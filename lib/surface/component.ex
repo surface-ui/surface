@@ -30,6 +30,19 @@ defmodule Surface.Component do
     end
   end
 
+  def pop_children_by_type(block, component) do
+    {:safe, content} = block
+    {children, rest} = Enum.reduce(content, {[], []}, fn child, {children, rest} ->
+      case child do
+        %DataContent{data: data, component: ^component} ->
+          {[data|children], rest}
+        _ ->
+          {children, [child|rest]}
+      end
+    end)
+    {Enum.reverse(children), {:safe, Enum.reverse(rest)}}
+  end
+
   def render_call(mod_str, attributes, mod, caller) do
     rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
     ["render_component(", mod_str, ", ", rendered_props, ")"]
