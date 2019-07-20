@@ -7,7 +7,7 @@ defmodule Surface.LiveComponent do
       use Surface.Event
 
       import unquote(__MODULE__)
-      import Surface.Component, only: [render_component: 2, render_component: 3]
+      import Surface.Component
       import Surface.Parser
       import Phoenix.LiveView
 
@@ -15,6 +15,7 @@ defmodule Surface.LiveComponent do
 
       @behaviour Phoenix.LiveView
       @behaviour unquote(__MODULE__)
+      @behaviour Surface.BaseComponent
 
       @impl Phoenix.LiveView
       def mount(session, socket) do
@@ -33,11 +34,10 @@ defmodule Surface.LiveComponent do
       @impl unquote(__MODULE__)
       def mount(_props, _session, socket), do: {:ok, socket}
 
-      def __component_type() do
-        unquote(__MODULE__)
-      end
+      defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
+        to: unquote(__MODULE__).CodeRenderer
 
-      defoverridable mount: 3
+      defoverridable mount: 3, render_code: 5
     end
   end
 
@@ -50,11 +50,6 @@ defmodule Surface.LiveComponent do
         !env.module.__has_event_handler?(event) do
       warn("Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)", env, line)
     end
-  end
-
-  def render_call(mod_str, attributes, mod, caller) do
-    rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-    ["live_render_component(@socket, ", mod_str, ", session: %{props: ", rendered_props, "})"]
   end
 
   def live_render_component(socket, module, opts) do
@@ -78,4 +73,10 @@ defmodule Surface.LiveComponent do
     IO.warn(message, stacktrace)
   end
 
+  defmodule CodeRenderer do
+    def render_code(mod_str, attributes, [], mod, caller) do
+      rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
+      ["<%= ", "live_render_component(@socket, ", mod_str, ", session: %{props: ", rendered_props, "})", " %>"]
+    end
+  end
 end

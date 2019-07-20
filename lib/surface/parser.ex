@@ -176,12 +176,10 @@ defmodule Surface.Parser do
   end
 
   defp to_iolist({<<first, _::binary>> = mod_str, attributes, children, line}, caller) when first in ?A..?Z do
-    # IO.inspect({mod_str, caller.module}, label: "CALLER")
     case validate_module(mod_str, caller) do
       {:ok, mod} ->
         validate_required_props(attributes, mod, mod_str, caller, line)
-        call = mod.__component_type().render_call(mod_str, attributes, mod, caller)
-        render_component_tag(call, children, caller)
+        mod.render_code(mod_str, attributes, to_iolist(children, caller), mod, caller)
         |> debug(attributes, line, caller)
 
       {:error, message} ->
@@ -206,14 +204,6 @@ defmodule Surface.Parser do
 
   defp to_iolist(node, _caller) when is_binary(node) do
     node
-  end
-
-  defp render_component_tag(call, [], _caller) do
-    ["<%= ", call, " %>"]
-  end
-
-  defp render_component_tag(call, children, caller) do
-    ["<%= ", call, " do %>", to_iolist(children, caller), "<% end %>"]
   end
 
   defp render_tag_props(props) do
@@ -269,7 +259,7 @@ defmodule Surface.Parser do
     cond do
       !Code.ensure_compiled?(mod) ->
         {:error, "Cannot render <#{mod_str}> (module #{mod_str} is not available)"}
-      !function_exported?(mod, :__component_type, 0) ->
+      !function_exported?(mod, :render_code, 5) ->
         {:error, "Cannot render <#{mod_str}> (module #{mod_str} is not a component"}
       true ->
         {:ok, mod}

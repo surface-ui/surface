@@ -14,10 +14,12 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @behaviour Surface.BaseComponent
 
-      def __component_type() do
-        unquote(__MODULE__)
-      end
+      defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
+        to: unquote(__MODULE__).CodeRenderer
+
+      defoverridable render_code: 5
     end
   end
 
@@ -43,11 +45,6 @@ defmodule Surface.Component do
     {Enum.reverse(children), {:safe, Enum.reverse(rest)}}
   end
 
-  def render_call(mod_str, attributes, mod, caller) do
-    rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-    ["render_component(", mod_str, ", ", rendered_props, ")"]
-  end
-
   def render_component(module, props) do
     do_render_component(module, props, [])
   end
@@ -62,6 +59,18 @@ defmodule Surface.Component do
         %DataContent{data: data, component: module}
       result ->
         result
+    end
+  end
+
+  defmodule CodeRenderer do
+    def render_code(mod_str, attributes, [], mod, caller) do
+      rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
+      ["<%= ", "render_component(", mod_str, ", ", rendered_props, ")", " %>"]
+    end
+
+    def render_code(mod_str, attributes, children_iolist, mod, caller) do
+      rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
+      ["<%= ", "render_component(", mod_str, ", ", rendered_props, ")", " do %>", children_iolist, "<% end %>"]
     end
   end
 end
