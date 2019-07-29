@@ -169,13 +169,13 @@ defmodule Surface.Parser do
     end
   end
 
-  defp to_iolist(nodes, caller) when is_list(nodes) do
+  def to_iolist(nodes, caller) when is_list(nodes) do
     for node <- nodes do
       to_iolist(node, caller)
     end
   end
 
-  defp to_iolist({<<first, _::binary>> = mod_str, attributes, children, line}, caller) when first in ?A..?Z do
+  def to_iolist({<<first, _::binary>> = mod_str, attributes, children, line}, caller) when first in ?A..?Z do
     case validate_module(mod_str, caller) do
       {:ok, mod} ->
         validate_required_props(attributes, mod, mod_str, caller, line)
@@ -189,12 +189,12 @@ defmodule Surface.Parser do
     end
   end
 
-  defp to_iolist({tag_name, attributes, [], line}, caller) when is_binary(tag_name) do
+  def to_iolist({tag_name, attributes, [], line}, caller) when is_binary(tag_name) do
     ["<", tag_name, render_tag_props(attributes), "/>"]
     |> debug(attributes, line, caller)
   end
 
-  defp to_iolist({tag_name, attributes, children, line}, caller) when is_binary(tag_name) do
+  def to_iolist({tag_name, attributes, children, line}, caller) when is_binary(tag_name) do
     [
       ["<", tag_name, render_tag_props(attributes), ">"],
       to_iolist(children, caller),
@@ -202,7 +202,7 @@ defmodule Surface.Parser do
     ] |> debug(attributes, line, caller)
   end
 
-  defp to_iolist(node, _caller) when is_binary(node) do
+  def to_iolist(node, _caller) when is_binary(node) do
     node
   end
 
