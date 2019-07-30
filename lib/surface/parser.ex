@@ -179,6 +179,7 @@ defmodule Surface.Parser do
     case validate_module(mod_str, caller) do
       {:ok, mod} ->
         validate_required_props(attributes, mod, mod_str, caller, line)
+        # validate_children(mod, children)
         mod.render_code(mod_str, attributes, to_iolist(children, caller), mod, caller)
         |> debug(attributes, line, caller)
 
@@ -237,9 +238,14 @@ defmodule Surface.Parser do
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     string
     |> parse()
+    |> prepend_context()
     |> to_iolist(__CALLER__)
     |> IO.iodata_to_binary()
     |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: __CALLER__.line + 1)
+  end
+
+  defp prepend_context(parsed_code) do
+    ["<% context = %{} %>", "\n", "<% _ = context %>", "\n" | parsed_code]
   end
 
   defp warn(message, caller, template_line) do

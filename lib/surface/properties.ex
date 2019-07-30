@@ -62,7 +62,7 @@ defmodule Surface.Properties do
             Module.put_attribute(caller.module, :event_references, {value, caller.line + line})
           end
           render_prop_value(key, value)
-        end
+        end ++ ["context: context"]
 
       ["%{", Enum.join(props, ", "), "}"]
     else

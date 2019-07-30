@@ -23,7 +23,11 @@ defmodule Surface.Component do
     end
   end
 
+  @callback begin_context(props :: map()) :: map()
+  @callback end_context(props :: map()) :: map()
   @callback render(props :: map(), content :: any) :: any
+
+  @optional_callbacks begin_context: 1, end_context: 1
 
   def children_by_type(block, component) do
     {:safe, content} = block
@@ -65,12 +69,34 @@ defmodule Surface.Component do
   defmodule CodeRenderer do
     def render_code(mod_str, attributes, [], mod, caller) do
       rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-      ["<%= ", "render_component(", mod_str, ", ", rendered_props, ")", " %>"]
+      ["<%= render_component(", mod_str, ", ", rendered_props, ") %>"]
     end
 
     def render_code(mod_str, attributes, children_iolist, mod, caller) do
       rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-      ["<%= ", "render_component(", mod_str, ", ", rendered_props, ")", " do %>", children_iolist, "<% end %>"]
+      [
+        maybe_add_begin_context(mod, mod_str, rendered_props),
+        "<%= render_component(", mod_str, ", ", rendered_props, ") do %>\n",
+        children_iolist,
+        "<% end %>\n",
+        maybe_add_end_context(mod, mod_str, rendered_props)
+      ]
+    end
+
+    defp maybe_add_begin_context(mod, mod_str, rendered_props) do
+      if function_exported?(mod, :begin_context, 1) do
+        ["<% context = ", mod_str, ".begin_context(", rendered_props, ") %>\n<% _ = context %>\n"]
+      else
+        ""
+      end
+    end
+
+    defp maybe_add_end_context(mod, mod_str, rendered_props) do
+      if function_exported?(mod, :end_context, 1) do
+        ["<% context = ", mod_str, ".end_context(", rendered_props, ") %>\n<% _ = context %>\n"]
+      else
+        ""
+      end
     end
   end
 end
