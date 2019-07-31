@@ -5,6 +5,10 @@ defmodule Surface.Component do
     defstruct [:data, :component]
   end
 
+  defmodule Lazy do
+    defstruct [:func]
+  end
+
   defmacro __using__(_) do
     quote do
       use Surface.Properties
@@ -28,6 +32,21 @@ defmodule Surface.Component do
   @callback render(props :: map(), content :: any) :: any
 
   @optional_callbacks begin_context: 1, end_context: 1
+
+  def lazy(func) do
+    %Surface.Component.Lazy{func: func}
+  end
+
+  def non_empty_children([]) do
+    []
+  end
+
+  def non_empty_children(block) do
+    {:safe, content} = block
+    for child <- content, !is_binary(child) || String.trim(child) != "" do
+      child
+    end
+  end
 
   def children_by_type(block, component) do
     {:safe, content} = block
@@ -102,6 +121,12 @@ defmodule Surface.Component do
 end
 
 defimpl Phoenix.HTML.Safe, for: Surface.Component.DataContent do
+  def to_iodata(data) do
+    data
+  end
+end
+
+defimpl Phoenix.HTML.Safe, for: Surface.Component.Lazy do
   def to_iodata(data) do
     data
   end
