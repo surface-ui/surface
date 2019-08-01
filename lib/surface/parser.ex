@@ -9,7 +9,7 @@ defmodule Surface.Parser do
 
       Failed to parse HTML: #{e.message}
 
-      Check your syntax near line #{e.line} and col #{e.col}:
+      Check your syntax near line #{e.line}:
 
       #{e.string}
       """
@@ -49,6 +49,7 @@ defmodule Surface.Parser do
     |> reduce({List, :to_string, []})
 
   whitespace = ascii_char([?\s, ?\n]) |> repeat() |> ignore()
+  whitespace_no_ignore = ascii_char([?\s, ?\n]) |> repeat()
 
   closing_tag =
     ignore(string("</"))
@@ -102,16 +103,16 @@ defmodule Surface.Parser do
     |> choice([
       ignore(string("/>")),
       ignore(string(">"))
-      |> concat(whitespace)
+      # |> concat(whitespace)
       |> concat(children)
       |> concat(closing_tag)
-      |> concat(whitespace)
+      # |> concat(whitespace)
     ])
     |> post_traverse(:validate_node)
 
   defparsecp(
     :parse_children,
-    whitespace
+    whitespace_no_ignore
     |> repeat(
       choice([
         tag,
@@ -154,15 +155,15 @@ defmodule Surface.Parser do
     end
   end
 
-  def parse(string) do
+  def parse(string, line_offset) do
     case parse_root(string) do
       {:ok, nodes, _, _, _, _} ->
         nodes
 
       {:error, reason, rest, _, {line, col}, _} ->
         raise %ParseError{
-          string: String.slice(rest, 0..40),
-          line: line,
+          string: String.split(rest, "\n") |> Enum.take(2) |> Enum.join("\n"),
+          line: line + line_offset,
           col: col,
           message: reason
         }
@@ -203,7 +204,8 @@ defmodule Surface.Parser do
     ] |> debug(attributes, line, caller)
   end
 
-  def to_iolist(node, _caller) when is_binary(node) do
+  # def to_iolist(node, _caller) when is_binary(node) do
+  def to_iolist(node, _caller) do
     node
   end
 
@@ -236,16 +238,17 @@ defmodule Surface.Parser do
   end
 
   defmacro sigil_H({:<<>>, _, [string]}, _) do
+    line_offset = __CALLER__.line + 1
     string
-    |> parse()
+    |> parse(line_offset)
     |> prepend_context()
     |> to_iolist(__CALLER__)
     |> IO.iodata_to_binary()
-    |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: __CALLER__.line + 1)
+    |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: line_offset)
   end
 
   defp prepend_context(parsed_code) do
-    ["<% context = %{} %>", "\n", "<% _ = context %>", "\n" | parsed_code]
+    ["<% context = %{} %><% _ = context %>" | parsed_code]
   end
 
   defp warn(message, caller, template_line) do

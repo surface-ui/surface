@@ -5,7 +5,7 @@ defmodule Surface.Engine do
     template =
       path
       |> File.read!()
-      |> Parser.parse()
+      |> Parser.parse(1)
       |> Parser.to_iolist(__ENV__)
       |> IO.iodata_to_binary()
       |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: 1)

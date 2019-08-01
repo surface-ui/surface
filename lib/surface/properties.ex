@@ -34,10 +34,15 @@ defmodule Surface.Properties do
     props = Module.get_attribute(env.module, :properties)
     props_names = Enum.map(props, fn prop -> prop.name end)
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
-    # IO.inspect(props_by_name, label: "PROP")
+    bindings = for p <- props, p.type == :binding, do: to_string(p.name)
+
     quote do
       def __props() do
         unquote(Macro.escape(props))
+      end
+
+      def __bindings__() do
+        unquote(Macro.escape(bindings))
       end
 
       def __validate_prop__(prop) do
