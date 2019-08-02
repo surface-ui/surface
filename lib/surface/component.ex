@@ -29,7 +29,7 @@ defmodule Surface.Component do
 
   @callback begin_context(props :: map()) :: map()
   @callback end_context(props :: map()) :: map()
-  @callback render(props :: map(), content :: any) :: any
+  @callback render(props :: map()) :: any
 
   @optional_callbacks begin_context: 1, end_context: 1
 
@@ -77,7 +77,8 @@ defmodule Surface.Component do
   end
 
   defp do_render_component(module, props, content) do
-    case module.render(props, content) do
+    props = Map.put(props, :content, content)
+    case module.render(props) do
       {:data, data} ->
         %DataContent{data: data, component: module}
       result ->
