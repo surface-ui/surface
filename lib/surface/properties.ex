@@ -61,7 +61,8 @@ defmodule Surface.Properties do
         for {key, value, line} <- props do
           key_atom = String.to_atom(key)
           if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
-            warn("Invalid property \"#{key}\" for component <#{mod_str}>", caller, line)
+            message = "Invalid property \"#{key}\" for component <#{mod_str}>"
+            Surface.IO.warn(message, caller, &(&1 + line))
           end
           if mod.__get_prop__(key_atom)[:type] == :event do
             Module.put_attribute(caller.module, :event_references, {value, caller.line + line})
@@ -83,13 +84,5 @@ defmodule Surface.Properties do
       _ ->
         [key, ": ", ~S("), value, ~S(")]
     end
-  end
-
-  # TODO: centralize
-  def warn(message, caller, template_line) do
-    stacktrace =
-      Macro.Env.stacktrace(caller)
-      |> (fn([{a, b, c, [d, {:line, line}]}]) -> [{a, b, c, [d, {:line, line + template_line}]}] end).()
-    IO.warn(message, stacktrace)
   end
 end

@@ -1,5 +1,7 @@
 defmodule Surface.LiveComponent do
 
+  alias Surface.Translator
+
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent
@@ -36,25 +38,15 @@ defmodule Surface.LiveComponent do
     event_references = Module.get_attribute(env.module, :event_references)
     for {event, line} <- event_references,
         !env.module.__has_event_handler?(event) do
-      warn("Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)", env, line)
+      message = "Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)"
+      Surface.IO.warn(message, env, fn _ -> line end)
     end
   end
 
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     line_offset = __CALLER__.line + 1
     string
-    |> Surface.Parser.parse(line_offset)
-    |> Surface.Parser.prepend_context()
-    |> Surface.Parser.to_iolist(__CALLER__)
-    |> IO.iodata_to_binary()
+    |> Translator.translate(line_offset, __CALLER__)
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
-  end
-
-  # TODO: centralize
-  def warn(message, caller, line) do
-    stacktrace =
-      Macro.Env.stacktrace(caller)
-      |> (fn([{a, b, c, [d, {:line, _line}]}]) -> [{a, b, c, [d, {:line, line}]}] end).()
-    IO.warn(message, stacktrace)
   end
 end

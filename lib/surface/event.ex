@@ -52,15 +52,3 @@ defmodule Surface.Event do
   end
 
 end
-
-defmodule Bbb do
-  use Surface.Event
-
-  def handle_event("change_name", 1, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("change_" <> _, value, socket) when value == 1 do
-    {:noreply, socket}
-  end
-end
