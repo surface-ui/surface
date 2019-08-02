@@ -1,27 +1,14 @@
 defmodule Surface.Component do
-  alias Surface.Properties
-
-  defmodule DataContent do
-    defstruct [:data, :component]
-  end
-
-  defmodule Lazy do
-    defstruct [:func]
-  end
 
   defmacro __using__(_) do
     quote do
-      use Surface.Properties
+      use Surface.BaseComponent
 
       import unquote(__MODULE__)
-      import Surface.Parser
-      import Phoenix.HTML
-
       @behaviour unquote(__MODULE__)
-      @behaviour Surface.BaseComponent
 
       defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
-        to: unquote(__MODULE__).CodeRenderer
+        to: Surface.ComponentRenderer
 
       defoverridable render_code: 5
     end
@@ -33,127 +20,13 @@ defmodule Surface.Component do
 
   @optional_callbacks begin_context: 1, end_context: 1
 
-  def lazy(func) do
-    %Surface.Component.Lazy{func: func}
-  end
-
-  def non_empty_children([]) do
-    []
-  end
-
-  def non_empty_children(block) do
-    {:safe, content} = block
-    for child <- content, !is_binary(child) || String.trim(child) != "" do
-      child
-    end
-  end
-
-  def children_by_type(block, component) do
-    {:safe, content} = block
-    for %DataContent{data: data, component: ^component} <- content do
-      data
-    end
-  end
-
-  def pop_children_by_type(block, component) do
-    {:safe, content} = block
-    {children, rest} = Enum.reduce(content, {[], []}, fn child, {children, rest} ->
-      case child do
-        %DataContent{data: data, component: ^component} ->
-          {[data|children], rest}
-        _ ->
-          {children, [child|rest]}
-      end
-    end)
-    {Enum.reverse(children), {:safe, Enum.reverse(rest)}}
-  end
-
-  def render_component(module, props) do
-    do_render_component(module, props, [])
-  end
-
-  def render_component(module, props, do: block) do
-    do_render_component(module, props, block)
-  end
-
-  defp do_render_component(module, props, content) do
-    props = Map.put(props, :content, content)
-    case module.render(props) do
-      {:data, data} ->
-        %DataContent{data: data, component: module}
-      result ->
-        result
-    end
-  end
-
-  defmodule CodeRenderer do
-    def render_code(mod_str, attributes, [], mod, caller) do
-      rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-      ["<%= render_component(", mod_str, ", ", rendered_props, ") %>"]
-    end
-
-    def render_code(mod_str, attributes, children_iolist, mod, caller) do
-      rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-      bindings = binding_values(mod, attributes)
-      [
-        maybe_add_begin_context(mod, mod_str, rendered_props),
-        "<%= render_component(", mod_str, ", ", rendered_props, ") do %>",
-        maybe_add_begin_lazy_content(bindings),
-        children_iolist,
-        maybe_add_end_lazy_content(bindings),
-        "<% end %>",
-        maybe_add_end_context(mod, mod_str, rendered_props)
-      ]
-    end
-
-    defp maybe_add_begin_context(mod, mod_str, rendered_props) do
-      if function_exported?(mod, :begin_context, 1) do
-        ["<% context = ", mod_str, ".begin_context(", rendered_props, ") %><% _ = context %>"]
-      else
-        ""
-      end
-    end
-
-    defp maybe_add_end_context(mod, mod_str, rendered_props) do
-      if function_exported?(mod, :end_context, 1) do
-        ["<% context = ", mod_str, ".end_context(", rendered_props, ") %><% _ = context %>"]
-      else
-        ""
-      end
-    end
-
-    defp maybe_add_begin_lazy_content([]) do
-      ""
-    end
-
-    defp maybe_add_begin_lazy_content(bindings) do
-      ["<%= lazy fn ", Enum.join(bindings, ", "), " -> %>"]
-    end
-
-    defp maybe_add_end_lazy_content([]) do
-      ""
-    end
-
-    defp maybe_add_end_lazy_content(_bindings) do
-      ["<% end %>"]
-    end
-
-    defp binding_values(mod, attributes) do
-      for {key, value, _line} <- attributes, key in mod.__bindings__() do
-        value
-      end
-    end
-  end
-end
-
-defimpl Phoenix.HTML.Safe, for: Surface.Component.DataContent do
-  def to_iodata(data) do
-    data
-  end
-end
-
-defimpl Phoenix.HTML.Safe, for: Surface.Component.Lazy do
-  def to_iodata(data) do
-    data
+  defmacro sigil_H({:<<>>, _, [string]}, _) do
+    line_offset = __CALLER__.line + 1
+    string
+    |> Surface.Parser.parse(line_offset)
+    |> Surface.Parser.prepend_context()
+    |> Surface.Parser.to_iolist(__CALLER__)
+    |> IO.iodata_to_binary()
+    |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: line_offset)
   end
 end

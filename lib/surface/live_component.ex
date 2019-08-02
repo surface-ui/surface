@@ -1,21 +1,22 @@
 defmodule Surface.LiveComponent do
-  alias Surface.Properties
 
   defmacro __using__(_) do
     quote do
-      use Surface.Properties
+      use Surface.BaseComponent
       use Surface.Event
 
       import unquote(__MODULE__)
-      import Surface.Component
-      import Surface.Parser
-      import Phoenix.LiveView
-
+      @behaviour unquote(__MODULE__)
       @after_compile unquote(__MODULE__)
 
+      @impl unquote(__MODULE__)
+      def mount(_props, _session, socket), do: {:ok, socket}
+
+      defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
+        to: Surface.LiveComponentRenderer
+
+      import Phoenix.LiveView
       @behaviour Phoenix.LiveView
-      @behaviour unquote(__MODULE__)
-      @behaviour Surface.BaseComponent
 
       @impl Phoenix.LiveView
       def mount(session, socket) do
@@ -23,19 +24,6 @@ defmodule Surface.LiveComponent do
         props = Map.put_new(props, :content, [])
         mount(props, session, assign(socket, props: props))
       end
-
-      @impl Phoenix.LiveView
-      def render(var!(assigns)) do
-        ~L"""
-        <%= render(assigns.props, assigns) %>
-        """
-      end
-
-      @impl unquote(__MODULE__)
-      def mount(_props, _session, socket), do: {:ok, socket}
-
-      defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
-        to: unquote(__MODULE__).CodeRenderer
 
       defoverridable mount: 3, render_code: 5
     end
@@ -52,17 +40,14 @@ defmodule Surface.LiveComponent do
     end
   end
 
-  def live_render_component(socket, module, opts) do
-    do_live_render_component(socket, module, opts, [])
-  end
-
-  def live_render_component(socket, module, opts, do: block) do
-    do_live_render_component(socket, module, opts, block)
-  end
-
-  def do_live_render_component(socket, module, opts, content) do
-    opts = put_in(opts, [:session, :props, :content], content)
-    Phoenix.LiveView.live_render(socket, module, opts)
+  defmacro sigil_H({:<<>>, _, [string]}, _) do
+    line_offset = __CALLER__.line + 1
+    string
+    |> Surface.Parser.parse(line_offset)
+    |> Surface.Parser.prepend_context()
+    |> Surface.Parser.to_iolist(__CALLER__)
+    |> IO.iodata_to_binary()
+    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 
   # TODO: centralize
@@ -71,12 +56,5 @@ defmodule Surface.LiveComponent do
       Macro.Env.stacktrace(caller)
       |> (fn([{a, b, c, [d, {:line, _line}]}]) -> [{a, b, c, [d, {:line, line}]}] end).()
     IO.warn(message, stacktrace)
-  end
-
-  defmodule CodeRenderer do
-    def render_code(mod_str, attributes, [], mod, caller) do
-      rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-      ["<%= ", "live_render_component(@socket, ", mod_str, ", session: %{props: ", rendered_props, "})", " %>"]
-    end
   end
 end

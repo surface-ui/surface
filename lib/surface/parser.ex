@@ -237,17 +237,7 @@ defmodule Surface.Parser do
     end
   end
 
-  defmacro sigil_H({:<<>>, _, [string]}, _) do
-    line_offset = __CALLER__.line + 1
-    string
-    |> parse(line_offset)
-    |> prepend_context()
-    |> to_iolist(__CALLER__)
-    |> IO.iodata_to_binary()
-    |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: line_offset)
-  end
-
-  defp prepend_context(parsed_code) do
+  def prepend_context(parsed_code) do
     ["<% context = %{} %><% _ = context %>" | parsed_code]
   end
 
