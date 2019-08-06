@@ -5,6 +5,8 @@ defmodule Surface.Component do
     quote do
       use Surface.BaseComponent
 
+      require Surface.LiveEngine
+
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
 
@@ -17,7 +19,7 @@ defmodule Surface.Component do
 
   @callback begin_context(props :: map()) :: map()
   @callback end_context(props :: map()) :: map()
-  @callback render(props :: map()) :: any
+  @callback render(assigns :: map()) :: any
 
   @optional_callbacks begin_context: 1, end_context: 1
 
@@ -25,6 +27,7 @@ defmodule Surface.Component do
     line_offset = __CALLER__.line + 1
     string
     |> Translator.translate(line_offset, __CALLER__)
-    |> EEx.compile_string(engine: Phoenix.HTML.Engine, line: line_offset)
+    |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
+    # |> EEx.compile_string(engine: Surface.Engine, line: line_offset, assigns_var: :assigns)
   end
 end

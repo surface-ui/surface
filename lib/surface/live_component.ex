@@ -20,6 +20,8 @@ defmodule Surface.LiveComponent do
       import Phoenix.LiveView
       @behaviour Phoenix.LiveView
 
+      require Surface.LiveEngine
+
       @impl Phoenix.LiveView
       def mount(session, socket) do
         {props, session} = Map.pop(session, :props, %{})
@@ -47,6 +49,7 @@ defmodule Surface.LiveComponent do
     line_offset = __CALLER__.line + 1
     string
     |> Translator.translate(line_offset, __CALLER__)
-    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
+    |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
+    # |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 end

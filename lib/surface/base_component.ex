@@ -5,10 +5,22 @@ defmodule Surface.BaseComponent do
 
   defmodule DataContent do
     defstruct [:data, :component]
+
+    defimpl Phoenix.HTML.Safe do
+      def to_iodata(data) do
+        data
+      end
+    end
   end
 
   defmodule Lazy do
     defstruct [:func]
+
+    defimpl Phoenix.HTML.Safe do
+      def to_iodata(data) do
+        data
+      end
+    end
   end
 
   defmacro __using__(_) do
@@ -30,22 +42,31 @@ defmodule Surface.BaseComponent do
     []
   end
 
-  def non_empty_children(block) do
-    {:safe, content} = block
+  def non_empty_children({:safe, content}) do
     for child <- content, !is_binary(child) || String.trim(child) != "" do
       child
     end
   end
 
-  def children_by_type(block, component) do
-    {:safe, content} = block
+  def non_empty_children(%Phoenix.LiveView.Rendered{dynamic: content}) do
+    for child <- content, !is_binary(child) || String.trim(child) != "" do
+      child
+    end
+  end
+
+  def children_by_type({:safe, content}, component) do
     for %DataContent{data: data, component: ^component} <- content do
       data
     end
   end
 
-  def pop_children_by_type(block, component) do
-    {:safe, content} = block
+  def children_by_type(%Phoenix.LiveView.Rendered{dynamic: content}, component) do
+    for %DataContent{data: data, component: ^component} <- content do
+      data
+    end
+  end
+
+  def pop_children_by_type({:safe, content}, component) do
     {children, rest} = Enum.reduce(content, {[], []}, fn child, {children, rest} ->
       case child do
         %DataContent{data: data, component: ^component} ->
@@ -56,16 +77,16 @@ defmodule Surface.BaseComponent do
     end)
     {Enum.reverse(children), {:safe, Enum.reverse(rest)}}
   end
-end
 
-defimpl Phoenix.HTML.Safe, for: Surface.BaseComponent.DataContent do
-  def to_iodata(data) do
-    data
-  end
-end
-
-defimpl Phoenix.HTML.Safe, for: Surface.BaseComponent.Lazy do
-  def to_iodata(data) do
-    data
+  def pop_children_by_type(%Phoenix.LiveView.Rendered{dynamic: content} = block, component) do
+    {children, rest} = Enum.reduce(content, {[], []}, fn child, {children, rest} ->
+      case child do
+        %DataContent{data: data, component: ^component} ->
+          {[data|children], [[]|rest]}
+        _ ->
+          {children, [child|rest]}
+      end
+    end)
+    {Enum.reverse(children), %Phoenix.LiveView.Rendered{block | dynamic: Enum.reverse(rest)}}
   end
 end
