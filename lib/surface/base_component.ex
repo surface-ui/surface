@@ -1,5 +1,5 @@
 defmodule Surface.BaseComponent do
-  alias Surface.BaseComponent.Lazy
+  alias Surface.BaseComponent.LazyContent
 
   @callback render_code(mod_str :: binary, attributes :: any, children_iolist :: any, mod :: module, caller :: Macro.Env.t) :: any
 
@@ -13,7 +13,7 @@ defmodule Surface.BaseComponent do
     end
   end
 
-  defmodule Lazy do
+  defmodule LazyContent do
     defstruct [:func]
 
     defimpl Phoenix.HTML.Safe do
@@ -35,7 +35,7 @@ defmodule Surface.BaseComponent do
   end
 
   def lazy(func) do
-    %Lazy{func: func}
+    %LazyContent{func: func}
   end
 
   def non_empty_children([]) do
