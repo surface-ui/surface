@@ -81,6 +81,10 @@ defmodule Surface.Properties do
       {:attribute_expr, value} ->
         expr = value |> IO.iodata_to_binary() |> String.trim()
         [key, ": ", "(", expr, ")"]
+      value when is_integer(value) ->
+        [key, ": ", to_string(value)]
+      value when is_boolean(value) ->
+        [key, ": ", inspect(value)]
       _ ->
         [key, ": ", ~S("), value, ~S(")]
     end

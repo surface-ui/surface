@@ -16,20 +16,62 @@ defmodule Surface.Parser do
     end
   end
 
+  defp content_expr("{{") do
+    "<%="
+  end
+
+  defp content_expr("}}") do
+    "%>"
+  end
+
   defp content_expr(expr) do
     expr
   end
 
-  expr =
+  defp attribute_value_expr("{{") do
+    "\#{"
+  end
+
+  defp attribute_value_expr("}}") do
+    "}"
+  end
+
+  defp attribute_value_expr(expr) do
+    expr
+  end
+
+  expr1 =
     string("<%")
     |> repeat(lookahead_not(string("%>")) |> utf8_char([]))
     |> string("%>")
     |> reduce({List, :to_string, []})
 
+  expr2 =
+    string("{{")
+    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
+    |> string("}}")
+    |> map(:content_expr)
+    |> reduce({List, :to_string, []})
+
+  expr3 =
+    string("{{")
+    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
+    |> string("}}")
+    |> map(:attribute_value_expr)
+    |> reduce({List, :to_string, []})
+
+  expr = choice([expr1, expr2])
+
+  boolean =
+    choice([
+      string("true") |> replace(true),
+      string("false") |> replace(false)
+    ])
+
   attribute_expr =
-    ignore(string("{"))
-    |> repeat(lookahead_not(string("}")) |> utf8_char([]))
-    |> ignore(string("}"))
+    ignore(string("{{"))
+    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
+    |> ignore(string("}}"))
     |> reduce({List, :to_string, []})
     |> tag(:attribute_expr)
 
@@ -41,7 +83,8 @@ defmodule Surface.Parser do
       lookahead_not(
         choice([
           ignore(string("<")),
-          ignore(string("<%"))
+          ignore(string("<%")),
+          ignore(string("{{"))
         ])
       )
       |> utf8_char([])
@@ -63,6 +106,7 @@ defmodule Surface.Parser do
       lookahead_not(ignore(ascii_char([?"])))
       |> choice([
         ~S(\") |> string() |> replace(?"),
+        expr3,
         utf8_char([])
       ])
     )
@@ -75,7 +119,9 @@ defmodule Surface.Parser do
     |> optional(
       choice([
         ignore(string("=")) |> concat(attribute_expr),
-        ignore(string("=")) |> concat(attribute_value)
+        ignore(string("=")) |> concat(attribute_value),
+        ignore(string("=")) |> concat(integer(min: 1)),
+        ignore(string("=")) |> concat(boolean)
       ])
     )
     |> line()
@@ -115,7 +161,7 @@ defmodule Surface.Parser do
       choice([
         tag,
         comment,
-        expr |> map(:content_expr),
+        expr,
         text
       ])
     )

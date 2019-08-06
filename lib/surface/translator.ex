@@ -98,7 +98,7 @@ defmodule Surface.Translator do
   end
 
   defp debug(iolist, props, line, caller) do
-    if Enum.find(props, fn {k, v, _} -> k in ["debug", :debug] && v == "true" end) do
+    if Enum.find(props, fn {k, v, _} -> k in ["debug", :debug] && v end) do
       IO.puts ">>> DEBUG: #{caller.file}:#{caller.line + line}"
       iolist
       |> IO.iodata_to_binary()
