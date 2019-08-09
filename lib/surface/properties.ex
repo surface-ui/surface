@@ -15,6 +15,7 @@ defmodule Surface.Properties do
   defp property_ast(name, type, opts) do
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
+    binding = Keyword.get(opts, :binding, false)
 
     quote do
       doc = Module.get_attribute(__MODULE__, :doc)
@@ -25,6 +26,7 @@ defmodule Surface.Properties do
         type: unquote(type),
         default: unquote(default),
         required: unquote(required),
+        binding: unquote(binding),
         doc: doc
       }
     end
@@ -57,19 +59,27 @@ defmodule Surface.Properties do
 
   def render_props(props, mod, mod_str, caller) do
     if function_exported?(mod, :__props, 0) do
+      component_id = generate_component_id()
+      Module.put_attribute(caller.module, :children, {component_id, mod})
+
       props =
         for {key, value, line} <- props do
           key_atom = String.to_atom(key)
+          prop = mod.__get_prop__(key_atom)
           if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
             message = "Invalid property \"#{key}\" for component <#{mod_str}>"
             Surface.IO.warn(message, caller, &(&1 + line))
           end
-          if mod.__get_prop__(key_atom)[:type] == :event do
+          if prop[:type] == :event do
             Module.put_attribute(caller.module, :event_references, {value, caller.line + line})
           end
+          if prop[:binding] do
+            # TODO: validate if it's a assign and show proper warning for line `caller.line + line`
+            {:attribute_expr, ["@" <> mapped_binding]} = value
+            Module.put_attribute(caller.module, :bindings_mapping, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
+          end
           render_prop_value(key, value)
-        end ++ ["context: context"]
-
+        end ++ ["context: context, __component_id: \"#{component_id}\""]
       ["%{", Enum.join(props, ", "), "}"]
     else
       "%{}"
@@ -88,5 +98,13 @@ defmodule Surface.Properties do
       _ ->
         [key, ": ", ~S("), value, ~S(")]
     end
+  end
+
+  defp generate_component_id() do
+    component_id =
+      :erlang.unique_integer([:positive, :monotonic])
+      |> to_string()
+      |> String.pad_leading(6, "0")
+    "COMP_#{component_id}"
   end
 end

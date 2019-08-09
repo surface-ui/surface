@@ -30,4 +30,10 @@ defmodule Surface.Component do
     |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
     # |> EEx.compile_string(engine: Surface.Engine, line: line_offset, assigns_var: :assigns)
   end
+
+  defmacro event(event_name) do
+    quote do
+      "__" <> Map.get(var!(assigns), :__component_id)  <> ":" <> to_string(unquote(event_name)) <> ":" <> inspect(__MODULE__)
+    end
+  end
 end
