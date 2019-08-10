@@ -79,7 +79,8 @@ defmodule Surface.Properties do
             Module.put_attribute(caller.module, :bindings_mapping, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
           end
           render_prop_value(key, value)
-        end ++ ["context: context, __component_id: \"#{component_id}\""]
+        end ++ ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
+        # end ++ ["context: context"]
       ["%{", Enum.join(props, ", "), "}"]
     else
       "%{}"

@@ -6,8 +6,6 @@ defmodule Surface.Event do
       import unquote(__MODULE__)
       Module.register_attribute __MODULE__, :event_handlers, accumulate: true, persist: false
       Module.register_attribute __MODULE__, :event_references, accumulate: true, persist: false
-      Module.register_attribute __MODULE__, :bindings_mapping, accumulate: true, persist: false
-      Module.register_attribute __MODULE__, :children, accumulate: true, persist: false
       @before_compile unquote(__MODULE__)
     end
   end
@@ -31,21 +29,7 @@ defmodule Surface.Event do
         end
       end
 
-    children = Module.get_attribute(env.module, :children) |> Enum.uniq()
-
-    bindings_mapping =
-      Module.get_attribute(env.module, :bindings_mapping)
-      |> Enum.uniq()
-      |> Map.new
-
-    bindings_mapping_def =
-      quote do
-        def __bindings_mapping__() do
-          unquote(Macro.escape(bindings_mapping))
-        end
-      end
-
-    has_handler_defs ++ [has_handler_catch_all_def, bindings_mapping_def, quoted_handle_event_fallback()]
+    has_handler_defs ++ [has_handler_catch_all_def, quoted_handle_event_fallback()]
   end
 
   defmacro def(fun_def, opts) do
@@ -70,25 +54,18 @@ defmodule Surface.Event do
 
   defp quoted_handle_event_fallback do
     quote do
-      def handle_event(<<"__", comp :: binary-size(11), ":">> <> rest, value, socket) do
-        [event, mod_str] = String.split(rest, ":")
+      def handle_event(<<"__", path :: binary()>>, value, socket) do
+        [comp_id, event, mod_str] = String.split(path, ":")
         mod = Module.concat([mod_str])
 
-        # TODO: Optimize
+        IO.inspect({comp_id, event, mod}, label: "event called")
 
-        bindings =
-          for {{^comp, binding}, assign} <- __bindings_mapping__(), into: %{} do
-            {binding, socket.assigns[assign]}
-          end
+        mappings = __bindings_mapping__()
+        bindings = assings_to_bindings(mappings, comp_id, socket.assigns)
+        updated_bindings = mod.handle_event(event, bindings, value)
+        updated_assigns = bindings_to_assigns(mappings, comp_id, updated_bindings)
 
-        new_assigns = mod.handle_event(event, bindings, value)
-
-        new_assigns =
-          for {{^comp, binding}, assign} <- __bindings_mapping__(), into: [] do
-            {assign, new_assigns[binding]}
-          end
-
-        {:noreply, assign(socket, new_assigns)}
+        {:noreply, assign(socket, updated_assigns)}
       end
     end
   end

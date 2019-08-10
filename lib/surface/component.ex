@@ -4,6 +4,7 @@ defmodule Surface.Component do
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent
+      use Surface.Binding
 
       require Surface.LiveEngine
 
