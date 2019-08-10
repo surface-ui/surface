@@ -80,7 +80,6 @@ defmodule Surface.Properties do
           end
           render_prop_value(key, value)
         end ++ ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
-        # end ++ ["context: context"]
       ["%{", Enum.join(props, ", "), "}"]
     else
       "%{}"
@@ -102,10 +101,7 @@ defmodule Surface.Properties do
   end
 
   defp generate_component_id() do
-    component_id =
-      :erlang.unique_integer([:positive, :monotonic])
-      |> to_string()
-      |> String.pad_leading(6, "0")
-    "COMP_#{component_id}"
+    :erlang.unique_integer([:positive, :monotonic])
+    |> to_string()
   end
 end

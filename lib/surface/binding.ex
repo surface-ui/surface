@@ -10,7 +10,7 @@ defmodule Surface.Binding do
   end
 
   defmacro __before_compile__(env) do
-    children = Module.get_attribute(env.module, :children) |> Enum.uniq()
+    children = Module.get_attribute(env.module, :children) |> Map.new
 
     children_def =
       quote do
@@ -21,12 +21,11 @@ defmodule Surface.Binding do
 
     children_bindings_mapping =
       for {id, mod} <- children, {{comp, binding}, assign} <- mod.__bindings_mapping__(), into: %{} do
-        {{id <> ">" <> comp, binding}, {id, assign}}
+        {{Surface.BaseComponent.concat_ids(id, comp), binding}, {id, assign}}
       end
 
     bindings_mapping =
       Module.get_attribute(env.module, :bindings_mapping)
-      |> Enum.uniq()
       |> Map.new
       |> Map.merge(children_bindings_mapping)
 

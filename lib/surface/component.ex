@@ -34,7 +34,7 @@ defmodule Surface.Component do
 
   defmacro event(event_name) do
     quote do
-      "__" <> Map.get(var!(assigns), :__component_id)  <> ":" <> to_string(unquote(event_name)) <> ":" <> inspect(__MODULE__)
+      "__" <> Map.get(var!(assigns), :__component_id) <> ":" <> to_string(unquote(event_name))
     end
   end
 end

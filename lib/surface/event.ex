@@ -1,5 +1,7 @@
 defmodule Surface.Event do
 
+  alias Surface.Binding
+
   defmacro __using__(_) do
     quote do
       import Kernel, except: [def: 2]
@@ -54,19 +56,23 @@ defmodule Surface.Event do
 
   defp quoted_handle_event_fallback do
     quote do
-      def handle_event(<<"__", path :: binary()>>, value, socket) do
-        [comp_id, event, mod_str] = String.split(path, ":")
-        mod = Module.concat([mod_str])
-
-        IO.inspect({comp_id, event, mod}, label: "event called")
-
-        mappings = __bindings_mapping__()
-        bindings = assings_to_bindings(mappings, comp_id, socket.assigns)
-        updated_bindings = mod.handle_event(event, bindings, value)
-        updated_assigns = bindings_to_assigns(mappings, comp_id, updated_bindings)
-
+      def handle_event(<<"__", comp_event :: binary()>>, value, socket) do
+        updated_assigns = handle_component_event(__MODULE__, comp_event, value, socket)
         {:noreply, assign(socket, updated_assigns)}
       end
     end
+  end
+
+  def handle_component_event(module, comp_event, value, socket) do
+    [comp, event] = String.split(comp_event, ":")
+    target_module =
+      comp
+      |> String.split("_")
+      |> Enum.reduce(module, fn id, mod -> mod.__children__()[id] end)
+
+    mappings = module.__bindings_mapping__()
+    bindings = Binding.assings_to_bindings(mappings, comp, socket.assigns)
+    updated_bindings = target_module.handle_event(event, bindings, value)
+    Binding.bindings_to_assigns(mappings, comp, updated_bindings)
   end
 end

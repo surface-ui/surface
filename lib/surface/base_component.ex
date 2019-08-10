@@ -95,6 +95,6 @@ defmodule Surface.BaseComponent do
   end
 
   def concat_ids(parent_id, id) do
-    "#{parent_id}>#{id}"
+    "#{parent_id}_#{id}"
   end
 end
