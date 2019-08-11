@@ -72,7 +72,7 @@ defmodule Surface.Event do
 
     bindings = module.__bindings__()
     bindings_map = Binding.assings_to_bindings_map(bindings, comp, socket.assigns)
-    updated_bindings = target_module.handle_event(event, bindings_map, value)
-    Binding.bindings_map_to_assigns(bindings, comp, updated_bindings)
+    updated_bindings_map = target_module.handle_event(event, bindings_map, value)
+    Binding.bindings_map_to_assigns(bindings, comp, updated_bindings_map)
   end
 end
