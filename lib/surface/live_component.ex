@@ -26,7 +26,7 @@ defmodule Surface.LiveComponent do
       @impl Phoenix.LiveView
       def mount(session, socket) do
         # IO.inspect(__children__(), label: :children)
-        # IO.inspect(__bindings_mapping__(), label: :bindings_mapping)
+        # IO.inspect(__bindings__(), label: :bindings)
         {props, session} = Map.pop(session, :props, %{})
         props = Map.put_new(props, :content, [])
         mount(props, session, assign(socket, props: props))

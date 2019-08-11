@@ -3,7 +3,7 @@ defmodule Surface.Binding do
   defmacro __using__(_) do
     quote do
       import unquote(__MODULE__)
-      Module.register_attribute __MODULE__, :bindings_mapping, accumulate: true, persist: false
+      Module.register_attribute __MODULE__, :bindings, accumulate: true, persist: false
       Module.register_attribute __MODULE__, :children, accumulate: true, persist: false
       @before_compile unquote(__MODULE__)
     end
@@ -19,43 +19,43 @@ defmodule Surface.Binding do
         end
       end
 
-    children_bindings_mapping =
-      for {id, mod} <- children, {{comp, binding}, assign} <- mod.__bindings_mapping__(), into: %{} do
+    children_bindings =
+      for {id, mod} <- children, {{comp, binding}, assign} <- mod.__bindings__(), into: %{} do
         {{Surface.BaseComponent.concat_ids(id, comp), binding}, {id, assign}}
       end
 
-    bindings_mapping =
-      Module.get_attribute(env.module, :bindings_mapping)
+    bindings =
+      Module.get_attribute(env.module, :bindings)
       |> Map.new
-      |> Map.merge(children_bindings_mapping)
+      |> Map.merge(children_bindings)
 
-    bindings_mapping_def =
+    bindings_def =
       quote do
-        def __bindings_mapping__() do
-          unquote(Macro.escape(bindings_mapping))
+        def __bindings__() do
+          unquote(Macro.escape(bindings))
         end
       end
 
-    [children_def, bindings_mapping_def]
+    [children_def, bindings_def]
   end
 
-  def assings_to_bindings(mappings, comp_id, assigns) do
-    for {{^comp_id, binding}, assign} <- mappings, into: %{} do
-      {binding, assigns[find_assign(mappings, assign)]}
+  def assings_to_bindings_map(bindings, comp_id, assigns) do
+    for {{^comp_id, binding}, assign} <- bindings, into: %{} do
+      {binding, assigns[find_assign(bindings, assign)]}
     end
   end
 
-  def bindings_to_assigns(mappings, comp_id, bindings) do
-    for {binding, value} <- bindings, into: [] do
-      {find_assign(mappings, {comp_id, binding}), value}
+  def bindings_map_to_assigns(bindings, comp_id, bindings_map) do
+    for {binding, value} <- bindings_map, into: [] do
+      {find_assign(bindings, {comp_id, binding}), value}
     end
   end
 
-  defp find_assign(_mappings, assign) when is_atom(assign) do
+  defp find_assign(_bindings, assign) when is_atom(assign) do
     assign
   end
 
-  defp find_assign(mappings, assign) do
-    find_assign(mappings, mappings[assign])
+  defp find_assign(bindings, assign) do
+    find_assign(bindings, bindings[assign])
   end
 end

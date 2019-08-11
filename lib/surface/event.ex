@@ -70,9 +70,9 @@ defmodule Surface.Event do
       |> String.split("_")
       |> Enum.reduce(module, fn id, mod -> mod.__children__()[id] end)
 
-    mappings = module.__bindings_mapping__()
-    bindings = Binding.assings_to_bindings(mappings, comp, socket.assigns)
-    updated_bindings = target_module.handle_event(event, bindings, value)
-    Binding.bindings_to_assigns(mappings, comp, updated_bindings)
+    bindings = module.__bindings__()
+    bindings_map = Binding.assings_to_bindings_map(bindings, comp, socket.assigns)
+    updated_bindings = target_module.handle_event(event, bindings_map, value)
+    Binding.bindings_map_to_assigns(bindings, comp, updated_bindings)
   end
 end

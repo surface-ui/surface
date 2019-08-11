@@ -78,7 +78,7 @@ defmodule Surface.Properties do
           if prop[:binding] do
             # TODO: validate if it's a assign and show proper warning for line `caller.line + line`
             {:attribute_expr, ["@" <> mapped_binding]} = value
-            Module.put_attribute(caller.module, :bindings_mapping, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
+            Module.put_attribute(caller.module, :bindings, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
           end
           render_prop_value(key, value)
         end ++ ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
