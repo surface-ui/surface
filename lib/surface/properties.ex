@@ -16,6 +16,7 @@ defmodule Surface.Properties do
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
     binding = Keyword.get(opts, :binding, false)
+    lazy = Keyword.get(opts, :lazy, false)
 
     quote do
       doc = Module.get_attribute(__MODULE__, :doc)
@@ -27,6 +28,7 @@ defmodule Surface.Properties do
         default: unquote(default),
         required: unquote(required),
         binding: unquote(binding),
+        lazy: unquote(lazy),
         doc: doc
       }
     end
@@ -36,15 +38,15 @@ defmodule Surface.Properties do
     props = Module.get_attribute(env.module, :properties)
     props_names = Enum.map(props, fn prop -> prop.name end)
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
-    bindings = for p <- props, p.type == :binding, do: to_string(p.name)
+    lazy_vars = for p <- props, p.lazy, do: to_string(p.name)
 
     quote do
       def __props() do
         unquote(Macro.escape(props))
       end
 
-      def __bindings__() do
-        unquote(Macro.escape(bindings))
+      def __lazy_vars__() do
+        unquote(Macro.escape(lazy_vars))
       end
 
       def __validate_prop__(prop) do

@@ -9,7 +9,7 @@ defmodule Surface.ComponentRenderer do
 
   def render_code(mod_str, attributes, children_iolist, mod, caller) do
     rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-    bindings = binding_values(mod, attributes)
+    bindings = lazy_values(mod, attributes)
     [
       maybe_add_begin_context(mod, mod_str, rendered_props),
       "<%= Surface.ComponentRenderer.render(", mod_str, ", ", rendered_props, ") do %>",
@@ -75,8 +75,8 @@ defmodule Surface.ComponentRenderer do
     ["<% end %>"]
   end
 
-  defp binding_values(mod, attributes) do
-    for {key, value, _line} <- attributes, key in mod.__bindings__() do
+  defp lazy_values(mod, attributes) do
+    for {key, value, _line} <- attributes, key in mod.__lazy_vars__() do
       value
     end
   end
