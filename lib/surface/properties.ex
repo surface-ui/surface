@@ -72,9 +72,18 @@ defmodule Surface.Properties do
             message = "Invalid property \"#{key}\" for component <#{mod_str}>"
             Surface.IO.warn(message, caller, &(&1 + line))
           end
-          if prop[:type] == :event do
-            Module.put_attribute(caller.module, :event_references, {value, caller.line + line})
-          end
+          value =
+            if prop[:type] == :event do
+              case value do
+                {:attribute_expr, [_expr]} ->
+                  value
+                event ->
+                  Module.put_attribute(caller.module, :event_references, {value, caller.line + line})
+                  {:attribute_expr, ["event(\"#{event}\")"]}
+              end
+            else
+              value
+            end
           if prop[:binding] do
             # TODO: validate if it's a assign and show proper warning for line `caller.line + line`
             {:attribute_expr, ["@" <> mapped_binding]} = value

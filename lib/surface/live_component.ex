@@ -55,4 +55,10 @@ defmodule Surface.LiveComponent do
     |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
     # |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
+
+  defmacro event(event_name) do
+    quote do
+      unquote(event_name)
+    end
+  end
 end
