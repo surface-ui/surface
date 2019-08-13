@@ -1,4 +1,4 @@
-defmodule Surface.Event do
+defmodule Surface.EventValidator do
 
   defmacro __using__(_) do
     quote do

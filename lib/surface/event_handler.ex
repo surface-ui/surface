@@ -1,4 +1,4 @@
-defmodule Surface.LiveEventHandler do
+defmodule Surface.EventHandler do
 
   alias Surface.Binding
 

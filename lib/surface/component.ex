@@ -5,7 +5,7 @@ defmodule Surface.Component do
     quote do
       use Surface.BaseComponent
       use Surface.Binding
-      use Surface.Event
+      use Surface.EventValidator
 
       require Surface.LiveEngine
 
@@ -30,7 +30,6 @@ defmodule Surface.Component do
     string
     |> Translator.translate(line_offset, __CALLER__)
     |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
-    # |> EEx.compile_string(engine: Surface.Engine, line: line_offset, assigns_var: :assigns)
   end
 
   defmacro event(event_name) do
