@@ -5,6 +5,7 @@ defmodule Surface.Component do
     quote do
       use Surface.BaseComponent
       use Surface.Binding
+      use Surface.Event
 
       require Surface.LiveEngine
 

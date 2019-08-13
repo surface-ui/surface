@@ -1,7 +1,5 @@
 defmodule Surface.Event do
 
-  alias Surface.Binding
-
   defmacro __using__(_) do
     quote do
       import Kernel, except: [def: 2]
@@ -9,6 +7,7 @@ defmodule Surface.Event do
       Module.register_attribute __MODULE__, :event_handlers, accumulate: true, persist: false
       Module.register_attribute __MODULE__, :event_references, accumulate: true, persist: false
       @before_compile unquote(__MODULE__)
+      @after_compile unquote(__MODULE__)
     end
   end
 
@@ -31,7 +30,16 @@ defmodule Surface.Event do
         end
       end
 
-    has_handler_defs ++ [has_handler_catch_all_def, quoted_handle_event_fallback()]
+    has_handler_defs ++ [has_handler_catch_all_def]
+  end
+
+  def __after_compile__(env, _) do
+    event_references = Module.get_attribute(env.module, :event_references)
+    for {event, line} <- event_references,
+        !env.module.__has_event_handler?(event) do
+      message = "Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)"
+      Surface.IO.warn(message, env, fn _ -> line end)
+    end
   end
 
   defmacro def(fun_def, opts) do
@@ -52,27 +60,5 @@ defmodule Surface.Event do
       _ ->
         nil
     end
-  end
-
-  defp quoted_handle_event_fallback do
-    quote do
-      def handle_event(<<"__", comp_event :: binary()>>, value, socket) do
-        updated_assigns = handle_component_event(__MODULE__, comp_event, value, socket)
-        {:noreply, assign(socket, updated_assigns)}
-      end
-    end
-  end
-
-  def handle_component_event(module, comp_event, value, socket) do
-    [comp, event] = String.split(comp_event, ":")
-    target_module =
-      comp
-      |> String.split("_")
-      |> Enum.reduce(module, fn id, mod -> mod.__children__()[id] end)
-
-    bindings = module.__bindings__()
-    bindings_map = Binding.assings_to_bindings_map(bindings, comp, socket.assigns)
-    updated_bindings_map = target_module.handle_event(event, bindings_map, value)
-    Binding.bindings_map_to_assigns(bindings, comp, updated_bindings_map)
   end
 end

@@ -7,10 +7,11 @@ defmodule Surface.LiveComponent do
       use Surface.BaseComponent
       use Surface.Binding
       use Surface.Event
+      use Surface.LiveEventHandler
 
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
-      @after_compile unquote(__MODULE__)
+      # @after_compile unquote(__MODULE__)
 
       @impl unquote(__MODULE__)
       def mount(_props, _session, socket), do: {:ok, socket}
@@ -39,14 +40,14 @@ defmodule Surface.LiveComponent do
   @callback mount(props :: map, session :: map, Socket.t()) ::
               {:ok, Socket.t()} | {:stop, Socket.t()}
 
-  def __after_compile__(env, _) do
-    event_references = Module.get_attribute(env.module, :event_references)
-    for {event, line} <- event_references,
-        !env.module.__has_event_handler?(event) do
-      message = "Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)"
-      Surface.IO.warn(message, env, fn _ -> line end)
-    end
-  end
+  # def __after_compile__(env, _) do
+  #   event_references = Module.get_attribute(env.module, :event_references)
+  #   for {event, line} <- event_references,
+  #       !env.module.__has_event_handler?(event) do
+  #     message = "Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)"
+  #     Surface.IO.warn(message, env, fn _ -> line end)
+  #   end
+  # end
 
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     line_offset = __CALLER__.line + 1
