@@ -53,6 +53,12 @@ defmodule Surface.Translator do
 
   defp render_tag_props(props) do
     for {key, value, _line} <- props do
+      value =
+        if key in ["class", :class] do
+          Surface.Properties.handle_custom_value(:css_class, value, nil, nil)
+        else
+          value
+        end
       render_tag_prop_value(key, value)
     end
   end

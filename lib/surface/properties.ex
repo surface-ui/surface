@@ -88,7 +88,7 @@ defmodule Surface.Properties do
     end
   end
 
-  defp handle_custom_value(:event, value, caller, line) do
+  def handle_custom_value(:event, value, caller, line) do
     case value do
       {:attribute_expr, [_expr]} ->
         value
@@ -98,7 +98,20 @@ defmodule Surface.Properties do
     end
   end
 
-  defp handle_custom_value(_type, value, _caller, _line) do
+  def handle_custom_value(:css_class, {:attribute_expr, [expr]}, _caller, _line) do
+    # TODO: Validate expression
+
+    new_expr =
+      case String.trim(expr) do
+        "[" <> _ ->
+          expr
+        _ ->
+          "[#{expr}]"
+    end
+    {:attribute_expr, ["css_class(#{new_expr})"]}
+  end
+
+  def handle_custom_value(_type, value, _caller, _line) do
     value
   end
 
@@ -119,5 +132,30 @@ defmodule Surface.Properties do
   defp generate_component_id() do
     :erlang.unique_integer([:positive, :monotonic])
     |> to_string()
+  end
+
+  def css_class(list) when is_list(list) do
+    Enum.reduce(list, [], fn item, classes ->
+      case item do
+        {class, true} ->
+          [to_kebab_case(class) | classes]
+        class when is_binary(class) or is_atom(class) ->
+          [to_kebab_case(class) | classes]
+        _ ->
+          classes
+      end
+    end) |> Enum.reverse() |> Enum.join(" ")
+  end
+
+  def css_class(value) when is_binary(value) do
+    value
+  end
+
+  # TODO: Replace with a decent implementation
+  defp to_kebab_case(value) do
+    value
+    |> to_string()
+    |> Macro.underscore()
+    |> String.replace("_", "-")
   end
 end
