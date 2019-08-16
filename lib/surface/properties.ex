@@ -76,8 +76,9 @@ defmodule Surface.Properties do
           value = handle_custom_value(prop[:type], value, caller, line)
 
           if prop[:binding] do
+            {:attribute_expr, [expr]} = value
             # TODO: validate if it's a assign and show proper warning for line `caller.line + line`
-            {:attribute_expr, ["@" <> mapped_binding]} = value
+            "@" <> mapped_binding = String.trim(expr)
             Module.put_attribute(caller.module, :bindings, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
           end
           render_prop_value(key, value)
