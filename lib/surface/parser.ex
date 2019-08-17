@@ -16,6 +16,7 @@ defmodule Surface.Parser do
     end
   end
 
+  # TODO: Find a better way to do this
   defp content_expr("{{") do
     "<%="
   end
@@ -25,18 +26,6 @@ defmodule Surface.Parser do
   end
 
   defp content_expr(expr) do
-    expr
-  end
-
-  defp attribute_value_expr("{{") do
-    "\#{"
-  end
-
-  defp attribute_value_expr("}}") do
-    "}"
-  end
-
-  defp attribute_value_expr(expr) do
     expr
   end
 
@@ -51,13 +40,6 @@ defmodule Surface.Parser do
     |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
     |> string("}}")
     |> map(:content_expr)
-    |> reduce({List, :to_string, []})
-
-  expr3 =
-    string("{{")
-    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
-    |> string("}}")
-    |> map(:attribute_value_expr)
     |> reduce({List, :to_string, []})
 
   expr = choice([expr1, expr2])
@@ -106,12 +88,12 @@ defmodule Surface.Parser do
       lookahead_not(ignore(ascii_char([?"])))
       |> choice([
         ~S(\") |> string() |> replace(?"),
-        expr3,
+        attribute_expr,
         utf8_char([])
       ])
     )
     |> ignore(ascii_char([?"]))
-    |> reduce({List, :to_string, []})
+    |> wrap()
 
   attribute =
     tag_name

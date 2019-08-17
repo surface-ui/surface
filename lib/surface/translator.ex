@@ -53,14 +53,31 @@ defmodule Surface.Translator do
 
   defp render_tag_props(props) do
     for {key, value, _line} <- props do
+      value = replace_attribute_expr(value)
+      # IO.inspect({key, value})
       value =
         if key in ["class", :class] do
-          Surface.Properties.handle_custom_value(:css_class, value, nil, nil)
+          Surface.Properties.translate_value(:css_class, value, nil, nil)
         else
           value
         end
       render_tag_prop_value(key, value)
     end
+  end
+
+  defp replace_attribute_expr(value) when is_list(value) do
+    for item <- value do
+      case item do
+        {:attribute_expr, [expr]} ->
+          ["<%= ", expr, " %>"]
+        _ ->
+          item
+      end
+    end
+  end
+
+  defp replace_attribute_expr(value) do
+    value
   end
 
   defp validate_required_props(props, mod, mod_str, caller, line) do

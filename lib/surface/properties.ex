@@ -62,7 +62,9 @@ defmodule Surface.Properties do
   def render_props(props, mod, mod_str, caller) do
     if function_exported?(mod, :__props, 0) do
       component_id = generate_component_id()
-      Module.put_attribute(caller.module, :children, {component_id, mod})
+      if Module.open?(caller.module) do
+        Module.put_attribute(caller.module, :children, {component_id, mod})
+      end
 
       props =
         for {key, value, line} <- props do
@@ -73,7 +75,7 @@ defmodule Surface.Properties do
             Surface.IO.warn(message, caller, &(&1 + line))
           end
 
-          value = handle_custom_value(prop[:type], value, caller, line)
+          value = translate_value(prop[:type], value, caller, line)
 
           if prop[:binding] do
             {:attribute_expr, [expr]} = value
@@ -82,24 +84,28 @@ defmodule Surface.Properties do
             Module.put_attribute(caller.module, :bindings, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
           end
           render_prop_value(key, value)
-        end ++ ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
-      ["%{", Enum.join(props, ", "), "}"]
+        end
+        extra_props = ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
+      ["%{", Enum.join(props ++ extra_props, ", "), "}"]
     else
       "%{}"
     end
   end
 
-  def handle_custom_value(:event, value, caller, line) do
+  def translate_value(:event, value, caller, line) do
     case value do
       {:attribute_expr, [_expr]} ->
         value
       event ->
-        Module.put_attribute(caller.module, :event_references, {value, caller.line + line})
-        {:attribute_expr, ["event(\"#{event}\")"]}
+        event_str = to_string(event)
+        if Module.open?(caller.module) do
+          Module.put_attribute(caller.module, :event_references, {event_str, caller.line + line})
+        end
+        {:attribute_expr, ["event(\"#{event_str}\")"]}
     end
   end
 
-  def handle_custom_value(:css_class, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:css_class, {:attribute_expr, [expr]}, _caller, _line) do
     # TODO: Validate expression
 
     new_expr =
@@ -112,7 +118,18 @@ defmodule Surface.Properties do
     {:attribute_expr, ["css_class(#{new_expr})"]}
   end
 
-  def handle_custom_value(_type, value, _caller, _line) do
+  def translate_value(_type, value, _caller, _line) when is_list(value) do
+    for item <- value do
+      case item do
+        {:attribute_expr, [expr]} ->
+          ["\#{", expr, "}"]
+        _ ->
+          item
+      end
+    end
+  end
+
+  def translate_value(_type, value, _caller, _line) do
     value
   end
 
