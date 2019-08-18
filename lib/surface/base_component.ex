@@ -38,6 +38,11 @@ defmodule Surface.BaseComponent do
     %LazyContent{func: func}
   end
 
+  def lazy_render(content) do
+    [%LazyContent{func: render}] = non_empty_children(content)
+    render
+  end
+
   def non_empty_children([]) do
     []
   end
