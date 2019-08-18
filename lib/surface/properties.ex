@@ -8,7 +8,7 @@ defmodule Surface.Properties do
     end
   end
 
-  defmacro property(name, type, opts \\ []) do
+  defmacro property({name, _, _}, type, opts \\ []) do
     property_ast(name, type, opts)
   end
 

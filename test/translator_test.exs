@@ -4,9 +4,9 @@ defmodule TranslatorTest do
   defmodule Button do
     use Surface.Component
 
-    property :label, :string, default: ""
-    property :click, :event
-    property :class, :css_class
+    property label, :string, default: ""
+    property click, :event
+    property class, :css_class
 
     def render(assigns) do
       ~H"""

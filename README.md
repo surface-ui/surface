@@ -1,6 +1,8 @@
 # Surface
 
-**TODO: Add description**
+## *** Proof of Concept ***
+
+A component based library for Phoenix
 
 ## Installation
 
