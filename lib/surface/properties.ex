@@ -71,7 +71,7 @@ defmodule Surface.Properties do
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
           if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
-            message = "Invalid property \"#{key}\" for component <#{mod_str}>"
+            message = "Unknown property \"#{key}\" for component <#{mod_str}>"
             Surface.IO.warn(message, caller, &(&1 + line))
           end
 
