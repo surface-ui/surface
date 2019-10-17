@@ -17,7 +17,7 @@ defmodule TranslatorTest do
 
   test "tag with expression" do
     code = """
-      <div label={{ @label }}/>
+    <div label={{ @label }}/>
     """
 
     translated = Surface.Translator.translate(code, 0, __ENV__)
@@ -28,7 +28,7 @@ defmodule TranslatorTest do
 
   test "tag with expressions inside a string" do
     code = """
-      <div label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"/>
+    <div label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"/>
     """
 
     translated = Surface.Translator.translate(code, 0, __ENV__)
@@ -39,7 +39,7 @@ defmodule TranslatorTest do
 
   test "tag with css_class property as string" do
     code = """
-      <div class="firstClass"/>
+    <div class="firstClass"/>
     """
 
     translated = Surface.Translator.translate(code, 0, __ENV__)
@@ -50,7 +50,7 @@ defmodule TranslatorTest do
 
   test "tag with css_class property as keyword list" do
     code = """
-      <div class={{ "firstClass", secondClass: var }}/>
+    <div class={{ "firstClass", secondClass: var }}/>
     """
 
     translated = Surface.Translator.translate(code, 0, __ENV__)
@@ -61,7 +61,7 @@ defmodule TranslatorTest do
 
   test "component with expression" do
     code = """
-      <Button label={{ @label }}/>
+    <Button label={{ @label }}/>
     """
     translated = Surface.Translator.translate(code, 0, __ENV__)
 
@@ -72,7 +72,7 @@ defmodule TranslatorTest do
 
   test "component with expressions inside a string" do
     code = """
-      <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />
+    <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />
     """
     translated = Surface.Translator.translate(code, 0, __ENV__)
 
@@ -83,7 +83,7 @@ defmodule TranslatorTest do
 
   test "component with events" do
     code = """
-      <Button click="click_event" />
+    <Button click="click_event" />
     """
     translated = Surface.Translator.translate(code, 0, __ENV__)
 
