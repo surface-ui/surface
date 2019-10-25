@@ -18,10 +18,7 @@ defmodule Surface.LiveComponent do
       defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
         to: Surface.LiveComponentRenderer
 
-      import Phoenix.LiveView
-      @behaviour Phoenix.LiveView
-
-      require Surface.LiveEngine
+      use Phoenix.LiveView
 
       @impl Phoenix.LiveView
       def mount(session, socket) do
@@ -43,7 +40,7 @@ defmodule Surface.LiveComponent do
     line_offset = __CALLER__.line + 1
     string
     |> Translator.translate(line_offset, __CALLER__)
-    |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
+    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 
   defmacro event(event_name) do

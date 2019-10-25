@@ -16,4 +16,3 @@ defmodule HtmlTagTest do
     """
   end
 end
-

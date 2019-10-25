@@ -22,7 +22,7 @@ defmodule Surface.MixProject do
   defp deps do
     [
       {:nimble_parsec, "~> 0.5.0"},
-      {:phoenix, "~> 1.4.3"},
+      {:phoenix, "~> 1.4.9"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.0"},

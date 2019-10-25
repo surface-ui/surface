@@ -7,8 +7,6 @@ defmodule Surface.Component do
       use Surface.Binding
       use Surface.EventValidator
 
-      require Surface.LiveEngine
-
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
 
@@ -29,7 +27,7 @@ defmodule Surface.Component do
     line_offset = __CALLER__.line + 1
     string
     |> Translator.translate(line_offset, __CALLER__)
-    |> EEx.compile_string(engine: Surface.LiveEngine, line: line_offset)
+    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 
   defmacro event(event_name) do
