@@ -1,4 +1,4 @@
-defmodule Surface.LiveComponent do
+defmodule Surface.LiveView do
 
   alias Surface.Translator
 
@@ -16,7 +16,7 @@ defmodule Surface.LiveComponent do
       def mount(_props, _session, socket), do: {:ok, socket}
 
       defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
-        to: Surface.LiveComponentRenderer
+        to: Surface.LiveViewRenderer
 
       use Phoenix.LiveView
 

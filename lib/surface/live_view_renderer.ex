@@ -1,9 +1,9 @@
-defmodule Surface.LiveComponentRenderer do
+defmodule Surface.LiveViewRenderer do
   alias Surface.Properties
 
   def render_code(mod_str, attributes, [], mod, caller) do
     rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-    ["<%= ", "Surface.LiveComponentRenderer.render(@socket, ", mod_str, ", session: %{props: ", rendered_props, "})", " %>"]
+    ["<%= ", "Surface.LiveViewRenderer.render(@socket, ", mod_str, ", session: %{props: ", rendered_props, "})", " %>"]
   end
 
   def render(socket, module, opts) do
