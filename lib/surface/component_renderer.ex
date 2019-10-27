@@ -1,7 +1,7 @@
 # TODO: Rename to `Surface.ComponentTranslator`
 defmodule Surface.ComponentRenderer do
-  alias Surface.BaseComponent.DataContent
   alias Surface.Properties
+  alias Surface.BaseComponent.DataContent
 
   # TODO: Rename to `translate`
   def render_code(mod_str, attributes, [], mod, caller) do

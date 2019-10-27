@@ -7,6 +7,22 @@ defmodule ComponentTestHelper do
     |> IO.iodata_to_binary()
     |> String.replace(~r/\n+/, "\n")
   end
+
+  def normalize_html(html) do
+    html
+    |> String.split("\n")
+    |> Enum.map(&String.trim(&1))
+    |> Enum.join("")
+  end
+
+  defmacro assert_html({op, meta, [lhs, rhs]}) do
+    new_lhs = quote do: normalize_html(unquote(lhs))
+    new_rhs = quote do: normalize_html(unquote(rhs))
+
+    quote do
+      assert unquote({op, meta, [new_lhs, new_rhs]})
+    end
+  end
 end
 
 Application.put_env(:surface, Endpoint, [
