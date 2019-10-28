@@ -27,26 +27,21 @@ defmodule LiveComponentLazyTest do
     property items, :list, required: true
 
     def render(assigns) do
+      # TODO: Do this before calling `render` and put it in the assigns
       cols = children_by_type(assigns.content, Column)
 
       ~H"""
       <table>
-        <th>
-          <%= for col <- cols do %>
-            <td>
-              {{ col.title }}
-            </td>
-          <% end %>
-        </th>
-        <%= for item <- @items do %>
-          <tr>
-            <%= for col <- cols do %>
-              <td>
-                {{ col.inner_content.(item: item) }}
-              </td>
-            <% end %>
-          </tr>
-        <% end %>
+        <tr>
+          <th :for={{ col <- cols }}>
+            {{ col.title }}
+          </th>
+        </tr>
+        <tr :for={{ item <- @items }}>
+          <td :for={{ col <- cols }}>
+            {{ col.inner_content.(item: item) }}
+          </td>
+        </tr>
       </table>
       """
     end
@@ -75,10 +70,10 @@ defmodule LiveComponentLazyTest do
 
     assert_html html =~ """
     <table>
-      <th>
-        <td>ID</td>
-        <td>NAME</td>
-      </th>
+      <tr>
+        <th>ID</th>
+        <th>NAME</th>
+      </tr>
       <tr>
         <td>Id: 1</td>
         <td>Name: First</td>

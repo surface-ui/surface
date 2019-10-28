@@ -59,6 +59,8 @@ defmodule Surface.Parser do
 
   tag_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_], min: 1)
 
+  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:], min: 1)
+
   text =
     utf8_char(not: ?<)
     |> repeat(
@@ -96,7 +98,7 @@ defmodule Surface.Parser do
     |> wrap()
 
   attribute =
-    tag_name
+    attr_name
     |> concat(whitespace)
     |> optional(
       choice([

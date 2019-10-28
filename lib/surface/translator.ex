@@ -1,4 +1,7 @@
 defmodule Surface.Translator do
+  alias Surface.Directive
+
+  @directives [":for"]
 
   def translate(string, line_offset, caller) do
     string
@@ -22,7 +25,7 @@ defmodule Surface.Translator do
     case validate_module(mod_str, caller) do
       {:ok, mod} ->
         validate_required_props(attributes, mod, mod_str, caller, line)
-        # validate_children(mod, children)
+        # TODO: validate_children(mod, children)
         mod.render_code(mod_str, attributes, to_iolist(children, caller), mod, caller)
         |> debug(attributes, line, caller)
 
@@ -39,10 +42,13 @@ defmodule Surface.Translator do
   end
 
   def to_iolist({tag_name, attributes, children, line}, caller) when is_binary(tag_name) do
+    {directives, attributes} = pop_directives(attributes)
     [
+      maybe_add_directives_begin(directives),
       ["<", tag_name, render_tag_props(attributes), ">"],
       to_iolist(children, caller),
-      ["</", tag_name, ">"]
+      ["</", tag_name, ">"],
+      maybe_add_directives_end(directives)
     ] |> debug(attributes, line, caller)
   end
 
@@ -103,6 +109,18 @@ defmodule Surface.Translator do
     end
   end
 
+  defp maybe_add_directives_begin(attributes) do
+    for attr <- attributes, code = Directive.code_begin(attr), code != [] do
+      code
+    end
+  end
+
+  defp maybe_add_directives_end(attributes) do
+    for attr <- attributes, code = Directive.code_end(attr), code != [] do
+      code
+    end
+  end
+
   defp actual_module(mod_str, env) do
     {:ok, ast} = Code.string_to_quoted(mod_str)
     Macro.expand(ast, env)
@@ -136,4 +154,7 @@ defmodule Surface.Translator do
     ["<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
   end
 
+  def pop_directives(attributes) do
+    Enum.split_with(attributes, fn {attr, _, _} -> attr in @directives end)
+  end
 end
