@@ -1,5 +1,4 @@
-# TODO: Rename to `Surface.ComponentTranslator`
-defmodule Surface.ComponentRenderer do
+defmodule Surface.DataComponentRenderer do
   alias Surface.Properties
   alias Surface.BaseComponent.DataContent
   alias Surface.BaseComponent.LazyContent
@@ -7,15 +6,15 @@ defmodule Surface.ComponentRenderer do
   # TODO: Rename to `translate`
   def render_code(mod_str, attributes, [], mod, caller) do
     rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-    ["<%= Surface.ComponentRenderer.render(", mod_str, ", ", rendered_props, ") %>"]
+    ["<%= Surface.DataComponentRenderer.render(", mod_str, ", ", rendered_props, ") %>"]
   end
 
   def render_code(mod_str, attributes, children_iolist, mod, caller) do
     rendered_props = Properties.render_props(attributes, mod, mod_str, caller)
-    bindings = lazy_values(mod, attributes)
+    bindings = mod.bindings()
     [
       maybe_add_begin_context(mod, mod_str, rendered_props),
-      "<%= Surface.ComponentRenderer.render(", mod_str, ", ", rendered_props, ") do %>",
+      "<%= Surface.DataComponentRenderer.render(", mod_str, ", ", rendered_props, ") do %>",
       maybe_add_begin_lazy_content(bindings),
       children_iolist,
       maybe_add_end_lazy_content(bindings),
@@ -38,17 +37,16 @@ defmodule Surface.ComponentRenderer do
       |> Map.put(:content, content)
       |> put_default_props(module)
 
-    case module.render(props) do
-      {:data, data} ->
-        case data do
-          %{content: {:safe, [%LazyContent{func: func}]}} ->
-            %DataContent{data: Map.put(data, :inner_content, func), component: module}
-          _ ->
-            %DataContent{data: data, component: module}
-        end
-      result ->
-        result
-    end
+    {:ok, data} = module.init(props)
+
+    assigns =
+      case data do
+        %{content: {:safe, [%LazyContent{func: func}]}} ->
+          Map.put(data, :inner_content, func)
+        data ->
+            data
+      end
+    %DataContent{data: assigns, component: module}
   end
 
   defp maybe_add_begin_context(mod, mod_str, rendered_props) do
@@ -72,7 +70,11 @@ defmodule Surface.ComponentRenderer do
   end
 
   defp maybe_add_begin_lazy_content(bindings) do
-    ["<%= lazy fn ", Enum.join(bindings, ", "), " -> %>"]
+    args =
+      for binding <- bindings, name = to_string(binding) do
+        [name, ": ", name]
+      end
+    ["<%= lazy fn ", Enum.join(args, ", "), " -> %>"]
   end
 
   defp maybe_add_end_lazy_content([]) do
@@ -81,12 +83,6 @@ defmodule Surface.ComponentRenderer do
 
   defp maybe_add_end_lazy_content(_bindings) do
     ["<% end %>"]
-  end
-
-  defp lazy_values(mod, attributes) do
-    for {key, value, _line} <- attributes, key in mod.__lazy_vars__() do
-      value
-    end
   end
 
   defp put_default_props(props, mod) do

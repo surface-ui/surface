@@ -12,16 +12,12 @@ defmodule LiveComponentLazyTest do
   end
 
   defmodule Column do
-    use Surface.Component
-
-    alias Surface.BaseComponent.LazyContent
+    use Surface.DataComponent
 
     property title, :string, required: true
-    property item, :any, lazy: true, required: true
 
-    def render(assigns) do
-      [%LazyContent{func: func}] = non_empty_children(assigns.content)
-      {:data, Map.put(assigns, :func, func)}
+    def bindings do
+      [:item]
     end
   end
 
@@ -46,7 +42,7 @@ defmodule LiveComponentLazyTest do
           <tr>
             <%= for col <- cols do %>
               <td>
-                {{ col.func.(item) }}
+                {{ col.inner_content.(item: item) }}
               </td>
             <% end %>
           </tr>
@@ -63,10 +59,10 @@ defmodule LiveComponentLazyTest do
       items = [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]
       ~H"""
       <Grid items={{ items }}>
-        <Column item="item" title="ID">
+        <Column title="ID">
           Id: {{ item.id }}
         </Column>
-        <Column item="item" title="NAME">
+        <Column title="NAME">
           Name: {{ item.name }}
         </Column>
       </Grid>
