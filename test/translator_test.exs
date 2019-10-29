@@ -20,7 +20,7 @@ defmodule TranslatorTest do
     <div label={{ @label }}/>
     """
 
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
     <div label="<%= @label %>"/>
     """
@@ -31,7 +31,7 @@ defmodule TranslatorTest do
     <div label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"/>
     """
 
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
     <div label="str_1 <%= @str_2 %> str_3 <%= @str_4 <> @str_5 %>"/>
     """
@@ -42,7 +42,7 @@ defmodule TranslatorTest do
     <div class="firstClass"/>
     """
 
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
     <div class="firstClass"/>
     """
@@ -53,7 +53,7 @@ defmodule TranslatorTest do
     <div class={{ "firstClass", secondClass: var }}/>
     """
 
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
     <div class="<%= css_class([ "firstClass", secondClass: var ]) %>"/>
     """
@@ -63,7 +63,7 @@ defmodule TranslatorTest do
     code = """
     <Button label={{ @label }}/>
     """
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
     Surface.ComponentRenderer.render(Button, %{label: (@label),\
@@ -74,7 +74,7 @@ defmodule TranslatorTest do
     code = """
     <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />
     """
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
     Surface.ComponentRenderer.render(Button, %{label: "str_1 \#{@str_2} str_3 \#{@str_4 <> @str_5}",\
@@ -85,7 +85,7 @@ defmodule TranslatorTest do
     code = """
     <Button click="click_event" />
     """
-    translated = Surface.Translator.translate(code, 0, __ENV__)
+    translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
     Surface.ComponentRenderer.render(Button, %{click: (event("click_event")),\

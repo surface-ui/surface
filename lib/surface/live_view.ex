@@ -39,7 +39,7 @@ defmodule Surface.LiveView do
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     line_offset = __CALLER__.line + 1
     string
-    |> Translator.translate(line_offset, __CALLER__)
+    |> Translator.run(line_offset, __CALLER__)
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 

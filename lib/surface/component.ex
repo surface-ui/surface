@@ -11,7 +11,7 @@ defmodule Surface.Component do
       @behaviour unquote(__MODULE__)
 
       defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
-        to: Surface.ComponentRenderer
+        to: Surface.ComponentTranslator
 
       defoverridable render_code: 5
     end
@@ -26,7 +26,7 @@ defmodule Surface.Component do
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     line_offset = __CALLER__.line + 1
     string
-    |> Translator.translate(line_offset, __CALLER__)
+    |> Translator.run(line_offset, __CALLER__)
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 

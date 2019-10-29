@@ -1,5 +1,6 @@
 defmodule Surface.Parser do
   import NimbleParsec
+  alias Surface.{TagNode, ComponentNode}
 
   defmodule ParseError do
     defexception string: "", line: 0, col: 0, message: "error parsing HTML"
@@ -171,12 +172,14 @@ defmodule Surface.Parser do
               {key, value, line}
           end)
 
-        children =
-          args
-          |> Keyword.get_values(:child)
-          |> Enum.reverse()
+        children = (args[:child] || [])
 
-        {[{tag, attributes, children, line}], context}
+        case tag do
+          <<first, _::binary>> when first in ?A..?Z ->
+            {[%ComponentNode{name: tag, attributes: attributes, children: children, line: line}], context}
+          _ ->
+            {[%TagNode{name: tag, attributes: attributes, children: children, line: line}], context}
+        end
 
       true ->
         {:error, "Closing tag #{closing_tag} did not match opening tag #{opening_tag}"}
