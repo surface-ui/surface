@@ -74,7 +74,7 @@ defmodule Surface.Properties do
           prop = mod.__get_prop__(key_atom)
           if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
             message = "Unknown property \"#{key}\" for component <#{mod_str}>"
-            Surface.IO.warn(message, caller, &(&1 + line))
+            Surface.Translator.IO.warn(message, caller, &(&1 + line))
           end
 
           value = translate_value(prop[:type], value, caller, line)

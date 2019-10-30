@@ -3,7 +3,6 @@ defmodule DataComponentTest do
   import ComponentTestHelper
   import Surface.Component
   import Surface.BaseComponent
-  require Surface.LiveEngine
 
   defmodule Outer do
     use Surface.Component

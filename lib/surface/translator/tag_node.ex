@@ -1,6 +1,6 @@
-defmodule Surface.TagNode do
+defmodule Surface.Translator.TagNode do
   import Surface.Translator
-  alias Surface.NodeTranslator
+  alias Surface.Translator.NodeTranslator
 
   defstruct [:name, :attributes, :children, :line]
 

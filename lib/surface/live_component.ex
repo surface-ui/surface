@@ -13,7 +13,7 @@ defmodule Surface.LiveComponent do
 
       def render_code(mod_str, attributes, children, mod, caller) do
         opts = [renderer: Surface.LiveComponentRenderer, pass_socket: true]
-        Surface.DefaultComponentTranslator.translate(mod_str, attributes, children, mod, caller, opts)
+        Surface.Translator.DefaultComponentTranslator.translate(mod_str, attributes, children, mod, caller, opts)
       end
 
       defoverridable render_code: 5

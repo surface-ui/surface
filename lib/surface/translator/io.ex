@@ -1,4 +1,4 @@
-defmodule Surface.IO do
+defmodule Surface.Translator.IO do
   def warn(message, caller, update_line_fun) do
     stacktrace =
       Macro.Env.stacktrace(caller)

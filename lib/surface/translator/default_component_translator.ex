@@ -1,6 +1,6 @@
-defmodule Surface.DefaultComponentTranslator do
+defmodule Surface.Translator.DefaultComponentTranslator do
   alias Surface.Properties
-  alias Surface.NodeTranslator
+  alias Surface.Translator.NodeTranslator
 
   import Surface.Translator
 

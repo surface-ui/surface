@@ -12,7 +12,7 @@ defmodule Surface.Component do
 
       def render_code(mod_str, attributes, children, mod, caller) do
         opts = [renderer: Surface.ComponentRenderer, pass_socket: false]
-        Surface.DefaultComponentTranslator.translate(mod_str, attributes, children, mod, caller, opts)
+        Surface.Translator.DefaultComponentTranslator.translate(mod_str, attributes, children, mod, caller, opts)
       end
 
       defoverridable render_code: 5

@@ -1,6 +1,6 @@
-defmodule Surface.Parser do
+defmodule Surface.Translator.Parser do
   import NimbleParsec
-  alias Surface.{TagNode, ComponentNode}
+  alias Surface.Translator.{TagNode, ComponentNode}
 
   defmodule ParseError do
     defexception string: "", line: 0, col: 0, message: "error parsing HTML"

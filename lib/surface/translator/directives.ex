@@ -1,4 +1,4 @@
-defmodule Surface.Directive do
+defmodule Surface.Translator.Directive do
   def code_begin({":for", {:attribute_expr, [expr]}, _line}) do
     ["<%= for ", String.trim(expr), " do %>"]
   end

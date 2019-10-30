@@ -1,13 +1,13 @@
 defmodule Surface.Translator do
-  alias Surface.Directive
+  alias Surface.Translator.{Parser, Directive, NodeTranslator}
 
   @directives [":for"]
 
   def run(string, line_offset, caller) do
     string
-    |> Surface.Parser.parse(line_offset)
+    |> Parser.parse(line_offset)
     |> prepend_context()
-    |> Surface.NodeTranslator.translate(caller)
+    |> NodeTranslator.translate(caller)
     |> IO.iodata_to_binary()
   end
 

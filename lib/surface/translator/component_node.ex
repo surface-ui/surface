@@ -1,6 +1,6 @@
-defmodule Surface.ComponentNode do
+defmodule Surface.Translator.ComponentNode do
   import Surface.Translator
-  alias Surface.NodeTranslator
+  alias Surface.Translator.NodeTranslator
 
   defstruct [:name, :attributes, :children, :line]
 
@@ -14,7 +14,7 @@ defmodule Surface.ComponentNode do
           |> debug(attributes, line, caller)
 
         {:error, message} ->
-          Surface.IO.warn(message, caller, &(&1 + line))
+          Surface.Translator.IO.warn(message, caller, &(&1 + line))
           render_error(message)
           |> debug(attributes, line, caller)
       end
@@ -45,7 +45,7 @@ defmodule Surface.ComponentNode do
 
         for prop <- missing_props do
           message = "Missing required property \"#{prop}\" for component <#{mod_str}>"
-          Surface.IO.warn(message, caller, &(&1 + line))
+          Surface.Translator.IO.warn(message, caller, &(&1 + line))
         end
       end
     end

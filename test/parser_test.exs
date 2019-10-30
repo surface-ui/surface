@@ -1,10 +1,10 @@
 defmodule ParserTest do
   use ExUnit.Case
-  alias Surface.{TagNode, ComponentNode}
+  alias Surface.Translator.{Parser, TagNode, ComponentNode}
 
   test "parse html tag" do
     code = ~S(<span label="My label 1" />)
-    [node] = Surface.Parser.parse(code, 1)
+    [node] = Parser.parse(code, 1)
 
     assert node == %TagNode{name: "span", attributes: [{"label", 'My label 1', 1}], children: [], line: 1}
   end
@@ -12,7 +12,7 @@ defmodule ParserTest do
   test "parse html tag with children" do
     code = ~S(<div><span/><span/></div>)
 
-    tree = Surface.Parser.parse(code, 1)
+    tree = Parser.parse(code, 1)
 
     assert tree == [
       %TagNode{name: "div", line: 1, attributes: [], children: [
@@ -24,7 +24,7 @@ defmodule ParserTest do
 
   test "parse component" do
     code = ~S(<MyComponent label="My label"/>)
-    [node] = Surface.Parser.parse(code, 1)
+    [node] = Parser.parse(code, 1)
 
     assert node == %ComponentNode{
       name: "MyComponent",
@@ -36,7 +36,7 @@ defmodule ParserTest do
 
   test "parse component with children" do
     code = ~S(<MyComponent><span /><span /></MyComponent>)
-    [node] = Surface.Parser.parse(code, 1)
+    [node] = Parser.parse(code, 1)
 
     assert node == %ComponentNode{
       name: "MyComponent",
@@ -57,7 +57,7 @@ defmodule ParserTest do
     </div>
     """
 
-    tree = Surface.Parser.parse(code, 1)
+    tree = Parser.parse(code, 1)
 
     assert tree == [
       %TagNode{name: "div", line: 1, attributes: [], children: [

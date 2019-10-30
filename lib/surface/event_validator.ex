@@ -38,7 +38,7 @@ defmodule Surface.EventValidator do
     for {event, line} <- event_references,
         !env.module.__has_event_handler?(event) do
       message = "Unhandled event \"#{event}\" (module #{inspect(env.module)} does not implement a matching handle_message/2)"
-      Surface.IO.warn(message, env, fn _ -> line end)
+      Surface.Translator.IO.warn(message, env, fn _ -> line end)
     end
   end
 
