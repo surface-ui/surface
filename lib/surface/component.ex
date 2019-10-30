@@ -10,8 +10,10 @@ defmodule Surface.Component do
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
 
-      defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
-        to: Surface.ComponentTranslator
+      def render_code(mod_str, attributes, children, mod, caller) do
+        opts = [renderer: Surface.ComponentRenderer, pass_socket: false]
+        Surface.DefaultComponentTranslator.translate(mod_str, attributes, children, mod, caller, opts)
+      end
 
       defoverridable render_code: 5
     end
