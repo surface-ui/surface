@@ -15,8 +15,9 @@ defmodule Surface.Properties do
   defp property_ast(name, type, opts) do
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
-    binding = Keyword.get(opts, :binding, false)
-    lazy = Keyword.get(opts, :lazy, false)
+    group = Keyword.get(opts, :group)
+    binding = Keyword.get(opts, :binding)
+    use_bindings = Keyword.get(opts, :use_bindings, [])
 
     quote do
       doc = Module.get_attribute(__MODULE__, :doc)
@@ -27,26 +28,23 @@ defmodule Surface.Properties do
         type: unquote(type),
         default: unquote(default),
         required: unquote(required),
+        group: unquote(group),
         binding: unquote(binding),
-        lazy: unquote(lazy),
+        use_bindings: unquote(use_bindings),
         doc: doc
       }
     end
   end
 
   defmacro __before_compile__(env) do
+    buildin_props = [:debug, :inner_content]
     props = Module.get_attribute(env.module, :properties)
-    props_names = Enum.map(props, fn prop -> prop.name end)
+    props_names = Enum.map(props, fn prop -> prop.name end) ++ buildin_props
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
-    lazy_vars = for p <- props, p.lazy, do: to_string(p.name)
 
     quote do
       def __props() do
         unquote(Macro.escape(props))
-      end
-
-      def __lazy_vars__() do
-        unquote(Macro.escape(lazy_vars))
       end
 
       def __validate_prop__(prop) do
@@ -59,9 +57,9 @@ defmodule Surface.Properties do
     end
   end
 
-  # TODO: Rename to `translate_props` or `translate_attrs`. Also see if
-  # it's better to move this to a new PropertyTranslator (or AttributeTranslator)
-  def render_props(props, mod, mod_str, caller) do
+  # TODO: Rename to `translate_attributes`. Also see if it's better
+  # to move this to a new PropertyTranslator (or AttributeTranslator)
+  def render_props(props, mod, mod_str, caller, add_context \\ true) do
     if function_exported?(mod, :__props, 0) do
       component_id = generate_component_id()
       if Module.open?(caller.module) do
@@ -78,16 +76,14 @@ defmodule Surface.Properties do
           end
 
           value = translate_value(prop[:type], value, caller, line)
-
-          if prop[:binding] do
-            {:attribute_expr, [expr]} = value
-            # TODO: validate if it's a assign and show proper warning for line `caller.line + line`
-            "@" <> mapped_binding = String.trim(expr)
-            Module.put_attribute(caller.module, :bindings, {{component_id, key_atom}, String.to_existing_atom(mapped_binding)})
-          end
           render_prop_value(key, value)
         end
-        extra_props = ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
+
+        extra_props = if add_context do
+          ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
+        else
+          []
+        end
       ["%{", Enum.join(props ++ extra_props, ", "), "}"]
     else
       "%{}"
@@ -99,12 +95,23 @@ defmodule Surface.Properties do
       {:attribute_expr, [_expr]} ->
         value
       event ->
-        event_str = to_string(event)
         if Module.open?(caller.module) do
-          Module.put_attribute(caller.module, :event_references, {event_str, caller.line + line})
+          event_reference = {to_string(event), caller.line + line}
+          Module.put_attribute(caller.module, :event_references, event_reference)
         end
-        {:attribute_expr, ["event(\"#{event_str}\")"]}
+        event
     end
+  end
+
+  def translate_value(:list, {:attribute_expr, [expr]}, _caller, _line) do
+    value =
+      case String.split(expr, "<-") do
+        [_lhs, value] ->
+          value
+        [value] ->
+          value
+      end
+    {:attribute_expr, [value]}
   end
 
   def translate_value(:css_class, {:attribute_expr, [expr]}, _caller, _line) do
@@ -133,6 +140,12 @@ defmodule Surface.Properties do
 
   def translate_value(_type, value, _caller, _line) do
     value
+  end
+
+  def put_default_props(props, mod) do
+    Enum.reduce(mod.__props(), props, fn %{name: name, default: default}, acc ->
+      Map.put_new(acc, name, default)
+    end)
   end
 
   defp render_prop_value(key, value) do

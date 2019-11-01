@@ -2,12 +2,12 @@ defmodule Surface.Translator.ComponentNode do
   import Surface.Translator
   alias Surface.Translator.NodeTranslator
 
-  defstruct [:name, :attributes, :children, :line]
+  defstruct [:name, :attributes, :children, :line, :module]
 
   defimpl NodeTranslator do
     def translate(node, caller) do
-      %{name: mod_str, attributes: attributes, children: children, line: line} = node
-      case validate_module(mod_str, caller) do
+      %{name: mod_str, attributes: attributes, children: children, line: line, module: mod} = node
+      case validate_module(mod_str, mod) do
         {:ok, mod} ->
           validate_required_props(attributes, mod, mod_str, caller, line)
           mod.render_code(mod_str, attributes, children, mod, caller)
@@ -20,21 +20,16 @@ defmodule Surface.Translator.ComponentNode do
       end
     end
 
-    defp validate_module(mod_str, caller) do
-      mod = actual_module(mod_str, caller)
+    defp validate_module(name, mod) do
       cond do
-        !Code.ensure_compiled?(mod) ->
-          {:error, "Cannot render <#{mod_str}> (module #{mod_str} is not available)"}
-        !function_exported?(mod, :render_code, 5) ->
-          {:error, "Cannot render <#{mod_str}> (module #{mod_str} is not a component"}
+        mod == nil ->
+          {:error, "Cannot render <#{name}> (module #{name} is not available)"}
+        # TODO: Fix this so it does not depend on the existence of a function
+        !function_exported?(mod, :render_code, 5) && !function_exported?(mod, :data, 1) ->
+          {:error, "Cannot render <#{name}> (module #{name} is not a component"}
         true ->
           {:ok, mod}
       end
-    end
-
-    defp actual_module(mod_str, env) do
-      {:ok, ast} = Code.string_to_quoted(mod_str)
-      Macro.expand(ast, env)
     end
 
     defp validate_required_props(props, mod, mod_str, caller, line) do

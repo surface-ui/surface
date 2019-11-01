@@ -5,9 +5,7 @@ defmodule Surface.LiveView do
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent
-      use Surface.Binding
       use Surface.EventValidator
-      use Surface.EventHandler
 
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
@@ -41,11 +39,5 @@ defmodule Surface.LiveView do
     string
     |> Translator.run(line_offset, __CALLER__)
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
-  end
-
-  defmacro event(event_name) do
-    quote do
-      unquote(event_name)
-    end
   end
 end

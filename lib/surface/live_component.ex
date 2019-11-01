@@ -5,14 +5,13 @@ defmodule Surface.LiveComponent do
     quote do
       use Phoenix.LiveComponent
       use Surface.BaseComponent
-      use Surface.Binding
       use Surface.EventValidator
 
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
 
       def render_code(mod_str, attributes, children, mod, caller) do
-        opts = [renderer: Surface.LiveComponentRenderer, pass_socket: true]
+        opts = [renderer: "live_component", pass_socket: true, assigns_as_keyword: true]
         Surface.Translator.DefaultComponentTranslator.translate(mod_str, attributes, children, mod, caller, opts)
       end
 
@@ -30,11 +29,5 @@ defmodule Surface.LiveComponent do
     string
     |> Translator.run(line_offset, __CALLER__)
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
-  end
-
-  defmacro event(event_name) do
-    quote do
-      "__" <> Map.get(var!(assigns), :__component_id) <> ":" <> to_string(unquote(event_name))
-    end
   end
 end

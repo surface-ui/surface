@@ -13,7 +13,6 @@ defmodule Surface.ComponentRenderer do
     props =
       props
       |> Map.put(:content, content)
-      |> put_default_props(module)
 
     case module.render(props) do
       {:data, data} ->
@@ -26,11 +25,5 @@ defmodule Surface.ComponentRenderer do
       result ->
         result
     end
-  end
-
-  defp put_default_props(props, mod) do
-    Enum.reduce(mod.__props(), props, fn %{name: name, default: default}, acc ->
-      Map.put_new(acc, name, default)
-    end)
   end
 end

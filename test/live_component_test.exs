@@ -60,6 +60,37 @@ defmodule LiveComponentTest do
     end
   end
 
+  defmodule InfoProvider do
+    use Surface.LiveComponent
+
+    def render(assigns) do
+      info = "Hi there!"
+      ~H"""
+        <div>
+          {{ @inner_content.(info: info)}}
+        </div>
+      """
+    end
+  end
+
+  defmodule ViewInnerContentWithoutBindings do
+    use Surface.LiveView
+    alias LiveComponentTest.InfoProvider
+
+    def render(assigns) do
+      ~H"""
+      <InfoProvider>
+        <span>{{ @info }}</span>
+      </InfoProvider>
+      """
+    end
+  end
+
+  test "render assigns from inner_content" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewInnerContentWithoutBindings)
+    assert html =~ "<div><span>Hi there!</span></div></div>"
+  end
+
   test "render stateless component" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
     assert html =~ "Initial stateless"

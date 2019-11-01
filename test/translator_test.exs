@@ -66,7 +66,7 @@ defmodule TranslatorTest do
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    Surface.ComponentRenderer.render(Button, %{label: (@label),\
+    %{label: (@label),\
     """
   end
 
@@ -77,7 +77,7 @@ defmodule TranslatorTest do
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    Surface.ComponentRenderer.render(Button, %{label: "str_1 \#{@str_2} str_3 \#{@str_4 <> @str_5}",\
+    %{label: "str_1 \#{@str_2} str_3 \#{@str_4 <> @str_5}",\
     """
   end
 
@@ -88,7 +88,7 @@ defmodule TranslatorTest do
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    Surface.ComponentRenderer.render(Button, %{click: (event("click_event")),\
+    %{click: "click_event",\
     """
   end
 end

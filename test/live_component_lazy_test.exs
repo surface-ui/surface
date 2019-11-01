@@ -15,31 +15,27 @@ defmodule LiveComponentLazyTest do
     use Surface.DataComponent
 
     property title, :string, required: true
-
-    def bindings do
-      [:item]
-    end
   end
 
   defmodule Grid do
     use Surface.LiveComponent
 
-    property items, :list, required: true
+    property items, :list, required: true, binding: :item
+
+    # TODO: Private properties? Like `propertyp`?
+    property cols, :children, group: Column, use_bindings: [:item]
 
     def render(assigns) do
-      # TODO: Do this before calling `render` and put it in the assigns
-      cols = children_by_type(assigns.content, Column)
-
       ~H"""
       <table>
         <tr>
-          <th :for={{ col <- cols }}>
+          <th :for={{ col <- @cols }}>
             {{ col.title }}
           </th>
         </tr>
         <tr :for={{ item <- @items }}>
-          <td :for={{ col <- cols }}>
-            {{ col.inner_content.(item: item) }}
+          <td :for={{ col <- @cols }}>
+            {{ col.inner_content.(item) }}
           </td>
         </tr>
       </table>
@@ -53,12 +49,12 @@ defmodule LiveComponentLazyTest do
     def render(assigns) do
       items = [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]
       ~H"""
-      <Grid items={{ items }}>
+      <Grid items={{ user <- items }}>
         <Column title="ID">
-          Id: {{ item.id }}
+          Id: {{ user.id }}
         </Column>
         <Column title="NAME">
-          Name: {{ item.name }}
+          Name: {{ user.name }}
         </Column>
       </Grid>
       """

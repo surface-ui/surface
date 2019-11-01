@@ -6,6 +6,7 @@ defmodule Surface.Translator do
   def run(string, line_offset, caller) do
     string
     |> Parser.parse(line_offset)
+    |> Surface.TranslatorUtils.put_module_info(caller)
     |> prepend_context()
     |> NodeTranslator.translate(caller)
     |> IO.iodata_to_binary()
