@@ -1,11 +1,9 @@
 defmodule Surface.LiveView do
-
-  alias Surface.Translator
-
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent
       use Surface.EventValidator
+      import Surface.Translator, only: [sigil_H: 2]
 
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
@@ -13,7 +11,7 @@ defmodule Surface.LiveView do
       @impl unquote(__MODULE__)
       def mount(_props, _session, socket), do: {:ok, socket}
 
-      defdelegate render_code(mod_str, attributes, children_iolist, mod, caller),
+      defdelegate render_code(node, caller),
         to: Surface.LiveViewRenderer
 
       use Phoenix.LiveView
@@ -25,17 +23,10 @@ defmodule Surface.LiveView do
         mount(props, session, assign(socket, props: props))
       end
 
-      defoverridable mount: 3, render_code: 5
+      defoverridable mount: 3, render_code: 2
     end
   end
 
   @callback mount(props :: map, session :: map, Socket.t()) ::
               {:ok, Socket.t()} | {:stop, Socket.t()}
-
-  defmacro sigil_H({:<<>>, _, [string]}, _) do
-    line_offset = __CALLER__.line + 1
-    string
-    |> Translator.run(line_offset, __CALLER__)
-    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
-  end
 end

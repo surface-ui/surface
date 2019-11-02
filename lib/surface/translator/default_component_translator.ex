@@ -4,7 +4,8 @@ defmodule Surface.Translator.DefaultComponentTranslator do
 
   import Surface.Translator
 
-  def translate(mod_str, attributes, children, mod, caller, opts) do
+  def translate(node, caller, opts) do
+    %{name: mod_str, attributes: attributes, children: children, module: mod} = node
     {data_children, children} = split_data_children(children)
     {directives, attributes} = pop_directives(attributes)
 
@@ -24,6 +25,7 @@ defmodule Surface.Translator.DefaultComponentTranslator do
 
     assigns_as_keyword = Keyword.get(opts, :assigns_as_keyword, false)
     rendered_props = Properties.render_props(attributes ++ children_attributes, mod, mod_str, caller)
+    # TODO: Create a new function `prepare_props` that calls `put_default_props`, `Keyword.new` and any other
     rendered_props = "Surface.Properties.put_default_props(#{rendered_props}, #{inspect(mod)})"
     rendered_props = if assigns_as_keyword, do: "Keyword.new(#{rendered_props})", else: rendered_props
 
@@ -44,8 +46,8 @@ defmodule Surface.Translator.DefaultComponentTranslator do
     ]
   end
 
-  defp maybe_add(value, add?) do
-    if add?, do: value, else: ""
+  defp maybe_add(value, condition) do
+    if condition, do: value, else: ""
   end
 
   defp translate_children_groups(_, _, [], _caller) do

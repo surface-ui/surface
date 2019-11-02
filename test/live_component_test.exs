@@ -99,7 +99,7 @@ defmodule LiveComponentTest do
     end
   end
 
-  test "render assigns from inner_content" do
+  test "render inner_content with bindings" do
     {:ok, _view, html} = live_isolated(build_conn(), ViewInnerContentWithoutBindings)
     assert html =~ "<div><span>Hi there!</span></div></div>"
   end

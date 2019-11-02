@@ -1,7 +1,7 @@
 defmodule ContextTest do
   use ExUnit.Case
   import ComponentTestHelper
-  import Surface.Component
+  import Surface.Translator, only: [sigil_H: 2]
   import Surface.BaseComponent
 
   defmodule Outer do

@@ -12,6 +12,13 @@ defmodule Surface.Translator do
     |> IO.iodata_to_binary()
   end
 
+  defmacro sigil_H({:<<>>, _, [string]}, _) do
+    line_offset = __CALLER__.line + 1
+    string
+    |> run(line_offset, __CALLER__)
+    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
+  end
+
   defp prepend_context(parsed_code) do
     ["<% context = %{} %><% _ = context %>" | parsed_code]
   end
@@ -70,6 +77,7 @@ defmodule Surface.Translator do
     ["<% end %>"]
   end
 
+  # TODO: Create a :debug directive instead of a property and use Logger
   def debug(iolist, props, line, caller) do
     if Enum.find(props, fn {k, v, _} -> k in ["debug", :debug] && v end) do
       IO.puts ">>> DEBUG: #{caller.file}:#{caller.line + line}"

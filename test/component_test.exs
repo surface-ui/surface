@@ -1,8 +1,8 @@
-defmodule ComponentTest do
+defmodule Surface.ComponentTest do
   use ExUnit.Case
   import ComponentTestHelper
-  import Surface.Component
-  import Surface.BaseComponent
+  import Surface.Translator, only: [sigil_H: 2]
+  # import Surface.BaseComponent
 
   defmodule Stateless do
     use Surface.Component

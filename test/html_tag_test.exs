@@ -1,7 +1,7 @@
 defmodule HtmlTagTest do
   use ExUnit.Case
   import ComponentTestHelper
-  import Surface.Component
+  import Surface.Translator, only: [sigil_H: 2]
   import Surface.Properties
 
   test "css class with keyword list notation" do

@@ -1,7 +1,7 @@
 defmodule Surface.BaseComponent do
   alias Surface.BaseComponent.LazyContent
 
-  @callback render_code(mod_str :: binary, attributes :: any, children_iolist :: any, mod :: module, caller :: Macro.Env.t) :: any
+  @callback render_code(node :: any, caller :: Macro.Env.t) :: any
 
   defmodule DataContent do
     defstruct [:data, :component]
@@ -57,41 +57,5 @@ defmodule Surface.BaseComponent do
     for child <- content, !is_binary(child) || String.trim(child) != "" do
       child
     end
-  end
-
-  def children_by_type({:safe, content}, component) do
-    for %DataContent{data: data, component: ^component} <- content do
-      data
-    end
-  end
-
-  def children_by_type(%Phoenix.LiveView.Rendered{dynamic: content}, component) do
-    for %DataContent{data: data, component: ^component} <- content do
-      data
-    end
-  end
-
-  def pop_children_by_type({:safe, content}, component) do
-    {children, rest} = Enum.reduce(content, {[], []}, fn child, {children, rest} ->
-      case child do
-        %DataContent{data: data, component: ^component} ->
-          {[data|children], rest}
-        _ ->
-          {children, [child|rest]}
-      end
-    end)
-    {Enum.reverse(children), {:safe, Enum.reverse(rest)}}
-  end
-
-  def pop_children_by_type(%Phoenix.LiveView.Rendered{dynamic: content} = block, component) do
-    {children, rest} = Enum.reduce(content, {[], []}, fn child, {children, rest} ->
-      case child do
-        %DataContent{data: data, component: ^component} ->
-          {[data|children], [[]|rest]}
-        _ ->
-          {children, [child|rest]}
-      end
-    end)
-    {Enum.reverse(children), %Phoenix.LiveView.Rendered{block | dynamic: Enum.reverse(rest)}}
   end
 end
