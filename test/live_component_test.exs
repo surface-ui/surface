@@ -86,6 +86,19 @@ defmodule LiveComponentTest do
     end
   end
 
+  defmodule ViewInnerContentWithBindings do
+    use Surface.LiveView
+    alias LiveComponentTest.InfoProvider
+
+    def render(assigns) do
+      ~H"""
+      <InfoProvider :bindings={{ info: my_info }}>
+        <span>{{ my_info }}</span>
+      </InfoProvider>
+      """
+    end
+  end
+
   test "render assigns from inner_content" do
     {:ok, _view, html} = live_isolated(build_conn(), ViewInnerContentWithoutBindings)
     assert html =~ "<div><span>Hi there!</span></div></div>"

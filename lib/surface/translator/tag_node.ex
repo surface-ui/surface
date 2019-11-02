@@ -17,6 +17,7 @@ defmodule Surface.Translator.TagNode do
       [
         maybe_add_directives_begin(directives),
         ["<", tag_name, render_tag_props(attributes), ">"],
+        maybe_add_directives_after_begin(directives),
         NodeTranslator.translate(children, caller),
         ["</", tag_name, ">"],
         maybe_add_directives_end(directives)

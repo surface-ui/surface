@@ -6,6 +6,7 @@ defmodule Surface.Translator.DefaultComponentTranslator do
 
   def translate(mod_str, attributes, children, mod, caller, opts) do
     {data_children, children} = split_data_children(children)
+    {directives, attributes} = pop_directives(attributes)
 
     # TODO: Find a better approach for this. For now, if there's any
     # DataComponent and the rest of children are blank, we remove them.
@@ -30,9 +31,11 @@ defmodule Surface.Translator.DefaultComponentTranslator do
 
     # bindings = lazy_values(mod, attributes)
     [
+      maybe_add_directives_begin(directives),
       maybe_add_begin_context(mod, mod_str, rendered_props),
       children_content,
       "<%= ", renderer, "(",  Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>",
+      maybe_add_directives_after_begin(directives),
       # maybe_add_begin_lazy_content(bindings),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       # maybe_add_end_lazy_content(bindings),

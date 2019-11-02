@@ -1,7 +1,7 @@
 defmodule Surface.Translator do
   alias Surface.Translator.{Parser, Directive, NodeTranslator}
 
-  @directives [":for"]
+  @directives [":for", ":bindings"]
 
   def run(string, line_offset, caller) do
     string
@@ -18,6 +18,12 @@ defmodule Surface.Translator do
 
   def maybe_add_directives_begin(attributes) do
     for attr <- attributes, code = Directive.code_begin(attr), code != [] do
+      code
+    end
+  end
+
+  def maybe_add_directives_after_begin(attributes) do
+    for attr <- attributes, code = Directive.code_after_begin(attr), code != [] do
       code
     end
   end
