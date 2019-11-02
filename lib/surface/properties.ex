@@ -61,11 +61,6 @@ defmodule Surface.Properties do
   # to move this to a new PropertyTranslator (or AttributeTranslator)
   def render_props(props, mod, mod_str, caller, add_context \\ true) do
     if function_exported?(mod, :__props, 0) do
-      component_id = generate_component_id()
-      if Module.open?(caller.module) do
-        Module.put_attribute(caller.module, :children, {component_id, mod})
-      end
-
       props =
         for {key, value, line} <- props do
           key_atom = String.to_atom(key)
@@ -79,11 +74,12 @@ defmodule Surface.Properties do
           render_prop_value(key, value)
         end
 
-        extra_props = if add_context do
-          ["context: context, __component_id: concat_ids(assigns[:__component_id], \"#{component_id}\")"]
-        else
-          []
-        end
+        extra_props =
+          if add_context do
+            ["context: context"]
+          else
+            []
+          end
       ["%{", Enum.join(props ++ extra_props, ", "), "}"]
     else
       "%{}"
@@ -160,11 +156,6 @@ defmodule Surface.Properties do
       _ ->
         [key, ": ", ~S("), value, ~S(")]
     end
-  end
-
-  defp generate_component_id() do
-    :erlang.unique_integer([:positive, :monotonic])
-    |> to_string()
   end
 
   def css_class(list) when is_list(list) do

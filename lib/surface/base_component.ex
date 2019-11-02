@@ -94,12 +94,4 @@ defmodule Surface.BaseComponent do
     end)
     {Enum.reverse(children), %Phoenix.LiveView.Rendered{block | dynamic: Enum.reverse(rest)}}
   end
-
-  def concat_ids(nil, id) do
-    id
-  end
-
-  def concat_ids(parent_id, id) do
-    "#{parent_id}_#{id}"
-  end
 end
