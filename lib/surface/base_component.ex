@@ -1,8 +1,9 @@
 defmodule Surface.BaseComponent do
   alias Surface.BaseComponent.LazyContent
 
-  @callback render_code(node :: any, caller :: Macro.Env.t) :: any
+  @callback translator() :: module
 
+  # TODO: Remove all this stuff
   defmodule DataContent do
     defstruct [:data, :component]
 

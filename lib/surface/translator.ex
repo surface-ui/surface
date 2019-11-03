@@ -1,12 +1,10 @@
 defmodule Surface.Translator do
-  alias Surface.Translator.{Parser, Directive, NodeTranslator}
-
-  @directives [":for", ":bindings"]
+  alias Surface.Translator.{TagNode, ComponentNode, Parser, NodeTranslator}
 
   def run(string, line_offset, caller) do
     string
     |> Parser.parse(line_offset)
-    |> Surface.TranslatorUtils.put_module_info(caller)
+    |> put_module_info(caller)
     |> prepend_context()
     |> NodeTranslator.translate(caller)
     |> IO.iodata_to_binary()
@@ -23,69 +21,38 @@ defmodule Surface.Translator do
     ["<% context = %{} %><% _ = context %>" | parsed_code]
   end
 
-  def maybe_add_directives_begin(attributes) do
-    for attr <- attributes, code = Directive.code_begin(attr), code != [] do
-      code
-    end
+  defp put_module_info([], _caller) do
+    []
   end
 
-  def maybe_add_directives_after_begin(attributes) do
-    for attr <- attributes, code = Directive.code_after_begin(attr), code != [] do
-      code
-    end
+  defp put_module_info([%ComponentNode{name: name} = node | nodes], caller) do
+    mod = actual_module(name, caller)
+    mod = if Code.ensure_compiled?(mod), do: mod, else: nil
+
+    updated_node = %ComponentNode{node |
+      module: mod,
+      children: put_module_info(node.children, caller)
+    }
+    [ updated_node | put_module_info(nodes, caller)]
   end
 
-  def maybe_add_directives_end(attributes) do
-    for attr <- attributes, code = Directive.code_end(attr), code != [] do
-      code
-    end
+  defp put_module_info([%TagNode{children: children} = node | nodes], caller) do
+    updated_node = %TagNode{node |
+      children: put_module_info(children, caller)
+    }
+    [ updated_node | put_module_info(nodes, caller)]
   end
 
-  def pop_directives(attributes) do
-    Enum.split_with(attributes, fn {attr, _, _} -> attr in @directives end)
+  defp put_module_info([node | nodes], caller) do
+    [ node | put_module_info(nodes, caller)]
   end
 
-  def maybe_add_begin_context(mod, mod_str, rendered_props) do
-    if function_exported?(mod, :begin_context, 1) do
-      ["<% context = ", mod_str, ".begin_context(", rendered_props, ") %><% _ = context %>"]
-    else
-      ""
-    end
+  defp put_module_info(nodes, _caller) do
+    nodes
   end
 
-  def maybe_add_end_context(mod, mod_str, rendered_props) do
-    if function_exported?(mod, :end_context, 1) do
-      ["<% context = ", mod_str, ".end_context(", rendered_props, ") %><% _ = context %>"]
-    else
-      ""
-    end
-  end
-
-  def maybe_add_begin_lazy_content([]) do
-    ""
-  end
-
-  def maybe_add_begin_lazy_content(bindings) do
-    ["<%= lazy fn ", Enum.join(bindings, ", "), " -> %>"]
-  end
-
-  def maybe_add_end_lazy_content([]) do
-    ""
-  end
-
-  def maybe_add_end_lazy_content(_bindings) do
-    ["<% end %>"]
-  end
-
-  # TODO: Create a :debug directive instead of a property and use Logger
-  def debug(iolist, props, line, caller) do
-    if Enum.find(props, fn {k, v, _} -> k in ["debug", :debug] && v end) do
-      IO.puts ">>> DEBUG: #{caller.file}:#{caller.line + line}"
-      iolist
-      |> IO.iodata_to_binary()
-      |> IO.puts
-      IO.puts "<<<"
-    end
-    iolist
+  defp actual_module(mod_str, env) do
+    {:ok, ast} = Code.string_to_quoted(mod_str)
+    Macro.expand(ast, env)
   end
 end

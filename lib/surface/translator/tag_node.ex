@@ -3,26 +3,26 @@ defmodule Surface.Translator.TagNode do
 end
 
 defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.TagNode do
-  import Surface.Translator
   alias Surface.Translator.NodeTranslator
+  alias Surface.Translator.Directive
 
   def translate(%{name: tag_name, children: []} = node, caller) do
     %{attributes: attributes, line: line} = node
     ["<", tag_name, render_tag_props(attributes), "/>"]
-    |> debug(attributes, line, caller)
+    |> Surface.Translator.IO.debug(attributes, line, caller)
   end
 
   def translate(%{name: tag_name} = node, caller) do
     %{attributes: attributes, children: children, line: line} = node
-    {directives, attributes} = pop_directives(attributes)
+    {directives, attributes} = Directive.pop_directives(attributes)
     [
-      maybe_add_directives_begin(directives),
+      Directive.maybe_add_directives_begin(directives),
       ["<", tag_name, render_tag_props(attributes), ">"],
-      maybe_add_directives_after_begin(directives),
+      Directive.maybe_add_directives_after_begin(directives),
       NodeTranslator.translate(children, caller),
       ["</", tag_name, ">"],
-      maybe_add_directives_end(directives)
-    ] |> debug(attributes, line, caller)
+      Directive.maybe_add_directives_end(directives)
+    ] |> Surface.Translator.IO.debug(attributes, line, caller)
   end
 
   def translate(node, _caller) do
