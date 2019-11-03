@@ -37,18 +37,18 @@ defmodule Surface.LiveView do
               {:ok, Socket.t()} | {:stop, Socket.t()}
 
   def translate(mod, mod_str, attributes, directives, children, children_groups_contents, has_children?, caller) do
-    rendered_props = Surface.Properties.render_props(attributes, mod, mod_str, caller)
-    session = ["session: %{props: ", "Surface.Properties.put_default_props(", rendered_props, inspect(mod), "})}"]
+    translated_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
+    session = ["session: %{props: ", translated_props, "}"]
 
     [
       Directive.maybe_add_directives_begin(directives),
-      maybe_add_begin_context(mod, mod_str, rendered_props),
+      maybe_add_begin_context(mod, mod_str, translated_props),
       children_groups_contents,
       add_render_call("live_render", ["@socket", mod_str, session], has_children?),
       Directive.maybe_add_directives_after_begin(directives),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       maybe_add("<% end %>", has_children?),
-      maybe_add_end_context(mod, mod_str, rendered_props),
+      maybe_add_end_context(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)
     ]
   end

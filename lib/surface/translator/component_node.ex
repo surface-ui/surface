@@ -101,8 +101,8 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
         reduce: {[], []} do
       {all_contents, new_attributes} ->
         # TODO: Warn if data_children[group] is nil
-        {contents, rendered_props_list} = translate_data_children(data_children[group], func_bindings, bindings, caller)
-        value = "[" <> Enum.join(rendered_props_list, ", ") <> "]"
+        {contents, translated_props_list} = translate_data_children(data_children[group], func_bindings, bindings, caller)
+        value = "[" <> Enum.join(translated_props_list, ", ") <> "]"
         attr = {to_string(name), {:attribute_expr, [value]}, caller.line}
         {[contents | all_contents], [attr | new_attributes]}
     end
@@ -110,7 +110,7 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
 
   def translate_data_children(children, func_bindings, bindings, caller) do
     for node <- children, reduce: {[], []} do
-      {contents, rendered_props_list} ->
+      {contents, translated_props_list} ->
         args =
           func_bindings
           |> Enum.map(&bindings[&1])
@@ -126,8 +126,8 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
         ]
 
         attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
-        rendered_props = Properties.render_props([attr | node.attributes], node.module, node.name, caller, false)
-        {[content | contents], [rendered_props | rendered_props_list]}
+        translated_props = Properties.translate_attributes([attr | node.attributes], node.module, node.name, caller, false)
+        {[content | contents], [translated_props | translated_props_list]}
     end
   end
 

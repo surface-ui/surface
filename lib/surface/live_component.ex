@@ -27,21 +27,19 @@ defmodule Surface.LiveComponent do
   @optional_callbacks begin_context: 1, end_context: 1
 
   def translate(mod, mod_str, attributes, directives, children, children_groups_contents, has_children?, caller) do
-
-    rendered_props = Surface.Properties.render_props(attributes, mod, mod_str, caller)
-    # TODO: Call put_default_props inside render_props? We could also have opts [as_keyword: true, put_default_props: true]
     # TODO: Add maybe_generate_id() or create a directive :id instead
-    rendered_props = "Keyword.new(Surface.Properties.put_default_props(#{rendered_props}, #{inspect(mod)}))"
+    translated_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
+    translated_props = "Keyword.new(#{translated_props})"
 
     [
       Directive.maybe_add_directives_begin(directives),
-      maybe_add_begin_context(mod, mod_str, rendered_props),
+      maybe_add_begin_context(mod, mod_str, translated_props),
       children_groups_contents,
-      add_render_call("live_component", ["@socket", mod_str, rendered_props], has_children?),
+      add_render_call("live_component", ["@socket", mod_str, translated_props], has_children?),
       Directive.maybe_add_directives_after_begin(directives),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       maybe_add("<% end %>", has_children?),
-      maybe_add_end_context(mod, mod_str, rendered_props),
+      maybe_add_end_context(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)
     ]
   end

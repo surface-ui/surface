@@ -57,12 +57,11 @@ defmodule Surface.Properties do
     end
   end
 
-  # TODO: Rename to `translate_attributes`. Also see if it's better
-  # to move this to a new PropertyTranslator (or AttributeTranslator)
-  def render_props(props, mod, mod_str, caller, add_context \\ true) do
+  # TODO: Move this to a new PropertyTranslator (or AttributeTranslator)
+  def translate_attributes(attributes, mod, mod_str, caller, add_context \\ true) do
     if function_exported?(mod, :__props, 0) do
       props =
-        for {key, value, line} <- props do
+        for {key, value, line} <- attributes do
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
           if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
@@ -80,7 +79,7 @@ defmodule Surface.Properties do
           else
             []
           end
-      ["%{", Enum.join(props ++ extra_props, ", "), "}"]
+      ["Surface.Properties.put_default_props(%{", Enum.join(props ++ extra_props, ", "), "}, #{inspect(mod)})"]
     else
       "%{}"
     end
