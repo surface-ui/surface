@@ -47,6 +47,17 @@ defmodule Surface.ComponentTest do
     end
   end
 
+  defmodule OuterWithNamedBindings do
+    use Surface.Component
+
+    def render(assigns) do
+      info = "My info"
+      ~H"""
+      <div>{{ @inner_content.(info: info) }}</div>
+      """
+    end
+  end
+
   defmodule ViewWithStateless do
     use Surface.LiveView
 
@@ -65,6 +76,18 @@ defmodule Surface.ComponentTest do
       <Outer>
         <Inner/>
       </Outer>
+      """
+    end
+  end
+
+  defmodule ViewWithNamedBindings do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~H"""
+      <OuterWithNamedBindings :bindings={{ info: my_info }}>
+        {{ my_info }}
+      </OuterWithNamedBindings>
       """
     end
   end
@@ -89,11 +112,22 @@ defmodule Surface.ComponentTest do
       </div>
       """
     end
+
+    test "render inner_content with named bindings" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithNamedBindings)
+
+      assert_html html =~ """
+      <div>
+        My info
+      </div>
+      """
+    end
   end
 
   describe "Without LiveView" do
     test "render stateless component" do
       import Surface.Component, only: [component: 2, component: 3]
+      import Surface.Properties, only: [put_default_props: 2]
 
       assigns = %{}
       code =
@@ -110,6 +144,7 @@ defmodule Surface.ComponentTest do
 
     test "render nested component's content" do
       import Surface.Component, only: [component: 2]
+      import Surface.Properties, only: [put_default_props: 2]
 
       assigns = %{}
       code =
@@ -122,6 +157,25 @@ defmodule Surface.ComponentTest do
       assert render_surface(code) =~ """
       <div>
         <span>Inner</span>
+      </div>
+      """
+    end
+
+    test "render inner_content with named bindings" do
+      import Surface.Component, only: [component: 2]
+      import Surface.Properties, only: [put_default_props: 2]
+
+      assigns = %{}
+      code =
+        ~H"""
+        <OuterWithNamedBindings :bindings={{ info: my_info }}>
+          {{ my_info }}
+        </OuterWithNamedBindings>
+        """
+
+      assert render_surface(code) =~ """
+      <div>
+        My info
       </div>
       """
     end

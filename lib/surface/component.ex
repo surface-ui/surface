@@ -39,7 +39,8 @@ defmodule Surface.Component do
         call = add_render_call("live_component", args, children != [])
         {translated_props, call, children, []}
       else
-        {var, children_content} = translate_children_content("[]", children)
+        bindings = find_bindings(directives)
+        {var, children_content} = translate_children_content(bindings, children)
         attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
         attributes =
           if var do
@@ -92,7 +93,16 @@ defmodule Surface.Component do
     {var, content}
   end
 
-  def generate_var_id() do
+  defp find_bindings(attributes) do
+    case Enum.find(attributes, fn attr -> match?({":bindings", _, _}, attr) end) do
+      {":bindings", {:attribute_expr, [expr]}, _line} ->
+        String.trim(expr)
+      _ ->
+        "[]"
+    end
+  end
+
+  defp generate_var_id() do
     :erlang.unique_integer([:positive, :monotonic])
     |> to_string()
   end

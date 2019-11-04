@@ -80,7 +80,7 @@ defmodule Surface.Properties do
           else
             []
           end
-      ["Surface.Properties.put_default_props(%{", Enum.join(props ++ extra_props, ", "), "}, #{inspect(mod)})"]
+      ["put_default_props(%{", Enum.join(props ++ extra_props, ", "), "}, #{mod_str})"]
     else
       "%{}"
     end

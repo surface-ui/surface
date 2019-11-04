@@ -35,6 +35,7 @@ defmodule ContextTest do
 
   test "render context field" do
     import Surface.Component, only: [component: 2]
+    import Surface.Properties, only: [put_default_props: 2]
 
     assigns = %{}
     code =
