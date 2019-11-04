@@ -1,5 +1,6 @@
 defmodule ContextTest do
   use ExUnit.Case
+  use Phoenix.ConnTest
   import ComponentTestHelper
   import Surface.Translator, only: [sigil_H: 2]
   import Surface.BaseComponent
@@ -13,7 +14,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ @content }}</div>
+      <div>{{ @inner_content.([]) }}</div>
       """
     end
 
@@ -33,6 +34,8 @@ defmodule ContextTest do
   end
 
   test "render context field" do
+    import Surface.Component, only: [component: 2]
+
     assigns = %{}
     code =
       ~H"""

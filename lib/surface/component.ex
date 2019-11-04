@@ -3,10 +3,11 @@ defmodule Surface.Component do
   import Surface.Translator.ComponentTranslator
 
   alias Surface.Translator.{Directive, NodeTranslator}
-  alias Surface.BaseComponent.{DataContent, LazyContent}
 
   defmacro __using__(_) do
     quote do
+      # TODO: Only use Phoenix.LiveComponent this if we have :phoenix_live_view installed
+      use Phoenix.LiveComponent
       use Surface.BaseComponent
       import Surface.Translator, only: [sigil_H: 2]
 
@@ -26,49 +27,73 @@ defmodule Surface.Component do
   @callback render(assigns :: map()) :: any
   @optional_callbacks begin_context: 1, end_context: 1
 
-  def translate(mod, mod_str, attributes, directives, children, children_groups_contents, has_children?, caller) do
-    # TODO:
-    # Check if it's liveview, if so, use `live_component`, otherwise use own private renderer
-    # - define `inner_content` and add it to the props
+  def translate(mod, mod_str, attributes, directives, children, children_groups_contents, caller) do
+    # TODO: Should this work?
+    # using_live_view? = function_exported?(caller.module, :__live__, 0)
+    using_live_view? = caller.macros[Phoenix.LiveView] != nil
 
-    translated_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
+    {translated_props, render_call, children, children_content} =
+      if using_live_view? do
+        translated_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
+        args = ["@socket", mod_str, "Keyword.new(#{translated_props})"]
+        call = add_render_call("live_component", args, children != [])
+        {translated_props, call, children, []}
+      else
+        {var, children_content} = translate_children_content("[]", children)
+        attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
+        attributes =
+          if var do
+            [attr | attributes]
+          else
+            attributes
+          end
+        translated_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
+        call = add_render_call("component", [mod_str, translated_props], false)
+        children_content = NodeTranslator.translate(children_content, caller)
+        {translated_props, call, [], children_content}
+      end
+
+    has_children? = children != []
 
     [
       Directive.maybe_add_directives_begin(directives),
-      maybe_add_begin_context(mod, mod_str, translated_props),
-      children_groups_contents,
-      add_render_call("#{inspect(__MODULE__)}.render", [mod_str, translated_props], has_children?),
-      Directive.maybe_add_directives_after_begin(directives),
+      maybe_add_context_begin(mod, mod_str, Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)),
+      [children_content | children_groups_contents],
+      render_call,
+      Directive.maybe_add_directives_after_begin(directives, using_live_view?),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       maybe_add("<% end %>", has_children?),
-      maybe_add_end_context(mod, mod_str, translated_props),
+      maybe_add_context_end(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)
     ]
   end
 
-  def render(module, props) do
-    do_render(module, props, [])
+  def component(module, assigns) do
+    module.render(assigns)
   end
 
-  def render(module, props, do: block) do
-    do_render(module, props, block)
+  def component(module, assigns, []) do
+    module.render(assigns)
   end
 
-  defp do_render(module, props, content) do
-    props =
-      props
-      |> Map.put(:content, content)
+  defp translate_children_content(_args, []) do
+    {nil, []}
+  end
 
-    case module.render(props) do
-      {:data, data} ->
-        case data do
-          %{content: {:safe, [%LazyContent{func: func}]}} ->
-            %DataContent{data: Map.put(data, :inner_content, func), component: module}
-          _ ->
-            %DataContent{data: data, component: module}
-        end
-      result ->
-        result
-    end
+  defp translate_children_content(args, children) do
+    # TODO: Generate a var name that's harder to conflict
+    var = "content_" <> generate_var_id()
+
+    content = [
+      "<% ", var, " = fn ", args, " -> %>",
+      children,
+      "<% end %>\n"
+    ]
+    {var, content}
+  end
+
+  def generate_var_id() do
+    :erlang.unique_integer([:positive, :monotonic])
+    |> to_string()
   end
 end

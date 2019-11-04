@@ -36,12 +36,11 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
       else
         children
       end
-    has_children? = children != []
 
     {children_groups_contents, children_attributes} =
       translate_children_groups(mod, attributes, data_children, caller)
 
-    translator.translate(mod, mod_str, attributes ++ children_attributes, directives, children, children_groups_contents, has_children?, caller)
+    translator.translate(mod, mod_str, attributes ++ children_attributes, directives, children, children_groups_contents, caller)
   end
 
   defp validate_module(name, mod) do
@@ -116,19 +115,24 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
           |> Enum.map(&bindings[&1])
           |> Enum.join(", ")
 
-        # TODO: Generate a var name that's harder to conflict
-        var = "content_" <> generate_var_id()
-
-        content = [
-          "<% ", var, " = fn ", args, " -> %>",
-          node.children,
-          "<% end %>\n"
-        ]
+        {var, content} = translate_children_content(args, node.children)
 
         attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
         translated_props = Properties.translate_attributes([attr | node.attributes], node.module, node.name, caller, false)
         {[content | contents], [translated_props | translated_props_list]}
     end
+  end
+
+  def translate_children_content(args, children) do
+    # TODO: Generate a var name that's harder to conflict
+    var = "content_" <> generate_var_id()
+
+    content = [
+      "<% ", var, " = fn ", args, " -> %>",
+      children,
+      "<% end %>\n"
+    ]
+    {var, content}
   end
 
   def find_bindings(module, attributes) do

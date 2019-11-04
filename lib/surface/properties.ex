@@ -23,6 +23,7 @@ defmodule Surface.Properties do
       doc = Module.get_attribute(__MODULE__, :doc)
       Module.delete_attribute(__MODULE__, :doc)
 
+      # TODO: Validate opts based on the type
       @properties %{
         name: unquote(name),
         type: unquote(type),
