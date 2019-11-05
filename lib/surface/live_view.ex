@@ -9,6 +9,7 @@ defmodule Surface.LiveView do
       use Surface.BaseComponent
       use Surface.EventValidator
       import Surface.Translator, only: [sigil_H: 2]
+      import Surface.Component, only: [component: 2, component: 3]
 
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
@@ -43,13 +44,11 @@ defmodule Surface.LiveView do
 
     [
       Directive.maybe_add_directives_begin(directives),
-      maybe_add_context_begin(mod, mod_str, translated_props),
       children_groups_contents,
       add_render_call("live_render", ["@socket", mod_str, session], has_children?),
       Directive.maybe_add_directives_after_begin(directives, false),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       maybe_add("<% end %>", has_children?),
-      maybe_add_context_end(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)
     ]
   end

@@ -21,6 +21,7 @@ defmodule Surface.Translator.Directive do
     []
   end
 
+  # TODO: Find another way to do this wihout passing the last boolean arg
   def code_after_begin({":bindings", {:attribute_expr, [expr]}, _line}, true) do
     ["<% ", String.trim(expr), " -> %>"]
   end
