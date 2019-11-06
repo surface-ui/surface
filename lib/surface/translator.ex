@@ -33,18 +33,18 @@ defmodule Surface.Translator do
       module: mod,
       children: put_module_info(node.children, caller)
     }
-    [ updated_node | put_module_info(nodes, caller)]
+    [updated_node | put_module_info(nodes, caller)]
   end
 
   defp put_module_info([%TagNode{children: children} = node | nodes], caller) do
     updated_node = %TagNode{node |
       children: put_module_info(children, caller)
     }
-    [ updated_node | put_module_info(nodes, caller)]
+    [updated_node | put_module_info(nodes, caller)]
   end
 
   defp put_module_info([node | nodes], caller) do
-    [ node | put_module_info(nodes, caller)]
+    [node | put_module_info(nodes, caller)]
   end
 
   defp put_module_info(nodes, _caller) do

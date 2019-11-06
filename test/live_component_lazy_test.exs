@@ -21,8 +21,6 @@ defmodule LiveComponentLazyTest do
     use Surface.LiveComponent
 
     property items, :list, required: true, binding: :item
-
-    # TODO: Private properties? Like `propertyp`?
     property cols, :children, group: Column, use_bindings: [:item]
 
     def render(assigns) do
@@ -51,7 +49,7 @@ defmodule LiveComponentLazyTest do
       ~H"""
       <Grid items={{ user <- items }}>
         <Column title="ID">
-          Id: {{ user.id }}
+          <b>Id: {{ user.id }}</b>
         </Column>
         <Column title="NAME">
           Name: {{ user.name }}
@@ -71,11 +69,11 @@ defmodule LiveComponentLazyTest do
         <th>NAME</th>
       </tr>
       <tr>
-        <td>Id: 1</td>
+        <td><b>Id: 1</b></td>
         <td>Name: First</td>
       </tr>
       <tr>
-        <td>Id: 2</td>
+        <td><b>Id: 2</b></td>
         <td>Name: Second</td>
       </tr>
     </table>
