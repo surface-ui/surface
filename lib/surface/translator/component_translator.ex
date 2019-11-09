@@ -68,9 +68,13 @@ defmodule Surface.Translator.ComponentTranslator do
 
         {var, content} = translate_children_content(args, node.children)
 
-        attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
-        translated_props = Properties.translate_attributes([attr | node.attributes], node.module, node.name, caller, false)
-        {[content | contents], [translated_props | translated_props_list]}
+        if var do
+          attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
+          translated_props = Properties.translate_attributes([attr | node.attributes], node.module, node.name, caller, false)
+          {[content | contents], [translated_props | translated_props_list]}
+        else
+          {contents, translated_props_list}
+        end
     end
   end
 

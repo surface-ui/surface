@@ -6,12 +6,6 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.TagNode do
   alias Surface.Translator.NodeTranslator
   alias Surface.Translator.Directive
 
-  def translate(%{name: tag_name, children: []} = node, caller) do
-    %{attributes: attributes, line: line} = node
-    ["<", tag_name, render_tag_props(attributes), "/>"]
-    |> Surface.Translator.IO.debug(attributes, line, caller)
-  end
-
   def translate(%{name: tag_name} = node, caller) do
     %{attributes: attributes, children: children, line: line} = node
     {directives, attributes} = Directive.pop_directives(attributes)

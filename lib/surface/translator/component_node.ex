@@ -44,7 +44,7 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
       mod == nil ->
         {:error, "Cannot render <#{name}> (module #{name} is not available)"}
       # TODO: Fix this so it does not depend on the existence of a function
-      !function_exported?(mod, :translator, 0) && !function_exported?(mod, :data, 1) ->
+      Code.ensure_compiled?(mod) && !function_exported?(mod, :translator, 0) && !function_exported?(mod, :data, 1) ->
         {:error, "Cannot render <#{name}> (module #{name} is not a component"}
       true ->
         {:ok, mod}

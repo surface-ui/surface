@@ -27,7 +27,6 @@ defmodule Surface.Translator do
 
   defp put_module_info([%ComponentNode{name: name} = node | nodes], caller) do
     mod = actual_module(name, caller)
-    mod = if Code.ensure_compiled?(mod), do: mod, else: nil
 
     updated_node = %ComponentNode{node |
       module: mod,

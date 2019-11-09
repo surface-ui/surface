@@ -32,7 +32,8 @@ defmodule Surface.LiveComponent do
 
     has_children? = children != []
 
-    # TODO: Add maybe_generate_id() or create a directive :id instead
+    # TODO: Add maybe_generate_id() to create an id automatically if there's a `handle_event`.
+    # Also, it's probably better to create a directive :id instead of a property
     all_attributes = attributes ++ children_attributes
     translated_props = Surface.Properties.translate_attributes(all_attributes , mod, mod_str, caller)
     translated_props = "Keyword.new(#{translated_props})"
