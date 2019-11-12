@@ -72,5 +72,86 @@ defmodule ParserTest do
       "\n"
     ]
   end
-end
 
+  describe "macros" do
+    test "single node" do
+      assert Parser.parse("<#Foo>bar</#Foo>", 1) == [
+        %Surface.Translator.ComponentNode{
+          attributes: [],
+          children: ["bar"],
+          line: 1,
+          module: nil,
+          name: "#Foo"
+        }
+      ]
+    end
+
+    test "mixed nodes" do
+      assert Parser.parse("<#Foo>one<bar>two</baz>three</#Foo>", 1) == [
+        %Surface.Translator.ComponentNode{
+          attributes: [],
+          children: ["one<bar>two</baz>three"],
+          line: 1,
+          module: nil,
+          name: "#Foo"
+        }
+      ]
+
+      assert Parser.parse("<#Foo>one<#Bar>two</#Baz>three</#Foo>", 1) == [
+        %Surface.Translator.ComponentNode{
+          attributes: [],
+          children: ["one<#Bar>two</#Baz>three"],
+          line: 1,
+          module: nil,
+          name: "#Foo"
+        }
+      ]
+
+      assert Parser.parse("<#Foo>one<bar>two<baz>three</#Foo>", 1) == [
+        %Surface.Translator.ComponentNode{
+          attributes: [],
+          children: ["one<bar>two<baz>three"],
+          line: 1,
+          module: nil,
+          name: "#Foo"
+        }
+      ]
+
+      assert Parser.parse("<#Foo>one</bar>two</baz>three</#Foo>", 1) == [
+        %Surface.Translator.ComponentNode{
+          attributes: [],
+          children: ["one</bar>two</baz>three"],
+          line: 1,
+          module: nil,
+          name: "#Foo"
+        }
+      ]
+    end
+
+    test "keep track of the line of the definition" do
+      code = """
+      <div>
+        one
+        <#Foo>
+          two
+        </#Foo>
+      </div>
+      """
+
+      [%{children: children} | _] = Parser.parse(code, 1)
+      assert Enum.at(children, 4).line == 3
+    end
+
+    test "do not perform interpolation for inner content" do
+      assert Parser.parse("<#Foo>one {{ @var }} two</#Foo>", 1) == [
+        %Surface.Translator.ComponentNode{
+          attributes: [],
+          children: ["one {{ @var }} two"],
+          line: 1,
+          module: nil,
+          name: "#Foo"
+        }
+      ]
+    end
+  end
+end

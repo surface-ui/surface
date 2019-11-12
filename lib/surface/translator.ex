@@ -26,6 +26,12 @@ defmodule Surface.Translator do
   end
 
   defp put_module_info([%ComponentNode{name: name} = node | nodes], caller) do
+    name =
+      case name do
+        "#" <> name -> name
+        _ -> name
+      end
+
     mod = actual_module(name, caller)
 
     updated_node = %ComponentNode{node |

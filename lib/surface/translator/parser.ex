@@ -139,12 +139,60 @@ defmodule Surface.Translator.Parser do
     ])
     |> post_traverse(:validate_node)
 
+  ## Macro
+
+  macro_tag =
+    ascii_char([?A..?Z])
+    |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
+    |> reduce({List, :to_string, []})
+
+  text_without_interpolation = utf8_string([not: ?<], min: 1)
+  opening_macro_tag = ignore(string("<#")) |> concat(macro_tag) |> ignore(string(">"))
+  closing_macro_tag = ignore(string("</#")) |> concat(macro_tag) |> ignore(string(">"))
+
+  macro =
+    opening_macro_tag
+    |> line()
+    |> post_traverse(:opening_macro_tag)
+    |> repeat_while(choice([string("<"), text_without_interpolation]), :lookahead_macro_tag)
+    |> wrap()
+    |> optional(closing_macro_tag)
+    |> post_traverse(:closing_macro_tag)
+
+  defp opening_macro_tag(_rest, [tag], context, _, _) do
+    {[], %{context | macro: tag}}
+  end
+
+  defp closing_macro_tag(_, [macro, rest], %{macro: {[macro], {line, _}}} = context, _, _) do
+    tag = "#" <> macro
+    text = IO.iodata_to_binary(rest)
+    # {[{tag, [], [text]}], %{context | macro: nil}}
+    {[%ComponentNode{name: tag, attributes: [], children: [text], line: line}], %{context | macro: nil}}
+  end
+
+  defp closing_macro_tag(_rest, _nodes, %{macro: macro}, _, _) do
+    {:error, "expected closing tag for #{inspect("#" <> macro)}"}
+  end
+
+  defp lookahead_macro_tag(rest, %{macro: {[macro], {_line, _}}} = context, _, _) do
+    size = byte_size(macro)
+
+    case rest do
+      <<"</#", macro_match::binary-size(size), ">", _::binary>> when macro_match == macro ->
+        {:halt, context}
+
+      _ ->
+        {:cont, context}
+    end
+  end
+
   defparsecp(
     :parse_children,
     whitespace_no_ignore
     |> repeat(
       choice([
         tag,
+        macro,
         comment,
         expr,
         text
@@ -187,7 +235,7 @@ defmodule Surface.Translator.Parser do
   end
 
   def parse(string, line_offset) do
-    case parse_root(string) do
+    case parse_root(string, context: [macro: nil]) do
       {:ok, nodes, _, _, _, _} ->
         nodes
 
