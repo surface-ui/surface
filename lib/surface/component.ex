@@ -42,7 +42,6 @@ defmodule Surface.Component do
       NodeTranslator.translate(children_groups_contents, caller),
       NodeTranslator.translate(children_contents, caller),
       add_render_call("component", [mod_str, all_translated_props], false),
-      Directive.maybe_add_directives_after_begin(directives, false),
       maybe_add_context_end(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)
     ]

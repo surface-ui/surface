@@ -21,8 +21,7 @@ defmodule Surface.Translator.Directive do
     []
   end
 
-  # TODO: Find another way to do this wihout passing the last boolean arg
-  def code_after_begin({":bindings", {:attribute_expr, [expr]}, _line}, true) do
+  def code_after_begin({":bindings", {:attribute_expr, [expr]}, _line}) do
     ["<% ", String.trim(expr), " -> %>"]
   end
 
@@ -44,8 +43,8 @@ defmodule Surface.Translator.Directive do
     end
   end
 
-  def maybe_add_directives_after_begin(attributes, using_live_view?) do
-    for attr <- attributes, code = code_after_begin(attr, using_live_view?), code != [] do
+  def maybe_add_directives_after_begin(attributes) do
+    for attr <- attributes, code = code_after_begin(attr), code != [] do
       code
     end
   end

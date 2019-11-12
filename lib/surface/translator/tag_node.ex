@@ -12,7 +12,6 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.TagNode do
     [
       Directive.maybe_add_directives_begin(directives),
       ["<", tag_name, render_tag_props(attributes), ">"],
-      Directive.maybe_add_directives_after_begin(directives, false),
       NodeTranslator.translate(children, caller),
       ["</", tag_name, ">"],
       Directive.maybe_add_directives_end(directives)

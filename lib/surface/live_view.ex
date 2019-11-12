@@ -46,7 +46,6 @@ defmodule Surface.LiveView do
       Directive.maybe_add_directives_begin(directives),
       children_groups_contents,
       add_render_call("live_render", ["@socket", mod_str, session], has_children?),
-      Directive.maybe_add_directives_after_begin(directives, false),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       maybe_add("<% end %>", has_children?),
       Directive.maybe_add_directives_end(directives)

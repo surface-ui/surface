@@ -43,7 +43,7 @@ defmodule Surface.LiveComponent do
       maybe_add_context_begin(mod, mod_str, translated_props),
       NodeTranslator.translate(children_groups_contents, caller),
       add_render_call("live_component", ["@socket", mod_str, translated_props], has_children?),
-      Directive.maybe_add_directives_after_begin(directives, true),
+      Directive.maybe_add_directives_after_begin(directives),
       NodeTranslator.translate(children, caller),
       maybe_add("<% end %>", has_children?),
       maybe_add_context_end(mod, mod_str, translated_props),
