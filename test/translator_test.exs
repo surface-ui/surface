@@ -22,7 +22,7 @@ defmodule TranslatorTest do
 
     translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
-    <div label="<%= @label %>"/>
+    <div label="<%= @label %>"></div>
     """
   end
 
@@ -33,7 +33,7 @@ defmodule TranslatorTest do
 
     translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
-    <div label="str_1 <%= @str_2 %> str_3 <%= @str_4 <> @str_5 %>"/>
+    <div label="str_1 <%= @str_2 %> str_3 <%= @str_4 <> @str_5 %>"></div>
     """
   end
 
@@ -44,7 +44,7 @@ defmodule TranslatorTest do
 
     translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
-    <div class="firstClass"/>
+    <div class="firstClass"></div>
     """
   end
 
@@ -55,7 +55,7 @@ defmodule TranslatorTest do
 
     translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
-    <div class="<%= css_class([ "firstClass", secondClass: var ]) %>"/>
+    <div class="<%= css_class([ "firstClass", secondClass: var ]) %>"></div>
     """
   end
 

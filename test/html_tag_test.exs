@@ -12,7 +12,7 @@ defmodule HtmlTagTest do
       """
 
     assert render_surface(code) =~ """
-    <div class="default1 default2 prop1 prop3"/>
+    <div class="default1 default2 prop1 prop3"></div>
     """
   end
 end
