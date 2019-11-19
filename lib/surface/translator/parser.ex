@@ -30,20 +30,12 @@ defmodule Surface.Translator.Parser do
     expr
   end
 
-  expr1 =
-    string("<%")
-    |> repeat(lookahead_not(string("%>")) |> utf8_char([]))
-    |> string("%>")
-    |> reduce({List, :to_string, []})
-
-  expr2 =
+  expr =
     string("{{")
     |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
     |> string("}}")
     |> map(:content_expr)
     |> reduce({List, :to_string, []})
-
-  expr = choice([expr1, expr2])
 
   boolean =
     choice([
@@ -68,7 +60,6 @@ defmodule Surface.Translator.Parser do
       lookahead_not(
         choice([
           ignore(string("<")),
-          ignore(string("<%")),
           ignore(string("{{"))
         ])
       )
