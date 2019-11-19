@@ -41,6 +41,7 @@ defmodule Surface.Component do
       maybe_add_context_begin(mod, mod_str, translated_props),
       NodeTranslator.translate(children_groups_contents, caller),
       NodeTranslator.translate(children_contents, caller),
+      add_require(mod_str),
       add_render_call("component", [mod_str, all_translated_props], false),
       maybe_add_context_end(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)

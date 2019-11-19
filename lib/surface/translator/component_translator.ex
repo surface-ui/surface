@@ -28,6 +28,10 @@ defmodule Surface.Translator.ComponentTranslator do
     end
   end
 
+  def add_require(mod_str) do
+    ["<% require ", mod_str, " %>"]
+  end
+
   def translate_children(_, [], _caller) do
     {[], []}
   end

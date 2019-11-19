@@ -42,6 +42,7 @@ defmodule Surface.LiveComponent do
       Directive.maybe_add_directives_begin(directives),
       maybe_add_context_begin(mod, mod_str, translated_props),
       NodeTranslator.translate(children_groups_contents, caller),
+      add_require(mod_str),
       add_render_call("live_component", ["@socket", mod_str, translated_props], has_children?),
       Directive.maybe_add_directives_after_begin(directives),
       "<% _ = assigns %>", # We need this to silence a warning. Probably due to a bug in live_component
