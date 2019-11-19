@@ -37,14 +37,18 @@ defmodule Surface.LiveView do
   @callback mount(props :: map, session :: map, Socket.t()) ::
               {:ok, Socket.t()} | {:stop, Socket.t()}
 
-  def translate(mod, mod_str, attributes, directives, children, children_groups_contents, caller) do
+  def translate(mod, mod_str, attributes, directives, children, _children_groups_contents, caller) do
     has_children? = children != []
-    translated_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
-    session = ["session: %{props: ", translated_props, "}"]
+
+    translated_session_props = Surface.Properties.translate_attributes(attributes, mod, mod_str, caller)
+
+    # TODO: Replace this. Create a directive :id?
+    live_view_id = :erlang.unique_integer([:positive, :monotonic]) |> to_string()
+
+    session = ["session: %{props: ", translated_session_props, "}, id: \"live_view_", live_view_id, "\""]
 
     [
       Directive.maybe_add_directives_begin(directives),
-      children_groups_contents,
       add_render_call("live_render", ["@socket", mod_str, session], has_children?),
       maybe_add(NodeTranslator.translate(children, caller), has_children?),
       maybe_add("<% end %>", has_children?),
