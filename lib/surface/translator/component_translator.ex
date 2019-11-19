@@ -50,15 +50,24 @@ defmodule Surface.Translator.ComponentTranslator do
 
   def translate_children_groups(module, attributes, data_children, caller) do
     bindings = find_bindings_from_lists(module, attributes)
-    for %{name: name, group: group, use_bindings: func_bindings} <- module.__props(),
-        group != nil,
-        reduce: {[], []} do
-      {all_contents, new_attributes} ->
-        # TODO: Warn if data_children[group] is nil
-        {contents, translated_props_list} = translate_data_children(data_children[group], func_bindings, bindings, caller)
-        value = "[" <> Enum.join(translated_props_list, ", ") <> "]"
-        attr = {to_string(name), {:attribute_expr, [value]}, caller.line}
-        {[contents | all_contents], [attr | new_attributes]}
+
+    result =
+      for %{name: name, group: group, use_bindings: func_bindings} <- module.__props(),
+          group != nil,
+          reduce: {[], []} do
+        {all_contents, new_attributes} ->
+          # TODO: Warn if data_children[group] is nil
+          {contents, translated_props_list} = translate_data_children(data_children[group], func_bindings, bindings, caller)
+          value = "[" <> Enum.join(translated_props_list, ", ") <> "]"
+          attr = {to_string(name), {:attribute_expr, [value]}, caller.line}
+          {[contents | all_contents], [attr | new_attributes]}
+      end
+
+    case result do
+      {[], _} ->
+        result
+      {contents, attributes} ->
+        {["\n" | contents], attributes}
     end
   end
 
@@ -75,7 +84,7 @@ defmodule Surface.Translator.ComponentTranslator do
         {contents, attributes} =
           if var do
             attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
-            {[content | contents], [attr | node.attributes]}
+            {[content, "\n" | contents], [attr | node.attributes]}
           else
             {contents, node.attributes}
           end
@@ -95,7 +104,7 @@ defmodule Surface.Translator.ComponentTranslator do
     content = [
       "<% ", var, " = fn ", args, " -> %>",
       children,
-      "<% end %>\n"
+      "<% end %>"
     ]
     {var, content}
   end
