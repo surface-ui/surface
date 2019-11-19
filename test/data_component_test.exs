@@ -1,4 +1,4 @@
-defmodule LiveComponentLazyTest do
+defmodule DataComponentTest do
   use ExUnit.Case
   use Phoenix.ConnTest
   import ComponentTestHelper
