@@ -1,5 +1,4 @@
 defprotocol Surface.Translator.NodeTranslator do
-  @fallback_to_any true
   def translate(nodes, caller)
 end
 
@@ -11,7 +10,7 @@ defimpl Surface.Translator.NodeTranslator, for: List do
   end
 end
 
-defimpl Surface.Translator.NodeTranslator, for: Any do
+defimpl Surface.Translator.NodeTranslator, for: [BitString, Integer] do
   def translate(node, _caller) do
     node
   end
