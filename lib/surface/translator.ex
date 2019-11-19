@@ -32,11 +32,16 @@ defmodule Surface.Translator do
         _ -> name
       end
 
-    mod = actual_module(name, caller)
+    children = put_module_info(node.children, caller)
+
+    {:module, mod} =
+      name
+      |> actual_module(caller)
+      |> Code.ensure_compiled()
 
     updated_node = %ComponentNode{node |
       module: mod,
-      children: put_module_info(node.children, caller)
+      children: children
     }
     [updated_node | put_module_info(nodes, caller)]
   end
