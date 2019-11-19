@@ -3,10 +3,14 @@
 # 2- Do not apply all directives to all nodes (e.g. :bindings only applies to components)
 defmodule Surface.Translator.Directive do
 
-  @directives [":for", ":bindings"]
+  @directives [":for", ":if", ":bindings"]
 
   def code_begin({":for", {:attribute_expr, [expr]}, _line}) do
     ["<%= for ", String.trim(expr), " do %>"]
+  end
+
+  def code_begin({":if", {:attribute_expr, [expr]}, _line}) do
+    ["<%= if ", String.trim(expr), " do %>"]
   end
 
   def code_begin(_) do
@@ -14,6 +18,10 @@ defmodule Surface.Translator.Directive do
   end
 
   def code_end({":for", _value, _line}) do
+    "<% end %>"
+  end
+
+  def code_end({":if", _value, _line}) do
     "<% end %>"
   end
 
