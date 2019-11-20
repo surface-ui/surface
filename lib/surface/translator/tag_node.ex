@@ -1,25 +1,17 @@
 defmodule Surface.Translator.TagNode do
-  defstruct [:name, :attributes, :children, :line]
-end
-
-defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.TagNode do
-  alias Surface.Translator.NodeTranslator
+  alias Surface.Translator
   alias Surface.Translator.Directive
 
-  def translate(%{name: tag_name} = node, caller) do
-    %{attributes: attributes, children: children, line: line} = node
+  def translate(node, caller) do
+    {tag_name, attributes, children, %{line: line}} = node
     {directives, attributes} = Directive.pop_directives(attributes)
     [
       Directive.maybe_add_directives_begin(directives),
       ["<", tag_name, render_tag_props(attributes), ">"],
-      NodeTranslator.translate(children, caller),
+      Translator.translate(children, caller),
       ["</", tag_name, ">"],
       Directive.maybe_add_directives_end(directives)
     ] |> Surface.Translator.IO.debug(attributes, line, caller)
-  end
-
-  def translate(node, _caller) do
-    node
   end
 
   defp render_tag_props(props) do

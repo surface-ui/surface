@@ -1,13 +1,9 @@
 defmodule Surface.Translator.ComponentNode do
-  defstruct [:name, :attributes, :children, :line, :module]
-end
-
-defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode do
   alias Surface.Translator.Directive
   import Surface.Translator.IO, only: [debug: 4, warn: 3]
 
   def translate(node, caller) do
-    %{name: mod_str, attributes: attributes, line: line, module: mod} = node
+    {mod_str, attributes, _, %{line: line, module: mod}} = node
     case validate_module(mod_str, mod) do
       {:ok, mod} ->
         validate_required_props(attributes, mod, mod_str, caller, line)
@@ -22,7 +18,7 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
   end
 
   defp do_translate(node, caller) do
-    %{name: mod_str, attributes: attributes, children: children, module: mod} = node
+    {mod_str, attributes, children, %{module: mod}} = node
     translator = mod.translator()
     {data_children, children} = split_data_children(children)
     {directives, attributes} = Directive.pop_directives(attributes)
@@ -72,14 +68,14 @@ defimpl Surface.Translator.NodeTranslator, for: Surface.Translator.ComponentNode
   def split_data_children(children) do
     {data_children, children} =
       Enum.reduce(children, {%{}, []}, fn child, {data_children, children} ->
-        if is_map(child) &&
-           child.__struct__ == Surface.Translator.ComponentNode
-           && function_exported?(child.module, :__group__, 0) do
-          group = child.module.__group__()
+        with {_, _, _, %{module: module}} <- child,
+             false <- is_nil(module),
+             true <- function_exported?(module, :__group__, 0) do
+          group = module.__group__()
           list = data_children[group] || []
           {Map.put(data_children, group, [child | list]), children}
         else
-          {data_children, [child | children]}
+          _ -> {data_children, [child | children]}
         end
       end)
     {data_children, Enum.reverse(children)}

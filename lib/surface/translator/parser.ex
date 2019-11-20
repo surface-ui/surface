@@ -157,8 +157,7 @@ defmodule Surface.Translator.Parser do
   defp closing_macro_tag(_, [macro, rest], %{macro: {[macro], {line, _}}} = context, _, _) do
     tag = "#" <> macro
     text = IO.iodata_to_binary(rest)
-    # {[{tag, [], [text]}], %{context | macro: nil}}
-    {[%ComponentNode{name: tag, attributes: [], children: [text], line: line}], %{context | macro: nil}}
+    {[{tag, [], [text], %{line: line}}], %{context | macro: nil}}
   end
 
   defp closing_macro_tag(_rest, _nodes, %{macro: macro}, _, _) do
@@ -212,13 +211,7 @@ defmodule Surface.Translator.Parser do
           end)
 
         children = (args[:child] || [])
-
-        case tag do
-          <<first, _::binary>> when first in ?A..?Z ->
-            {[%ComponentNode{name: tag, attributes: attributes, children: children, line: line}], context}
-          _ ->
-            {[%TagNode{name: tag, attributes: attributes, children: children, line: line}], context}
-        end
+        {[{tag, attributes, children, %{line: line}}], context}
 
       true ->
         {:error, "Closing tag #{closing_tag} did not match opening tag #{opening_tag}"}

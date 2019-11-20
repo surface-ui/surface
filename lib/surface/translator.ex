@@ -1,12 +1,12 @@
 defmodule Surface.Translator do
-  alias Surface.Translator.{TagNode, ComponentNode, Parser, NodeTranslator}
+  alias Surface.Translator.{TagNode, ComponentNode, Parser}
 
   def run(string, line_offset, caller) do
     string
     |> Parser.parse(line_offset)
     |> put_module_info(caller)
     |> prepend_context()
-    |> NodeTranslator.translate(caller)
+    |> translate(caller)
     |> IO.iodata_to_binary()
   end
 
@@ -17,6 +17,24 @@ defmodule Surface.Translator do
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 
+  def translate(nodes, caller) when is_list(nodes) do
+    for node <- nodes do
+      translate(node, caller)
+    end
+  end
+
+  def translate({<<first, _::binary>>, _, _, _} = node, caller) when first in ?A..?Z do
+    ComponentNode.translate(node, caller)
+  end
+
+  def translate({tag, _, _, _} = node, caller) when is_binary(tag) do
+    TagNode.translate(node, caller)
+  end
+
+  def translate(node, _caller) do
+    node
+  end
+
   defp prepend_context(parsed_code) do
     ["<% context = %{} %><% _ = context %>" | parsed_code]
   end
@@ -25,31 +43,32 @@ defmodule Surface.Translator do
     []
   end
 
-  defp put_module_info([%ComponentNode{name: name} = node | nodes], caller) do
+  defp put_module_info([{<<first, _::binary>>, _, _, _} = node | nodes], caller)
+      when first in ?A..?Z or first == ?# do
+    {name, attributes, children, meta} = node
+
     name =
       case name do
         "#" <> name -> name
         _ -> name
       end
 
-    children = put_module_info(node.children, caller)
+    children = put_module_info(children, caller)
 
     {:module, mod} =
       name
       |> actual_module(caller)
       |> Code.ensure_compiled()
 
-    updated_node = %ComponentNode{node |
-      module: mod,
-      children: children
-    }
+    updated_node = {name, attributes, children, Map.put(meta, :module, mod)}
     [updated_node | put_module_info(nodes, caller)]
   end
 
-  defp put_module_info([%TagNode{children: children} = node | nodes], caller) do
-    updated_node = %TagNode{node |
-      children: put_module_info(children, caller)
-    }
+  defp put_module_info([{tag_name, _, _, _} = node | nodes], caller) when is_binary(tag_name) do
+    {_, attributes, children, meta} = node
+
+    children = put_module_info(children, caller)
+    updated_node = {tag_name, attributes, children, meta}
     [updated_node | put_module_info(nodes, caller)]
   end
 

@@ -79,16 +79,18 @@ defmodule Surface.Translator.ComponentTranslator do
           |> Enum.map(&bindings[&1])
           |> Enum.join(", ")
 
-        {var, content} = translate_children_content(args, node.children)
+        {name, attributes, node_children, %{module: module}} = node
+
+        {var, content} = translate_children_content(args, node_children)
 
         {contents, attributes} =
           if var do
             attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
-            {[content, "\n" | contents], [attr | node.attributes]}
+            {[content, "\n" | contents], [attr | attributes]}
           else
-            {contents, node.attributes}
+            {contents, attributes}
           end
-        translated_props = Properties.translate_attributes(attributes, node.module, node.name, caller, false)
+        translated_props = Properties.translate_attributes(attributes, module, name, caller, false)
         {contents, [translated_props | translated_props_list]}
     end
   end

@@ -1,12 +1,12 @@
 defmodule ParserTest do
   use ExUnit.Case
-  alias Surface.Translator.{Parser, TagNode, ComponentNode}
+  alias Surface.Translator.{Parser}
 
   test "parse html tag" do
     code = ~S(<span label="My label 1" />)
     [node] = Parser.parse(code, 1)
 
-    assert node == %TagNode{name: "span", attributes: [{"label", 'My label 1', 1}], children: [], line: 1}
+    assert node == {"span", [{"label", 'My label 1', 1}], [], %{line: 1}}
   end
 
   test "parse html tag with children" do
@@ -15,10 +15,10 @@ defmodule ParserTest do
     tree = Parser.parse(code, 1)
 
     assert tree == [
-      %TagNode{name: "div", line: 1, attributes: [], children: [
-        %TagNode{name: "span", line: 1, attributes: [], children: []},
-        %TagNode{name: "span", line: 1, attributes: [], children: []},
-      ]}
+      {"div", [], [
+        {"span", [], [], %{line: 1}},
+        {"span", [], [], %{line: 1}},
+      ], %{line: 1}}
     ]
   end
 
@@ -26,26 +26,21 @@ defmodule ParserTest do
     code = ~S(<MyComponent label="My label"/>)
     [node] = Parser.parse(code, 1)
 
-    assert node == %ComponentNode{
-      name: "MyComponent",
-      attributes: [{"label", 'My label', 1}],
-      line: 1,
-      children: []
-    }
+    assert node == {"MyComponent", [{"label", 'My label', 1}], [], %{line: 1}}
   end
 
   test "parse component with children" do
     code = ~S(<MyComponent><span /><span /></MyComponent>)
     [node] = Parser.parse(code, 1)
 
-    assert node == %ComponentNode{
-      name: "MyComponent",
-      attributes: [],
-      line: 1,
-      children: [
-        %TagNode{name: "span", attributes: [], children: [], line: 1},
-        %TagNode{name: "span", attributes: [], children: [], line: 1}
-      ]
+    assert node == {
+      "MyComponent",
+      [],
+      [
+        {"span", [], [], %{line: 1}},
+        {"span", [], [], %{line: 1}}
+      ],
+      %{line: 1}
     }
   end
 
@@ -60,15 +55,15 @@ defmodule ParserTest do
     tree = Parser.parse(code, 1)
 
     assert tree == [
-      %TagNode{name: "div", line: 1, attributes: [], children: [
+      {"div", [], [
         10,
         32,
         32,
-        %TagNode{name: "span", line: 2, attributes: [], children: []},
+        {"span", [], [], %{line: 2}},
         "\n  ",
-        %TagNode{name: "span", line: 3, attributes: [], children: []},
+        {"span", [], [], %{line: 3}},
         "\n"
-      ]},
+      ], %{line: 1}},
       "\n"
     ]
   end
@@ -76,55 +71,25 @@ defmodule ParserTest do
   describe "macros" do
     test "single node" do
       assert Parser.parse("<#Foo>bar</#Foo>", 1) == [
-        %Surface.Translator.ComponentNode{
-          attributes: [],
-          children: ["bar"],
-          line: 1,
-          module: nil,
-          name: "#Foo"
-        }
+        {"#Foo", [], ["bar"], %{line: 1}}
       ]
     end
 
     test "mixed nodes" do
       assert Parser.parse("<#Foo>one<bar>two</baz>three</#Foo>", 1) == [
-        %Surface.Translator.ComponentNode{
-          attributes: [],
-          children: ["one<bar>two</baz>three"],
-          line: 1,
-          module: nil,
-          name: "#Foo"
-        }
+        {"#Foo", [], ["one<bar>two</baz>three"], %{line: 1}}
       ]
 
       assert Parser.parse("<#Foo>one<#Bar>two</#Baz>three</#Foo>", 1) == [
-        %Surface.Translator.ComponentNode{
-          attributes: [],
-          children: ["one<#Bar>two</#Baz>three"],
-          line: 1,
-          module: nil,
-          name: "#Foo"
-        }
+        {"#Foo", [], ["one<#Bar>two</#Baz>three"], %{line: 1}}
       ]
 
       assert Parser.parse("<#Foo>one<bar>two<baz>three</#Foo>", 1) == [
-        %Surface.Translator.ComponentNode{
-          attributes: [],
-          children: ["one<bar>two<baz>three"],
-          line: 1,
-          module: nil,
-          name: "#Foo"
-        }
+        {"#Foo", [], ["one<bar>two<baz>three"], %{line: 1}}
       ]
 
       assert Parser.parse("<#Foo>one</bar>two</baz>three</#Foo>", 1) == [
-        %Surface.Translator.ComponentNode{
-          attributes: [],
-          children: ["one</bar>two</baz>three"],
-          line: 1,
-          module: nil,
-          name: "#Foo"
-        }
+        {"#Foo", [], ["one</bar>two</baz>three"], %{line: 1}}
       ]
     end
 
@@ -138,19 +103,14 @@ defmodule ParserTest do
       </div>
       """
 
-      [%{children: children} | _] = Parser.parse(code, 1)
-      assert Enum.at(children, 4).line == 3
+      [{_, _, children, _} | _] = Parser.parse(code, 1)
+      {_, _, _, meta} = Enum.at(children, 4)
+      assert meta.line == 3
     end
 
     test "do not perform interpolation for inner content" do
       assert Parser.parse("<#Foo>one {{ @var }} two</#Foo>", 1) == [
-        %Surface.Translator.ComponentNode{
-          attributes: [],
-          children: ["one {{ @var }} two"],
-          line: 1,
-          module: nil,
-          name: "#Foo"
-        }
+        {"#Foo", [], ["one {{ @var }} two"], %{line: 1}}
       ]
     end
   end
