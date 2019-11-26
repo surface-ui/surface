@@ -1,4 +1,4 @@
-defmodule Surface.Translator.ComponentTranslator do
+defmodule Surface.Translator.LiveComponentTranslator do
   alias Surface.Translator
   alias Surface.Translator.Directive
   alias Surface.Properties
@@ -20,22 +20,27 @@ defmodule Surface.Translator.ComponentTranslator do
 
     ######
 
-    {children_contents, children_attributes} = translate_children(directives, children, caller)
-
-    {children_groups_contents, children_groups_attributes} =
+    {children_groups_contents, children_attributes} =
       translate_children_groups(mod, attributes, data_children, caller)
 
-    translated_props = Properties.translate_attributes(attributes, mod, mod_str, caller)
-    all_attributes = children_attributes ++ children_groups_attributes ++ attributes
-    all_translated_props = Properties.translate_attributes(all_attributes, mod, mod_str, caller)
+    has_children? = children != []
+
+    # TODO: Add maybe_generate_id() to create an id automatically if there's a `handle_event`.
+    # Also, it's probably better to create a directive :id instead of a property
+    all_attributes = attributes ++ children_attributes
+    translated_props = Properties.translate_attributes(all_attributes , mod, mod_str, caller)
+    translated_props = "Keyword.new(#{translated_props})"
 
     [
       Directive.maybe_add_directives_begin(directives),
       maybe_add_context_begin(mod, mod_str, translated_props),
       Translator.translate(children_groups_contents, caller),
-      Translator.translate(children_contents, caller),
       add_require(mod_str),
-      add_render_call("component", [mod_str, all_translated_props], false),
+      add_render_call("live_component", ["@socket", mod_str, translated_props], has_children?),
+      Directive.maybe_add_directives_after_begin(directives),
+      "<% _ = assigns %>", # We need this to silence a warning. Probably due to a bug in live_component
+      Translator.translate(children, caller),
+      maybe_add("<% end %>", has_children?),
       maybe_add_context_end(mod, mod_str, translated_props),
       Directive.maybe_add_directives_end(directives)
     ]

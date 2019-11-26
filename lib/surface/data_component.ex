@@ -8,6 +8,10 @@ defmodule Surface.DataComponent do
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
 
+      def __component_type__ do
+        unquote(__MODULE__)
+      end
+
       def data(assigns) do
         {:ok, assigns}
       end

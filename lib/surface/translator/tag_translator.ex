@@ -1,6 +1,7 @@
-defmodule Surface.Translator.TagNode do
+defmodule Surface.Translator.TagTranslator do
   alias Surface.Translator
   alias Surface.Translator.Directive
+  alias Surface.Properties
 
   def translate(node, caller) do
     {tag_name, attributes, children, %{line: line}} = node
@@ -19,7 +20,7 @@ defmodule Surface.Translator.TagNode do
       value = replace_attribute_expr(value)
       value =
         if key in ["class", :class] do
-          Surface.Properties.translate_value(:css_class, value, nil, nil)
+          Properties.translate_value(:css_class, value, nil, nil)
         else
           value
         end
