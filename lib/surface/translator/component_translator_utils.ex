@@ -12,22 +12,6 @@ defmodule Surface.Translator.ComponentTranslatorUtils do
     if condition, do: value, else: ""
   end
 
-  def maybe_add_context_begin(mod, mod_str, rendered_props) do
-    if function_exported?(mod, :begin_context, 1) do
-      ["<% context = ", mod_str, ".begin_context(", rendered_props, ") %><% _ = context %>"]
-    else
-      ""
-    end
-  end
-
-  def maybe_add_context_end(mod, mod_str, rendered_props) do
-    if function_exported?(mod, :end_context, 1) do
-      ["<% context = ", mod_str, ".end_context(", rendered_props, ") %><% _ = context %>"]
-    else
-      ""
-    end
-  end
-
   def add_require(mod_str) do
     ["<% require ", mod_str, " %>"]
   end
@@ -106,7 +90,12 @@ defmodule Surface.Translator.ComponentTranslatorUtils do
           else
             {contents, attributes}
           end
-        translated_props = Properties.translate_attributes(attributes, module, name, caller, false)
+
+        translated_props =
+          attributes
+          |> Properties.translate_attributes(module, name, caller)
+          |> Properties.wrap(name)
+
         {contents, [translated_props | translated_props_list]}
     end
   end

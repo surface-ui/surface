@@ -2,6 +2,10 @@ defmodule Surface.Translator do
   alias Surface.Translator.Parser
   import Surface.Translator.IO, only: [debug: 4, warn: 3]
 
+  @tag_directives [":for", ":if"]
+
+  @component_directives [":for", ":if", ":bindings"]
+
   def run(string, line_offset, caller) do
     string
     |> Parser.parse(line_offset)
@@ -35,11 +39,20 @@ defmodule Surface.Translator do
     validate_required_props(attributes, mod, mod_str, caller, line)
 
     translator.translate(node, caller)
+    |> translate_context(node)
+    |> translate_directives(node)
+    |> fix_assigns_warning(node)
+    |> Tuple.to_list()
     |> debug(attributes, line, caller)
   end
 
   def translate({_, _, _, %{translator: translator}} = node, caller) do
+    {_, attributes, _, %{line: line}} = node
+
     translator.translate(node, caller)
+    |> translate_directives(node)
+    |> Tuple.to_list()
+    |> debug(attributes, line, caller)
   end
 
   def translate(node, _caller) do
@@ -59,6 +72,8 @@ defmodule Surface.Translator do
       when first in ?A..?Z or first == ?# do
     {name, attributes, children, meta} = node
 
+    {directives, attributes} = pop_directives(attributes, @component_directives)
+
     name =
       case name do
         "#" <> name -> name
@@ -71,9 +86,12 @@ defmodule Surface.Translator do
       with {:ok, mod} <- actual_module(name, caller),
            {:ok, mod} <- check_module_loaded(mod, name),
            {:ok, mod} <- check_module_is_component(mod, name) do
+        translated_props = Surface.Properties.translate_attributes(attributes, mod, name, caller)
         meta
         |> Map.put(:module, mod)
         |> Map.put(:translator, get_translator(mod))
+        |> Map.put(:directives, directives)
+        |> Map.put(:translated_props, ["context: context"] ++ translated_props)
       else
         {:error, message} ->
           Map.put(meta, :error, "cannot render <#{name}> (#{message})")
@@ -86,7 +104,12 @@ defmodule Surface.Translator do
   defp build_metadata([{tag_name, _, _, _} = node | nodes], caller) when is_binary(tag_name) do
     {_, attributes, children, meta} = node
 
-    meta = Map.put(meta, :translator, Surface.Translator.TagTranslator)
+    {directives, attributes} = pop_directives(attributes, @tag_directives)
+
+    meta =
+      meta
+      |> Map.put(:translator, Surface.Translator.TagTranslator)
+      |> Map.put(:directives, directives)
 
     children = build_metadata(children, caller)
     updated_node = {tag_name, attributes, children, meta}
@@ -101,6 +124,7 @@ defmodule Surface.Translator do
     nodes
   end
 
+  # TODO: Move to mod.__translator__
   defp get_translator(mod) do
     case mod.__component_type__ do
       Surface.MacroComponent ->
@@ -157,8 +181,91 @@ defmodule Surface.Translator do
 
       for prop <- missing_props do
         message = "Missing required property \"#{prop}\" for component <#{mod_str}>"
-        Surface.Translator.IO.warn(message, caller, &(&1 + line))
+        warn(message, caller, &(&1 + line))
       end
     end
+  end
+
+  # TODO: We need this to silence the warning. Check if it's a bug in live_component
+  defp fix_assigns_warning(parts, node) do
+    {open, children, close} = parts
+    {_, _, _, %{translator: translator}} = node
+
+    case translator do
+      Surface.Translator.LiveComponentTranslator ->
+        {[open, "<% _ = assigns %>"],  children, close}
+      _ ->
+        parts
+    end
+  end
+
+  defp translate_context(parts, {mod_str, _, _, %{module: mod, translated_props: translated_props}}) do
+    {open, children, close} = parts
+    props = Surface.Properties.wrap(translated_props, mod_str)
+
+    open =
+      if function_exported?(mod, :begin_context, 1) do
+        ["<% context = ", mod_str, ".begin_context(", props, ") %><% _ = context %>", open]
+      else
+        open
+      end
+
+    close =
+      if function_exported?(mod, :end_context, 1) do
+        ["<% context = ", mod_str, ".end_context(", props, ") %><% _ = context %>"]
+      else
+        close
+      end
+
+    {open, children, close}
+  end
+
+  defp translate_context(parts, _node) do
+    parts
+  end
+
+  def translate_directives(parts, node) do
+    {_, _, _, %{directives: directives}} = node
+
+    Enum.reduce(directives, parts, fn directive, acc ->
+      handle_directive(directive, acc, node)
+    end)
+  end
+
+  defp handle_directive({":if", {:attribute_expr, [expr]}, _line}, parts, _node) do
+    {open, children, close} = parts
+
+    {
+      ["<%= if ", String.trim(expr), " do %>", open],
+      children,
+      [close, "<% end %>"]
+    }
+  end
+
+  defp handle_directive({":for", {:attribute_expr, [expr]}, _line}, parts, _node) do
+    {open, children, close} = parts
+
+    {
+      ["<%= for ", String.trim(expr), " do %>", open],
+      children,
+      [close, "<% end %>"]
+    }
+  end
+
+  defp handle_directive({":bindings", {:attribute_expr, [expr]}, _line}, parts, node) do
+    {open, children, close} = parts
+    {_, _, _, %{translator: translator}} = node
+
+    case translator do
+      Surface.Translator.LiveComponentTranslator ->
+        {[open, "<% ", String.trim(expr), " -> %>"], children, close}
+
+      _ ->
+        parts
+    end
+  end
+
+  defp pop_directives(attributes, allowed_directives) do
+    Enum.split_with(attributes, fn {attr, _, _} -> attr in allowed_directives end)
   end
 end

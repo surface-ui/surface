@@ -1,18 +1,15 @@
 defmodule Surface.Translator.TagTranslator do
   alias Surface.Translator
-  alias Surface.Translator.Directive
   alias Surface.Properties
 
   def translate(node, caller) do
-    {tag_name, attributes, children, %{line: line}} = node
-    {directives, attributes} = Directive.pop_directives(attributes)
-    [
-      Directive.maybe_add_directives_begin(directives),
+    {tag_name, attributes, children, _} = node
+
+    {
       ["<", tag_name, render_tag_props(attributes), ">"],
       Translator.translate(children, caller),
-      ["</", tag_name, ">"],
-      Directive.maybe_add_directives_end(directives)
-    ] |> Surface.Translator.IO.debug(attributes, line, caller)
+      ["</", tag_name, ">"]
+    }
   end
 
   defp render_tag_props(props) do

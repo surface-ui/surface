@@ -59,31 +59,30 @@ defmodule Surface.Properties do
   end
 
   # TODO: Move this to a new PropertyTranslator (or AttributeTranslator)
-  def translate_attributes(attributes, mod, mod_str, caller, add_context \\ true) do
+  def translate_attributes(attributes, mod, mod_str, caller) do
     if function_exported?(mod, :__props, 0) do
-      props =
-        for {key, value, line} <- attributes do
-          key_atom = String.to_atom(key)
-          prop = mod.__get_prop__(key_atom)
-          if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
-            message = "Unknown property \"#{key}\" for component <#{mod_str}>"
-            Surface.Translator.IO.warn(message, caller, &(&1 + line))
-          end
-
-          value = translate_value(prop[:type], value, caller, line)
-          render_prop_value(key, value)
+      for {key, value, line} <- attributes do
+        key_atom = String.to_atom(key)
+        prop = mod.__get_prop__(key_atom)
+        if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
+          message = "Unknown property \"#{key}\" for component <#{mod_str}>"
+          Surface.Translator.IO.warn(message, caller, &(&1 + line))
         end
 
-        extra_props =
-          if add_context do
-            ["context: context"]
-          else
-            []
-          end
-      ["put_default_props(%{", Enum.join(props ++ extra_props, ", "), "}, #{mod_str})"]
+        value = translate_value(prop[:type], value, caller, line)
+        render_prop_value(key, value)
+      end
     else
-      "%{}"
+      []
     end
+  end
+
+  def wrap([], _mod_str) do
+    "%{}"
+  end
+
+  def wrap(props, mod_str) do
+    ["put_default_props(%{", Enum.join(props, ", "), "}, #{mod_str})"]
   end
 
   def translate_value(:event, value, caller, line) do

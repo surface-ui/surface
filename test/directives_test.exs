@@ -55,7 +55,7 @@ defmodule Surface.DirectivesTest do
       """
     end
   end
-  
+
   describe ":if" do
     test "in components" do
       assigns = %{show: true, dont_show: false}
@@ -77,19 +77,20 @@ defmodule Surface.DirectivesTest do
     end
 
     test "in html tags" do
-      assigns = %{items: [1, 2]}
+      assigns = %{show: true, dont_show: false}
       code =
         ~H"""
-        <div :for={{ i <- @items }}>
-          Item: {{i}}
+        <div :if={{ @show }}>
+          Show
+        </div>
+        <div :if={{ @dont_show }}>
+          Dont's show
         </div>
         """
 
       assert render_surface(code) =~ """
       <div>
-        Item: 1
-      </div><div>
-        Item: 2
+        Show
       </div>
       """
     end
