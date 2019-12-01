@@ -246,7 +246,7 @@ defmodule TranslatorTest do
       end)
     end
 
-    test "raise error on the right line when error occurres in data components" do
+    test "raise error on the right line when error occurs in data components" do
       code = """
       <Grid items={{ user <- users }}>
         <Column>
@@ -265,7 +265,7 @@ defmodule TranslatorTest do
       end)
     end
 
-    test "raise error on the right line when error occurres in live components" do
+    test "raise error on the right line when error occurs in live components" do
       code = """
       <GridLive items={{ , }}>
         <Column>
