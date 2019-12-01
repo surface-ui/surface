@@ -4,11 +4,12 @@ defmodule Surface.Component do
       use Surface.BaseComponent
       import Surface.Translator, only: [sigil_H: 2]
       import unquote(__MODULE__), only: [component: 2, component: 3]
+      import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
 
-      def __component_type__ do
-        unquote(__MODULE__)
+      def translator do
+        Surface.Translator.ComponentTranslator
       end
     end
   end

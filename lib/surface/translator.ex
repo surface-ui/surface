@@ -2,6 +2,8 @@ defmodule Surface.Translator do
   alias Surface.Translator.Parser
   import Surface.Translator.IO, only: [debug: 4, warn: 3]
 
+  @callback translate(node :: any, caller: Macro.Env.t()) :: any
+
   @tag_directives [":for", ":if"]
 
   @component_directives [":for", ":if", ":bindings"]
@@ -85,7 +87,7 @@ defmodule Surface.Translator do
            {:ok, mod} <- check_module_is_component(mod, name) do
         meta
         |> Map.put(:module, mod)
-        |> Map.put(:translator, get_translator(mod))
+        |> Map.put(:translator, mod.translator())
         |> Map.put(:directives, directives)
       else
         {:error, message} ->
@@ -119,26 +121,6 @@ defmodule Surface.Translator do
     nodes
   end
 
-  # TODO: Move to mod.__translator__
-  defp get_translator(mod) do
-    case mod.__component_type__ do
-      Surface.MacroComponent ->
-        mod
-
-      Surface.Component ->
-        Surface.Translator.ComponentTranslator
-
-      Surface.DataComponent ->
-        Surface.Translator.DataComponentTranslator
-
-      Surface.LiveComponent ->
-        Surface.Translator.LiveComponentTranslator
-
-      Surface.LiveView ->
-        Surface.Translator.LiveViewTranslator
-    end
-  end
-
   defp actual_module(mod_str, env) do
     {:ok, ast} = Code.string_to_quoted(mod_str)
     case Macro.expand(ast, env) do
@@ -160,7 +142,7 @@ defmodule Surface.Translator do
   end
 
   defp check_module_is_component(module, mod_str) do
-    if function_exported?(module, :__component_type__, 0) do
+    if function_exported?(module, :translator, 0) do
       {:ok, module}
     else
       {:error, "module #{mod_str} is not a component"}

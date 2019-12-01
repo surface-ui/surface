@@ -2,6 +2,8 @@ defmodule Surface.Translator.TagTranslator do
   alias Surface.Translator
   alias Surface.Properties
 
+  @behaviour Translator
+
   def translate(node, caller) do
     {tag_name, attributes, children, _} = node
 

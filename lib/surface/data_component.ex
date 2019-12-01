@@ -3,13 +3,13 @@ defmodule Surface.DataComponent do
     group = Keyword.get(opts, :group, __CALLER__.module)
 
     quote do
-      use Surface.Properties
-
+      use Surface.BaseComponent
       import unquote(__MODULE__)
+
       @behaviour unquote(__MODULE__)
 
-      def __component_type__ do
-        unquote(__MODULE__)
+      def translator do
+        Surface.Translator.DataComponentTranslator
       end
 
       def data(assigns) do

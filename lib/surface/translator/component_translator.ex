@@ -3,6 +3,8 @@ defmodule Surface.Translator.ComponentTranslator do
   alias Surface.Properties
   import Surface.Translator.ComponentTranslatorHelper
 
+  @behaviour Translator
+
   def translate(node, caller) do
     {mod_str, attributes, children, meta} = node
     %{module: mod, line: mod_line, directives: directives} = meta

@@ -5,6 +5,7 @@ defmodule Surface.LiveView do
       use Surface.EventValidator
       import Surface.Translator, only: [sigil_H: 2]
       import Surface.Component, only: [component: 2, component: 3]
+      import Phoenix.HTML
 
       import unquote(__MODULE__)
       @behaviour unquote(__MODULE__)
@@ -12,8 +13,8 @@ defmodule Surface.LiveView do
       @impl unquote(__MODULE__)
       def mount(_props, _session, socket), do: {:ok, socket}
 
-      def __component_type__ do
-        unquote(__MODULE__)
+      def translator do
+        Surface.Translator.LiveViewTranslator
       end
 
       use Phoenix.LiveView
