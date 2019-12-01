@@ -38,7 +38,7 @@ defmodule Surface.Properties do
   end
 
   defmacro __before_compile__(env) do
-    builtin_props = [:id, :debug, :inner_content]
+    builtin_props = [:id, :inner_content]
     props = Module.get_attribute(env.module, :properties)
     props_names = Enum.map(props, fn prop -> prop.name end) ++ builtin_props
     props_by_name = for p <- props, into: %{}, do: {p.name, p}

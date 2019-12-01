@@ -1,12 +1,12 @@
 defmodule Surface.Translator do
   alias Surface.Translator.Parser
-  import Surface.Translator.IO, only: [debug: 4, warn: 3]
+  import Surface.Translator.IO, only: [warn: 3]
 
   @callback translate(node :: any, caller: Macro.Env.t()) :: any
 
-  @tag_directives [":for", ":if"]
+  @tag_directives [":for", ":if", ":debug"]
 
-  @component_directives [":for", ":if", ":bindings"]
+  @component_directives [":for", ":if", ":bindings", ":debug"]
 
   def run(string, line_offset, caller) do
     string
@@ -34,18 +34,14 @@ defmodule Surface.Translator do
     validate_required_props(attributes, mod, mod_str, caller, line)
 
     translator.translate(node, caller)
-    |> translate_directives(node)
+    |> translate_directives(node, caller)
     |> Tuple.to_list()
-    |> debug(attributes, line, caller)
   end
 
   def translate({_, _, _, %{translator: translator}} = node, caller) do
-    {_, attributes, _, %{line: line}} = node
-
     translator.translate(node, caller)
-    |> translate_directives(node)
+    |> translate_directives(node, caller)
     |> Tuple.to_list()
-    |> debug(attributes, line, caller)
   end
 
   def translate(node, _caller) do
@@ -155,15 +151,15 @@ defmodule Surface.Translator do
     end
   end
 
-  def translate_directives(parts, node) do
+  def translate_directives(parts, node, caller) do
     {_, _, _, %{directives: directives}} = node
 
     Enum.reduce(directives, parts, fn directive, acc ->
-      handle_directive(directive, acc, node)
+      handle_directive(directive, acc, node, caller)
     end)
   end
 
-  defp handle_directive({":if", {:attribute_expr, [expr]}, _line}, parts, _node) do
+  defp handle_directive({":if", {:attribute_expr, [expr]}, _line}, parts, _node, _caller) do
     {open, children, close} = parts
 
     {
@@ -173,7 +169,7 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":for", {:attribute_expr, [expr]}, _line}, parts, _node) do
+  defp handle_directive({":for", {:attribute_expr, [expr]}, _line}, parts, _node, _caller) do
     {open, children, close} = parts
 
     {
@@ -183,7 +179,20 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":bindings", {:attribute_expr, [_expr]}, _line}, parts, _node) do
+  defp handle_directive({":bindings", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
+    parts
+  end
+
+  defp handle_directive({":debug", _value, _line}, parts, node, caller) do
+    {_, _, _, %{line: line}} = node
+
+    IO.puts ">>> DEBUG: #{caller.file}:#{caller.line + line}"
+    parts
+    |> Tuple.to_list()
+    |> IO.iodata_to_binary()
+    |> IO.puts
+    IO.puts "<<<"
+
     parts
   end
 
