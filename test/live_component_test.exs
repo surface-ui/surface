@@ -79,8 +79,8 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <InfoProvider>
-        <span>{{ @info }}</span>
+      <InfoProvider :bindings={{ info: info }}>
+        <span>{{ info }}</span>
       </InfoProvider>
       """
     end

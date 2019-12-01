@@ -1,12 +1,19 @@
 defmodule Surface.Translator do
-  alias Surface.Translator.{TagNode, ComponentNode, Parser, NodeTranslator}
+  alias Surface.Translator.Parser
+  import Surface.Translator.IO, only: [debug: 4, warn: 3]
+
+  @callback translate(node :: any, caller: Macro.Env.t()) :: any
+
+  @tag_directives [":for", ":if"]
+
+  @component_directives [":for", ":if", ":bindings"]
 
   def run(string, line_offset, caller) do
     string
     |> Parser.parse(line_offset)
-    |> put_module_info(caller)
+    |> build_metadata(caller)
     |> prepend_context()
-    |> NodeTranslator.translate(caller)
+    |> translate(caller)
     |> IO.iodata_to_binary()
   end
 
@@ -17,52 +24,177 @@ defmodule Surface.Translator do
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 
+  def translate(nodes, caller) when is_list(nodes) do
+    for node <- nodes do
+      translate(node, caller)
+    end
+  end
+
+  def translate({_, _, _, %{error: message, line: line}}, caller) do
+    warn(message, caller, &(&1 + line))
+    encoded_message = Plug.HTML.html_escape_to_iodata(message)
+    ["<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
+  end
+
+  def translate({_, _, _, %{translator: translator, module: mod}} = node, caller) do
+    {mod_str, attributes, _, %{line: line}} = node
+    validate_required_props(attributes, mod, mod_str, caller, line)
+
+    translator.translate(node, caller)
+    |> translate_directives(node)
+    |> Tuple.to_list()
+    |> debug(attributes, line, caller)
+  end
+
+  def translate({_, _, _, %{translator: translator}} = node, caller) do
+    {_, attributes, _, %{line: line}} = node
+
+    translator.translate(node, caller)
+    |> translate_directives(node)
+    |> Tuple.to_list()
+    |> debug(attributes, line, caller)
+  end
+
+  def translate(node, _caller) do
+    node
+  end
+
   defp prepend_context(parsed_code) do
     ["<% context = %{} %><% _ = context %>" | parsed_code]
   end
 
-  defp put_module_info([], _caller) do
+  defp build_metadata([], _caller) do
     []
   end
 
-  defp put_module_info([%ComponentNode{name: name} = node | nodes], caller) do
+  # TODO: Handle macros separately
+  defp build_metadata([{<<first, _::binary>>, _, _, _} = node | nodes], caller)
+      when first in ?A..?Z or first == ?# do
+    {name, attributes, children, meta} = node
+    {directives, attributes} = pop_directives(attributes, @component_directives)
+
     name =
       case name do
         "#" <> name -> name
         _ -> name
       end
 
-    children = put_module_info(node.children, caller)
+    children = build_metadata(children, caller)
 
-    {:module, mod} =
-      name
-      |> actual_module(caller)
-      |> Code.ensure_compiled()
+    meta =
+      with {:ok, mod} <- actual_module(name, caller),
+           {:ok, mod} <- check_module_loaded(mod, name),
+           {:ok, mod} <- check_module_is_component(mod, name) do
+        meta
+        |> Map.put(:module, mod)
+        |> Map.put(:translator, mod.translator())
+        |> Map.put(:directives, directives)
+      else
+        {:error, message} ->
+          Map.put(meta, :error, "cannot render <#{name}> (#{message})")
+      end
 
-    updated_node = %ComponentNode{node |
-      module: mod,
-      children: children
-    }
-    [updated_node | put_module_info(nodes, caller)]
+    updated_node = {name, attributes, children, meta}
+    [updated_node | build_metadata(nodes, caller)]
   end
 
-  defp put_module_info([%TagNode{children: children} = node | nodes], caller) do
-    updated_node = %TagNode{node |
-      children: put_module_info(children, caller)
-    }
-    [updated_node | put_module_info(nodes, caller)]
+  defp build_metadata([{tag_name, _, _, _} = node | nodes], caller) when is_binary(tag_name) do
+    {_, attributes, children, meta} = node
+
+    {directives, attributes} = pop_directives(attributes, @tag_directives)
+
+    meta =
+      meta
+      |> Map.put(:translator, Surface.Translator.TagTranslator)
+      |> Map.put(:directives, directives)
+
+    children = build_metadata(children, caller)
+    updated_node = {tag_name, attributes, children, meta}
+    [updated_node | build_metadata(nodes, caller)]
   end
 
-  defp put_module_info([node | nodes], caller) do
-    [node | put_module_info(nodes, caller)]
+  defp build_metadata([node | nodes], caller) do
+    [node | build_metadata(nodes, caller)]
   end
 
-  defp put_module_info(nodes, _caller) do
+  defp build_metadata(nodes, _caller) do
     nodes
   end
 
   defp actual_module(mod_str, env) do
     {:ok, ast} = Code.string_to_quoted(mod_str)
-    Macro.expand(ast, env)
+    case Macro.expand(ast, env) do
+      mod when is_atom(mod) ->
+        {:ok, mod}
+      _ ->
+        {:error, "#{mod_str} is not a valid module name"}
+    end
+  end
+
+  defp check_module_loaded(module, mod_str) do
+    case Code.ensure_compiled(module) do
+      {:module, mod} ->
+        {:ok, mod}
+
+      {:error, _reason} ->
+        {:error, "module #{mod_str} could not be loaded"}
+    end
+  end
+
+  defp check_module_is_component(module, mod_str) do
+    if function_exported?(module, :translator, 0) do
+      {:ok, module}
+    else
+      {:error, "module #{mod_str} is not a component"}
+    end
+  end
+
+  defp validate_required_props(props, mod, mod_str, caller, line) do
+    if function_exported?(mod, :__props, 0) do
+      existing_props = Enum.map(props, fn {key, _, _} -> String.to_atom(key) end)
+      required_props = for p <- mod.__props(), p.required, do: p.name
+      missing_props = required_props -- existing_props
+
+      for prop <- missing_props do
+        message = "Missing required property \"#{prop}\" for component <#{mod_str}>"
+        warn(message, caller, &(&1 + line))
+      end
+    end
+  end
+
+  def translate_directives(parts, node) do
+    {_, _, _, %{directives: directives}} = node
+
+    Enum.reduce(directives, parts, fn directive, acc ->
+      handle_directive(directive, acc, node)
+    end)
+  end
+
+  defp handle_directive({":if", {:attribute_expr, [expr]}, _line}, parts, _node) do
+    {open, children, close} = parts
+
+    {
+      ["<%= if ", String.trim(expr), " do %>", open],
+      children,
+      [close, "<% end %>"]
+    }
+  end
+
+  defp handle_directive({":for", {:attribute_expr, [expr]}, _line}, parts, _node) do
+    {open, children, close} = parts
+
+    {
+      ["<%= for ", String.trim(expr), " do %>", open],
+      children,
+      [close, "<% end %>"]
+    }
+  end
+
+  defp handle_directive({":bindings", {:attribute_expr, [_expr]}, _line}, parts, _node) do
+    parts
+  end
+
+  defp pop_directives(attributes, allowed_directives) do
+    Enum.split_with(attributes, fn {attr, _, _} -> attr in allowed_directives end)
   end
 end

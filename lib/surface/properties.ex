@@ -58,11 +58,10 @@ defmodule Surface.Properties do
     end
   end
 
-  # TODO: Move this to a new PropertyTranslator (or AttributeTranslator)
-  def translate_attributes(attributes, mod, mod_str, caller, add_context \\ true) do
+  def translate_attributes(attributes, mod, mod_str, mod_line, caller) do
     if function_exported?(mod, :__props, 0) do
-      props =
-        for {key, value, line} <- attributes do
+      {_, translated_props} =
+        Enum.reduce(attributes, {mod_line, []}, fn {key, value, line}, {last_line, translated_props} ->
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
           if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
@@ -71,16 +70,10 @@ defmodule Surface.Properties do
           end
 
           value = translate_value(prop[:type], value, caller, line)
-          render_prop_value(key, value)
-        end
-
-        extra_props =
-          if add_context do
-            ["context: context"]
-          else
-            []
-          end
-      ["put_default_props(%{", Enum.join(props ++ extra_props, ", "), "}, #{mod_str})"]
+          translated_prop = [String.duplicate("\n", line - last_line) | render_prop_value(key, value)]
+          {line, [translated_prop | translated_props]}
+        end)
+      ["put_default_props(%{", Enum.join(translated_props, ", "), "}, ", mod_str, ")"]
     else
       "%{}"
     end
@@ -175,7 +168,7 @@ defmodule Surface.Properties do
     value
   end
 
-  # TODO: Replace with a decent implementation
+  # TODO: Find a better way to do this
   defp to_kebab_case(value) do
     value
     |> to_string()

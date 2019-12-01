@@ -1,4 +1,4 @@
-defmodule Surface.Translator.ComponentTranslator do
+defmodule Surface.Translator.LiveComponentTranslator do
   alias Surface.Translator
   alias Surface.Properties
   import Surface.Translator.ComponentTranslatorHelper
@@ -18,7 +18,7 @@ defmodule Surface.Translator.ComponentTranslator do
       Translator.translate(children_contents, caller),
       ["<% children_props = ", children_props_str, " %>"],
       add_require(mod_str),
-      add_render_call("component", [mod_str, "Map.merge(props, children_props)"])
+      add_render_call("live_component", ["@socket", mod_str, "Keyword.new(Map.merge(props, children_props))"])
     ]
 
     close = add_end_context(mod, mod_str)
