@@ -4,8 +4,6 @@ defmodule Surface.LiveComponent do
       use Phoenix.LiveComponent
       use Surface.BaseComponent
       use Surface.EventValidator
-      import Surface.Translator, only: [sigil_H: 2]
-      import Surface.Component, only: [component: 2, component: 3]
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)

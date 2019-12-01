@@ -2,10 +2,8 @@ defmodule Surface.DirectivesTest do
   use ExUnit.Case
   use Phoenix.ConnTest
 
+  import Surface
   import ComponentTestHelper
-  import Surface.Component, only: [component: 2]
-  import Surface.Properties, only: [put_default_props: 2]
-  import Surface.Translator, only: [sigil_H: 2]
 
   defmodule Div do
     use Surface.Component

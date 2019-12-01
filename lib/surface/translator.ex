@@ -17,13 +17,6 @@ defmodule Surface.Translator do
     |> IO.iodata_to_binary()
   end
 
-  defmacro sigil_H({:<<>>, _, [string]}, _) do
-    line_offset = __CALLER__.line + 1
-    string
-    |> run(line_offset, __CALLER__)
-    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
-  end
-
   def translate(nodes, caller) when is_list(nodes) do
     for node <- nodes do
       translate(node, caller)

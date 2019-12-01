@@ -1,9 +1,9 @@
 defmodule ContextTest do
   use ExUnit.Case
   use Phoenix.ConnTest
+
+  import Surface
   import ComponentTestHelper
-  import Surface.Translator, only: [sigil_H: 2]
-  import Surface.BaseComponent
 
   defmodule Outer do
     use Surface.Component
@@ -34,9 +34,6 @@ defmodule ContextTest do
   end
 
   test "render context field" do
-    import Surface.Component, only: [component: 2]
-    import Surface.Properties, only: [put_default_props: 2]
-
     assigns = %{}
     code =
       ~H"""

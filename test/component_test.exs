@@ -1,9 +1,10 @@
 defmodule Surface.ComponentTest do
   use ExUnit.Case
   use Phoenix.ConnTest
+
   import Phoenix.LiveViewTest
+  import Surface
   import ComponentTestHelper
-  import Surface.Translator, only: [sigil_H: 2]
 
   @endpoint Endpoint
 
@@ -126,9 +127,6 @@ defmodule Surface.ComponentTest do
 
   describe "Without LiveView" do
     test "render stateless component" do
-      import Surface.Component, only: [component: 2, component: 3]
-      import Surface.Properties, only: [put_default_props: 2]
-
       assigns = %{}
       code =
         ~H"""
@@ -143,9 +141,6 @@ defmodule Surface.ComponentTest do
     end
 
     test "render nested component's content" do
-      import Surface.Component, only: [component: 2]
-      import Surface.Properties, only: [put_default_props: 2]
-
       assigns = %{}
       code =
         ~H"""
@@ -162,9 +157,6 @@ defmodule Surface.ComponentTest do
     end
 
     test "render inner_content with named bindings" do
-      import Surface.Component, only: [component: 2]
-      import Surface.Properties, only: [put_default_props: 2]
-
       assigns = %{}
       code =
         ~H"""
