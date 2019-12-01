@@ -58,7 +58,9 @@ defmodule Surface.Properties do
     end
   end
 
-  def translate_attributes(attributes, mod, mod_str, mod_line, caller) do
+  def translate_attributes(attributes, mod, mod_str, mod_line, caller, opts \\ []) do
+    put_default_props = Keyword.get(opts, :put_default_props, true)
+
     if function_exported?(mod, :__props, 0) do
       {_, translated_props} =
         Enum.reduce(attributes, {mod_line, []}, fn {key, value, line}, {last_line, translated_props} ->
@@ -73,7 +75,14 @@ defmodule Surface.Properties do
           translated_prop = [String.duplicate("\n", line - last_line) | render_prop_value(key, value)]
           {line, [translated_prop | translated_props]}
         end)
-      ["put_default_props(%{", Enum.join(translated_props, ", "), "}, ", mod_str, ")"]
+
+      props = ["%{", Enum.join(translated_props, ", "), "}"]
+
+      if put_default_props do
+        ["put_default_props(", props, ", ", mod_str, ")"]
+      else
+        props
+      end
     else
       "%{}"
     end

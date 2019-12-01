@@ -47,6 +47,15 @@ defmodule TranslatorTest do
     end
   end
 
+  defmodule MyLiveViewWith do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~H"""
+      """
+    end
+  end
+
   test "tag with expression" do
     code = """
     <div label={{ @label }}/>
@@ -122,6 +131,25 @@ defmodule TranslatorTest do
     assert translated =~ """
     click: "click_event"\
     """
+  end
+
+  test "LiveView's propeties are forwarded to live_render as options" do
+    code = """
+    <MyLiveViewWith id="my_id" session={{ %{user_id: 1} }} />
+    """
+
+    translated = Surface.Translator.run(code, 0, __ENV__)
+    assert translated =~ "<% props = %{session: (%{user_id: 1}), id: \"my_id\"} %>"
+    assert translated =~ "<%= live_render(@socket, MyLiveViewWith, Keyword.new(props)) %>"
+  end
+
+  test "LiveView has no default properties" do
+    code = """
+    <MyLiveViewWith />
+    """
+
+    translated = Surface.Translator.run(code, 0, __ENV__)
+    assert translated =~ "<% props = %{} %>"
   end
 
   describe "errors/warnings" do

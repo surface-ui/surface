@@ -5,29 +5,14 @@ defmodule Surface.LiveView do
       use Surface.EventValidator
       import Phoenix.HTML
 
-      import unquote(__MODULE__)
-      @behaviour unquote(__MODULE__)
-
-      @impl unquote(__MODULE__)
-      def mount(_props, _session, socket), do: {:ok, socket}
+      property id, :integer
+      property session, :map
 
       def translator do
         Surface.Translator.LiveViewTranslator
       end
 
       use Phoenix.LiveView
-
-      @impl Phoenix.LiveView
-      def mount(session, socket) do
-        {props, session} = Map.pop(session, :props, %{})
-        props = Map.put_new(props, :content, [])
-        mount(props, session, assign(socket, props: props))
-      end
-
-      defoverridable mount: 3
     end
   end
-
-  @callback mount(props :: map, session :: map, Socket.t()) ::
-              {:ok, Socket.t()} | {:stop, Socket.t()}
 end

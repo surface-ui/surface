@@ -44,7 +44,7 @@ defmodule LiveComponentTest do
     use Surface.LiveView
     alias LiveComponentTest.StatelessComponent
 
-    def mount(_props, _session, socket) do
+    def mount(_session, socket) do
       {:ok, assign(socket, label: "Initial stateless")}
     end
 
