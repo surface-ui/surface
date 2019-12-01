@@ -1,4 +1,4 @@
-defmodule Surface.Translator.ComponentTranslatorUtils do
+defmodule Surface.Translator.ComponentTranslatorHelper do
   alias Surface.Properties
   alias Surface.Translator.DataComponentTranslator
 
