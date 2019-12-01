@@ -39,9 +39,7 @@ defmodule Surface.Translator do
     validate_required_props(attributes, mod, mod_str, caller, line)
 
     translator.translate(node, caller)
-    |> translate_context(node)
     |> translate_directives(node)
-    |> fix_assigns_warning(node)
     |> Tuple.to_list()
     |> debug(attributes, line, caller)
   end
@@ -71,7 +69,6 @@ defmodule Surface.Translator do
   defp build_metadata([{<<first, _::binary>>, _, _, _} = node | nodes], caller)
       when first in ?A..?Z or first == ?# do
     {name, attributes, children, meta} = node
-
     {directives, attributes} = pop_directives(attributes, @component_directives)
 
     name =
@@ -86,12 +83,10 @@ defmodule Surface.Translator do
       with {:ok, mod} <- actual_module(name, caller),
            {:ok, mod} <- check_module_loaded(mod, name),
            {:ok, mod} <- check_module_is_component(mod, name) do
-        translated_props = Surface.Properties.translate_attributes(attributes, mod, name, caller)
         meta
         |> Map.put(:module, mod)
         |> Map.put(:translator, get_translator(mod))
         |> Map.put(:directives, directives)
-        |> Map.put(:translated_props, ["context: context"] ++ translated_props)
       else
         {:error, message} ->
           Map.put(meta, :error, "cannot render <#{name}> (#{message})")
@@ -134,8 +129,7 @@ defmodule Surface.Translator do
         Surface.Translator.ComponentTranslator
 
       Surface.DataComponent ->
-        # TODO: Create own DataComponentTranslator
-        Surface.Translator.ComponentTranslator
+        Surface.Translator.DataComponentTranslator
 
       Surface.LiveComponent ->
         Surface.Translator.LiveComponentTranslator
@@ -186,44 +180,6 @@ defmodule Surface.Translator do
     end
   end
 
-  # TODO: We need this to silence the warning. Check if it's a bug in live_component
-  defp fix_assigns_warning(parts, node) do
-    {open, children, close} = parts
-    {_, _, _, %{translator: translator}} = node
-
-    case translator do
-      Surface.Translator.LiveComponentTranslator ->
-        {[open, "<% _ = assigns %>"],  children, close}
-      _ ->
-        parts
-    end
-  end
-
-  defp translate_context(parts, {mod_str, _, _, %{module: mod, translated_props: translated_props}}) do
-    {open, children, close} = parts
-    props = Surface.Properties.wrap(translated_props, mod_str)
-
-    open =
-      if function_exported?(mod, :begin_context, 1) do
-        ["<% context = ", mod_str, ".begin_context(", props, ") %><% _ = context %>", open]
-      else
-        open
-      end
-
-    close =
-      if function_exported?(mod, :end_context, 1) do
-        ["<% context = ", mod_str, ".end_context(", props, ") %><% _ = context %>"]
-      else
-        close
-      end
-
-    {open, children, close}
-  end
-
-  defp translate_context(parts, _node) do
-    parts
-  end
-
   def translate_directives(parts, node) do
     {_, _, _, %{directives: directives}} = node
 
@@ -252,17 +208,8 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":bindings", {:attribute_expr, [expr]}, _line}, parts, node) do
-    {open, children, close} = parts
-    {_, _, _, %{translator: translator}} = node
-
-    case translator do
-      Surface.Translator.LiveComponentTranslator ->
-        {[open, "<% ", String.trim(expr), " -> %>"], children, close}
-
-      _ ->
-        parts
-    end
+  defp handle_directive({":bindings", {:attribute_expr, [_expr]}, _line}, parts, _node) do
+    parts
   end
 
   defp pop_directives(attributes, allowed_directives) do

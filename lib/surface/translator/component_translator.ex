@@ -4,26 +4,24 @@ defmodule Surface.Translator.ComponentTranslator do
   import Surface.Translator.ComponentTranslatorUtils
 
   def translate(node, caller) do
-    {mod_str, attributes, children, %{module: mod, directives: directives, translated_props: translated_props}} = node
-    {data_children, children} = split_data_children(children)
+    {mod_str, attributes, children, meta} = node
+    %{module: mod, line: mod_line, directives: directives} = meta
 
-    {children_contents, children_attributes} = translate_children(directives, children, caller)
-    {children_groups_contents, children_groups_attributes} =
-      translate_children_groups(mod, attributes, data_children, caller)
-    all_children_attributes = children_attributes ++ children_groups_attributes
-
-    all_children_translated_props = Properties.translate_attributes(all_children_attributes, mod, mod_str, caller)
-    all_translated_props = translated_props ++ all_children_translated_props
-    all_props = Properties.wrap(all_translated_props, mod_str)
+    {children_props, children_contents} = translate_children(mod, attributes, directives, children, caller)
+    children_props_str = ["%{", Enum.join(children_props, ", "), "}"]
 
     open = [
-      Translator.translate(children_groups_contents, caller),
+      ["<% props = ", Properties.translate_attributes(attributes, mod, mod_str, mod_line, caller), " %>"],
+      add_begin_context(mod, mod_str),
       Translator.translate(children_contents, caller),
+      ["<% children_props = ", children_props_str, " %>"],
       add_require(mod_str),
-      add_render_call("component", [mod_str, all_props], false)
+      add_render_call("component", [mod_str, "Map.merge(props, children_props)"])
     ]
 
-    {open, [], []}
+    close = add_end_context(mod, mod_str)
+
+    {open, [], close}
   end
 end
 

@@ -1,10 +1,11 @@
 defmodule Surface.Translator.ComponentTranslatorUtils do
   alias Surface.Properties
+  alias Surface.Translator.DataComponentTranslator
 
   @callback translate(mod :: any, mod_str :: any, attributes :: any, directives :: any,
             children :: any, children_groups_contents :: any, caller :: any) :: iolist
 
-  def add_render_call(renderer, args, has_children?) do
+  def add_render_call(renderer, args, has_children? \\ false) do
     ["<%= ", renderer, "(",  Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>"]
   end
 
@@ -16,104 +17,22 @@ defmodule Surface.Translator.ComponentTranslatorUtils do
     ["<% require ", mod_str, " %>"]
   end
 
-  def translate_children(_, [], _caller) do
-    {[], []}
-  end
-
-  def translate_children(directives, children, caller) do
-    bindings = find_bindings(directives)
-    {var, children_content} = translate_children_content(bindings, children)
-    attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
-
-    {[children_content], [attr]}
-  end
-
-  def translate_children_groups(_, _, [], _caller) do
-    {[], []}
-  end
-
-  def translate_children_groups(module, attributes, data_children, caller) do
-    bindings = find_bindings_from_lists(module, attributes)
-
-    result =
-      for %{name: name, group: group, use_bindings: func_bindings} <- module.__props(),
-          group != nil,
-          reduce: {[], []} do
-        {all_contents, new_attributes} ->
-          # TODO: Warn if data_children[group] is nil
-          {contents, translated_props_list} = translate_data_children(data_children[group], func_bindings, bindings, caller)
-          value = "[" <> Enum.join(translated_props_list, ", ") <> "]"
-          attr = {to_string(name), {:attribute_expr, [value]}, caller.line}
-          {[contents | all_contents], [attr | new_attributes]}
+  def add_begin_context(mod, mod_str) do
+    begin_context =
+      if function_exported?(mod, :begin_context, 1) do
+        ["<% context = ", mod_str, ".begin_context(Map.put(props, :context, context)) %>"]
+      else
+        ""
       end
+    [begin_context, "<% props = Map.put(props, :context, context) %>"]
+  end
 
-    case result do
-      {[], _} ->
-        result
-      {contents, attributes} ->
-        {["\n" | contents], attributes}
+  def add_end_context(mod, mod_str) do
+    if function_exported?(mod, :begin_context, 1) do
+      ["<% context = ", mod_str, ".end_context(props) %><% _ = context %>"]
+    else
+      ""
     end
-  end
-
-  def split_data_children(children) do
-    {data_children, children} =
-      Enum.reduce(children, {%{}, []}, fn child, {data_children, children} ->
-        with {_, _, _, %{module: module}} <- child,
-             false <- is_nil(module),
-             true <- function_exported?(module, :__group__, 0) do
-          group = module.__group__()
-          list = data_children[group] || []
-          {Map.put(data_children, group, [child | list]), children}
-        else
-          _ -> {data_children, [child | children]}
-        end
-      end)
-    {data_children, Enum.reverse(children)}
-  end
-
-  defp translate_data_children(children, func_bindings, bindings, caller) do
-    for node <- children, reduce: {[], []} do
-      {contents, translated_props_list} ->
-        args =
-          func_bindings
-          |> Enum.map(&bindings[&1])
-          |> Enum.join(", ")
-
-        {name, attributes, node_children, %{module: module}} = node
-
-        {var, content} = translate_children_content(args, node_children)
-
-        {contents, attributes} =
-          if var do
-            attr = {"inner_content", {:attribute_expr, [var]}, caller.line}
-            {[content, "\n" | contents], [attr | attributes]}
-          else
-            {contents, attributes}
-          end
-
-        translated_props =
-          attributes
-          |> Properties.translate_attributes(module, name, caller)
-          |> Properties.wrap(name)
-
-        {contents, [translated_props | translated_props_list]}
-    end
-  end
-
-  defp translate_children_content(_args, []) do
-    {nil, []}
-  end
-
-  defp translate_children_content(args, children) do
-    # TODO: Generate a var name that's harder to conflict
-    var = "content_" <> generate_var_id()
-
-    content = [
-      "<% ", var, " = fn ", args, " -> %>",
-      children,
-      "<% end %>"
-    ]
-    {var, content}
   end
 
   defp find_bindings_from_lists(module, attributes) do
@@ -141,4 +60,111 @@ defmodule Surface.Translator.ComponentTranslatorUtils do
     :erlang.unique_integer([:positive, :monotonic])
     |> to_string()
   end
+
+  def translate_children(mod, attributes, directives, children, caller) do
+    parent_args = find_bindings(directives)
+    prop_name_and_args_by_group = classify_prop_name_and_args_by_group(mod, attributes)
+
+    {child_vars_by_prop_name, contents, temp_contents, has_inner_content?} =
+      Enum.reduce(children, {%{}, [], [], false}, fn child, acc ->
+        {child_vars_by_prop_name, contents, temp_contents, has_inner_content?} = acc
+        case child do
+          {_, _, _, %{translator: DataComponentTranslator, module: module}} ->
+
+            {has_inner_content?, contents}
+              = maybe_translate_inner_content(temp_contents, contents, has_inner_content?, parent_args)
+
+            group = module.__group__()
+            {prop_name, args} = prop_name_and_args_by_group[group]
+            child_vars = child_vars_by_prop_name[prop_name] || []
+            {child_var, content} = translate_child(child, args, caller)
+
+            {
+              Map.put(child_vars_by_prop_name, prop_name, [child_var | child_vars]),
+              [content | contents],
+              [],
+              has_inner_content?
+            }
+          _ ->
+            {child_vars_by_prop_name, contents, [child | temp_contents], has_inner_content?}
+        end
+      end)
+
+    {has_inner_content?, contents} =
+      maybe_translate_inner_content(temp_contents, contents, has_inner_content?, parent_args)
+
+    children_props =
+      for {prop_name, child_vars} <- child_vars_by_prop_name do
+        [to_string(prop_name), ": [", Enum.join(Enum.reverse(child_vars), ", "), "]"]
+      end
+
+    children_props =
+      if has_inner_content? do
+        ["inner_content: inner_content" | children_props]
+      else
+        children_props
+      end
+
+    {children_props, Enum.reverse(contents)}
+  end
+
+  defp translate_child(node, args, caller) do
+    {mod_str, attributes, children, %{module: mod, line: mod_line}} = node
+
+    # TODO: Generate names that are harder to conflict
+    id = generate_var_id()
+    props_id = "props_" <> id
+    content_id = "content_" <> id
+    var_id = "child_" <> id
+
+    translated_props = Properties.translate_attributes(attributes, mod, mod_str, mod_line, caller)
+
+    translated_child = [
+      "<% ", props_id, " = ", translated_props, " %>",
+      "<% ", content_id, " = fn ", args, " -> %>",
+      children,
+      "<% end %>",
+      "<% ", var_id, " = Map.put(", props_id, ", :inner_content, ", content_id, ") %>"
+    ]
+    {var_id, translated_child}
+  end
+
+  defp maybe_translate_inner_content(temp_contents, contents, has_inner_content?, args) do
+    temp_contents = Enum.reverse(temp_contents)
+
+    {inner_content_found?, translated} =
+      if blank?(temp_contents) do
+        {false, temp_contents}
+      else
+        {true, ["<% inner_content = fn ", args, " -> %>", temp_contents, "<% end %>"]}
+      end
+
+    {has_inner_content? || inner_content_found?, [translated | contents]}
+  end
+
+  defp classify_prop_name_and_args_by_group(mod, attributes) do
+    bindings = find_bindings_from_lists(mod, attributes)
+
+    for %{name: name, group: group, use_bindings: use_bindings} <- mod.__props(), into: %{} do
+      args =
+        use_bindings
+        |> Enum.map(&bindings[&1])
+        |> Enum.join(", ")
+      {group, {name, args}}
+    end
+  end
+
+  # TODO: Is there a better way to check if the code is blank?
+
+  defp blank?([]), do: true
+
+  defp blank?([h|t]), do: blank?(h) && blank?(t)
+
+  defp blank?(""), do: true
+
+  defp blank?(char) when char in [32, 10, 13, 9, 11, 8, 12, 27, 127, 7], do: true
+
+  defp blank?(<<h, t::binary>>) when h in ' \n\r\t\v\b\f\e\d\a', do: blank?(t)
+
+  defp blank?(_), do: false
 end

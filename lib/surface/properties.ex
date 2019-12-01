@@ -58,31 +58,25 @@ defmodule Surface.Properties do
     end
   end
 
-  # TODO: Move this to a new PropertyTranslator (or AttributeTranslator)
-  def translate_attributes(attributes, mod, mod_str, caller) do
+  def translate_attributes(attributes, mod, mod_str, mod_line, caller) do
     if function_exported?(mod, :__props, 0) do
-      for {key, value, line} <- attributes do
-        key_atom = String.to_atom(key)
-        prop = mod.__get_prop__(key_atom)
-        if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
-          message = "Unknown property \"#{key}\" for component <#{mod_str}>"
-          Surface.Translator.IO.warn(message, caller, &(&1 + line))
-        end
+      {_, translated_props} =
+        Enum.reduce(attributes, {mod_line, []}, fn {key, value, line}, {last_line, translated_props} ->
+          key_atom = String.to_atom(key)
+          prop = mod.__get_prop__(key_atom)
+          if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
+            message = "Unknown property \"#{key}\" for component <#{mod_str}>"
+            Surface.Translator.IO.warn(message, caller, &(&1 + line))
+          end
 
-        value = translate_value(prop[:type], value, caller, line)
-        render_prop_value(key, value)
-      end
+          value = translate_value(prop[:type], value, caller, line)
+          translated_prop = [String.duplicate("\n", line - last_line) | render_prop_value(key, value)]
+          {line, [translated_prop | translated_props]}
+        end)
+      ["put_default_props(%{", Enum.join(translated_props, ", "), "}, ", mod_str, ")"]
     else
-      []
+      "%{}"
     end
-  end
-
-  def wrap([], _mod_str) do
-    "%{}"
-  end
-
-  def wrap(props, mod_str) do
-    ["put_default_props(%{", Enum.join(props, ", "), "}, #{mod_str})"]
   end
 
   def translate_value(:event, value, caller, line) do
@@ -174,7 +168,7 @@ defmodule Surface.Properties do
     value
   end
 
-  # TODO: Replace with a decent implementation
+  # TODO: Find a better way to do this
   defp to_kebab_case(value) do
     value
     |> to_string()

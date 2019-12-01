@@ -2,9 +2,9 @@ defmodule Surface.Translator.LiveViewTranslator do
   alias Surface.Properties
   import Surface.Translator.ComponentTranslatorUtils
 
-  def translate(node, _caller) do
-    {mod_str, _attributes, _children, %{translated_props: translated_props}} = node
-    translated_session_props = Properties.wrap(translated_props, mod_str)
+  def translate(node, caller) do
+    {mod_str, attributes, _children, %{module: mod, line: mod_line}} = node
+    translated_session_props = Properties.translate_attributes(attributes, mod, mod_str, mod_line, caller)
 
     # TODO: Replace this. Create a directive :id?
     live_view_id = :erlang.unique_integer([:positive, :monotonic]) |> to_string()
@@ -12,7 +12,7 @@ defmodule Surface.Translator.LiveViewTranslator do
 
     open = [
       add_require(mod_str),
-      add_render_call("live_render", ["@socket", mod_str, session], false)
+      add_render_call("live_render", ["@socket", mod_str, session])
     ]
 
     {open, [], []}

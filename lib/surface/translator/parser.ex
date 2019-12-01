@@ -106,7 +106,7 @@ defmodule Surface.Translator.Parser do
     |> concat(tag_name)
     |> line()
     |> unwrap_and_tag(:opening_tag)
-    |> repeat(whitespace |> concat(attribute)|> unwrap_and_tag(:attributes))
+    |> repeat(whitespace |> concat(attribute) |> unwrap_and_tag(:attributes))
     |> concat(whitespace)
 
   comment =
