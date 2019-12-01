@@ -11,6 +11,24 @@ defmodule DataComponentTest do
     :ok
   end
 
+  defmodule InnerData do
+    use Surface.DataComponent
+
+    property label, :string
+  end
+
+  defmodule Outer do
+    use Surface.Component
+
+    property inner, :children, group: InnerData
+
+    def render(assigns) do
+      ~H"""
+      <div :for={{ data <- @inner }}>{{ data.label }}: {{ data.inner_content.() }}</div>
+      """
+    end
+  end
+
   defmodule Column do
     use Surface.DataComponent
 
@@ -57,6 +75,30 @@ defmodule DataComponentTest do
       </Grid>
       """
     end
+  end
+
+  defmodule ViewWithNoBindings do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~H"""
+      <Outer>
+        <InnerData label="label 1">
+          <b>content 1</b>
+        </InnerData>
+        <InnerData label="label 2">
+          <b>content 2</b>
+        </InnerData>
+      </Outer>
+      """
+    end
+  end
+
+  test "render inner content with no bindings" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithNoBindings)
+
+    assert_html html =~
+      "<div>label 1:<b>content 1</b></div><div>label 2:<b>content 2</b></div></div>"
   end
 
   test "render inner content" do

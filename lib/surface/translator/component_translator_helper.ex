@@ -52,7 +52,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       {":bindings", {:attribute_expr, [expr]}, _line} ->
         String.trim(expr)
       _ ->
-        "[]"
+        ""
     end
   end
 
