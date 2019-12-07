@@ -8,9 +8,9 @@ defmodule Surface.Translator do
 
   @component_directives [":for", ":if", ":bindings", ":debug"]
 
-  def run(string, line_offset, caller) do
+  def run(string, line_offset, caller, file \\ "nofile") do
     string
-    |> Parser.parse(line_offset)
+    |> Parser.parse(line_offset, file)
     |> build_metadata(caller)
     |> prepend_context()
     |> translate(caller)

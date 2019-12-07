@@ -154,7 +154,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  # TODO: Is there a better way to check if the code is blank?
+  @blanks ' \n\r\t\v\b\f\e\d\a'
 
   defp blank?([]), do: true
 
@@ -162,9 +162,9 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   defp blank?(""), do: true
 
-  defp blank?(char) when char in [32, 10, 13, 9, 11, 8, 12, 27, 127, 7], do: true
+  defp blank?(char) when char in @blanks, do: true
 
-  defp blank?(<<h, t::binary>>) when h in ' \n\r\t\v\b\f\e\d\a', do: blank?(t)
+  defp blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
 
   defp blank?(_), do: false
 end

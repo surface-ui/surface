@@ -2,17 +2,11 @@ defmodule Surface.Translator.Parser do
   import NimbleParsec
 
   defmodule ParseError do
-    defexception string: "", line: 0, col: 0, message: "error parsing HTML"
+    defexception file: "", line: 0, message: "error parsing HTML/Surface"
 
-    def message(e) do
-      """
-
-      Failed to parse HTML: #{e.message}
-
-      Check your syntax near line #{e.line}:
-
-      #{e.string}
-      """
+    @impl true
+    def message(exception) do
+      "#{exception.file}:#{exception.line}: #{exception.message}"
     end
   end
 
@@ -217,16 +211,15 @@ defmodule Surface.Translator.Parser do
     end
   end
 
-  def parse(string, line_offset) do
+  def parse(string, line_offset, file \\ "nofile") do
     case parse_root(string, context: [macro: nil]) do
       {:ok, nodes, _, _, _, _} ->
         nodes
 
-      {:error, reason, rest, _, {line, col}, _} ->
+      {:error, reason, _rest, _, {line, _col}, _} ->
         raise %ParseError{
-          string: String.split(rest, "\n") |> Enum.take(2) |> Enum.join("\n"),
-          line: line + line_offset,
-          col: col,
+          line: line + line_offset - 1,
+          file: file,
           message: reason
         }
     end

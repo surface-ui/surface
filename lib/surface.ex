@@ -4,7 +4,7 @@ defmodule Surface do
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     line_offset = __CALLER__.line + 1
     string
-    |> Translator.run(line_offset, __CALLER__)
+    |> Translator.run(line_offset, __CALLER__, __CALLER__.file)
     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
   end
 
