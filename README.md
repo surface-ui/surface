@@ -5,7 +5,9 @@ A component based library for **Phoenix LiveView**.
 Built on top of the new [LiveComponent](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html)
 API, Surface provides a more declarative way to express and use components in Phoenix.
 
-Here's an example:
+A work-in-progress live demo with more details can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
+
+### Example
 
 ![Example](images/example.png?raw=true)
 
@@ -14,9 +16,9 @@ solutions like `React` and `Vue.js`.
 
 ## How does it work?
 
-Surface works as a pre-processor at compile time. It translates components defined in an extended
-HTML-like syntax into regular Phoenix templates. It also translates standard HTML nodes allowing
-us to extend their behaviour adding new features like syntatic sugar on attributes definition,
+At compile time, Surface translates components defined in an extended HTML-like syntax
+into regular Phoenix templates. It also translates standard HTML nodes allowing us to
+extend their behaviour adding new features like syntatic sugar on attributes definition,
 directives, scoped styles, validation and more.
 
 In order to have your code translated, you need to use the `~H` sigil when defining your templates.
@@ -48,8 +50,8 @@ def deps do
 end
 ```
 
-In order to have Surface functions and macros avaialble in regular Phoenix views,
-add the following import to your web file in `lib/my_app_web.ex`:
+In order to have `~H` available for any Phoenix view, add the following import to your web
+file in `lib/my_app_web.ex`:
 
 ```elixir
   # lib/my_app_web.ex
@@ -87,7 +89,7 @@ To create a component you need to define a module and `use` one of the available
 
     def render(assigns) do
       ~H"""
-      <button class="button {{ @kind }}" phx-click={{ @click }} style="margin: 0px 5px">
+      <button class="button {{ @kind }}" phx-click={{ @click }}>
         {{ @inner_content.() }}
       </button>
       """
