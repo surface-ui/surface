@@ -7,6 +7,9 @@ API, Surface provides a more declarative way to express and use components in Ph
 
 A work-in-progress live demo with more details can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
 
+A VS Code extension that adds support for syntax highlighting is available at
+[marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=msaraiva.surface).
+
 ### Example
 
 ![Example](images/example.png?raw=true)
@@ -147,8 +150,6 @@ To create a component you need to define a module and `use` one of the available
 
   defmodule Example do
     use Surface.LiveView
-
-    alias Surface.Components.Button
 
     def render(assigns) do
       ~H"""

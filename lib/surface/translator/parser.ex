@@ -1,4 +1,6 @@
 defmodule Surface.Translator.Parser do
+  @moduledoc false
+
   import NimbleParsec
 
   defmodule ParseError do

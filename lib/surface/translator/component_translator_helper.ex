@@ -1,4 +1,6 @@
 defmodule Surface.Translator.ComponentTranslatorHelper do
+  @moduledoc false
+
   alias Surface.Properties
   alias Surface.Translator.DataComponentTranslator
 

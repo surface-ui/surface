@@ -1,10 +1,13 @@
 defmodule Surface.Translator.LiveViewTranslator do
+  @moduledoc false
+
   alias Surface.Properties
   alias Surface.Translator
   import Surface.Translator.ComponentTranslatorHelper
 
   @behaviour Translator
 
+  @impl true
   def translate(node, caller) do
     {mod_str, attributes, _children, %{module: mod, line: mod_line}} = node
 

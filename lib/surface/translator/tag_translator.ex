@@ -1,9 +1,12 @@
 defmodule Surface.Translator.TagTranslator do
+  @moduledoc false
+
   alias Surface.Translator
   alias Surface.Properties
 
   @behaviour Translator
 
+  @impl true
   def translate(node, caller) do
     {tag_name, attributes, children, _} = node
 

@@ -1,4 +1,10 @@
 defmodule Surface.Translator do
+  @moduledoc """
+  Defines a behaviour that must be implemented by all HTML/Surface node translators.
+
+  This module also contains the main logic to translate Surface code.
+  """
+
   alias Surface.Translator.Parser
   import Surface.Translator.IO, only: [warn: 3]
 
@@ -8,6 +14,10 @@ defmodule Surface.Translator do
 
   @component_directives [":for", ":if", ":bindings", ":debug"]
 
+  @doc """
+  Translates a string written using the Surface format into a Phoenix template.
+  """
+  @spec run(binary, integer, Macro.Env.t(), binary) :: binary
   def run(string, line_offset, caller, file \\ "nofile") do
     string
     |> Parser.parse(line_offset, file)
@@ -17,6 +27,9 @@ defmodule Surface.Translator do
     |> IO.iodata_to_binary()
   end
 
+  @doc """
+  Recursively translates nodes from a parsed surface code.
+  """
   def translate(nodes, caller) when is_list(nodes) do
     for node <- nodes do
       translate(node, caller)
@@ -151,7 +164,7 @@ defmodule Surface.Translator do
     end
   end
 
-  def translate_directives(parts, node, caller) do
+  defp translate_directives(parts, node, caller) do
     {_, _, _, %{directives: directives}} = node
 
     Enum.reduce(directives, parts, fn directive, acc ->
