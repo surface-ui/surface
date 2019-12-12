@@ -200,7 +200,7 @@ at compile time. Currently, the following directives are supported:
 ## Static checking
 
 Since components are ordinary Elixir modules, some static checking is already provided
-by the compiler. Addicionally, we added a few extra warnings to improve user experience.
+by the compiler. Additionally, we added a few extra warnings to improve user experience.
 Here are some examples:
 
 ### Module not available
