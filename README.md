@@ -82,7 +82,7 @@ To create a component you need to define a module and `use` one of the available
 ### Example
 
 ```elixir
-  # A functional steteless component
+  # A functional stateless component
 
   defmodule Button do
     use Surface.Component
@@ -99,7 +99,7 @@ To create a component you need to define a module and `use` one of the available
     end
   end
 
-  # A live steteful component
+  # A live stateful component
 
   defmodule Dialog do
     use Surface.LiveComponent

@@ -15,7 +15,7 @@ defmodule Surface.DataComponent do
   As you can see, data components don't need to implement a `render/1` callback.
   Instead, this module defines a `c:data/1` callback that you can use to
   transform, filter or validate properties before sending them to the parent
-  component. By default all properties are sent as they were originaly defined.
+  component. By default all properties are sent as they were originally defined.
   """
 
   defmacro __using__(opts \\ []) do

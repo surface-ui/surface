@@ -36,7 +36,7 @@ defmodule Surface do
 
   ### Example
 
-      # A functional steteless component
+      # A functional stateless component
 
       defmodule Button do
         use Surface.Component
