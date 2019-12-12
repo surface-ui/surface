@@ -33,7 +33,17 @@ defmodule ContextTest do
     end
   end
 
-  test "render context field" do
+  defmodule InnerWrapper do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <Inner />
+      """
+    end
+  end
+
+  test "pass context to child component" do
     assigns = %{}
     code =
       ~H"""
@@ -48,5 +58,20 @@ defmodule ContextTest do
     </div>
     """
   end
-end
 
+  test "pass context down the tree of components" do
+    assigns = %{}
+    code =
+      ~H"""
+      <Outer field="My field">
+        <InnerWrapper />
+      </Outer>
+      """
+
+    assert render_surface(code) =~ """
+    <div>
+      <span>My field</span>
+    </div>
+    """
+  end
+end
