@@ -62,15 +62,17 @@ defmodule HTMLParser do
   self_closing_node =
     ignore(string("<"))
     |> concat(tag)
+    |> line()
     |> repeat(whitespace |> concat(attribute))
     |> concat(whitespace)
     |> ignore(string("/>"))
     |> wrap()
     |> post_traverse(:self_closing_tags)
 
-  defp self_closing_tags(_rest, [[tag | attr_nodes]], context, _line, _offset) do
+  defp self_closing_tags(_rest, [[tag_node | attr_nodes]], context, _line, _offset) do
+    {[tag], {line, _}} = tag_node
     {attributes, _spaces} = split_attributes_and_spaces(attr_nodes)
-    {[{tag, Enum.reverse(attributes), []}], context}
+    {[{tag, Enum.reverse(attributes), [], %{line: line}}], context}
   end
 
   ## Regular node
@@ -86,6 +88,7 @@ defmodule HTMLParser do
   opening_tag =
     ignore(string("<"))
     |> concat(tag)
+    |> line()
     |> repeat(whitespace |> concat(attribute))
     |> concat(whitespace)
     |> ignore(string(">"))
@@ -108,16 +111,20 @@ defmodule HTMLParser do
     |> optional(closing_tag)
     |> post_traverse(:match_tags)
 
-  defp match_tags(_rest, [tag, [[tag | attr_nodes] | nodes]], context, _line, _offset) do
+  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}} | attr_nodes] | nodes]], context, _line, _offset) do
     {attributes, _spaces} = split_attributes_and_spaces(attr_nodes)
-    {[{tag, Enum.reverse(attributes), nodes}], context}
+    {[{tag, Enum.reverse(attributes), nodes, %{line: opening_line}}], context}
   end
 
-  defp match_tags(_rest, [closing, [[opening | _] | _]], _context, _line, _offset),
-    do: {:error, "closing tag #{inspect(closing)} did not match opening tag #{inspect(opening)}"}
+  defp match_tags(_rest, [closing, [[tag_node | _] | _]], _context, _line, _offset) do
+    {[opening], {_opening_line, _}} = tag_node
+    {:error, "closing tag #{inspect(closing)} did not match opening tag #{inspect(opening)}"}
+  end
 
-  defp match_tags(_rest, [[[opening | _] | _]], _context, _line, _offset),
-    do: {:error, "expected closing tag for #{inspect(opening)}"}
+  defp match_tags(_rest, [[[tag_node | _] | _]], _context, _line, _offset) do
+    {[opening], {_opening_line, _}} = tag_node
+    {:error, "expected closing tag for #{inspect(opening)}"}
+  end
 
   defp interpolation(_rest, ["}}" | nodes], context, _line, _offset),
     do: {[{:interpolation, nodes |> Enum.reverse() |> IO.iodata_to_binary()}], context}
@@ -143,6 +150,7 @@ defmodule HTMLParser do
 
   macro_node =
     opening_macro_tag
+    |> line()
     |> post_traverse(:opening_macro_tag)
     |> repeat_while(choice([string("<"), text_without_interpolation]), :lookahead_macro_tag)
     |> wrap()
@@ -153,17 +161,17 @@ defmodule HTMLParser do
     {[], %{context | macro: tag}}
   end
 
-  defp closing_macro_tag(_, [macro, rest], %{macro: macro} = context, _, _) do
+  defp closing_macro_tag(_, [macro, rest], %{macro: {[macro], {line, _}}} = context, _, _) do
     tag = "#" <> macro
     text = IO.iodata_to_binary(rest)
-    {[{tag, [], [text]}], %{context | macro: nil}}
+    {[{tag, [], [text], %{line: line}}], %{context | macro: nil}}
   end
 
-  defp closing_macro_tag(_rest, _nodes, %{macro: macro}, _, _) do
+  defp closing_macro_tag(_rest, _nodes, %{macro: {[macro], {_line, _}}}, _, _) do
     {:error, "expected closing tag for #{inspect("#" <> macro)}"}
   end
 
-  defp lookahead_macro_tag(rest, %{macro: macro} = context, _, _) do
+  defp lookahead_macro_tag(rest, %{macro: {[macro], {_line, _}}} = context, _, _) do
     size = byte_size(macro)
 
     case rest do
