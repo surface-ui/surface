@@ -3,6 +3,41 @@ defmodule HTMLParserTest do
 
   import HTMLParser
 
+  test "empty node" do
+    assert parse("") == {:ok, []}
+  end
+
+  test "keep spaces before node" do
+    assert parse("\n<div></div>") == {:ok, [
+      10,
+      {"div", [], [], %{line: 2}}
+    ]}
+  end
+
+  test "keep spaces after node" do
+    assert parse("<div></div>\n") == {:ok, [
+      {"div", [], [], %{line: 1}},
+      "\n"
+    ]}
+  end
+
+  test "multiple nodes" do
+    code = """
+    <div>
+      Div 1
+    </div>
+    <div>
+      Div 2
+    </div>
+    """
+    assert parse(code) == {:ok, [
+      {"div", [], ["\n  Div 1\n"], %{line: 1}},
+      10,
+      {"div", [], ["\n  Div 2\n"], %{line: 4}},
+      "\n"
+    ]}
+  end
+
   describe "HTML only" do
     test "single node" do
       assert parse("<foo>bar</foo>") ==
