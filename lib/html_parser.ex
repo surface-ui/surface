@@ -12,15 +12,15 @@ defmodule HTMLParser do
   """
   def parse(content) do
     case node(content, context: [macro: nil]) do
-      {:ok, tree, rest, %{macro: nil}, _, _} ->
+      {:ok, tree, rest, %{macro: nil}, {line, _}, _} ->
         if blank?(rest) do
           {:ok, tree}
         else
-          {:error, "expected end of string, found: #{inspect(rest)}"}
+          {:error, "expected end of string, found: #{inspect(rest)}", line}
         end
 
-      {:error, message, _rest, _context, _line_offset, _byte_offset} ->
-        {:error, message}
+      {:error, message, _rest, _context, {line, _col}, _byte_offset} ->
+        {:error, message, line}
     end
   end
 
@@ -31,12 +31,20 @@ defmodule HTMLParser do
     |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
     |> reduce({List, :to_string, []})
 
+  attribute_expr =
+    ignore(string("{{"))
+    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
+    |> ignore(string("}}"))
+    |> reduce({List, :to_string, []})
+    |> tag(:attribute_expr)
+
   attribute_value =
     ignore(ascii_char([?"]))
     |> repeat(
       lookahead_not(ignore(ascii_char([?"])))
       |> choice([
         ~S(\") |> string() |> replace(?"),
+        attribute_expr,
         utf8_char([])
       ])
     )
@@ -51,6 +59,7 @@ defmodule HTMLParser do
     |> concat(whitespace)
     |> optional(
       choice([
+        ignore(string("=")) |> concat(attribute_expr),
         ignore(string("=")) |> concat(attribute_value),
         ignore(string("=")) |> concat(integer(min: 1)),
       ])

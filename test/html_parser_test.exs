@@ -71,42 +71,42 @@ defmodule HTMLParserTest do
   describe "errors on" do
     test "invalid opening tag" do
       assert parse("<>bar</>") ==
-               {:error, "expected opening HTML tag"}
+               {:error, "expected opening HTML tag", 1}
     end
 
     test "invalid closing tag" do
       assert parse("<foo>bar</></foo>") ==
-               {:error, "expected closing tag for \"foo\""}
+               {:error, "expected closing tag for \"foo\"", 1}
     end
 
     test "tag mismatch" do
       assert parse("<foo>bar</baz>") ==
-               {:error, "closing tag \"baz\" did not match opening tag \"foo\""}
+               {:error, "closing tag \"baz\" did not match opening tag \"foo\"", 1}
     end
 
     test "before tag content" do
       assert parse("oops<foo>bar</foo>") ==
-               {:error, "expected opening HTML tag"}
+               {:error, "expected opening HTML tag", 1}
     end
 
     test "after tag content" do
       assert parse("<foo>bar</foo>oops") ==
-               {:error, "expected end of string, found: \"oops\""}
+               {:error, "expected end of string, found: \"oops\"", 1}
     end
 
     test "incomplete tag content" do
       assert parse("<foo>bar") ==
-               {:error, "expected closing tag for \"foo\""}
+               {:error, "expected closing tag for \"foo\"", 1}
     end
 
     test "incomplete macro content" do
       assert parse("<#foo>bar</#bar>") ==
-               {:error, "expected closing tag for \"#foo\""}
+               {:error, "expected closing tag for \"#foo\"", 1}
     end
 
     test "non-closing interpolation" do
       assert parse("<foo>{{bar</foo>") ==
-               {:error, "expected closing for interpolation"}
+               {:error, "expected closing for interpolation", 1}
     end
   end
 
@@ -141,6 +141,22 @@ defmodule HTMLParserTest do
       """
 
       attributes = [{"prop1", 'value1', 2}, {"prop2", 'value2', 3}]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}]}
+    end
+
+    test "value as expression" do
+      code = """
+      <foo
+        prop1={{ var1 }}
+        prop2={{ var2 }}
+      />
+      """
+
+      attributes = [
+        {"prop1", {:attribute_expr, [" var1 "]}, 2},
+        {"prop2", {:attribute_expr, [" var2 "]}, 3}
+      ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}]}
     end
