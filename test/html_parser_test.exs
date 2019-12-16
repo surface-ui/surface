@@ -109,4 +109,40 @@ defmodule HTMLParserTest do
                {:error, "expected closing for interpolation"}
     end
   end
+
+  describe "attributes" do
+    test "regular nodes" do
+      code = """
+      <foo
+        prop1="value1"
+        prop2="value2"
+      >
+        bar
+        <div>{{ var }}</div>
+      </foo>
+      """
+
+      attributes = [{"prop1", 'value1', 2}, {"prop2", 'value2', 3}]
+      children = [
+        "\n  bar\n  ",
+        {"div", [], [{:interpolation, " var "}]},
+        "\n"
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, children}]}
+    end
+
+    test "self-closing nodes" do
+      code = """
+      <foo
+        prop1="value1"
+        prop2="value2"
+      />
+      """
+
+      attributes = [{"prop1", 'value1', 2}, {"prop2", 'value2', 3}]
+
+      assert parse(code) == {:ok, [{"foo", attributes, []}]}
+    end
+  end
 end
