@@ -28,15 +28,12 @@ In order to have your code translated, you need to use the `~H` sigil when defin
 
 ## Features
 
-  * Components as modules
-  * Declarative properties
-  * Built-in directives (`:for`, `:if`, ...)
-  * Syntatic sugar for CSS class properties
-  * Children components as data
-  * Contexts
-  * Compile time checking
-  * Editor/tools integration
-  * And more already planned...
+  * **Components as modules** - they can be stateless, stateful, data-only or compile-time
+  * **Declarative properties** - explicitly declare the inputs (properties) of each component (like React)
+  * **An HTML-centric** templating language with built-in directives (`:for`, `:if`, ...) and syntactic sugar for attributes (inspired by Vue.js)
+  * **Contexts** - allows parent components to share data with its children without passing them as properties
+  * **Compile-time checking** of components and their properties
+  * **Integration with editor/tools** for warnings, syntax highlighting, jump-to-definition, auto-completion and more
 
 > **Note:** Some of the features are still experimental and subject to change.
 

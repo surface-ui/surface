@@ -21,7 +21,11 @@ defmodule Surface.Properties do
     use_bindings = Keyword.get(opts, :use_bindings, [])
 
     quote do
-      doc = Module.get_attribute(__MODULE__, :doc)
+      doc =
+        case Module.get_attribute(__MODULE__, :doc) do
+          {_, doc} -> doc
+          _ -> nil
+        end
       Module.delete_attribute(__MODULE__, :doc)
 
       # TODO: Validate opts based on the type
