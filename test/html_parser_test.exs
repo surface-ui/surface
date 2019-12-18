@@ -7,6 +7,10 @@ defmodule HTMLParserTest do
     assert parse("") == {:ok, []}
   end
 
+  test "only text" do
+    assert parse("Some text") == {:ok, ["Some text"]}
+  end
+
   test "keep spaces before node" do
     assert parse("\n<div></div>") == {:ok, [
       10,
