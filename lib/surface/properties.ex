@@ -9,11 +9,14 @@ defmodule Surface.Properties do
     end
   end
 
-  defmacro property({name, _, _}, type, opts \\ []) do
-    property_ast(name, type, opts)
+  defmacro property(name_ast, type, opts \\ []) do
+    property_ast(name_ast, type, opts)
   end
 
-  defp property_ast(name, type, opts) do
+  defp property_ast(name_ast, type, opts) do
+    # TODO: Validate property definition as:
+    # property name, type, opts
+    {name, _, _} = name_ast
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
     group = Keyword.get(opts, :group)
@@ -32,12 +35,15 @@ defmodule Surface.Properties do
       @properties %{
         name: unquote(name),
         type: unquote(type),
+        doc: doc,
+        opts: unquote(opts),
+        opts_ast: unquote(Macro.escape(opts)),
+        # TODO: Keep only :name, :type and :doc. The rest below should stay in :opts
         default: unquote(default),
         required: unquote(required),
         group: unquote(group),
         binding: unquote(binding),
-        use_bindings: unquote(use_bindings),
-        doc: doc
+        use_bindings: unquote(use_bindings)
       }
     end
   end
@@ -47,6 +53,7 @@ defmodule Surface.Properties do
     props = Module.get_attribute(env.module, :properties)
     props_names = Enum.map(props, fn prop -> prop.name end) ++ builtin_props
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
+    generate_docs(env)
 
     quote do
       def __props() do
@@ -61,6 +68,43 @@ defmodule Surface.Properties do
         Map.get(unquote(Macro.escape(props_by_name)), name)
       end
     end
+  end
+
+  defp format_opts(opts_ast) do
+    opts_ast
+    |> Macro.to_string()
+    |> String.slice(1..-2)
+  end
+
+  defp generate_docs(env) do
+    props_doc = generate_props_docs(env.module)
+    {line, doc} =
+      case Module.get_attribute(env.module, :moduledoc) do
+        nil ->
+          mod = Module.split(env.module) |> List.last
+          doc = "Defines a **<#{mod}>** component.\n\n"
+          {env.line, doc <> props_doc}
+        {line, doc} ->
+          {line, doc <> "\n" <> props_doc}
+      end
+    Module.put_attribute(env.module, :moduledoc, {line, doc})
+  end
+
+  defp generate_props_docs(module) do
+    docs =
+      for prop <- Module.get_attribute(module, :properties) do
+        doc = if prop.doc, do: " - #{prop.doc}.", else: ""
+        opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
+        "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"
+      end
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    """
+    ### Properties
+
+    #{docs}
+    """
   end
 
   def translate_attributes(attributes, mod, mod_str, mod_line, caller, opts \\ []) do
