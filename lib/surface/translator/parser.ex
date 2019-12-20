@@ -89,10 +89,10 @@ defmodule Surface.Translator.Parser do
     |> concat(whitespace)
     |> optional(
       choice([
-        ignore(string("=")) |> concat(attribute_expr),
-        ignore(string("=")) |> concat(attribute_value),
-        ignore(string("=")) |> concat(integer(min: 1)),
-        ignore(string("=")) |> concat(boolean)
+        ignore(string("=")) |> concat(whitespace) |> concat(attribute_expr),
+        ignore(string("=")) |> concat(whitespace) |> concat(attribute_value),
+        ignore(string("=")) |> concat(whitespace) |> concat(integer(min: 1)),
+        ignore(string("=")) |> concat(whitespace) |> concat(boolean)
       ])
     )
     |> line()
