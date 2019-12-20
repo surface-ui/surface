@@ -147,7 +147,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   defp classify_prop_name_and_args_by_group(mod, attributes) do
     bindings = find_bindings_from_lists(mod, attributes)
 
-    for %{name: name, group: group, use_bindings: use_bindings} <- mod.__props(), into: %{} do
+    for %{name: name, group: group, use_bindings: use_bindings} <- mod.__props__(), into: %{} do
       args =
         use_bindings
         |> Enum.map(&bindings[&1])

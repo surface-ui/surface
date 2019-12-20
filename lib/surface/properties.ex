@@ -56,7 +56,7 @@ defmodule Surface.Properties do
     generate_docs(env)
 
     quote do
-      def __props() do
+      def __props__() do
         unquote(Macro.escape(props))
       end
 
@@ -110,12 +110,12 @@ defmodule Surface.Properties do
   def translate_attributes(attributes, mod, mod_str, mod_line, caller, opts \\ []) do
     put_default_props = Keyword.get(opts, :put_default_props, true)
 
-    if function_exported?(mod, :__props, 0) do
+    if function_exported?(mod, :__props__, 0) do
       {_, translated_props} =
         Enum.reduce(attributes, {mod_line, []}, fn {key, value, line}, {last_line, translated_props} ->
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
-          if mod.__props() != [] && !mod.__validate_prop__(key_atom) do
+          if mod.__props__() != [] && !mod.__validate_prop__(key_atom) do
             message = "Unknown property \"#{key}\" for component <#{mod_str}>"
             Surface.Translator.IO.warn(message, caller, &(&1 + line))
           end
