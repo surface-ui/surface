@@ -81,9 +81,7 @@ defmodule Surface.Properties do
     {line, doc} =
       case Module.get_attribute(env.module, :moduledoc) do
         nil ->
-          mod = Module.split(env.module) |> List.last
-          doc = "Defines a **<#{mod}>** component.\n\n"
-          {env.line, doc <> props_doc}
+          {env.line, props_doc}
         {line, doc} ->
           {line, doc <> "\n" <> props_doc}
       end

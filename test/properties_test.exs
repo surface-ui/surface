@@ -3,8 +3,6 @@ defmodule Surface.PropertiesTest do
 
   test "generate documentation when no @moduledoc is defined" do
     assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
-    Defines a **<MyComponent>** component.
-
     ### Properties
 
     * **label** *:string, required: true, default: ""* - The label.
