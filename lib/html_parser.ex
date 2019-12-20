@@ -11,13 +11,18 @@ defmodule HTMLParser do
   Parses a surface HTML document.
   """
   def parse(content) do
-    case node(content, context: [macro: nil]) do
-      {:ok, tree, rest, %{macro: nil}, {line, _}, _} ->
-        if blank?(rest) do
-          {:ok, tree}
-        else
-          {:error, "expected end of string, found: #{inspect(rest)}", line}
-        end
+    case root(content, context: [macro: nil]) do
+      {:ok, tree, "", %{macro: nil}, _, _} ->
+        {:ok, tree}
+
+      {:ok, _, rest, context, {line, _}, byte_offset} ->
+        # Something went wrong then it has to be an error parsing the HTML tag.
+        # However, because of repeat, the error is discarded, so we call node
+        # again to get the proper error message.
+        {:error, message, _rest, _context, {line, _col}, _byte_offset} =
+          node(rest, context: context, line: line, byte_offset: byte_offset)
+
+        {:error, message, line}
 
       {:error, message, _rest, _context, {line, _col}, _byte_offset} ->
         {:error, message, line}
@@ -52,7 +57,7 @@ defmodule HTMLParser do
     |> wrap()
 
   attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:], min: 1)
-  whitespace = ascii_char([?\s, ?\n]) |> repeat()
+  whitespace = ascii_string([?\s, ?\n], min: 0) |> ignore()
 
   attribute =
     attr_name
@@ -145,9 +150,6 @@ defmodule HTMLParser do
     Enum.reduce(attr_nodes, {[], []}, fn
       {[attr, value], {line, _}}, {attributes, spaces} ->
         {[{attr, value, line} | attributes], spaces}
-
-      space, {attributes, spaces} ->
-        {attributes, [space|spaces]}
     end)
   end
 
@@ -192,23 +194,15 @@ defmodule HTMLParser do
     end
   end
 
-  @blanks ' \n\r\t\v\b\f\e\d\a'
-
-  defp blank?([]), do: true
-
-  defp blank?([h|t]), do: blank?(h) && blank?(t)
-
-  defp blank?(""), do: true
-
-  defp blank?(char) when char in @blanks, do: true
-
-  defp blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
-
-  defp blank?(_), do: false
-
-  defparsec :node,
+  defparsecp :node,
             [macro_node, regular_node, self_closing_node]
             |> choice()
             |> label("opening HTML tag"),
             inline: true
+
+  defparsecp :root,
+              repeat(choice([
+                ascii_string([not: ?<], min: 1),
+                parsec(:node)
+              ]))
 end
