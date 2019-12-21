@@ -2,8 +2,6 @@ defmodule HTMLParser do
   import NimbleParsec
 
   # TODO: use line+line_offset+byte_offset in parse/1 for error reporting
-  # TODO: interpolation in attribute value
-  # TODO: add support for comments
   # TODO: add support for attributes in macro components
 
   @doc """
@@ -77,6 +75,12 @@ defmodule HTMLParser do
       ])
     )
     |> wrap()
+
+  comment =
+    ignore(string("<!--"))
+    |> repeat(lookahead_not(string("-->")) |> utf8_char([]))
+    |> ignore(string("-->"))
+    |> ignore()
 
   ## Self-closing node
 
@@ -207,7 +211,7 @@ defmodule HTMLParser do
   end
 
   defparsecp :node,
-            [macro_node, regular_node, self_closing_node]
+            [macro_node, regular_node, self_closing_node, comment]
             |> choice()
             |> label("opening HTML tag"),
             inline: true

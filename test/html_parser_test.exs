@@ -54,6 +54,30 @@ defmodule HTMLParserTest do
              {:ok, ["hello", {"foo", [], ["bar"], %{line: 1}}, "world"]}
   end
 
+  test "ignore comments" do
+    code = """
+    <div>
+      <!-- This will be ignored -->
+      <span/>
+    </div>
+    """
+
+    assert parse(code) == {:ok, [
+      {
+        "div",
+        '',
+        [
+          "\n  ",
+          "\n  ",
+          {"span", [], [], %{line: 3, space: ""}},
+          "\n"
+        ],
+        %{line: 1}
+      },
+      "\n"
+    ]}
+  end
+
   describe "HTML only" do
     test "single node" do
       assert parse("<foo>bar</foo>") ==
