@@ -76,7 +76,7 @@ defmodule HTMLParserTest do
                {:ok,
                 [
                   {"foo", [],
-                   ["one", {"bar", [], [{"bat", [], [], %{line: 1}}], %{line: 1}}, "three"],
+                   ["one", {"bar", [], [{"bat", [], [], %{line: 1, space: ""}}], %{line: 1}}, "three"],
                    %{line: 1}}
                 ]}
     end
@@ -169,7 +169,10 @@ defmodule HTMLParserTest do
       </foo>
       """
 
-      attributes = [{"prop1", 'value1', 2}, {"prop2", 'value2', 3}]
+      attributes = [
+        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
 
       children = [
         "\n  bar\n  ",
@@ -188,9 +191,56 @@ defmodule HTMLParserTest do
       />
       """
 
-      attributes = [{"prop1", 'value1', 2}, {"prop2", 'value2', 3}]
+      attributes = [
+        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 'value2',  %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "regular nodes with whitespaces" do
+      code = """
+      <foo
+        prop1
+        prop2 = "value 2"
+        prop3 =
+          {{ var3 }}
+        prop4
+      ></foo>
+      """
+
+      attributes = [
+        {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
+        {"prop2", 'value 2', %{line: 3, spaces: ["", " ", " "]}},
+        {"prop3", {:attribute_expr, [" var3 "]},
+          %{line: 4, spaces: ["\n  ", " ", "\n    "]}
+        },
+        {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
+      ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
+    end
+
+    test "self-closing nodes with whitespaces" do
+      code = """
+      <foo
+        prop1
+        prop2 = "2"
+        prop3 =
+          {{ var3 }}
+        prop4
+      />
+      """
+
+      attributes = [
+        {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
+        {"prop2", '2', %{line: 3, spaces: ["", " ", " "]}},
+        {"prop3", {:attribute_expr, [" var3 "]}, %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
+        {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
 
     test "value as expression" do
@@ -202,11 +252,51 @@ defmodule HTMLParserTest do
       """
 
       attributes = [
-        {"prop1", {:attribute_expr, [" var1 "]}, 2},
-        {"prop2", {:attribute_expr, [" var2 "]}, 3}
+        {"prop1", {:attribute_expr, [" var1 "]},
+          %{line: 2, spaces: ["\n  ", "", ""]}
+        },
+        {"prop2", {:attribute_expr, [" var2 "]},
+          %{line: 3, spaces: ["\n  ", "", ""]}
+        }
       ]
 
-      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "integer values" do
+      code = """
+      <foo
+        prop1=1
+        prop2=2
+      />
+      """
+
+      attributes = [
+        {"prop1", 1, %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 2, %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "boolean values" do
+      code = """
+      <foo
+        prop1
+        prop2=true
+        prop3=false
+        prop4
+      />
+      """
+
+      attributes = [
+        {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
+        {"prop2", true, %{line: 3, spaces: ["", "", ""]}},
+        {"prop3", false, %{line: 4, spaces: ["\n  ", "", ""]}},
+        {"prop4", true, %{line: 5, spaces: ["\n  ", "\n"]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
   end
 end

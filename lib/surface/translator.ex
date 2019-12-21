@@ -5,7 +5,7 @@ defmodule Surface.Translator do
   This module also contains the main logic to translate Surface code.
   """
 
-  alias Surface.Translator.Parser
+  # alias Surface.Translator.Parser
   import Surface.Translator.IO, only: [warn: 3]
 
   @callback translate(node :: any, caller: Macro.Env.t()) :: any
@@ -14,13 +14,28 @@ defmodule Surface.Translator do
 
   @component_directives [":for", ":if", ":bindings", ":debug"]
 
+  defmodule ParseError do
+    defexception file: "", line: 0, message: "error parsing HTML/Surface"
+
+    @impl true
+    def message(exception) do
+      "#{exception.file}:#{exception.line}: #{exception.message}"
+    end
+  end
+
   @doc """
   Translates a string written using the Surface format into a Phoenix template.
   """
   @spec run(binary, integer, Macro.Env.t(), binary) :: binary
   def run(string, line_offset, caller, file \\ "nofile") do
     string
-    |> Parser.parse(line_offset, file)
+    |> HTMLParser.parse()
+    |> case do
+      {:ok, nodes} ->
+        nodes
+      {:error, message, line} ->
+        raise %ParseError{line: line + line_offset - 1, file: file, message: message}
+    end
     |> build_metadata(caller)
     |> prepend_context()
     |> translate(caller)
@@ -40,6 +55,10 @@ defmodule Surface.Translator do
     warn(message, caller, &(&1 + line))
     encoded_message = Plug.HTML.html_escape_to_iodata(message)
     ["<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
+  end
+
+  def translate({:interpolation, expr}, _caller) do
+    ["<%=", expr, "%>"]
   end
 
   def translate({_, _, _, %{translator: translator, module: mod}} = node, caller) do

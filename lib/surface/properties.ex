@@ -110,7 +110,7 @@ defmodule Surface.Properties do
 
     if function_exported?(mod, :__props__, 0) do
       {_, translated_props} =
-        Enum.reduce(attributes, {mod_line, []}, fn {key, value, line}, {last_line, translated_props} ->
+        Enum.reduce(attributes, {mod_line, []}, fn {key, value, %{line: line}}, {last_line, translated_props} ->
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
           if mod.__props__() != [] && !mod.__validate_prop__(key_atom) do

@@ -2,7 +2,6 @@ defmodule HTMLParser do
   import NimbleParsec
 
   # TODO: use line+line_offset+byte_offset in parse/1 for error reporting
-  # TODO: add atributes spaces in metadata
   # TODO: interpolation in attribute value
   # TODO: add support for comments
   # TODO: add support for attributes in macro components
@@ -36,6 +35,12 @@ defmodule HTMLParser do
     |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
     |> reduce({List, :to_string, []})
 
+  boolean =
+    choice([
+      string("true") |> replace(true),
+      string("false") |> replace(false)
+    ])
+
   attribute_expr =
     ignore(string("{{"))
     |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
@@ -57,19 +62,21 @@ defmodule HTMLParser do
     |> wrap()
 
   attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:], min: 1)
-  whitespace = ascii_string([?\s, ?\n], min: 0) |> ignore()
+  whitespace = ascii_string([?\s, ?\n], min: 0)
 
   attribute =
-    attr_name
+    whitespace
+    |> concat(attr_name |> line())
     |> concat(whitespace)
     |> optional(
       choice([
-        ignore(string("=")) |> concat(attribute_expr),
-        ignore(string("=")) |> concat(attribute_value),
-        ignore(string("=")) |> concat(integer(min: 1)),
+        ignore(string("=")) |> concat(whitespace) |> concat(attribute_expr),
+        ignore(string("=")) |> concat(whitespace) |> concat(attribute_value),
+        ignore(string("=")) |> concat(whitespace) |> concat(integer(min: 1)),
+        ignore(string("=")) |> concat(whitespace) |> concat(boolean)
       ])
     )
-    |> line()
+    |> wrap()
 
   ## Self-closing node
 
@@ -77,16 +84,16 @@ defmodule HTMLParser do
     ignore(string("<"))
     |> concat(tag)
     |> line()
-    |> repeat(whitespace |> concat(attribute))
+    |> concat(repeat(attribute) |> wrap())
     |> concat(whitespace)
     |> ignore(string("/>"))
     |> wrap()
     |> post_traverse(:self_closing_tags)
 
-  defp self_closing_tags(_rest, [[tag_node | attr_nodes]], context, _line, _offset) do
+  defp self_closing_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
     {[tag], {line, _}} = tag_node
-    {attributes, _spaces} = split_attributes_and_spaces(attr_nodes)
-    {[{tag, Enum.reverse(attributes), [], %{line: line}}], context}
+    attributes = build_attributes(attr_nodes)
+    {[{tag, attributes, [], %{line: line, space: space}}], context}
   end
 
   ## Regular node
@@ -103,7 +110,7 @@ defmodule HTMLParser do
     ignore(string("<"))
     |> concat(tag)
     |> line()
-    |> repeat(whitespace |> concat(attribute))
+    |> concat(repeat(attribute) |> wrap())
     |> concat(whitespace)
     |> ignore(string(">"))
     |> wrap()
@@ -125,9 +132,9 @@ defmodule HTMLParser do
     |> optional(closing_tag)
     |> post_traverse(:match_tags)
 
-  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}} | attr_nodes] | nodes]], context, _line, _offset) do
-    {attributes, _spaces} = split_attributes_and_spaces(attr_nodes)
-    {[{tag, Enum.reverse(attributes), nodes, %{line: opening_line}}], context}
+  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}}, attr_nodes, _space] | nodes]], context, _line, _offset) do
+    attributes = build_attributes(attr_nodes)
+    {[{tag, attributes, nodes, %{line: opening_line}}], context}
   end
 
   defp match_tags(_rest, [closing, [[tag_node | _] | _]], _context, _line, _offset) do
@@ -146,10 +153,15 @@ defmodule HTMLParser do
   defp interpolation(_rest, _, _context, _line, _offset),
     do: {:error, "expected closing for interpolation"}
 
-  defp split_attributes_and_spaces(attr_nodes) do
-    Enum.reduce(attr_nodes, {[], []}, fn
-      {[attr, value], {line, _}}, {attributes, spaces} ->
-        {[{attr, value, line} | attributes], spaces}
+  defp build_attributes(attr_nodes) do
+    Enum.map(attr_nodes, fn
+      # attribute without value (e.g. disabled)
+      [space1, {[attr], {line, _}}, space2] ->
+        {attr, true, %{line: line, spaces: [space1, space2]}}
+
+      # attribute with value
+      [space1, {[attr], {line, _}}, space2, space3, value] ->
+        {attr, value, %{line: line, spaces: [space1, space2, space3]}}
     end)
   end
 
