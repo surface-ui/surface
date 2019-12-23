@@ -82,6 +82,43 @@ defmodule HTMLParser do
     |> ignore(string("-->"))
     |> ignore()
 
+  ## Void element node
+
+  void_element =
+    choice([
+      string("area"),
+      string("base"),
+      string("br"),
+      string("col"),
+      string("hr"),
+      string("img"),
+      string("input"),
+      string("link"),
+      string("meta"),
+      string("param"),
+      string("command"),
+      string("keygen"),
+      string("source")
+    ])
+
+  void_element_node =
+    ignore(string("<"))
+    |> concat(void_element)
+    |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string(">"))
+    |> wrap()
+    |> post_traverse(:void_element_tags)
+
+  defp void_element_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
+    {[tag], {line, _}} = tag_node
+    message = "void element #{inspect(tag)} not following XHTML standard. " <>
+                "Please replace <#{tag}> with <#{tag}/>"
+    attributes = build_attributes(attr_nodes)
+    {[{tag, attributes, [], %{line: line, space: space, warn: message}}], context}
+  end
+
   ## Self-closing node
 
   self_closing_node =
@@ -211,7 +248,7 @@ defmodule HTMLParser do
   end
 
   defparsecp :node,
-            [macro_node, regular_node, self_closing_node, comment]
+            [void_element_node, macro_node, regular_node, self_closing_node, comment]
             |> choice()
             |> label("opening HTML tag"),
             inline: true

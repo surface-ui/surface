@@ -51,6 +51,12 @@ defmodule Surface.Translator do
     end
   end
 
+  def translate({tag, attributes, children, %{warn: message, line: line} = meta}, caller) do
+    warn(message, caller, &(&1 + line))
+    meta = Map.delete(meta, :warn)
+    translate({tag, attributes, children, meta}, caller)
+  end
+
   def translate({_, _, _, %{error: message, line: line}}, caller) do
     warn(message, caller, &(&1 + line))
     encoded_message = Plug.HTML.html_escape_to_iodata(message)
