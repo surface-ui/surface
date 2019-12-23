@@ -1,9 +1,6 @@
 defmodule HTMLParser do
   import NimbleParsec
 
-  # TODO: use line+line_offset+byte_offset in parse/1 for error reporting
-  # TODO: add support for attributes in macro components
-
   @doc """
   Parses a surface HTML document.
   """
@@ -209,33 +206,43 @@ defmodule HTMLParser do
   ## Macro node
 
   text_without_interpolation = utf8_string([not: ?<], min: 1)
-  opening_macro_tag = ignore(string("<#")) |> concat(tag) |> ignore(string(">"))
+
+  opening_macro_tag =
+    ignore(string("<#"))
+    |> concat(tag)
+    |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string(">"))
+    |> wrap()
+
   closing_macro_tag = ignore(string("</#")) |> concat(tag) |> ignore(string(">"))
 
   macro_node =
     opening_macro_tag
-    |> line()
     |> post_traverse(:opening_macro_tag)
     |> repeat_while(choice([string("<"), text_without_interpolation]), :lookahead_macro_tag)
     |> wrap()
     |> optional(closing_macro_tag)
     |> post_traverse(:closing_macro_tag)
 
-  defp opening_macro_tag(_rest, [tag], context, _, _) do
-    {[], %{context | macro: tag}}
+  defp opening_macro_tag(_rest, [macro], context, _, _) do
+    {[], %{context | macro: macro}}
   end
 
-  defp closing_macro_tag(_, [macro, rest], %{macro: {[macro], {line, _}}} = context, _, _) do
+  defp closing_macro_tag(_, [macro, rest], %{macro: [{[macro], {line, _}}, attr_nodes, space]} = context, _, _) do
     tag = "#" <> macro
+    attributes = build_attributes(attr_nodes)
     text = IO.iodata_to_binary(rest)
-    {[{tag, [], [text], %{line: line}}], %{context | macro: nil}}
+    {[{tag, attributes, [text], %{line: line, space: space}}], %{context | macro: nil}}
   end
 
-  defp closing_macro_tag(_rest, _nodes, %{macro: {[macro], {_line, _}}}, _, _) do
+  defp closing_macro_tag(_rest, _nodes, %{macro: [{[macro], {_line, _}}, _attr_nodes, _space]}, _, _) do
     {:error, "expected closing tag for #{inspect("#" <> macro)}"}
   end
 
-  defp lookahead_macro_tag(rest, %{macro: {[macro], {_line, _}}} = context, _, _) do
+  defp lookahead_macro_tag(rest, %{macro: macro} = context, _, _) do
+    [{[macro], {_line, _}}, _attr_nodes, _space] = macro
     size = byte_size(macro)
 
     case rest do

@@ -171,21 +171,21 @@ defmodule HTMLParserTest do
   describe "with macros" do
     test "single node" do
       assert parse("<#foo>bar</#foo>") ==
-               {:ok, [{"#foo", [], ["bar"], %{line: 1}}]}
+               {:ok, [{"#foo", [], ["bar"], %{line: 1, space: ""}}]}
     end
 
     test "mixed nodes" do
       assert parse("<#foo>one<bar>two</baz>three</#foo>") ==
-               {:ok, [{"#foo", [], ["one<bar>two</baz>three"], %{line: 1}}]}
+               {:ok, [{"#foo", [], ["one<bar>two</baz>three"], %{line: 1, space: ""}}]}
 
       assert parse("<#foo>one<#bar>two</#baz>three</#foo>") ==
-               {:ok, [{"#foo", [], ["one<#bar>two</#baz>three"], %{line: 1}}]}
+               {:ok, [{"#foo", [], ["one<#bar>two</#baz>three"], %{line: 1, space: ""}}]}
 
       assert parse("<#foo>one<bar>two<baz>three</#foo>") ==
-               {:ok, [{"#foo", [], ["one<bar>two<baz>three"], %{line: 1}}]}
+               {:ok, [{"#foo", [], ["one<bar>two<baz>three"], %{line: 1, space: ""}}]}
 
       assert parse("<#foo>one</bar>two</baz>three</#foo>") ==
-               {:ok, [{"#foo", [], ["one</bar>two</baz>three"], %{line: 1}}]}
+               {:ok, [{"#foo", [], ["one</bar>two</baz>three"], %{line: 1, space: ""}}]}
     end
   end
 
@@ -261,6 +261,25 @@ defmodule HTMLParserTest do
       ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "macro nodes" do
+      code = """
+      <#foo
+        prop1="value1"
+        prop2="value2"
+      >
+        bar
+      </#foo>
+      """
+
+      attributes = [
+        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 'value2',  %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
+
+      assert parse(code) ==
+        {:ok, [{"#foo", attributes, ["\n  bar\n"], %{line: 1, space: "\n"}}, "\n"]}
     end
 
     test "regular nodes with whitespaces" do
