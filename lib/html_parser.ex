@@ -170,9 +170,9 @@ defmodule HTMLParser do
     |> optional(closing_tag)
     |> post_traverse(:match_tags)
 
-  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}}, attr_nodes, _space] | nodes]], context, _line, _offset) do
+  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}}, attr_nodes, space] | nodes]], context, _line, _offset) do
     attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, nodes, %{line: opening_line}}], context}
+    {[{tag, attributes, nodes, %{line: opening_line, space: space}}], context}
   end
 
   defp match_tags(_rest, [closing, [[tag_node | _] | _]], _context, _line, _offset) do

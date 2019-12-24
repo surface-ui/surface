@@ -10,13 +10,13 @@ defmodule Surface.Translator.ComponentTranslator do
   @impl true
   def translate(node, caller) do
     {mod_str, attributes, children, meta} = node
-    %{module: mod, line: mod_line, directives: directives} = meta
+    %{module: mod, directives: directives, space: space} = meta
 
     {children_props, children_contents} = translate_children(mod, attributes, directives, children, caller)
     children_props_str = ["%{", Enum.join(children_props, ", "), "}"]
 
     open = [
-      ["<% props = ", Properties.translate_attributes(attributes, mod, mod_str, mod_line, caller), " %>"],
+      ["<% props = ", Properties.translate_attributes(attributes, mod, mod_str, space, caller), " %>"],
       add_begin_context(mod, mod_str),
       Translator.translate(children_contents, caller),
       ["<% children_props = ", children_props_str, " %>"],

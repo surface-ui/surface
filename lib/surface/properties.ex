@@ -105,12 +105,12 @@ defmodule Surface.Properties do
     """
   end
 
-  def translate_attributes(attributes, mod, mod_str, mod_line, caller, opts \\ []) do
+  def translate_attributes(attributes, mod, mod_str, space, caller, opts \\ []) do
     put_default_props = Keyword.get(opts, :put_default_props, true)
 
     if function_exported?(mod, :__props__, 0) do
-      {_, translated_props} =
-        Enum.reduce(attributes, {mod_line, []}, fn {key, value, %{line: line}}, {last_line, translated_props} ->
+      translated_values =
+        Enum.reduce(attributes, [], fn {key, value, %{line: line, spaces: spaces}}, translated_values ->
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
           if mod.__props__() != [] && !mod.__validate_prop__(key_atom) do
@@ -119,11 +119,24 @@ defmodule Surface.Properties do
           end
 
           value = translate_value(prop[:type], value, caller, line)
-          translated_prop = [String.duplicate("\n", line - last_line) | render_prop_value(key, value)]
-          {line, [translated_prop | translated_props]}
+          [{key, value, spaces, ","} | translated_values]
         end)
 
-      props = ["%{", Enum.join(translated_props, ", "), "}"]
+      translated_values =
+        case translated_values do
+          [{key, value, spaces, _} | rest] ->
+            [{key, value, spaces, ""} | rest]
+
+          _ ->
+            translated_values
+        end
+
+      translated_props =
+        Enum.reduce(translated_values, [], fn {key, value, spaces, comma}, translated_props ->
+          [render_prop(key, value, spaces, comma) | translated_props]
+        end)
+
+      props = ["%{", translated_props, space, "}"]
 
       if put_default_props do
         ["put_default_props(", props, ", ", mod_str, ")"]
@@ -187,17 +200,28 @@ defmodule Surface.Properties do
     value
   end
 
-  defp render_prop_value(key, value) do
-    case value do
-      {:attribute_expr, value} ->
-        expr = value |> IO.iodata_to_binary() |> String.trim()
-        [key, ": ", "(", expr, ")"]
-      value when is_integer(value) ->
-        [key, ": ", to_string(value)]
-      value when is_boolean(value) ->
-        [key, ": ", inspect(value)]
-      _ ->
-        [key, ": ", ~S("), value, ~S(")]
+  defp render_prop(key, value, spaces, comma) do
+    rhs =
+      case value do
+        {:attribute_expr, value} ->
+          expr = value |> IO.iodata_to_binary() |> String.trim()
+          ["(", expr, ")"]
+        value when is_integer(value) ->
+          to_string(value)
+        value when is_boolean(value) ->
+          inspect(value)
+        _ ->
+          [~S("), value, ~S(")]
+      end
+
+    case spaces do
+      [space1, space2, space3] ->
+        space = space2 <> space3
+        space = if space != "", do: space, else: " "
+        [space1, key, ":", space, rhs, comma]
+
+      [space1, space2] ->
+        [space1, key, ": ", rhs, comma, space2]
     end
   end
 end

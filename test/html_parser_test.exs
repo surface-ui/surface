@@ -16,7 +16,7 @@ defmodule HTMLParserTest do
              {:ok,
               [
                 "\n",
-                {"div", [], [], %{line: 2}}
+                {"div", [], [], %{line: 2, space: ""}}
               ]}
   end
 
@@ -24,7 +24,7 @@ defmodule HTMLParserTest do
     assert parse("<div></div>\n") ==
              {:ok,
               [
-                {"div", [], [], %{line: 1}},
+                {"div", [], [], %{line: 1, space: ""}},
                 "\n"
               ]}
   end
@@ -42,16 +42,16 @@ defmodule HTMLParserTest do
     assert parse(code) ==
              {:ok,
               [
-                {"div", [], ["\n  Div 1\n"], %{line: 1}},
+                {"div", [], ["\n  Div 1\n"], %{line: 1, space: ""}},
                 "\n",
-                {"div", [], ["\n  Div 2\n"], %{line: 4}},
+                {"div", [], ["\n  Div 2\n"], %{line: 4, space: ""}},
                 "\n"
               ]}
   end
 
   test "text before and after" do
     assert parse("hello<foo>bar</foo>world") ==
-             {:ok, ["hello", {"foo", [], ["bar"], %{line: 1}}, "world"]}
+             {:ok, ["hello", {"foo", [], ["bar"], %{line: 1, space: ""}}, "world"]}
   end
 
   test "ignore comments" do
@@ -72,7 +72,7 @@ defmodule HTMLParserTest do
           {"span", [], [], %{line: 3, space: ""}},
           "\n"
         ],
-        %{line: 1}
+        %{line: 1, space: ""}
       },
       "\n"
     ]}
@@ -121,18 +121,18 @@ defmodule HTMLParserTest do
   describe "HTML only" do
     test "single node" do
       assert parse("<foo>bar</foo>") ==
-               {:ok, [{"foo", [], ["bar"], %{line: 1}}]}
+               {:ok, [{"foo", [], ["bar"], %{line: 1, space: ""}}]}
     end
 
     test "Elixir node" do
       assert parse("<Foo.Bar>bar</Foo.Bar>") ==
-               {:ok, [{"Foo.Bar", [], ["bar"], %{line: 1}}]}
+               {:ok, [{"Foo.Bar", [], ["bar"], %{line: 1, space: ""}}]}
     end
 
     test "mixed nodes" do
       assert parse("<foo>one<bar>two</bar>three</foo>") ==
                {:ok,
-                [{"foo", [], ["one", {"bar", [], ["two"], %{line: 1}}, "three"], %{line: 1}}]}
+                [{"foo", [], ["one", {"bar", [], ["two"], %{line: 1, space: ""}}, "three"], %{line: 1, space: ""}}]}
     end
 
     test "self-closing nodes" do
@@ -140,8 +140,8 @@ defmodule HTMLParserTest do
                {:ok,
                 [
                   {"foo", [],
-                   ["one", {"bar", [], [{"bat", [], [], %{line: 1, space: ""}}], %{line: 1}}, "three"],
-                   %{line: 1}}
+                   ["one", {"bar", [], [{"bat", [], [], %{line: 1, space: ""}}], %{line: 1, space: ""}}, "three"],
+                   %{line: 1, space: ""}}
                 ]}
     end
   end
@@ -149,22 +149,22 @@ defmodule HTMLParserTest do
   describe "interpolation" do
     test "single curly bracket" do
       assert parse("<foo>{bar}</foo>") ==
-               {:ok, [{"foo", [], ["{", "bar}"], %{line: 1}}]}
+               {:ok, [{"foo", [], ["{", "bar}"], %{line: 1, space: ""}}]}
     end
 
     test "double curly bracket" do
       assert parse("<foo>{{baz}}</foo>") ==
-               {:ok, [{"foo", '', [{:interpolation, "baz"}], %{line: 1}}]}
+               {:ok, [{"foo", '', [{:interpolation, "baz"}], %{line: 1, space: ""}}]}
     end
 
     test "mixed curly bracket" do
       assert parse("<foo>bar{{baz}}bat</foo>") ==
-               {:ok, [{"foo", '', ["bar", {:interpolation, "baz"}, "bat"], %{line: 1}}]}
+               {:ok, [{"foo", '', ["bar", {:interpolation, "baz"}, "bat"], %{line: 1, space: ""}}]}
     end
 
     test "single-closing curly bracket" do
       assert parse("<foo>bar{{ 'a}b' }}bat</foo>") ==
-               {:ok, [{"foo", [], ["bar", {:interpolation, " 'a}b' "}, "bat"], %{line: 1}}]}
+               {:ok, [{"foo", [], ["bar", {:interpolation, " 'a}b' "}, "bat"], %{line: 1, space: ""}}]}
     end
   end
 
@@ -240,11 +240,11 @@ defmodule HTMLParserTest do
 
       children = [
         "\n  bar\n  ",
-        {"div", [], [{:interpolation, " var "}], %{line: 6}},
+        {"div", [], [{:interpolation, " var "}], %{line: 6, space: ""}},
         "\n"
       ]
 
-      assert parse(code) == {:ok, [{"foo", attributes, children, %{line: 1}}, "\n"]}
+      assert parse(code) == {:ok, [{"foo", attributes, children, %{line: 1, space: "\n"}}, "\n"]}
     end
 
     test "self-closing nodes" do
@@ -302,7 +302,7 @@ defmodule HTMLParserTest do
         {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
       ]
 
-      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
 
     test "self-closing nodes with whitespaces" do
