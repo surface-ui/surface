@@ -8,17 +8,17 @@ defmodule Surface.Translator.TagTranslator do
 
   @impl true
   def translate(node, caller) do
-    {tag_name, attributes, children, _} = node
+    {tag_name, attributes, children, %{space: space}} = node
 
     {
-      ["<", tag_name, render_tag_props(attributes), ">"],
+      ["<", tag_name, translate_attributes(attributes), space, ">"],
       Translator.translate(children, caller),
       ["</", tag_name, ">"]
     }
   end
 
-  defp render_tag_props(props) do
-    for {key, value, _line} <- props do
+  defp translate_attributes(attributes) do
+    for {key, value, %{spaces: spaces}} <- attributes do
       value = replace_attribute_expr(value)
       value =
         if key in ["class", :class] do
@@ -26,17 +26,27 @@ defmodule Surface.Translator.TagTranslator do
         else
           value
         end
-      render_tag_prop_value(key, value)
+      translate_attribute(key, value, spaces)
     end
   end
 
-  defp render_tag_prop_value(key, value) do
+  defp translate_attribute(key, value, spaces) do
+    case spaces do
+      [space1, space2, space3] ->
+        [space1, key, space2, "=", space3, wrap_value(value)]
+
+      [space1, space2] ->
+        [space1, key, space2]
+    end
+  end
+
+  defp wrap_value(value) do
     case value do
       {:attribute_expr, value} ->
         expr = value |> IO.iodata_to_binary() |> String.trim()
-        [" ", key, "=", ~S("), "<%= ", expr, " %>", ~S(")]
+        [~S("), "<%= ", expr, " %>", ~S(")]
       _ ->
-        [" ", key, "=", ~S("), value, ~S(")]
+        [~S("), value, ~S(")]
     end
   end
 

@@ -133,7 +133,7 @@ defmodule Surface.Properties do
 
       translated_props =
         Enum.reduce(translated_values, [], fn {key, value, spaces, comma}, translated_props ->
-          [render_prop(key, value, spaces, comma) | translated_props]
+          [translate_prop(key, value, spaces, comma) | translated_props]
         end)
 
       props = ["%{", translated_props, space, "}"]
@@ -200,7 +200,7 @@ defmodule Surface.Properties do
     value
   end
 
-  defp render_prop(key, value, spaces, comma) do
+  defp translate_prop(key, value, spaces, comma) do
     rhs =
       case value do
         {:attribute_expr, value} ->

@@ -176,6 +176,27 @@ defmodule TranslatorTest do
     """
   end
 
+  test "HTML node with white spaces between attributes" do
+    code = """
+    <div
+      label="label"
+      disabled
+      click=
+        "event"
+    ></div>
+    """
+    translated = Surface.Translator.run(code, 0, __ENV__)
+
+    assert translated =~ """
+    <div
+      label="label"
+      disabled
+      click=
+        "event"
+    ></div>\
+    """
+  end
+
   test "LiveView's propeties are forwarded to live_render as options" do
     code = """
     <MyLiveViewWith id="my_id" session={{ %{user_id: 1} }} />
