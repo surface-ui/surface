@@ -90,7 +90,7 @@ defmodule Surface do
     line_offset = __CALLER__.line + 1
     string
     |> Surface.Translator.run(line_offset, __CALLER__, __CALLER__.file)
-    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset)
+    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset, file: __CALLER__.file)
   end
 
   @doc false
