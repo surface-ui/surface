@@ -262,6 +262,9 @@ defmodule HTMLParser do
 
   defparsecp :root,
               repeat(choice([
+                interpolation,
+                string("{"),
+                text_with_interpolation,
                 ascii_string([not: ?<], min: 1),
                 parsec(:node)
               ]))

@@ -147,6 +147,16 @@ defmodule HTMLParserTest do
   end
 
   describe "interpolation" do
+    test "as root" do
+      assert parse("{{baz}}") ==
+               {:ok, [{:interpolation, "baz"}]}
+    end
+
+    test "without root node but with text" do
+      assert parse("foo {{baz}} bar") ==
+               {:ok, ["foo ", {:interpolation, "baz"}, " bar"]}
+    end
+
     test "single curly bracket" do
       assert parse("<foo>{bar}</foo>") ==
                {:ok, [{"foo", [], ["{", "bar}"], %{line: 1, space: ""}}]}
