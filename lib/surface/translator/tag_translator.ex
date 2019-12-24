@@ -6,6 +6,16 @@ defmodule Surface.Translator.TagTranslator do
 
   @behaviour Translator
 
+  @void_elements ["area", "base", "br", "col", "hr", "img", "input", "link",
+                  "meta", "param", "command", "keygen", "source"]
+
+  @impl true
+  def translate({tag_name, attributes, _, %{space: space}}, _) when tag_name in @void_elements do
+    {
+      ["<", tag_name, translate_attributes(attributes), space, ">"]
+    }
+  end
+
   @impl true
   def translate(node, caller) do
     {tag_name, attributes, children, %{space: space}} = node

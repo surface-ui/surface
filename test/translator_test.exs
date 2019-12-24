@@ -373,21 +373,6 @@ defmodule TranslatorTest do
         |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: 1)
       end)
     end
-
-    test "show parser warnings" do
-      code = """
-      <div>
-        <br>
-        <hr>
-      </div>
-      """
-
-      {:warn, line, message} = run_translate(code, __ENV__)
-
-      assert message =~ ~S(void element "br" not following XHTML standard)
-      assert line == 2
-      assert message =~ ~S(void element "hr" not following XHTML standard)
-    end
   end
 
   defp extract_line(message) do

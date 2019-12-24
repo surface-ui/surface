@@ -110,10 +110,8 @@ defmodule HTMLParser do
 
   defp void_element_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
     {[tag], {line, _}} = tag_node
-    message = "void element #{inspect(tag)} not following XHTML standard. " <>
-                "Please replace <#{tag}> with <#{tag}/>"
     attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, [], %{line: line, space: space, warn: message}}], context}
+    {[{tag, attributes, [], %{line: line, space: space}}], context}
   end
 
   ## Self-closing node

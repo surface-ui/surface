@@ -78,7 +78,7 @@ defmodule HTMLParserTest do
     ]}
   end
 
-  describe "add warning on void element without self closing tag" do
+  describe "void elements" do
     test "without attributes" do
       code = """
       <div>
@@ -87,11 +87,7 @@ defmodule HTMLParserTest do
       """
 
       {:ok, [{"div", [], ["\n  ", node, "\n"], _}, "\n"]} = parse(code)
-      {"hr", [], [], %{line: line, space: "", warn: warn}} = node
-
-      assert warn ==
-        "void element \"hr\" not following XHTML standard. Please replace <hr> with <hr/>"
-      assert line == 2
+      assert node == {"hr", [], [], %{line: 2, space: ""}}
     end
 
     test "with attributes" do
@@ -105,16 +101,11 @@ defmodule HTMLParserTest do
       """
 
       {:ok, [{"div", [], ["\n  ", node, "\n"], _}, "\n"]} = parse(code)
-      {"img", attributes, [], %{line: line, space: "\n  ", warn: warn}} = node
 
-      assert attributes == [
+      assert node == {"img", [
         {"src", 'file.gif', %{line: 3, spaces: ["\n    ", "", ""]}},
         {"alt", 'My image', %{line: 4, spaces: ["\n    ", "", ""]}}
-      ]
-
-      assert warn ==
-        "void element \"img\" not following XHTML standard. Please replace <img> with <img/>"
-      assert line == 2
+      ], [], %{line: 2, space: "\n  "}}
     end
   end
 
