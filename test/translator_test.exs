@@ -137,7 +137,7 @@ defmodule TranslatorTest do
   test "self-closed component with white spaces between attributes" do
     code = """
     <Button
-      label="label"
+      label = "label"
       disabled
       click=
         "event"
@@ -147,7 +147,7 @@ defmodule TranslatorTest do
 
     assert translated =~ """
     <% props = put_default_props(%{
-      label: "label",
+      label:  "label",
       disabled: true,
       click:
         "event"
