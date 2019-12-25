@@ -3,33 +3,33 @@ defmodule Surface.Translator.Parser do
 
   import NimbleParsec
 
-  defmodule ParseError do
-    defexception file: "", line: 0, message: "error parsing HTML/Surface"
+  @doc """
+  Parses a surface HTML document.
+  """
+  def parse(content) do
+    case root(content, context: [macro: nil]) do
+      {:ok, tree, "", %{macro: nil}, _, _} ->
+        {:ok, tree}
 
-    @impl true
-    def message(exception) do
-      "#{exception.file}:#{exception.line}: #{exception.message}"
+      {:ok, _, rest, context, {line, _}, byte_offset} ->
+        # Something went wrong then it has to be an error parsing the HTML tag.
+        # However, because of repeat, the error is discarded, so we call node
+        # again to get the proper error message.
+        {:error, message, _rest, _context, {line, _col}, _byte_offset} =
+          node(rest, context: context, line: line, byte_offset: byte_offset)
+
+        {:error, message, line}
+
+      {:error, message, _rest, _context, {line, _col}, _byte_offset} ->
+        {:error, message, line}
     end
   end
 
-  # TODO: Find a better way to do this
-  defp content_expr("{{") do
-    "<%="
-  end
+  ## Common helpers
 
-  defp content_expr("}}") do
-    "%>"
-  end
-
-  defp content_expr(expr) do
-    expr
-  end
-
-  expr =
-    string("{{")
-    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
-    |> string("}}")
-    |> map(:content_expr)
+  tag =
+    ascii_char([?a..?z, ?A..?Z])
+    |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
     |> reduce({List, :to_string, []})
 
   boolean =
@@ -45,32 +45,6 @@ defmodule Surface.Translator.Parser do
     |> reduce({List, :to_string, []})
     |> tag(:attribute_expr)
 
-  tag_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_], min: 1)
-
-  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:], min: 1)
-
-  text =
-    utf8_char(not: ?<)
-    |> repeat(
-      lookahead_not(
-        choice([
-          ignore(string("<")),
-          ignore(string("{{"))
-        ])
-      )
-      |> utf8_char([])
-    )
-    |> reduce({List, :to_string, []})
-
-  whitespace = ascii_char([?\s, ?\n]) |> repeat() |> ignore()
-  whitespace_no_ignore = ascii_char([?\s, ?\n]) |> repeat()
-
-  closing_tag =
-    ignore(string("</"))
-    |> concat(tag_name)
-    |> ignore(string(">"))
-    |> unwrap_and_tag(:closing_tag)
-
   attribute_value =
     ignore(ascii_char([?"]))
     |> repeat(
@@ -84,26 +58,22 @@ defmodule Surface.Translator.Parser do
     |> ignore(ascii_char([?"]))
     |> wrap()
 
+  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:], min: 1)
+  whitespace = ascii_string([?\s, ?\n], min: 0)
+
   attribute =
-    attr_name
+    whitespace
+    |> concat(attr_name |> line())
     |> concat(whitespace)
     |> optional(
       choice([
-        ignore(string("=")) |> concat(attribute_expr),
-        ignore(string("=")) |> concat(attribute_value),
-        ignore(string("=")) |> concat(integer(min: 1)),
-        ignore(string("=")) |> concat(boolean)
+        ignore(string("=")) |> concat(whitespace) |> concat(attribute_expr),
+        ignore(string("=")) |> concat(whitespace) |> concat(attribute_value),
+        ignore(string("=")) |> concat(whitespace) |> concat(integer(min: 1)),
+        ignore(string("=")) |> concat(whitespace) |> concat(boolean)
       ])
     )
-    |> line()
-
-  opening_tag =
-    ignore(string("<"))
-    |> concat(tag_name)
-    |> line()
-    |> unwrap_and_tag(:opening_tag)
-    |> repeat(whitespace |> concat(attribute) |> unwrap_and_tag(:attributes))
-    |> concat(whitespace)
+    |> wrap()
 
   comment =
     ignore(string("<!--"))
@@ -111,55 +81,168 @@ defmodule Surface.Translator.Parser do
     |> ignore(string("-->"))
     |> ignore()
 
-  children =
-    parsec(:parse_children)
-    |> tag(:child)
+  ## Void element node
 
-  tag =
-    opening_tag
-    |> choice([
-      ignore(string("/>")),
-      ignore(string(">"))
-      |> concat(children)
-      |> concat(closing_tag)
+  void_element =
+    choice([
+      string("area"),
+      string("base"),
+      string("br"),
+      string("col"),
+      string("hr"),
+      string("img"),
+      string("input"),
+      string("link"),
+      string("meta"),
+      string("param"),
+      string("command"),
+      string("keygen"),
+      string("source")
     ])
-    |> post_traverse(:validate_node)
 
-  ## Macro
+  void_element_node =
+    ignore(string("<"))
+    |> concat(void_element)
+    |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string(">"))
+    |> wrap()
+    |> post_traverse(:void_element_tags)
 
-  macro_tag =
-    ascii_char([?A..?Z])
-    |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
-    |> reduce({List, :to_string, []})
+  defp void_element_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
+    {[tag], {line, _}} = tag_node
+    attributes = build_attributes(attr_nodes)
+    {[{tag, attributes, [], %{line: line, space: space}}], context}
+  end
+
+  ## Self-closing node
+
+  self_closing_node =
+    ignore(string("<"))
+    |> concat(tag)
+    |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string("/>"))
+    |> wrap()
+    |> post_traverse(:self_closing_tags)
+
+  defp self_closing_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
+    {[tag], {line, _}} = tag_node
+    attributes = build_attributes(attr_nodes)
+    {[{tag, attributes, [], %{line: line, space: space}}], context}
+  end
+
+  ## Regular node
+
+  interpolation =
+    ignore(string("{{"))
+    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
+    |> optional(string("}}"))
+    |> post_traverse(:interpolation)
+
+  text_with_interpolation = utf8_string([not: ?<, not: ?{], min: 1)
+
+  opening_tag =
+    ignore(string("<"))
+    |> concat(tag)
+    |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string(">"))
+    |> wrap()
+
+  closing_tag = ignore(string("</")) |> concat(tag) |> ignore(string(">"))
+
+  regular_node =
+    opening_tag
+    |> repeat(
+      lookahead_not(string("</"))
+      |> choice([
+        parsec(:node),
+        interpolation,
+        string("{"),
+        text_with_interpolation
+      ])
+    )
+    |> wrap()
+    |> optional(closing_tag)
+    |> post_traverse(:match_tags)
+
+  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}}, attr_nodes, space] | nodes]], context, _line, _offset) do
+    attributes = build_attributes(attr_nodes)
+    {[{tag, attributes, nodes, %{line: opening_line, space: space}}], context}
+  end
+
+  defp match_tags(_rest, [closing, [[tag_node | _] | _]], _context, _line, _offset) do
+    {[opening], {_opening_line, _}} = tag_node
+    {:error, "closing tag #{inspect(closing)} did not match opening tag #{inspect(opening)}"}
+  end
+
+  defp match_tags(_rest, [[[tag_node | _] | _]], _context, _line, _offset) do
+    {[opening], {_opening_line, _}} = tag_node
+    {:error, "expected closing tag for #{inspect(opening)}"}
+  end
+
+  defp interpolation(_rest, ["}}" | nodes], context, _line, _offset),
+    do: {[{:interpolation, nodes |> Enum.reverse() |> IO.iodata_to_binary()}], context}
+
+  defp interpolation(_rest, _, _context, _line, _offset),
+    do: {:error, "expected closing for interpolation"}
+
+  defp build_attributes(attr_nodes) do
+    Enum.map(attr_nodes, fn
+      # attribute without value (e.g. disabled)
+      [space1, {[attr], {line, _}}, space2] ->
+        {attr, true, %{line: line, spaces: [space1, space2]}}
+
+      # attribute with value
+      [space1, {[attr], {line, _}}, space2, space3, value] ->
+        {attr, value, %{line: line, spaces: [space1, space2, space3]}}
+    end)
+  end
+
+  ## Macro node
 
   text_without_interpolation = utf8_string([not: ?<], min: 1)
-  opening_macro_tag = ignore(string("<#")) |> concat(macro_tag) |> ignore(string(">"))
-  closing_macro_tag = ignore(string("</#")) |> concat(macro_tag) |> ignore(string(">"))
 
-  macro =
-    opening_macro_tag
+  opening_macro_tag =
+    ignore(string("<#"))
+    |> concat(tag)
     |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string(">"))
+    |> wrap()
+
+  closing_macro_tag = ignore(string("</#")) |> concat(tag) |> ignore(string(">"))
+
+  macro_node =
+    opening_macro_tag
     |> post_traverse(:opening_macro_tag)
     |> repeat_while(choice([string("<"), text_without_interpolation]), :lookahead_macro_tag)
     |> wrap()
     |> optional(closing_macro_tag)
     |> post_traverse(:closing_macro_tag)
 
-  defp opening_macro_tag(_rest, [tag], context, _, _) do
-    {[], %{context | macro: tag}}
+  defp opening_macro_tag(_rest, [macro], context, _, _) do
+    {[], %{context | macro: macro}}
   end
 
-  defp closing_macro_tag(_, [macro, rest], %{macro: {[macro], {line, _}}} = context, _, _) do
+  defp closing_macro_tag(_, [macro, rest], %{macro: [{[macro], {line, _}}, attr_nodes, space]} = context, _, _) do
     tag = "#" <> macro
+    attributes = build_attributes(attr_nodes)
     text = IO.iodata_to_binary(rest)
-    {[{tag, [], [text], %{line: line}}], %{context | macro: nil}}
+    {[{tag, attributes, [text], %{line: line, space: space}}], %{context | macro: nil}}
   end
 
-  defp closing_macro_tag(_rest, _nodes, %{macro: macro}, _, _) do
+  defp closing_macro_tag(_rest, _nodes, %{macro: [{[macro], {_line, _}}, _attr_nodes, _space]}, _, _) do
     {:error, "expected closing tag for #{inspect("#" <> macro)}"}
   end
 
-  defp lookahead_macro_tag(rest, %{macro: {[macro], {_line, _}}} = context, _, _) do
+  defp lookahead_macro_tag(rest, %{macro: macro} = context, _, _) do
+    [{[macro], {_line, _}}, _attr_nodes, _space] = macro
     size = byte_size(macro)
 
     case rest do
@@ -171,59 +254,18 @@ defmodule Surface.Translator.Parser do
     end
   end
 
-  defparsecp(
-    :parse_children,
-    whitespace_no_ignore
-    |> repeat(
-      choice([
-        tag,
-        macro,
-        comment,
-        expr,
-        text
-      ])
-    )
-  )
+  defparsecp :node,
+            [void_element_node, macro_node, regular_node, self_closing_node, comment]
+            |> choice()
+            |> label("opening HTML tag"),
+            inline: true
 
-  defparsecp(:parse_root, parsec(:parse_children) |> eos)
-
-  defp validate_node(_rest, args, context, _line, _offset) do
-    {[opening_tag], {line, _}} = Keyword.get(args, :opening_tag)
-    closing_tag = Keyword.get(args, :closing_tag)
-
-    cond do
-      opening_tag == closing_tag or closing_tag == nil ->
-        tag = opening_tag
-
-        attributes =
-          Keyword.get_values(args, :attributes)
-          |> Enum.reverse()
-          |> Enum.map(fn
-            {[key], {line, _byte_offset}} ->
-              {key, true, line}
-            {[key, value], {line, _byte_offset}} ->
-              {key, value, line}
-          end)
-
-        children = (args[:child] || [])
-        {[{tag, attributes, children, %{line: line}}], context}
-
-      true ->
-        {:error, "Closing tag #{closing_tag} did not match opening tag #{opening_tag}"}
-    end
-  end
-
-  def parse(string, line_offset, file \\ "nofile") do
-    case parse_root(string, context: [macro: nil]) do
-      {:ok, nodes, _, _, _, _} ->
-        nodes
-
-      {:error, reason, _rest, _, {line, _col}, _} ->
-        raise %ParseError{
-          line: line + line_offset - 1,
-          file: file,
-          message: reason
-        }
-    end
-  end
+  defparsecp :root,
+              repeat(choice([
+                interpolation,
+                string("{"),
+                text_with_interpolation,
+                ascii_string([not: ?<], min: 1),
+                parsec(:node)
+              ]))
 end

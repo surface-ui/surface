@@ -5,7 +5,7 @@ defmodule Surface.Translator do
   This module also contains the main logic to translate Surface code.
   """
 
-  # alias Surface.Translator.Parser
+  alias Surface.Translator.Parser
   import Surface.Translator.IO, only: [warn: 3]
 
   @callback translate(node :: any, caller: Macro.Env.t()) :: any
@@ -29,7 +29,7 @@ defmodule Surface.Translator do
   @spec run(binary, integer, Macro.Env.t(), binary) :: binary
   def run(string, line_offset, caller, file \\ "nofile") do
     string
-    |> HTMLParser.parse()
+    |> Parser.parse()
     |> case do
       {:ok, nodes} ->
         nodes
