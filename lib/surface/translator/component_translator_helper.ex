@@ -111,7 +111,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   end
 
   defp translate_child(node, args, caller) do
-    {mod_str, attributes, children, %{module: mod, line: mod_line}} = node
+    {mod_str, attributes, children, %{module: mod, space: space}} = node
 
     # TODO: Generate names that are harder to conflict
     id = generate_var_id()
@@ -119,7 +119,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     content_id = "content_" <> id
     var_id = "child_" <> id
 
-    translated_props = Properties.translate_attributes(attributes, mod, mod_str, mod_line, caller)
+    translated_props = Properties.translate_attributes(attributes, mod, mod_str, space, caller)
 
     translated_child = [
       "<% ", props_id, " = ", translated_props, " %>",

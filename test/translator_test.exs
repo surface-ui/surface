@@ -9,6 +9,7 @@ defmodule TranslatorTest do
     property label, :string, default: ""
     property click, :event
     property class, :css_class
+    property disabled, :boolean
 
     def render(assigns) do
       ~H"""
@@ -133,13 +134,76 @@ defmodule TranslatorTest do
     """
   end
 
+  test "self-closed component with white spaces between attributes" do
+    code = """
+    <Button
+      label = "label"
+      disabled
+      click=
+        "event"
+    />
+    """
+    translated = Surface.Translator.run(code, 0, __ENV__)
+
+    assert translated =~ """
+    <% props = put_default_props(%{
+      label:  "label",
+      disabled: true,
+      click:
+        "event"
+    }, Button) %>\
+    """
+  end
+
+  test "regular node component with white spaces between attributes" do
+    code = """
+    <Button
+      label="label"
+      disabled
+      click=
+        "event"
+    ></Button>
+    """
+    translated = Surface.Translator.run(code, 0, __ENV__)
+
+    assert translated =~ """
+    <% props = put_default_props(%{
+      label: "label",
+      disabled: true,
+      click:
+        "event"
+    }, Button) %>\
+    """
+  end
+
+  test "HTML node with white spaces between attributes" do
+    code = """
+    <div
+      label="label"
+      disabled
+      click=
+        "event"
+    ></div>
+    """
+    translated = Surface.Translator.run(code, 0, __ENV__)
+
+    assert translated =~ """
+    <div
+      label="label"
+      disabled
+      click=
+        "event"
+    ></div>\
+    """
+  end
+
   test "LiveView's propeties are forwarded to live_render as options" do
     code = """
     <MyLiveViewWith id="my_id" session={{ %{user_id: 1} }} />
     """
 
     translated = Surface.Translator.run(code, 0, __ENV__)
-    assert translated =~ "<% props = %{session: (%{user_id: 1}), id: \"my_id\"} %>"
+    assert translated =~ "<% props = %{ id: \"my_id\", session: (%{user_id: 1}) } %>"
     assert translated =~ "<%= live_render(@socket, MyLiveViewWith, Keyword.new(props)) %>"
   end
 
@@ -149,7 +213,7 @@ defmodule TranslatorTest do
     """
 
     translated = Surface.Translator.run(code, 0, __ENV__)
-    assert translated =~ "<% props = %{} %>"
+    assert translated =~ "<% props = %{ } %>"
   end
 
   describe "errors/warnings" do
@@ -246,12 +310,13 @@ defmodule TranslatorTest do
       <div>
         <Button
           label="label"
-          click="event"/>
+          click="event"
+        />
         <Button click={{ , }} />
       </div>
       """
 
-      assert_raise(SyntaxError, "nofile:5: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, "nofile:6: syntax error before: ','", fn ->
         code
         |> Surface.Translator.run(0, __ENV__)
         |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: 1)

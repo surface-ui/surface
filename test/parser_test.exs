@@ -1,96 +1,231 @@
-defmodule ParserTest do
+defmodule Surface.Translator.ParserTest do
   use ExUnit.Case
-  alias Surface.Translator.{Parser}
 
-  test "parse html tag" do
-    code = ~S(<span label="My label 1" />)
-    [node] = Parser.parse(code, 1)
+  import Surface.Translator.Parser
 
-    assert node == {"span", [{"label", 'My label 1', 1}], [], %{line: 1}}
+  test "empty node" do
+    assert parse("") == {:ok, []}
   end
 
-  test "parse html tag with children" do
-    code = ~S(<div><span/><span/></div>)
-
-    tree = Parser.parse(code, 1)
-
-    assert tree == [
-      {"div", [], [
-        {"span", [], [], %{line: 1}},
-        {"span", [], [], %{line: 1}},
-      ], %{line: 1}}
-    ]
+  test "only text" do
+    assert parse("Some text") == {:ok, ["Some text"]}
   end
 
-  test "parse component" do
-    code = ~S(<MyComponent label="My label"/>)
-    [node] = Parser.parse(code, 1)
-
-    assert node == {"MyComponent", [{"label", 'My label', 1}], [], %{line: 1}}
+  test "keep spaces before node" do
+    assert parse("\n<div></div>") ==
+             {:ok,
+              [
+                "\n",
+                {"div", [], [], %{line: 2, space: ""}}
+              ]}
   end
 
-  test "parse component with children" do
-    code = ~S(<MyComponent><span /><span /></MyComponent>)
-    [node] = Parser.parse(code, 1)
-
-    assert node == {
-      "MyComponent",
-      [],
-      [
-        {"span", [], [], %{line: 1}},
-        {"span", [], [], %{line: 1}}
-      ],
-      %{line: 1}
-    }
+  test "keep spaces after node" do
+    assert parse("<div></div>\n") ==
+             {:ok,
+              [
+                {"div", [], [], %{line: 1, space: ""}},
+                "\n"
+              ]}
   end
 
-  test "parsing with spaces and line break" do
+  test "multiple nodes" do
     code = """
     <div>
-      <span />
-      <span />
+      Div 1
+    </div>
+    <div>
+      Div 2
     </div>
     """
 
-    tree = Parser.parse(code, 1)
+    assert parse(code) ==
+             {:ok,
+              [
+                {"div", [], ["\n  Div 1\n"], %{line: 1, space: ""}},
+                "\n",
+                {"div", [], ["\n  Div 2\n"], %{line: 4, space: ""}},
+                "\n"
+              ]}
+  end
+
+  test "text before and after" do
+    assert parse("hello<foo>bar</foo>world") ==
+             {:ok, ["hello", {"foo", [], ["bar"], %{line: 1, space: ""}}, "world"]}
+  end
+
+  test "component" do
+    code = ~S(<MyComponent label="My label"/>)
+    {:ok, [node]} = parse(code)
+
+    assert node == {"MyComponent", [
+      {"label", 'My label', %{line: 1, spaces: [" ", "", ""]}}
+      ], [], %{line: 1, space: ""}
+    }
+  end
+
+  test "spaces and line break between children" do
+    code = """
+    <div>
+      <span/> <span/>
+      <span/>
+    </div>
+    """
+
+    {:ok, tree} = parse(code)
 
     assert tree == [
-      {"div", [], [
-        10,
-        32,
-        32,
-        {"span", [], [], %{line: 2}},
-        "\n  ",
-        {"span", [], [], %{line: 3}},
-        "\n"
-      ], %{line: 1}},
+      {
+        "div",
+        '',
+        [
+          "\n  ",
+          {"span", '', '', %{line: 2, space: ""}},
+          " ",
+          {"span", [], [], %{line: 2, space: ""}},
+          "\n  ",
+          {"span", [], [], %{line: 3, space: ""}},
+          "\n"
+        ],
+        %{line: 1, space: ""}
+      },
       "\n"
     ]
   end
 
-  describe "macros" do
+  test "ignore comments" do
+    code = """
+    <div>
+      <!-- This will be ignored -->
+      <span/>
+    </div>
+    """
+
+    assert parse(code) == {:ok, [
+      {
+        "div",
+        '',
+        [
+          "\n  ",
+          "\n  ",
+          {"span", [], [], %{line: 3, space: ""}},
+          "\n"
+        ],
+        %{line: 1, space: ""}
+      },
+      "\n"
+    ]}
+  end
+
+  describe "void elements" do
+    test "without attributes" do
+      code = """
+      <div>
+        <hr>
+      </div>
+      """
+
+      {:ok, [{"div", [], ["\n  ", node, "\n"], _}, "\n"]} = parse(code)
+      assert node == {"hr", [], [], %{line: 2, space: ""}}
+    end
+
+    test "with attributes" do
+      code = """
+      <div>
+        <img
+          src="file.gif"
+          alt="My image"
+        >
+      </div>
+      """
+
+      {:ok, [{"div", [], ["\n  ", node, "\n"], _}, "\n"]} = parse(code)
+
+      assert node == {"img", [
+        {"src", 'file.gif', %{line: 3, spaces: ["\n    ", "", ""]}},
+        {"alt", 'My image', %{line: 4, spaces: ["\n    ", "", ""]}}
+      ], [], %{line: 2, space: "\n  "}}
+    end
+  end
+
+  describe "HTML only" do
     test "single node" do
-      assert Parser.parse("<#Foo>bar</#Foo>", 1) == [
-        {"#Foo", [], ["bar"], %{line: 1}}
-      ]
+      assert parse("<foo>bar</foo>") ==
+               {:ok, [{"foo", [], ["bar"], %{line: 1, space: ""}}]}
+    end
+
+    test "Elixir node" do
+      assert parse("<Foo.Bar>bar</Foo.Bar>") ==
+               {:ok, [{"Foo.Bar", [], ["bar"], %{line: 1, space: ""}}]}
     end
 
     test "mixed nodes" do
-      assert Parser.parse("<#Foo>one<bar>two</baz>three</#Foo>", 1) == [
-        {"#Foo", [], ["one<bar>two</baz>three"], %{line: 1}}
-      ]
+      assert parse("<foo>one<bar>two</bar>three</foo>") ==
+               {:ok,
+                [{"foo", [], ["one", {"bar", [], ["two"], %{line: 1, space: ""}}, "three"], %{line: 1, space: ""}}]}
+    end
 
-      assert Parser.parse("<#Foo>one<#Bar>two</#Baz>three</#Foo>", 1) == [
-        {"#Foo", [], ["one<#Bar>two</#Baz>three"], %{line: 1}}
-      ]
+    test "self-closing nodes" do
+      assert parse("<foo>one<bar><bat/></bar>three</foo>") ==
+               {:ok,
+                [
+                  {"foo", [],
+                   ["one", {"bar", [], [{"bat", [], [], %{line: 1, space: ""}}], %{line: 1, space: ""}}, "three"],
+                   %{line: 1, space: ""}}
+                ]}
+    end
+  end
 
-      assert Parser.parse("<#Foo>one<bar>two<baz>three</#Foo>", 1) == [
-        {"#Foo", [], ["one<bar>two<baz>three"], %{line: 1}}
-      ]
+  describe "interpolation" do
+    test "as root" do
+      assert parse("{{baz}}") ==
+               {:ok, [{:interpolation, "baz"}]}
+    end
 
-      assert Parser.parse("<#Foo>one</bar>two</baz>three</#Foo>", 1) == [
-        {"#Foo", [], ["one</bar>two</baz>three"], %{line: 1}}
-      ]
+    test "without root node but with text" do
+      assert parse("foo {{baz}} bar") ==
+               {:ok, ["foo ", {:interpolation, "baz"}, " bar"]}
+    end
+
+    test "single curly bracket" do
+      assert parse("<foo>{bar}</foo>") ==
+               {:ok, [{"foo", [], ["{", "bar}"], %{line: 1, space: ""}}]}
+    end
+
+    test "double curly bracket" do
+      assert parse("<foo>{{baz}}</foo>") ==
+               {:ok, [{"foo", '', [{:interpolation, "baz"}], %{line: 1, space: ""}}]}
+    end
+
+    test "mixed curly bracket" do
+      assert parse("<foo>bar{{baz}}bat</foo>") ==
+               {:ok, [{"foo", '', ["bar", {:interpolation, "baz"}, "bat"], %{line: 1, space: ""}}]}
+    end
+
+    test "single-closing curly bracket" do
+      assert parse("<foo>bar{{ 'a}b' }}bat</foo>") ==
+               {:ok, [{"foo", [], ["bar", {:interpolation, " 'a}b' "}, "bat"], %{line: 1, space: ""}}]}
+    end
+  end
+
+  describe "with macros" do
+    test "single node" do
+      assert parse("<#foo>bar</#foo>") ==
+               {:ok, [{"#foo", [], ["bar"], %{line: 1, space: ""}}]}
+    end
+
+    test "mixed nodes" do
+      assert parse("<#foo>one<bar>two</baz>three</#foo>") ==
+               {:ok, [{"#foo", [], ["one<bar>two</baz>three"], %{line: 1, space: ""}}]}
+
+      assert parse("<#foo>one<#bar>two</#baz>three</#foo>") ==
+               {:ok, [{"#foo", [], ["one<#bar>two</#baz>three"], %{line: 1, space: ""}}]}
+
+      assert parse("<#foo>one<bar>two<baz>three</#foo>") ==
+               {:ok, [{"#foo", [], ["one<bar>two<baz>three"], %{line: 1, space: ""}}]}
+
+      assert parse("<#foo>one</bar>two</baz>three</#foo>") ==
+               {:ok, [{"#foo", [], ["one</bar>two</baz>three"], %{line: 1, space: ""}}]}
     end
 
     test "keep track of the line of the definition" do
@@ -103,15 +238,208 @@ defmodule ParserTest do
       </div>
       """
 
-      [{_, _, children, _} | _] = Parser.parse(code, 1)
-      {_, _, _, meta} = Enum.at(children, 4)
+      {:ok, [{_, _, children, _} | _]} = parse(code)
+      {_, _, _, meta} = Enum.at(children, 1)
       assert meta.line == 3
     end
 
     test "do not perform interpolation for inner content" do
-      assert Parser.parse("<#Foo>one {{ @var }} two</#Foo>", 1) == [
-        {"#Foo", [], ["one {{ @var }} two"], %{line: 1}}
+      assert parse("<#Foo>one {{ @var }} two</#Foo>") ==
+        {:ok, [{"#Foo", [], ["one {{ @var }} two"], %{line: 1, space: ""}}]}
+    end
+  end
+
+  describe "errors on" do
+    test "invalid opening tag" do
+      assert parse("<>bar</>") ==
+               {:error, "expected opening HTML tag", 1}
+    end
+
+    test "invalid closing tag" do
+      assert parse("<foo>bar</></foo>") ==
+               {:error, "expected closing tag for \"foo\"", 1}
+    end
+
+    test "tag mismatch" do
+      assert parse("<foo>bar</baz>") ==
+               {:error, "closing tag \"baz\" did not match opening tag \"foo\"", 1}
+    end
+
+    test "incomplete tag content" do
+      assert parse("<foo>bar") ==
+               {:error, "expected closing tag for \"foo\"", 1}
+    end
+
+    test "incomplete macro content" do
+      assert parse("<#foo>bar</#bar>") ==
+               {:error, "expected closing tag for \"#foo\"", 1}
+    end
+
+    test "non-closing interpolation" do
+      assert parse("<foo>{{bar</foo>") ==
+               {:error, "expected closing for interpolation", 1}
+    end
+  end
+
+  describe "attributes" do
+    test "regular nodes" do
+      code = """
+      <foo
+        prop1="value1"
+        prop2="value2"
+      >
+        bar
+        <div>{{ var }}</div>
+      </foo>
+      """
+
+      attributes = [
+        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
+
+      children = [
+        "\n  bar\n  ",
+        {"div", [], [{:interpolation, " var "}], %{line: 6, space: ""}},
+        "\n"
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, children, %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "self-closing nodes" do
+      code = """
+      <foo
+        prop1="value1"
+        prop2="value2"
+      />
+      """
+
+      attributes = [
+        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 'value2',  %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "macro nodes" do
+      code = """
+      <#foo
+        prop1="value1"
+        prop2="value2"
+      >
+        bar
+      </#foo>
+      """
+
+      attributes = [
+        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 'value2',  %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
+
+      assert parse(code) ==
+        {:ok, [{"#foo", attributes, ["\n  bar\n"], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "regular nodes with whitespaces" do
+      code = """
+      <foo
+        prop1
+        prop2 = "value 2"
+        prop3 =
+          {{ var3 }}
+        prop4
+      ></foo>
+      """
+
+      attributes = [
+        {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
+        {"prop2", 'value 2', %{line: 3, spaces: ["", " ", " "]}},
+        {"prop3", {:attribute_expr, [" var3 "]},
+          %{line: 4, spaces: ["\n  ", " ", "\n    "]}
+        },
+        {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
+
+    test "self-closing nodes with whitespaces" do
+      code = """
+      <foo
+        prop1
+        prop2 = "2"
+        prop3 =
+          {{ var3 }}
+        prop4
+      />
+      """
+
+      attributes = [
+        {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
+        {"prop2", '2', %{line: 3, spaces: ["", " ", " "]}},
+        {"prop3", {:attribute_expr, [" var3 "]}, %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
+        {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
+
+    test "value as expression" do
+      code = """
+      <foo
+        prop1={{ var1 }}
+        prop2={{ var2 }}
+      />
+      """
+
+      attributes = [
+        {"prop1", {:attribute_expr, [" var1 "]},
+          %{line: 2, spaces: ["\n  ", "", ""]}
+        },
+        {"prop2", {:attribute_expr, [" var2 "]},
+          %{line: 3, spaces: ["\n  ", "", ""]}
+        }
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "integer values" do
+      code = """
+      <foo
+        prop1=1
+        prop2=2
+      />
+      """
+
+      attributes = [
+        {"prop1", 1, %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", 2, %{line: 3, spaces: ["\n  ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
+    end
+
+    test "boolean values" do
+      code = """
+      <foo
+        prop1
+        prop2=true
+        prop3=false
+        prop4
+      />
+      """
+
+      attributes = [
+        {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
+        {"prop2", true, %{line: 3, spaces: ["", "", ""]}},
+        {"prop3", false, %{line: 4, spaces: ["\n  ", "", ""]}},
+        {"prop4", true, %{line: 5, spaces: ["\n  ", "\n"]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
   end
 end

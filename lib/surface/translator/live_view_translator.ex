@@ -9,10 +9,10 @@ defmodule Surface.Translator.LiveViewTranslator do
 
   @impl true
   def translate(node, caller) do
-    {mod_str, attributes, _children, %{module: mod, line: mod_line}} = node
+    {mod_str, attributes, _children, %{module: mod, space: space}} = node
 
     # TODO: Validation: only accept `id` and `session` properties
-    props = Properties.translate_attributes(attributes, mod, mod_str, mod_line, caller, put_default_props: false)
+    props = Properties.translate_attributes(attributes, mod, mod_str, space, caller, put_default_props: false)
 
     open = [
       ["<% props = ", props , " %>"],
