@@ -77,33 +77,5 @@ defmodule Surface.LiveComponent do
   """
   @callback end_context(props :: map()) :: map()
 
-  @doc """
-  The same as `Phoenix.LiveComponent.mount/1`.
-  """
-  @callback mount(socket :: Socket.t()) ::
-    {:ok, Socket.t()} | {:ok, Socket.t(), keyword()}
-
-  @doc """
-  The same as `Phoenix.LiveComponent.preload/1`.
-  """
-  @callback preload([Socket.assigns()]) :: [Socket.assigns()]
-
-  @doc """
-  The same as `Phoenix.LiveComponent.update/2`.
-  """
-  @callback update(Socket.assigns(), socket :: Socket.t()) ::
-    {:ok, Socket.t()}
-
-  @doc """
-  The same as `Phoenix.LiveComponent.render/1`.
-  """
-  @callback render(assigns :: Socket.assigns()) :: Phoenix.LiveView.Rendered.t()
-
-  @doc """
-  The same as `Phoenix.LiveComponent.handle_event/3`.
-  """
-  @callback handle_event(event :: binary, Phoenix.LiveView.unsigned_params, socket :: Socket.t()) ::
-    {:noreply, Socket.t()}
-
-  @optional_callbacks preload: 1, mount: 1, update: 2, handle_event: 3, begin_context: 1, end_context: 1
+  @optional_callbacks begin_context: 1, end_context: 1
 end
