@@ -57,10 +57,12 @@ defmodule Surface.Translator do
     translate({tag, attributes, children, meta}, caller)
   end
 
-  def translate({_, _, _, %{error: message, line: line}}, caller) do
+  def translate({_, _, _, %{error: message, line: line} = meta}, caller) do
     warn(message, caller, &(&1 + line))
     encoded_message = Plug.HTML.html_escape_to_iodata(message)
-    ["<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
+    require_code = if meta[:module], do: ["<% require ", meta[:module], " %>"], else: []
+
+    [require_code, "<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
   end
 
   def translate({:interpolation, expr}, _caller) do
@@ -118,7 +120,9 @@ defmodule Surface.Translator do
         |> Map.put(:directives, directives)
       else
         {:error, message} ->
-          Map.put(meta, :error, "cannot render <#{name}> (#{message})")
+          meta
+          |> Map.put(:module, name)
+          |> Map.put(:error, "cannot render <#{name}> (#{message})")
       end
 
     updated_node = {name, attributes, children, meta}
