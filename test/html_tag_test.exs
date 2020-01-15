@@ -11,7 +11,7 @@ defmodule HtmlTagTest do
       <div class={{ "default1", "default2", prop1: @value1, prop2: @value2, prop3: @value3 }}/>
       """
 
-    assert render_surface(code) =~ """
+    assert render_static(code) =~ """
     <div class="default1 default2 prop1 prop3"></div>
     """
   end

@@ -33,7 +33,7 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ @inner_content.() }}</div>
+      <div>{{ @content.() }}</div>
       """
     end
   end
@@ -54,7 +54,7 @@ defmodule Surface.ComponentTest do
     def render(assigns) do
       info = "My info"
       ~H"""
-      <div>{{ @inner_content.(info: info) }}</div>
+      <div>{{ @content.(info: info) }}</div>
       """
     end
   end
@@ -114,7 +114,7 @@ defmodule Surface.ComponentTest do
       """
     end
 
-    test "render inner_content with named bindings" do
+    test "render content with named bindings" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithNamedBindings)
 
       assert_html html =~ """
@@ -127,45 +127,38 @@ defmodule Surface.ComponentTest do
 
   describe "Without LiveView" do
     test "render stateless component" do
-      assigns = %{}
       code =
-        ~H"""
+        """
         <Stateless label="My label" class="myclass"/>
         """
 
-      assert render_surface(code) =~ """
-      <div class="myclass">
-        <span>My label</span>
-      </div>
+      assert render_live(code) =~ """
+      <div class="myclass"><span>My label</span></div>
       """
     end
 
     test "render nested component's content" do
-      assigns = %{}
       code =
-        ~H"""
+        """
         <Outer>
           <Inner/>
         </Outer>
         """
 
-      assert render_surface(code) =~ """
-      <div>
-        <span>Inner</span>
-      </div>
+      assert render_live(code) =~ """
+      <div><span>Inner</span></div>
       """
     end
 
-    test "render inner_content with named bindings" do
-      assigns = %{}
+    test "render content with named bindings" do
       code =
-        ~H"""
+        """
         <OuterWithNamedBindings :bindings={{ info: my_info }}>
           {{ my_info }}
         </OuterWithNamedBindings>
         """
 
-      assert render_surface(code) =~ """
+      assert render_live(code) =~ """
       <div>
         My info
       </div>

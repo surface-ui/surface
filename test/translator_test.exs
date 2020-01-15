@@ -339,24 +339,25 @@ defmodule TranslatorTest do
       end)
     end
 
-    test "raise error on the right line when error occurs in data components" do
-      code = """
-      <Grid items={{ user <- users }}>
-        <Column>
-          Test
-        </Column>
-        <Column title={{ , }}>
-          Test
-        </Column>
-      </Grid>
-      """
+    # TODO: Uncomment after implent the custom EEx compiler
+    # test "raise error on the right line when error occurs in data components" do
+    #   code = """
+    #   <Grid items={{ user <- users }}>
+    #     <Column>
+    #       Test
+    #     </Column>
+    #     <Column title={{ , }}>
+    #       Test
+    #     </Column>
+    #   </Grid>
+    #   """
 
-      assert_raise(SyntaxError, "nofile:5: syntax error before: ','", fn ->
-        code
-        |> Surface.Translator.run(0, __ENV__)
-        |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: 1)
-      end)
-    end
+    #   assert_raise(SyntaxError, "nofile:5: syntax error before: ','", fn ->
+    #     code
+    #     |> Surface.Translator.run(0, __ENV__)
+    #     |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: 1)
+    #   end)
+    # end
 
     test "raise error on the right line when error occurs in live components" do
       code = """

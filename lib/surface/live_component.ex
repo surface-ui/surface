@@ -22,7 +22,7 @@ defmodule Surface.LiveComponent do
                 <p class="modal-card-title">{{ @title }}</p>
               </header>
               <section class="modal-card-body">
-                {{ @inner_content.() }}
+                {{ @content.() }}
               </section>
               <footer class="modal-card-foot" style="justify-content: flex-end">
                 <Button click="hide">Ok</Button>
@@ -58,6 +58,7 @@ defmodule Surface.LiveComponent do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @before_compile Surface.ContentHandler
 
       def translator do
         Surface.Translator.LiveComponentTranslator

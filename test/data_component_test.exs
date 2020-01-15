@@ -11,6 +11,16 @@ defmodule DataComponentTest do
     :ok
   end
 
+  defmodule StatefulComponent do
+    use Surface.LiveComponent
+
+    def render(assigns) do
+      ~H"""
+      <div>Stateful</div>
+      """
+    end
+  end
+
   defmodule InnerData do
     use Surface.DataComponent
 
@@ -18,13 +28,20 @@ defmodule DataComponentTest do
   end
 
   defmodule Outer do
-    use Surface.Component
+    use Surface.LiveComponent
 
     property inner, :children, group: InnerData
 
     def render(assigns) do
       ~H"""
-      <div :for={{ data <- @inner }}>{{ data.label }}: {{ data.inner_content.() }}</div>
+      <div>
+        <div :for={{ data <- @inner }}>
+          {{ data.label }}: {{ data.content.() }}
+        </div>
+        <div>
+          {{ @content.() }}
+        </div>
+      </div>
       """
     end
   end
@@ -51,7 +68,7 @@ defmodule DataComponentTest do
         </tr>
         <tr :for={{ item <- @items }}>
           <td :for={{ col <- @cols }}>
-            {{ col.inner_content.(item) }}
+            {{ col.content.(item) }}
           </td>
         </tr>
       </table>
@@ -83,12 +100,18 @@ defmodule DataComponentTest do
     def render(assigns) do
       ~H"""
       <Outer>
+        Content 1
         <InnerData label="label 1">
           <b>content 1</b>
+          <StatefulComponent id="stateful1"/>
         </InnerData>
+        Content 2
+          Content 2.1
         <InnerData label="label 2">
           <b>content 2</b>
         </InnerData>
+        Content 3
+        <StatefulComponent id="stateful2"/>
       </Outer>
       """
     end
@@ -97,8 +120,24 @@ defmodule DataComponentTest do
   test "render inner content with no bindings" do
     {:ok, _view, html} = live_isolated(build_conn(), ViewWithNoBindings)
 
-    assert_html html =~
-      "<div>label 1:<b>content 1</b></div><div>label 2:<b>content 2</b></div></div>"
+    assert_html html =~ """
+    <div>
+      <div>
+        label 1:<b>content 1</b>
+        <div data-phx-component="0">Stateful</div>
+      </div>
+      <div>
+        label 2:<b>content 2</b>
+      </div>
+      <div>
+        Content 1
+        Content 2
+          Content 2.1
+        Content 3
+        <div data-phx-component="1">Stateful</div>
+      </div>
+    </div>
+    """
   end
 
   test "render inner content" do

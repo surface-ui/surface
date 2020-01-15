@@ -90,7 +90,7 @@ To create a component you need to define a module and `use` one of the available
     def render(assigns) do
       ~H"""
       <button class="button {{ @kind }}" phx-click={{ @click }}>
-        {{ @inner_content.() }}
+        {{ @content.() }}
       </button>
       """
     end
@@ -116,7 +116,7 @@ To create a component you need to define a module and `use` one of the available
             <p class="modal-card-title">{{ @title }}</p>
           </header>
           <section class="modal-card-body">
-            {{ @inner_content.() }}
+            {{ @content.() }}
           </section>
           <footer class="modal-card-foot" style="justify-content: flex-end">
             <Button click="hide">Ok</Button>
@@ -177,7 +177,7 @@ at compile time. Currently, the following directives are supported:
     is evaluated to a truthy value.
 
   * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
-    the values passed internally by the component when calling the `@inner_content` function.
+    the values passed internally by the component when calling the `@content` function.
 
 ### Example
 
