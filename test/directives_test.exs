@@ -25,7 +25,7 @@ defmodule Surface.DirectivesTest do
         </Div>
         """
 
-      assert render_surface(code) =~ """
+      assert render_surface(code) == """
       <div>
         Item: 1
       </div>
@@ -44,12 +44,24 @@ defmodule Surface.DirectivesTest do
         </div>
         """
 
-      assert render_surface(code) =~ """
+      assert render_surface(code) == """
       <div>
         Item: 1
       </div><div>
         Item: 2
       </div>
+      """
+    end
+
+    test "in void html elements" do
+      assigns = %{}
+      code =
+        ~H"""
+        <br :for={{ _ <- [1,2] }}>
+        """
+
+      assert render_surface(code) == """
+      <br><br>
       """
     end
   end
@@ -86,10 +98,23 @@ defmodule Surface.DirectivesTest do
         </div>
         """
 
-      assert render_surface(code) =~ """
+      assert render_surface(code) == """
       <div>
         Show
       </div>
+      """
+    end
+
+    test "in void html elements" do
+      assigns = %{show: true, dont_show: false}
+      code =
+        ~H"""
+        <col class="show" :if={{ @show }}>
+        <col class="dont_show" :if={{ @dont_show }}>
+        """
+
+      assert render_surface(code) == """
+      <col class="show">
       """
     end
   end

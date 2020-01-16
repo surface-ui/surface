@@ -11,9 +11,7 @@ defmodule Surface.Translator.TagTranslator do
 
   @impl true
   def translate({tag_name, attributes, _, %{space: space}}, _) when tag_name in @void_elements do
-    {
-      ["<", tag_name, translate_attributes(attributes), space, ">"]
-    }
+    {["<", tag_name, translate_attributes(attributes), space, ">"], [], []}
   end
 
   @impl true
