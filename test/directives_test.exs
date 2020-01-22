@@ -5,6 +5,11 @@ defmodule Surface.DirectivesTest do
   import Surface
   import ComponentTestHelper
 
+  setup_all do
+    Endpoint.start_link()
+    :ok
+  end
+
   defmodule Div do
     use Surface.Component
 
@@ -19,17 +24,16 @@ defmodule Surface.DirectivesTest do
     test "in components" do
       assigns = %{items: [1, 2]}
       code =
-        ~H"""
+        """
         <Div :for={{ i <- @items }}>
           Item: {{i}}
         </Div>
         """
 
-      assert render_surface(code) == """
+      assert render_live(code, assigns) =~ """
       <div>
         Item: 1
-      </div>
-      <div>
+      </div><div>
         Item: 2
       </div>
       """
@@ -38,13 +42,13 @@ defmodule Surface.DirectivesTest do
     test "in html tags" do
       assigns = %{items: [1, 2]}
       code =
-        ~H"""
+        """
         <div :for={{ i <- @items }}>
           Item: {{i}}
         </div>
         """
 
-      assert render_surface(code) == """
+      assert render_live(code, assigns) =~ """
       <div>
         Item: 1
       </div><div>
@@ -60,7 +64,7 @@ defmodule Surface.DirectivesTest do
         <br :for={{ _ <- [1,2] }}>
         """
 
-      assert render_surface(code) == """
+      assert render_static(code) == """
       <br><br>
       """
     end
@@ -70,7 +74,7 @@ defmodule Surface.DirectivesTest do
     test "in components" do
       assigns = %{show: true, dont_show: false}
       code =
-        ~H"""
+        """
         <Div :if={{ @show }}>
           Show
         </Div>
@@ -79,7 +83,7 @@ defmodule Surface.DirectivesTest do
         </Div>
         """
 
-      assert render_surface(code) == """
+      assert render_live(code, assigns) == """
       <div>
         Show
       </div>
@@ -98,7 +102,7 @@ defmodule Surface.DirectivesTest do
         </div>
         """
 
-      assert render_surface(code) == """
+      assert render_static(code) =~ """
       <div>
         Show
       </div>
@@ -113,7 +117,7 @@ defmodule Surface.DirectivesTest do
         <col class="dont_show" :if={{ @dont_show }}>
         """
 
-      assert render_surface(code) == """
+      assert render_static(code) == """
       <col class="show">
       """
     end

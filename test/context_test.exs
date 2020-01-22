@@ -5,6 +5,11 @@ defmodule ContextTest do
   import Surface
   import ComponentTestHelper
 
+  setup_all do
+    Endpoint.start_link()
+    :ok
+  end
+
   defmodule Outer do
     use Surface.Component
 
@@ -44,34 +49,28 @@ defmodule ContextTest do
   end
 
   test "pass context to child component" do
-    assigns = %{}
     code =
-      ~H"""
+      """
       <Outer field="My field">
         <Inner/>
       </Outer>
       """
 
-    assert render_surface(code) =~ """
-    <div>
-      <span>My field</span>
-    </div>
+    assert render_live(code) =~ """
+    <div><span>My field</span></div>
     """
   end
 
   test "pass context down the tree of components" do
-    assigns = %{}
     code =
-      ~H"""
+      """
       <Outer field="My field">
         <InnerWrapper />
       </Outer>
       """
 
-    assert render_surface(code) =~ """
-    <div>
-      <span>My field</span>
-    </div>
+    assert render_live(code) =~ """
+    <div><span>My field</span></div>
     """
   end
 end

@@ -58,6 +58,7 @@ defmodule Surface.LiveComponent do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @before_compile Surface.ContentHandler
 
       def translator do
         Surface.Translator.LiveComponentTranslator

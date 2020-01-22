@@ -4,9 +4,6 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   alias Surface.Properties
   alias Surface.Translator.DataComponentTranslator
 
-  @callback translate(mod :: any, mod_str :: any, attributes :: any, directives :: any,
-            children :: any, children_groups_contents :: any, caller :: any) :: iolist
-
   def add_render_call(renderer, args, has_children? \\ false) do
     ["<%= ", renderer, "(",  Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>"]
   end
@@ -37,6 +34,13 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
+  def maybe_add_fallback_content(condition) do
+    maybe_add([
+      "<% {prop, i, arg} -> %>",
+      ~S[<%= raise "no matching content function for #{inspect(prop)}\##{i} with argument #{inspect(arg)}" %>]
+    ], condition)
+  end
+
   defp find_bindings_from_lists(module, attributes) do
     # TODO: Warn if :binding is not defined and we have lhs
     for {name, {:attribute_expr, [expr]}, _line} <- attributes,
@@ -58,90 +62,68 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  defp generate_var_id() do
-    :erlang.unique_integer([:positive, :monotonic])
-    |> to_string()
-  end
-
   def translate_children(mod, attributes, directives, children, caller) do
-    parent_args = find_bindings(directives)
-    prop_name_and_args_by_group = classify_prop_name_and_args_by_group(mod, attributes)
+    opts = %{
+      parent_args: find_bindings(directives),
+      prop_name_and_args_by_group: classify_prop_name_and_args_by_group(mod, attributes),
+      caller: caller
+    }
 
-    {child_vars_by_prop_name, contents, temp_contents, has_inner_content?} =
-      Enum.reduce(children, {%{}, [], [], false}, fn child, acc ->
-        {child_vars_by_prop_name, contents, temp_contents, has_inner_content?} = acc
-        case child do
-          {_, _, _, %{translator: DataComponentTranslator, module: module}} ->
+    init_groups_meta = %{__default__: %{size: 0, binding: opts.parent_args != ""}}
 
-            {has_inner_content?, contents}
-              = maybe_translate_inner_content(temp_contents, contents, has_inner_content?, parent_args)
-
-            group = module.__group__()
-            {prop_name, args} = prop_name_and_args_by_group[group]
-            child_vars = child_vars_by_prop_name[prop_name] || []
-            {child_var, content} = translate_child(child, args, caller)
-
-            {
-              Map.put(child_vars_by_prop_name, prop_name, [child_var | child_vars]),
-              [content | contents],
-              [],
-              has_inner_content?
-            }
-          _ ->
-            {child_vars_by_prop_name, contents, [child | temp_contents], has_inner_content?}
-        end
-      end)
-
-    {has_inner_content?, contents} =
-      maybe_translate_inner_content(temp_contents, contents, has_inner_content?, parent_args)
+    {groups_props, groups_meta, contents, _temp_contents, _opts} =
+      children
+      |> Enum.reduce({%{}, init_groups_meta, [], [], opts}, &handle_child/2)
+      |> maybe_add_default_content()
 
     children_props =
-      for {prop_name, child_vars} <- child_vars_by_prop_name do
-        [to_string(prop_name), ": [", Enum.join(Enum.reverse(child_vars), ", "), "]"]
+      for {prop_name, value} <- groups_props do
+        [to_string(prop_name), ": [", Enum.join(Enum.reverse(value), ", "), "]"]
       end
 
-    children_props =
-      if has_inner_content? do
-        ["inner_content: inner_content" | children_props]
-      else
-        children_props
-      end
-
-    {children_props, Enum.reverse(contents)}
+    {children_props, inspect(groups_meta), Enum.reverse(contents)}
   end
 
-  defp translate_child(node, args, caller) do
-    {mod_str, attributes, children, %{module: mod, space: space}} = node
+  defp handle_child({_, _, _, %{translator: DataComponentTranslator}} = child, acc) do
+    {mod_str, attributes, children, %{module: module, space: space}} = child
+    {groups_props, groups_meta, contents, _, opts} = maybe_add_default_content(acc)
 
-    # TODO: Generate names that are harder to conflict
-    id = generate_var_id()
-    props_id = "props_" <> id
-    content_id = "content_" <> id
-    var_id = "child_" <> id
+    group = module.__group__()
+    {prop_name, content_args} = opts.prop_name_and_args_by_group[group]
 
-    translated_props = Properties.translate_attributes(attributes, mod, mod_str, space, caller)
+    groups_meta = Map.put_new(groups_meta, prop_name, %{size: 0})
+    meta = groups_meta[prop_name]
+    args = if content_args == "", do: "_args", else: content_args
+    content = ["<% {", inspect(prop_name), ", ", to_string(meta.size), ", ", args, "} -> %>", children]
+    groups_meta = Map.put(groups_meta, prop_name, %{size: meta.size + 1, binding: content_args != ""})
 
-    translated_child = [
-      "<% ", props_id, " = ", translated_props, " %>",
-      "<% ", content_id, " = fn ", args, " -> %>",
-      children,
-      "<% end %>",
-      "<% ", var_id, " = Map.put(", props_id, ", :inner_content, ", content_id, ") %>"
-    ]
-    {var_id, translated_child}
+    groups_props = Map.put_new(groups_props, prop_name, [])
+    props = Properties.translate_attributes(attributes, module, mod_str, space, opts.caller)
+    groups_props = Map.update(groups_props, prop_name, [], &[props|&1])
+
+    {groups_props, groups_meta, [content | contents], [], opts}
   end
 
-  defp maybe_translate_inner_content(temp_contents, contents, has_inner_content?, args) do
-    temp_contents = Enum.reverse(temp_contents)
+  defp handle_child(child, acc) do
+    {groups_props, groups_meta, contents, temp_contents, opts} = acc
+    {groups_props, groups_meta, contents, [child | temp_contents], opts}
+  end
 
-    {inner_content_found?, translated} =
+  defp maybe_add_default_content(acc) do
+    {groups_props, groups_meta, contents, temp_contents, opts} = acc
+
+    {groups_meta, contents} =
       if blank?(temp_contents) do
-        {false, temp_contents}
+        {groups_meta, [Enum.reverse(temp_contents) | contents]}
       else
-        {true, ["<% inner_content = fn ", args, " -> %>", temp_contents, "<% end %>"]}
+        meta = groups_meta[:__default__]
+        args = if opts.parent_args == "", do: "_args", else: opts.parent_args
+        content = ["<% {:__default__, ", to_string(meta.size), ", ", args, "} -> %>", Enum.reverse(temp_contents)]
+        groups_meta = update_in(groups_meta, [:__default__, :size], &(&1 + 1))
+        {groups_meta, [content | contents]}
       end
 
-    {has_inner_content? || inner_content_found?, [translated | contents]}
+    {groups_props, groups_meta, contents, [], opts}
   end
 
   defp classify_prop_name_and_args_by_group(mod, attributes) do

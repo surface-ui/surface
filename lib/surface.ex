@@ -67,7 +67,7 @@ defmodule Surface do
       is evaluated to a truthy value.
 
     * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
-      the values passed internally by the component when calling the `@inner_content` function.
+      the values passed internally by the component when calling the `@content` function.
 
   ### Example
 
