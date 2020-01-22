@@ -67,7 +67,7 @@ defmodule LiveComponentTest do
       info = "Hi there!"
       ~H"""
         <div>
-          {{ @content.(info: info) }}
+          {{ @inner_content.(info: info) }}
         </div>
       """
     end
@@ -79,7 +79,7 @@ defmodule LiveComponentTest do
     def render(assigns) do
       ~H"""
         <div>
-          {{ @content.() }}
+          {{ @inner_content.() }}
         </div>
       """
     end

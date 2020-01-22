@@ -24,7 +24,7 @@ defmodule Surface.ContentHandler do
           assigns[name]
           |> Enum.with_index()
           |> Enum.map(fn {assign, index} ->
-            Map.put(assign, :content, data_content_fun(assigns, name, index, binding: binding))
+            Map.put(assign, :inner_content, data_content_fun(assigns, name, index, binding: binding))
           end)
         {name, value}
       end
@@ -33,7 +33,7 @@ defmodule Surface.ContentHandler do
 
     assigns
     |> Map.merge(props)
-    |> Map.put(:content, content)
+    |> Map.put(:inner_content, content)
   end
 
   defp data_content_fun(assigns, name, index, binding: true) do

@@ -15,7 +15,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ @content.() }}</div>
+      <div>{{ @inner_content.() }}</div>
       """
     end
   end

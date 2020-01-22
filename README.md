@@ -90,7 +90,7 @@ To create a component you need to define a module and `use` one of the available
     def render(assigns) do
       ~H"""
       <button class="button {{ @kind }}" phx-click={{ @click }}>
-        {{ @content.() }}
+        {{ @inner_content.() }}
       </button>
       """
     end
@@ -116,7 +116,7 @@ To create a component you need to define a module and `use` one of the available
             <p class="modal-card-title">{{ @title }}</p>
           </header>
           <section class="modal-card-body">
-            {{ @content.() }}
+            {{ @inner_content.() }}
           </section>
           <footer class="modal-card-foot" style="justify-content: flex-end">
             <Button click="hide">Ok</Button>

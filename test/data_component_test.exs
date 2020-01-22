@@ -36,10 +36,10 @@ defmodule DataComponentTest do
       ~H"""
       <div>
         <div :for={{ data <- @inner }}>
-          {{ data.label }}: {{ data.content.() }}
+          {{ data.label }}: {{ data.inner_content.() }}
         </div>
         <div>
-          {{ @content.() }}
+          {{ @inner_content.() }}
         </div>
       </div>
       """
@@ -68,7 +68,7 @@ defmodule DataComponentTest do
         </tr>
         <tr :for={{ item <- @items }}>
           <td :for={{ col <- @cols }}>
-            {{ col.content.(item) }}
+            {{ col.inner_content.(item) }}
           </td>
         </tr>
       </table>

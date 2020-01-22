@@ -12,7 +12,7 @@ defmodule Surface.Component do
         def render(assigns) do
           ~H"\""
           <button class="button" phx-click={{ @click }}>
-            {{ @content.() }}
+            {{ @inner_content.() }}
           </button>
           "\""
         end
