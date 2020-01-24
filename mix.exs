@@ -32,7 +32,7 @@ defmodule Surface.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
-      {:floki, "~> 0.23.0", only: :test},
+      {:floki, "~> 0.24.0", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
     ]
   end

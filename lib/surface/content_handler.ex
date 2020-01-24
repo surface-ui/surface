@@ -1,5 +1,5 @@
 defmodule Surface.ContentHandler do
-  import Phoenix.LiveView, only: [sigil_L: 2]
+  import Phoenix.LiveView.Helpers, only: [sigil_L: 2]
 
   defmacro __before_compile__(_) do
     quote do
