@@ -15,4 +15,22 @@ defmodule HtmlTagTest do
     <div class="default1 default2 prop1 prop3"></div>
     """
   end
+
+  test "boolean attributes" do
+    assigns = %{checked: true, focus: false}
+    code =
+      ~H"""
+      <input
+        disabled={{ false }}
+        checked={{ @checked }}
+        autofocus={{ @focus == true }}
+        readonly="false"
+        default={{ true }}
+      />
+      """
+
+    assert render_static(code) =~ """
+    <input\n  \n  checked\n  \n  readonly=\"false\"\n  default\n>
+    """
+  end
 end

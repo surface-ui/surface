@@ -129,6 +129,16 @@ defmodule Surface do
     value
   end
 
+  @doc false
+  def boolean_attr(name, true) do
+    name
+  end
+
+  @doc false
+  def boolean_attr(_name, false) do
+    ""
+  end
+
   # TODO: Find a better way to do this
   defp to_kebab_case(value) do
     value
