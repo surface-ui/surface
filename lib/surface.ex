@@ -130,13 +130,12 @@ defmodule Surface do
   end
 
   @doc false
-  def boolean_attr(name, true) do
-    name
-  end
-
-  @doc false
-  def boolean_attr(_name, false) do
-    ""
+  def boolean_attr(name, value) do
+    if value do
+      name
+    else
+      ""
+    end
   end
 
   # TODO: Find a better way to do this

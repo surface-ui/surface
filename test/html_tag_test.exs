@@ -26,11 +26,12 @@ defmodule HtmlTagTest do
         autofocus={{ @focus == true }}
         readonly="false"
         default={{ true }}
+        required={{ nil }}
       />
       """
 
     assert render_static(code) =~ """
-    <input\n  \n  checked\n  \n  readonly=\"false\"\n  default\n>
+    <input\n  \n  checked\n  \n  readonly=\"false\"\n  default\n  \n>
     """
   end
 end
