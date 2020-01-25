@@ -29,9 +29,13 @@ defmodule LiveComponentTest do
       {:ok, assign(socket, label: "Initial stateful")}
     end
 
+    def update(_assigns, socket) do
+      {:ok, assign(socket, assigned_in_update: "Assinged in update/2")}
+    end
+
     def render(assigns) do
       ~H"""
-      <div phx-click="click" id="theDiv">{{ @label }}</div>
+      <div phx-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
       """
     end
 
@@ -134,6 +138,11 @@ defmodule LiveComponentTest do
   test "render LiveComponent" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
     assert html =~ "Initial stateful"
+  end
+
+  test "render data assigned in update/2" do
+    {:ok, _view, html} = live_isolated(build_conn(), View)
+    assert html =~ "Assinged in update/2"
   end
 
   test "handle events in LiveComponent (handled by the component itself)" do

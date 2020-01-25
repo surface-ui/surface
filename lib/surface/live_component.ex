@@ -58,10 +58,23 @@ defmodule Surface.LiveComponent do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
       def translator do
         Surface.Translator.LiveComponentTranslator
+      end
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    if Module.defines?(env.module, {:update, 2}) do
+      quote do
+        defoverridable update: 2
+
+        def update(assigns, socket) do
+          super(assigns, Phoenix.LiveView.assign(socket, :__surface__, assigns.__surface__))
+        end
       end
     end
   end
