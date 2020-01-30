@@ -98,7 +98,6 @@ defmodule Surface do
     module.render(assigns)
   end
 
-  @doc false
   def component(module, assigns, []) do
     module.render(assigns)
   end
@@ -124,7 +123,6 @@ defmodule Surface do
     end) |> Enum.reverse() |> Enum.join(" ")
   end
 
-  @doc false
   def css_class(value) when is_binary(value) do
     value
   end
@@ -136,6 +134,72 @@ defmodule Surface do
     else
       ""
     end
+  end
+
+  @doc false
+  def event([event], caller_cid) do
+    event(event, caller_cid)
+  end
+
+  def event([name | opts], caller_cid) do
+    event = Map.new(opts) |> Map.put(:name, name)
+    event(event, caller_cid)
+  end
+
+  def event(nil, _caller_cid) do
+    nil
+  end
+
+  def event(name, nil) when is_binary(name) do
+    %{name: name, target: :live_view}
+  end
+
+  def event(name, caller_cid) when is_binary(name) do
+    %{name: name, target: "[surface-cid=#{caller_cid}]"}
+  end
+
+  def event(%{name: _, target: _} = event, _caller_cid) do
+    event
+  end
+
+  def event(event, _caller_cid) do
+    raise "invalid event #{inspect(event)}"
+  end
+
+  @doc false
+  def on_event(phx_event, [event], caller_cid) do
+    on_event(phx_event, event, caller_cid)
+  end
+
+  def on_event(phx_event, [event | opts], caller_cid) do
+    value = Map.new(opts) |> Map.put(:name, event)
+    on_event(phx_event, value, caller_cid)
+  end
+
+  def on_event(phx_event, %{name: name, target: :live_view}, _caller_cid) do
+    [phx_event, "=", quot(name)]
+  end
+
+  def on_event(phx_event, %{name: name, target: target}, _caller_cid) do
+    [phx_event, "=", quot(name), " phx-target=", quot(target)]
+  end
+
+  # Stateless component or a liveview (no caller_id)
+  def on_event(phx_event, event, nil) when is_binary(event) do
+    [phx_event, "=", quot(event)]
+  end
+
+  def on_event(phx_event, event, caller_cid) when is_binary(event) do
+    [phx_event, "=", quot(event), " phx-target=", "[surface-cid=", caller_cid, "]"]
+  end
+
+  def on_event(phx_event, event, _caller_cid) do
+    raise "invalid value #{inspect(event)} for event \":on-#{phx_event}\". " <>
+      "An event has to be either a binary() or %{name: binary(), target: binary()})"
+  end
+
+  defp quot(value) do
+    [{:safe, "\""}, value, {:safe, "\""}]
   end
 
   # TODO: Find a better way to do this

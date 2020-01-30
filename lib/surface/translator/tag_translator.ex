@@ -57,6 +57,10 @@ defmodule Surface.Translator.TagTranslator do
     end
   end
 
+  defp translate_attribute_assignment(":on-" <> event, {:attribute_expr, [expr]}, [space1, space2, space3]) do
+    [space1, "<%= on_event(\"", event, "\",", space2, "[", expr, "], assigns[:__surface_cid__]) %>", space3]
+  end
+
   defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, [space1, space2, space3])
       when key in @boolean_attributes do
     [space1, "<%= boolean_attr(\"", key, "\",", space2, expr, ") %>", space3]

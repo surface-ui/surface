@@ -122,5 +122,54 @@ defmodule Surface.DirectivesTest do
       """
     end
   end
-end
 
+  describe ":on-phx-*" do
+    test "as an event map" do
+      assigns = %{click: %{name: "ok", target: "#comp"}}
+      code =
+        ~H"""
+        <button :on-phx-click={{ @click }}>OK</button>
+        """
+
+      assert render_static(code) =~ """
+      <button phx-click="ok" phx-target="#comp">OK</button>
+      """
+    end
+
+    test "as a binary" do
+      assigns = %{click: "ok"}
+      code =
+        ~H"""
+        <button :on-phx-click={{ @click }}>OK</button>
+        """
+
+      assert render_static(code) =~ """
+      <button phx-click="ok">OK</button>
+      """
+    end
+
+    test "as a keyword list" do
+      assigns = %{}
+      code =
+        ~H"""
+        <button :on-phx-click={{ ["ok", target: "#comp"] }}>OK</button>
+        """
+
+      assert render_static(code) =~ """
+      <button phx-click="ok" phx-target="#comp">OK</button>
+      """
+    end
+
+    test "as a keyword list without square brackets" do
+      assigns = %{}
+      code =
+        ~H"""
+        <button :on-phx-click={{ "ok", target: "#comp" }}>OK</button>
+        """
+
+      assert render_static(code) =~ """
+      <button phx-click="ok" phx-target="#comp">OK</button>
+      """
+    end
+  end
+end

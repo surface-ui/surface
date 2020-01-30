@@ -6,6 +6,8 @@ defmodule Surface.Translator do
   """
 
   alias Surface.Translator.Parser
+  alias Surface.Translator.TagTranslator
+  alias Surface.Translator.ComponentTranslatorHelper
   import Surface.Translator.IO, only: [warn: 3]
 
   @callback translate(node :: any, caller: Macro.Env.t()) :: any
@@ -37,6 +39,7 @@ defmodule Surface.Translator do
         raise %ParseError{line: line + line_offset - 1, file: file, message: message}
     end
     |> build_metadata(caller)
+    |> validate_root_node(caller)
     |> prepend_context()
     |> translate(caller)
     |> IO.iodata_to_binary()
@@ -240,5 +243,50 @@ defmodule Surface.Translator do
 
   defp pop_directives(attributes, allowed_directives) do
     Enum.split_with(attributes, fn {attr, _, _} -> attr in allowed_directives end)
+  end
+
+  defp validate_root_node(children, caller) do
+    if live_component?(caller.module) do
+      decorate_root_node(children, caller)
+    else
+      children
+    end
+  end
+
+  defp live_component?(mod) do
+    Module.open?(mod) && Module.get_attribute(mod, :component_type) == Surface.LiveComponent
+  end
+
+  defp decorate_root_node(children, caller) do
+    {nodes, n_tags, _n_binary} =
+      Enum.reduce(children, {[], 0, 0}, fn child, {nodes, n_tags, n_binary} ->
+        cond do
+          ComponentTranslatorHelper.blank?(child) ->
+            {[child | nodes], n_tags, n_binary}
+
+          is_binary(child) ->
+            {[child | nodes], n_tags, n_binary + 1}
+
+          n_tags + n_binary == 0 && match?({_, _, _, %{translator: TagTranslator}}, child) ->
+            {mod_str, attributes, children, %{line: line} = meta} = child
+            expr = {:attribute_expr, ["@__surface_cid__"]}
+            new_attr = {"surface-cid", expr, %{line: line, spaces: [" ", "", ""]}}
+            updated_child = {mod_str, [new_attr | attributes], children, meta}
+            {[updated_child | nodes], n_tags + 1, n_binary}
+
+          true ->
+            {_, _, _, %{line: line}} = child
+            message = "stateful live components must have a single HTML root element"
+            Surface.Translator.IO.warn(message, caller, &(&1 + line))
+            {[child | nodes], n_tags + 1, n_binary}
+        end
+      end)
+
+    if n_tags == 0 do
+      message = "stateful live components must have a HTML root element"
+      warn(message, caller, &(&1 + 1))
+    end
+
+    Enum.reverse(nodes)
   end
 end

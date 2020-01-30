@@ -2,6 +2,7 @@ defmodule LiveComponentTest do
   use ExUnit.Case
   use Phoenix.ConnTest
   import Phoenix.LiveViewTest
+  import ComponentTestHelper
 
   @endpoint Endpoint
 
@@ -89,40 +90,30 @@ defmodule LiveComponentTest do
     end
   end
 
-  defmodule ViewInnerContentWithoutBindings do
-    use Surface.LiveView
-    alias LiveComponentTest.InfoProvider
-
-    def render(assigns) do
-      ~H"""
+  test "render content without bindings" do
+    code =
+      """
       <InfoProviderWithoutBindings>
         <span>Hi there!</span>
       </InfoProviderWithoutBindings>
       """
-    end
+
+    assert render_live(code) =~ ~r"""
+    <div surface-cid=".+"><span>Hi there!</span></div>
+    """
   end
 
-  defmodule ViewInnerContentWithBindings do
-    use Surface.LiveView
-    alias LiveComponentTest.InfoProvider
-
-    def render(assigns) do
-      ~H"""
+  test "render content with bindings" do
+    code =
+      """
       <InfoProvider :bindings={{ info: my_info }}>
         <span>{{ my_info }}</span>
       </InfoProvider>
       """
-    end
-  end
 
-  test "render content without bindings" do
-    {:ok, _view, html} = live_isolated(build_conn(), ViewInnerContentWithoutBindings)
-    assert html =~ "<div><span>Hi there!</span></div>"
-  end
-
-  test "render content with bindings" do
-    {:ok, _view, html} = live_isolated(build_conn(), ViewInnerContentWithBindings)
-    assert html =~ "<div><span>Hi there!</span></div>"
+    assert render_live(code) =~ ~r"""
+    <div surface-cid=".+"><span>Hi there!</span></div>
+    """
   end
 
   test "render stateless component" do
