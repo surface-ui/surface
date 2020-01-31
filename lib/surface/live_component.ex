@@ -53,15 +53,13 @@ defmodule Surface.LiveComponent do
   defmacro __using__(_) do
     quote do
       use Phoenix.LiveComponent
-      use Surface.BaseComponent
+      use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
       use Surface.EventValidator
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
-
-      @translator Surface.Translator.LiveComponentTranslator
 
       @doc """
       Defines the id of the live component.
@@ -70,10 +68,6 @@ defmodule Surface.LiveComponent do
       in your component. This is required by LiveView.
       """
       property id, :integer
-
-      def translator do
-        @translator
-      end
     end
   end
 

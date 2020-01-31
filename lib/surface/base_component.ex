@@ -10,11 +10,21 @@ defmodule Surface.BaseComponent do
   """
   @callback translator() :: module
 
-  defmacro __using__(_) do
+  defmacro __using__([translator: translator]) do
+
     quote do
       use Surface.Properties
       import Surface
       @behaviour unquote(__MODULE__)
+
+      # TODO: Remove the alias after fix ElixirSense
+      alias Module, as: Mod
+      Mod.put_attribute(__MODULE__, :translator, unquote(translator))
+
+      @doc false
+      def translator do
+        unquote(translator)
+      end
     end
   end
 end
