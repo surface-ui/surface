@@ -60,10 +60,19 @@ defmodule Surface.LiveComponent do
       @behaviour unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
-      @component_type unquote(__MODULE__)
+
+      @translator Surface.Translator.LiveComponentTranslator
+
+      @doc """
+      Defines the id of the live component.
+
+      Set a unique id for this property if you need to handle events
+      in your component. This is required by LiveView.
+      """
+      property id, :integer
 
       def translator do
-        Surface.Translator.LiveComponentTranslator
+        @translator
       end
     end
   end

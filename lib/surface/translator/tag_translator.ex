@@ -57,8 +57,12 @@ defmodule Surface.Translator.TagTranslator do
     end
   end
 
-  defp translate_attribute_assignment(":on-" <> event, {:attribute_expr, [expr]}, [space1, space2, space3]) do
-    [space1, "<%= on_event(\"", event, "\",", space2, "[", expr, "], assigns[:__surface_cid__]) %>", space3]
+  defp translate_attribute_assignment(":on-" <> event, value, [space1, space2, space3]) do
+    [space1, "<%= on_phx_event(\"", event, "\",", space2, "[", expr_iodata(value), "], assigns[:__surface_cid__]) %>", space3]
+  end
+
+  defp translate_attribute_assignment("phx-" <> _ = phx_event, value, [space1, space2, space3]) do
+    [space1, phx_event, space2, "=", space3, "<%= phx_event(\"#{phx_event}\", ", expr_iodata(value), ") %>"]
   end
 
   defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, [space1, space2, space3])
@@ -68,6 +72,14 @@ defmodule Surface.Translator.TagTranslator do
 
   defp translate_attribute_assignment(key, value, [space1, space2, space3]) do
     [space1, key, space2, "=", space3, wrap_value(value)]
+  end
+
+  defp expr_iodata({:attribute_expr, expr}) do
+    expr
+  end
+
+  defp expr_iodata(value) do
+    [~S("), value, ~S(")]
   end
 
   defp wrap_value(value) do

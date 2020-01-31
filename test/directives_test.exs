@@ -136,11 +136,23 @@ defmodule Surface.DirectivesTest do
       """
     end
 
-    test "as a binary" do
+    test "as a string" do
       assigns = %{click: "ok"}
       code =
         ~H"""
         <button :on-phx-click={{ @click }}>OK</button>
+        """
+
+      assert render_static(code) =~ """
+      <button phx-click="ok">OK</button>
+      """
+    end
+
+    test "as a literal string" do
+      assigns = %{}
+      code =
+        ~H"""
+        <button :on-phx-click="ok">OK</button>
         """
 
       assert render_static(code) =~ """

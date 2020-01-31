@@ -49,9 +49,8 @@ defmodule Surface.Properties do
   end
 
   defmacro __before_compile__(env) do
-    builtin_props = [:id, :inner_content]
     props = Module.get_attribute(env.module, :properties)
-    props_names = Enum.map(props, fn prop -> prop.name end) ++ builtin_props
+    props_names = Enum.map(props, fn prop -> prop.name end)
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
     generate_docs(env)
 
@@ -151,14 +150,14 @@ defmodule Surface.Properties do
   def translate_value(:event, value, caller, line) do
     case value do
       {:attribute_expr, [expr]} ->
-        {:attribute_expr, ["event([#{expr}], assigns[:__surface_cid__])"]}
+        {:attribute_expr, ["event_value([#{expr}], assigns[:__surface_cid__])"]}
 
       event ->
         if Module.open?(caller.module) do
           event_reference = {to_string(event), caller.line + line}
           Module.put_attribute(caller.module, :event_references, event_reference)
         end
-        {:attribute_expr, ["event(\"#{event}\", assigns[:__surface_cid__])"]}
+        {:attribute_expr, ["event_value(\"#{event}\", assigns[:__surface_cid__])"]}
     end
   end
 

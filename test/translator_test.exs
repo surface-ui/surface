@@ -131,7 +131,7 @@ defmodule TranslatorTest do
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    click: (event(\"click_event\", assigns[:__surface_cid__]))\
+    click: (event_value(\"click_event\", assigns[:__surface_cid__]))\
     """
   end
 
@@ -151,7 +151,7 @@ defmodule TranslatorTest do
       label:  "label",
       disabled: true,
       click:
-        (event("event", assigns[:__surface_cid__]))
+        (event_value("event", assigns[:__surface_cid__]))
     }, Button) %>\
     """
   end
@@ -172,7 +172,7 @@ defmodule TranslatorTest do
       label: "label",
       disabled: true,
       click:
-        (event("event", assigns[:__surface_cid__]))
+        (event_value("event", assigns[:__surface_cid__]))
     }, Button) %>\
     """
   end

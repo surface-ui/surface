@@ -31,8 +31,10 @@ defmodule Surface.Component do
       @behaviour unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
+      @translator Surface.Translator.ComponentTranslator
+
       def translator do
-        Surface.Translator.ComponentTranslator
+        @translator
       end
     end
   end
