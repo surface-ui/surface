@@ -98,7 +98,6 @@ defmodule Surface do
     module.render(assigns)
   end
 
-  @doc false
   def component(module, assigns, []) do
     module.render(assigns)
   end
@@ -124,7 +123,6 @@ defmodule Surface do
     end) |> Enum.reverse() |> Enum.join(" ")
   end
 
-  @doc false
   def css_class(value) when is_binary(value) do
     value
   end
@@ -136,6 +134,83 @@ defmodule Surface do
     else
       ""
     end
+  end
+
+  @doc false
+  def event_value([event], caller_cid) do
+    event_value(event, caller_cid)
+  end
+
+  def event_value([name | opts], caller_cid) do
+    event = Map.new(opts) |> Map.put(:name, name)
+    event_value(event, caller_cid)
+  end
+
+  def event_value(nil, _caller_cid) do
+    nil
+  end
+
+  def event_value(name, nil) when is_binary(name) do
+    %{name: name, target: :live_view}
+  end
+
+  def event_value(name, caller_cid) when is_binary(name) do
+    %{name: name, target: "[surface-cid=#{caller_cid}]"}
+  end
+
+  def event_value(%{name: _, target: _} = event, _caller_cid) do
+    event
+  end
+
+  def event_value(event, _caller_cid) do
+    raise "invalid event #{inspect(event)}"
+  end
+
+  @doc false
+  def on_phx_event(phx_event, [event], caller_cid) do
+    on_phx_event(phx_event, event, caller_cid)
+  end
+
+  def on_phx_event(phx_event, [event | opts], caller_cid) do
+    value = Map.new(opts) |> Map.put(:name, event)
+    on_phx_event(phx_event, value, caller_cid)
+  end
+
+  def on_phx_event(phx_event, %{name: name, target: :live_view}, _caller_cid) do
+    [phx_event, "=", quot(name)]
+  end
+
+  def on_phx_event(phx_event, %{name: name, target: target}, _caller_cid) do
+    [phx_event, "=", quot(name), " phx-target=", quot(target)]
+  end
+
+  # Stateless component or a liveview (no caller_id)
+  def on_phx_event(phx_event, event, nil) when is_binary(event) do
+    [phx_event, "=", quot(event)]
+  end
+
+  def on_phx_event(phx_event, event, caller_cid) when is_binary(event) do
+    [phx_event, "=", quot(event), " phx-target=", "[surface-cid=", caller_cid, "]"]
+  end
+
+  def on_phx_event(phx_event, event, _caller_cid) do
+    raise "invalid value for \":on-#{phx_event}\". " <>
+      "Expected a :string or :event, got: #{inspect(event)}"
+  end
+
+  @doc false
+  def phx_event(_phx_event, value) when is_binary(value) do
+    value
+  end
+
+  def phx_event(phx_event, value) do
+    raise "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
+      "of type :string. If you want to pass an :event, please use directive " <>
+      ":on-#{phx_event} instead. Expected a :string, got: #{inspect(value)}"
+  end
+
+  defp quot(value) do
+    [{:safe, "\""}, value, {:safe, "\""}]
   end
 
   # TODO: Find a better way to do this

@@ -22,14 +22,10 @@ defmodule Surface.DataComponent do
     group = Keyword.get(opts, :group, __CALLER__.module)
 
     quote do
-      use Surface.BaseComponent
+      use Surface.BaseComponent, translator: Surface.Translator.DataComponentTranslator
       import unquote(__MODULE__)
 
       @behaviour unquote(__MODULE__)
-
-      def translator do
-        Surface.Translator.DataComponentTranslator
-      end
 
       def data(assigns) do
         {:ok, assigns}

@@ -25,15 +25,11 @@ defmodule Surface.Component do
   defmacro __using__(_) do
     quote do
       use Phoenix.LiveComponent
-      use Surface.BaseComponent
+      use Surface.BaseComponent, translator: Surface.Translator.ComponentTranslator
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
       @before_compile Surface.ContentHandler
-
-      def translator do
-        Surface.Translator.ComponentTranslator
-      end
     end
   end
 

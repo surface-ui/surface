@@ -71,4 +71,12 @@ defmodule ComponentTestHelper do
     |> String.replace(~r/<\/div>$/, "\n")
     |> String.replace(~r/\n+/, "\n")
   end
+
+  def extract_line(message) do
+    case Regex.run(~r/.exs:(\d+)/, message) do
+      [_, line] ->
+        String.to_integer(line)
+      _ -> :not_found
+    end
+  end
 end

@@ -140,15 +140,15 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   @blanks ' \n\r\t\v\b\f\e\d\a'
 
-  defp blank?([]), do: true
+  def blank?([]), do: true
 
-  defp blank?([h|t]), do: blank?(h) && blank?(t)
+  def blank?([h|t]), do: blank?(h) && blank?(t)
 
-  defp blank?(""), do: true
+  def blank?(""), do: true
 
-  defp blank?(char) when char in @blanks, do: true
+  def blank?(char) when char in @blanks, do: true
 
-  defp blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
+  def blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
 
-  defp blank?(_), do: false
+  def blank?(_), do: false
 end

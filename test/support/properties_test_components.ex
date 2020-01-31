@@ -1,5 +1,4 @@
 defmodule Surface.PropertiesTest.Components do
-
   defmodule MyComponent do
     use Surface.Component
 

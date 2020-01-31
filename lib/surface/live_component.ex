@@ -53,7 +53,7 @@ defmodule Surface.LiveComponent do
   defmacro __using__(_) do
     quote do
       use Phoenix.LiveComponent
-      use Surface.BaseComponent
+      use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
       use Surface.EventValidator
       import Phoenix.HTML
 
@@ -61,13 +61,21 @@ defmodule Surface.LiveComponent do
       @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
-      def translator do
-        Surface.Translator.LiveComponentTranslator
-      end
+      @doc """
+      Defines the id of the live component.
+
+      Set a unique id for this property if you need to handle events
+      in your component. This is required by LiveView.
+      """
+      property id, :integer
     end
   end
 
   defmacro __before_compile__(env) do
+    [quoted_mount(env), quoted_update(env)]
+  end
+
+  defp quoted_update(env) do
     if Module.defines?(env.module, {:update, 2}) do
       quote do
         defoverridable update: 2
@@ -77,6 +85,32 @@ defmodule Surface.LiveComponent do
         end
       end
     end
+  end
+
+  defp quoted_mount(env) do
+    prefix = Module.split(env.module) |> List.last() |> String.downcase()
+    default_assigns = [__surface_cid__: "#{prefix}-#{hash_id()}"]
+
+    if Module.defines?(env.module, {:mount, 1}) do
+      quote do
+        defoverridable mount: 1
+
+        def mount(socket) do
+          super(assign(socket, unquote(default_assigns)))
+        end
+      end
+    else
+      quote do
+        def mount(socket) do
+          {:ok, assign(socket, unquote(default_assigns))}
+        end
+      end
+    end
+  end
+
+  defp hash_id() do
+    :crypto.strong_rand_bytes(4)
+    |> Base.encode32(padding: false, case: :lower)
   end
 
   @doc """

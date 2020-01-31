@@ -1,7 +1,9 @@
 defmodule Surface.ContentHandler do
+  @moduledoc false
+
   import Phoenix.LiveView.Helpers, only: [sigil_L: 2]
 
-  defmacro __before_compile__(_) do
+  defmacro __before_compile__(_env) do
     quote do
       defoverridable render: 1
 

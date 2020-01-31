@@ -2,9 +2,6 @@ defmodule DataComponentTest do
   use ExUnit.Case
   use Phoenix.ConnTest
   import ComponentTestHelper
-  import Phoenix.LiveViewTest
-
-  @endpoint Endpoint
 
   setup_all do
     Endpoint.start_link()
@@ -15,6 +12,7 @@ defmodule DataComponentTest do
     use Surface.LiveComponent
 
     def render(assigns) do
+      assigns = Map.put(assigns, :__surface_cid__, "stateful")
       ~H"""
       <div>Stateful</div>
       """
@@ -33,6 +31,8 @@ defmodule DataComponentTest do
     property inner, :children, group: InnerData
 
     def render(assigns) do
+      assigns = Map.put(assigns, :__surface_cid__, "outer")
+
       ~H"""
       <div>
         <div :for={{ data <- @inner }}>
@@ -59,6 +59,8 @@ defmodule DataComponentTest do
     property cols, :children, group: Column, use_bindings: [:item]
 
     def render(assigns) do
+      assigns = Map.put(assigns, :__surface_cid__, "table")
+
       ~H"""
       <table>
         <tr>
@@ -76,29 +78,9 @@ defmodule DataComponentTest do
     end
   end
 
-  defmodule View do
-    use Surface.LiveView
-
-    def render(assigns) do
-      items = [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]
-      ~H"""
-      <Grid items={{ user <- items }}>
-        <Column title="ID">
-          <b>Id: {{ user.id }}</b>
-        </Column>
-        <Column title="NAME">
-          Name: {{ user.name }}
-        </Column>
-      </Grid>
+  test "render inner content with no bindings" do
+    code =
       """
-    end
-  end
-
-  defmodule ViewWithNoBindings do
-    use Surface.LiveView
-
-    def render(assigns) do
-      ~H"""
       <Outer>
         Content 1
         <InnerData label="label 1">
@@ -114,17 +96,12 @@ defmodule DataComponentTest do
         <StatefulComponent id="stateful2"/>
       </Outer>
       """
-    end
-  end
 
-  test "render inner content with no bindings" do
-    {:ok, _view, html} = live_isolated(build_conn(), ViewWithNoBindings)
-
-    assert_html html =~ """
-    <div>
+    assert_html render_live(code) =~ """
+    <div surface-cid="outer">
       <div>
         label 1:<b>content 1</b>
-        <div data-phx-component="0">Stateful</div>
+        <div surface-cid="stateful" data-phx-component="0">Stateful</div>
       </div>
       <div>
         label 2:<b>content 2</b>
@@ -134,26 +111,34 @@ defmodule DataComponentTest do
         Content 2
           Content 2.1
         Content 3
-        <div data-phx-component="1">Stateful</div>
+        <div surface-cid="stateful" data-phx-component="1">Stateful</div>
       </div>
     </div>
     """
   end
 
   test "render inner content" do
-    {:ok, _view, html} = live_isolated(build_conn(), View)
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+    code =
+      """
+      <Grid items={{ user <- @items }}>
+        <Column title="ID">
+          <b>Id: {{ user.id }}</b>
+        </Column>
+        <Column title="NAME">
+          Name: {{ user.name }}
+        </Column>
+      </Grid>
+      """
 
-    assert_html html =~ """
-    <table>
+    assert_html render_live(code, assigns) =~ """
+    <table surface-cid="table">
       <tr>
-        <th>ID</th>
-        <th>NAME</th>
-      </tr>
-      <tr>
+        <th>ID</th><th>NAME</th>
+      </tr><tr>
         <td><b>Id: 1</b></td>
         <td>Name: First</td>
-      </tr>
-      <tr>
+      </tr><tr>
         <td><b>Id: 2</b></td>
         <td>Name: Second</td>
       </tr>

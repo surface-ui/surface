@@ -1,7 +1,9 @@
 defmodule TranslatorTest do
   use ExUnit.Case
-  import ExUnit.CaptureIO
+
   require Logger
+  import ExUnit.CaptureIO
+  import ComponentTestHelper
 
   defmodule Button do
     use Surface.Component
@@ -44,6 +46,7 @@ defmodule TranslatorTest do
 
     def render(assigns) do
       ~H"""
+      <div></div>
       """
     end
   end
@@ -130,7 +133,7 @@ defmodule TranslatorTest do
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    click: "click_event"\
+    click: (event_value(\"click_event\", assigns[:__surface_cid__]))\
     """
   end
 
@@ -150,7 +153,7 @@ defmodule TranslatorTest do
       label:  "label",
       disabled: true,
       click:
-        "event"
+        (event_value("event", assigns[:__surface_cid__]))
     }, Button) %>\
     """
   end
@@ -171,7 +174,7 @@ defmodule TranslatorTest do
       label: "label",
       disabled: true,
       click:
-        "event"
+        (event_value("event", assigns[:__surface_cid__]))
     }, Button) %>\
     """
   end
@@ -374,13 +377,47 @@ defmodule TranslatorTest do
         |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: 1)
       end)
     end
-  end
 
-  defp extract_line(message) do
-    case Regex.run(~r/.exs:(\d+)/, message) do
-      [_, line] ->
-        String.to_integer(line)
-      _ -> :not_found
+    test "warning on stateful components with more than one root element" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      view_code = """
+      defmodule TestLiveComponent_#{id} do
+        use Surface.LiveComponent
+
+        def render(assigns) do
+          ~H(<div>1</div><div>2</div>)
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+        end)
+
+      assert output =~ "stateful live components must have a single HTML root element"
+      assert extract_line(output) == 5
+    end
+
+    test "warning on stateful components with no root element" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      view_code = """
+      defmodule TestLiveComponent_#{id} do
+        use Surface.LiveComponent
+
+        def render(assigns) do
+          ~H(just text)
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+        end)
+
+      assert output =~ "stateful live components must have a HTML root element"
+      assert extract_line(output) == 5
     end
   end
 

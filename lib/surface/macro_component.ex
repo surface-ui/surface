@@ -6,14 +6,9 @@ defmodule Surface.MacroComponent do
 
   defmacro __using__(_) do
     quote do
-      use Surface.BaseComponent
+      use Surface.BaseComponent, translator: __MODULE__
 
       @behaviour Surface.Translator
-
-      @doc false
-      def translator do
-        __MODULE__
-      end
     end
   end
 
