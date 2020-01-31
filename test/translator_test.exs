@@ -1,7 +1,9 @@
 defmodule TranslatorTest do
   use ExUnit.Case
-  import ExUnit.CaptureIO
+
   require Logger
+  import ExUnit.CaptureIO
+  import ComponentTestHelper
 
   defmodule Button do
     use Surface.Component
@@ -416,14 +418,6 @@ defmodule TranslatorTest do
 
       assert output =~ "stateful live components must have a HTML root element"
       assert extract_line(output) == 5
-    end
-  end
-
-  defp extract_line(message) do
-    case Regex.run(~r/.exs:(\d+)/, message) do
-      [_, line] ->
-        String.to_integer(line)
-      _ -> :not_found
     end
   end
 
