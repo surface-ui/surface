@@ -23,7 +23,7 @@ defmodule Surface.Translator do
 
     @impl true
     def message(exception) do
-      "#{exception.file}:#{exception.line}: #{exception.message}"
+      "#{Path.relative_to_cwd(exception.file)}:#{exception.line}: #{exception.message}"
     end
   end
 

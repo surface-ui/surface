@@ -33,10 +33,18 @@ defmodule Surface.LiveView do
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent, translator: Surface.Translator.LiveViewTranslator
+      use Surface.API, include: [:data]
       use Surface.EventValidator
       import Phoenix.HTML
 
+      @doc "The id of the live view"
       property id, :integer
+
+      @doc """
+      The request info necessary for the view, such as params, cookie session info, etc.
+      The session is signed and stored on the client, then provided back to the server
+      when the client connects, or reconnects to the stateful view.
+      """
       property session, :map
 
       use Phoenix.LiveView
