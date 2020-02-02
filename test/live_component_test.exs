@@ -26,9 +26,7 @@ defmodule LiveComponentTest do
   defmodule StatefulComponent do
     use Surface.LiveComponent
 
-    def mount(socket) do
-      {:ok, assign(socket, label: "Initial stateful")}
-    end
+    data label, :string, default: "Initial stateful"
 
     def update(_assigns, socket) do
       {:ok, assign(socket, assigned_in_update: "Assinged in update/2")}
@@ -49,9 +47,7 @@ defmodule LiveComponentTest do
     use Surface.LiveView
     alias LiveComponentTest.StatelessComponent
 
-    def mount(_params, _session, socket) do
-      {:ok, assign(socket, label: "Initial stateless")}
-    end
+    data label, :string, default: "Initial stateless"
 
     def render(assigns) do
       ~H"""

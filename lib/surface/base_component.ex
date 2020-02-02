@@ -13,7 +13,6 @@ defmodule Surface.BaseComponent do
   defmacro __using__([translator: translator]) do
 
     quote do
-      use Surface.Properties
       import Surface
       @behaviour unquote(__MODULE__)
 

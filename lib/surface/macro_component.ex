@@ -7,6 +7,7 @@ defmodule Surface.MacroComponent do
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent, translator: __MODULE__
+      use Surface.API, include: [:property]
 
       @behaviour Surface.Translator
     end

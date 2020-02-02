@@ -2,7 +2,6 @@ defmodule Surface.Translator.TagTranslator do
   @moduledoc false
 
   alias Surface.Translator
-  alias Surface.Properties
 
   @behaviour Translator
 
@@ -39,7 +38,9 @@ defmodule Surface.Translator.TagTranslator do
       value = replace_attribute_expr(value)
       value =
         if key in ["class", :class] do
-          Properties.translate_value(:css_class, value, nil, nil)
+          # TODO: Create a common helper module for both, HTML and component translators
+          #       and move this function there
+          Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, value, nil, nil)
         else
           value
         end
