@@ -1,4 +1,4 @@
-defmodule Surface.DataTest do
+defmodule Surface.APITest do
   use ExUnit.Case
 
   test "raise error at the right line" do
@@ -96,6 +96,26 @@ defmodule Surface.DataTest do
     end
   end
 
+  test "generate documentation when no @moduledoc is defined" do
+    assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
+    ### Properties
+
+    * **label** *:string, required: true, default: ""* - The label.
+    * **class** *:css_class* - The class.
+    """
+  end
+
+  test "append properties' documentation when @moduledoc is defined" do
+    assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledoc) == """
+    My component with @moduledoc
+
+    ### Properties
+
+    * **label** *:string, required: true, default: ""* - The label.
+    * **class** *:css_class* - The class.
+    """
+  end
+
   defp eval(code) do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module = "TestLiveComponent_#{id}"
@@ -114,5 +134,10 @@ defmodule Surface.DataTest do
 
     {{:module, _, _, _}, _} = Code.eval_string(comp_code, [], file: "code")
     :ok
+  end
+
+  defp get_docs(module) do
+    {:docs_v1, _, _, "text/markdown", %{"en" => docs}, %{}, _} = Code.fetch_docs(module)
+    docs
   end
 end
