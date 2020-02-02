@@ -17,9 +17,83 @@ defmodule Surface.API do
     end
   end
 
+  defmacro __before_compile__(env) do
+    generate_docs(env)
+    [quoted_property_funcs(env), quoted_data_funcs(env)]
+  end
+
+  defmacro property(name_ast, type, opts \\ []) do
+    property_ast(name_ast, type, opts)
+  end
+
   defmacro data(name_ast, type, opts \\ []) do
     validate(:data, name_ast, type, opts, __CALLER__)
     data_ast(name_ast, type, opts)
+  end
+
+  defp quoted_data_funcs(env) do
+    data = Module.get_attribute(env.module, :data)
+
+    quote do
+      def __data__() do
+        unquote(Macro.escape(data))
+      end
+    end
+  end
+
+  defp quoted_property_funcs(env) do
+    props = Module.get_attribute(env.module, :property)
+    props_names = Enum.map(props, fn prop -> prop.name end)
+    props_by_name = for p <- props, into: %{}, do: {p.name, p}
+
+    quote do
+      def __props__() do
+        unquote(Macro.escape(props))
+      end
+
+      def __validate_prop__(prop) do
+        prop in unquote(props_names)
+      end
+
+      def __get_prop__(name) do
+        Map.get(unquote(Macro.escape(props_by_name)), name)
+      end
+    end
+  end
+
+  defp property_ast(name_ast, type, opts) do
+    # TODO: Validate property definition as:
+    # property name, type, opts
+    {name, _, _} = name_ast
+    default = Keyword.get(opts, :default)
+    required = Keyword.get(opts, :required, false)
+    group = Keyword.get(opts, :group)
+    binding = Keyword.get(opts, :binding)
+    use_bindings = Keyword.get(opts, :use_bindings, [])
+
+    quote do
+      doc =
+        case Module.get_attribute(__MODULE__, :doc) do
+          {_, doc} -> doc
+          _ -> nil
+        end
+      Module.delete_attribute(__MODULE__, :doc)
+
+      # TODO: Validate opts based on the type
+      @property %{
+        name: unquote(name),
+        type: unquote(type),
+        doc: doc,
+        opts: unquote(opts),
+        opts_ast: unquote(Macro.escape(opts)),
+        # TODO: Keep only :name, :type and :doc. The rest below should stay in :opts
+        default: unquote(default),
+        required: unquote(required),
+        group: unquote(group),
+        binding: unquote(binding),
+        use_bindings: unquote(use_bindings)
+      }
+    end
   end
 
   defp data_ast(name_ast, type, opts) do
@@ -103,13 +177,39 @@ defmodule Surface.API do
     "Expected any of #{inspect(valid_opts)}. Got: #{inspect(unknown_items)}"
   end
 
-  defmacro __before_compile__(env) do
-    data = Module.get_attribute(env.module, :data)
-
-    quote do
-      def __data__() do
-        unquote(Macro.escape(data))
-      end
-    end
+  defp format_opts(opts_ast) do
+    opts_ast
+    |> Macro.to_string()
+    |> String.slice(1..-2)
   end
+
+  defp generate_docs(env) do
+    props_doc = generate_props_docs(env.module)
+    {line, doc} =
+      case Module.get_attribute(env.module, :moduledoc) do
+        nil ->
+          {env.line, props_doc}
+        {line, doc} ->
+          {line, doc <> "\n" <> props_doc}
+      end
+    Module.put_attribute(env.module, :moduledoc, {line, doc})
+  end
+
+  defp generate_props_docs(module) do
+    docs =
+      for prop <- Module.get_attribute(module, :property) do
+        doc = if prop.doc, do: " - #{prop.doc}.", else: ""
+        opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
+        "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"
+      end
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    """
+    ### Properties
+
+    #{docs}
+    """
+  end
+
 end

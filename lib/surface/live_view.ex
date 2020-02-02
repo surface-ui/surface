@@ -33,7 +33,7 @@ defmodule Surface.LiveView do
   defmacro __using__(_) do
     quote do
       use Surface.BaseComponent, translator: Surface.Translator.LiveViewTranslator
-      use Surface.API, include: [:data]
+      use Surface.API, include: [:property, :data]
       use Surface.EventValidator
       import Phoenix.HTML
 

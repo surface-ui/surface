@@ -26,7 +26,7 @@ defmodule Surface.Component do
     quote do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.ComponentTranslator
-      use Surface.API, include: []
+      use Surface.API, include: [:property]
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)

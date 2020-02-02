@@ -2,7 +2,6 @@ defmodule Surface.Translator.LiveComponentTranslator do
   @moduledoc false
 
   alias Surface.Translator
-  alias Surface.Properties
   alias Surface.Translator.TagTranslator
   import Surface.Translator.ComponentTranslatorHelper
 
@@ -26,7 +25,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
 
     open = [
       add_require(mod_str),
-      ["<% props = ", Properties.translate_attributes(attributes, mod, mod_str, space, caller), " %>"],
+      ["<% props = ", translate_attributes(attributes, mod, mod_str, space, caller), " %>"],
       "<% props = Map.put(props, :__surface__, %{groups: ", groups_meta, "}) %>",
       add_begin_context(mod, mod_str),
       ["<% children_props = ", children_props_str, " %>"],

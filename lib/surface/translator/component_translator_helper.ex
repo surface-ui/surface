@@ -1,7 +1,6 @@
 defmodule Surface.Translator.ComponentTranslatorHelper do
   @moduledoc false
 
-  alias Surface.Properties
   alias Surface.Translator.DataComponentTranslator
 
   def add_render_call(renderer, args, has_children? \\ false) do
@@ -84,6 +83,116 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     {children_props, inspect(groups_meta), Enum.reverse(contents)}
   end
 
+  def translate_attributes(attributes, mod, mod_str, space, caller, opts \\ []) do
+    put_default_props = Keyword.get(opts, :put_default_props, true)
+
+    if function_exported?(mod, :__props__, 0) do
+      translated_values =
+        Enum.reduce(attributes, [], fn {key, value, %{line: line, spaces: spaces}}, translated_values ->
+          key_atom = String.to_atom(key)
+          prop = mod.__get_prop__(key_atom)
+          if mod.__props__() != [] && !mod.__validate_prop__(key_atom) do
+            message = "Unknown property \"#{key}\" for component <#{mod_str}>"
+            Surface.Translator.IO.warn(message, caller, &(&1 + line))
+          end
+
+          value = translate_value(prop[:type], value, caller, line)
+          [{key, value, spaces, ","} | translated_values]
+        end)
+
+      translated_values =
+        case translated_values do
+          [{key, value, spaces, _} | rest] ->
+            [{key, value, spaces, ""} | rest]
+
+          _ ->
+            translated_values
+        end
+
+      translated_props =
+        Enum.reduce(translated_values, [], fn {key, value, spaces, comma}, translated_props ->
+          [translate_prop(key, value, spaces, comma) | translated_props]
+        end)
+
+      props = ["%{", translated_props, space, "}"]
+
+      if put_default_props do
+        ["put_default_props(", props, ", ", mod_str, ")"]
+      else
+        props
+      end
+    else
+      "%{}"
+    end
+  end
+
+  def translate_value(:event, value, caller, line) do
+    case value do
+      {:attribute_expr, [expr]} ->
+        {:attribute_expr, ["event_value([#{expr}], assigns[:__surface_cid__])"]}
+
+      event ->
+        if Module.open?(caller.module) do
+          event_reference = {to_string(event), caller.line + line}
+          Module.put_attribute(caller.module, :event_references, event_reference)
+        end
+        {:attribute_expr, ["event_value(\"#{event}\", assigns[:__surface_cid__])"]}
+    end
+  end
+
+  def translate_value(:list, {:attribute_expr, [expr]}, _caller, _line) do
+    value =
+      case String.split(expr, "<-") do
+        [_lhs, value] ->
+          value
+        [value] ->
+          value
+      end
+    {:attribute_expr, [value]}
+  end
+
+  def translate_value(:css_class, {:attribute_expr, [expr]}, _caller, _line) do
+    # TODO: Validate expression
+
+    new_expr =
+      case String.trim(expr) do
+        "[" <> _ ->
+          expr
+        _ ->
+          "[#{expr}]"
+    end
+    {:attribute_expr, ["css_class(#{new_expr})"]}
+  end
+
+  def translate_value(_type, value, _caller, _line) when is_list(value) do
+    for item <- value do
+      case item do
+        {:attribute_expr, [expr]} ->
+          ["\#{", expr, "}"]
+        _ ->
+          item
+      end
+    end
+  end
+
+  def translate_value(_type, value, _caller, _line) do
+    value
+  end
+
+  @blanks ' \n\r\t\v\b\f\e\d\a'
+
+  def blank?([]), do: true
+
+  def blank?([h|t]), do: blank?(h) && blank?(t)
+
+  def blank?(""), do: true
+
+  def blank?(char) when char in @blanks, do: true
+
+  def blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
+
+  def blank?(_), do: false
+
   defp handle_child({_, _, _, %{translator: DataComponentTranslator}} = child, acc) do
     {mod_str, attributes, children, %{module: module, space: space}} = child
     {groups_props, groups_meta, contents, _, opts} = maybe_add_default_content(acc)
@@ -98,7 +207,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     groups_meta = Map.put(groups_meta, prop_name, %{size: meta.size + 1, binding: content_args != ""})
 
     groups_props = Map.put_new(groups_props, prop_name, [])
-    props = Properties.translate_attributes(attributes, module, mod_str, space, opts.caller)
+    props = translate_attributes(attributes, module, mod_str, space, opts.caller)
     groups_props = Map.update(groups_props, prop_name, [], &[props|&1])
 
     {groups_props, groups_meta, [content | contents], [], opts}
@@ -138,17 +247,28 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  @blanks ' \n\r\t\v\b\f\e\d\a'
+  defp translate_prop(key, value, spaces, comma) do
+    rhs =
+      case value do
+        {:attribute_expr, value} ->
+          expr = value |> IO.iodata_to_binary() |> String.trim()
+          ["(", expr, ")"]
+        value when is_integer(value) ->
+          to_string(value)
+        value when is_boolean(value) ->
+          inspect(value)
+        _ ->
+          [~S("), value, ~S(")]
+      end
 
-  def blank?([]), do: true
+    case spaces do
+      [space1, space2, space3] ->
+        space = space2 <> space3
+        space = if space != "", do: space, else: " "
+        [space1, key, ":", space, rhs, comma]
 
-  def blank?([h|t]), do: blank?(h) && blank?(t)
-
-  def blank?(""), do: true
-
-  def blank?(char) when char in @blanks, do: true
-
-  def blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
-
-  def blank?(_), do: false
+      [space1, space2] ->
+        [space1, key, ": ", rhs, comma, space2]
+    end
+  end
 end

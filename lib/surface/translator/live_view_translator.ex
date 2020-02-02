@@ -1,7 +1,6 @@
 defmodule Surface.Translator.LiveViewTranslator do
   @moduledoc false
 
-  alias Surface.Properties
   alias Surface.Translator
   import Surface.Translator.ComponentTranslatorHelper
 
@@ -12,7 +11,7 @@ defmodule Surface.Translator.LiveViewTranslator do
     {mod_str, attributes, _children, %{module: mod, space: space}} = node
 
     # TODO: Validation: only accept `id` and `session` properties
-    props = Properties.translate_attributes(attributes, mod, mod_str, space, caller, put_default_props: false)
+    props = translate_attributes(attributes, mod, mod_str, space, caller, put_default_props: false)
 
     open = [
       ["<% props = ", props , " %>"],

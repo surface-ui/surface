@@ -23,6 +23,7 @@ defmodule Surface.DataComponent do
 
     quote do
       use Surface.BaseComponent, translator: Surface.Translator.DataComponentTranslator
+      use Surface.API, include: [:property]
       import unquote(__MODULE__)
 
       @behaviour unquote(__MODULE__)

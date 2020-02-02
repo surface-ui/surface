@@ -54,7 +54,7 @@ defmodule Surface.LiveComponent do
     quote do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
-      use Surface.API, include: [:data]
+      use Surface.API, include: [:property, :data]
       use Surface.EventValidator
       import Phoenix.HTML
 
