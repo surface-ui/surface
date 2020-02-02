@@ -1,8 +1,8 @@
 defmodule Surface.API do
   @moduledoc false
 
-  @types [:any, :boolean, :list, :event, :string, :date, :datetime, :number, :integer,
-          :decimal, :map, :fun]
+  @types [:any, :css_class, :list, :event, :children, :boolean, :string, :date,
+          :datetime, :number, :integer, :decimal, :map, :fun]
 
   defmacro __using__([include: include]) do
     functions = for func <- include, arity <- [2, 3], into: [], do: {func, arity}
@@ -23,6 +23,7 @@ defmodule Surface.API do
   end
 
   defmacro property(name_ast, type, opts \\ []) do
+    validate(:property, name_ast, type, opts, __CALLER__)
     property_ast(name_ast, type, opts)
   end
 
@@ -126,7 +127,8 @@ defmodule Surface.API do
     end
   end
 
-  defp validate_name(_func, {name, meta, nil}) when is_atom(name) and is_list(meta) do
+  defp validate_name(_func, {name, meta, context})
+    when is_atom(name) and is_list(meta) and is_atom(context) do
     {:ok, name}
   end
 
@@ -145,7 +147,7 @@ defmodule Surface.API do
   end
 
   defp validate_opts(func, name, type, opts) do
-    valid_opts = valid_type_opts(type)
+    valid_opts = valid_type_opts(func, type)
 
     with true <- is_list(opts) ,
          true <- Keyword.keyword?(opts),
@@ -160,7 +162,19 @@ defmodule Surface.API do
     end
   end
 
-  defp valid_type_opts(_type) do
+  defp valid_type_opts(:property, :list) do
+    [:required, :default, :binding]
+  end
+
+  defp valid_type_opts(:property, :children) do
+    [:required, :group, :use_bindings]
+  end
+
+  defp valid_type_opts(:property, _type) do
+    [:required, :default, :values]
+  end
+
+  defp valid_type_opts(:data, _type) do
     [:default, :values]
   end
 
