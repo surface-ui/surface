@@ -63,8 +63,6 @@ defmodule Surface.API do
   end
 
   defp property_ast(name_ast, type, opts) do
-    # TODO: Validate property definition as:
-    # property name, type, opts
     {name, _, _} = name_ast
     default = Keyword.get(opts, :default)
     required = Keyword.get(opts, :required, false)
@@ -80,7 +78,6 @@ defmodule Surface.API do
         end
       Module.delete_attribute(__MODULE__, :doc)
 
-      # TODO: Validate opts based on the type
       @property %{
         name: unquote(name),
         type: unquote(type),
@@ -102,7 +99,6 @@ defmodule Surface.API do
     default = Keyword.get(opts, :default)
 
     quote do
-      # TODO: Validate opts based on the type
       @data %{
         name: unquote(name),
         type: unquote(type),
