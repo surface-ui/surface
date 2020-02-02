@@ -37,6 +37,8 @@ defmodule Surface.LiveView do
       use Surface.EventValidator
       import Phoenix.HTML
 
+      @before_compile unquote(__MODULE__)
+
       @doc "The id of the live view"
       property id, :integer
 
@@ -48,6 +50,33 @@ defmodule Surface.LiveView do
       property session, :map
 
       use Phoenix.LiveView
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    quoted_mount(env)
+  end
+
+  defp quoted_mount(env) do
+    defaults =
+      for %{name: name, default: value} <- Module.get_attribute(env.module, :data) do
+        {name, value}
+      end
+
+    if Module.defines?(env.module, {:mount, 3}) do
+      quote do
+        defoverridable mount: 3
+
+        def mount(params, session, socket) do
+          super(params, session, assign(socket, unquote(defaults)))
+        end
+      end
+    else
+      quote do
+        def mount(_params, _session, socket) do
+          {:ok, assign(socket, unquote(defaults))}
+        end
+      end
     end
   end
 end

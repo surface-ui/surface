@@ -90,7 +90,13 @@ defmodule Surface.LiveComponent do
 
   defp quoted_mount(env) do
     prefix = Module.split(env.module) |> List.last() |> String.downcase()
-    default_assigns = [__surface_cid__: "#{prefix}-#{hash_id()}"]
+
+    defaults =
+      for %{name: name, default: value} <- Module.get_attribute(env.module, :data) do
+        {name, value}
+      end
+
+    default_assigns = [__surface_cid__: "#{prefix}-#{hash_id()}"] ++ defaults
 
     if Module.defines?(env.module, {:mount, 1}) do
       quote do

@@ -33,7 +33,7 @@ defmodule Surface.API do
   end
 
   defp quoted_data_funcs(env) do
-    data = Module.get_attribute(env.module, :data)
+    data = Module.get_attribute(env.module, :data, [])
 
     quote do
       def __data__() do
@@ -43,7 +43,7 @@ defmodule Surface.API do
   end
 
   defp quoted_property_funcs(env) do
-    props = Module.get_attribute(env.module, :property)
+    props = Module.get_attribute(env.module, :property, [])
     props_names = Enum.map(props, fn prop -> prop.name end)
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
 
