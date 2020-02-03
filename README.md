@@ -70,8 +70,8 @@ file in `lib/my_app_web.ex`:
 
 To create a component you need to define a module and `use` one of the available component types:
 
-  * **Surface.Component** - A functional (stateless) component.
-  * **Surface.LiveComponent** - A live (stateless or stateful) component. A wrapper around `Phoenix.LiveComponent`.
+  * **Surface.Component** - A stateless component.
+  * **Surface.LiveComponent** - A live stateful component.
   * **Surface.LiveView** - A wrapper component around `Phoenix.LiveView`.
   * **Surface.DataComponent** - A component that serves as a customizable data holder for the parent component.
   * **Surface.MacroComponent** - A low-level component which is responsible for translating its own content at compile time.
@@ -79,7 +79,7 @@ To create a component you need to define a module and `use` one of the available
 ### Example
 
 ```elixir
-  # A functional stateless component
+  # A stateless component
 
   defmodule Button do
     use Surface.Component
@@ -89,7 +89,7 @@ To create a component you need to define a module and `use` one of the available
 
     def render(assigns) do
       ~H"""
-      <button class="button {{ @kind }}" phx-click={{ @click }}>
+      <button class="button {{ @kind }}" :on-phx-click={{ @click }}>
         {{ @inner_content.() }}
       </button>
       """
@@ -101,11 +101,10 @@ To create a component you need to define a module and `use` one of the available
   defmodule Dialog do
     use Surface.LiveComponent
 
+    @doc "The title of the dialog"
     property title, :string, required: true
 
-    def mount(socket) do
-      {:ok, assign(socket, show: false)}
-    end
+    data show, :boolean, default: false
 
     def render(assigns) do
       ~H"""
@@ -178,6 +177,12 @@ at compile time. Currently, the following directives are supported:
 
   * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
     the values passed internally by the component when calling the `@content` function.
+
+  * `:on-[event]` - Sets a `phx` event binding defining the component itself as the
+    default handler (target). This is the prefered way to use `phx` events in **Surface** as it can
+    properly handle properties of type `:event`. Available directives are: `:on-phx-click`,
+    `:on-phx-blur`, `:on-phx-focus`, `:on-phx-change`, `:on-phx-submit`, `:on-phx-keydown`
+    and `:on-phx-keyup`.
 
 ### Example
 
