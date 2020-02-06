@@ -183,5 +183,17 @@ defmodule Surface.DirectivesTest do
       <button phx-click="ok" phx-target="#comp">OK</button>
       """
     end
+
+    test "do not translate invalid events" do
+      assigns = %{}
+      code =
+        ~H"""
+        <button :on-phx-invalid="ok">OK</button>
+        """
+
+      assert render_static(code) =~ """
+      <button :on-phx-invalid="ok">OK</button>
+      """
+    end
   end
 end

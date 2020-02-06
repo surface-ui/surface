@@ -17,6 +17,8 @@ defmodule Surface.Translator.TagTranslator do
     "required", "reversed", "selected", "typemustmatch"
   ]
 
+  @phx_events ["phx-click", "phx-blur",  "phx-focus",  "phx-change",  "phx-submit",  "phx-keydown", "phx-keyup"]
+
   @impl true
   def translate({tag_name, attributes, _, %{space: space}}, _) when tag_name in @void_elements do
     {["<", tag_name, translate_attributes(attributes), space, ">"], [], []}
@@ -58,11 +60,13 @@ defmodule Surface.Translator.TagTranslator do
     end
   end
 
-  defp translate_attribute_assignment(":on-" <> event, value, [space1, space2, space3]) do
+  defp translate_attribute_assignment(":on-" <> event, value, [space1, space2, space3])
+    when event in @phx_events do
     [space1, "<%= on_phx_event(\"", event, "\",", space2, "[", expr_iodata(value), "], assigns[:__surface_cid__]) %>", space3]
   end
 
-  defp translate_attribute_assignment("phx-" <> _ = phx_event, value, [space1, space2, space3]) do
+  defp translate_attribute_assignment("phx-" <> _ = phx_event, value, [space1, space2, space3])
+    when phx_event in @phx_events do
     [space1, phx_event, space2, "=", space3, "<%= phx_event(\"#{phx_event}\", ", expr_iodata(value), ") %>"]
   end
 
