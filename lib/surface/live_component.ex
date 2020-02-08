@@ -96,23 +96,26 @@ defmodule Surface.LiveComponent do
         {name, value}
       end
 
-    default_assigns = [__surface_cid__: "#{prefix}-#{hash_id()}"] ++ defaults
-
     if Module.defines?(env.module, {:mount, 1}) do
       quote do
         defoverridable mount: 1
 
         def mount(socket) do
-          super(assign(socket, unquote(default_assigns)))
+          super(assign(socket, unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults))))
         end
       end
     else
       quote do
         def mount(socket) do
-          {:ok, assign(socket, unquote(default_assigns))}
+          {:ok, assign(socket, unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults)))}
         end
       end
     end
+  end
+
+  @doc false
+  def default_assigns(prefix, defaults) do
+    [__surface_cid__: "#{prefix}-#{hash_id()}"] ++ defaults
   end
 
   defp hash_id() do
