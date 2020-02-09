@@ -114,7 +114,7 @@ defmodule Surface do
     if String.Chars.impl_for(value) do
       value
     else
-      raise "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
+      runtime_error "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
             "the String.Chars protocol (e.g. string, boolean, integer, atom, ...). " <>
             "Got: #{inspect(value)}"
     end
@@ -148,33 +148,33 @@ defmodule Surface do
   end
 
   @doc false
-  def event_value([event], caller_cid) do
-    event_value(event, caller_cid)
+  def event_value(key, [event], caller_cid) do
+    event_value(key, event, caller_cid)
   end
 
-  def event_value([name | opts], caller_cid) do
+  def event_value(key, [name | opts], caller_cid) do
     event = Map.new(opts) |> Map.put(:name, name)
-    event_value(event, caller_cid)
+    event_value(key, event, caller_cid)
   end
 
-  def event_value(nil, _caller_cid) do
+  def event_value(_key, nil, _caller_cid) do
     nil
   end
 
-  def event_value(name, nil) when is_binary(name) do
+  def event_value(_key, name, nil) when is_binary(name) do
     %{name: name, target: :live_view}
   end
 
-  def event_value(name, caller_cid) when is_binary(name) do
+  def event_value(_key, name, caller_cid) when is_binary(name) do
     %{name: name, target: "[surface-cid=#{caller_cid}]"}
   end
 
-  def event_value(%{name: _, target: _} = event, _caller_cid) do
+  def event_value(_key, %{name: _, target: _} = event, _caller_cid) do
     event
   end
 
-  def event_value(event, _caller_cid) do
-    raise "invalid event #{inspect(event)}"
+  def event_value(key, event, _caller_cid) do
+    runtime_error "invalid value for event \"#{key}\". Expected an :event or :string, got: #{inspect(event)}"
   end
 
   @doc false
@@ -205,7 +205,7 @@ defmodule Surface do
   end
 
   def on_phx_event(phx_event, event, _caller_cid) do
-    raise "invalid value for \":on-#{phx_event}\". " <>
+    runtime_error "invalid value for \":on-#{phx_event}\". " <>
       "Expected a :string or :event, got: #{inspect(event)}"
   end
 
@@ -215,7 +215,7 @@ defmodule Surface do
   end
 
   def phx_event(phx_event, value) do
-    raise "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
+    runtime_error "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
       "of type :string. If you want to pass an :event, please use directive " <>
       ":on-#{phx_event} instead. Expected a :string, got: #{inspect(value)}"
   end
@@ -230,5 +230,15 @@ defmodule Surface do
     |> to_string()
     |> Macro.underscore()
     |> String.replace("_", "-")
+  end
+
+  defp runtime_error(message) do
+    stacktrace =
+      self()
+      |> Process.info(:current_stacktrace)
+      |> elem(1)
+      |> Enum.drop(2)
+
+    reraise(message, stacktrace)
   end
 end

@@ -184,7 +184,7 @@ defmodule Surface.API do
       end
 
     "unknown option#{plural} for type #{inspect(type)}. " <>
-    "Expected any of #{inspect(valid_opts)}. Got: #{inspect(unknown_items)}"
+    "Expected any of #{inspect(valid_opts)}, got: #{inspect(unknown_items)}"
   end
 
   defp format_opts(opts_ast) do

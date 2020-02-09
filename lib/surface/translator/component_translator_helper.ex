@@ -96,7 +96,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
             Surface.Translator.IO.warn(message, caller, &(&1 + line))
           end
 
-          value = translate_value(prop[:type], value, caller, line)
+          value = translate_value(prop[:type], key, value, caller, line)
           [{key, value, spaces, ","} | translated_values]
         end)
 
@@ -126,21 +126,21 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  def translate_value(:event, value, caller, line) do
+  def translate_value(:event, key, value, caller, line) do
     case value do
       {:attribute_expr, [expr]} ->
-        {:attribute_expr, ["event_value([#{expr}], assigns[:__surface_cid__])"]}
+        {:attribute_expr, ["event_value(\"#{key}\", [#{expr}], assigns[:__surface_cid__])"]}
 
       event ->
         if Module.open?(caller.module) do
           event_reference = {to_string(event), caller.line + line}
           Module.put_attribute(caller.module, :event_references, event_reference)
         end
-        {:attribute_expr, ["event_value(\"#{event}\", assigns[:__surface_cid__])"]}
+        {:attribute_expr, ["event_value(\"#{key}\", \"#{event}\", assigns[:__surface_cid__])"]}
     end
   end
 
-  def translate_value(:list, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:list, _key, {:attribute_expr, [expr]}, _caller, _line) do
     value =
       case String.split(expr, "<-") do
         [_lhs, value] ->
@@ -151,7 +151,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     {:attribute_expr, [value]}
   end
 
-  def translate_value(:css_class, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:css_class, _key, {:attribute_expr, [expr]}, _caller, _line) do
     # TODO: Validate expression
 
     new_expr =
@@ -164,7 +164,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     {:attribute_expr, ["css_class(#{new_expr})"]}
   end
 
-  def translate_value(_type, value, _caller, _line) when is_list(value) do
+  def translate_value(_type, _key, value, _caller, _line) when is_list(value) do
     for item <- value do
       case item do
         {:attribute_expr, [expr]} ->
@@ -175,7 +175,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  def translate_value(_type, value, _caller, _line) do
+  def translate_value(_type, _key, value, _caller, _line) do
     value
   end
 

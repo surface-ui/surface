@@ -67,9 +67,9 @@ defmodule Surface.Translator.TagTranslator do
     [space1, "<%= boolean_attr(\"", key, "\",", space2, expr, ") %>", space3]
   end
 
-  defp translate_attribute_assignment("class", value, [space1, space2, space3]) do
-    value = Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, value, nil, nil)
-    [space1, "class", space2, "=", space3, wrap_safe_value(value)]
+  defp translate_attribute_assignment("class" = key, value, [space1, space2, space3]) do
+    value = Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, key, value, nil, nil)
+    [space1, key, space2, "=", space3, wrap_safe_value(value)]
   end
 
   defp translate_attribute_assignment("surface-cid", value, [space1, space2, space3]) do
