@@ -179,12 +179,12 @@ defmodule Surface.Translator.ParserTest do
   describe "interpolation" do
     test "as root" do
       assert parse("{{baz}}") ==
-               {:ok, [{:interpolation, "baz"}]}
+               {:ok, [{:interpolation, "baz", %{line: 1}}]}
     end
 
     test "without root node but with text" do
       assert parse("foo {{baz}} bar") ==
-               {:ok, ["foo ", {:interpolation, "baz"}, " bar"]}
+               {:ok, ["foo ", {:interpolation, "baz", %{line: 1}}, " bar"]}
     end
 
     test "single curly bracket" do
@@ -194,17 +194,17 @@ defmodule Surface.Translator.ParserTest do
 
     test "double curly bracket" do
       assert parse("<foo>{{baz}}</foo>") ==
-               {:ok, [{"foo", '', [{:interpolation, "baz"}], %{line: 1, space: ""}}]}
+               {:ok, [{"foo", '', [{:interpolation, "baz", %{line: 1}}], %{line: 1, space: ""}}]}
     end
 
     test "mixed curly bracket" do
       assert parse("<foo>bar{{baz}}bat</foo>") ==
-               {:ok, [{"foo", '', ["bar", {:interpolation, "baz"}, "bat"], %{line: 1, space: ""}}]}
+               {:ok, [{"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"], %{line: 1, space: ""}}]}
     end
 
     test "single-closing curly bracket" do
       assert parse("<foo>bar{{ 'a}b' }}bat</foo>") ==
-               {:ok, [{"foo", [], ["bar", {:interpolation, " 'a}b' "}, "bat"], %{line: 1, space: ""}}]}
+               {:ok, [{"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"], %{line: 1, space: ""}}]}
     end
   end
 
@@ -300,7 +300,7 @@ defmodule Surface.Translator.ParserTest do
 
       children = [
         "\n  bar\n  ",
-        {"div", [], [{:interpolation, " var "}], %{line: 6, space: ""}},
+        {"div", [], [{:interpolation, " var ", %{line: 6}}], %{line: 6, space: ""}},
         "\n"
       ]
 

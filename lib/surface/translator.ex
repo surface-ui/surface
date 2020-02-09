@@ -70,8 +70,15 @@ defmodule Surface.Translator do
     [require_code, "<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
   end
 
-  def translate({:interpolation, expr}, _caller) do
-    ["<%=", expr, "%>"]
+  def translate({:interpolation, expr, %{line: line}}, caller) do
+    if String.contains?(expr, ["@inner_content(", ".inner_content("]) do
+      file = Path.relative_to_cwd(caller.file)
+      message = "the `inner_content` anonymous function should be called using the " <>
+                "dot-notation. Use `inner_content.()` instead of `inner_content()`"
+      raise %CompileError{line: caller.line + line, file: file, description: message}
+    else
+      ["<%=", expr, "%>"]
+    end
   end
 
   def translate({_, _, _, %{translator: translator, module: mod}} = node, caller) do

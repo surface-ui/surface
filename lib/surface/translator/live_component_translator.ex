@@ -51,7 +51,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
           is_binary(child) ->
             {[child | nodes], n_tags, n_non_tags + 1}
 
-          match?({:interpolation, _}, child) ->
+          match?({:interpolation, _, _}, child) ->
             {[child | nodes], n_tags, n_non_tags + 1}
 
           n_tags + n_non_tags == 0 && match?({_, _, _, %{translator: TagTranslator}}, child) ->

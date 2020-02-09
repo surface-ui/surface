@@ -138,6 +138,7 @@ defmodule Surface.Translator.Parser do
 
   interpolation =
     ignore(string("{{"))
+    |> line()
     |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
     |> optional(string("}}"))
     |> post_traverse(:interpolation)
@@ -185,8 +186,10 @@ defmodule Surface.Translator.Parser do
     {:error, "expected closing tag for #{inspect(opening)}"}
   end
 
-  defp interpolation(_rest, ["}}" | nodes], context, _line, _offset),
-    do: {[{:interpolation, nodes |> Enum.reverse() |> IO.iodata_to_binary()}], context}
+  defp interpolation(_rest, ["}}" | nodes], context, _line, _offset) do
+    [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
+    {[{:interpolation, rest |> IO.iodata_to_binary(), %{line: opening_line}}], context}
+  end
 
   defp interpolation(_rest, _, _context, _line, _offset),
     do: {:error, "expected closing for interpolation"}
