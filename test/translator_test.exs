@@ -67,7 +67,7 @@ defmodule TranslatorTest do
 
     translated = Surface.Translator.run(code, 0, __ENV__)
     assert translated =~ """
-    <div label="<%= @label %>"></div>
+    <div label="<%= attr_value("label", (@label)) %>"></div>
     """
   end
 

@@ -38,14 +38,6 @@ defmodule Surface.Translator.TagTranslator do
   defp translate_attributes(attributes) do
     for {key, value, %{spaces: spaces}} <- attributes do
       value = replace_attribute_expr(value)
-      value =
-        if key in ["class", :class] do
-          # TODO: Create a common helper module for both, HTML and component translators
-          #       and move this function there
-          Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, value, nil, nil)
-        else
-          value
-        end
       translate_attribute(key, value, spaces)
     end
   end
@@ -75,8 +67,17 @@ defmodule Surface.Translator.TagTranslator do
     [space1, "<%= boolean_attr(\"", key, "\",", space2, expr, ") %>", space3]
   end
 
+  defp translate_attribute_assignment("class", value, [space1, space2, space3]) do
+    value = Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, value, nil, nil)
+    [space1, "class", space2, "=", space3, wrap_safe_value(value)]
+  end
+
+  defp translate_attribute_assignment("surface-cid", value, [space1, space2, space3]) do
+    [space1, "surface-cid", space2, "=", space3, wrap_safe_value(value)]
+  end
+
   defp translate_attribute_assignment(key, value, [space1, space2, space3]) do
-    [space1, key, space2, "=", space3, wrap_value(value)]
+    [space1, key, space2, "=", space3, wrap_unsafe_value(key, value)]
   end
 
   defp expr_iodata({:attribute_expr, expr}) do
@@ -87,11 +88,21 @@ defmodule Surface.Translator.TagTranslator do
     [~S("), value, ~S(")]
   end
 
-  defp wrap_value(value) do
+  defp wrap_safe_value(value) do
     case value do
       {:attribute_expr, value} ->
         expr = value |> IO.iodata_to_binary() |> String.trim()
         [~S("), "<%= ", expr, " %>", ~S(")]
+      _ ->
+        [~S("), value, ~S(")]
+    end
+  end
+
+  defp wrap_unsafe_value(key, value) do
+    case value do
+      {:attribute_expr, value} ->
+        expr = value |> IO.iodata_to_binary() |> String.trim()
+        [~S("), "<%= attr_value(\"", key, "\", (", expr, ")) %>", ~S(")]
       _ ->
         [~S("), value, ~S(")]
     end

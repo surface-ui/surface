@@ -34,4 +34,13 @@ defmodule HtmlTagTest do
     <input\n  \n  checked\n  \n  readonly=\"false\"\n  default\n  \n>
     """
   end
+
+  test "raise runtime error for invalid attributes values" do
+    assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
+      assigns = %{}
+      ~H"""
+      <div style={{ {1, 2} }}/>
+      """
+    end)
+  end
 end

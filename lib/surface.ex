@@ -110,6 +110,17 @@ defmodule Surface do
   end
 
   @doc false
+  def attr_value(attr, value) do
+    if String.Chars.impl_for(value) do
+      value
+    else
+      raise "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
+            "the String.Chars protocol (e.g. string, boolean, integer, atom, ...). " <>
+            "Got: #{inspect(value)}"
+    end
+  end
+
+  @doc false
   def css_class(list) when is_list(list) do
     Enum.reduce(list, [], fn item, classes ->
       case item do
