@@ -399,7 +399,7 @@ defmodule TranslatorTest do
       assert extract_line(output) == 5
     end
 
-    test "warning on stateful components with no root element" do
+    test "warning on stateful components with text root element" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       view_code = """
       defmodule TestLiveComponent_#{id} do
@@ -407,6 +407,27 @@ defmodule TranslatorTest do
 
         def render(assigns) do
           ~H(just text)
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+        end)
+
+      assert output =~ "stateful live components must have a HTML root element"
+      assert extract_line(output) == 5
+    end
+
+    test "warning on stateful components with interpolation root element" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      view_code = """
+      defmodule TestLiveComponent_#{id} do
+        use Surface.LiveComponent
+
+        def render(assigns) do
+          ~H({{ 1 }})
         end
       end
       """
