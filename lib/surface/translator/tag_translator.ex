@@ -36,47 +36,59 @@ defmodule Surface.Translator.TagTranslator do
   end
 
   defp translate_attributes(attributes) do
-    for {key, value, %{spaces: spaces}} <- attributes do
+    for {key, value, meta} <- attributes do
       value = replace_attribute_expr(value)
-      translate_attribute(key, value, spaces)
+      translate_attribute(key, value, meta)
     end
   end
 
-  defp translate_attribute(key, value, spaces) do
+  defp translate_attribute(key, value, %{spaces: spaces} = meta) do
     case spaces do
       [_space1, _space2, _space3] ->
-        translate_attribute_assignment(key, value, spaces)
+        translate_attribute_assignment(key, value, meta)
 
       [space1, space2] ->
         [space1, key, space2]
     end
   end
 
-  defp translate_attribute_assignment(":on-" <> event, value, [space1, space2, space3])
+  defp translate_attribute_assignment(":on-" <> event, value, %{spaces: spaces})
     when event in @phx_events do
+    [space1, space2, space3] = spaces
     [space1, "<%= on_phx_event(\"", event, "\",", space2, "[", expr_iodata(value), "], assigns[:__surface_cid__]) %>", space3]
   end
 
-  defp translate_attribute_assignment("phx-" <> _ = phx_event, value, [space1, space2, space3])
+  defp translate_attribute_assignment("phx-" <> _ = phx_event, value, %{spaces: spaces})
     when phx_event in @phx_events do
+    [space1, space2, space3] = spaces
     [space1, phx_event, space2, "=", space3, "<%= phx_event(\"#{phx_event}\", ", expr_iodata(value), ") %>"]
   end
 
-  defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, [space1, space2, space3])
+  defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, %{spaces: spaces})
       when key in @boolean_attributes do
+    [space1, space2, space3] = spaces
     [space1, "<%= boolean_attr(\"", key, "\",", space2, expr, ") %>", space3]
   end
 
-  defp translate_attribute_assignment("class" = key, value, [space1, space2, space3]) do
+  defp translate_attribute_assignment("class" = key, value, %{spaces: spaces}) do
+    [space1, space2, space3] = spaces
     value = Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, key, value, nil, nil)
     [space1, key, space2, "=", space3, wrap_safe_value(value)]
   end
 
-  defp translate_attribute_assignment("surface-cid", value, [space1, space2, space3]) do
+  defp translate_attribute_assignment("style" = key, value, meta) do
+    %{spaces: [space1, space2, space3]} = meta
+    show_expr = Map.get(meta, :directive_show_expr, "true")
+    [space1, key, space2, "=", space3, "<%= style(", expr_iodata(value), ", ", show_expr, ") %>"]
+  end
+
+  defp translate_attribute_assignment("surface-cid", value, %{spaces: spaces}) do
+    [space1, space2, space3] = spaces
     [space1, "surface-cid", space2, "=", space3, wrap_safe_value(value)]
   end
 
-  defp translate_attribute_assignment(key, value, [space1, space2, space3]) do
+  defp translate_attribute_assignment(key, value, %{spaces: spaces}) do
+    [space1, space2, space3] = spaces
     [space1, key, space2, "=", space3, wrap_unsafe_value(key, value)]
   end
 

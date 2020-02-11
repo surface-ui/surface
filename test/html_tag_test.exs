@@ -36,6 +36,15 @@ defmodule HtmlTagTest do
   end
 
   test "raise runtime error for invalid attributes values" do
+    assert_raise(RuntimeError, ~r/invalid value for attribute "label"/, fn ->
+      assigns = %{}
+      ~H"""
+      <div label={{ {1, 2} }}/>
+      """
+    end)
+  end
+
+  test "raise runtime error for invalid style value" do
     assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
       assigns = %{}
       ~H"""

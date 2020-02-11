@@ -14,7 +14,7 @@ defmodule Surface.Translator do
 
   @optional_callbacks prepare: 2
 
-  @tag_directives [":for", ":if", ":debug"]
+  @tag_directives [":for", ":if", ":show", ":debug"]
 
   @component_directives [":for", ":if", ":bindings", ":debug"]
 
@@ -91,7 +91,8 @@ defmodule Surface.Translator do
   end
 
   def translate({_, _, _, %{translator: translator}} = node, caller) do
-    translator.translate(node, caller)
+    translate_pre_directives(node, caller)
+    |> translator.translate(caller)
     |> translate_directives(node, caller)
     |> Tuple.to_list()
   end
@@ -235,6 +236,53 @@ defmodule Surface.Translator do
     end)
   end
 
+  defp translate_pre_directives(node, caller) do
+    {_, _, _, %{directives: directives}} = node
+
+    Enum.reduce(directives, node, fn directive, acc ->
+      handle_pre_directive(directive, acc, caller)
+    end)
+  end
+
+  defp handle_pre_directive({":show", {:attribute_expr, [dir_expr]}, dir_meta}, node, _caller) do
+    {mod_str, attributes, children, meta} = node
+
+    build_style_attr =
+      fn value, meta ->
+        {"style", value, Map.put(meta, :directive_show_expr, dir_expr)}
+      end
+
+    {updated_attributes, found} =
+      Enum.reduce(attributes, {[], false}, fn
+        {"style", value, meta}, {attrs, _found} ->
+          attr = build_style_attr.(value, meta)
+          {[attr | attrs], true}
+
+        attr, {attrs, found} ->
+          {[attr | attrs], found}
+      end)
+
+    updated_attributes =
+      if found do
+        updated_attributes
+      else
+        attr = build_style_attr.("", dir_meta)
+        [attr | updated_attributes]
+      end
+
+    {mod_str, Enum.reverse(updated_attributes), children, meta}
+  end
+
+  defp handle_pre_directive({name, _, %{line: line}}, node, caller) do
+    {tag_name, _, _, %{translator: translator}} = node
+    if (translator == Surface.Translator.TagTranslator && name not in @tag_directives) ||
+       (translator == Surface.Translator.ComponentTranslator && name not in @component_directives) do
+      warn("unknown directive #{inspect(name)} for <#{tag_name}>", caller, &(&1 + line))
+    end
+
+    node
+  end
+
   defp handle_directive({":if", {:attribute_expr, [expr]}, _line}, parts, _node, _caller) do
     {open, children, close} = parts
 
@@ -269,6 +317,10 @@ defmodule Surface.Translator do
     |> IO.puts
     IO.puts "<<<"
 
+    parts
+  end
+
+  defp handle_directive(_, parts, _node, _caller) do
     parts
   end
 

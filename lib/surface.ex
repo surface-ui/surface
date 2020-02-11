@@ -121,6 +121,21 @@ defmodule Surface do
   end
 
   @doc false
+  def style(value, show) when is_binary(value) do
+    if show do
+      quot(value)
+    else
+      semicolon = if String.ends_with?(value, ";") || value == "", do: "", else: ";"
+      quot([value, semicolon, "display: none;"])
+    end
+  end
+
+  def style(value, _show) do
+    runtime_error "invalid value for attribute \"style\". Expected a string " <>
+                  "got: #{inspect(value)}"
+  end
+
+  @doc false
   def css_class(list) when is_list(list) do
     Enum.reduce(list, [], fn item, classes ->
       case item do

@@ -123,6 +123,46 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  describe ":show" do
+    test "when true, do nothing" do
+      assigns = %{show: true}
+      code =
+        ~H"""
+        <col style="padding: 1px;" :show={{ @show }}>
+        <col :show=true>
+        """
+
+      assert render_static(code) == """
+      <col style="padding: 1px;">
+      <col>
+      """
+    end
+
+    test "when false and style already exists, add `display: none`" do
+      assigns = %{show: false}
+      code =
+        ~H"""
+        <col style="padding: 1px;" :show={{ @show }}>
+        """
+
+      assert render_static(code) == """
+      <col style="padding: 1px;display: none;">
+      """
+    end
+
+    test "when false and style does not exists, create style and add `display: none`" do
+      assigns = %{show: false}
+      code =
+        ~H"""
+        <col :show={{ @show }}>
+        """
+
+      assert render_static(code) == """
+      <col style="display: none;">
+      """
+    end
+  end
+
   describe ":on-phx-*" do
     test "as an event map" do
       assigns = %{click: %{name: "ok", target: "#comp"}}
