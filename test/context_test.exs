@@ -13,8 +13,10 @@ defmodule ContextTest do
   defmodule Outer do
     use Surface.Component
 
-    def begin_context(props) do
-      Map.put(props.context, :field, props.field)
+    context :set, field, :any
+
+    def init_context(assigns) do
+      {:ok, field: assigns.field}
     end
 
     def render(assigns) do
@@ -22,18 +24,27 @@ defmodule ContextTest do
       <div>{{ @inner_content.() }}</div>
       """
     end
+  end
 
-    def end_context(props) do
-      Map.delete(props.context, :field)
+  defmodule RenderContext do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      Context: {{ inspect(context) }}
+      """
     end
+
   end
 
   defmodule Inner do
     use Surface.Component
 
+    context :get, field, from: Outer
+
     def render(assigns) do
       ~H"""
-      <span>{{ @context.field }}</span>
+      <span>{{ @field }}</span>
       """
     end
   end
@@ -71,6 +82,20 @@ defmodule ContextTest do
 
     assert render_live(code) =~ """
     <div><span>My field</span></div>
+    """
+  end
+
+  test "reset context after the component" do
+    code =
+      """
+      <Outer field="My field">
+        <Inner/>
+      </Outer>
+      <RenderContext/>
+      """
+
+    assert render_live(code) =~ """
+    Context: %{}
     """
   end
 end

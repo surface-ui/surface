@@ -110,6 +110,45 @@ defmodule Surface do
   end
 
   @doc false
+  def begin_context(props, current_context, mod) do
+    assigns = put_vars_from_context(props, current_context, mod.__context_gets__())
+
+    initialized_context =
+      with true <- function_exported?(mod, :init_context, 1),
+           {:ok, values} <- mod.init_context(assigns) do
+        values
+      else
+        false ->
+          []
+
+        {:error, message} ->
+          runtime_error(message)
+
+        result ->
+          runtime_error(
+            "unexpected return value from init_context/1. " <>
+            "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
+          )
+      end
+
+    context = Map.merge(current_context, Map.new(initialized_context))
+
+    assigns =
+      assigns
+      |> put_vars_from_context(context, mod.__context_sets_in_scope__())
+      |> Map.put(:__surface_context__, context)
+
+    {assigns, context}
+  end
+
+  @doc false
+  def end_context(context, mod) do
+    Enum.reduce(mod.__context_sets__(), context, fn %{name: name}, acc ->
+      Map.delete(acc, name)
+    end)
+  end
+
+  @doc false
   def attr_value(attr, value) do
     if String.Chars.impl_for(value) do
       value
@@ -255,5 +294,11 @@ defmodule Surface do
       |> Enum.drop(2)
 
     reraise(message, stacktrace)
+  end
+
+  defp put_vars_from_context(dest, context, vars) do
+    Enum.reduce(vars, dest, fn %{name: name}, acc ->
+      Map.put_new(acc, name, context[name])
+    end)
   end
 end

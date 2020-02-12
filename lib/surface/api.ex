@@ -2,10 +2,17 @@ defmodule Surface.API do
   @moduledoc false
 
   @types [:any, :css_class, :list, :event, :children, :boolean, :string, :date,
-          :datetime, :number, :integer, :decimal, :map, :fun]
+          :datetime, :number, :integer, :decimal, :map, :fun, :atom, :module,
+          :changeset]
 
   defmacro __using__([include: include]) do
-    functions = for func <- include, arity <- [2, 3], into: [], do: {func, arity}
+    arities = %{
+      property: [2, 3],
+      data: [2, 3],
+      context: [3, 4]
+    }
+
+    functions = for func <- include, arity <- arities[func], into: [], do: {func, arity}
 
     quote do
       import unquote(__MODULE__), only: unquote(functions)
@@ -19,17 +26,36 @@ defmodule Surface.API do
 
   defmacro __before_compile__(env) do
     generate_docs(env)
-    [quoted_property_funcs(env), quoted_data_funcs(env)]
+    [
+      quoted_property_funcs(env),
+      quoted_data_funcs(env),
+      quoted_context_funcs(env)
+    ]
   end
 
+  @doc "TODO"
   defmacro property(name_ast, type, opts \\ []) do
     validate(:property, name_ast, type, opts, __CALLER__)
     property_ast(name_ast, type, opts)
   end
 
+  @doc "TODO"
   defmacro data(name_ast, type, opts \\ []) do
     validate(:data, name_ast, type, opts, __CALLER__)
     data_ast(name_ast, type, opts)
+  end
+
+  @doc "TODO"
+  defmacro context(action, name_ast, opts) when is_list(opts) do
+    opts = [{:action, action} | opts]
+    validate(:context, name_ast, :any, opts, __CALLER__)
+    context_ast(name_ast, :any, opts, __CALLER__)
+  end
+
+  defmacro context(action, name_ast, type, opts \\ []) do
+    opts = [{:action, action} | opts]
+    validate(:context, name_ast, type, opts, __CALLER__)
+    context_ast(name_ast, type, opts, __CALLER__)
   end
 
   defp quoted_data_funcs(env) do
@@ -58,6 +84,31 @@ defmodule Surface.API do
 
       def __get_prop__(name) do
         Map.get(unquote(Macro.escape(props_by_name)), name)
+      end
+    end
+  end
+
+  defp quoted_context_funcs(env) do
+    context = Module.get_attribute(env.module, :context, [])
+    {gets, sets} = Enum.split_with(context, fn c -> c.opts[:action] == :get end)
+    sets_in_scope = Enum.filter(sets, fn var -> var.opts[:scope] != :children end)
+    assigns = gets ++ sets_in_scope
+
+    quote do
+      def __context_gets__() do
+        unquote(Macro.escape(gets))
+      end
+
+      def __context_sets__() do
+        unquote(Macro.escape(sets))
+      end
+
+      def __context_sets_in_scope__() do
+        unquote(Macro.escape(sets_in_scope))
+      end
+
+      def __context_assigns__() do
+        unquote(Macro.escape(assigns))
       end
     end
   end
@@ -107,6 +158,42 @@ defmodule Surface.API do
         opts_ast: unquote(Macro.escape(opts)),
         # TODO: Keep only :name and :type. The rest below should stay in :opts
         default: unquote(default)
+      }
+    end
+  end
+
+  defp context_ast(name_ast, type, opts, caller) do
+    {name, _, _} = name_ast
+    from = Keyword.get(opts, :from)
+    to = Keyword.get(opts, :to, caller.module)
+
+    quote do
+      opts = unquote(opts)
+      name = unquote(name)
+      doc =
+        if from = opts[:from] do
+          from.__context_sets__()
+          |> Enum.find(fn c -> c.name == name end)
+          |> Map.get(:doc)
+        else
+          doc =
+            case Module.get_attribute(__MODULE__, :doc) do
+              {_, doc} -> doc
+              _ -> nil
+            end
+          Module.delete_attribute(__MODULE__, :doc)
+          doc
+        end
+
+      @context %{
+        name: unquote(name),
+        type: unquote(type),
+        doc: doc,
+        opts: unquote(opts),
+        opts_ast: unquote(Macro.escape(opts)),
+        # TODO: Keep only :name, :type and :doc. The rest below should stay in :opts
+        from: unquote(from),
+        to: unquote(to)
       }
     end
   end
@@ -172,6 +259,13 @@ defmodule Surface.API do
 
   defp valid_type_opts(:data, _type) do
     [:default, :values]
+  end
+
+  defp valid_type_opts(:context, _type) do
+    # TODO: Accept :required only if :action is :get
+    # TODO: Validate if parent sets the context variable
+    # TODO: If is :required, we could validate if there's a parent up in the tree
+    [:from, :to, :as, :scope, :action, :required]
   end
 
   defp unknown_options_message(type, valid_opts, unknown_options) do

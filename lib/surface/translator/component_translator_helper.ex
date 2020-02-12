@@ -15,22 +15,12 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     ["<% require ", mod_str, " %>"]
   end
 
-  def add_begin_context(mod, mod_str) do
-    begin_context =
-      if function_exported?(mod, :begin_context, 1) do
-        ["<% context = ", mod_str, ".begin_context(Map.put(props, :context, context)) %>"]
-      else
-        ""
-      end
-    [begin_context, "<% props = Map.put(props, :context, context) %>"]
+  def add_begin_context(_mod, mod_str) do
+    ["<% {props, context} = begin_context(props, context, ", mod_str, ") %>"]
   end
 
-  def add_end_context(mod, mod_str) do
-    if function_exported?(mod, :begin_context, 1) do
-      ["<% context = ", mod_str, ".end_context(props) %><% _ = context %>"]
-    else
-      ""
-    end
+  def add_end_context(_mod, mod_str) do
+    ["<% context = end_context(context, ", mod_str, ") %><% _ = context %>"]
   end
 
   def maybe_add_fallback_content(condition) do

@@ -54,7 +54,7 @@ defmodule Surface.LiveComponent do
     quote do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
-      use Surface.API, include: [:property, :data]
+      use Surface.API, include: [:property, :data, :context]
       use Surface.EventValidator
       import Phoenix.HTML
 
@@ -127,13 +127,7 @@ defmodule Surface.LiveComponent do
   This optional callback is invoked in order to set up a
   context that can be retrieved for any descendent component.
   """
-  @callback begin_context(props :: map()) :: map()
+  @callback init_context(props :: map()) :: map()
 
-  @doc """
-  This optional callback is invoked in order to clean up a
-  context previously created in the `c:begin_context/1`.
-  """
-  @callback end_context(props :: map()) :: map()
-
-  @optional_callbacks begin_context: 1, end_context: 1
+  @optional_callbacks init_context: 1
 end

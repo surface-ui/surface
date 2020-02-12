@@ -26,7 +26,7 @@ defmodule Surface.Component do
     quote do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.ComponentTranslator
-      use Surface.API, include: [:property]
+      use Surface.API, include: [:property, :context]
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
@@ -38,13 +38,7 @@ defmodule Surface.Component do
   This optional callback is invoked in order to set up a
   context that can be retrieved for any descendent component.
   """
-  @callback begin_context(props :: map()) :: map()
+  @callback init_context(props :: map()) :: map()
 
-  @doc """
-  This optional callback is invoked in order to clean up a
-  context previously created in the `c:begin_context/1`.
-  """
-  @callback end_context(props :: map()) :: map()
-
-  @optional_callbacks begin_context: 1, end_context: 1
+  @optional_callbacks init_context: 1
 end

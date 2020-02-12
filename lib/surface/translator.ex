@@ -124,7 +124,7 @@ defmodule Surface.Translator do
   end
 
   defp prepend_context(parsed_code) do
-    ["<% context = assigns[:context] || %{} %><% _ = context %>" | parsed_code]
+    ["<% context = assigns[:__surface_context__] || %{} %><% _ = context %>" | parsed_code]
   end
 
   defp build_metadata([], _caller) do
