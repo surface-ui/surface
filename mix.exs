@@ -31,7 +31,7 @@ defmodule Surface.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
+      {:phoenix_live_view, "~> 0.7.0"},
       {:floki, "~> 0.24.0", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
     ]
