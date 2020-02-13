@@ -115,8 +115,8 @@ defmodule Surface do
       value
     else
       runtime_error "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
-            "the String.Chars protocol (e.g. string, boolean, integer, atom, ...). " <>
-            "Got: #{inspect(value)}"
+            "the String.Chars protocol (e.g. string, boolean, integer, atom, ...), " <>
+            "got: #{inspect(value)}"
     end
   end
 

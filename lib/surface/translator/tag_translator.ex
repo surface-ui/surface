@@ -55,13 +55,13 @@ defmodule Surface.Translator.TagTranslator do
   defp translate_attribute_assignment(":on-" <> event, value, %{spaces: spaces})
     when event in @phx_events do
     [space1, space2, space3] = spaces
-    [space1, "<%= on_phx_event(\"", event, "\",", space2, "[", expr_iodata(value), "], assigns[:__surface_cid__]) %>", space3]
+    [space1, "<%= on_phx_event(\"", event, "\",", space2, "[", value_to_code(value), "], assigns[:__surface_cid__]) %>", space3]
   end
 
   defp translate_attribute_assignment("phx-" <> _ = phx_event, value, %{spaces: spaces})
     when phx_event in @phx_events do
     [space1, space2, space3] = spaces
-    [space1, phx_event, space2, "=", space3, "<%= phx_event(\"#{phx_event}\", ", expr_iodata(value), ") %>"]
+    [space1, phx_event, space2, "=", space3, "<%= phx_event(\"#{phx_event}\", ", value_to_code(value), ") %>"]
   end
 
   defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, %{spaces: spaces})
@@ -79,7 +79,7 @@ defmodule Surface.Translator.TagTranslator do
   defp translate_attribute_assignment("style" = key, value, meta) do
     %{spaces: [space1, space2, space3]} = meta
     show_expr = Map.get(meta, :directive_show_expr, "true")
-    [space1, key, space2, "=", space3, "<%= style(", expr_iodata(value), ", ", show_expr, ") %>"]
+    [space1, key, space2, "=", space3, "<%= style(", value_to_code(value), ", ", show_expr, ") %>"]
   end
 
   defp translate_attribute_assignment("surface-cid", value, %{spaces: spaces}) do
@@ -92,39 +92,27 @@ defmodule Surface.Translator.TagTranslator do
     [space1, key, space2, "=", space3, wrap_unsafe_value(key, value)]
   end
 
-  defp expr_iodata({:attribute_expr, expr}) do
-    expr
+  defp value_to_code({:attribute_expr, expr}) do
+    expr |> IO.iodata_to_binary() |> String.trim()
   end
 
-  defp expr_iodata(value) do
+  defp value_to_code(value) do
     [~S("), value, ~S(")]
   end
 
   defp wrap_safe_value(value) do
-    case value do
-      {:attribute_expr, value} ->
-        expr = value |> IO.iodata_to_binary() |> String.trim()
-        [~S("), "<%= ", expr, " %>", ~S(")]
-      _ ->
-        [~S("), value, ~S(")]
-    end
+    [~S("), "<%= ", value_to_code(value), " %>", ~S(")]
   end
 
   defp wrap_unsafe_value(key, value) do
-    case value do
-      {:attribute_expr, value} ->
-        expr = value |> IO.iodata_to_binary() |> String.trim()
-        [~S("), "<%= attr_value(\"", key, "\", (", expr, ")) %>", ~S(")]
-      _ ->
-        [~S("), value, ~S(")]
-    end
+    [~S("), "<%= attr_value(\"", key, "\", ", value_to_code(value), ") %>", ~S(")]
   end
 
   defp replace_attribute_expr(value) when is_list(value) do
     for item <- value do
       case item do
         {:attribute_expr, [expr]} ->
-          ["<%= ", expr, " %>"]
+          ["\#{", expr, "}"]
         _ ->
           item
       end
