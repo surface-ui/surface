@@ -30,7 +30,7 @@ defmodule Surface.LiveView do
 
   """
 
-  defmacro __using__(_) do
+  defmacro __using__(opts) do
     quote do
       use Surface.BaseComponent, translator: Surface.Translator.LiveViewTranslator
       use Surface.API, include: [:property, :data]
@@ -49,7 +49,7 @@ defmodule Surface.LiveView do
       """
       property session, :map
 
-      use Phoenix.LiveView
+      use Phoenix.LiveView, unquote(opts)
     end
   end
 
