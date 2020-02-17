@@ -1,5 +1,6 @@
 defmodule Surface.APITest do
   use ExUnit.Case
+  import ExUnit.CaptureIO
 
   defmodule ContextSetter do
     use Surface.Component
@@ -185,6 +186,34 @@ defmodule Surface.APITest do
         eval(code)
       end)
     end
+
+    test "warn on context :set if there's no init_context/1" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestLiveComponent_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.LiveComponent
+
+        context :set, field, :atom
+
+        def render(assigns) do
+          ~H(<div></div>)
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+      context assign "field" not initialized. You should implement an init_context/1 \
+      callback and initialize its value by returning {:ok, field: ...}
+        code.exs:4:\
+      """
+    end
   end
 
   describe "context :get" do
@@ -299,6 +328,10 @@ defmodule Surface.APITest do
       use Surface.LiveComponent
 
       #{code}
+
+      def init_context(_assigns) do
+        {:ok, field: nil}
+      end
 
       def render(assigns) do
         ~H(<div></div>)

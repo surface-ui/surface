@@ -19,6 +19,7 @@ defmodule Surface.API do
     quote do
       import unquote(__MODULE__), only: unquote(functions)
       @before_compile unquote(__MODULE__)
+      @after_compile unquote(__MODULE__)
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
@@ -33,6 +34,18 @@ defmodule Surface.API do
       quoted_data_funcs(env),
       quoted_context_funcs(env)
     ]
+  end
+
+  def __after_compile__(env, _) do
+    has_init_context? = function_exported?(env.module, :init_context, 1)
+    for var <- Module.get_attribute(env.module, :context, []) do
+      if Keyword.get(var.opts, :action) == :set && !has_init_context? do
+        message = "context assign \"#{var.name}\" not initialized. " <>
+                  "You should implement an init_context/1 callback and initialize its " <>
+                  "value by returning {:ok, #{var.name}: ...}"
+        Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
+      end
+    end
   end
 
   @doc "Defines a property for the component"
@@ -237,6 +250,7 @@ defmodule Surface.API do
         doc: doc,
         opts: unquote(opts),
         opts_ast: unquote(Macro.escape(opts)),
+        line: unquote(caller.line),
         # TODO: Keep only :name, :type and :doc. The rest below should stay in :opts
         from: unquote(from),
         to: unquote(to)
