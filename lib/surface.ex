@@ -297,8 +297,8 @@ defmodule Surface do
   end
 
   defp put_vars_from_context(dest, context, vars) do
-    Enum.reduce(vars, dest, fn %{name: name}, acc ->
-      Map.put_new(acc, name, context[name])
+    Enum.reduce(vars, dest, fn %{name: name, opts: opts}, acc ->
+      Map.put_new(acc, Keyword.get(opts, :as, name), context[name])
     end)
   end
 end

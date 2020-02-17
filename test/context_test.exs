@@ -49,6 +49,18 @@ defmodule ContextTest do
     end
   end
 
+  defmodule InnerWithOptionAs do
+    use Surface.Component
+
+    context :get, field, from: Outer, as: :my_field
+
+    def render(assigns) do
+      ~H"""
+      <span>{{ @my_field }}</span>
+      """
+    end
+  end
+
   defmodule InnerWrapper do
     use Surface.Component
 
@@ -64,6 +76,19 @@ defmodule ContextTest do
       """
       <Outer field="My field">
         <Inner/>
+      </Outer>
+      """
+
+    assert render_live(code) =~ """
+    <div><span>My field</span></div>
+    """
+  end
+
+  test "pass context to child component using :as option" do
+    code =
+      """
+      <Outer field="My field">
+        <InnerWithOptionAs/>
       </Outer>
       """
 

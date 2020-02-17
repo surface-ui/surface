@@ -55,7 +55,7 @@ defmodule Surface.API do
 
   @doc false
   defmacro context(:get, name_ast) do
-    opts = [{:action, :get}]
+    opts = [action: :get]
     validate(:context, name_ast, :any, opts, __CALLER__)
     context_ast(name_ast, :any, opts, __CALLER__)
   end
@@ -68,7 +68,7 @@ defmodule Surface.API do
   end
 
   defmacro context(:set, name_ast, opts) when is_list(opts) do
-    opts = [{:action, :set}]
+    opts = [action: :set]
     validate(:context, name_ast, nil, opts, __CALLER__)
   end
 
