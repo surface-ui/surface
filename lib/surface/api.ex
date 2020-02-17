@@ -3,13 +3,15 @@ defmodule Surface.API do
 
   @types [:any, :css_class, :list, :event, :children, :boolean, :string, :date,
           :datetime, :number, :integer, :decimal, :map, :fun, :atom, :module,
-          :changeset]
+          :changeset, :form]
+
+  @private_opts [:action]
 
   defmacro __using__([include: include]) do
     arities = %{
       property: [2, 3],
       data: [2, 3],
-      context: [3, 4]
+      context: [2, 3, 4]
     }
 
     functions = for func <- include, arity <- arities[func], into: [], do: {func, arity}
@@ -33,35 +35,71 @@ defmodule Surface.API do
     ]
   end
 
-  @doc "TODO"
+  @doc "Defines a property for the component"
   defmacro property(name_ast, type, opts \\ []) do
     validate(:property, name_ast, type, opts, __CALLER__)
     property_ast(name_ast, type, opts)
   end
 
-  @doc "TODO"
+  @doc "Defines a data assign for the component"
   defmacro data(name_ast, type, opts \\ []) do
     validate(:data, name_ast, type, opts, __CALLER__)
     data_ast(name_ast, type, opts)
   end
 
-  @doc "TODO"
-  defmacro context(action, name_ast, opts) when is_list(opts) do
-    opts = [{:action, action} | opts]
+  @doc false
+  defmacro context(:set, name_ast) do
+    opts = [{:action, :set}]
+    validate(:context, name_ast, nil, opts, __CALLER__)
+  end
+
+  @doc false
+  defmacro context(:get, name_ast) do
+    opts = [{:action, :get}]
     validate(:context, name_ast, :any, opts, __CALLER__)
     context_ast(name_ast, :any, opts, __CALLER__)
   end
 
-  defmacro context(action, name_ast, type, opts \\ []) do
-    opts = [{:action, action} | opts]
+  @doc "Sets or retrieves a context assign"
+  defmacro context(:get, name_ast, opts) when is_list(opts) do
+    opts = [{:action, :get} | opts]
+    validate(:context, name_ast, :any, opts, __CALLER__)
+    context_ast(name_ast, :any, opts, __CALLER__)
+  end
+
+  defmacro context(:set, name_ast, opts) when is_list(opts) do
+    opts = [{:action, :set}]
+    validate(:context, name_ast, nil, opts, __CALLER__)
+  end
+
+  @doc """
+  Same as `context/3` but specifying the assign's type
+  as third argument. Only valid for action `:set`.
+  """
+  defmacro context(action, name_ast, type, opts \\ [])
+
+  defmacro context(:set, name_ast, type, opts) do
+    opts = [{:action, :set} | opts]
     validate(:context, name_ast, type, opts, __CALLER__)
     context_ast(name_ast, type, opts, __CALLER__)
+  end
+
+  defmacro context(:get, _name_ast, _type, _opts) do
+    message = "cannot define the type of the assign when using action :get. " <>
+              "The type should be already defined by a parent component using action :set"
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+  end
+
+  defmacro context(action, _name_ast, _type, _opts) do
+    message = "invalid context action. Expected :get or :set, got: #{inspect(action)}"
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
   end
 
   defp quoted_data_funcs(env) do
     data = Module.get_attribute(env.module, :data, [])
 
     quote do
+      @doc false
       def __data__() do
         unquote(Macro.escape(data))
       end
@@ -74,14 +112,17 @@ defmodule Surface.API do
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
 
     quote do
+      @doc false
       def __props__() do
         unquote(Macro.escape(props))
       end
 
+      @doc false
       def __validate_prop__(prop) do
         prop in unquote(props_names)
       end
 
+      @doc false
       def __get_prop__(name) do
         Map.get(unquote(Macro.escape(props_by_name)), name)
       end
@@ -95,18 +136,22 @@ defmodule Surface.API do
     assigns = gets ++ sets_in_scope
 
     quote do
+      @doc false
       def __context_gets__() do
         unquote(Macro.escape(gets))
       end
 
+      @doc false
       def __context_sets__() do
         unquote(Macro.escape(sets))
       end
 
+      @doc false
       def __context_sets_in_scope__() do
         unquote(Macro.escape(sets_in_scope))
       end
 
+      @doc false
       def __context_assigns__() do
         unquote(Macro.escape(assigns))
       end
@@ -165,7 +210,8 @@ defmodule Surface.API do
   defp context_ast(name_ast, type, opts, caller) do
     {name, _, _} = name_ast
     from = Keyword.get(opts, :from)
-    to = Keyword.get(opts, :to, caller.module)
+    # we don't accept custom :to for now
+    to = caller.module
 
     quote do
       opts = unquote(opts)
@@ -199,9 +245,11 @@ defmodule Surface.API do
   end
 
   defp validate(func, name_ast, type, opts, caller) do
+    {evaluated_opts, _} = Code.eval_quoted(opts, [], caller)
     with {:ok, name} <- validate_name(func, name_ast),
          :ok <- validate_type(func, name, type),
-         :ok <- validate_opts(func, name, type, opts) do
+         :ok <- validate_opts(func, name, type, evaluated_opts),
+         :ok <- validate_required_opts(func, type, evaluated_opts) do
       :ok
     else
       {:error, message} ->
@@ -219,6 +267,10 @@ defmodule Surface.API do
     {:error, "invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}"}
   end
 
+  defp validate_type(_func, _name, nil) do
+    {:error, "action :set requires the type of the assign as third argument"}
+  end
+
   defp validate_type(_func, _name, type) when type in @types do
     :ok
   end
@@ -229,46 +281,93 @@ defmodule Surface.API do
     {:error, message}
   end
 
-  defp validate_opts(func, name, type, opts) do
-    valid_opts = valid_type_opts(func, type)
+  defp validate_required_opts(func, type, opts) do
+    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
+      [] ->
+        :ok
+      missing_opts ->
+        {:error, "the following options are required: #{inspect(missing_opts)}"}
+    end
+  end
 
-    with true <- is_list(opts) ,
-         true <- Keyword.keyword?(opts),
-         [] <- Keyword.keys(opts) -- valid_opts do
-      :ok
+  defp validate_opts(func, name, type, opts) do
+    valid_opts = get_valid_opts(func, type, opts)
+
+    with true <- Keyword.keyword?(opts),
+         keys <- Keyword.keys(opts),
+         [] <- keys -- valid_opts ++ @private_opts do
+      Enum.reduce_while(keys, :ok, fn key, _ ->
+        case validate_opt(func, type, key, opts[key]) do
+          :ok ->
+            {:cont, :ok}
+          error ->
+            {:halt, error}
+        end
+      end)
     else
       false ->
         opts_str = Macro.to_string(opts)
         {:error, "invalid options for #{func} #{name}. Expected a keyword list of options, got: #{opts_str}"}
       unknown_options ->
-        {:error, unknown_options_message(type, valid_opts, unknown_options)}
+        {:error, unknown_options_message(valid_opts, unknown_options)}
     end
   end
 
-  defp valid_type_opts(:property, :list) do
+  defp get_valid_opts(:property, :list, _opts) do
     [:required, :default, :binding]
   end
 
-  defp valid_type_opts(:property, :children) do
+  defp get_valid_opts(:property, :children, _opts) do
     [:required, :group, :use_bindings]
   end
 
-  defp valid_type_opts(:property, _type) do
+  defp get_valid_opts(:property, _type, _opts) do
     [:required, :default, :values]
   end
 
-  defp valid_type_opts(:data, _type) do
+  defp get_valid_opts(:data, _type, _opts) do
     [:default, :values]
   end
 
-  defp valid_type_opts(:context, _type) do
-    # TODO: Accept :required only if :action is :get
-    # TODO: Validate if parent sets the context variable
-    # TODO: If is :required, we could validate if there's a parent up in the tree
-    [:from, :to, :as, :scope, :action, :required]
+  defp get_valid_opts(:context, _type, opts) do
+    case Keyword.fetch!(opts, :action) do
+      :get ->
+        [:from, :as]
+      :set ->
+        [:scope]
+    end
   end
 
-  defp unknown_options_message(type, valid_opts, unknown_options) do
+  defp get_required_opts(:context, _type, opts) do
+    case Keyword.fetch!(opts, :action) do
+      :get ->
+        [:from]
+      _ ->
+        []
+    end
+  end
+
+  defp get_required_opts(_func, _type, _opts) do
+    []
+  end
+
+  defp validate_opt(:context, _type, :from, value) do
+    if is_atom(value) && Code.ensure_compiled?(value) do
+      :ok
+    else
+      {:error, "invalid value for option :from. Expected an existing module, got: #{inspect(value)}"}
+    end
+  end
+
+  defp validate_opt(:context, _type, :as, value) when not is_atom(value) do
+    {:error, "invalid value for option :as. Expected an atom, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(_func, _type, _opts, _key) do
+    :ok
+  end
+
+  defp unknown_options_message(valid_opts, unknown_options) do
     {plural, unknown_items} =
       case unknown_options do
         [option] ->
@@ -277,8 +376,8 @@ defmodule Surface.API do
           {"s", unknown_options}
       end
 
-    "unknown option#{plural} for type #{inspect(type)}. " <>
-    "Expected any of #{inspect(valid_opts)}, got: #{inspect(unknown_items)}"
+    "unknown option#{plural} #{inspect(unknown_items)}. " <>
+    "Available options: #{inspect(valid_opts)}"
   end
 
   defp format_opts(opts_ast) do

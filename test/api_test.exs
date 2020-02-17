@@ -1,6 +1,24 @@
 defmodule Surface.APITest do
   use ExUnit.Case
 
+  defmodule ContextSetter do
+    use Surface.Component
+
+    @doc """
+    The Form struct defined by the parent <Form/> component.
+    """
+    context :set, form, :form
+
+    def init_context(_assigns) do
+      {:ok, form: :fake}
+    end
+
+    def render(assigns) do
+      ~H"""
+      """
+    end
+  end
+
   test "raise error at the right line" do
     code = "property label, :unknown_type"
     message = ~r/code:4/
@@ -20,8 +38,8 @@ defmodule Surface.APITest do
   end
 
   test "validate options" do
-    code = "property label, :string, {a, b}"
-    message = ~r/invalid options for property label. Expected a keyword list of options, got: {a, b}/
+    code = "property label, :string, {:a, :b}"
+    message = ~r/invalid options for property label. Expected a keyword list of options, got: {:a, :b}/
 
     assert_raise(CompileError, message, fn ->
       eval(code)
@@ -30,14 +48,14 @@ defmodule Surface.APITest do
 
   test "validate type options" do
     code = "data label, :string, a: 1"
-    message = ~r/unknown option for type :string/
+    message = ~r/unknown option :a/
 
     assert_raise(CompileError, message, fn ->
       eval(code)
     end)
 
     code = "data label, :string, a: 1, b: 2"
-    message = ~r/unknown options for type :string/
+    message = ~r/unknown options \[:a, :b\]/
 
     assert_raise(CompileError, message, fn ->
       eval(code)
@@ -62,7 +80,7 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "property label, :string, a: 1"
-      message = ~r/unknown option for type :string. Expected any of \[:required, :default, :values\], got: :a/
+      message = ~r/unknown option :a. Available options: \[:required, :default, :values\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -88,7 +106,154 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "data label, :string, a: 1"
-      message = ~r/unknown option for type :string. Expected any of \[:default, :values\], got: :a/
+      message = ~r/unknown option :a. Available options: \[:default, :values\]/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+  end
+
+  describe "context :set" do
+
+    test "validate action without options" do
+      code = "context :unknown, name, :string"
+      message = ~r/invalid context action. Expected :get or :set, got: :unknown/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate action with options" do
+      code = "context :unknown, name, :string, scope: :children"
+      message = ~r/invalid context action. Expected :get or :set, got: :unknown/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate name" do
+      code = "context :set, {a, b}, :string"
+      message = ~r/invalid context name. Expected a variable name, got: {a, b}/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate type is required" do
+      code = "context :set, name, scope: :children"
+      message = ~r/action :set requires the type of the assign as third argument/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+
+      code = "context :set, name"
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "valid options" do
+      code = "context :set, field, :atom, scope: :children"
+      assert eval(code) == :ok
+    end
+
+    test "no required options" do
+      code = "context :set, field, :atom"
+      assert eval(code) == :ok
+    end
+
+    test "unknown options" do
+      code = "context :set, label, :string, a: 1"
+      message = ~r/unknown option :a. Available options: \[:scope\]/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+  end
+
+  describe "context :get" do
+
+    test "validate action" do
+      code = "context :unknown, name, from: Surface.APITest.ContextSetter"
+      message = ~r/invalid context action. Expected :get or :set, got: :unknown/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "valid options" do
+      code = """
+      alias Surface.APITest.ContextSetter
+      context :get, form, from: ContextSetter, as: :my_form
+      """
+      assert eval(code) == :ok
+    end
+
+    test "invalid :from" do
+      code = """
+      context :get, form, from: UnknownModule
+      """
+      message = ~r/invalid value for option :from. Expected an existing module, got: UnknownModule/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "option :from is required" do
+      code = """
+      context :get, form, as: :my_form
+      """
+      message = ~r/the following options are required: \[:from\]/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+
+      code = """
+      context :get, form
+      """
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "invalid :as" do
+      code = """
+      context :get, form, from: Surface.APITest.ContextSetter, as: 1
+      """
+      message = ~r/invalid value for option :as. Expected an atom, got: 1/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "cannot define the type of the assign" do
+      code = "context :get, name, :string"
+      message =
+        ~r"""
+        cannot define the type of the assign when using action :get. \
+        The type should be already defined by a parent component using action :set\
+        """
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "unknown options" do
+      code = "context :get, label, from: Surface.APITest.ContextSetter, a: 1"
+      message = ~r/unknown option :a. Available options: \[:from, :as\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
