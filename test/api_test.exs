@@ -126,7 +126,7 @@ defmodule Surface.APITest do
     end
 
     test "validate action with options" do
-      code = "context :unknown, name, :string, scope: :children"
+      code = "context :unknown, name, :string, scope: :only_children"
       message = ~r/invalid context action. Expected :get or :set, got: :unknown/
 
       assert_raise(CompileError, message, fn ->
@@ -144,7 +144,7 @@ defmodule Surface.APITest do
     end
 
     test "validate type is required" do
-      code = "context :set, name, scope: :children"
+      code = "context :set, name, scope: :only_children"
       message = ~r/action :set requires the type of the assign as third argument/
 
       assert_raise(CompileError, message, fn ->
@@ -159,8 +159,17 @@ defmodule Surface.APITest do
     end
 
     test "valid options" do
-      code = "context :set, field, :atom, scope: :children"
+      code = "context :set, field, :atom, scope: :only_children"
       assert eval(code) == :ok
+    end
+
+    test "validate :scope" do
+      code = "context :set, field, :atom, scope: :unknown"
+      message = ~r/invalid value for option :scope. Expected :only_children or :self_and_children, got: :unknown/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
     end
 
     test "no required options" do

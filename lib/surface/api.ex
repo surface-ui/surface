@@ -132,7 +132,7 @@ defmodule Surface.API do
   defp quoted_context_funcs(env) do
     context = Module.get_attribute(env.module, :context, [])
     {gets, sets} = Enum.split_with(context, fn c -> c.opts[:action] == :get end)
-    sets_in_scope = Enum.filter(sets, fn var -> var.opts[:scope] != :children end)
+    sets_in_scope = Enum.filter(sets, fn var -> var.opts[:scope] != :only_children end)
     assigns = gets ++ sets_in_scope
 
     quote do
@@ -349,6 +349,11 @@ defmodule Surface.API do
 
   defp get_required_opts(_func, _type, _opts) do
     []
+  end
+
+  defp validate_opt(:context, _type, :scope, value)
+    when value not in [:only_children, :self_and_children] do
+    {:error, "invalid value for option :scope. Expected :only_children or :self_and_children, got: #{inspect(value)}"}
   end
 
   defp validate_opt(:context, _type, :from, value) do
