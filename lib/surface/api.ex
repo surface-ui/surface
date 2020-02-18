@@ -51,13 +51,13 @@ defmodule Surface.API do
   @doc "Defines a property for the component"
   defmacro property(name_ast, type, opts \\ []) do
     validate(:property, name_ast, type, opts, __CALLER__)
-    property_ast(name_ast, type, opts)
+    property_ast(name_ast, type, opts, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
   defmacro data(name_ast, type, opts \\ []) do
     validate(:data, name_ast, type, opts, __CALLER__)
-    data_ast(name_ast, type, opts)
+    data_ast(name_ast, type, opts, __CALLER__)
   end
 
   @doc false
@@ -171,13 +171,8 @@ defmodule Surface.API do
     end
   end
 
-  defp property_ast(name_ast, type, opts) do
+  defp property_ast(name_ast, type, opts, caller) do
     {name, _, _} = name_ast
-    default = Keyword.get(opts, :default)
-    required = Keyword.get(opts, :required, false)
-    group = Keyword.get(opts, :group)
-    binding = Keyword.get(opts, :binding)
-    use_bindings = Keyword.get(opts, :use_bindings, [])
 
     quote do
       doc =
@@ -193,19 +188,13 @@ defmodule Surface.API do
         doc: doc,
         opts: unquote(opts),
         opts_ast: unquote(Macro.escape(opts)),
-        # TODO: Keep only :name, :type and :doc. The rest below should stay in :opts
-        default: unquote(default),
-        required: unquote(required),
-        group: unquote(group),
-        binding: unquote(binding),
-        use_bindings: unquote(use_bindings)
+        line: unquote(caller.line),
       }
     end
   end
 
-  defp data_ast(name_ast, type, opts) do
+  defp data_ast(name_ast, type, opts, caller) do
     {name, _, _} = name_ast
-    default = Keyword.get(opts, :default)
 
     quote do
       @data %{
@@ -214,17 +203,14 @@ defmodule Surface.API do
         doc: nil,
         opts: unquote(opts),
         opts_ast: unquote(Macro.escape(opts)),
-        # TODO: Keep only :name and :type. The rest below should stay in :opts
-        default: unquote(default)
+        line: unquote(caller.line),
       }
     end
   end
 
   defp context_ast(name_ast, type, opts, caller) do
     {name, _, _} = name_ast
-    from = Keyword.get(opts, :from)
-    # we don't accept custom :to for now
-    to = caller.module
+    opts = Keyword.put_new(opts, :to, caller.module)
 
     quote do
       opts = unquote(opts)
@@ -251,9 +237,6 @@ defmodule Surface.API do
         opts: unquote(opts),
         opts_ast: unquote(Macro.escape(opts)),
         line: unquote(caller.line),
-        # TODO: Keep only :name, :type and :doc. The rest below should stay in :opts
-        from: unquote(from),
-        to: unquote(to)
       }
     end
   end
@@ -322,6 +305,7 @@ defmodule Surface.API do
       false ->
         opts_str = Macro.to_string(opts)
         {:error, "invalid options for #{func} #{name}. Expected a keyword list of options, got: #{opts_str}"}
+
       unknown_options ->
         {:error, unknown_options_message(valid_opts, unknown_options)}
     end
@@ -363,6 +347,14 @@ defmodule Surface.API do
 
   defp get_required_opts(_func, _type, _opts) do
     []
+  end
+
+  defp validate_opt(_func, _type, :required, value) when not is_boolean(value) do
+    {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(_func, _type, :values, value) when not is_list(value) do
+    {:error, "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
   end
 
   defp validate_opt(:context, _type, :scope, value)

@@ -104,7 +104,8 @@ defmodule Surface do
 
   @doc false
   def put_default_props(props, mod) do
-    Enum.reduce(mod.__props__(), props, fn %{name: name, default: default}, acc ->
+    Enum.reduce(mod.__props__(), props, fn %{name: name, opts: opts}, acc ->
+      default = Keyword.get(opts, :default)
       Map.put_new(acc, name, default)
     end)
   end

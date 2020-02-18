@@ -63,6 +63,24 @@ defmodule Surface.APITest do
     end)
   end
 
+  test "validate :required" do
+    code = "property label, :string, required: 1"
+    message = ~r/invalid value for option :required. Expected a boolean, got: 1/
+
+    assert_raise(CompileError, message, fn ->
+      eval(code)
+    end)
+  end
+
+  test "validate :values" do
+    code = "property label, :string, values: 1"
+    message = ~r/invalid value for option :values. Expected a list of values, got: 1/
+
+    assert_raise(CompileError, message, fn ->
+      eval(code)
+    end)
+  end
+
   describe "property" do
 
     test "validate name" do
