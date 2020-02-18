@@ -255,9 +255,9 @@ defmodule Surface.APITest do
 
     test "invalid :from" do
       code = """
-      context :get, form, from: UnknownModule
+      context :get, form, from: 1
       """
-      message = ~r/invalid value for option :from. Expected an existing module, got: UnknownModule/
+      message = ~r/invalid value for option :from. Expected a module, got: 1/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

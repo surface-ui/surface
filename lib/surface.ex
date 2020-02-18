@@ -112,12 +112,12 @@ defmodule Surface do
 
   @doc false
   def begin_context(props, current_context, mod) do
-    assigns = put_vars_from_context(props, current_context, mod.__context_gets__())
+    assigns = put_gets_into_assigns(props, current_context, mod.__context_gets__())
 
-    initialized_context =
+    initialized_context_assigns =
       with true <- function_exported?(mod, :init_context, 1),
            {:ok, values} <- mod.init_context(assigns) do
-        values
+        Map.new(values)
       else
         false ->
           []
@@ -132,20 +132,29 @@ defmodule Surface do
           )
       end
 
-    context = Map.merge(current_context, Map.new(initialized_context))
+    {assigns, new_context} =
+      put_sets_into_assigns_and_context(
+        assigns,
+        current_context,
+        initialized_context_assigns,
+        mod.__context_sets__()
+      )
 
-    assigns =
-      assigns
-      |> put_vars_from_context(context, mod.__context_sets_in_scope__())
-      |> Map.put(:__surface_context__, context)
+    assigns = Map.put(assigns, :__surface_context__, new_context)
 
-    {assigns, context}
+    {assigns, new_context}
   end
 
   @doc false
   def end_context(context, mod) do
-    Enum.reduce(mod.__context_sets__(), context, fn %{name: name}, acc ->
-      Map.delete(acc, name)
+    Enum.reduce(mod.__context_sets__(), context, fn %{name: name, opts: opts}, acc ->
+      to = Keyword.fetch!(opts, :to)
+      context_entry = acc |> Map.get(to, %{}) |> Map.delete(name)
+      if context_entry == %{} do
+        Map.delete(acc, to)
+      else
+        Map.put(acc, to, context_entry)
+      end
     end)
   end
 
@@ -297,9 +306,34 @@ defmodule Surface do
     reraise(message, stacktrace)
   end
 
-  defp put_vars_from_context(dest, context, vars) do
-    Enum.reduce(vars, dest, fn %{name: name, opts: opts}, acc ->
-      Map.put_new(acc, Keyword.get(opts, :as, name), context[name])
+  defp put_gets_into_assigns(assigns, context, gets) do
+    Enum.reduce(gets, assigns, fn %{name: name, opts: opts}, acc ->
+      key = Keyword.get(opts, :as, name)
+      from = Keyword.fetch!(opts, :from)
+      # TODO: raise an error if it's required and it hasn't been set
+      value = context[from][name]
+      Map.put_new(acc, key, value)
+    end)
+  end
+
+  defp put_sets_into_assigns_and_context(assigns, context, values, sets) do
+    Enum.reduce(sets, {assigns, context}, fn %{name: name, opts: opts}, {assigns, context} ->
+      to = Keyword.fetch!(opts, :to)
+      scope = Keyword.get(opts, :scope)
+      case Map.fetch(values, name) do
+        {:ok, value} ->
+          new_context_entry =
+            context
+            |> Map.get(to, %{})
+            |> Map.put(name, value)
+          new_context = Map.put(context, to, new_context_entry)
+          new_assigns =
+            if scope == :only_children, do: assigns, else: Map.put(assigns, name, value)
+          {new_assigns, new_context}
+
+        :error ->
+          {assigns, context}
+      end
     end)
   end
 end

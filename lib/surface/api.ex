@@ -216,19 +216,11 @@ defmodule Surface.API do
       opts = unquote(opts)
       name = unquote(name)
       doc =
-        if from = opts[:from] do
-          from.__context_sets__()
-          |> Enum.find(fn c -> c.name == name end)
-          |> Map.get(:doc)
-        else
-          doc =
-            case Module.get_attribute(__MODULE__, :doc) do
-              {_, doc} -> doc
-              _ -> nil
-            end
-          Module.delete_attribute(__MODULE__, :doc)
-          doc
+        case Module.get_attribute(__MODULE__, :doc) do
+          {_, doc} -> doc
+          _ -> nil
         end
+      Module.delete_attribute(__MODULE__, :doc)
 
       @context %{
         name: unquote(name),
@@ -362,12 +354,8 @@ defmodule Surface.API do
     {:error, "invalid value for option :scope. Expected :only_children or :self_and_children, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:context, _type, :from, value) do
-    if is_atom(value) && Code.ensure_compiled?(value) do
-      :ok
-    else
-      {:error, "invalid value for option :from. Expected an existing module, got: #{inspect(value)}"}
-    end
+  defp validate_opt(:context, _type, :from, value) when not is_atom(value) do
+    {:error, "invalid value for option :from. Expected a module, got: #{inspect(value)}"}
   end
 
   defp validate_opt(:context, _type, :as, value) when not is_atom(value) do

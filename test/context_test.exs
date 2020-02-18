@@ -13,10 +13,10 @@ defmodule ContextTest do
   defmodule Outer do
     use Surface.Component
 
-    context :set, field, :any
+    context :set, field, :any, scope: :only_children
 
-    def init_context(assigns) do
-      {:ok, field: assigns.field}
+    def init_context(_assigns) do
+      {:ok, field: "field from Outer"}
     end
 
     def render(assigns) do
@@ -34,17 +34,37 @@ defmodule ContextTest do
       Context: {{ inspect(context) }}
       """
     end
-
   end
 
   defmodule Inner do
     use Surface.Component
 
+    alias ContextTest.InnerWrapper
+    alias ContextTest.Outer
+
     context :get, field, from: Outer
+    context :get, field, from: InnerWrapper, as: :other_field
 
     def render(assigns) do
       ~H"""
-      <span>{{ @field }}</span>
+      <span id="field">{{ @field }}</span>
+      <span id="other_field">{{ @other_field }}</span>
+      """
+    end
+  end
+
+  defmodule InnerWrapper do
+    use Surface.Component
+
+    context :set, field, :any
+
+    def init_context(_assigns) do
+      {:ok, field: "field from InnerWrapper"}
+    end
+
+    def render(assigns) do
+      ~H"""
+      <Inner />
       """
     end
   end
@@ -61,59 +81,63 @@ defmodule ContextTest do
     end
   end
 
-  defmodule InnerWrapper do
-    use Surface.Component
-
-    def render(assigns) do
-      ~H"""
-      <Inner />
-      """
-    end
-  end
-
   test "pass context to child component" do
     code =
       """
-      <Outer field="My field">
+      <Outer>
         <Inner/>
       </Outer>
       """
 
     assert render_live(code) =~ """
-    <div><span>My field</span></div>
+    <span id="field">field from Outer</span>\
     """
   end
 
   test "pass context to child component using :as option" do
     code =
       """
-      <Outer field="My field">
+      <Outer>
         <InnerWithOptionAs/>
       </Outer>
       """
 
     assert render_live(code) =~ """
-    <div><span>My field</span></div>
+    <div><span>field from Outer</span></div>
     """
   end
 
   test "pass context down the tree of components" do
     code =
       """
-      <Outer field="My field">
+      <Outer>
         <InnerWrapper />
       </Outer>
       """
 
     assert render_live(code) =~ """
-    <div><span>My field</span></div>
+    <span id="field">field from Outer</span>\
+    """
+  end
+
+  test "context assingns are scoped by their parent components" do
+    code =
+      """
+      <Outer>
+        <InnerWrapper/>
+      </Outer>
+      """
+
+    assert render_live(code) =~ """
+    <span id="field">field from Outer</span>\
+    <span id="other_field">field from InnerWrapper</span>\
     """
   end
 
   test "reset context after the component" do
     code =
       """
-      <Outer field="My field">
+      <Outer>
         <Inner/>
       </Outer>
       <RenderContext/>
