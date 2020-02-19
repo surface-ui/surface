@@ -13,7 +13,7 @@ defmodule ContextTest do
   defmodule Outer do
     use Surface.Component
 
-    context :set, field, :any, scope: :only_children
+    context set field, :any, scope: :only_children
 
     def init_context(_assigns) do
       {:ok, field: "field from Outer"}
@@ -42,8 +42,8 @@ defmodule ContextTest do
     alias ContextTest.InnerWrapper
     alias ContextTest.Outer
 
-    context :get, field, from: Outer
-    context :get, field, from: InnerWrapper, as: :other_field
+    context get field, from: Outer
+    context get field, from: InnerWrapper, as: :other_field
 
     def render(assigns) do
       ~H"""
@@ -56,7 +56,7 @@ defmodule ContextTest do
   defmodule InnerWrapper do
     use Surface.Component
 
-    context :set, field, :any
+    context set field, :any
 
     def init_context(_assigns) do
       {:ok, field: "field from InnerWrapper"}
@@ -72,7 +72,7 @@ defmodule ContextTest do
   defmodule InnerWithOptionAs do
     use Surface.Component
 
-    context :get, field, from: Outer, as: :my_field
+    context get field, from: Outer, as: :my_field
 
     def render(assigns) do
       ~H"""

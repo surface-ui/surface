@@ -8,7 +8,7 @@ defmodule Surface.APITest do
     @doc """
     The Form struct defined by the parent <Form/> component.
     """
-    context :set, form, :form
+    context set form, :form
 
     def init_context(_assigns) do
       {:ok, form: :fake}
@@ -29,7 +29,7 @@ defmodule Surface.APITest do
 
   test "validate type" do
     code = "property label, {a, b}"
-    message = ~r/invalid type {a, b} for property label. Expected one of \[:any/
+    message = ~r/invalid type {a, b} for property label.\nExpected one of \[:any/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -90,7 +90,7 @@ defmodule Surface.APITest do
 
     code = """
     data label, :string
-    context :get, label, from: Surface.APITest.ContextSetter
+    context get label, from: Surface.APITest.ContextSetter
     """
 
     message =
@@ -102,7 +102,7 @@ defmodule Surface.APITest do
 
     code = """
     property form, :form
-    context :set, form, :form
+    context set form, :form
     """
 
     message =
@@ -114,7 +114,7 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
-    context :set, form, :form
+    context set form, :form
     property form, :form
     """
 
@@ -125,7 +125,7 @@ defmodule Surface.APITest do
   test "allow context :set with existing assign name when :scope is :only_children" do
     code = """
     property form, :form
-    context :set, form, :form, scope: :only_children
+    context set form, :form, scope: :only_children
     """
 
     assert eval(code) == :ok
@@ -134,7 +134,7 @@ defmodule Surface.APITest do
   test "allow context :get with existing assign name when using :as" do
     code = """
     property form, :form
-    context :get, form, from: Surface.APITest.ContextSetter, as: :my_form
+    context get form, from: Surface.APITest.ContextSetter, as: :my_form
     """
 
     assert eval(code) == :ok
@@ -195,7 +195,7 @@ defmodule Surface.APITest do
   describe "context :set" do
 
     test "validate action without options" do
-      code = "context :unknown, name, :string"
+      code = "context unknown name, :string"
       message = ~r/invalid context action. Expected :get or :set, got: :unknown/
 
       assert_raise(CompileError, message, fn ->
@@ -204,8 +204,12 @@ defmodule Surface.APITest do
     end
 
     test "validate action with options" do
-      code = "context :unknown, name, :string, scope: :only_children"
-      message = ~r/invalid context action. Expected :get or :set, got: :unknown/
+      code = "context unknown name, :string, scope: :only_children"
+      message =
+        ~r"""
+        invalid use of context. Usage: `context get name, opts` or \
+        `context set name, type, opts \\ \[\]`\
+        """
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -213,7 +217,7 @@ defmodule Surface.APITest do
     end
 
     test "validate name" do
-      code = "context :set, {a, b}, :string"
+      code = "context set {a, b}, :string"
       message = ~r/invalid context name. Expected a variable name, got: {a, b}/
 
       assert_raise(CompileError, message, fn ->
@@ -221,15 +225,15 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "validate type is required" do
-      code = "context :set, name, scope: :only_children"
-      message = ~r/action :set requires the type of the assign as third argument/
+    test "validate type" do
+      code = "context set name, scope: :only_children"
+      message = ~r/no type defined for context set. Type is required after the name./
 
       assert_raise(CompileError, message, fn ->
         eval(code)
       end)
 
-      code = "context :set, name"
+      code = "context set name"
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -237,12 +241,12 @@ defmodule Surface.APITest do
     end
 
     test "valid options" do
-      code = "context :set, field, :atom, scope: :only_children"
+      code = "context set field, :atom, scope: :only_children"
       assert eval(code) == :ok
     end
 
     test "validate :scope" do
-      code = "context :set, field, :atom, scope: :unknown"
+      code = "context set field, :atom, scope: :unknown"
       message = ~r/invalid value for option :scope. Expected :only_children or :self_and_children, got: :unknown/
 
       assert_raise(CompileError, message, fn ->
@@ -251,12 +255,12 @@ defmodule Surface.APITest do
     end
 
     test "no required options" do
-      code = "context :set, field, :atom"
+      code = "context set field, :atom"
       assert eval(code) == :ok
     end
 
     test "unknown options" do
-      code = "context :set, label, :string, a: 1"
+      code = "context set label, :string, a: 1"
       message = ~r/unknown option :a. Available options: \[:scope\]/
 
       assert_raise(CompileError, message, fn ->
@@ -272,7 +276,7 @@ defmodule Surface.APITest do
       defmodule #{module} do
         use Surface.LiveComponent
 
-        context :set, field, :atom
+        context set field, :atom
 
         def render(assigns) do
           ~H(<div></div>)
@@ -296,7 +300,7 @@ defmodule Surface.APITest do
   describe "context :get" do
 
     test "validate action" do
-      code = "context :unknown, name, from: Surface.APITest.ContextSetter"
+      code = "context unknown name, from: Surface.APITest.ContextSetter"
       message = ~r/invalid context action. Expected :get or :set, got: :unknown/
 
       assert_raise(CompileError, message, fn ->
@@ -307,14 +311,14 @@ defmodule Surface.APITest do
     test "valid options" do
       code = """
       alias Surface.APITest.ContextSetter
-      context :get, form, from: ContextSetter, as: :my_form
+      context get form, from: ContextSetter, as: :my_form
       """
       assert eval(code) == :ok
     end
 
     test "invalid :from" do
       code = """
-      context :get, form, from: 1
+      context get form, from: 1
       """
       message = ~r/invalid value for option :from. Expected a module, got: 1/
 
@@ -325,7 +329,7 @@ defmodule Surface.APITest do
 
     test "option :from is required" do
       code = """
-      context :get, form, as: :my_form
+      context get form, as: :my_form
       """
       message = ~r/the following options are required: \[:from\]/
 
@@ -334,7 +338,7 @@ defmodule Surface.APITest do
       end)
 
       code = """
-      context :get, form
+      context get form
       """
 
       assert_raise(CompileError, message, fn ->
@@ -344,7 +348,7 @@ defmodule Surface.APITest do
 
     test "invalid :as" do
       code = """
-      context :get, form, from: Surface.APITest.ContextSetter, as: 1
+      context get form, from: Surface.APITest.ContextSetter, as: 1
       """
       message = ~r/invalid value for option :as. Expected an atom, got: 1/
 
@@ -354,11 +358,11 @@ defmodule Surface.APITest do
     end
 
     test "cannot define the type of the assign" do
-      code = "context :get, name, :string"
+      code = "context get name, :string"
       message =
         ~r"""
-        cannot define the type of the assign when using action :get. \
-        The type should be already defined by a parent component using action :set\
+        cannot redefine the type of the assign when using action :get. \
+        The type is already defined by a parent component using action :set\
         """
 
       assert_raise(CompileError, message, fn ->
@@ -367,7 +371,7 @@ defmodule Surface.APITest do
     end
 
     test "unknown options" do
-      code = "context :get, label, from: Surface.APITest.ContextSetter, a: 1"
+      code = "context get label, from: Surface.APITest.ContextSetter, a: 1"
       message = ~r/unknown option :a. Available options: \[:from, :as\]/
 
       assert_raise(CompileError, message, fn ->

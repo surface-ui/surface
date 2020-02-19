@@ -11,7 +11,7 @@ defmodule Surface.API do
     arities = %{
       property: [2, 3],
       data: [2, 3],
-      context: [2, 3, 4]
+      context: [1]
     }
 
     functions = for func <- include, arity <- arities[func], into: [], do: {func, arity}
@@ -52,49 +52,85 @@ defmodule Surface.API do
     build_assign_ast(:data, name_ast, type, opts, __CALLER__)
   end
 
-  @doc "Sets or retrieves a context assign"
-  defmacro context(:get, name_ast, opts) when is_list(opts) do
+  @doc """
+  Sets or retrieves a context assign.
+
+  ### Usage
+
+  ```
+    context set name, type, opts \\ []
+    context get name, opts
+  ```
+
+  ### Examples
+
+  ```
+    context set form, :form
+    ...
+    context get form, from: Form
+  ```
+  """
+
+  # context get
+
+  defmacro context({:get, _, [name_ast, opts]}) when is_list(opts) do
     opts = [{:action, :get} | opts]
     build_assign_ast(:context, name_ast, :any, opts, __CALLER__)
   end
 
-  defmacro context(:set, name_ast, opts) when is_list(opts) do
-    opts = [action: :set, to: __CALLER__.module]
-    validate!(:context, name_ast, nil, opts, __CALLER__)
+  defmacro context({:get, _, [_name_ast, type]}) when type in @types do
+    message = "cannot redefine the type of the assign when using action :get. " <>
+              "The type is already defined by a parent component using action :set"
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
   end
 
-  @doc """
-  Same as `context/3` but specifying the assign's type
-  as third argument. Only valid for action `:set`.
-  """
-  defmacro context(action, name_ast, type, opts \\ [])
+  defmacro context({:get, _, [name_ast, invalid_opts]}) do
+    build_assign_ast(:context, name_ast, :any, invalid_opts, __CALLER__)
+  end
 
-  defmacro context(:set, name_ast, type, opts) do
+  defmacro context({:get, _, [name_ast]}) do
+    opts = [action: :get]
+    build_assign_ast(:context, name_ast, :any, opts, __CALLER__)
+  end
+
+  defmacro context({:get, _, nil}) do
+    message = "no name defined for context get"
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+  end
+
+  # context set
+
+  defmacro context({:set, _, [name_ast, type, opts]}) when is_list(opts) do
     opts = Keyword.merge(opts, action: :set, to: __CALLER__.module)
     build_assign_ast(:context, name_ast, type, opts, __CALLER__)
   end
 
-  defmacro context(:get, _name_ast, _type, _opts) do
-    message = "cannot define the type of the assign when using action :get. " <>
-              "The type should be already defined by a parent component using action :set"
+  defmacro context({:set, _, [_name_ast, opts]}) when is_list(opts) do
+    message = "no type defined for context set. Type is required after the name."
     raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
   end
 
-  defmacro context(action, _name_ast, _type, _opts) do
-    message = "invalid context action. Expected :get or :set, got: #{inspect(action)}"
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
-  end
-
-  @doc false
-  defmacro context(:set, name_ast) do
+  defmacro context({:set, _, [name_ast, type]}) do
     opts = [action: :set, to: __CALLER__.module]
-    validate!(:context, name_ast, nil, opts, __CALLER__)
+    build_assign_ast(:context, name_ast, type, opts, __CALLER__)
   end
 
-  @doc false
-  defmacro context(:get, name_ast) do
-    opts = [action: :get]
-    validate!(:context, name_ast, :any, opts, __CALLER__)
+  defmacro context({:set, _, [_name_ast]}) do
+    message = "no type defined for context set. Type is required after the name."
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+  end
+
+  # invalid usage
+
+  defmacro context({_action, _, args}) when length(args) > 2 do
+    message = "invalid use of context. Usage: `context get name, opts`" <>
+              " or `context set name, type, opts \\ []`"
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+  end
+
+  defmacro context({action, _, _}) do
+    message = "invalid context action. Expected :get or :set, got: #{Macro.to_string(action)}"
+    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
   end
 
   @doc false
@@ -240,17 +276,21 @@ defmodule Surface.API do
     {:error, "invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}"}
   end
 
-  defp validate_type(_func, _name, nil) do
-    {:error, "action :set requires the type of the assign as third argument"}
-  end
+  # defp validate_type(_func, _name, nil) do
+  #   {:error, "action :set requires the type of the assign as third argument"}
+  # end
 
   defp validate_type(_func, _name, type) when type in @types do
     :ok
   end
 
   defp validate_type(func, name, type) do
-    message = "invalid type #{Macro.to_string(type)} for #{func} #{name}. Expected one " <>
-              "of #{inspect(@types)}. Use :any if the type is not listed"
+    message =
+      """
+      invalid type #{Macro.to_string(type)} for #{func} #{name}.
+      Expected one of #{inspect(@types)}.
+      Hint: Use :any if the type is not listed.\
+      """
     {:error, message}
   end
 
@@ -264,10 +304,9 @@ defmodule Surface.API do
   end
 
   defp validate_opts(func, name, type, opts) do
-    valid_opts = get_valid_opts(func, type, opts)
-
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
+         valid_opts <- get_valid_opts(func, type, opts),
          [] <- keys -- valid_opts ++ @private_opts do
       Enum.reduce_while(keys, :ok, fn key, _ ->
         case validate_opt(func, type, key, opts[key]) do
@@ -284,6 +323,7 @@ defmodule Surface.API do
           "Expected a keyword list of options, got: #{inspect(opts)}"}
 
       unknown_options ->
+        valid_opts = get_valid_opts(func, type, opts)
         {:error, unknown_options_message(valid_opts, unknown_options)}
     end
   end
