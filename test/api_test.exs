@@ -24,61 +24,120 @@ defmodule Surface.APITest do
     code = "property label, :unknown_type"
     message = ~r/code:4/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate type" do
     code = "property label, {a, b}"
     message = ~r/invalid type {a, b} for property label. Expected one of \[:any/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate options" do
     code = "property label, :string, {:a, :b}"
     message = ~r/invalid options for property label. Expected a keyword list of options, got: {:a, :b}/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate type options" do
     code = "data label, :string, a: 1"
     message = ~r/unknown option :a/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = "data label, :string, a: 1, b: 2"
     message = ~r/unknown options \[:a, :b\]/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :required" do
     code = "property label, :string, required: 1"
     message = ~r/invalid value for option :required. Expected a boolean, got: 1/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :values" do
     code = "property label, :string, values: 1"
     message = ~r/invalid value for option :values. Expected a list of values, got: 1/
 
-    assert_raise(CompileError, message, fn ->
-      eval(code)
-    end)
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate duplicate assigns" do
+    code = """
+    property label, :string
+    property label, :string
+    """
+
+    message =
+      ~r"""
+      cannot use name "label". \
+      There's already a property assign with the same name at line 4\
+      """
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    property label, :string
+    data label, :string
+    """
+
+    message = ~r/cannot use name "label". There's already a property/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    data label, :string
+    context :get, label, from: Surface.APITest.ContextSetter
+    """
+
+    message =
+      ~r"""
+      cannot use name "label". There's already a data assign with the same name at line 4.
+      Hint: you can use the :as option to set another name for the context assign.\
+      """
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    property form, :form
+    context :set, form, :form
+    """
+
+    message =
+      ~r"""
+      cannot use name "form". There's already a property assign with the same name at line 4.
+      Hint: if you only need this context assign in the child components, \
+      you can set option :scope as :only_children to solve the issue.\
+      """
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    context :set, form, :form
+    property form, :form
+    """
+
+    message = ~r/cannot use name "form". There's already a context/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "allow context :set with existing assign name when :scope is :only_children" do
+    code = """
+    property form, :form
+    context :set, form, :form, scope: :only_children
+    """
+
+    assert eval(code) == :ok
+  end
+
+  test "allow context :get with existing assign name when using :as" do
+    code = """
+    property form, :form
+    context :get, form, from: Surface.APITest.ContextSetter, as: :my_form
+    """
+
+    assert eval(code) == :ok
   end
 
   describe "property" do

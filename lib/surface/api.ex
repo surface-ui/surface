@@ -5,7 +5,7 @@ defmodule Surface.API do
           :datetime, :number, :integer, :decimal, :map, :fun, :atom, :module,
           :changeset, :form]
 
-  @private_opts [:action]
+  @private_opts [:action, :to]
 
   defmacro __using__([include: include]) do
     arities = %{
@@ -20,6 +20,8 @@ defmodule Surface.API do
       import unquote(__MODULE__), only: unquote(functions)
       @before_compile unquote(__MODULE__)
       @after_compile unquote(__MODULE__)
+
+      Module.register_attribute(__MODULE__, :assigns, accumulate: false)
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
@@ -37,52 +39,28 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
-    has_init_context? = function_exported?(env.module, :init_context, 1)
-    for var <- Module.get_attribute(env.module, :context, []) do
-      if Keyword.get(var.opts, :action) == :set && !has_init_context? do
-        message = "context assign \"#{var.name}\" not initialized. " <>
-                  "You should implement an init_context/1 callback and initialize its " <>
-                  "value by returning {:ok, #{var.name}: ...}"
-        Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
-      end
-    end
+    validate_has_init_context(env)
   end
 
   @doc "Defines a property for the component"
   defmacro property(name_ast, type, opts \\ []) do
-    validate(:property, name_ast, type, opts, __CALLER__)
-    property_ast(name_ast, type, opts, __CALLER__)
+    build_assign_ast(:property, name_ast, type, opts, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
   defmacro data(name_ast, type, opts \\ []) do
-    validate(:data, name_ast, type, opts, __CALLER__)
-    data_ast(name_ast, type, opts, __CALLER__)
-  end
-
-  @doc false
-  defmacro context(:set, name_ast) do
-    opts = [{:action, :set}]
-    validate(:context, name_ast, nil, opts, __CALLER__)
-  end
-
-  @doc false
-  defmacro context(:get, name_ast) do
-    opts = [action: :get]
-    validate(:context, name_ast, :any, opts, __CALLER__)
-    context_ast(name_ast, :any, opts, __CALLER__)
+    build_assign_ast(:data, name_ast, type, opts, __CALLER__)
   end
 
   @doc "Sets or retrieves a context assign"
   defmacro context(:get, name_ast, opts) when is_list(opts) do
     opts = [{:action, :get} | opts]
-    validate(:context, name_ast, :any, opts, __CALLER__)
-    context_ast(name_ast, :any, opts, __CALLER__)
+    build_assign_ast(:context, name_ast, :any, opts, __CALLER__)
   end
 
   defmacro context(:set, name_ast, opts) when is_list(opts) do
-    opts = [action: :set]
-    validate(:context, name_ast, nil, opts, __CALLER__)
+    opts = [action: :set, to: __CALLER__.module]
+    validate!(:context, name_ast, nil, opts, __CALLER__)
   end
 
   @doc """
@@ -92,9 +70,8 @@ defmodule Surface.API do
   defmacro context(action, name_ast, type, opts \\ [])
 
   defmacro context(:set, name_ast, type, opts) do
-    opts = [{:action, :set} | opts]
-    validate(:context, name_ast, type, opts, __CALLER__)
-    context_ast(name_ast, type, opts, __CALLER__)
+    opts = Keyword.merge(opts, action: :set, to: __CALLER__.module)
+    build_assign_ast(:context, name_ast, type, opts, __CALLER__)
   end
 
   defmacro context(:get, _name_ast, _type, _opts) do
@@ -106,6 +83,57 @@ defmodule Surface.API do
   defmacro context(action, _name_ast, _type, _opts) do
     message = "invalid context action. Expected :get or :set, got: #{inspect(action)}"
     raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+  end
+
+  @doc false
+  defmacro context(:set, name_ast) do
+    opts = [action: :set, to: __CALLER__.module]
+    validate!(:context, name_ast, nil, opts, __CALLER__)
+  end
+
+  @doc false
+  defmacro context(:get, name_ast) do
+    opts = [action: :get]
+    validate!(:context, name_ast, :any, opts, __CALLER__)
+  end
+
+  @doc false
+  def maybe_put_assign!(caller, assign) do
+    assign = %{assign | doc: pop_doc(caller.module)}
+    assigns = Module.get_attribute(caller.module, :assigns, %{})
+    name = Keyword.get(assign.opts, :as, assign.name)
+    existing_assign = assigns[name]
+
+    if Keyword.get(assign.opts, :scope) != :only_children do
+      if existing_assign do
+        message = "cannot use name \"#{assign.name}\". There's already " <>
+                  "a #{existing_assign.func} assign with the same name " <>
+                  "at line #{existing_assign.line}." <> suggestion_for_duplicated_assign(assign)
+        raise %CompileError{line: assign.line, file: caller.file, description: message}
+      else
+        assigns = Map.put(assigns, name, assign)
+        Module.put_attribute(caller.module, :assigns, assigns)
+      end
+    end
+    Module.put_attribute(caller.module, assign.func, assign)
+    assign
+  end
+
+  defp suggestion_for_duplicated_assign(%{func: :context, opts: opts}) do
+    "\nHint: " <>
+      case Keyword.get(opts, :action) do
+        :set ->
+          """
+          if you only need this context assign in the child components, \
+          you can set option :scope as :only_children to solve the issue.\
+          """
+        :get ->
+          "you can use the :as option to set another name for the context assign."
+      end
+  end
+
+  defp suggestion_for_duplicated_assign(_assign) do
+    ""
   end
 
   defp quoted_data_funcs(env) do
@@ -171,69 +199,25 @@ defmodule Surface.API do
     end
   end
 
-  defp property_ast(name_ast, type, opts, caller) do
+  defp build_assign_ast(func, name_ast, type, opts, caller) do
+    validate!(func, name_ast, type, opts, caller)
+
     {name, _, _} = name_ast
 
     quote do
-      doc =
-        case Module.get_attribute(__MODULE__, :doc) do
-          {_, doc} -> doc
-          _ -> nil
-        end
-      Module.delete_attribute(__MODULE__, :doc)
-
-      @property %{
-        name: unquote(name),
-        type: unquote(type),
-        doc: doc,
-        opts: unquote(opts),
-        opts_ast: unquote(Macro.escape(opts)),
-        line: unquote(caller.line),
-      }
-    end
-  end
-
-  defp data_ast(name_ast, type, opts, caller) do
-    {name, _, _} = name_ast
-
-    quote do
-      @data %{
+      unquote(__MODULE__).maybe_put_assign!(__ENV__, %{
+        func: unquote(func),
         name: unquote(name),
         type: unquote(type),
         doc: nil,
         opts: unquote(opts),
         opts_ast: unquote(Macro.escape(opts)),
-        line: unquote(caller.line),
-      }
+        line: unquote(caller.line)
+      })
     end
   end
 
-  defp context_ast(name_ast, type, opts, caller) do
-    {name, _, _} = name_ast
-    opts = Keyword.put_new(opts, :to, caller.module)
-
-    quote do
-      opts = unquote(opts)
-      name = unquote(name)
-      doc =
-        case Module.get_attribute(__MODULE__, :doc) do
-          {_, doc} -> doc
-          _ -> nil
-        end
-      Module.delete_attribute(__MODULE__, :doc)
-
-      @context %{
-        name: unquote(name),
-        type: unquote(type),
-        doc: doc,
-        opts: unquote(opts),
-        opts_ast: unquote(Macro.escape(opts)),
-        line: unquote(caller.line),
-      }
-    end
-  end
-
-  defp validate(func, name_ast, type, opts, caller) do
+  defp validate!(func, name_ast, type, opts, caller) do
     {evaluated_opts, _} = Code.eval_quoted(opts, [], caller)
     with {:ok, name} <- validate_name(func, name_ast),
          :ok <- validate_type(func, name, type),
@@ -295,8 +279,9 @@ defmodule Surface.API do
       end)
     else
       false ->
-        opts_str = Macro.to_string(opts)
-        {:error, "invalid options for #{func} #{name}. Expected a keyword list of options, got: #{opts_str}"}
+        {:error,
+          "invalid options for #{func} #{name}. " <>
+          "Expected a keyword list of options, got: #{inspect(opts)}"}
 
       unknown_options ->
         {:error, unknown_options_message(valid_opts, unknown_options)}
@@ -414,4 +399,26 @@ defmodule Surface.API do
     """
   end
 
+  defp validate_has_init_context(env) do
+    if !function_exported?(env.module, :init_context, 1) do
+      for var <- Module.get_attribute(env.module, :context, []) do
+        if Keyword.get(var.opts, :action) == :set do
+          message = "context assign \"#{var.name}\" not initialized. " <>
+                    "You should implement an init_context/1 callback and initialize its " <>
+                    "value by returning {:ok, #{var.name}: ...}"
+          Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
+        end
+      end
+    end
+  end
+
+  defp pop_doc(module) do
+    doc =
+      case Module.get_attribute(module, :doc) do
+        {_, doc} -> doc
+        _ -> nil
+      end
+    Module.delete_attribute(module, :doc)
+    doc
+  end
 end
