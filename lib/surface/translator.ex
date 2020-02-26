@@ -102,24 +102,26 @@ defmodule Surface.Translator do
   end
 
   defp prepare(nodes, caller) do
-    translator =
-      cond do
-        Module.open?(caller.module) ->
-          Module.get_attribute(caller.module, :translator)
-
-        function_exported?(caller.module, :translator, 0) ->
-          caller.module.translator()
-
-        true ->
-          nil
-      end
-
-    if translator &&
-       Code.ensure_compiled?(translator) &&
-       function_exported?(translator, :prepare, 2) do
+    with translator <- get_component_translator(caller.module),
+         {:module, _} <- Code.ensure_compiled(translator),
+         true <- function_exported?(translator, :prepare, 2) do
       translator.prepare(nodes, caller)
     else
-      nodes
+      _ ->
+        nodes
+    end
+  end
+
+  defp get_component_translator(module) do
+    cond do
+      Module.open?(module) ->
+        Module.get_attribute(module, :translator)
+
+      function_exported?(module, :translator, 0) ->
+        module.translator()
+
+      true ->
+        nil
     end
   end
 
