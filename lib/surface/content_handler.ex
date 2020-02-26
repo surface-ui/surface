@@ -56,7 +56,9 @@ defmodule Surface.ContentHandler do
 
   defp join_contents(assigns, size, args) do
     ~L"""
+    <%= if assigns[:inner_content] != nil do %>
     <%= for index <- 0..size-1 do %><%= assigns.inner_content.({:__default__, index, args}) %><% end %>
+    <% end %>
     """
   end
 end
