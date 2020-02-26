@@ -124,7 +124,7 @@ defmodule Surface.Translator do
   end
 
   defp prepend_context(parsed_code) do
-    ["<% context = assigns[:context] || %{} %><% _ = context %>" | parsed_code]
+    ["<% context = assigns[:__surface_context__] || %{} %><% _ = context %>" | parsed_code]
   end
 
   defp build_metadata([], _caller) do
@@ -218,7 +218,7 @@ defmodule Surface.Translator do
   defp validate_required_props(props, mod, mod_str, caller, line) do
     if function_exported?(mod, :__props__, 0) do
       existing_props = Enum.map(props, fn {key, _, _} -> String.to_atom(key) end)
-      required_props = for p <- mod.__props__(), p.required, do: p.name
+      required_props = for p <- mod.__props__(), Keyword.get(p.opts, :required, false), do: p.name
       missing_props = required_props -- existing_props
 
       for prop <- missing_props do

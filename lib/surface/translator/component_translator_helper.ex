@@ -15,22 +15,12 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     ["<% require ", mod_str, " %>"]
   end
 
-  def add_begin_context(mod, mod_str) do
-    begin_context =
-      if function_exported?(mod, :begin_context, 1) do
-        ["<% context = ", mod_str, ".begin_context(Map.put(props, :context, context)) %>"]
-      else
-        ""
-      end
-    [begin_context, "<% props = Map.put(props, :context, context) %>"]
+  def add_begin_context(_mod, mod_str) do
+    ["<% {props, context} = begin_context(props, context, ", mod_str, ") %>"]
   end
 
-  def add_end_context(mod, mod_str) do
-    if function_exported?(mod, :begin_context, 1) do
-      ["<% context = ", mod_str, ".end_context(props) %><% _ = context %>"]
-    else
-      ""
-    end
+  def add_end_context(_mod, mod_str) do
+    ["<% context = end_context(context, ", mod_str, ") %><% _ = context %>"]
   end
 
   def maybe_add_fallback_content(condition) do
@@ -46,9 +36,9 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         [lhs, _] <- [String.split(expr, "<-")],
         prop_info = module.__get_prop__(String.to_atom(name)),
         prop_info.type == :list,
-        prop_info.binding != nil,
+        binding = prop_info.opts[:binding],
         into: %{} do
-      {prop_info.binding, String.trim(lhs)}
+      {binding, String.trim(lhs)}
     end
   end
 
@@ -238,7 +228,10 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   defp classify_prop_name_and_args_by_group(mod, attributes) do
     bindings = find_bindings_from_lists(mod, attributes)
 
-    for %{name: name, group: group, use_bindings: use_bindings} <- mod.__props__(), into: %{} do
+    for %{name: name, opts: opts} <- mod.__props__(),
+        group = Keyword.get(opts, :group),
+        use_bindings = Keyword.get(opts, :use_bindings, []),
+        into: %{} do
       args =
         use_bindings
         |> Enum.map(&bindings[&1])

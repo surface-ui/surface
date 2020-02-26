@@ -59,8 +59,8 @@ defmodule Surface.LiveView do
 
   defp quoted_mount(env) do
     defaults =
-      for %{name: name, default: value} <- Module.get_attribute(env.module, :data) do
-        {name, value}
+      for %{name: name, opts: opts} <- Module.get_attribute(env.module, :data) do
+        {name, Keyword.get(opts, :default)}
       end
 
     if Module.defines?(env.module, {:mount, 3}) do
