@@ -1,5 +1,7 @@
 # Surface
 
+[![Hex.pm version](https://img.shields.io/hexpm/v/surface.svg?style=flat)](https://hex.pm/packages/surface)
+
 A component based library for **Phoenix LiveView**.
 
 Built on top of the new [LiveComponent](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html)
@@ -45,7 +47,7 @@ Then add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, git: "https://github.com/msaraiva/surface.git"}
+    {:surface, "~> 0.1.0-alpha.0"}
   ]
 end
 ```
