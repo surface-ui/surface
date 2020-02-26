@@ -175,6 +175,9 @@ at compile time. Currently, the following directives are supported:
   * `:if` - Conditionally render a tag (or component). The code will be rendered if the expression
     is evaluated to a truthy value.
 
+  * `:show` - Conditionally shows/hides an HTML tag, keeping the rendered alement in the DOM even
+    when the value is `false`.
+
   * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
     the values passed internally by the component when calling the `@content` function.
 
@@ -216,10 +219,6 @@ Here are some examples:
 ### Unknown property
 
 ![Example](images/unknown_property.png?raw=true)
-
-### Unhandled event
-
-![Example](images/unhandled_event.png?raw=true)
 
 ## Tooling
 
