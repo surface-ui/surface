@@ -1,10 +1,12 @@
 defmodule Surface.MixProject do
   use Mix.Project
 
+  @version "0.1.0-alpha.0"
+
   def project do
     [
       app: :surface,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -26,11 +28,7 @@ defmodule Surface.MixProject do
   defp deps do
     [
       {:nimble_parsec, "~> 0.5.0"},
-      {:phoenix, "~> 1.4.9"},
-      {:phoenix_pubsub, "~> 1.1"},
-      {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"},
       {:phoenix_live_view, "~> 0.8.0"},
       {:floki, "~> 0.25.0", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
@@ -38,6 +36,10 @@ defmodule Surface.MixProject do
   end
 
   defp docs do
-    [main: "Surface"]
+    [
+      main: "Surface",
+      source_ref: "v#{@version}",
+      source_url: "https://github.com/msaraiva/surface"
+    ]
   end
 end
