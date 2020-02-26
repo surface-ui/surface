@@ -28,8 +28,8 @@ defmodule Surface do
 
   To create a component you need to define a module and `use` one of the available component types:
 
-    * `Surface.Component` - A functional (stateless) component.
-    * `Surface.LiveComponent` - A live (stateless or stateful) component. A wrapper around `Phoenix.LiveComponent`.
+    * `Surface.Component` - A stateless component.
+    * `Surface.LiveComponent` - A live stateful component.
     * `Surface.LiveView` - A wrapper component around `Phoenix.LiveView`.
     * `Surface.DataComponent` - A component that serves as a customizable data holder for the parent component.
     * `Surface.MacroComponent` - A low-level component which is responsible for translating its own content at compile time.
@@ -66,8 +66,17 @@ defmodule Surface do
     * `:if` - Conditionally render a tag (or component). The code will be rendered if the expression
       is evaluated to a truthy value.
 
+    * `:show` - Conditionally shows/hides an HTML tag, keeping the rendered alement in the DOM even
+      when the value is `false`.
+
     * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
       the values passed internally by the component when calling the `@content` function.
+
+    * `:on-[event]` - Sets a `phx` event binding defining the component itself as the
+      default handler (target). This is the prefered way to use `phx` events in **Surface** as it can
+      properly handle properties of type `:event`. Available directives are: `:on-phx-click`,
+      `:on-phx-blur`, `:on-phx-focus`, `:on-phx-change`, `:on-phx-submit`, `:on-phx-keydown`
+      and `:on-phx-keyup`.
 
   ### Example
 
