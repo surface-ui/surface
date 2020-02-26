@@ -136,7 +136,7 @@ defmodule Surface.API do
   @doc false
   def maybe_put_assign!(caller, assign) do
     assign = %{assign | doc: pop_doc(caller.module)}
-    assigns = Module.get_attribute(caller.module, :assigns, %{})
+    assigns = Module.get_attribute(caller.module, :assigns) || %{}
     name = Keyword.get(assign.opts, :as, assign.name)
     existing_assign = assigns[name]
 
@@ -173,7 +173,7 @@ defmodule Surface.API do
   end
 
   defp quoted_data_funcs(env) do
-    data = Module.get_attribute(env.module, :data, [])
+    data = Module.get_attribute(env.module, :data) || []
 
     quote do
       @doc false
@@ -184,7 +184,7 @@ defmodule Surface.API do
   end
 
   defp quoted_property_funcs(env) do
-    props = Module.get_attribute(env.module, :property, [])
+    props = Module.get_attribute(env.module, :property) || []
     props_names = Enum.map(props, fn prop -> prop.name end)
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
 
@@ -207,7 +207,7 @@ defmodule Surface.API do
   end
 
   defp quoted_context_funcs(env) do
-    context = Module.get_attribute(env.module, :context, [])
+    context = Module.get_attribute(env.module, :context) || []
     {gets, sets} = Enum.split_with(context, fn c -> c.opts[:action] == :get end)
     sets_in_scope = Enum.filter(sets, fn var -> var.opts[:scope] != :only_children end)
     assigns = gets ++ sets_in_scope
@@ -441,7 +441,7 @@ defmodule Surface.API do
 
   defp validate_has_init_context(env) do
     if !function_exported?(env.module, :init_context, 1) do
-      for var <- Module.get_attribute(env.module, :context, []) do
+      for var <- Module.get_attribute(env.module, :context) || [] do
         if Keyword.get(var.opts, :action) == :set do
           message = "context assign \"#{var.name}\" not initialized. " <>
                     "You should implement an init_context/1 callback and initialize its " <>
