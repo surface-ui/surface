@@ -8,10 +8,12 @@ defmodule Surface.MixProject do
       app: :surface,
       version: @version,
       elixir: "~> 1.7",
+      description: "A component based library for Phoenix LiveView",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      docs: docs()
+      docs: docs(),
+      package: package()
     ]
   end
 
@@ -41,5 +43,12 @@ defmodule Surface.MixProject do
       source_ref: "v#{@version}",
       source_url: "https://github.com/msaraiva/surface"
     ]
+  end
+
+  defp package do
+    %{
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/msaraiva/surface"}
+    }
   end
 end
