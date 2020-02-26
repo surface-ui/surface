@@ -34,7 +34,6 @@ defmodule Surface.LiveView do
     quote do
       use Surface.BaseComponent, translator: Surface.Translator.LiveViewTranslator
       use Surface.API, include: [:property, :data]
-      use Surface.EventValidator
       import Phoenix.HTML
 
       @before_compile unquote(__MODULE__)

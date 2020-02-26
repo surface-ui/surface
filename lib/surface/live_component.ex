@@ -55,7 +55,6 @@ defmodule Surface.LiveComponent do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
       use Surface.API, include: [:property, :data, :context]
-      use Surface.EventValidator
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
