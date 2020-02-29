@@ -20,7 +20,7 @@ defmodule DataComponentTest do
   end
 
   defmodule InnerData do
-    use Surface.DataComponent
+    use Surface.DataComponent, name: "inner"
 
     property label, :string
   end
@@ -28,7 +28,8 @@ defmodule DataComponentTest do
   defmodule Outer do
     use Surface.LiveComponent
 
-    property inner, :children, group: InnerData
+    slot default
+    slot inner
 
     def render(assigns) do
       assigns = Map.put(assigns, :__surface_cid__, "outer")
@@ -47,7 +48,7 @@ defmodule DataComponentTest do
   end
 
   defmodule Column do
-    use Surface.DataComponent
+    use Surface.DataComponent, name: "cols"
 
     property title, :string, required: true
   end
@@ -56,7 +57,8 @@ defmodule DataComponentTest do
     use Surface.LiveComponent
 
     property items, :list, required: true, binding: :item
-    property cols, :children, group: Column, use_bindings: [:item]
+
+    slot cols, use_bindings: [:item]
 
     def render(assigns) do
       assigns = Map.put(assigns, :__surface_cid__, "table")

@@ -64,6 +64,8 @@ defmodule LiveComponentTest do
   defmodule InfoProvider do
     use Surface.LiveComponent
 
+    slot default, use_bindings: [:info]
+
     def render(assigns) do
       info = "Hi there!"
       ~H"""

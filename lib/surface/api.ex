@@ -1,7 +1,7 @@
 defmodule Surface.API do
   @moduledoc false
 
-  @types [:any, :css_class, :list, :event, :children, :boolean, :string, :date,
+  @types [:any, :css_class, :list, :event, :boolean, :string, :date,
           :datetime, :number, :integer, :decimal, :map, :fun, :atom, :module,
           :changeset, :form]
 
@@ -10,6 +10,7 @@ defmodule Surface.API do
   defmacro __using__([include: include]) do
     arities = %{
       property: [2, 3],
+      slot: [1, 2],
       data: [2, 3],
       context: [1]
     }
@@ -33,6 +34,7 @@ defmodule Surface.API do
     generate_docs(env)
     [
       quoted_property_funcs(env),
+      quoted_slot_funcs(env),
       quoted_data_funcs(env),
       quoted_context_funcs(env)
     ]
@@ -45,6 +47,11 @@ defmodule Surface.API do
   @doc "Defines a property for the component"
   defmacro property(name_ast, type, opts \\ []) do
     build_assign_ast(:property, name_ast, type, opts, __CALLER__)
+  end
+
+  @doc "Defines a slot for the component"
+  defmacro slot(name_ast, opts \\ []) do
+    build_assign_ast(:slot, name_ast, :any, opts, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
@@ -206,6 +213,29 @@ defmodule Surface.API do
     end
   end
 
+  defp quoted_slot_funcs(env) do
+    slots = Module.get_attribute(env.module, :slot) || []
+    slots_names = Enum.map(slots, fn slot -> slot.name end)
+    slots_by_name = for p <- slots, into: %{}, do: {p.name, p}
+
+    quote do
+      @doc false
+      def __slots__() do
+        unquote(Macro.escape(slots))
+      end
+
+      @doc false
+      def __validate_slot__(prop) do
+        prop in unquote(slots_names)
+      end
+
+      @doc false
+      def __get_slot__(name) do
+        Map.get(unquote(Macro.escape(slots_by_name)), name)
+      end
+    end
+  end
+
   defp quoted_context_funcs(env) do
     context = Module.get_attribute(env.module, :context) || []
     {gets, sets} = Enum.split_with(context, fn c -> c.opts[:action] == :get end)
@@ -276,10 +306,6 @@ defmodule Surface.API do
     {:error, "invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}"}
   end
 
-  # defp validate_type(_func, _name, nil) do
-  #   {:error, "action :set requires the type of the assign as third argument"}
-  # end
-
   defp validate_type(_func, _name, type) when type in @types do
     :ok
   end
@@ -332,16 +358,16 @@ defmodule Surface.API do
     [:required, :default, :binding]
   end
 
-  defp get_valid_opts(:property, :children, _opts) do
-    [:required, :group, :use_bindings]
-  end
-
   defp get_valid_opts(:property, _type, _opts) do
     [:required, :default, :values]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
     [:default, :values]
+  end
+
+  defp get_valid_opts(:slot, _type, _opts) do
+    [:required, :default, :use_bindings]
   end
 
   defp get_valid_opts(:context, _type, opts) do

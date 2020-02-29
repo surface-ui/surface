@@ -19,7 +19,12 @@ defmodule Surface.DataComponent do
   """
 
   defmacro __using__(opts \\ []) do
-    group = Keyword.get(opts, :group, __CALLER__.module)
+    slot_name = Keyword.get(opts, :name)
+
+    if !slot_name do
+      message = "slot name is required. Usage: use Surface.DataComponent, name: \"...\""
+      raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    end
 
     quote do
       use Surface.BaseComponent, translator: Surface.Translator.DataComponentTranslator
@@ -32,8 +37,8 @@ defmodule Surface.DataComponent do
         {:ok, assigns}
       end
 
-      def __group__ do
-        unquote(group)
+      def __slot_name__ do
+        unquote(String.to_atom(slot_name))
       end
 
       defoverridable data: 1

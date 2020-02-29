@@ -15,13 +15,13 @@ defmodule Surface.ContentHandler do
   end
 
   def init_contents(assigns) do
-    {%{__default__: default_group}, data_groups} =
+    {%{__default__: default_slot}, other_slots} =
       assigns
-      |> get_in([:__surface__, :groups])
+      |> get_in([:__surface__, :slots])
       |> Map.split([:__default__])
 
     props =
-      for {name, %{size: _size, binding: binding}} <- data_groups, into: %{} do
+      for {name, %{size: _size, binding: binding}} <- other_slots, into: %{} do
         value =
           assigns[name]
           |> Enum.with_index()
@@ -31,7 +31,7 @@ defmodule Surface.ContentHandler do
         {name, value}
       end
 
-    content = default_content_fun(assigns, default_group.size, binding: default_group.binding)
+    content = default_content_fun(assigns, default_slot.size, binding: default_slot.binding)
 
     assigns
     |> Map.merge(props)

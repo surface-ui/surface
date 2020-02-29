@@ -21,7 +21,7 @@ defmodule TranslatorTest do
   end
 
   defmodule Column do
-    use Surface.DataComponent
+    use Surface.DataComponent, name: "cols"
 
     property title, :string, required: true
   end
@@ -30,7 +30,8 @@ defmodule TranslatorTest do
     use Surface.Component
 
     property items, :list, binding: :item
-    property cols, :children, group: Column, use_bindings: [:item]
+
+    slot cols, use_bindings: [:item]
 
     def render(assigns) do
       ~H"""
@@ -42,7 +43,8 @@ defmodule TranslatorTest do
     use Surface.LiveComponent
 
     property items, :list
-    property cols, :children, group: Column
+
+    slot cols
 
     def render(assigns) do
       ~H"""

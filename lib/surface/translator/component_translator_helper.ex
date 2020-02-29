@@ -54,23 +54,23 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   def translate_children(mod, attributes, directives, children, caller) do
     opts = %{
       parent_args: find_bindings(directives),
-      prop_name_and_args_by_group: classify_prop_name_and_args_by_group(mod, attributes),
+      slots_with_args: get_slots_with_args(mod, attributes),
       caller: caller
     }
 
-    init_groups_meta = %{__default__: %{size: 0, binding: opts.parent_args != ""}}
+    init_slots_meta = %{__default__: %{size: 0, binding: opts.parent_args != ""}}
 
-    {groups_props, groups_meta, contents, _temp_contents, _opts} =
+    {slots_props, slots_meta, contents, _temp_contents, _opts} =
       children
-      |> Enum.reduce({%{}, init_groups_meta, [], [], opts}, &handle_child/2)
+      |> Enum.reduce({%{}, init_slots_meta, [], [], opts}, &handle_child/2)
       |> maybe_add_default_content()
 
     children_props =
-      for {prop_name, value} <- groups_props do
+      for {prop_name, value} <- slots_props do
         [to_string(prop_name), ": [", Enum.join(Enum.reverse(value), ", "), "]"]
       end
 
-    {children_props, inspect(groups_meta), Enum.reverse(contents)}
+    {children_props, inspect(slots_meta), Enum.reverse(contents)}
   end
 
   def translate_attributes(attributes, mod, mod_str, space, caller, opts \\ []) do
@@ -185,58 +185,57 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   defp handle_child({_, _, _, %{translator: DataComponentTranslator}} = child, acc) do
     {mod_str, attributes, children, %{module: module, space: space}} = child
-    {groups_props, groups_meta, contents, _, opts} = maybe_add_default_content(acc)
+    {slots_props, slots_meta, contents, _, opts} = maybe_add_default_content(acc)
 
-    group = module.__group__()
-    {prop_name, content_args} = opts.prop_name_and_args_by_group[group]
+    slot_name = module.__slot_name__()
+    content_args = opts.slots_with_args[slot_name]
 
-    groups_meta = Map.put_new(groups_meta, prop_name, %{size: 0})
-    meta = groups_meta[prop_name]
+    slots_meta = Map.put_new(slots_meta, slot_name, %{size: 0})
+    meta = slots_meta[slot_name]
     args = if content_args == "", do: "_args", else: content_args
-    content = ["<% {", inspect(prop_name), ", ", to_string(meta.size), ", ", args, "} -> %>", children]
-    groups_meta = Map.put(groups_meta, prop_name, %{size: meta.size + 1, binding: content_args != ""})
+    content = ["<% {", inspect(slot_name), ", ", to_string(meta.size), ", ", args, "} -> %>", children]
+    slots_meta = Map.put(slots_meta, slot_name, %{size: meta.size + 1, binding: content_args != ""})
 
-    groups_props = Map.put_new(groups_props, prop_name, [])
+    slots_props = Map.put_new(slots_props, slot_name, [])
     props = translate_attributes(attributes, module, mod_str, space, opts.caller)
-    groups_props = Map.update(groups_props, prop_name, [], &[props|&1])
+    slots_props = Map.update(slots_props, slot_name, [], &[props|&1])
 
-    {groups_props, groups_meta, [content | contents], [], opts}
+    {slots_props, slots_meta, [content | contents], [], opts}
   end
 
   defp handle_child(child, acc) do
-    {groups_props, groups_meta, contents, temp_contents, opts} = acc
-    {groups_props, groups_meta, contents, [child | temp_contents], opts}
+    {slots_props, slots_meta, contents, temp_contents, opts} = acc
+    {slots_props, slots_meta, contents, [child | temp_contents], opts}
   end
 
   defp maybe_add_default_content(acc) do
-    {groups_props, groups_meta, contents, temp_contents, opts} = acc
+    {slots_props, slots_meta, contents, temp_contents, opts} = acc
 
-    {groups_meta, contents} =
+    {slots_meta, contents} =
       if blank?(temp_contents) do
-        {groups_meta, [Enum.reverse(temp_contents) | contents]}
+        {slots_meta, [Enum.reverse(temp_contents) | contents]}
       else
-        meta = groups_meta[:__default__]
+        meta = slots_meta[:__default__]
         args = if opts.parent_args == "", do: "_args", else: opts.parent_args
         content = ["<% {:__default__, ", to_string(meta.size), ", ", args, "} -> %>", Enum.reverse(temp_contents)]
-        groups_meta = update_in(groups_meta, [:__default__, :size], &(&1 + 1))
-        {groups_meta, [content | contents]}
+        slots_meta = update_in(slots_meta, [:__default__, :size], &(&1 + 1))
+        {slots_meta, [content | contents]}
       end
 
-    {groups_props, groups_meta, contents, [], opts}
+    {slots_props, slots_meta, contents, [], opts}
   end
 
-  defp classify_prop_name_and_args_by_group(mod, attributes) do
+  defp get_slots_with_args(mod, attributes) do
     bindings = find_bindings_from_lists(mod, attributes)
 
-    for %{name: name, opts: opts} <- mod.__props__(),
-        group = Keyword.get(opts, :group),
+    for %{name: name, opts: opts} <- mod.__slots__(),
         use_bindings = Keyword.get(opts, :use_bindings, []),
         into: %{} do
       args =
         use_bindings
         |> Enum.map(&bindings[&1])
         |> Enum.join(", ")
-      {group, {name, args}}
+      {name, args}
     end
   end
 
