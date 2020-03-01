@@ -36,18 +36,20 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         [lhs, _] <- [String.split(expr, "<-")],
         prop_info = module.__get_prop__(String.to_atom(name)),
         prop_info.type == :list,
-        binding = prop_info.opts[:binding],
         into: %{} do
-      {binding, String.trim(lhs)}
+      {String.to_atom(name), String.trim(lhs)}
     end
   end
 
   defp find_bindings(attributes) do
     case Enum.find(attributes, fn attr -> match?({":bindings", _, _}, attr) end) do
       {":bindings", {:attribute_expr, [expr]}, _line} ->
-        String.trim(expr)
+        "[#{String.trim(expr)}]"
+        |> Code.string_to_quoted!
+        |> List.flatten
+        |> Enum.map(fn {k, v} -> {k, Macro.to_string(v)} end)
       _ ->
-        ""
+        []
     end
   end
 
@@ -58,7 +60,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       caller: caller
     }
 
-    init_slots_meta = %{__default__: %{size: 0, binding: opts.parent_args != ""}}
+    init_slots_meta = %{__default__: %{size: 0, binding: opts.parent_args != []}}
 
     {slots_props, slots_meta, contents, _temp_contents, _opts} =
       children
@@ -184,17 +186,21 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   def blank?(_), do: false
 
   defp handle_child({_, _, _, %{translator: DataComponentTranslator}} = child, acc) do
-    {mod_str, attributes, children, %{module: module, space: space}} = child
+    {mod_str, attributes, children, %{module: module, space: space, directives: directives}} = child
     {slots_props, slots_meta, contents, _, opts} = maybe_add_default_content(acc)
 
     slot_name = module.__slot_name__()
-    content_args = opts.slots_with_args[slot_name]
+    slot_args = opts.slots_with_args[slot_name]
+    # TODO: Validate bindings keys against slots_args keys
+    child_bindings = find_bindings(directives)
+
+    merged_args = Keyword.merge(slot_args, child_bindings)
+    args = args_to_map_string(merged_args)
 
     slots_meta = Map.put_new(slots_meta, slot_name, %{size: 0})
     meta = slots_meta[slot_name]
-    args = if content_args == "", do: "_args", else: content_args
     content = ["<% {", inspect(slot_name), ", ", to_string(meta.size), ", ", args, "} -> %>", children]
-    slots_meta = Map.put(slots_meta, slot_name, %{size: meta.size + 1, binding: content_args != ""})
+    slots_meta = Map.put(slots_meta, slot_name, %{size: meta.size + 1, binding: merged_args != []})
 
     slots_props = Map.put_new(slots_props, slot_name, [])
     props = translate_attributes(attributes, module, mod_str, space, opts.caller)
@@ -216,7 +222,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         {slots_meta, [Enum.reverse(temp_contents) | contents]}
       else
         meta = slots_meta[:__default__]
-        args = if opts.parent_args == "", do: "_args", else: opts.parent_args
+        args = args_to_map_string(opts.parent_args)
         content = ["<% {:__default__, ", to_string(meta.size), ", ", args, "} -> %>", Enum.reverse(temp_contents)]
         slots_meta = update_in(slots_meta, [:__default__, :size], &(&1 + 1))
         {slots_meta, [content | contents]}
@@ -229,14 +235,23 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     bindings = find_bindings_from_lists(mod, attributes)
 
     for %{name: name, opts: opts} <- mod.__slots__(),
-        use_bindings = Keyword.get(opts, :use_bindings, []),
+        args_list = Keyword.get(opts, :args, []),
         into: %{} do
       args =
-        use_bindings
-        |> Enum.map(&bindings[&1])
-        |> Enum.join(", ")
+        for %{name: name, generator: generator} <- args_list, generator do
+          {name, bindings[generator]}
+        end
       {name, args}
     end
+  end
+
+  defp args_to_map_string(args) do
+    map_content =
+      args
+      |> Enum.map(fn {k, v} -> "#{k}: #{v}" end )
+      |> Enum.join(", ")
+
+    ["%{", map_content, "}"]
   end
 
   defp translate_prop(key, value, spaces, comma) do

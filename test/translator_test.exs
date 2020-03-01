@@ -29,9 +29,9 @@ defmodule TranslatorTest do
   defmodule Grid do
     use Surface.Component
 
-    property items, :list, binding: :item
+    property items, :list
 
-    slot cols, use_bindings: [:item]
+    slot cols, args: [item: ^items]
 
     def render(assigns) do
       ~H"""

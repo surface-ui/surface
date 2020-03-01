@@ -39,19 +39,19 @@ defmodule Surface.ContentHandler do
   end
 
   defp data_content_fun(assigns, name, index, binding: true) do
-    fn args -> assigns.inner_content.({name, index, args}) end
+    fn args -> assigns.inner_content.({name, index, args_to_map(args)}) end
   end
 
   defp data_content_fun(assigns, name, index, binding: false) do
-    fn -> assigns.inner_content.({name, index, []}) end
+    fn -> assigns.inner_content.({name, index, %{}}) end
   end
 
   defp default_content_fun(assigns, size, binding: true) do
-    fn args -> join_contents(assigns, size, args) end
+    fn args -> join_contents(assigns, size, args_to_map(args)) end
   end
 
   defp default_content_fun(assigns, size, binding: false) do
-    fn -> join_contents(assigns, size, []) end
+    fn -> join_contents(assigns, size, %{}) end
   end
 
   defp join_contents(assigns, size, args) do
@@ -60,5 +60,20 @@ defmodule Surface.ContentHandler do
     <%= for index <- 0..size-1 do %><%= assigns.inner_content.({:__default__, index, args}) %><% end %>
     <% end %>
     """
+  end
+
+  defp args_to_map(args) do
+    if Keyword.keyword?(args) do
+      Map.new(args)
+    else
+      stacktrace =
+        self()
+        |> Process.info(:current_stacktrace)
+        |> elem(1)
+        |> Enum.drop(3)
+
+      message = "invalid slot argument. Expected a keyword list, got: #{inspect(args)}"
+      reraise(message, stacktrace)
+    end
   end
 end

@@ -51,7 +51,9 @@ defmodule Surface.API do
 
   @doc "Defines a slot for the component"
   defmacro slot(name_ast, opts \\ []) do
-    build_assign_ast(:slot, name_ast, :any, opts, __CALLER__)
+    {args_ast, opts} = Keyword.pop(opts, :args, [])
+    args = slot_args_ast_to_args(args_ast, __CALLER__)
+    build_assign_ast(:slot, name_ast, :any, [args: Macro.escape(args)] ++ opts, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
@@ -355,7 +357,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:property, :list, _opts) do
-    [:required, :default, :binding]
+    [:required, :default]
   end
 
   defp get_valid_opts(:property, _type, _opts) do
@@ -367,7 +369,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :default, :use_bindings]
+    [:required, :args]
   end
 
   defp get_valid_opts(:context, _type, opts) do
@@ -486,5 +488,18 @@ defmodule Surface.API do
       end
     Module.delete_attribute(module, :doc)
     doc
+  end
+
+  defp slot_args_ast_to_args(args_ast, caller) do
+    Enum.map(args_ast, fn
+      {name, {:^, _, [{generator, _, _}]}} ->
+        %{name: name, generator: generator}
+      name when is_atom(name) ->
+        %{name: name, generator: nil}
+      ast ->
+        message = "invalid slot argument #{Macro.to_string(ast)}. " <>
+                  "Expected an atom or a binding to a generator as `key: ^property_name`"
+        raise %CompileError{line: caller.line, file: caller.file, description: message}
+    end)
   end
 end

@@ -56,13 +56,13 @@ defmodule DataComponentTest do
   defmodule Grid do
     use Surface.LiveComponent
 
-    property items, :list, required: true, binding: :item
+    property items, :list, required: true
 
-    slot cols, use_bindings: [:item]
+    slot cols, args: [:info, item: ^items]
 
     def render(assigns) do
       assigns = Map.put(assigns, :__surface_cid__, "table")
-
+      info = "Some info from Grid"
       ~H"""
       <table>
         <tr>
@@ -72,7 +72,7 @@ defmodule DataComponentTest do
         </tr>
         <tr :for={{ item <- @items }}>
           <td :for={{ col <- @cols }}>
-            {{ col.inner_content.(item) }}
+            {{ col.inner_content.(item: item, info: info) }}
           </td>
         </tr>
       </table>
@@ -119,7 +119,7 @@ defmodule DataComponentTest do
     """
   end
 
-  test "render inner content" do
+  test "render inner content with parent bindings" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
     code =
       """
@@ -143,6 +143,34 @@ defmodule DataComponentTest do
       </tr><tr>
         <td><b>Id: 2</b></td>
         <td>Name: Second</td>
+      </tr>
+    </table>
+    """
+  end
+
+  test "render inner content renaming args" do
+    assigns = %{items: [%{id: 1, name: "First"}]}
+    code =
+      """
+      <Grid items={{ user <- @items }}>
+        <Column title="ID" :bindings={{ item: my_user }}>
+          <b>Id: {{ my_user.id }}</b>
+        </Column>
+        <Column title="NAME" :bindings={{ info: my_info }}>
+          Name: {{ user.name }}
+          Info: {{ my_info }}
+        </Column>
+      </Grid>
+      """
+
+    assert_html render_live(code, assigns) =~ """
+    <table surface-cid="table">
+      <tr>
+        <th>ID</th><th>NAME</th>
+      </tr><tr>
+        <td><b>Id: 1</b></td>
+        <td>Name: First
+        Info: Some info from Grid</td>
       </tr>
     </table>
     """

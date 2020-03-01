@@ -166,6 +166,39 @@ defmodule Surface.APITest do
     end
   end
 
+  describe "slot" do
+
+    test "validate name" do
+      code = "slot {a, b}"
+      message = ~r/invalid slot name. Expected a variable name, got: {a, b}/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate arg" do
+      code = "slot cols, args: [:info, {a, b}]"
+      message = ~r"""
+      invalid slot argument {a, b}. Expected an atom or a \
+      binding to a generator as `key: \^property_name`\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate unknown options" do
+      code = "slot cols, a: 1"
+      message = ~r/unknown option :a. Available options: \[:required, :args\]/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+  end
+
   describe "data" do
 
     test "validate name" do
