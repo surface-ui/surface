@@ -51,9 +51,7 @@ defmodule Surface.API do
 
   @doc "Defines a slot for the component"
   defmacro slot(name_ast, opts \\ []) do
-    {args_ast, opts} = Keyword.pop(opts, :args, [])
-    args = slot_args_ast_to_args(args_ast, __CALLER__)
-    build_assign_ast(:slot, name_ast, :any, [args: Macro.escape(args)] ++ opts, __CALLER__)
+    build_assign_ast(:slot, name_ast, :any, opts, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
@@ -268,7 +266,7 @@ defmodule Surface.API do
   end
 
   defp build_assign_ast(func, name_ast, type, opts, caller) do
-    validate!(func, name_ast, type, opts, caller)
+    evaluated_opts = validate!(func, name_ast, type, opts, caller)
 
     {name, _, _} = name_ast
 
@@ -278,7 +276,7 @@ defmodule Surface.API do
         name: unquote(name),
         type: unquote(type),
         doc: nil,
-        opts: unquote(opts),
+        opts: unquote(Macro.escape(evaluated_opts)),
         opts_ast: unquote(Macro.escape(opts)),
         line: unquote(caller.line)
       })
@@ -289,10 +287,10 @@ defmodule Surface.API do
     with {:ok, name} <- validate_name(func, name_ast),
          :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
-         {evaluated_opts, _} <- Code.eval_quoted(opts, [], caller),
+         {:ok, evaluated_opts} <- eval_opts_values(func, opts, caller),
          :ok <- validate_opts(func, type, evaluated_opts),
          :ok <- validate_required_opts(func, type, evaluated_opts) do
-      :ok
+      evaluated_opts
     else
       {:error, message} ->
         file = Path.relative_to_cwd(caller.file)
@@ -323,26 +321,6 @@ defmodule Surface.API do
     {:error, message}
   end
 
-  defp validate_required_opts(func, type, opts) do
-    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
-      [] ->
-        :ok
-      missing_opts ->
-        {:error, "the following options are required: #{inspect(missing_opts)}"}
-    end
-  end
-
-  defp validate_opts(func, type, opts) do
-    Enum.reduce_while(opts, :ok, fn {key, value}, _acc ->
-      case validate_opt(func, type, key, value) do
-        :ok ->
-          {:cont, :ok}
-        error ->
-          {:halt, error}
-      end
-    end)
-  end
-
   defp validate_opts_keys(func, name, type, opts) do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
@@ -358,6 +336,38 @@ defmodule Surface.API do
       unknown_options ->
         valid_opts = get_valid_opts(func, type, opts)
         {:error, unknown_options_message(valid_opts, unknown_options)}
+    end
+  end
+
+  defp eval_opts_values(func, opts, caller) do
+    Enum.reduce_while(opts, {:ok, []}, fn {key, value}, {:ok, acc} ->
+      case eval_opt_value(func, key, value, caller) do
+        {:ok, evaluated_value} ->
+          {:cont, {:ok, [{key, evaluated_value} | acc]}}
+
+        error ->
+          {:halt, error}
+      end
+    end)
+  end
+
+  defp validate_opts(func, type, opts) do
+    Enum.reduce_while(opts, :ok, fn {key, value}, _acc ->
+      case validate_opt(func, type, key, value) do
+        :ok ->
+          {:cont, :ok}
+        error ->
+          {:halt, error}
+      end
+    end)
+  end
+
+  defp validate_required_opts(func, type, opts) do
+    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
+      [] ->
+        :ok
+      missing_opts ->
+        {:error, "the following options are required: #{inspect(missing_opts)}"}
     end
   end
 
@@ -397,6 +407,26 @@ defmodule Surface.API do
 
   defp get_required_opts(_func, _type, _opts) do
     []
+  end
+
+  defp eval_opt_value(:slot, :args, args_ast, _caller) do
+    Enum.reduce_while(args_ast, {:ok, []}, fn
+      {name, {:^, _, [{generator, _, context}]}}, {:ok, acc} when context in [Elixir, nil] ->
+        {:cont, {:ok, [%{name: name, generator: generator} | acc]}}
+
+      name, {:ok, acc} when is_atom(name) ->
+        {:cont, {:ok, [%{name: name, generator: nil} | acc]}}
+
+      ast, _ ->
+        message = "invalid slot argument #{Macro.to_string(ast)}. " <>
+                  "Expected an atom or a binding to a generator as `key: ^property_name`"
+        {:halt, {:error, message}}
+    end)
+  end
+
+  defp eval_opt_value(_func, _key, value, caller) do
+    {evaluated_value, _} = Code.eval_quoted(value, [], caller)
+    {:ok, evaluated_value}
   end
 
   defp validate_opt(_func, _type, :required, value) when not is_boolean(value) do
@@ -493,18 +523,5 @@ defmodule Surface.API do
       end
     Module.delete_attribute(module, :doc)
     doc
-  end
-
-  defp slot_args_ast_to_args(args_ast, caller) do
-    Enum.map(args_ast, fn
-      {name, {:^, _, [{generator, _, _}]}} ->
-        %{name: name, generator: generator}
-      name when is_atom(name) ->
-        %{name: name, generator: nil}
-      ast ->
-        message = "invalid slot argument #{Macro.to_string(ast)}. " <>
-                  "Expected an atom or a binding to a generator as `key: ^property_name`"
-        raise %CompileError{line: caller.line, file: caller.file, description: message}
-    end)
   end
 end
