@@ -1,4 +1,4 @@
-defmodule Surface.DataComponent do
+defmodule Surface.Slot do
   @moduledoc """
   Defines a component that serves as a customizable data holder for the
   parent component.
@@ -6,7 +6,7 @@ defmodule Surface.DataComponent do
   ## Example
 
       defmodule Column do
-        use Surface.DataComponent
+        use Surface.Slot
 
         property title, :string
         property field, :string
@@ -22,12 +22,12 @@ defmodule Surface.DataComponent do
     slot_name = Keyword.get(opts, :name)
 
     if !slot_name do
-      message = "slot name is required. Usage: use Surface.DataComponent, name: ..."
+      message = "slot name is required. Usage: use Surface.Slot, name: ..."
       raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
     end
 
     quote do
-      use Surface.BaseComponent, translator: Surface.Translator.DataComponentTranslator
+      use Surface.BaseComponent, translator: Surface.Translator.SlotTranslator
       use Surface.API, include: [:property]
       import unquote(__MODULE__)
 

@@ -1,4 +1,4 @@
-defmodule DataComponentTest do
+defmodule SlotTest do
   use ExUnit.Case
   use Phoenix.ConnTest
   import ComponentTestHelper
@@ -20,7 +20,7 @@ defmodule DataComponentTest do
   end
 
   defmodule InnerData do
-    use Surface.DataComponent, name: "inner"
+    use Surface.Slot, name: "inner"
 
     property label, :string
   end
@@ -48,7 +48,7 @@ defmodule DataComponentTest do
   end
 
   defmodule Column do
-    use Surface.DataComponent, name: "cols"
+    use Surface.Slot, name: "cols"
 
     property title, :string, required: true
   end
@@ -178,17 +178,17 @@ defmodule DataComponentTest do
 
   test "raise compile error whne no slot name is defined" do
     id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestDataComponentWithoutSlotName_#{id}"
+    module = "TestSlotWithoutSlotName_#{id}"
 
     code = """
     defmodule #{module} do
-      use Surface.DataComponent
+      use Surface.Slot
 
       property label, :string
     end
     """
 
-    message = "code.exs:2: slot name is required. Usage: use Surface.DataComponent, name: ..."
+    message = "code.exs:2: slot name is required. Usage: use Surface.Slot, name: ..."
 
     assert_raise(CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})

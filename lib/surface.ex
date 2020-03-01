@@ -31,7 +31,7 @@ defmodule Surface do
     * `Surface.Component` - A stateless component.
     * `Surface.LiveComponent` - A live stateful component.
     * `Surface.LiveView` - A wrapper component around `Phoenix.LiveView`.
-    * `Surface.DataComponent` - A component that serves as a customizable data holder for the parent component.
+    * `Surface.Slot` - A component that serves as a typed slot.
     * `Surface.MacroComponent` - A low-level component which is responsible for translating its own content at compile time.
 
   ### Example

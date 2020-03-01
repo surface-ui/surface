@@ -1,4 +1,4 @@
-defmodule Surface.Translator.DataComponentTranslator do
+defmodule Surface.Translator.SlotTranslator do
   @moduledoc false
 
   alias Surface.Translator
