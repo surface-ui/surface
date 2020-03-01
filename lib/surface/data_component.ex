@@ -22,7 +22,7 @@ defmodule Surface.DataComponent do
     slot_name = Keyword.get(opts, :name)
 
     if !slot_name do
-      message = "slot name is required. Usage: use Surface.DataComponent, name: \"...\""
+      message = "slot name is required. Usage: use Surface.DataComponent, name: ..."
       raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
     end
 

@@ -175,4 +175,23 @@ defmodule DataComponentTest do
     </table>
     """
   end
+
+  test "raise compile error whne no slot name is defined" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestDataComponentWithoutSlotName_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.DataComponent
+
+      property label, :string
+    end
+    """
+
+    message = "code.exs:2: slot name is required. Usage: use Surface.DataComponent, name: ..."
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
+  end
 end
