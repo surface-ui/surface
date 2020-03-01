@@ -277,6 +277,10 @@ defmodule Surface do
     [phx_event, "=", quot(event), " phx-target=", "[surface-cid=", caller_cid, "]"]
   end
 
+  def on_phx_event(_phx_event, nil, _caller_cid) do
+    []
+  end
+
   def on_phx_event(phx_event, event, _caller_cid) do
     runtime_error "invalid value for \":on-#{phx_event}\". " <>
       "Expected a :string or :event, got: #{inspect(event)}"
