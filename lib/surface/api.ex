@@ -286,10 +286,11 @@ defmodule Surface.API do
   end
 
   defp validate!(func, name_ast, type, opts, caller) do
-    {evaluated_opts, _} = Code.eval_quoted(opts, [], caller)
     with {:ok, name} <- validate_name(func, name_ast),
          :ok <- validate_type(func, name, type),
-         :ok <- validate_opts(func, name, type, evaluated_opts),
+         :ok <- validate_opts_keys(func, name, type, opts),
+         {evaluated_opts, _} <- Code.eval_quoted(opts, [], caller),
+         :ok <- validate_opts(func, type, evaluated_opts),
          :ok <- validate_required_opts(func, type, evaluated_opts) do
       :ok
     else
@@ -331,19 +332,23 @@ defmodule Surface.API do
     end
   end
 
-  defp validate_opts(func, name, type, opts) do
+  defp validate_opts(func, type, opts) do
+    Enum.reduce_while(opts, :ok, fn {key, value}, _acc ->
+      case validate_opt(func, type, key, value) do
+        :ok ->
+          {:cont, :ok}
+        error ->
+          {:halt, error}
+      end
+    end)
+  end
+
+  defp validate_opts_keys(func, name, type, opts) do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
          [] <- keys -- valid_opts ++ @private_opts do
-      Enum.reduce_while(keys, :ok, fn key, _ ->
-        case validate_opt(func, type, key, opts[key]) do
-          :ok ->
-            {:cont, :ok}
-          error ->
-            {:halt, error}
-        end
-      end)
+      :ok
     else
       false ->
         {:error,
@@ -415,7 +420,7 @@ defmodule Surface.API do
     {:error, "invalid value for option :as. Expected an atom, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _type, _opts, _key) do
+  defp validate_opt(_func, _type, _key, _value) do
     :ok
   end
 
