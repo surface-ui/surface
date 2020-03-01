@@ -149,6 +149,21 @@ defmodule Surface.EventsTest do
     """
   end
 
+  test "passing event as nil does not render phx-*" do
+    code =
+      """
+      <div>
+        <Button id="button_id" click={{ nil }}/>
+      </div>
+      """
+
+    html = render_live(code)
+
+    assert html =~ "<button"
+    refute html =~ "phx-click"
+    refute html =~ "phx-target"
+  end
+
   test "raise error when passing an :event into a phx-* binding" do
 
     code =
