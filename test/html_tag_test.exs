@@ -76,6 +76,30 @@ defmodule HtmlTagTest do
       <div class="default1 default2 prop1 prop3"></div>
       """
     end
+
+    test "css class with periods in names" do
+      assigns = %{value1: true, value2: false, value3: true}
+      code =
+        ~H"""
+        <div class={{ "default.1", "default.2", "prop.1": @value1, prop2: @value2, prop3: @value3 }}/>
+        """
+
+      assert render_static(code) =~ """
+      <div class="default.1 default.2 prop.1 prop3"></div>
+      """
+    end
+
+    test "css class with underscores in names" do
+      assigns = %{value1: true, value2: false, value3: true}
+      code =
+        ~H"""
+        <div class={{ "default__1", "default__2", prop__1: @value1, prop2: @value2, prop3: @value3 }}/>
+        """
+
+      assert render_static(code) =~ """
+      <div class="default__1 default__2 prop__1 prop3"></div>
+      """
+    end
   end
 
   test "boolean attributes" do

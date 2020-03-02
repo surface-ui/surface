@@ -305,8 +305,8 @@ defmodule Surface do
   defp to_kebab_case(value) do
     value
     |> to_string()
-    |> Macro.underscore()
-    |> String.replace("_", "-")
+    |> String.replace(~r/([a-z])([A-Z])/, "\\1-\\2")
+    |> String.downcase()
   end
 
   defp runtime_error(message) do
