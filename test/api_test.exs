@@ -177,10 +177,10 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "validate arg" do
-      code = "slot cols, args: [:info, {a, b}]"
+    test "validate slot props" do
+      code = "slot cols, props: [:info, {a, b}]"
       message = ~r"""
-      invalid slot argument {a, b}. Expected an atom or a \
+      invalid slot prop {a, b}. Expected an atom or a \
       binding to a generator as `key: \^property_name`\
       """
 
@@ -191,7 +191,7 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :args\]/
+      message = ~r/unknown option :a. Available options: \[:required, :props\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

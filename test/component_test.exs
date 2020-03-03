@@ -48,7 +48,7 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  defmodule OuterWithNamedBindings do
+  defmodule OuterWithSlotProps do
     use Surface.Component
 
     def render(assigns) do
@@ -81,14 +81,14 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  defmodule ViewWithNamedBindings do
+  defmodule ViewWithSlotProps do
     use Surface.LiveView
 
     def render(assigns) do
       ~H"""
-      <OuterWithNamedBindings :bindings={{ info: my_info }}>
+      <OuterWithSlotProps :let={{ info: my_info }}>
         {{ my_info }}
-      </OuterWithNamedBindings>
+      </OuterWithSlotProps>
       """
     end
   end
@@ -114,8 +114,8 @@ defmodule Surface.ComponentTest do
       """
     end
 
-    test "render content with named bindings" do
-      {:ok, _view, html} = live_isolated(build_conn(), ViewWithNamedBindings)
+    test "render content with slot props" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithSlotProps)
 
       assert_html html =~ """
       <div>
@@ -150,12 +150,12 @@ defmodule Surface.ComponentTest do
       """
     end
 
-    test "render content with named bindings" do
+    test "render content with slot props" do
       code =
         """
-        <OuterWithNamedBindings :bindings={{ info: my_info }}>
+        <OuterWithSlotProps :let={{ info: my_info }}>
           {{ my_info }}
-        </OuterWithNamedBindings>
+        </OuterWithSlotProps>
         """
 
       assert render_live(code) =~ """

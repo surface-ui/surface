@@ -69,8 +69,8 @@ defmodule Surface do
     * `:show` - Conditionally shows/hides an HTML tag, keeping the rendered alement in the DOM even
       when the value is `false`.
 
-    * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
-      the values passed internally by the component when calling the `@content` function.
+    * `:let` - Binds the input props passed by the slot when calling the `inner_content` function to
+      the current scope.
 
     * `:on-[event]` - Sets a `phx` event binding defining the component itself as the
       default handler (target). This is the prefered way to use `phx` events in **Surface** as it can

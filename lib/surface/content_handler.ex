@@ -72,7 +72,7 @@ defmodule Surface.ContentHandler do
         |> elem(1)
         |> Enum.drop(3)
 
-      message = "invalid slot argument. Expected a keyword list, got: #{inspect(args)}"
+      message = "invalid slot props. Expected a keyword list, got: #{inspect(args)}"
       reraise(message, stacktrace)
     end
   end

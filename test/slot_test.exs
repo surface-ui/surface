@@ -58,7 +58,7 @@ defmodule SlotTest do
 
     property items, :list, required: true
 
-    slot cols, args: [:info, item: ^items]
+    slot cols, props: [:info, item: ^items]
 
     def render(assigns) do
       assigns = Map.put(assigns, :__surface_cid__, "table")
@@ -80,7 +80,7 @@ defmodule SlotTest do
     end
   end
 
-  test "render inner content with no bindings" do
+  test "render inner content without slot props" do
     code =
       """
       <Outer>
@@ -119,7 +119,7 @@ defmodule SlotTest do
     """
   end
 
-  test "render inner content with parent bindings" do
+  test "render inner content with slot props containing parent bindings" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
     code =
       """
@@ -148,15 +148,15 @@ defmodule SlotTest do
     """
   end
 
-  test "render inner content renaming args" do
+  test "render inner content renaming slot props" do
     assigns = %{items: [%{id: 1, name: "First"}]}
     code =
       """
       <Grid items={{ user <- @items }}>
-        <Column title="ID" :bindings={{ item: my_user }}>
+        <Column title="ID" :let={{ item: my_user }}>
           <b>Id: {{ my_user.id }}</b>
         </Column>
-        <Column title="NAME" :bindings={{ info: my_info }}>
+        <Column title="NAME" :let={{ info: my_info }}>
           Name: {{ user.name }}
           Info: {{ my_info }}
         </Column>
@@ -176,22 +176,22 @@ defmodule SlotTest do
     """
   end
 
-  test "raise compile error for undefined bindings" do
+  test "raise compile error for undefined slot props" do
     assigns = %{items: [%{id: 1, name: "First"}]}
     code =
       """
       <Grid items={{ user <- @items }}>
-        <Column title="ID" :bindings={{ item: my_user, non_existing1: 1, non_existing2: 2 }}>
+        <Column title="ID" :let={{ item: my_user, non_existing1: 1, non_existing2: 2 }}>
           <b>Id: {{ my_user.id }}</b>
         </Column>
       </Grid>
       """
 
     message = """
-    code:2: undefined slot variable. Expected any of [:item, :info], got: \
+    code:2: undefined slot prop. Expected any of [:item, :info], got: \
     [:item, :non_existing1, :non_existing2].
-    Hint: Define all accepted variables of the slot using the :args option, \
-    e.g. `slot slot_name, args: [:arg1, :arg2]\
+    Hint: Define all input props of the slot using the :props option, \
+    e.g. `slot slot_name, props: [:prop1, :prop2]\
     """
 
     assert_raise(CompileError, message, fn ->

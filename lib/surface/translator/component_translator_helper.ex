@@ -41,9 +41,9 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  defp find_bindings(attributes) do
-    case Enum.find(attributes, fn attr -> match?({":bindings", _, _}, attr) end) do
-      {":bindings", {:attribute_expr, [expr]}, %{line: line}} ->
+  defp find_let_bindings(attributes) do
+    case Enum.find(attributes, fn attr -> match?({":let", _, _}, attr) end) do
+      {":let", {:attribute_expr, [expr]}, %{line: line}} ->
         bindings =
           "[#{String.trim(expr)}]"
           |> Code.string_to_quoted!
@@ -56,7 +56,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   end
 
   def translate_children(mod, attributes, directives, children, caller) do
-    {parent_bindings, _line} = find_bindings(directives)
+    {parent_bindings, _line} = find_let_bindings(directives)
     opts = %{
       parent_args: parent_bindings,
       slots_with_args: get_slots_with_args(mod, attributes),
@@ -197,8 +197,8 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     slot_args = opts.slots_with_args[slot_name]
     slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} ->  v end)
 
-    {child_bindings, line} = find_bindings(directives)
-    validate_child_bindings!(child_bindings, slot_args, opts.caller, line)
+    {child_bindings, line} = find_let_bindings(directives)
+    validate_let_bindings!(child_bindings, slot_args, opts.caller, line)
 
     merged_args = Keyword.merge(slot_args_with_generators, child_bindings)
     args = args_to_map_string(merged_args)
@@ -241,7 +241,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     bindings = find_bindings_from_lists(mod, attributes)
 
     for %{name: name, opts: opts} <- mod.__slots__(),
-        args_list = Keyword.get(opts, :args, []),
+        args_list = Keyword.get(opts, :props, []),
         into: %{} do
       args =
         for %{name: name, generator: generator} <- args_list do
@@ -285,17 +285,17 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  defp validate_child_bindings!(child_bindings, slot_args, caller, line) do
+  defp validate_let_bindings!(child_bindings, slot_args, caller, line) do
     child_bindings_keys = Keyword.keys(child_bindings)
     slot_args_keys = Keyword.keys(slot_args)
     undefined_keys = child_bindings_keys -- slot_args_keys
 
     if undefined_keys != [] do
       message = """
-      undefined slot variable. Expected any of #{inspect(slot_args_keys)}, \
+      undefined slot prop. Expected any of #{inspect(slot_args_keys)}, \
       got: #{inspect(child_bindings_keys)}.
-      Hint: Define all accepted variables of the slot using the :args option, \
-      e.g. `slot slot_name, args: [:arg1, :arg2]\
+      Hint: Define all input props of the slot using the :props option, \
+      e.g. `slot slot_name, props: [:prop1, :prop2]\
       """
       raise %CompileError{line: caller.line + line, file: caller.file, description: message}
     end

@@ -384,7 +384,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :args]
+    [:required, :props]
   end
 
   defp get_valid_opts(:context, _type, opts) do
@@ -409,7 +409,7 @@ defmodule Surface.API do
     []
   end
 
-  defp eval_opt_value(:slot, :args, args_ast, _caller) do
+  defp eval_opt_value(:slot, :props, args_ast, _caller) do
     Enum.reduce_while(args_ast, {:ok, []}, fn
       {name, {:^, _, [{generator, _, context}]}}, {:ok, acc} when context in [Elixir, nil] ->
         {:cont, {:ok, [%{name: name, generator: generator} | acc]}}
@@ -418,7 +418,7 @@ defmodule Surface.API do
         {:cont, {:ok, [%{name: name, generator: nil} | acc]}}
 
       ast, _ ->
-        message = "invalid slot argument #{Macro.to_string(ast)}. " <>
+        message = "invalid slot prop #{Macro.to_string(ast)}. " <>
                   "Expected an atom or a binding to a generator as `key: ^property_name`"
         {:halt, {:error, message}}
     end)

@@ -31,7 +31,7 @@ defmodule TranslatorTest do
 
     property items, :list
 
-    slot cols, args: [item: ^items]
+    slot cols, props: [item: ^items]
 
     def render(assigns) do
       ~H"""

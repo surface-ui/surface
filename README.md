@@ -181,8 +181,8 @@ at compile time. Currently, the following directives are supported:
   * `:show` - Conditionally shows/hides an HTML tag, keeping the rendered alement in the DOM even
     when the value is `false`.
 
-  * `:bindings` - Defines the name of the variables (bindings) in the current scope that represent
-    the values passed internally by the component when calling the `@content` function.
+  * `:let` - Binds the input props passed by the slot when calling the `inner_content` function to
+    the current scope.
 
   * `:on-[event]` - Sets a `phx` event binding defining the component itself as the
     default handler (target). This is the prefered way to use `phx` events in **Surface** as it can
@@ -243,7 +243,7 @@ Some experimental work on tooling around the library has been done. Here's a few
 Having a standard way of defining components with typed properties allows us to
 enhance tools that introspect information from modules. One already discussed was
 the possibility to have `ex_doc` query that information to provide standard
-documentation for properties, events, bindings, etc.
+documentation for properties, events, slots, etc.
 
 ## License
 

@@ -16,7 +16,7 @@ defmodule Surface.Translator do
 
   @tag_directives [":for", ":if", ":show", ":debug"]
 
-  @component_directives [":for", ":if", ":bindings", ":debug"]
+  @component_directives [":for", ":if", ":let", ":debug"]
 
   defmodule ParseError do
     defexception file: "", line: 0, message: "error parsing HTML/Surface"
@@ -305,7 +305,7 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":bindings", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
+  defp handle_directive({":let", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
     parts
   end
 
