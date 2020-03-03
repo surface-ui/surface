@@ -43,19 +43,22 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   defp find_bindings(attributes) do
     case Enum.find(attributes, fn attr -> match?({":bindings", _, _}, attr) end) do
-      {":bindings", {:attribute_expr, [expr]}, _line} ->
-        "[#{String.trim(expr)}]"
-        |> Code.string_to_quoted!
-        |> List.flatten
-        |> Enum.map(fn {k, v} -> {k, Macro.to_string(v)} end)
+      {":bindings", {:attribute_expr, [expr]}, %{line: line}} ->
+        bindings =
+          "[#{String.trim(expr)}]"
+          |> Code.string_to_quoted!
+          |> List.flatten
+          |> Enum.map(fn {k, v} -> {k, Macro.to_string(v)} end)
+        {bindings, line}
       _ ->
-        []
+        {[], nil}
     end
   end
 
   def translate_children(mod, attributes, directives, children, caller) do
+    {parent_bindings, _line} = find_bindings(directives)
     opts = %{
-      parent_args: find_bindings(directives),
+      parent_args: parent_bindings,
       slots_with_args: get_slots_with_args(mod, attributes),
       caller: caller
     }
@@ -186,15 +189,18 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   def blank?(_), do: false
 
   defp handle_child({_, _, _, %{translator: SlotTranslator}} = child, acc) do
-    {mod_str, attributes, children, %{module: module, space: space, directives: directives}} = child
+    {mod_str, attributes, children, meta} = child
+    %{module: module, space: space, directives: directives} = meta
     {slots_props, slots_meta, contents, _, opts} = maybe_add_default_content(acc)
 
     slot_name = module.__slot_name__()
     slot_args = opts.slots_with_args[slot_name]
-    # TODO: Validate bindings keys against slots_args keys
-    child_bindings = find_bindings(directives)
+    slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} ->  v end)
 
-    merged_args = Keyword.merge(slot_args, child_bindings)
+    {child_bindings, line} = find_bindings(directives)
+    validate_child_bindings!(child_bindings, slot_args, opts.caller, line)
+
+    merged_args = Keyword.merge(slot_args_with_generators, child_bindings)
     args = args_to_map_string(merged_args)
 
     slots_meta = Map.put_new(slots_meta, slot_name, %{size: 0})
@@ -238,7 +244,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         args_list = Keyword.get(opts, :args, []),
         into: %{} do
       args =
-        for %{name: name, generator: generator} <- args_list, generator do
+        for %{name: name, generator: generator} <- args_list do
           {name, bindings[generator]}
         end
       {name, args}
@@ -276,6 +282,22 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
       [space1, space2] ->
         [space1, key, ": ", rhs, comma, space2]
+    end
+  end
+
+  defp validate_child_bindings!(child_bindings, slot_args, caller, line) do
+    child_bindings_keys = Keyword.keys(child_bindings)
+    slot_args_keys = Keyword.keys(slot_args)
+    undefined_keys = child_bindings_keys -- slot_args_keys
+
+    if undefined_keys != [] do
+      message = """
+      undefined slot variable. Expected any of #{inspect(slot_args_keys)}, \
+      got: #{inspect(child_bindings_keys)}.
+      Hint: Define all accepted variables of the slot using the :args option, \
+      e.g. `slot slot_name, args: [:arg1, :arg2]\
+      """
+      raise %CompileError{line: caller.line + line, file: caller.file, description: message}
     end
   end
 end

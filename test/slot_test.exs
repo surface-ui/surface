@@ -176,7 +176,30 @@ defmodule SlotTest do
     """
   end
 
-  test "raise compile error whne no slot name is defined" do
+  test "raise compile error for undefined bindings" do
+    assigns = %{items: [%{id: 1, name: "First"}]}
+    code =
+      """
+      <Grid items={{ user <- @items }}>
+        <Column title="ID" :bindings={{ item: my_user, non_existing1: 1, non_existing2: 2 }}>
+          <b>Id: {{ my_user.id }}</b>
+        </Column>
+      </Grid>
+      """
+
+    message = """
+    code:2: undefined slot variable. Expected any of [:item, :info], got: \
+    [:item, :non_existing1, :non_existing2].
+    Hint: Define all accepted variables of the slot using the :args option, \
+    e.g. `slot slot_name, args: [:arg1, :arg2]\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code, assigns)
+    end)
+  end
+
+  test "raise compile error when no slot name is defined" do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module = "TestSlotWithoutSlotName_#{id}"
 
