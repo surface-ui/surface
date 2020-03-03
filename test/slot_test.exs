@@ -20,7 +20,7 @@ defmodule SlotTest do
   end
 
   defmodule InnerData do
-    use Surface.Slot, name: "inner"
+    use Surface.Component, slot: "inner"
 
     property label, :string
   end
@@ -48,9 +48,11 @@ defmodule SlotTest do
   end
 
   defmodule Column do
-    use Surface.Slot, name: "cols"
+    use Surface.Component, slot: "cols"
 
     property title, :string, required: true
+
+    def render(assigns), do: ~H()
   end
 
   defmodule Grid do
@@ -196,79 +198,6 @@ defmodule SlotTest do
 
     assert_raise(CompileError, message, fn ->
       render_live(code, assigns)
-    end)
-  end
-
-  test "raise compile error when no slot name is defined" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestSlotWithoutSlotName_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Surface.Slot
-
-      property label, :string
-    end
-    """
-
-    message = "code.exs:2: slot name is required. Usage: use Surface.Slot, name: ..."
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-    end)
-  end
-
-  test "raise compile error when a slot prop is bound to a non-existing property" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestSlotWithoutSlotName_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Surface.Component
-
-      property label, :string
-      property items, :list
-
-      slot default, props: [item: ^unknown]
-
-      def render(assigns), do: ~H()
-    end
-    """
-
-    message = """
-    code.exs:7: cannot bind slot prop `item` to property `unknown`. \
-    Expected a existing property after `^`, got: an undefined property `unknown`.
-    Hint: Existing properties are [:items, :label]\
-    """
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-    end)
-  end
-
-  test "raise compile error when a slot prop is bound to a property of type other than :list" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestSlotWithoutSlotName_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Surface.Component
-
-      property label, :string
-
-      slot default, props: [item: ^label]
-
-      def render(assigns), do: ~H()
-    end
-    """
-
-    message = """
-    code.exs:6: cannot bind slot prop `item` to property `label`. \
-    Expected a property of type :list after `^`, got: a property of type :string\
-    """
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
 end

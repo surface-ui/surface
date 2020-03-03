@@ -3,13 +3,15 @@ defmodule Surface.ContentHandler do
 
   import Phoenix.LiveView.Helpers, only: [sigil_L: 2]
 
-  defmacro __before_compile__(_env) do
-    quote do
-      defoverridable render: 1
+  defmacro __before_compile__(env) do
+    if Module.defines?(env.module, {:render, 1}) do
+      quote do
+        defoverridable render: 1
 
-      def render(assigns) do
-        assigns = unquote(__MODULE__).init_contents(assigns)
-        super(assigns)
+        def render(assigns) do
+          assigns = unquote(__MODULE__).init_contents(assigns)
+          super(assigns)
+        end
       end
     end
   end

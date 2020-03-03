@@ -93,6 +93,25 @@ defmodule Surface.ComponentTest do
     end
   end
 
+  test "raise compile error if option :slot is not a string" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestSlotWithoutSlotName_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component, slot: {1, 2}
+
+      property label, :string
+    end
+    """
+
+    message = "code.exs:2: invalid value for option :slot. Expected a string, got: {1, 2}"
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
+  end
+
   describe "With LiveView" do
     test "render stateless component" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithStateless)

@@ -21,7 +21,7 @@ defmodule TranslatorTest do
   end
 
   defmodule Column do
-    use Surface.Slot, name: "cols"
+    use Surface.Component, slot: "cols"
 
     property title, :string, required: true
   end
