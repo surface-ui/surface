@@ -41,7 +41,13 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
-    validate_has_init_context(env)
+    if !function_exported?(env.module, :init_context, 1) do
+      validate_has_init_context(env)
+    end
+
+    if function_exported?(env.module, :__slots__, 0) do
+      validate_slot_props_bindings!(env)
+    end
   end
 
   @doc "Defines a property for the component"
@@ -503,14 +509,44 @@ defmodule Surface.API do
   end
 
   defp validate_has_init_context(env) do
-    if !function_exported?(env.module, :init_context, 1) do
-      for var <- Module.get_attribute(env.module, :context) || [] do
-        if Keyword.get(var.opts, :action) == :set do
-          message = "context assign \"#{var.name}\" not initialized. " <>
-                    "You should implement an init_context/1 callback and initialize its " <>
-                    "value by returning {:ok, #{var.name}: ...}"
-          Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
-        end
+    for var <- Module.get_attribute(env.module, :context) || [] do
+      if Keyword.get(var.opts, :action) == :set do
+        message = "context assign \"#{var.name}\" not initialized. " <>
+                  "You should implement an init_context/1 callback and initialize its " <>
+                  "value by returning {:ok, #{var.name}: ...}"
+        Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
+      end
+    end
+  end
+
+  defp validate_slot_props_bindings!(env) do
+    for slot <- env.module.__slots__(),
+        slot_props = Keyword.get(slot.opts, :props, []),
+        %{name: name, generator: generator} <- slot_props,
+        generator != nil do
+      case env.module.__get_prop__(generator) do
+        nil ->
+          existing_properties_names = env.module.__props__() |> Enum.map(& &1.name)
+          message =
+            """
+            cannot bind slot prop `#{name}` to property `#{generator}`. \
+            Expected a existing property after `^`, \
+            got: an undefined property `#{generator}`.
+            Hint: Existing properties are #{inspect(existing_properties_names)}\
+            """
+          raise %CompileError{line: slot.line, file: env.file, description: message}
+
+        %{type: type} when type != :list ->
+          message =
+            """
+            cannot bind slot prop `#{name}` to property `#{generator}`. \
+            Expected a property of type :list after `^`, \
+            got: a property of type #{inspect(type)}\
+            """
+          raise %CompileError{line: slot.line, file: env.file, description: message}
+
+        _ ->
+          :ok
       end
     end
   end

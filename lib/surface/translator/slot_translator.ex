@@ -11,4 +11,3 @@ defmodule Surface.Translator.SlotTranslator do
     ComponentTranslator.translate(node, caller)
   end
 end
-
