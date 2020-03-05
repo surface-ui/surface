@@ -47,6 +47,32 @@ defmodule SlotTest do
     end
   end
 
+  defmodule OuterWithDefaultSlotAndProps do
+    use Surface.Component
+
+    slot default, props: [:info]
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        {{ @inner_content.(info: "Info from slot") }}
+      </div>
+      """
+    end
+  end
+
+  defmodule OuterWithoutDefaultSlot do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        {{ @inner_content.(info: "Info from slot") }}
+      </div>
+      """
+    end
+  end
+
   defmodule Column do
     use Surface.Component, slot: "cols"
 
@@ -183,21 +209,112 @@ defmodule SlotTest do
     code =
       """
       <Grid items={{ user <- @items }}>
-        <Column title="ID" :let={{ item: my_user, non_existing1: 1, non_existing2: 2 }}>
+        <Column title="ID" :let={{ item: my_user, non_existing: 1}}>
           <b>Id: {{ my_user.id }}</b>
         </Column>
       </Grid>
       """
 
     message = """
-    code:2: undefined slot prop. Expected any of [:item, :info], got: \
-    [:item, :non_existing1, :non_existing2].
-    Hint: Define all input props of the slot using the :props option, \
-    e.g. `slot slot_name, props: [:prop1, :prop2]\
+    code:2: undefined prop `:non_existing` for slot `cols` in `SlotTest.Column`. \
+    Existing props are: [:item, :info].
+    Hint: You can define a new slot prop using the `props` option: \
+    `slot cols, props: [..., :non_existing]`\
     """
 
     assert_raise(CompileError, message, fn ->
       render_live(code, assigns)
+    end)
+  end
+
+  test "render default inner_content with slot props" do
+    code =
+      """
+      <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
+        Info: {{ my_info }}
+      </OuterWithDefaultSlotAndProps>
+      """
+
+    assert_html render_live(code) == """
+    <div>
+      Info: Info from slot
+    </div>
+    """
+  end
+
+  test "raise compile error when using :let and there's no default slot defined" do
+    code =
+      """
+      <OuterWithoutDefaultSlot :let={{ info: my_info }}>
+        Info: {{ my_info }}
+      </OuterWithoutDefaultSlot>
+      """
+
+    message =
+      """
+      code:1: there's no `default` slot defined in `SlotTest.OuterWithoutDefaultSlot`. \
+      Directive :let can only be used on explicitly defined slots.
+      Hint: You can define a `default` slot and its props using: \
+      `slot default, props: [:info]\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+  end
+
+  test "raise compile error when using :let with undefined props for default slot" do
+    code =
+      """
+      <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: 1 }}>
+        Info: {{ my_info }}
+      </OuterWithDefaultSlotAndProps>
+      """
+
+    message =
+      """
+      code:1: undefined prop `:non_existing` for slot `default` in \
+      `SlotTest.OuterWithDefaultSlotAndProps`. Existing props are: [:info].
+      Hint: You can define a new slot prop using the `props` option: \
+      `slot default, props: [..., :non_existing]`\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+  end
+
+  test "raise compile error if parent component does not define any slots" do
+    code =
+      """
+      <StatefulComponent>
+        <InnerData/>
+      </StatefulComponent>
+      """
+
+    message = "code:2: there's no slot `inner` defined in parent `SlotTest.StatefulComponent`"
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code)
+    end)
+  end
+
+  test "raise compile error if parent component does not define the slot" do
+    code =
+      """
+      <Grid items={{[]}}>
+        <InnerData/>
+      </Grid>
+      """
+
+    message =
+      """
+      code:2: there's no slot `inner` defined in parent `SlotTest.Grid`. \
+      Existing slots are: [:cols]\
+      """
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code)
     end)
   end
 end

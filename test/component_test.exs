@@ -51,6 +51,8 @@ defmodule Surface.ComponentTest do
   defmodule OuterWithSlotProps do
     use Surface.Component
 
+    slot default, props: [:info]
+
     def render(assigns) do
       info = "My info"
       ~H"""

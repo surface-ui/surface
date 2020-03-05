@@ -56,10 +56,14 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   end
 
   def translate_children(mod, attributes, directives, children, caller) do
-    {parent_bindings, _line} = find_let_bindings(directives)
+    {parent_bindings, line} = find_let_bindings(directives)
+    slots_with_args = get_slots_with_args(mod, attributes)
+    validate_let_bindings!(:default, parent_bindings, slots_with_args[:default] || [], mod, caller, line)
+
     opts = %{
+      parent: mod,
       parent_args: parent_bindings,
-      slots_with_args: get_slots_with_args(mod, attributes),
+      slots_with_args: slots_with_args,
       caller: caller
     }
 
@@ -190,15 +194,16 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   defp handle_child({_, _, _, %{translator: SlotTranslator}} = child, acc) do
     {mod_str, attributes, children, meta} = child
-    %{module: module, space: space, directives: directives} = meta
+    %{module: module, space: space, directives: directives, line: child_line} = meta
     {slots_props, slots_meta, contents, _, opts} = maybe_add_default_content(acc)
 
     slot_name = module.__slot_name__()
-    slot_args = opts.slots_with_args[slot_name]
+    slot_args = opts.slots_with_args[slot_name] || []
     slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} ->  v end)
 
     {child_bindings, line} = find_let_bindings(directives)
-    validate_let_bindings!(child_bindings, slot_args, opts.caller, line)
+    validate_slot!(slot_name, opts.parent, opts.caller, child_line)
+    validate_let_bindings!(slot_name, child_bindings, slot_args, module, opts.caller, line)
 
     merged_args = Keyword.merge(slot_args_with_generators, child_bindings)
     args = args_to_map_string(merged_args)
@@ -285,19 +290,62 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  defp validate_let_bindings!(child_bindings, slot_args, caller, line) do
+  defp validate_let_bindings!(slot_name, child_bindings, slot_args, mod, caller, line) do
     child_bindings_keys = Keyword.keys(child_bindings)
     slot_args_keys = Keyword.keys(slot_args)
     undefined_keys = child_bindings_keys -- slot_args_keys
 
-    if undefined_keys != [] do
-      message = """
-      undefined slot prop. Expected any of #{inspect(slot_args_keys)}, \
-      got: #{inspect(child_bindings_keys)}.
-      Hint: Define all input props of the slot using the :props option, \
-      e.g. `slot slot_name, props: [:prop1, :prop2]\
-      """
-      raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+    cond do
+      child_bindings_keys != [] && slot_args_keys == [] ->
+        message =
+          """
+          there's no `#{slot_name}` slot defined in `#{inspect(mod)}`. \
+          Directive :let can only be used on explicitly defined slots.
+          Hint: You can define a `#{slot_name}` slot and its props using: \
+          `slot #{slot_name}, props: #{inspect(child_bindings_keys)}\
+          """
+        raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+
+      undefined_keys != [] ->
+        [prop | _] = undefined_keys
+        message =
+          """
+          undefined prop `#{inspect(prop)}` for slot `#{slot_name}` in `#{inspect(mod)}`. \
+          Existing props are: #{inspect(slot_args_keys)}.
+          Hint: You can define a new slot prop using the `props` option: \
+          `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
+          """
+        raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+
+      true ->
+        nil
+    end
+  end
+
+  defp validate_slot!(slot_name, parent_mod, caller, line) do
+    cond do
+      !function_exported?(parent_mod, :__slots__, 0) ->
+        message =
+          """
+          parent component `#{inspect(parent_mod)}` does not define any slots. \
+          Cannot insert component #{inspect(caller.module)} here.
+          """
+        raise %CompileError{line: caller.line, file: caller.file, description: message}
+
+      parent_mod.__get_slot__(slot_name) == nil ->
+        parent_slots = parent_mod.__slots__() |> Enum.map(& &1.name)
+        existing_slots_message = if parent_slots == [], do: "",
+          else: ". Existing slots are: #{inspect(parent_slots)}"
+
+        message =
+          """
+          there's no slot `#{slot_name}` defined in parent \
+          `#{inspect(parent_mod)}`#{existing_slots_message}\
+          """
+        raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+
+      true ->
+        :ok
     end
   end
 end
