@@ -197,12 +197,22 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     %{module: module, space: space, directives: directives, line: child_line} = meta
     {slots_props, slots_meta, contents, _, opts} = maybe_add_default_content(acc)
 
-    slot_name = module.__slot_name__()
+    {slot_name, slot_name_line} =
+      if module do
+        {module.__slot_name__(), child_line}
+      else
+        case Map.get(meta, :slot) do
+          {value, line} ->
+            {List.to_atom(value), line}
+           _ ->
+            {nil, nil}
+        end
+      end
     slot_args = opts.slots_with_args[slot_name] || []
     slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} ->  v end)
 
     {child_bindings, line} = find_let_bindings(directives)
-    validate_slot!(slot_name, opts.parent, opts.caller, child_line)
+    validate_slot!(slot_name, opts.parent, opts.caller, slot_name_line)
     validate_let_bindings!(slot_name, child_bindings, slot_args, module, opts.caller, line)
 
     merged_args = Keyword.merge(slot_args_with_generators, child_bindings)
@@ -288,6 +298,11 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       [space1, space2] ->
         [space1, key, ": ", rhs, comma, space2]
     end
+  end
+
+  defp validate_let_bindings!(_slot_name, _child_bindings, _slot_args, nil, _caller, _line) do
+    # TODO
+    :ok
   end
 
   defp validate_let_bindings!(slot_name, child_bindings, slot_args, mod, caller, line) do

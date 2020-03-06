@@ -70,6 +70,21 @@ defmodule Surface.Translator do
     [require_code, "<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
   end
 
+  def translate({"slot", attributes, _, _}, _caller) do
+    name =
+      Enum.find_value(attributes, fn {prop_name, value, _meta} ->
+        if prop_name == "name" do
+          List.to_atom(value)
+        end
+      end)
+
+    if name do
+      "<%= for slot <- @#{name} do %><%= slot.inner_content.() %><% end %>"
+    else
+      "<%= @inner_content.() %>"
+    end
+  end
+
   def translate({:interpolation, expr, %{line: line}}, caller) do
     if String.contains?(expr, ["@inner_content(", ".inner_content("]) do
       file = Path.relative_to_cwd(caller.file)
@@ -172,9 +187,20 @@ defmodule Surface.Translator do
     {directives, attributes} = pop_directives(attributes, @tag_directives)
 
     meta =
-      meta
-      |> Map.put(:translator, Surface.Translator.TagTranslator)
-      |> Map.put(:directives, directives)
+      with true <- tag_name == "template",
+           slot <- find_attribute_and_line(attributes, "slot"),
+           true <- slot != nil do
+        meta
+        |> Map.put(:translator, Surface.Translator.SlotTranslator)
+        |> Map.put(:slot, slot)
+        |> Map.put(:module, nil)
+        |> Map.put(:directives, directives)
+      else
+        _ ->
+          meta
+          |> Map.put(:translator, Surface.Translator.TagTranslator)
+          |> Map.put(:directives, directives)
+      end
 
     children = build_metadata(children, caller)
     updated_node = {tag_name, attributes, children, meta}
@@ -328,5 +354,13 @@ defmodule Surface.Translator do
 
   defp pop_directives(attributes, allowed_directives) do
     Enum.split_with(attributes, fn {attr, _, _} -> attr in allowed_directives end)
+  end
+
+  defp find_attribute_and_line(attributes, name) do
+    Enum.find_value(attributes, fn {attr_name, value, %{line: line}} ->
+      if name == attr_name do
+        {value, line}
+      end
+    end)
   end
 end

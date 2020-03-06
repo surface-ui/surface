@@ -47,6 +47,24 @@ defmodule SlotTest do
     end
   end
 
+  defmodule OuterWithSlotNotation do
+    use Surface.Component
+
+    slot default
+    slot header
+    slot footer
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header"/>
+        <slot/>
+        <slot name="footer"/>
+      </div>
+      """
+    end
+  end
+
   defmodule OuterWithDefaultSlotAndProps do
     use Surface.Component
 
@@ -143,6 +161,29 @@ defmodule SlotTest do
         Content 3
         <div surface-cid="stateful" data-phx-component="1">Stateful</div>
       </div>
+    </div>
+    """
+  end
+
+  test "assign slots without props using <slot/> notation" do
+    code =
+      """
+      <OuterWithSlotNotation>
+        <template slot="header">
+          My header
+        </template>
+        My body
+        <template slot="footer">
+          My footer
+        </template>
+      </OuterWithSlotNotation>
+      """
+
+    assert_html render_live(code) =~ """
+    <div>
+      My header
+      My body
+      My footer
     </div>
     """
   end
