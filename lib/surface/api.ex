@@ -23,6 +23,7 @@ defmodule Surface.API do
       @after_compile unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :assigns, accumulate: false)
+      Module.register_attribute(__MODULE__, :used_slot, accumulate: true)
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
@@ -220,7 +221,13 @@ defmodule Surface.API do
   end
 
   defp quoted_slot_funcs(env) do
-    slots = Module.get_attribute(env.module, :slot) || []
+    used_slots =
+      for %{name: name, line: line} <- Module.get_attribute(env.module, :used_slot) || [] do
+        %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
+      end
+
+    slots = (Module.get_attribute(env.module, :slot) || []) ++ used_slots
+    slots = Enum.uniq_by(slots, & &1.name)
     slots_names = Enum.map(slots, fn slot -> slot.name end)
     slots_by_name = for p <- slots, into: %{}, do: {p.name, p}
 

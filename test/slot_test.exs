@@ -65,6 +65,20 @@ defmodule SlotTest do
     end
   end
 
+  defmodule OuterWithSlotNotationWithoutDeclaring do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header"/>
+        <slot/>
+        <slot name="footer"/>
+      </div>
+      """
+    end
+  end
+
   defmodule OuterWithDefaultSlotAndProps do
     use Surface.Component
 
@@ -177,6 +191,29 @@ defmodule SlotTest do
           My footer
         </template>
       </OuterWithSlotNotation>
+      """
+
+    assert_html render_live(code) =~ """
+    <div>
+      My header
+      My body
+      My footer
+    </div>
+    """
+  end
+
+  test "assign undeclared slots without props using <slot/> notation" do
+    code =
+      """
+      <OuterWithSlotNotationWithoutDeclaring>
+        <template slot="header">
+          My header
+        </template>
+        My body
+        <template slot="footer">
+          My footer
+        </template>
+      </OuterWithSlotNotationWithoutDeclaring>
       """
 
     assert_html render_live(code) =~ """
