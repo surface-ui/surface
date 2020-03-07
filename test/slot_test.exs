@@ -58,8 +58,12 @@ defmodule SlotTest do
       ~H"""
       <div>
         <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <slot>
+          Default fallback
+        </slot>
+        <slot name="footer">
+          Footer fallback
+        </slot>
       </div>
       """
     end
@@ -221,6 +225,20 @@ defmodule SlotTest do
       My header
       My body
       My footer
+    </div>
+    """
+  end
+
+  test "fallback content using <slot/> notation" do
+    code =
+      """
+      <OuterWithSlotNotation/>
+      """
+
+    assert_html render_live(code) =~ """
+    <div>
+      Default fallback
+      Footer fallback
     </div>
     """
   end

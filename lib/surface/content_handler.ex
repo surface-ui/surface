@@ -35,9 +35,14 @@ defmodule Surface.ContentHandler do
 
     content = default_content_fun(assigns, default_slot.size, binding: default_slot.binding)
 
-    assigns
-    |> Map.merge(props)
-    |> Map.put(:inner_content, content)
+    assigns =
+      if default_slot.size > 0 do
+        Map.put(assigns, :inner_content, content)
+      else
+        Map.delete(assigns, :inner_content)
+      end
+
+    Map.merge(assigns, props)
   end
 
   defp data_content_fun(assigns, name, index, binding: true) do

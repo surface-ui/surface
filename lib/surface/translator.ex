@@ -70,7 +70,7 @@ defmodule Surface.Translator do
     [require_code, "<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
   end
 
-  def translate({"slot", attributes, _, %{line: line}}, caller) do
+  def translate({"slot", attributes, children, %{line: line}}, caller) do
     name =
       Enum.find_value(attributes, fn {prop_name, value, _meta} ->
         if prop_name == "name" do
@@ -78,12 +78,24 @@ defmodule Surface.Translator do
         end
       end)
 
-    if name do
-      Module.put_attribute(caller.module, :used_slot, %{name: name, line: line})
-      "<%= for slot <- @#{name} do %><%= slot.inner_content.() %><% end %>"
-    else
+    if name == "default" || name == nil do
       Module.put_attribute(caller.module, :used_slot, %{name: :default, line: line})
-      "<%= @inner_content.() %>"
+      [
+        "<%= if assigns[:inner_content] do %>",
+        "<%= @inner_content.() %>",
+        "<% else %>",
+        translate(children, caller),
+        "<% end %>"
+      ]
+    else
+      Module.put_attribute(caller.module, :used_slot, %{name: name, line: line})
+      [
+        "<%= if assigns[:#{name}] do %>",
+        "<%= for slot <- @#{name} do %><%= slot.inner_content.() %><% end %>",
+        "<% else %>",
+        translate(children, caller),
+        "<% end %>"
+      ]
     end
   end
 
