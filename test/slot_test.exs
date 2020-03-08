@@ -83,6 +83,34 @@ defmodule SlotTest do
     end
   end
 
+  defmodule OuterWithSlotNotationAndProps do
+    use Surface.Component
+
+    slot body, props: [:info]
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="body" :props={{ info: "Info from slot" }}/>
+      </div>
+      """
+    end
+  end
+
+  defmodule OuterWithSlotNotationDefaultAndProps do
+    use Surface.Component
+
+    slot default, props: [:info]
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot :props={{ info: "Info from slot" }}/>
+      </div>
+      """
+    end
+  end
+
   defmodule OuterWithDefaultSlotAndProps do
     use Surface.Component
 
@@ -179,6 +207,38 @@ defmodule SlotTest do
         Content 3
         <div surface-cid="stateful" data-phx-component="1">Stateful</div>
       </div>
+    </div>
+    """
+  end
+
+  test "assign slots with props using <slot/> notation" do
+    code =
+      """
+      <OuterWithSlotNotationAndProps>
+        <template slot="body" :let={{ info: my_info }}>
+          Info: {{ my_info }}
+        </template>
+      </OuterWithSlotNotationAndProps>
+      """
+
+    assert_html render_live(code) =~ """
+    <div>
+      Info: Info from slot
+    </div>
+    """
+  end
+
+  test "assign default slot with props using <slot/> notation" do
+    code =
+      """
+      <OuterWithSlotNotationDefaultAndProps :let={{ info: my_info }}>
+        Info: {{ my_info }}
+      </OuterWithSlotNotationDefaultAndProps>
+      """
+
+    assert_html render_live(code) =~ """
+    <div>
+      Info: Info from slot
     </div>
     """
   end
@@ -373,6 +433,29 @@ defmodule SlotTest do
       `SlotTest.OuterWithDefaultSlotAndProps`. Existing props are: [:info].
       Hint: You can define a new slot prop using the `props` option: \
       `slot default, props: [..., :non_existing]`\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+  end
+
+  test "raise compile error when using :let with undefined slot props" do
+    code =
+      """
+      <OuterWithSlotNotationAndProps>
+        <template slot="body" :let={{ non_existing: my_info }}>
+          Info: {{ my_info }}
+        </template>
+      </OuterWithSlotNotationAndProps>
+      """
+
+    message =
+      """
+      code:2: undefined prop `:non_existing` for slot `body` in \
+      `SlotTest.OuterWithSlotNotationAndProps`. Existing props are: [:info].
+      Hint: You can define a new slot prop using the `props` option: \
+      `slot body, props: [..., :non_existing]`\
       """
 
       assert_raise(CompileError, message, fn ->

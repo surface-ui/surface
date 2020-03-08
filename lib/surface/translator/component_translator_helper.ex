@@ -213,7 +213,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
     {child_bindings, line} = find_let_bindings(directives)
     validate_slot!(slot_name, opts.parent, opts.caller, slot_name_line)
-    validate_let_bindings!(slot_name, child_bindings, slot_args, module, opts.caller, line)
+    validate_let_bindings!(slot_name, child_bindings, slot_args, module || opts.parent, opts.caller, line)
 
     merged_args = Keyword.merge(slot_args_with_generators, child_bindings)
     args = args_to_map_string(merged_args)
