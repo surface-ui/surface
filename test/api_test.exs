@@ -20,6 +20,42 @@ defmodule Surface.APITest do
     end
   end
 
+  defmodule ComponentWithRequiredDefaultSlot do
+    use Surface.Component
+
+    slot default, required: true
+    slot header
+    slot footer
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header"/>
+        <slot/>
+        <slot name="footer"/>
+      </div>
+      """
+    end
+  end
+
+  defmodule ComponentWithRequiredSlots do
+    use Surface.Component
+
+    slot default
+    slot header, required: true
+    slot footer
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header"/>
+        <slot/>
+        <slot name="footer"/>
+      </div>
+      """
+    end
+  end
+
   test "raise error at the right line" do
     code = "property label, :unknown_type"
     message = ~r/code:4/
@@ -245,6 +281,86 @@ defmodule Surface.APITest do
       message = """
       code.exs:6: cannot bind slot prop `item` to property `label`. \
       Expected a property of type :list after `^`, got: a property of type :string\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+    end
+
+    test "raise compile error if a required slot is not assigned (self-closed)" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot/>
+          "\""
+        end
+      end
+      """
+
+      message = """
+      code.exs:6: missing required slot `default` for \
+      `Surface.APITest.ComponentWithRequiredDefaultSlot`\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+    end
+
+    test "raise compile error if a required slot is not assigned (blank content)" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot>
+          </ComponentWithRequiredDefaultSlot>
+          "\""
+        end
+      end
+      """
+
+      message = """
+      code.exs:6: missing required slot `default` for \
+      `Surface.APITest.ComponentWithRequiredDefaultSlot`\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+    end
+
+    test "raise compile error if a required named slot is not assigned" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredSlots_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredSlots>
+          </ComponentWithRequiredSlots>
+          "\""
+        end
+      end
+      """
+
+      message = """
+      code.exs:6: missing required slot `header` for \
+      `Surface.APITest.ComponentWithRequiredSlots`\
       """
 
       assert_raise(CompileError, message, fn ->

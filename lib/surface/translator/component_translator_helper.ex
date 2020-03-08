@@ -203,7 +203,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       else
         case Map.get(meta, :slot) do
           {value, line} ->
-            {List.to_atom(value), line}
+            {value, line}
            _ ->
             {nil, nil}
         end

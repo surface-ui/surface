@@ -23,10 +23,12 @@ defmodule Surface.API do
       @after_compile unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :assigns, accumulate: false)
-      Module.register_attribute(__MODULE__, :used_slot, accumulate: true)
+      # Any caller component can hold other components with slots
+      Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
+        unquote(__MODULE__).init_func(func, __MODULE__)
       end
     end
   end
@@ -48,7 +50,18 @@ defmodule Surface.API do
 
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
+      validate_required_slots!(env)
     end
+  end
+
+  @doc false
+  def init_func(:slot, module) do
+    Module.register_attribute(module, :used_slot, accumulate: true)
+    :ok
+  end
+
+  def init_func(_func, _caller) do
+    :ok
   end
 
   @doc "Defines a property for the component"
@@ -231,6 +244,13 @@ defmodule Surface.API do
     slots_names = Enum.map(slots, fn slot -> slot.name end)
     slots_by_name = for p <- slots, into: %{}, do: {p.name, p}
 
+    required_slots_names =
+      for %{name: name, opts: opts} <- slots, opts[:required] do
+        name
+      end
+
+    assigned_slots_by_parent = Module.get_attribute(env.module, :assigned_slots_by_parent) || %{}
+
     quote do
       @doc false
       def __slots__() do
@@ -245,6 +265,16 @@ defmodule Surface.API do
       @doc false
       def __get_slot__(name) do
         Map.get(unquote(Macro.escape(slots_by_name)), name)
+      end
+
+      @doc false
+      def __assigned_slots_by_parent__() do
+        unquote(Macro.escape(assigned_slots_by_parent))
+      end
+
+      @doc false
+      def __required_slots_names__() do
+        unquote(Macro.escape(required_slots_names))
       end
     end
   end
@@ -555,6 +585,15 @@ defmodule Surface.API do
         _ ->
           :ok
       end
+    end
+  end
+
+  defp validate_required_slots!(env) do
+    for {{mod, _parent_node_id, line}, assigned_slots} <- env.module.__assigned_slots_by_parent__(),
+        name <- mod.__required_slots_names__(),
+        !MapSet.member?(assigned_slots, name) do
+      message = "missing required slot `#{name}` for `#{inspect(mod)}`"
+      raise %CompileError{line: line, file: env.file, description: message}
     end
   end
 
