@@ -38,7 +38,7 @@ defmodule Surface.Component do
   This optional callback is invoked in order to set up a
   context that can be retrieved for any descendent component.
   """
-  @callback init_context(props :: map()) :: map()
+  @callback init_context(props :: map()) :: {:ok, keyword} | {:error, String.t()}
 
   @optional_callbacks init_context: 1
 end
