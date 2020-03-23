@@ -206,6 +206,18 @@ defmodule Surface.Translator.Parser do
     end)
   end
 
+  ## Self-closing macro node
+
+  self_closing_macro_node =
+    ignore(string("<#"))
+    |> concat(tag)
+    |> line()
+    |> concat(repeat(attribute) |> wrap())
+    |> concat(whitespace)
+    |> ignore(string("/>"))
+    |> wrap()
+    |> post_traverse(:self_closing_tags)
+
   ## Macro node
 
   text_without_interpolation = utf8_string([not: ?<], min: 1)
@@ -258,7 +270,7 @@ defmodule Surface.Translator.Parser do
   end
 
   defparsecp :node,
-            [void_element_node, macro_node, regular_node, self_closing_node, comment]
+            [void_element_node, macro_node, self_closing_macro_node, regular_node, self_closing_node, comment]
             |> choice()
             |> label("opening HTML tag"),
             inline: true

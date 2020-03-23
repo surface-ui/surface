@@ -1,4 +1,4 @@
-defmodule Surface.Translator.DataComponentTranslator do
+defmodule Surface.Translator.SlotTranslator do
   @moduledoc false
 
   alias Surface.Translator
@@ -11,4 +11,3 @@ defmodule Surface.Translator.DataComponentTranslator do
     ComponentTranslator.translate(node, caller)
   end
 end
-

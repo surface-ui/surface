@@ -48,8 +48,10 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  defmodule OuterWithNamedBindings do
+  defmodule OuterWithSlotProps do
     use Surface.Component
+
+    slot default, props: [:info]
 
     def render(assigns) do
       info = "My info"
@@ -81,16 +83,35 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  defmodule ViewWithNamedBindings do
+  defmodule ViewWithSlotProps do
     use Surface.LiveView
 
     def render(assigns) do
       ~H"""
-      <OuterWithNamedBindings :bindings={{ info: my_info }}>
+      <OuterWithSlotProps :let={{ info: my_info }}>
         {{ my_info }}
-      </OuterWithNamedBindings>
+      </OuterWithSlotProps>
       """
     end
+  end
+
+  test "raise compile error if option :slot is not a string" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestSlotWithoutSlotName_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component, slot: {1, 2}
+
+      property label, :string
+    end
+    """
+
+    message = "code.exs:2: invalid value for option :slot. Expected a string, got: {1, 2}"
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   describe "With LiveView" do
@@ -114,8 +135,8 @@ defmodule Surface.ComponentTest do
       """
     end
 
-    test "render content with named bindings" do
-      {:ok, _view, html} = live_isolated(build_conn(), ViewWithNamedBindings)
+    test "render content with slot props" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithSlotProps)
 
       assert_html html =~ """
       <div>
@@ -150,12 +171,12 @@ defmodule Surface.ComponentTest do
       """
     end
 
-    test "render content with named bindings" do
+    test "render content with slot props" do
       code =
         """
-        <OuterWithNamedBindings :bindings={{ info: my_info }}>
+        <OuterWithSlotProps :let={{ info: my_info }}>
           {{ my_info }}
-        </OuterWithNamedBindings>
+        </OuterWithSlotProps>
         """
 
       assert render_live(code) =~ """

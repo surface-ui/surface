@@ -64,6 +64,8 @@ defmodule LiveComponentTest do
   defmodule InfoProvider do
     use Surface.LiveComponent
 
+    slot default, props: [:info]
+
     def render(assigns) do
       info = "Hi there!"
       ~H"""
@@ -74,7 +76,7 @@ defmodule LiveComponentTest do
     end
   end
 
-  defmodule InfoProviderWithoutBindings do
+  defmodule InfoProviderWithoutSlotProps do
     use Surface.LiveComponent
 
     def render(assigns) do
@@ -86,12 +88,12 @@ defmodule LiveComponentTest do
     end
   end
 
-  test "render content without bindings" do
+  test "render content without slot props" do
     code =
       """
-      <InfoProviderWithoutBindings>
+      <InfoProviderWithoutSlotProps>
         <span>Hi there!</span>
-      </InfoProviderWithoutBindings>
+      </InfoProviderWithoutSlotProps>
       """
 
     assert render_live(code) =~ ~r"""
@@ -99,10 +101,10 @@ defmodule LiveComponentTest do
     """
   end
 
-  test "render content with bindings" do
+  test "render content with slot props" do
     code =
       """
-      <InfoProvider :bindings={{ info: my_info }}>
+      <InfoProvider :let={{ info: my_info }}>
         <span>{{ my_info }}</span>
       </InfoProvider>
       """

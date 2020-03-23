@@ -1,7 +1,7 @@
 defmodule Surface.API do
   @moduledoc false
 
-  @types [:any, :css_class, :list, :event, :children, :boolean, :string, :date,
+  @types [:any, :css_class, :list, :event, :boolean, :string, :date,
           :datetime, :number, :integer, :decimal, :map, :fun, :atom, :module,
           :changeset, :form]
 
@@ -10,6 +10,7 @@ defmodule Surface.API do
   defmacro __using__([include: include]) do
     arities = %{
       property: [2, 3],
+      slot: [1, 2],
       data: [2, 3],
       context: [1]
     }
@@ -22,9 +23,12 @@ defmodule Surface.API do
       @after_compile unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :assigns, accumulate: false)
+      # Any caller component can hold other components with slots
+      Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
+        unquote(__MODULE__).init_func(func, __MODULE__)
       end
     end
   end
@@ -33,18 +37,41 @@ defmodule Surface.API do
     generate_docs(env)
     [
       quoted_property_funcs(env),
+      quoted_slot_funcs(env),
       quoted_data_funcs(env),
       quoted_context_funcs(env)
     ]
   end
 
   def __after_compile__(env, _) do
-    validate_has_init_context(env)
+    if !function_exported?(env.module, :init_context, 1) do
+      validate_has_init_context(env)
+    end
+
+    if function_exported?(env.module, :__slots__, 0) do
+      validate_slot_props_bindings!(env)
+      validate_required_slots!(env)
+    end
+  end
+
+  @doc false
+  def init_func(:slot, module) do
+    Module.register_attribute(module, :used_slot, accumulate: true)
+    :ok
+  end
+
+  def init_func(_func, _caller) do
+    :ok
   end
 
   @doc "Defines a property for the component"
   defmacro property(name_ast, type, opts \\ []) do
     build_assign_ast(:property, name_ast, type, opts, __CALLER__)
+  end
+
+  @doc "Defines a slot for the component"
+  defmacro slot(name_ast, opts \\ []) do
+    build_assign_ast(:slot, name_ast, :any, opts, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
@@ -206,6 +233,52 @@ defmodule Surface.API do
     end
   end
 
+  defp quoted_slot_funcs(env) do
+    used_slots =
+      for %{name: name, line: line} <- Module.get_attribute(env.module, :used_slot) || [] do
+        %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
+      end
+
+    slots = (Module.get_attribute(env.module, :slot) || []) ++ used_slots
+    slots = Enum.uniq_by(slots, & &1.name)
+    slots_names = Enum.map(slots, fn slot -> slot.name end)
+    slots_by_name = for p <- slots, into: %{}, do: {p.name, p}
+
+    required_slots_names =
+      for %{name: name, opts: opts} <- slots, opts[:required] do
+        name
+      end
+
+    assigned_slots_by_parent = Module.get_attribute(env.module, :assigned_slots_by_parent) || %{}
+
+    quote do
+      @doc false
+      def __slots__() do
+        unquote(Macro.escape(slots))
+      end
+
+      @doc false
+      def __validate_slot__(prop) do
+        prop in unquote(slots_names)
+      end
+
+      @doc false
+      def __get_slot__(name) do
+        Map.get(unquote(Macro.escape(slots_by_name)), name)
+      end
+
+      @doc false
+      def __assigned_slots_by_parent__() do
+        unquote(Macro.escape(assigned_slots_by_parent))
+      end
+
+      @doc false
+      def __required_slots_names__() do
+        unquote(Macro.escape(required_slots_names))
+      end
+    end
+  end
+
   defp quoted_context_funcs(env) do
     context = Module.get_attribute(env.module, :context) || []
     {gets, sets} = Enum.split_with(context, fn c -> c.opts[:action] == :get end)
@@ -236,7 +309,7 @@ defmodule Surface.API do
   end
 
   defp build_assign_ast(func, name_ast, type, opts, caller) do
-    validate!(func, name_ast, type, opts, caller)
+    evaluated_opts = validate!(func, name_ast, type, opts, caller)
 
     {name, _, _} = name_ast
 
@@ -246,7 +319,7 @@ defmodule Surface.API do
         name: unquote(name),
         type: unquote(type),
         doc: nil,
-        opts: unquote(opts),
+        opts: unquote(Macro.escape(evaluated_opts)),
         opts_ast: unquote(Macro.escape(opts)),
         line: unquote(caller.line)
       })
@@ -254,12 +327,13 @@ defmodule Surface.API do
   end
 
   defp validate!(func, name_ast, type, opts, caller) do
-    {evaluated_opts, _} = Code.eval_quoted(opts, [], caller)
     with {:ok, name} <- validate_name(func, name_ast),
          :ok <- validate_type(func, name, type),
-         :ok <- validate_opts(func, name, type, evaluated_opts),
+         :ok <- validate_opts_keys(func, name, type, opts),
+         {:ok, evaluated_opts} <- eval_opts_values(func, opts, caller),
+         :ok <- validate_opts(func, type, evaluated_opts),
          :ok <- validate_required_opts(func, type, evaluated_opts) do
-      :ok
+      evaluated_opts
     else
       {:error, message} ->
         file = Path.relative_to_cwd(caller.file)
@@ -276,10 +350,6 @@ defmodule Surface.API do
     {:error, "invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}"}
   end
 
-  # defp validate_type(_func, _name, nil) do
-  #   {:error, "action :set requires the type of the assign as third argument"}
-  # end
-
   defp validate_type(_func, _name, type) when type in @types do
     :ok
   end
@@ -294,28 +364,12 @@ defmodule Surface.API do
     {:error, message}
   end
 
-  defp validate_required_opts(func, type, opts) do
-    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
-      [] ->
-        :ok
-      missing_opts ->
-        {:error, "the following options are required: #{inspect(missing_opts)}"}
-    end
-  end
-
-  defp validate_opts(func, name, type, opts) do
+  defp validate_opts_keys(func, name, type, opts) do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
          [] <- keys -- valid_opts ++ @private_opts do
-      Enum.reduce_while(keys, :ok, fn key, _ ->
-        case validate_opt(func, type, key, opts[key]) do
-          :ok ->
-            {:cont, :ok}
-          error ->
-            {:halt, error}
-        end
-      end)
+      :ok
     else
       false ->
         {:error,
@@ -328,12 +382,40 @@ defmodule Surface.API do
     end
   end
 
-  defp get_valid_opts(:property, :list, _opts) do
-    [:required, :default, :binding]
+  defp eval_opts_values(func, opts, caller) do
+    Enum.reduce_while(opts, {:ok, []}, fn {key, value}, {:ok, acc} ->
+      case eval_opt_value(func, key, value, caller) do
+        {:ok, evaluated_value} ->
+          {:cont, {:ok, [{key, evaluated_value} | acc]}}
+
+        error ->
+          {:halt, error}
+      end
+    end)
   end
 
-  defp get_valid_opts(:property, :children, _opts) do
-    [:required, :group, :use_bindings]
+  defp validate_opts(func, type, opts) do
+    Enum.reduce_while(opts, :ok, fn {key, value}, _acc ->
+      case validate_opt(func, type, key, value) do
+        :ok ->
+          {:cont, :ok}
+        error ->
+          {:halt, error}
+      end
+    end)
+  end
+
+  defp validate_required_opts(func, type, opts) do
+    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
+      [] ->
+        :ok
+      missing_opts ->
+        {:error, "the following options are required: #{inspect(missing_opts)}"}
+    end
+  end
+
+  defp get_valid_opts(:property, :list, _opts) do
+    [:required, :default]
   end
 
   defp get_valid_opts(:property, _type, _opts) do
@@ -342,6 +424,10 @@ defmodule Surface.API do
 
   defp get_valid_opts(:data, _type, _opts) do
     [:default, :values]
+  end
+
+  defp get_valid_opts(:slot, _type, _opts) do
+    [:required, :props]
   end
 
   defp get_valid_opts(:context, _type, opts) do
@@ -366,6 +452,26 @@ defmodule Surface.API do
     []
   end
 
+  defp eval_opt_value(:slot, :props, args_ast, _caller) do
+    Enum.reduce_while(args_ast, {:ok, []}, fn
+      {name, {:^, _, [{generator, _, context}]}}, {:ok, acc} when context in [Elixir, nil] ->
+        {:cont, {:ok, [%{name: name, generator: generator} | acc]}}
+
+      name, {:ok, acc} when is_atom(name) ->
+        {:cont, {:ok, [%{name: name, generator: nil} | acc]}}
+
+      ast, _ ->
+        message = "invalid slot prop #{Macro.to_string(ast)}. " <>
+                  "Expected an atom or a binding to a generator as `key: ^property_name`"
+        {:halt, {:error, message}}
+    end)
+  end
+
+  defp eval_opt_value(_func, _key, value, caller) do
+    {evaluated_value, _} = Code.eval_quoted(value, [], caller)
+    {:ok, evaluated_value}
+  end
+
   defp validate_opt(_func, _type, :required, value) when not is_boolean(value) do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
@@ -387,7 +493,7 @@ defmodule Surface.API do
     {:error, "invalid value for option :as. Expected an atom, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _type, _opts, _key) do
+  defp validate_opt(_func, _type, _key, _value) do
     :ok
   end
 
@@ -440,15 +546,54 @@ defmodule Surface.API do
   end
 
   defp validate_has_init_context(env) do
-    if !function_exported?(env.module, :init_context, 1) do
-      for var <- Module.get_attribute(env.module, :context) || [] do
-        if Keyword.get(var.opts, :action) == :set do
-          message = "context assign \"#{var.name}\" not initialized. " <>
-                    "You should implement an init_context/1 callback and initialize its " <>
-                    "value by returning {:ok, #{var.name}: ...}"
-          Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
-        end
+    for var <- Module.get_attribute(env.module, :context) || [] do
+      if Keyword.get(var.opts, :action) == :set do
+        message = "context assign \"#{var.name}\" not initialized. " <>
+                  "You should implement an init_context/1 callback and initialize its " <>
+                  "value by returning {:ok, #{var.name}: ...}"
+        Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
       end
+    end
+  end
+
+  defp validate_slot_props_bindings!(env) do
+    for slot <- env.module.__slots__(),
+        slot_props = Keyword.get(slot.opts, :props, []),
+        %{name: name, generator: generator} <- slot_props,
+        generator != nil do
+      case env.module.__get_prop__(generator) do
+        nil ->
+          existing_properties_names = env.module.__props__() |> Enum.map(& &1.name)
+          message =
+            """
+            cannot bind slot prop `#{name}` to property `#{generator}`. \
+            Expected a existing property after `^`, \
+            got: an undefined property `#{generator}`.
+            Hint: Existing properties are #{inspect(existing_properties_names)}\
+            """
+          raise %CompileError{line: slot.line, file: env.file, description: message}
+
+        %{type: type} when type != :list ->
+          message =
+            """
+            cannot bind slot prop `#{name}` to property `#{generator}`. \
+            Expected a property of type :list after `^`, \
+            got: a property of type #{inspect(type)}\
+            """
+          raise %CompileError{line: slot.line, file: env.file, description: message}
+
+        _ ->
+          :ok
+      end
+    end
+  end
+
+  defp validate_required_slots!(env) do
+    for {{mod, _parent_node_id, line}, assigned_slots} <- env.module.__assigned_slots_by_parent__(),
+        name <- mod.__required_slots_names__(),
+        !MapSet.member?(assigned_slots, name) do
+      message = "missing required slot `#{name}` for `#{inspect(mod)}`"
+      raise %CompileError{line: line, file: env.file, description: message}
     end
   end
 

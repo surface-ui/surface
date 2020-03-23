@@ -16,7 +16,9 @@ defmodule Surface.Translator do
 
   @tag_directives [":for", ":if", ":show", ":debug"]
 
-  @component_directives [":for", ":if", ":bindings", ":debug"]
+  @component_directives [":for", ":if", ":let", ":debug"]
+
+  @template_directives [":let"]
 
   defmodule ParseError do
     defexception file: "", line: 0, message: "error parsing HTML/Surface"
@@ -40,7 +42,7 @@ defmodule Surface.Translator do
       {:error, message, line} ->
         raise %ParseError{line: line + line_offset - 1, file: file, message: message}
     end
-    |> build_metadata(caller)
+    |> build_metadata(nil, caller)
     |> prepare(caller)
     |> prepend_context()
     |> translate(caller)
@@ -68,6 +70,36 @@ defmodule Surface.Translator do
     require_code = if meta[:module], do: ["<% require ", meta[:module], " %>"], else: []
 
     [require_code, "<span style=\"color: red; border: 2px solid red; padding: 3px\"> Error: ", encoded_message, "</span>"]
+  end
+
+  def translate({"slot", attributes, children, %{line: line}}, caller) do
+    {name, props_expr} =
+      Enum.reduce(attributes, {nil, ""}, fn
+        {"name", value, _meta}, {_, props_expr} ->
+          {List.to_atom(value), props_expr}
+        {":props", {:attribute_expr, [expr]}, _meta}, {name, _} ->
+          {name, String.trim(expr)}
+      end)
+
+    if name == "default" || name == nil do
+      Module.put_attribute(caller.module, :used_slot, %{name: :default, line: line})
+      [
+        "<%= if assigns[:inner_content] do %>",
+        "<%= @inner_content.(", props_expr, ") %>",
+        "<% else %>",
+        translate(children, caller),
+        "<% end %>"
+      ]
+    else
+      Module.put_attribute(caller.module, :used_slot, %{name: name, line: line})
+      [
+        "<%= if assigns[:#{name}] do %>",
+        "<%= for slot <- @#{name} do %><%= slot.inner_content.(", props_expr, ") %><% end %>",
+        "<% else %>",
+        translate(children, caller),
+        "<% end %>"
+      ]
+    end
   end
 
   def translate({:interpolation, expr, %{line: line}}, caller) do
@@ -129,12 +161,12 @@ defmodule Surface.Translator do
     ["<% context = assigns[:__surface_context__] || %{} %><% _ = context %>" | parsed_code]
   end
 
-  defp build_metadata([], _caller) do
+  defp build_metadata([], _parent_key, _caller) do
     []
   end
 
   # TODO: Handle macros separately
-  defp build_metadata([{<<first, _::binary>>, _, _, _} = node | nodes], caller)
+  defp build_metadata([{<<first, _::binary>>, _, _, _} = node | nodes], parent_key, caller)
       when first in ?A..?Z or first == ?# do
     {name, attributes, children, meta} = node
     {directives, attributes} = pop_directives(attributes, @component_directives)
@@ -144,8 +176,6 @@ defmodule Surface.Translator do
         "#" <> name -> name
         _ -> name
       end
-
-    children = build_metadata(children, caller)
 
     meta =
       with {:ok, mod} <- actual_module(name, caller),
@@ -158,34 +188,77 @@ defmodule Surface.Translator do
       else
         {:error, message} ->
           meta
-          |> Map.put(:module, name)
+          |> Map.put(:module, nil)
           |> Map.put(:error, "cannot render <#{name}> (#{message})")
       end
 
+    with true <- function_exported?(meta.module, :__slot_name__, 0),
+         slot <- meta.module.__slot_name__(),
+         true <- slot != nil do
+      put_assigned_slot(caller, slot, parent_key)
+    else
+      _ ->
+        put_assigned_slot(caller, :default, parent_key)
+    end
+
+    node_id = :erlang.unique_integer([:positive, :monotonic])
+    node_key = {meta.module, node_id, caller.line + meta.line}
+    init_assigned_slots(caller, node_key)
+    children = build_metadata(children, node_key, caller)
+
     updated_node = {name, attributes, children, meta}
-    [updated_node | build_metadata(nodes, caller)]
+    [updated_node | build_metadata(nodes, nil, caller)]
   end
 
-  defp build_metadata([{tag_name, _, _, _} = node | nodes], caller) when is_binary(tag_name) do
+  defp build_metadata([{"template" = tag_name, _, _, _} = node | nodes], parent_key, caller) do
     {_, attributes, children, meta} = node
+    {directives, attributes} = pop_directives(attributes, @template_directives)
 
+    meta =
+      case find_attribute_and_line(attributes, "slot") do
+        {slot, slot_line} ->
+          put_assigned_slot(caller, slot, parent_key)
+          meta
+          |> Map.put(:translator, Surface.Translator.SlotTranslator)
+          |> Map.put(:slot, {slot, slot_line})
+          |> Map.put(:module, nil)
+          |> Map.put(:directives, directives)
+        _ ->
+          put_assigned_slot(caller, :default, parent_key)
+          meta
+          |> Map.put(:translator, Surface.Translator.TagTranslator)
+          |> Map.put(:directives, directives)
+      end
+
+    children = build_metadata(children, parent_key, caller)
+    updated_node = {tag_name, attributes, children, meta}
+    [updated_node | build_metadata(nodes, parent_key, caller)]
+  end
+
+  defp build_metadata([{tag_name, _, _, _} = node | nodes], parent_key, caller) when is_binary(tag_name) do
+    {_, attributes, children, meta} = node
     {directives, attributes} = pop_directives(attributes, @tag_directives)
+
+    put_assigned_slot(caller, :default, parent_key)
 
     meta =
       meta
       |> Map.put(:translator, Surface.Translator.TagTranslator)
       |> Map.put(:directives, directives)
 
-    children = build_metadata(children, caller)
+    children = build_metadata(children, parent_key, caller)
     updated_node = {tag_name, attributes, children, meta}
-    [updated_node | build_metadata(nodes, caller)]
+    [updated_node | build_metadata(nodes, parent_key, caller)]
   end
 
-  defp build_metadata([node | nodes], caller) do
-    [node | build_metadata(nodes, caller)]
+  defp build_metadata([node | nodes], parent_key, caller) do
+    if !Surface.Translator.ComponentTranslatorHelper.blank?(node) do
+      put_assigned_slot(caller, :default, parent_key)
+    end
+    [node | build_metadata(nodes, parent_key, caller)]
   end
 
-  defp build_metadata(nodes, _caller) do
+  defp build_metadata(nodes, _pareint_node_id, _caller) do
     nodes
   end
 
@@ -305,7 +378,7 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":bindings", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
+  defp handle_directive({":let", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
     parts
   end
 
@@ -328,5 +401,33 @@ defmodule Surface.Translator do
 
   defp pop_directives(attributes, allowed_directives) do
     Enum.split_with(attributes, fn {attr, _, _} -> attr in allowed_directives end)
+  end
+
+  defp find_attribute_and_line(attributes, name) do
+    Enum.find_value(attributes, fn {attr_name, value, %{line: line}} ->
+      if name == attr_name do
+        {List.to_atom(value), line}
+      end
+    end)
+  end
+
+  defp init_assigned_slots(caller, parent_key) do
+    {mod, _, _} = parent_key
+    if Module.open?(caller.module) && function_exported?(mod, :__slots__,  0) do
+      assigned_slots_by_parent = Module.get_attribute(caller.module, :assigned_slots_by_parent) || %{}
+      assigned_slots_by_parent = Map.put(assigned_slots_by_parent, parent_key, MapSet.new)
+      Module.put_attribute(caller.module, :assigned_slots_by_parent, assigned_slots_by_parent)
+    end
+  end
+
+  defp put_assigned_slot(caller, slot, parent_key) do
+    if parent_key && Module.open?(caller.module) do
+      assigned_slots_by_parent = Module.get_attribute(caller.module, :assigned_slots_by_parent)
+      assigned_slots_by_parent =
+        Map.update(assigned_slots_by_parent, parent_key, MapSet.new([slot]), fn slots ->
+          MapSet.put(slots, slot)
+        end)
+      Module.put_attribute(caller.module, :assigned_slots_by_parent, assigned_slots_by_parent)
+    end
   end
 end
