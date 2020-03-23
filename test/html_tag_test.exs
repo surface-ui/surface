@@ -7,9 +7,11 @@ defmodule HtmlTagTest do
   test "raise runtime error for invalid attributes values" do
     assert_raise(RuntimeError, ~r/invalid value for attribute "title"/, fn ->
       assigns = %{}
-      ~H"""
-      <div title={{ {1, 2} }}/>
-      """
+      code =
+        ~H"""
+        <div title={{ {1, 2} }}/>
+        """
+      render_static(code)
     end)
   end
 
@@ -162,9 +164,12 @@ defmodule HtmlTagTest do
     test "raise runtime error for invalid style value" do
       assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
         assigns = %{}
-        ~H"""
-        <div style={{ {1, 2} }}/>
-        """
+        code =
+          ~H"""
+          <div style={{ {1, 2} }}/>
+          """
+
+        render_static(code)
       end)
     end
   end
