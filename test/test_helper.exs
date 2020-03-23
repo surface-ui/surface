@@ -16,6 +16,8 @@ Application.put_env(:surface, Endpoint, [
   ]
 ])
 
+Endpoint.start_link()
+
 defmodule ComponentTestHelper do
   require Phoenix.LiveViewTest
 

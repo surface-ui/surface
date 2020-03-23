@@ -5,11 +5,6 @@ defmodule ContextTest do
   import Surface
   import ComponentTestHelper
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
-  end
-
   defmodule Outer do
     use Surface.Component
 

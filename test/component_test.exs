@@ -8,11 +8,6 @@ defmodule Surface.ComponentTest do
 
   @endpoint Endpoint
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
-  end
-
   defmodule Stateless do
     use Surface.Component
 

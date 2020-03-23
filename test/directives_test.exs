@@ -5,11 +5,6 @@ defmodule Surface.DirectivesTest do
   import Surface
   import ComponentTestHelper
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
-  end
-
   defmodule Div do
     use Surface.Component
 

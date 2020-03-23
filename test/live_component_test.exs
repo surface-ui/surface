@@ -6,11 +6,6 @@ defmodule LiveComponentTest do
 
   @endpoint Endpoint
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
-  end
-
   defmodule StatelessComponent do
     use Surface.LiveComponent
 

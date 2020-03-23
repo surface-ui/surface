@@ -3,11 +3,6 @@ defmodule SlotTest do
   use Phoenix.ConnTest
   import ComponentTestHelper
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
-  end
-
   defmodule StatefulComponent do
     use Surface.LiveComponent
 

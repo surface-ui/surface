@@ -6,11 +6,6 @@ defmodule Surface.EventsTest do
 
   @endpoint Endpoint
 
-  setup_all do
-    Endpoint.start_link()
-    :ok
-  end
-
   defmodule LiveDiv do
     use Surface.LiveComponent
 
