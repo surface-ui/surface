@@ -8,7 +8,9 @@ locals_without_parens = [
   set: 2,
   set: 3,
   data: 3,
-  data: 2
+  data: 2,
+  slot: 1,
+  slot: 2
 ]
 
 [
