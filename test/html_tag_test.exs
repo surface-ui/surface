@@ -99,8 +99,32 @@ defmodule HtmlTagTest do
         """
 
       assert render_static(code) =~ """
-      <div class="default__1 default__2 prop__1 prop3"></div>
+             <div class="default__1 default__2 prop__1 prop3"></div>
+             """
+    end
+
+    test "css class defined with an atom" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class={{:default}}/>
       """
+
+      assert render_static(code) =~ """
+             <div class="default"></div>
+             """
+    end
+
+    test "css class with uppercase letter" do
+      assigns = %{value1: true}
+
+      code = ~H"""
+      <div class={{ "Default", Prop1: @value1 }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div class="Default Prop1"></div>
+             """
     end
   end
 

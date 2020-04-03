@@ -197,9 +197,10 @@ defmodule Surface do
     Enum.reduce(list, [], fn item, classes ->
       case item do
         {class, true} ->
-          [to_kebab_case(class) | classes]
+          [to_string(class) | classes]
         class when is_binary(class) or is_atom(class) ->
-          [to_kebab_case(class) | classes]
+          [to_string(class) | classes]
+
         _ ->
           classes
       end
@@ -298,14 +299,6 @@ defmodule Surface do
 
   defp quot(value) do
     [{:safe, "\""}, value, {:safe, "\""}]
-  end
-
-  # TODO: Find a better way to do this
-  defp to_kebab_case(value) do
-    value
-    |> to_string()
-    |> String.replace(~r/([a-z])([A-Z])/, "\\1-\\2")
-    |> String.downcase()
   end
 
   defp runtime_error(message) do
