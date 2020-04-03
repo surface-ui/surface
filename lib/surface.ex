@@ -301,14 +301,6 @@ defmodule Surface do
     [{:safe, "\""}, value, {:safe, "\""}]
   end
 
-  # TODO: Find a better way to do this
-  defp to_kebab_case(value) do
-    value
-    |> to_string()
-    |> String.replace(~r/([a-z])([A-Z])/, "\\1-\\2")
-    |> String.downcase()
-  end
-
   defp runtime_error(message) do
     stacktrace =
       self()
