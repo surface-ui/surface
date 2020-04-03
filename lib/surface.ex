@@ -199,7 +199,7 @@ defmodule Surface do
         {class, true} ->
           [to_kebab_case(class) | classes]
         class when is_binary(class) or is_atom(class) ->
-          [class | classes]
+          [to_string(class) | classes]
 
         _ ->
           classes
