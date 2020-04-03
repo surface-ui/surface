@@ -197,7 +197,7 @@ defmodule Surface do
     Enum.reduce(list, [], fn item, classes ->
       case item do
         {class, true} ->
-          [to_kebab_case(class) | classes]
+          [to_string(class) | classes]
         class when is_binary(class) or is_atom(class) ->
           [to_string(class) | classes]
 
