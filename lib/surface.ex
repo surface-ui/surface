@@ -5,7 +5,7 @@ defmodule Surface do
   Built on top of the new `Phoenix.LiveComponent` API, Surface provides
   a more declarative way to express and use components in Phoenix.
 
-  A work-in-progress live demo with more details can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
+  Full documentation and live examples can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
 
   This module defines the `~H` sigil that should be used to translate Surface
   code into Phoenix templates.
@@ -53,42 +53,6 @@ defmodule Surface do
       end
 
   You can visit the documentation of each type of component for further explanation and examples.
-
-  ## Directives
-
-  Directives are built-in attributes that can modify the translated code of a component
-  at compile time. Currently, the following directives are supported:
-
-    * `:for` - Iterates over a list (generator) and renders the content of the tag (or component)
-      for each item in the list.
-
-    * `:if` - Conditionally render a tag (or component). The code will be rendered if the expression
-      is evaluated to a truthy value.
-
-    * `:show` - Conditionally shows/hides an HTML tag, keeping the rendered alement in the DOM even
-      when the value is `false`.
-
-    * `:let` - Binds the input props passed by the slot when calling the `inner_content` function to
-      the current scope.
-
-    * `:on-[event]` - Sets a `phx` event binding defining the component itself as the
-      default handler (target). This is the prefered way to use `phx` events in **Surface** as it can
-      properly handle properties of type `:event`. Available directives are: `:on-phx-click`,
-      `:on-phx-blur`, `:on-phx-focus`, `:on-phx-change`, `:on-phx-submit`, `:on-phx-keydown`
-      and `:on-phx-keyup`.
-
-  ### Example
-
-      <div>
-        <div class="header" :if={{ @showHeader }}>
-          The Header
-        </div>
-        <ul>
-          <li :for={{ item <- @items }}>
-            {{ item }}
-          </li>
-        </ul>
-      </div>
   """
 
   @doc """

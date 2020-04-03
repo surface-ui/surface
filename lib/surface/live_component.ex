@@ -15,7 +15,7 @@ defmodule Surface.LiveComponent do
 
         def render(assigns) do
           ~H"\""
-          <div class={{ "modal", isActive: @show }}>
+          <div class={{ "modal", "is-active": @show }}>
             <div class="modal-background"></div>
             <div class="modal-card">
               <header class="modal-card-head">

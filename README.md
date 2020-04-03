@@ -8,7 +8,7 @@ A component based library for **Phoenix LiveView**.
 Built on top of the new [LiveComponent](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html)
 API, Surface provides a more declarative way to express and use components in Phoenix.
 
-A work-in-progress live demo with more details can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
+Full documentation and live examples can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io).
 
 A VS Code extension that adds support for syntax highlighting is available at
 [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=msaraiva.surface).
@@ -110,7 +110,7 @@ To create a component you need to define a module and `use` one of the available
 
     def render(assigns) do
       ~H"""
-      <div class={{ "modal", isActive: @show }}>
+      <div class={{ "modal", "is-active": @show }}>
         <div class="modal-background"></div>
         <div class="modal-card">
           <header class="modal-card-head">
@@ -164,44 +164,6 @@ To create a component you need to define a module and `use` one of the available
       {:noreply, socket}
     end
   end
-```
-
-## Directives
-
-Directives are built-in attributes that can modify the translated code of a component
-at compile time. Currently, the following directives are supported:
-
-  * `:for` - Iterates over a list (generator) and renders the content of the tag (or component)
-    for each item in the list.
-
-  * `:if` - Conditionally render a tag (or component). The code will be rendered if the expression
-    is evaluated to a truthy value.
-
-  * `:show` - Conditionally shows/hides an HTML tag, keeping the rendered alement in the DOM even
-    when the value is `false`.
-
-  * `:let` - Binds the input props passed by the slot when calling the `inner_content` function to
-    the current scope.
-
-  * `:on-[event]` - Sets a `phx` event binding defining the component itself as the
-    default handler (target). This is the prefered way to use `phx` events in **Surface** as it can
-    properly handle properties of type `:event`. Available directives are: `:on-phx-click`,
-    `:on-phx-blur`, `:on-phx-focus`, `:on-phx-change`, `:on-phx-submit`, `:on-phx-keydown`
-    and `:on-phx-keyup`.
-
-### Example
-
-```jsx
-<div>
-  <div class="header" :if={{ @showHeader }}>
-    The Header
-  </div>
-  <ul>
-    <li :for={{ item <- @items }}>
-      {{ item }}
-    </li>
-  </ul>
-</div>
 ```
 
 ## Static checking

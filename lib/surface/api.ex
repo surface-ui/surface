@@ -414,10 +414,6 @@ defmodule Surface.API do
     end
   end
 
-  defp get_valid_opts(:property, :list, _opts) do
-    [:required, :default]
-  end
-
   defp get_valid_opts(:property, _type, _opts) do
     [:required, :default, :values]
   end

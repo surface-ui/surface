@@ -29,7 +29,7 @@ defmodule Surface.Components.LivePatch do
   property label, :string
 
   @doc """
-  The content of the generated `<a>` element. Note: if no content is provided,
+  The content of the generated `<a>` element. If no content is provided,
   the value of property `label` is used instead.
   """
   slot default
