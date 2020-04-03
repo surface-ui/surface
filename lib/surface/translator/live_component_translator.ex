@@ -26,10 +26,16 @@ defmodule Surface.Translator.LiveComponentTranslator do
     open = [
       add_require(mod_str),
       ["<% props = ", translate_attributes(attributes, mod, mod_str, space, caller), " %>"],
-      "<% props = Map.put(props, :__surface__, %{slots: ", slots_meta, "}) %>",
+      "<% props = Map.put(props, :__surface__, %{slots: ",
+      slots_meta,
+      "}) %>",
       add_begin_context(mod, mod_str),
       ["<% children_props = ", children_props_str, " %>"],
-      add_render_call("live_component", ["@socket", mod_str, "Keyword.new(Map.merge(props, children_props))"], has_children?)
+      add_render_call(
+        "live_component",
+        ["@socket", mod_str, "Keyword.new(Map.merge(props, children_props))"],
+        has_children?
+      )
     ]
 
     close = [

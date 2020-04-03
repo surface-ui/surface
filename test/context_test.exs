@@ -77,69 +77,64 @@ defmodule ContextTest do
   end
 
   test "pass context to child component" do
-    code =
-      """
-      <Outer>
-        <Inner/>
-      </Outer>
-      """
+    code = """
+    <Outer>
+      <Inner/>
+    </Outer>
+    """
 
     assert render_live(code) =~ """
-    <span id="field">field from Outer</span>\
-    """
+           <span id="field">field from Outer</span>\
+           """
   end
 
   test "pass context to child component using :as option" do
-    code =
-      """
-      <Outer>
-        <InnerWithOptionAs/>
-      </Outer>
-      """
+    code = """
+    <Outer>
+      <InnerWithOptionAs/>
+    </Outer>
+    """
 
     assert render_live(code) =~ """
-    <div><span>field from Outer</span></div>
-    """
+           <div><span>field from Outer</span></div>
+           """
   end
 
   test "pass context down the tree of components" do
-    code =
-      """
-      <Outer>
-        <InnerWrapper />
-      </Outer>
-      """
+    code = """
+    <Outer>
+      <InnerWrapper />
+    </Outer>
+    """
 
     assert render_live(code) =~ """
-    <span id="field">field from Outer</span>\
-    """
+           <span id="field">field from Outer</span>\
+           """
   end
 
   test "context assingns are scoped by their parent components" do
-    code =
-      """
-      <Outer>
-        <InnerWrapper/>
-      </Outer>
-      """
+    code = """
+    <Outer>
+      <InnerWrapper/>
+    </Outer>
+    """
 
     assert render_live(code) =~ """
-    <span id="field">field from Outer</span>\
-    <span id="other_field">field from InnerWrapper</span>\
-    """
+           <span id="field">field from Outer</span>\
+           <span id="other_field">field from InnerWrapper</span>\
+           """
   end
 
   test "reset context after the component" do
-    code =
-      """
-      <Outer>
-        <Inner/>
-      </Outer>
-      <RenderContext/>
-      """
+    code = """
+    <Outer>
+      <Inner/>
+    </Outer>
+    <RenderContext/>
+    """
 
     assert render_live(code) =~ """
-    Context: %{}
-    """
+           Context: %{}
+           """
   end
 end

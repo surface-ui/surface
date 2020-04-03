@@ -23,6 +23,7 @@ defmodule Surface.EventsTest do
 
     def render(assigns) do
       assigns = Map.put(assigns, :__surface_cid__, "button")
+
       ~H"""
       <button :on-phx-click={{ @click }}>Click me!</button>
       """
@@ -40,6 +41,7 @@ defmodule Surface.EventsTest do
 
     def render(assigns) do
       assigns = Map.put(assigns, :__surface_cid__, "panel")
+
       ~H"""
       <div>
         <Button id="button_id" click={{ @buttonClick }}/>
@@ -87,70 +89,67 @@ defmodule Surface.EventsTest do
   test "handle event in the parent liveview" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
 
-    assert_html html =~ """
-    <button surface-cid="button" phx-click="click" data-phx-component="1">Click me!</button>
-    """
+    assert_html(
+      html =~ """
+      <button surface-cid="button" phx-click="click" data-phx-component="1">Click me!</button>
+      """
+    )
   end
 
   test "handle event in parent component" do
-    code =
-      """
-      <div>
-        <Panel id="panel_id"/>
-      </div>
-      """
+    code = """
+    <div>
+      <Panel id="panel_id"/>
+    </div>
+    """
 
     assert render_live(code) =~ """
-    <button surface-cid="button" phx-click="click" phx-target="[surface-cid=panel]"\
-    """
+           <button surface-cid="button" phx-click="click" phx-target="[surface-cid=panel]"\
+           """
   end
 
   test "handle event locally" do
-    code =
-      """
-      <div>
-        <Button id="button_id"/>
-      </div>
-      """
+    code = """
+    <div>
+      <Button id="button_id"/>
+    </div>
+    """
 
     assert render_live(code) =~ """
-    <button surface-cid="button" phx-click="click" phx-target="[surface-cid=button]"\
-    """
+           <button surface-cid="button" phx-click="click" phx-target="[surface-cid=button]"\
+           """
   end
 
   test "override target" do
-    code =
-      """
-      <div>
-        <Button id="button_id" click={{ %{name: "ok", target: "#comp"} }}/>
-      </div>
-      """
+    code = """
+    <div>
+      <Button id="button_id" click={{ %{name: "ok", target: "#comp"} }}/>
+    </div>
+    """
 
     assert render_live(code) =~ """
-    phx-click="ok" phx-target="#comp"\
-    """
+           phx-click="ok" phx-target="#comp"\
+           """
   end
 
   test "override target with keyword list notation" do
-    code =
-      """
-      <div>
-        <Button id="button_id" click={{ "ok", target: "#comp" }}/>
-      </div>
-      """
+    code = """
+    <div>
+      <Button id="button_id" click={{ "ok", target: "#comp" }}/>
+    </div>
+    """
 
     assert render_live(code) =~ """
-    phx-click="ok" phx-target="#comp"\
-    """
+           phx-click="ok" phx-target="#comp"\
+           """
   end
 
   test "passing event as nil does not render phx-*" do
-    code =
-      """
-      <div>
-        <Button id="button_id" click={{ nil }}/>
-      </div>
-      """
+    code = """
+    <div>
+      <Button id="button_id" click={{ nil }}/>
+    </div>
+    """
 
     html = render_live(code)
 
@@ -160,17 +159,17 @@ defmodule Surface.EventsTest do
   end
 
   test "raise error when passing an :event into a phx-* binding" do
+    code = """
+    <div>
+      <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
+    </div>
+    """
 
-    code =
-      """
-      <div>
-        <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
-      </div>
-      """
-
-    message = "invalid value for \"phx-click\". LiveView bindings only accept values " <>
-              "of type :string. If you want to pass an :event, please use directive " <>
-              ":on-phx-click instead. Expected a :string, got: %{name: \"ok\", target: :live_view}"
+    message = """
+    invalid value for "phx-click". LiveView bindings only accept values \
+    of type :string. If you want to pass an :event, please use directive \
+    :on-phx-click instead. Expected a :string, got: %{name: "ok", target: :live_view}\
+    """
 
     assert_raise(RuntimeError, message, fn ->
       render_live(code)

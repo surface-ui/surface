@@ -1,13 +1,29 @@
 defmodule Surface.API do
   @moduledoc false
 
-  @types [:any, :css_class, :list, :event, :boolean, :string, :date,
-          :datetime, :number, :integer, :decimal, :map, :fun, :atom, :module,
-          :changeset, :form]
+  @types [
+    :any,
+    :css_class,
+    :list,
+    :event,
+    :boolean,
+    :string,
+    :date,
+    :datetime,
+    :number,
+    :integer,
+    :decimal,
+    :map,
+    :fun,
+    :atom,
+    :module,
+    :changeset,
+    :form
+  ]
 
   @private_opts [:action, :to]
 
-  defmacro __using__([include: include]) do
+  defmacro __using__(include: include) do
     arities = %{
       property: [2, 3],
       slot: [1, 2],
@@ -35,6 +51,7 @@ defmodule Surface.API do
 
   defmacro __before_compile__(env) do
     generate_docs(env)
+
     [
       quoted_property_funcs(env),
       quoted_slot_funcs(env),
@@ -106,8 +123,11 @@ defmodule Surface.API do
   end
 
   defmacro context({:get, _, [_name_ast, type]}) when type in @types do
-    message = "cannot redefine the type of the assign when using action :get. " <>
-              "The type is already defined by a parent component using action :set"
+    message = """
+    cannot redefine the type of the assign when using action :get. \
+    The type is already defined by a parent component using action :set\
+    """
+
     raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
   end
 
@@ -150,8 +170,11 @@ defmodule Surface.API do
   # invalid usage
 
   defmacro context({_action, _, args}) when length(args) > 2 do
-    message = "invalid use of context. Usage: `context get name, opts`" <>
-              " or `context set name, type, opts \\ []`"
+    message = """
+    invalid use of context. Usage: `context get name, opts` \
+    or `context set name, type, opts \\ []`\
+    """
+
     raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
   end
 
@@ -169,15 +192,19 @@ defmodule Surface.API do
 
     if Keyword.get(assign.opts, :scope) != :only_children do
       if existing_assign do
-        message = "cannot use name \"#{assign.name}\". There's already " <>
-                  "a #{existing_assign.func} assign with the same name " <>
-                  "at line #{existing_assign.line}." <> suggestion_for_duplicated_assign(assign)
+        message = """
+        cannot use name \"#{assign.name}\". There's already \
+        a #{existing_assign.func} assign with the same name \
+        at line #{existing_assign.line}.#{suggestion_for_duplicated_assign(assign)}\
+        """
+
         raise %CompileError{line: assign.line, file: caller.file, description: message}
       else
         assigns = Map.put(assigns, name, assign)
         Module.put_attribute(caller.module, :assigns, assigns)
       end
     end
+
     Module.put_attribute(caller.module, assign.func, assign)
     assign
   end
@@ -190,6 +217,7 @@ defmodule Surface.API do
           if you only need this context assign in the child components, \
           you can set option :scope as :only_children to solve the issue.\
           """
+
         :get ->
           "you can use the :as option to set another name for the context assign."
       end
@@ -342,7 +370,7 @@ defmodule Surface.API do
   end
 
   defp validate_name(_func, {name, meta, context})
-    when is_atom(name) and is_list(meta) and is_atom(context) do
+       when is_atom(name) and is_list(meta) and is_atom(context) do
     {:ok, name}
   end
 
@@ -355,12 +383,12 @@ defmodule Surface.API do
   end
 
   defp validate_type(func, name, type) do
-    message =
-      """
-      invalid type #{Macro.to_string(type)} for #{func} #{name}.
-      Expected one of #{inspect(@types)}.
-      Hint: Use :any if the type is not listed.\
-      """
+    message = """
+    invalid type #{Macro.to_string(type)} for #{func} #{name}.
+    Expected one of #{inspect(@types)}.
+    Hint: Use :any if the type is not listed.\
+    """
+
     {:error, message}
   end
 
@@ -368,13 +396,13 @@ defmodule Surface.API do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
-         [] <- keys -- valid_opts ++ @private_opts do
+         [] <- keys -- (valid_opts ++ @private_opts) do
       :ok
     else
       false ->
         {:error,
-          "invalid options for #{func} #{name}. " <>
-          "Expected a keyword list of options, got: #{inspect(opts)}"}
+         "invalid options for #{func} #{name}. " <>
+           "Expected a keyword list of options, got: #{inspect(opts)}"}
 
       unknown_options ->
         valid_opts = get_valid_opts(func, type, opts)
@@ -399,6 +427,7 @@ defmodule Surface.API do
       case validate_opt(func, type, key, value) do
         :ok ->
           {:cont, :ok}
+
         error ->
           {:halt, error}
       end
@@ -409,6 +438,7 @@ defmodule Surface.API do
     case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
       [] ->
         :ok
+
       missing_opts ->
         {:error, "the following options are required: #{inspect(missing_opts)}"}
     end
@@ -430,6 +460,7 @@ defmodule Surface.API do
     case Keyword.fetch!(opts, :action) do
       :get ->
         [:from, :as]
+
       :set ->
         [:scope]
     end
@@ -439,6 +470,7 @@ defmodule Surface.API do
     case Keyword.fetch!(opts, :action) do
       :get ->
         [:from]
+
       _ ->
         []
     end
@@ -457,8 +489,10 @@ defmodule Surface.API do
         {:cont, {:ok, [%{name: name, generator: nil} | acc]}}
 
       ast, _ ->
-        message = "invalid slot prop #{Macro.to_string(ast)}. " <>
-                  "Expected an atom or a binding to a generator as `key: ^property_name`"
+        message =
+          "invalid slot prop #{Macro.to_string(ast)}. " <>
+            "Expected an atom or a binding to a generator as `key: ^property_name`"
+
         {:halt, {:error, message}}
     end)
   end
@@ -473,12 +507,18 @@ defmodule Surface.API do
   end
 
   defp validate_opt(_func, _type, :values, value) when not is_list(value) do
-    {:error, "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
+    {:error,
+     "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
   end
 
   defp validate_opt(:context, _type, :scope, value)
-    when value not in [:only_children, :self_and_children] do
-    {:error, "invalid value for option :scope. Expected :only_children or :self_and_children, got: #{inspect(value)}"}
+       when value not in [:only_children, :self_and_children] do
+    message = """
+    invalid value for option :scope. Expected :only_children or :self_and_children, \
+    got: #{inspect(value)}
+    """
+
+    {:error, message}
   end
 
   defp validate_opt(:context, _type, :from, value) when not is_atom(value) do
@@ -498,12 +538,15 @@ defmodule Surface.API do
       case unknown_options do
         [option] ->
           {"", option}
+
         _ ->
           {"s", unknown_options}
       end
 
-    "unknown option#{plural} #{inspect(unknown_items)}. " <>
-    "Available options: #{inspect(valid_opts)}"
+    """
+    unknown option#{plural} #{inspect(unknown_items)}. \
+    Available options: #{inspect(valid_opts)}\
+    """
   end
 
   defp format_opts(opts_ast) do
@@ -514,13 +557,16 @@ defmodule Surface.API do
 
   defp generate_docs(env) do
     props_doc = generate_props_docs(env.module)
+
     {line, doc} =
       case Module.get_attribute(env.module, :moduledoc) do
         nil ->
           {env.line, props_doc}
+
         {line, doc} ->
           {line, doc <> "\n" <> props_doc}
       end
+
     Module.put_attribute(env.module, :moduledoc, {line, doc})
   end
 
@@ -544,9 +590,12 @@ defmodule Surface.API do
   defp validate_has_init_context(env) do
     for var <- Module.get_attribute(env.module, :context) || [] do
       if Keyword.get(var.opts, :action) == :set do
-        message = "context assign \"#{var.name}\" not initialized. " <>
-                  "You should implement an init_context/1 callback and initialize its " <>
-                  "value by returning {:ok, #{var.name}: ...}"
+        message = """
+        context assign \"#{var.name}\" not initialized. \
+        You should implement an init_context/1 callback and initialize its \
+        value by returning {:ok, #{var.name}: ...}\
+        """
+
         Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
       end
     end
@@ -560,22 +609,23 @@ defmodule Surface.API do
       case env.module.__get_prop__(generator) do
         nil ->
           existing_properties_names = env.module.__props__() |> Enum.map(& &1.name)
-          message =
-            """
-            cannot bind slot prop `#{name}` to property `#{generator}`. \
-            Expected a existing property after `^`, \
-            got: an undefined property `#{generator}`.
-            Hint: Existing properties are #{inspect(existing_properties_names)}\
-            """
+
+          message = """
+          cannot bind slot prop `#{name}` to property `#{generator}`. \
+          Expected a existing property after `^`, \
+          got: an undefined property `#{generator}`.
+          Hint: Existing properties are #{inspect(existing_properties_names)}\
+          """
+
           raise %CompileError{line: slot.line, file: env.file, description: message}
 
         %{type: type} when type != :list ->
-          message =
-            """
-            cannot bind slot prop `#{name}` to property `#{generator}`. \
-            Expected a property of type :list after `^`, \
-            got: a property of type #{inspect(type)}\
-            """
+          message = """
+          cannot bind slot prop `#{name}` to property `#{generator}`. \
+          Expected a property of type :list after `^`, \
+          got: a property of type #{inspect(type)}\
+          """
+
           raise %CompileError{line: slot.line, file: env.file, description: message}
 
         _ ->
@@ -585,7 +635,8 @@ defmodule Surface.API do
   end
 
   defp validate_required_slots!(env) do
-    for {{mod, _parent_node_id, line}, assigned_slots} <- env.module.__assigned_slots_by_parent__(),
+    for {{mod, _parent_node_id, line}, assigned_slots} <-
+          env.module.__assigned_slots_by_parent__(),
         name <- mod.__required_slots_names__(),
         !MapSet.member?(assigned_slots, name) do
       message = "missing required slot `#{name}` for `#{inspect(mod)}`"
@@ -599,6 +650,7 @@ defmodule Surface.API do
         {_, doc} -> doc
         _ -> nil
       end
+
     Module.delete_attribute(module, :doc)
     doc
   end

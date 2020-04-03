@@ -4,7 +4,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   alias Surface.Translator.SlotTranslator
 
   def add_render_call(renderer, args, has_children? \\ false) do
-    ["<%= ", renderer, "(",  Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>"]
+    ["<%= ", renderer, "(", Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>"]
   end
 
   def maybe_add(value, condition) do
@@ -24,10 +24,13 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   end
 
   def maybe_add_fallback_content(condition) do
-    maybe_add([
-      "<% {prop, i, arg} -> %>",
-      ~S[<%= raise "no matching content function for #{inspect(prop)}\##{i} with argument #{inspect(arg)}" %>]
-    ], condition)
+    maybe_add(
+      [
+        "<% {prop, i, arg} -> %>",
+        ~S[<%= raise "no matching content function for #{inspect(prop)}\##{i} with argument #{inspect(arg)}" %>]
+      ],
+      condition
+    )
   end
 
   defp find_bindings_from_lists(module, attributes) do
@@ -46,10 +49,12 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       {":let", {:attribute_expr, [expr]}, %{line: line}} ->
         bindings =
           "[#{String.trim(expr)}]"
-          |> Code.string_to_quoted!
-          |> List.flatten
+          |> Code.string_to_quoted!()
+          |> List.flatten()
           |> Enum.map(fn {k, v} -> {k, Macro.to_string(v)} end)
+
         {bindings, line}
+
       _ ->
         {[], nil}
     end
@@ -58,7 +63,15 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   def translate_children(mod, attributes, directives, children, caller) do
     {parent_bindings, line} = find_let_bindings(directives)
     slots_with_args = get_slots_with_args(mod, attributes)
-    validate_let_bindings!(:default, parent_bindings, slots_with_args[:default] || [], mod, caller, line)
+
+    validate_let_bindings!(
+      :default,
+      parent_bindings,
+      slots_with_args[:default] || [],
+      mod,
+      caller,
+      line
+    )
 
     opts = %{
       parent: mod,
@@ -87,9 +100,11 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
     if function_exported?(mod, :__props__, 0) do
       translated_values =
-        Enum.reduce(attributes, [], fn {key, value, %{line: line, spaces: spaces}}, translated_values ->
+        Enum.reduce(attributes, [], fn {key, value, %{line: line, spaces: spaces}},
+                                       translated_values ->
           key_atom = String.to_atom(key)
           prop = mod.__get_prop__(key_atom)
+
           if mod.__props__() != [] && !mod.__validate_prop__(key_atom) do
             message = "Unknown property \"#{key}\" for component <#{mod_str}>"
             Surface.Translator.IO.warn(message, caller, &(&1 + line))
@@ -135,6 +150,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
           event_reference = {to_string(event), caller.line + line}
           Module.put_attribute(caller.module, :event_references, event_reference)
         end
+
         {:attribute_expr, ["event_value(\"#{key}\", \"#{event}\", assigns[:__surface_cid__])"]}
     end
   end
@@ -144,9 +160,11 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       case String.split(expr, "<-") do
         [_lhs, value] ->
           value
+
         [value] ->
           value
       end
+
     {:attribute_expr, [value]}
   end
 
@@ -157,9 +175,11 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       case String.trim(expr) do
         "[" <> _ ->
           expr
+
         _ ->
           "[#{expr}]"
-    end
+      end
+
     {:attribute_expr, ["css_class(#{new_expr})"]}
   end
 
@@ -168,6 +188,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       case item do
         {:attribute_expr, [expr]} ->
           ["\#{", expr, "}"]
+
         _ ->
           item
       end
@@ -182,7 +203,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   def blank?([]), do: true
 
-  def blank?([h|t]), do: blank?(h) && blank?(t)
+  def blank?([h | t]), do: blank?(h) && blank?(t)
 
   def blank?(""), do: true
 
@@ -204,28 +225,50 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         case Map.get(meta, :slot) do
           {value, line} ->
             {value, line}
-           _ ->
+
+          _ ->
             {nil, nil}
         end
       end
+
     slot_args = opts.slots_with_args[slot_name] || []
-    slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} ->  v end)
+    slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} -> v end)
 
     {child_bindings, line} = find_let_bindings(directives)
     validate_slot!(slot_name, opts.parent, opts.caller, slot_name_line)
-    validate_let_bindings!(slot_name, child_bindings, slot_args, module || opts.parent, opts.caller, line)
+
+    validate_let_bindings!(
+      slot_name,
+      child_bindings,
+      slot_args,
+      module || opts.parent,
+      opts.caller,
+      line
+    )
 
     merged_args = Keyword.merge(slot_args_with_generators, child_bindings)
     args = args_to_map_string(merged_args)
 
     slots_meta = Map.put_new(slots_meta, slot_name, %{size: 0})
     meta = slots_meta[slot_name]
-    content = ["<% {", inspect(slot_name), ", ", to_string(meta.size), ", ", args, "} -> %>", children]
-    slots_meta = Map.put(slots_meta, slot_name, %{size: meta.size + 1, binding: merged_args != []})
+
+    content = [
+      "<% {",
+      inspect(slot_name),
+      ", ",
+      to_string(meta.size),
+      ", ",
+      args,
+      "} -> %>",
+      children
+    ]
+
+    slots_meta =
+      Map.put(slots_meta, slot_name, %{size: meta.size + 1, binding: merged_args != []})
 
     slots_props = Map.put_new(slots_props, slot_name, [])
     props = translate_attributes(attributes, module, mod_str, space, opts.caller)
-    slots_props = Map.update(slots_props, slot_name, [], &[props|&1])
+    slots_props = Map.update(slots_props, slot_name, [], &[props | &1])
 
     {slots_props, slots_meta, [content | contents], [], opts}
   end
@@ -244,7 +287,16 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       else
         meta = slots_meta[:__default__]
         args = args_to_map_string(opts.parent_args)
-        content = ["<% {:__default__, ", to_string(meta.size), ", ", args, "} -> %>", Enum.reverse(temp_contents)]
+
+        content = [
+          "<% {:__default__, ",
+          to_string(meta.size),
+          ", ",
+          args,
+          "} -> %>",
+          Enum.reverse(temp_contents)
+        ]
+
         slots_meta = update_in(slots_meta, [:__default__, :size], &(&1 + 1))
         {slots_meta, [content | contents]}
       end
@@ -262,6 +314,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         for %{name: name, generator: generator} <- args_list do
           {name, bindings[generator]}
         end
+
       {name, args}
     end
   end
@@ -269,7 +322,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   defp args_to_map_string(args) do
     map_content =
       args
-      |> Enum.map(fn {k, v} -> "#{k}: #{v}" end )
+      |> Enum.map(fn {k, v} -> "#{k}: #{v}" end)
       |> Enum.join(", ")
 
     ["%{", map_content, "}"]
@@ -281,10 +334,13 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         {:attribute_expr, value} ->
           expr = value |> IO.iodata_to_binary() |> String.trim()
           ["(", expr, ")"]
+
         value when is_integer(value) ->
           to_string(value)
+
         value when is_boolean(value) ->
           inspect(value)
+
         _ ->
           [~S("), value, ~S(")]
       end
@@ -312,24 +368,25 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
     cond do
       child_bindings_keys != [] && slot_args_keys == [] ->
-        message =
-          """
-          there's no `#{slot_name}` slot defined in `#{inspect(mod)}`. \
-          Directive :let can only be used on explicitly defined slots.
-          Hint: You can define a `#{slot_name}` slot and its props using: \
-          `slot #{slot_name}, props: #{inspect(child_bindings_keys)}\
-          """
+        message = """
+        there's no `#{slot_name}` slot defined in `#{inspect(mod)}`. \
+        Directive :let can only be used on explicitly defined slots.
+        Hint: You can define a `#{slot_name}` slot and its props using: \
+        `slot #{slot_name}, props: #{inspect(child_bindings_keys)}\
+        """
+
         raise %CompileError{line: caller.line + line, file: caller.file, description: message}
 
       undefined_keys != [] ->
         [prop | _] = undefined_keys
-        message =
-          """
-          undefined prop `#{inspect(prop)}` for slot `#{slot_name}` in `#{inspect(mod)}`. \
-          Existing props are: #{inspect(slot_args_keys)}.
-          Hint: You can define a new slot prop using the `props` option: \
-          `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
-          """
+
+        message = """
+        undefined prop `#{inspect(prop)}` for slot `#{slot_name}` in `#{inspect(mod)}`. \
+        Existing props are: #{inspect(slot_args_keys)}.
+        Hint: You can define a new slot prop using the `props` option: \
+        `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
+        """
+
         raise %CompileError{line: caller.line + line, file: caller.file, description: message}
 
       true ->
@@ -340,23 +397,28 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   defp validate_slot!(slot_name, parent_mod, caller, line) do
     cond do
       !function_exported?(parent_mod, :__slots__, 0) ->
-        message =
-          """
-          parent component `#{inspect(parent_mod)}` does not define any slots. \
-          Cannot insert component #{inspect(caller.module)} here.
-          """
+        message = """
+        parent component `#{inspect(parent_mod)}` does not define any slots. \
+        Cannot insert component #{inspect(caller.module)} here.
+        """
+
         raise %CompileError{line: caller.line, file: caller.file, description: message}
 
       parent_mod.__get_slot__(slot_name) == nil ->
         parent_slots = parent_mod.__slots__() |> Enum.map(& &1.name)
-        existing_slots_message = if parent_slots == [], do: "",
-          else: ". Existing slots are: #{inspect(parent_slots)}"
 
-        message =
-          """
-          there's no slot `#{slot_name}` defined in parent \
-          `#{inspect(parent_mod)}`#{existing_slots_message}\
-          """
+        existing_slots_message =
+          if parent_slots == [] do
+            ""
+          else
+            ". Existing slots are: #{inspect(parent_slots)}"
+          end
+
+        message = """
+        there's no slot `#{slot_name}` defined in parent \
+        `#{inspect(parent_mod)}`#{existing_slots_message}\
+        """
+
         raise %CompileError{line: caller.line + line, file: caller.file, description: message}
 
       true ->

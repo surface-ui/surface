@@ -58,10 +58,11 @@ defmodule Surface.Translator.ParserTest do
     code = ~S(<MyComponent label="My label"/>)
     {:ok, [node]} = parse(code)
 
-    assert node == {"MyComponent", [
-      {"label", 'My label', %{line: 1, spaces: [" ", "", ""]}}
-      ], [], %{line: 1, space: ""}
-    }
+    assert node ==
+             {"MyComponent",
+              [
+                {"label", 'My label', %{line: 1, spaces: [" ", "", ""]}}
+              ], [], %{line: 1, space: ""}}
   end
 
   test "spaces and line break between children" do
@@ -75,22 +76,22 @@ defmodule Surface.Translator.ParserTest do
     {:ok, tree} = parse(code)
 
     assert tree == [
-      {
-        "div",
-        '',
-        [
-          "\n  ",
-          {"span", '', '', %{line: 2, space: ""}},
-          " ",
-          {"span", [], [], %{line: 2, space: ""}},
-          "\n  ",
-          {"span", [], [], %{line: 3, space: ""}},
-          "\n"
-        ],
-        %{line: 1, space: ""}
-      },
-      "\n"
-    ]
+             {
+               "div",
+               '',
+               [
+                 "\n  ",
+                 {"span", '', '', %{line: 2, space: ""}},
+                 " ",
+                 {"span", [], [], %{line: 2, space: ""}},
+                 "\n  ",
+                 {"span", [], [], %{line: 3, space: ""}},
+                 "\n"
+               ],
+               %{line: 1, space: ""}
+             },
+             "\n"
+           ]
   end
 
   test "ignore comments" do
@@ -101,20 +102,22 @@ defmodule Surface.Translator.ParserTest do
     </div>
     """
 
-    assert parse(code) == {:ok, [
-      {
-        "div",
-        '',
-        [
-          "\n  ",
-          "\n  ",
-          {"span", [], [], %{line: 3, space: ""}},
-          "\n"
-        ],
-        %{line: 1, space: ""}
-      },
-      "\n"
-    ]}
+    assert parse(code) ==
+             {:ok,
+              [
+                {
+                  "div",
+                  '',
+                  [
+                    "\n  ",
+                    "\n  ",
+                    {"span", [], [], %{line: 3, space: ""}},
+                    "\n"
+                  ],
+                  %{line: 1, space: ""}
+                },
+                "\n"
+              ]}
   end
 
   describe "void elements" do
@@ -141,10 +144,12 @@ defmodule Surface.Translator.ParserTest do
 
       {:ok, [{"div", [], ["\n  ", node, "\n"], _}, "\n"]} = parse(code)
 
-      assert node == {"img", [
-        {"src", 'file.gif', %{line: 3, spaces: ["\n    ", "", ""]}},
-        {"alt", 'My image', %{line: 4, spaces: ["\n    ", "", ""]}}
-      ], [], %{line: 2, space: "\n  "}}
+      assert node ==
+               {"img",
+                [
+                  {"src", 'file.gif', %{line: 3, spaces: ["\n    ", "", ""]}},
+                  {"alt", 'My image', %{line: 4, spaces: ["\n    ", "", ""]}}
+                ], [], %{line: 2, space: "\n  "}}
     end
   end
 
@@ -162,7 +167,10 @@ defmodule Surface.Translator.ParserTest do
     test "mixed nodes" do
       assert parse("<foo>one<bar>two</bar>three</foo>") ==
                {:ok,
-                [{"foo", [], ["one", {"bar", [], ["two"], %{line: 1, space: ""}}, "three"], %{line: 1, space: ""}}]}
+                [
+                  {"foo", [], ["one", {"bar", [], ["two"], %{line: 1, space: ""}}, "three"],
+                   %{line: 1, space: ""}}
+                ]}
     end
 
     test "self-closing nodes" do
@@ -170,8 +178,11 @@ defmodule Surface.Translator.ParserTest do
                {:ok,
                 [
                   {"foo", [],
-                   ["one", {"bar", [], [{"bat", [], [], %{line: 1, space: ""}}], %{line: 1, space: ""}}, "three"],
-                   %{line: 1, space: ""}}
+                   [
+                     "one",
+                     {"bar", [], [{"bat", [], [], %{line: 1, space: ""}}], %{line: 1, space: ""}},
+                     "three"
+                   ], %{line: 1, space: ""}}
                 ]}
     end
   end
@@ -199,12 +210,20 @@ defmodule Surface.Translator.ParserTest do
 
     test "mixed curly bracket" do
       assert parse("<foo>bar{{baz}}bat</foo>") ==
-               {:ok, [{"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"], %{line: 1, space: ""}}]}
+               {:ok,
+                [
+                  {"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"],
+                   %{line: 1, space: ""}}
+                ]}
     end
 
     test "single-closing curly bracket" do
       assert parse("<foo>bar{{ 'a}b' }}bat</foo>") ==
-               {:ok, [{"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"], %{line: 1, space: ""}}]}
+               {:ok,
+                [
+                  {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"],
+                   %{line: 1, space: ""}}
+                ]}
     end
   end
 
@@ -245,7 +264,7 @@ defmodule Surface.Translator.ParserTest do
 
     test "do not perform interpolation for inner content" do
       assert parse("<#Foo>one {{ @var }} two</#Foo>") ==
-        {:ok, [{"#Foo", [], ["one {{ @var }} two"], %{line: 1, space: ""}}]}
+               {:ok, [{"#Foo", [], ["one {{ @var }} two"], %{line: 1, space: ""}}]}
     end
   end
 
@@ -317,7 +336,7 @@ defmodule Surface.Translator.ParserTest do
 
       attributes = [
         {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
-        {"prop2", 'value2',  %{line: 3, spaces: ["\n  ", "", ""]}}
+        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
@@ -335,11 +354,11 @@ defmodule Surface.Translator.ParserTest do
 
       attributes = [
         {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
-        {"prop2", 'value2',  %{line: 3, spaces: ["\n  ", "", ""]}}
+        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       assert parse(code) ==
-        {:ok, [{"#foo", attributes, ["\n  bar\n"], %{line: 1, space: "\n"}}, "\n"]}
+               {:ok, [{"#foo", attributes, ["\n  bar\n"], %{line: 1, space: "\n"}}, "\n"]}
     end
 
     test "regular nodes with whitespaces" do
@@ -356,9 +375,7 @@ defmodule Surface.Translator.ParserTest do
       attributes = [
         {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
         {"prop2", 'value 2', %{line: 3, spaces: ["", " ", " "]}},
-        {"prop3", {:attribute_expr, [" var3 "]},
-          %{line: 4, spaces: ["\n  ", " ", "\n    "]}
-        },
+        {"prop3", {:attribute_expr, [" var3 "]}, %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
         {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
       ]
 
@@ -395,12 +412,8 @@ defmodule Surface.Translator.ParserTest do
       """
 
       attributes = [
-        {"prop1", {:attribute_expr, [" var1 "]},
-          %{line: 2, spaces: ["\n  ", "", ""]}
-        },
-        {"prop2", {:attribute_expr, [" var2 "]},
-          %{line: 3, spaces: ["\n  ", "", ""]}
-        }
+        {"prop1", {:attribute_expr, [" var1 "]}, %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", {:attribute_expr, [" var2 "]}, %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}

@@ -100,13 +100,15 @@ defmodule Surface.LiveComponent do
         defoverridable mount: 1
 
         def mount(socket) do
-          super(assign(socket, unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults))))
+          assigns = unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults))
+          super(assign(socket, assigns))
         end
       end
     else
       quote do
         def mount(socket) do
-          {:ok, assign(socket, unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults)))}
+          assigns = unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults))
+          {:ok, assign(socket, assigns)}
         end
       end
     end

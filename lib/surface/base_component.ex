@@ -1,8 +1,5 @@
 defmodule Surface.BaseComponent do
-  @moduledoc !"""
-  This module defines the basic behaviour to be implemented by each
-  different type of component.
-  """
+  @moduledoc false
 
   @doc """
   Defines which module is responsible for translating the component. The
@@ -10,8 +7,7 @@ defmodule Surface.BaseComponent do
   """
   @callback translator() :: module
 
-  defmacro __using__([translator: translator]) do
-
+  defmacro __using__(translator: translator) do
     quote do
       import Surface
       @behaviour unquote(__MODULE__)

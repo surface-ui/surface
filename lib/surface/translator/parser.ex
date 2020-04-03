@@ -171,7 +171,13 @@ defmodule Surface.Translator.Parser do
     |> optional(closing_tag)
     |> post_traverse(:match_tags)
 
-  defp match_tags(_rest, [tag, [[{[tag], {opening_line, _}}, attr_nodes, space] | nodes]], context, _line, _offset) do
+  defp match_tags(
+         _rest,
+         [tag, [[{[tag], {opening_line, _}}, attr_nodes, space] | nodes]],
+         context,
+         _line,
+         _offset
+       ) do
     attributes = build_attributes(attr_nodes)
     {[{tag, attributes, nodes, %{line: opening_line, space: space}}], context}
   end
@@ -245,14 +251,26 @@ defmodule Surface.Translator.Parser do
     {[], %{context | macro: macro}}
   end
 
-  defp closing_macro_tag(_, [macro, rest], %{macro: [{[macro], {line, _}}, attr_nodes, space]} = context, _, _) do
+  defp closing_macro_tag(
+         _,
+         [macro, rest],
+         %{macro: [{[macro], {line, _}}, attr_nodes, space]} = context,
+         _,
+         _
+       ) do
     tag = "#" <> macro
     attributes = build_attributes(attr_nodes)
     text = IO.iodata_to_binary(rest)
     {[{tag, attributes, [text], %{line: line, space: space}}], %{context | macro: nil}}
   end
 
-  defp closing_macro_tag(_rest, _nodes, %{macro: [{[macro], {_line, _}}, _attr_nodes, _space]}, _, _) do
+  defp closing_macro_tag(
+         _rest,
+         _nodes,
+         %{macro: [{[macro], {_line, _}}, _attr_nodes, _space]},
+         _,
+         _
+       ) do
     {:error, "expected closing tag for #{inspect("#" <> macro)}"}
   end
 
@@ -269,18 +287,31 @@ defmodule Surface.Translator.Parser do
     end
   end
 
-  defparsecp :node,
-            [void_element_node, macro_node, self_closing_macro_node, regular_node, self_closing_node, comment]
-            |> choice()
-            |> label("opening HTML tag"),
-            inline: true
+  defparsecp(
+    :node,
+    [
+      void_element_node,
+      macro_node,
+      self_closing_macro_node,
+      regular_node,
+      self_closing_node,
+      comment
+    ]
+    |> choice()
+    |> label("opening HTML tag"),
+    inline: true
+  )
 
-  defparsecp :root,
-              repeat(choice([
-                interpolation,
-                string("{"),
-                text_with_interpolation,
-                ascii_string([not: ?<], min: 1),
-                parsec(:node)
-              ]))
+  defparsecp(
+    :root,
+    repeat(
+      choice([
+        interpolation,
+        string("{"),
+        text_with_interpolation,
+        ascii_string([not: ?<], min: 1),
+        parsec(:node)
+      ])
+    )
+  )
 end

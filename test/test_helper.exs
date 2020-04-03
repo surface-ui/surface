@@ -6,15 +6,15 @@ end
 
 defmodule Endpoint do
   use Phoenix.Endpoint, otp_app: :surface
-  plug Router
+  plug(Router)
 end
 
-Application.put_env(:surface, Endpoint, [
+Application.put_env(:surface, Endpoint,
   secret_key_base: "J4lTFt000ENUVhu3dbIB2P2vRVl2nDBH6FLefnPUImL8mHYNX8Kln/N9J0HH19Mq",
   live_view: [
     signing_salt: "LfCCMxfkGME8S8P8XU3Z6/7+ZlD9611u"
   ]
-])
+)
 
 Endpoint.start_link()
 
@@ -46,7 +46,7 @@ defmodule ComponentTestHelper do
     end
   end
 
-  defmacro render_live(code, assigns \\ quote do: %{}) do
+  defmacro render_live(code, assigns \\ quote(do: %{})) do
     quote do
       render_live(unquote(code), unquote(assigns), unquote(Macro.escape(__CALLER__)))
     end
@@ -57,12 +57,12 @@ defmodule ComponentTestHelper do
 
     view_code =
       "defmodule TestLiveView_#{id} do; " <>
-      "  use Surface.LiveView; " <>
-      "  def render(assigns) do; " <>
-      "    assigns = Map.merge(assigns, #{inspect(assigns)}); " <>
-      "    ~H(#{code});" <>
-      "  end; " <>
-      "end"
+        "  use Surface.LiveView; " <>
+        "  def render(assigns) do; " <>
+        "    assigns = Map.merge(assigns, #{inspect(assigns)}); " <>
+        "    ~H(#{code});" <>
+        "  end; " <>
+        "end"
 
     {{:module, module, _, _}, _} = Code.eval_string(view_code, [], %{env | file: "code", line: 0})
     conn = Phoenix.ConnTest.build_conn()
@@ -78,7 +78,9 @@ defmodule ComponentTestHelper do
     case Regex.run(~r/.exs:(\d+)/, message) do
       [_, line] ->
         String.to_integer(line)
-      _ -> :not_found
+
+      _ ->
+        :not_found
     end
   end
 end

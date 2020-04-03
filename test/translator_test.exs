@@ -66,33 +66,36 @@ defmodule TranslatorTest do
     code = """
     <Button label={{ @label }}/>
     """
+
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    label: (@label)\
-    """
+           label: (@label)\
+           """
   end
 
   test "component with expressions inside a string" do
     code = """
     <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />
     """
+
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    label: "str_1 \#{@str_2} str_3 \#{@str_4 <> @str_5}"\
-    """
+           label: "str_1 \#{@str_2} str_3 \#{@str_4 <> @str_5}"\
+           """
   end
 
   test "component with events" do
     code = """
     <Button click="click_event" />
     """
+
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    click: (event_value(\"click\", \"click_event\", assigns[:__surface_cid__]))\
-    """
+           click: (event_value(\"click\", \"click_event\", assigns[:__surface_cid__]))\
+           """
   end
 
   test "self-closed component with white spaces between attributes" do
@@ -104,16 +107,17 @@ defmodule TranslatorTest do
         "event"
     />
     """
+
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    <% props = put_default_props(%{
-      label:  "label",
-      disabled: true,
-      click:
-        (event_value(\"click\", "event", assigns[:__surface_cid__]))
-    }, Button) %>\
-    """
+           <% props = put_default_props(%{
+             label:  "label",
+             disabled: true,
+             click:
+               (event_value(\"click\", "event", assigns[:__surface_cid__]))
+           }, Button) %>\
+           """
   end
 
   test "regular node component with white spaces between attributes" do
@@ -125,16 +129,17 @@ defmodule TranslatorTest do
         "event"
     ></Button>
     """
+
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    <% props = put_default_props(%{
-      label: "label",
-      disabled: true,
-      click:
-        (event_value(\"click\", "event", assigns[:__surface_cid__]))
-    }, Button) %>\
-    """
+           <% props = put_default_props(%{
+             label: "label",
+             disabled: true,
+             click:
+               (event_value(\"click\", "event", assigns[:__surface_cid__]))
+           }, Button) %>\
+           """
   end
 
   test "HTML node with white spaces between attributes" do
@@ -146,16 +151,17 @@ defmodule TranslatorTest do
         "event"
     ></div>
     """
+
     translated = Surface.Translator.run(code, 0, __ENV__)
 
     assert translated =~ """
-    <div
-      label="<%= attr_value("label", "label") %>"
-      disabled
-      click=
-        "<%= attr_value("click", "event") %>"
-    ></div>\
-    """
+           <div
+             label="<%= attr_value("label", "label") %>"
+             disabled
+             click=
+               "<%= attr_value("click", "event") %>"
+           ></div>\
+           """
   end
 
   test "LiveView's propeties are forwarded to live_render as options" do
@@ -178,7 +184,6 @@ defmodule TranslatorTest do
   end
 
   describe "errors/warnings" do
-
     test "warning when component cannot be loaded" do
       code = """
       <div>
@@ -338,6 +343,7 @@ defmodule TranslatorTest do
 
     test "raise error when calling @inner_content() instead of @inner_content.()" do
       id = :erlang.unique_integer([:positive]) |> to_string()
+
       view_code = """
       defmodule TestLiveComponent_#{id} do
         use Surface.Component
@@ -348,16 +354,20 @@ defmodule TranslatorTest do
       end
       """
 
-      message = "code.exs:5: the `inner_content` anonymous function should be called using " <>
-                "the dot-notation. Use `inner_content.()` instead of `inner_content()`"
+      message = """
+      code.exs:5: the `inner_content` anonymous function should be called using \
+      the dot-notation. Use `inner_content.()` instead of `inner_content()`\
+      """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
       end)
     end
 
     test "raise error when calling .inner_content() instead of .inner_content.()" do
       id = :erlang.unique_integer([:positive]) |> to_string()
+
       view_code = """
       defmodule TestLiveComponent_#{id} do
         use Surface.Component
@@ -368,16 +378,19 @@ defmodule TranslatorTest do
       end
       """
 
-      message = "code.exs:5: the `inner_content` anonymous function should be called using " <>
-                "the dot-notation. Use `inner_content.()` instead of `inner_content()`"
+      message =
+        "code.exs:5: the `inner_content` anonymous function should be called using " <>
+          "the dot-notation. Use `inner_content.()` instead of `inner_content()`"
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
       end)
     end
 
     test "warning on stateful components with more than one root element" do
       id = :erlang.unique_integer([:positive]) |> to_string()
+
       view_code = """
       defmodule TestLiveComponent_#{id} do
         use Surface.LiveComponent
@@ -390,7 +403,8 @@ defmodule TranslatorTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+          {{:module, _, _, _}, _} =
+            Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
         end)
 
       assert output =~ "stateful live components must have a single HTML root element"
@@ -399,6 +413,7 @@ defmodule TranslatorTest do
 
     test "warning on stateful components with text root element" do
       id = :erlang.unique_integer([:positive]) |> to_string()
+
       view_code = """
       defmodule TestLiveComponent_#{id} do
         use Surface.LiveComponent
@@ -411,7 +426,8 @@ defmodule TranslatorTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+          {{:module, _, _, _}, _} =
+            Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
         end)
 
       assert output =~ "stateful live components must have a HTML root element"
@@ -420,6 +436,7 @@ defmodule TranslatorTest do
 
     test "warning on stateful components with interpolation root element" do
       id = :erlang.unique_integer([:positive]) |> to_string()
+
       view_code = """
       defmodule TestLiveComponent_#{id} do
         use Surface.LiveComponent
@@ -432,7 +449,8 @@ defmodule TranslatorTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+          {{:module, _, _, _}, _} =
+            Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
         end)
 
       assert output =~ "stateful live components must have a HTML root element"
@@ -455,9 +473,9 @@ defmodule TranslatorTest do
     case output do
       "" ->
         {:ok, result}
+
       message ->
         {:warn, extract_line(output) - env.line, message}
     end
   end
 end
-

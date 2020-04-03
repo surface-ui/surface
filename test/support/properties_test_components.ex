@@ -17,6 +17,7 @@ defmodule Surface.PropertiesTest.Components do
 
   defmodule MyComponentWithModuledoc do
     use Surface.Component
+
     @moduledoc """
     My component with @moduledoc
     """

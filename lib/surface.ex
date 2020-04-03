@@ -60,9 +60,14 @@ defmodule Surface do
   """
   defmacro sigil_H({:<<>>, _, [string]}, _) do
     line_offset = __CALLER__.line + 1
+
     string
     |> Surface.Translator.run(line_offset, __CALLER__, __CALLER__.file)
-    |> EEx.compile_string(engine: Phoenix.LiveView.Engine, line: line_offset, file: __CALLER__.file)
+    |> EEx.compile_string(
+      engine: Phoenix.LiveView.Engine,
+      line: line_offset,
+      file: __CALLER__.file
+    )
   end
 
   @doc false
@@ -100,7 +105,7 @@ defmodule Surface do
         result ->
           runtime_error(
             "unexpected return value from init_context/1. " <>
-            "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
+              "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
           )
       end
 
@@ -122,6 +127,7 @@ defmodule Surface do
     Enum.reduce(mod.__context_sets__(), context, fn %{name: name, opts: opts}, acc ->
       to = Keyword.fetch!(opts, :to)
       context_entry = acc |> Map.get(to, %{}) |> Map.delete(name)
+
       if context_entry == %{} do
         Map.delete(acc, to)
       else
@@ -135,9 +141,11 @@ defmodule Surface do
     if String.Chars.impl_for(value) do
       value
     else
-      runtime_error "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
-            "the String.Chars protocol (e.g. string, boolean, integer, atom, ...), " <>
-            "got: #{inspect(value)}"
+      runtime_error(
+        "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
+          "the String.Chars protocol (e.g. string, boolean, integer, atom, ...), " <>
+          "got: #{inspect(value)}"
+      )
     end
   end
 
@@ -152,8 +160,10 @@ defmodule Surface do
   end
 
   def style(value, _show) do
-    runtime_error "invalid value for attribute \"style\". Expected a string " <>
-                  "got: #{inspect(value)}"
+    runtime_error(
+      "invalid value for attribute \"style\". Expected a string " <>
+        "got: #{inspect(value)}"
+    )
   end
 
   @doc false
@@ -162,13 +172,16 @@ defmodule Surface do
       case item do
         {class, true} ->
           [to_string(class) | classes]
+
         class when is_binary(class) or is_atom(class) ->
           [to_string(class) | classes]
 
         _ ->
           classes
       end
-    end) |> Enum.reverse() |> Enum.join(" ")
+    end)
+    |> Enum.reverse()
+    |> Enum.join(" ")
   end
 
   def css_class(value) when is_binary(value) do
@@ -211,7 +224,9 @@ defmodule Surface do
   end
 
   def event_value(key, event, _caller_cid) do
-    runtime_error "invalid value for event \"#{key}\". Expected an :event or :string, got: #{inspect(event)}"
+    runtime_error(
+      "invalid value for event \"#{key}\". Expected an :event or :string, got: #{inspect(event)}"
+    )
   end
 
   @doc false
@@ -246,8 +261,10 @@ defmodule Surface do
   end
 
   def on_phx_event(phx_event, event, _caller_cid) do
-    runtime_error "invalid value for \":on-#{phx_event}\". " <>
-      "Expected a :string or :event, got: #{inspect(event)}"
+    runtime_error(
+      "invalid value for \":on-#{phx_event}\". " <>
+        "Expected a :string or :event, got: #{inspect(event)}"
+    )
   end
 
   @doc false
@@ -256,9 +273,11 @@ defmodule Surface do
   end
 
   def phx_event(phx_event, value) do
-    runtime_error "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
-      "of type :string. If you want to pass an :event, please use directive " <>
-      ":on-#{phx_event} instead. Expected a :string, got: #{inspect(value)}"
+    runtime_error(
+      "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
+        "of type :string. If you want to pass an :event, please use directive " <>
+        ":on-#{phx_event} instead. Expected a :string, got: #{inspect(value)}"
+    )
   end
 
   defp quot(value) do
@@ -289,15 +308,19 @@ defmodule Surface do
     Enum.reduce(sets, {assigns, context}, fn %{name: name, opts: opts}, {assigns, context} ->
       to = Keyword.fetch!(opts, :to)
       scope = Keyword.get(opts, :scope)
+
       case Map.fetch(values, name) do
         {:ok, value} ->
           new_context_entry =
             context
             |> Map.get(to, %{})
             |> Map.put(name, value)
+
           new_context = Map.put(context, to, new_context_entry)
+
           new_assigns =
             if scope == :only_children, do: assigns, else: Map.put(assigns, name, value)
+
           {new_assigns, new_context}
 
         :error ->

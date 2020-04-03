@@ -17,5 +17,5 @@ defmodule Surface.MacroComponent do
   Tranlates the content of the macro component.
   """
   @callback translate(code :: any, caller: Macro.Env.t()) ::
-    {open :: iodata(), content :: iodata(), close :: iodata()}
+              {open :: iodata(), content :: iodata(), close :: iodata()}
 end

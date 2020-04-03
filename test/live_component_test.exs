@@ -63,6 +63,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       info = "Hi there!"
+
       ~H"""
         <div>
           {{ @inner_content.(info: info) }}
@@ -84,36 +85,33 @@ defmodule LiveComponentTest do
   end
 
   test "render content without slot props" do
-    code =
-      """
-      <InfoProviderWithoutSlotProps>
-        <span>Hi there!</span>
-      </InfoProviderWithoutSlotProps>
-      """
+    code = """
+    <InfoProviderWithoutSlotProps>
+      <span>Hi there!</span>
+    </InfoProviderWithoutSlotProps>
+    """
 
     assert render_live(code) =~ ~r"""
-    <div surface-cid=".+"><span>Hi there!</span></div>
-    """
+           <div surface-cid=".+"><span>Hi there!</span></div>
+           """
   end
 
   test "render content with slot props" do
-    code =
-      """
-      <InfoProvider :let={{ info: my_info }}>
-        <span>{{ my_info }}</span>
-      </InfoProvider>
-      """
+    code = """
+    <InfoProvider :let={{ info: my_info }}>
+      <span>{{ my_info }}</span>
+    </InfoProvider>
+    """
 
     assert render_live(code) =~ ~r"""
-    <div surface-cid=".+"><span>Hi there!</span></div>
-    """
+           <div surface-cid=".+"><span>Hi there!</span></div>
+           """
   end
 
   test "generate a different cid for each instance when using :for" do
-    code =
-      """
-      <StatefulComponent:for={{ i <- [1,2] }} id={{i}} />
-      """
+    code = """
+    <StatefulComponent:for={{ i <- [1,2] }} id={{i}} />
+    """
 
     [cid1, cid2] =
       Regex.scan(~r/surface-cid="(.+)"/U, render_live(code))

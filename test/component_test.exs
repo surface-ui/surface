@@ -50,6 +50,7 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       info = "My info"
+
       ~H"""
       <div>{{ @inner_content.(info: info) }}</div>
       """
@@ -113,72 +114,75 @@ defmodule Surface.ComponentTest do
     test "render stateless component" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithStateless)
 
-      assert_html html =~ """
-      <div class="myclass">
-        <span>My label</span>
-      </div>
-      """
+      assert_html(
+        html =~ """
+        <div class="myclass">
+          <span>My label</span>
+        </div>
+        """
+      )
     end
 
     test "render nested component's content" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithNested)
 
-      assert_html html =~ """
-      <div>
-        <span>Inner</span>
-      </div>
-      """
+      assert_html(
+        html =~ """
+        <div>
+          <span>Inner</span>
+        </div>
+        """
+      )
     end
 
     test "render content with slot props" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithSlotProps)
 
-      assert_html html =~ """
-      <div>
-        My info
-      </div>
-      """
+      assert_html(
+        html =~ """
+        <div>
+          My info
+        </div>
+        """
+      )
     end
   end
 
   describe "Without LiveView" do
     test "render stateless component" do
-      code =
-        """
-        <Stateless label="My label" class="myclass"/>
-        """
+      code = """
+      <Stateless label="My label" class="myclass"/>
+      """
 
       assert render_live(code) =~ """
-      <div class="myclass"><span>My label</span></div>
-      """
+             <div class="myclass"><span>My label</span></div>
+             """
     end
 
     test "render nested component's content" do
-      code =
-        """
-        <Outer>
-          <Inner/>
-        </Outer>
-        """
+      code = """
+      <Outer>
+        <Inner/>
+      </Outer>
+      """
 
       assert render_live(code) =~ """
-      <div><span>Inner</span></div>
-      """
+             <div><span>Inner</span></div>
+             """
     end
 
     test "render content with slot props" do
-      code =
-        """
-        <OuterWithSlotProps :let={{ info: my_info }}>
-          {{ my_info }}
-        </OuterWithSlotProps>
-        """
+      code = """
+      <OuterWithSlotProps :let={{ info: my_info }}>
+        {{ my_info }}
+      </OuterWithSlotProps>
+      """
 
       assert render_live(code) =~ """
-      <div>
-        My info
-      </div>
-      """
+             <div>
+               My info
+             </div>
+             """
     end
   end
 end

@@ -72,7 +72,9 @@ defmodule Surface.APITest do
 
   test "validate options" do
     code = "property label, :string, {:a, :b}"
-    message = ~r/invalid options for property label. Expected a keyword list of options, got: {:a, :b}/
+
+    message =
+      ~r/invalid options for property label. Expected a keyword list of options, got: {:a, :b}/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -109,11 +111,11 @@ defmodule Surface.APITest do
     property label, :string
     """
 
-    message =
-      ~r"""
-      cannot use name "label". \
-      There's already a property assign with the same name at line 4\
-      """
+    message = ~r"""
+    cannot use name "label". \
+    There's already a property assign with the same name at line 4\
+    """
+
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
@@ -129,11 +131,11 @@ defmodule Surface.APITest do
     context get label, from: Surface.APITest.ContextSetter
     """
 
-    message =
-      ~r"""
-      cannot use name "label". There's already a data assign with the same name at line 4.
-      Hint: you can use the :as option to set another name for the context assign.\
-      """
+    message = ~r"""
+    cannot use name "label". There's already a data assign with the same name at line 4.
+    Hint: you can use the :as option to set another name for the context assign.\
+    """
+
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
@@ -141,12 +143,12 @@ defmodule Surface.APITest do
     context set form, :form
     """
 
-    message =
-      ~r"""
-      cannot use name "form". There's already a property assign with the same name at line 4.
-      Hint: if you only need this context assign in the child components, \
-      you can set option :scope as :only_children to solve the issue.\
-      """
+    message = ~r"""
+    cannot use name "form". There's already a property assign with the same name at line 4.
+    Hint: if you only need this context assign in the child components, \
+    you can set option :scope as :only_children to solve the issue.\
+    """
+
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
@@ -177,7 +179,6 @@ defmodule Surface.APITest do
   end
 
   describe "property" do
-
     test "validate name" do
       code = "property {a, b}, :string"
       message = ~r/invalid property name. Expected a variable name, got: {a, b}/
@@ -203,7 +204,6 @@ defmodule Surface.APITest do
   end
 
   describe "slot" do
-
     test "validate name" do
       code = "slot {a, b}"
       message = ~r/invalid slot name. Expected a variable name, got: {a, b}/
@@ -215,6 +215,7 @@ defmodule Surface.APITest do
 
     test "validate slot props" do
       code = "slot cols, props: [:info, {a, b}]"
+
       message = ~r"""
       invalid slot prop {a, b}. Expected an atom or a \
       binding to a generator as `key: \^property_name`\
@@ -258,7 +259,8 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
 
@@ -284,7 +286,8 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
 
@@ -310,7 +313,8 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
 
@@ -337,7 +341,8 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
 
@@ -364,13 +369,13 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
   end
 
   describe "data" do
-
     test "validate name" do
       code = "data {a, b}, :string"
       message = ~r/invalid data name. Expected a variable name, got: {a, b}/
@@ -396,7 +401,6 @@ defmodule Surface.APITest do
   end
 
   describe "context :set" do
-
     test "validate action without options" do
       code = "context unknown name, :string"
       message = ~r/invalid context action. Expected :get or :set, got: :unknown/
@@ -408,11 +412,11 @@ defmodule Surface.APITest do
 
     test "validate action with options" do
       code = "context unknown name, :string, scope: :only_children"
-      message =
-        ~r"""
-        invalid use of context. Usage: `context get name, opts` or \
-        `context set name, type, opts \\ \[\]`\
-        """
+
+      message = ~r"""
+      invalid use of context. Usage: `context get name, opts` or \
+      `context set name, type, opts \\ \[\]`\
+      """
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -450,7 +454,9 @@ defmodule Surface.APITest do
 
     test "validate :scope" do
       code = "context set field, :atom, scope: :unknown"
-      message = ~r/invalid value for option :scope. Expected :only_children or :self_and_children, got: :unknown/
+
+      message =
+        ~r/invalid value for option :scope. Expected :only_children or :self_and_children, got: :unknown/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -489,19 +495,19 @@ defmodule Surface.APITest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
       assert output =~ ~r"""
-      context assign "field" not initialized. You should implement an init_context/1 \
-      callback and initialize its value by returning {:ok, field: ...}
-        code.exs:4:\
-      """
+             context assign "field" not initialized. You should implement an init_context/1 \
+             callback and initialize its value by returning {:ok, field: ...}
+               code.exs:4:\
+             """
     end
   end
 
   describe "context :get" do
-
     test "validate action" do
       code = "context unknown name, from: Surface.APITest.ContextSetter"
       message = ~r/invalid context action. Expected :get or :set, got: :unknown/
@@ -516,6 +522,7 @@ defmodule Surface.APITest do
       alias Surface.APITest.ContextSetter
       context get form, from: ContextSetter, as: :my_form
       """
+
       assert eval(code) == :ok
     end
 
@@ -523,6 +530,7 @@ defmodule Surface.APITest do
       code = """
       context get form, from: 1
       """
+
       message = ~r/invalid value for option :from. Expected a module, got: 1/
 
       assert_raise(CompileError, message, fn ->
@@ -534,6 +542,7 @@ defmodule Surface.APITest do
       code = """
       context get form, as: :my_form
       """
+
       message = ~r/the following options are required: \[:from\]/
 
       assert_raise(CompileError, message, fn ->
@@ -553,6 +562,7 @@ defmodule Surface.APITest do
       code = """
       context get form, from: Surface.APITest.ContextSetter, as: 1
       """
+
       message = ~r/invalid value for option :as. Expected an atom, got: 1/
 
       assert_raise(CompileError, message, fn ->
@@ -562,11 +572,11 @@ defmodule Surface.APITest do
 
     test "cannot define the type of the assign" do
       code = "context get name, :string"
-      message =
-        ~r"""
-        cannot redefine the type of the assign when using action :get. \
-        The type is already defined by a parent component using action :set\
-        """
+
+      message = ~r"""
+      cannot redefine the type of the assign when using action :get. \
+      The type is already defined by a parent component using action :set\
+      """
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -585,22 +595,22 @@ defmodule Surface.APITest do
 
   test "generate documentation when no @moduledoc is defined" do
     assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
-    ### Properties
+           ### Properties
 
-    * **label** *:string, required: true, default: ""* - The label.
-    * **class** *:css_class* - The class.
-    """
+           * **label** *:string, required: true, default: ""* - The label.
+           * **class** *:css_class* - The class.
+           """
   end
 
   test "append properties' documentation when @moduledoc is defined" do
     assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledoc) == """
-    My component with @moduledoc
+           My component with @moduledoc
 
-    ### Properties
+           ### Properties
 
-    * **label** *:string, required: true, default: ""* - The label.
-    * **class** *:css_class* - The class.
-    """
+           * **label** *:string, required: true, default: ""* - The label.
+           * **class** *:css_class* - The class.
+           """
   end
 
   defp eval(code) do

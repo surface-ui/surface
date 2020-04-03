@@ -6,18 +6,58 @@ defmodule Surface.Translator.TagTranslator do
   @behaviour Translator
 
   @void_elements [
-    "area", "base", "br", "col", "hr", "img", "input", "link",
-    "meta", "param", "command", "keygen", "source"
+    "area",
+    "base",
+    "br",
+    "col",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "command",
+    "keygen",
+    "source"
   ]
 
   @boolean_attributes [
-    "allowfullscreen", "allowpaymentrequest", "async", "autofocus", "autoplay", "checked",
-    "controls", "default", "defer", "disabled", "formnovalidate", "hidden", "ismap",
-    "itemscope", "loop", "multiple", "muted", "nomodule", "novalidate", "open", "readonly",
-    "required", "reversed", "selected", "typemustmatch"
+    "allowfullscreen",
+    "allowpaymentrequest",
+    "async",
+    "autofocus",
+    "autoplay",
+    "checked",
+    "controls",
+    "default",
+    "defer",
+    "disabled",
+    "formnovalidate",
+    "hidden",
+    "ismap",
+    "itemscope",
+    "loop",
+    "multiple",
+    "muted",
+    "nomodule",
+    "novalidate",
+    "open",
+    "readonly",
+    "required",
+    "reversed",
+    "selected",
+    "typemustmatch"
   ]
 
-  @phx_events ["phx-click", "phx-blur",  "phx-focus",  "phx-change",  "phx-submit",  "phx-keydown", "phx-keyup"]
+  @phx_events [
+    "phx-click",
+    "phx-blur",
+    "phx-focus",
+    "phx-change",
+    "phx-submit",
+    "phx-keydown",
+    "phx-keyup"
+  ]
 
   @impl true
   def translate({tag_name, attributes, _, %{space: space}}, _) when tag_name in @void_elements do
@@ -53,33 +93,75 @@ defmodule Surface.Translator.TagTranslator do
   end
 
   defp translate_attribute_assignment(":on-" <> event, value, %{spaces: spaces})
-    when event in @phx_events do
+       when event in @phx_events do
     [space1, space2, space3] = spaces
-    [space1, "<%= on_phx_event(\"", event, "\",", space2, "[", value_to_code(value), "], assigns[:__surface_cid__]) %>", space3]
+
+    [
+      space1,
+      "<%= on_phx_event(\"",
+      event,
+      "\",",
+      space2,
+      "[",
+      value_to_code(value),
+      "], assigns[:__surface_cid__]) %>",
+      space3
+    ]
   end
 
   defp translate_attribute_assignment("phx-" <> _ = phx_event, value, %{spaces: spaces})
-    when phx_event in @phx_events do
+       when phx_event in @phx_events do
     [space1, space2, space3] = spaces
-    [space1, phx_event, space2, "=", space3, "<%= phx_event(\"#{phx_event}\", ", value_to_code(value), ") %>"]
+
+    [
+      space1,
+      phx_event,
+      space2,
+      "=",
+      space3,
+      "<%= phx_event(\"#{phx_event}\", ",
+      value_to_code(value),
+      ") %>"
+    ]
   end
 
   defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, %{spaces: spaces})
-      when key in @boolean_attributes do
+       when key in @boolean_attributes do
     [space1, space2, space3] = spaces
     [space1, "<%= boolean_attr(\"", key, "\",", space2, expr, ") %>", space3]
   end
 
   defp translate_attribute_assignment("class" = key, value, %{spaces: spaces}) do
     [space1, space2, space3] = spaces
-    value = Surface.Translator.ComponentTranslatorHelper.translate_value(:css_class, key, value, nil, nil)
+
+    value =
+      Surface.Translator.ComponentTranslatorHelper.translate_value(
+        :css_class,
+        key,
+        value,
+        nil,
+        nil
+      )
+
     [space1, key, space2, "=", space3, wrap_safe_value(value)]
   end
 
   defp translate_attribute_assignment("style" = key, value, meta) do
     %{spaces: [space1, space2, space3]} = meta
     show_expr = Map.get(meta, :directive_show_expr, "true")
-    [space1, key, space2, "=", space3, "<%= style(", value_to_code(value), ", ", show_expr, ") %>"]
+
+    [
+      space1,
+      key,
+      space2,
+      "=",
+      space3,
+      "<%= style(",
+      value_to_code(value),
+      ", ",
+      show_expr,
+      ") %>"
+    ]
   end
 
   defp translate_attribute_assignment("surface-cid", value, %{spaces: spaces}) do
@@ -113,6 +195,7 @@ defmodule Surface.Translator.TagTranslator do
       case item do
         {:attribute_expr, [expr]} ->
           ["\#{", expr, "}"]
+
         _ ->
           item
       end
