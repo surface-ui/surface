@@ -123,7 +123,7 @@ defmodule HtmlTagTest do
       """
 
       assert render_static(code) =~ """
-             <div class="Default prop1"></div>
+             <div class="Default Prop1"></div>
              """
     end
   end
