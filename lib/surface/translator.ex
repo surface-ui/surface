@@ -88,6 +88,8 @@ defmodule Surface.Translator do
           {name, String.trim(expr)}
       end)
 
+    props_expr = if props_expr in [nil, ""], do: "[]", else: props_expr
+
     if name == "default" || name == nil do
       Module.put_attribute(caller.module, :used_slot, %{name: :default, line: line})
 

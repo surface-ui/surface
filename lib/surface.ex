@@ -46,7 +46,7 @@ defmodule Surface do
         def render(assigns) do
           ~H"\""
           <button class="button {{ @kind }}" phx-click={{ @click }}>
-            {{ @inner_content.() }}
+            <slot/>
           </button>
           "\""
         end

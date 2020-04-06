@@ -80,7 +80,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       caller: caller
     }
 
-    init_slots_meta = %{__default__: %{size: 0, binding: opts.parent_args != []}}
+    init_slots_meta = %{__default__: %{size: 0}}
 
     {slots_props, slots_meta, contents, _temp_contents, _opts} =
       children
@@ -263,8 +263,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       children
     ]
 
-    slots_meta =
-      Map.put(slots_meta, slot_name, %{size: meta.size + 1, binding: merged_args != []})
+    slots_meta = Map.put(slots_meta, slot_name, %{size: meta.size + 1})
 
     slots_props = Map.put_new(slots_props, slot_name, [])
     props = translate_attributes(attributes, module, mod_str, space, opts.caller)

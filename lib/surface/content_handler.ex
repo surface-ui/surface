@@ -23,7 +23,7 @@ defmodule Surface.ContentHandler do
       |> Map.split([:__default__])
 
     props =
-      for {name, %{size: _size, binding: binding}} <- other_slots, into: %{} do
+      for {name, %{size: _size}} <- other_slots, into: %{} do
         value =
           assigns[name]
           |> Enum.with_index()
@@ -31,14 +31,14 @@ defmodule Surface.ContentHandler do
             Map.put(
               assign,
               :inner_content,
-              data_content_fun(assigns, name, index, binding: binding)
+              data_content_fun(assigns, name, index)
             )
           end)
 
         {name, value}
       end
 
-    content = default_content_fun(assigns, default_slot.size, binding: default_slot.binding)
+    content = default_content_fun(assigns, default_slot.size)
 
     assigns =
       if default_slot.size > 0 do
@@ -50,20 +50,12 @@ defmodule Surface.ContentHandler do
     Map.merge(assigns, props)
   end
 
-  defp data_content_fun(assigns, name, index, binding: true) do
+  defp data_content_fun(assigns, name, index) do
     fn args -> assigns.inner_content.({name, index, args_to_map(args)}) end
   end
 
-  defp data_content_fun(assigns, name, index, binding: false) do
-    fn -> assigns.inner_content.({name, index, %{}}) end
-  end
-
-  defp default_content_fun(assigns, size, binding: true) do
+  defp default_content_fun(assigns, size) do
     fn args -> join_contents(assigns, size, args_to_map(args)) end
-  end
-
-  defp default_content_fun(assigns, size, binding: false) do
-    fn -> join_contents(assigns, size, %{}) end
   end
 
   defp join_contents(assigns, size, args) do

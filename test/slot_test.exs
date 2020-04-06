@@ -33,10 +33,10 @@ defmodule SlotTest do
       ~H"""
       <div>
         <div :for={{ data <- @inner }}>
-          {{ data.label }}: {{ data.inner_content.() }}
+          {{ data.label }}: {{ data.inner_content.([]) }}
         </div>
         <div>
-          {{ @inner_content.() }}
+          {{ @inner_content.([]) }}
         </div>
       </div>
       """
@@ -238,6 +238,22 @@ defmodule SlotTest do
       render_live(code) =~ """
       <div>
         Info: Info from slot
+      </div>
+      """
+    )
+  end
+
+  test "assign default slot ignoring all props" do
+    code = """
+    <OuterWithSlotNotationDefaultAndProps>
+      Info
+    </OuterWithSlotNotationDefaultAndProps>
+    """
+
+    assert_html(
+      render_live(code) =~ """
+      <div>
+        Info
       </div>
       """
     )

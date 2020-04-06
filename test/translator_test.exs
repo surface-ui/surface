@@ -341,7 +341,7 @@ defmodule TranslatorTest do
       end)
     end
 
-    test "raise error when calling @inner_content() instead of @inner_content.()" do
+    test "raise error when calling @inner_content([]) instead of @inner_content.([])" do
       id = :erlang.unique_integer([:positive]) |> to_string()
 
       view_code = """
@@ -349,7 +349,7 @@ defmodule TranslatorTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ @inner_content() }} </div>"
+          ~H"<div> {{ @inner_content([]) }} </div>"
         end
       end
       """

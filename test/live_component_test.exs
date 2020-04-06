@@ -78,7 +78,7 @@ defmodule LiveComponentTest do
     def render(assigns) do
       ~H"""
         <div>
-          {{ @inner_content.() }}
+          {{ @inner_content.([]) }}
         </div>
       """
     end
