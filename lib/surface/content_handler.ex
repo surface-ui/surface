@@ -18,9 +18,13 @@ defmodule Surface.ContentHandler do
 
   def init_contents(assigns) do
     {%{__default__: default_slot}, other_slots} =
-      assigns
-      |> get_in([:__surface__, :slots])
-      |> Map.split([:__default__])
+      case assigns[:__surface__][:slots] do
+        nil ->
+          {%{__default__: %{size: 0}}, []}
+
+        slots ->
+          Map.split(slots, [:__default__])
+      end
 
     props =
       for {name, %{size: _size}} <- other_slots, into: %{} do

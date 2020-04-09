@@ -184,5 +184,13 @@ defmodule Surface.ComponentTest do
              </div>
              """
     end
+
+    test "render stateless component without named slots with render_component/2" do
+      assert render_component(Stateless, %{label: "My label", class: "myclass"}) =~ """
+             <div class="myclass">
+               <span>My label</span>
+             </div>
+             """
+    end
   end
 end
