@@ -25,7 +25,7 @@ solutions like `React` and `Vue.js`.
 At compile time, Surface translates components defined in an extended HTML-like syntax
 into regular Phoenix templates. It also translates standard HTML nodes allowing us to
 extend their behaviour adding new features like syntatic sugar on attributes definition,
-directives, scoped styles, validation and more.
+directives, static validation and more.
 
 In order to have your code translated, you need to use the `~H` sigil when defining your templates.
 
@@ -92,7 +92,7 @@ To create a component you need to define a module and `use` one of the available
     def render(assigns) do
       ~H"""
       <button class="button {{ @kind }}" :on-phx-click={{ @click }}>
-        {{ @inner_content.() }}
+        <slot/>
       </button>
       """
     end
@@ -117,7 +117,7 @@ To create a component you need to define a module and `use` one of the available
             <p class="modal-card-title">{{ @title }}</p>
           </header>
           <section class="modal-card-body">
-            {{ @inner_content.() }}
+            <slot/>
           </section>
           <footer class="modal-card-foot" style="justify-content: flex-end">
             <Button click="hide">Ok</Button>
