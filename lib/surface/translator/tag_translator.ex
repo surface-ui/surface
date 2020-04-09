@@ -104,7 +104,7 @@ defmodule Surface.Translator.TagTranslator do
       space2,
       "[",
       value_to_code(value),
-      "], assigns[:__surface_cid__]) %>",
+      "], assigns[:myself]) %>",
       space3
     ]
   end
@@ -162,11 +162,6 @@ defmodule Surface.Translator.TagTranslator do
       show_expr,
       ") %>"
     ]
-  end
-
-  defp translate_attribute_assignment("surface-cid", value, %{spaces: spaces}) do
-    [space1, space2, space3] = spaces
-    [space1, "surface-cid", space2, "=", space3, wrap_safe_value(value)]
   end
 
   defp translate_attribute_assignment(key, value, %{spaces: spaces}) do

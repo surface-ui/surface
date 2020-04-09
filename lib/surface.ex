@@ -216,7 +216,7 @@ defmodule Surface do
   end
 
   def event_value(_key, name, caller_cid) when is_binary(name) do
-    %{name: name, target: "[surface-cid=#{caller_cid}]"}
+    %{name: name, target: to_string(caller_cid)}
   end
 
   def event_value(_key, %{name: _, target: _} = event, _caller_cid) do
@@ -253,7 +253,7 @@ defmodule Surface do
   end
 
   def on_phx_event(phx_event, event, caller_cid) when is_binary(event) do
-    [phx_event, "=", quot(event), " phx-target=", "[surface-cid=", caller_cid, "]"]
+    [phx_event, "=", quot(event), " phx-target=", to_string(caller_cid)]
   end
 
   def on_phx_event(_phx_event, nil, _caller_cid) do

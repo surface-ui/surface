@@ -143,7 +143,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   def translate_value(:event, key, value, caller, line) do
     case value do
       {:attribute_expr, [expr]} ->
-        {:attribute_expr, ["event_value(\"#{key}\", [#{expr}], assigns[:__surface_cid__])"]}
+        {:attribute_expr, ["event_value(\"#{key}\", [#{expr}], assigns[:myself])"]}
 
       event ->
         if Module.open?(caller.module) do
@@ -151,7 +151,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
           Module.put_attribute(caller.module, :event_references, event_reference)
         end
 
-        {:attribute_expr, ["event_value(\"#{key}\", \"#{event}\", assigns[:__surface_cid__])"]}
+        {:attribute_expr, ["event_value(\"#{key}\", \"#{event}\", assigns[:myself])"]}
     end
   end
 

@@ -9,7 +9,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
 
   @impl true
   def prepare(nodes, caller) do
-    validate_root_node_and_add_cid(nodes, caller)
+    validate_root_node(nodes, caller)
   end
 
   @impl true
@@ -47,7 +47,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
     {open, Translator.translate(children_contents, caller), close}
   end
 
-  defp validate_root_node_and_add_cid(children, caller) do
+  defp validate_root_node(children, caller) do
     {nodes, n_tags, _n_binary} =
       Enum.reduce(children, {[], 0, 0}, fn child, {nodes, n_tags, n_non_tags} ->
         cond do
@@ -61,11 +61,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
             {[child | nodes], n_tags, n_non_tags + 1}
 
           n_tags + n_non_tags == 0 && match?({_, _, _, %{translator: TagTranslator}}, child) ->
-            {mod_str, attributes, children, %{line: line} = meta} = child
-            expr = {:attribute_expr, ["@__surface_cid__"]}
-            new_attr = {"surface-cid", expr, %{line: line, spaces: [" ", "", ""]}}
-            updated_child = {mod_str, [new_attr | attributes], children, meta}
-            {[updated_child | nodes], n_tags + 1, n_non_tags}
+            {[child | nodes], n_tags + 1, n_non_tags}
 
           true ->
             {_, _, _, %{line: line}} = child

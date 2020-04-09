@@ -7,8 +7,6 @@ defmodule SlotTest do
     use Surface.LiveComponent
 
     def render(assigns) do
-      assigns = Map.put(assigns, :__surface_cid__, "stateful")
-
       ~H"""
       <div>Stateful</div>
       """
@@ -28,8 +26,6 @@ defmodule SlotTest do
     slot inner
 
     def render(assigns) do
-      assigns = Map.put(assigns, :__surface_cid__, "outer")
-
       ~H"""
       <div>
         <div :for={{ data <- @inner }}>
@@ -149,7 +145,6 @@ defmodule SlotTest do
     slot cols, props: [:info, item: ^items]
 
     def render(assigns) do
-      assigns = Map.put(assigns, :__surface_cid__, "table")
       info = "Some info from Grid"
 
       ~H"""
@@ -189,10 +184,10 @@ defmodule SlotTest do
 
     assert_html(
       render_live(code) =~ """
-      <div surface-cid="outer">
+      <div>
         <div>
           label 1:<b>content 1</b>
-          <div surface-cid="stateful" data-phx-component="0">Stateful</div>
+          <div data-phx-component="0">Stateful</div>
         </div>
         <div>
           label 2:<b>content 2</b>
@@ -202,7 +197,7 @@ defmodule SlotTest do
           Content 2
             Content 2.1
           Content 3
-          <div surface-cid="stateful" data-phx-component="1">Stateful</div>
+          <div data-phx-component="1">Stateful</div>
         </div>
       </div>
       """
@@ -338,7 +333,7 @@ defmodule SlotTest do
 
     assert_html(
       render_live(code, assigns) =~ """
-      <table surface-cid="table">
+      <table>
         <tr>
           <th>ID</th><th>NAME</th>
         </tr><tr>
@@ -370,7 +365,7 @@ defmodule SlotTest do
 
     assert_html(
       render_live(code, assigns) =~ """
-      <table surface-cid="table">
+      <table>
         <tr>
           <th>ID</th><th>NAME</th>
         </tr><tr>

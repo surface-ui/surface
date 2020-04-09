@@ -22,8 +22,6 @@ defmodule Surface.EventsTest do
     property click, :event, default: "click"
 
     def render(assigns) do
-      assigns = Map.put(assigns, :__surface_cid__, "button")
-
       ~H"""
       <button :on-phx-click={{ @click }}>Click me!</button>
       """
@@ -40,8 +38,6 @@ defmodule Surface.EventsTest do
     property buttonClick, :event, default: "click"
 
     def render(assigns) do
-      assigns = Map.put(assigns, :__surface_cid__, "panel")
-
       ~H"""
       <div>
         <Button id="button_id" click={{ @buttonClick }}/>
@@ -82,16 +78,12 @@ defmodule Surface.EventsTest do
     end
   end
 
-  test "automatically generate surface-cid for live components" do
-    assert render_live("<LiveDiv/>") =~ ~r(<div surface-cid="livediv-.{7}">Live div</div>)
-  end
-
   test "handle event in the parent liveview" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
 
     assert_html(
       html =~ """
-      <button surface-cid="button" phx-click="click" data-phx-component="1">Click me!</button>
+      <button phx-click="click" data-phx-component="1">Click me!</button>
       """
     )
   end
@@ -104,7 +96,7 @@ defmodule Surface.EventsTest do
     """
 
     assert render_live(code) =~ """
-           <button surface-cid="button" phx-click="click" phx-target="[surface-cid=panel]"\
+           <button phx-click="click" phx-target="0"\
            """
   end
 
@@ -116,7 +108,7 @@ defmodule Surface.EventsTest do
     """
 
     assert render_live(code) =~ """
-           <button surface-cid="button" phx-click="click" phx-target="[surface-cid=button]"\
+           <button phx-click="click" phx-target="0"\
            """
   end
 

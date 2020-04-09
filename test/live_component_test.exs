@@ -91,8 +91,8 @@ defmodule LiveComponentTest do
     </InfoProviderWithoutSlotProps>
     """
 
-    assert render_live(code) =~ ~r"""
-           <div surface-cid=".+"><span>Hi there!</span></div>
+    assert render_live(code) =~ """
+           <div><span>Hi there!</span></div>
            """
   end
 
@@ -103,23 +103,9 @@ defmodule LiveComponentTest do
     </InfoProvider>
     """
 
-    assert render_live(code) =~ ~r"""
-           <div surface-cid=".+"><span>Hi there!</span></div>
+    assert render_live(code) =~ """
+           <div><span>Hi there!</span></div>
            """
-  end
-
-  test "generate a different cid for each instance when using :for" do
-    code = """
-    <StatefulComponent:for={{ i <- [1,2] }} id={{i}} />
-    """
-
-    [cid1, cid2] =
-      Regex.scan(~r/surface-cid="(.+)"/U, render_live(code))
-      |> Enum.map(fn [_, cid] -> cid end)
-
-    assert cid1 =~ ~r/^statefulcomponent-/
-    assert cid2 =~ ~r/^statefulcomponent-/
-    assert cid1 != cid2
   end
 
   test "render stateless component" do

@@ -88,8 +88,6 @@ defmodule Surface.LiveComponent do
   end
 
   defp quoted_mount(env) do
-    prefix = Module.split(env.module) |> List.last() |> String.downcase()
-
     defaults =
       for %{name: name, opts: opts} <- Module.get_attribute(env.module, :data) do
         {name, Keyword.get(opts, :default)}
@@ -100,28 +98,16 @@ defmodule Surface.LiveComponent do
         defoverridable mount: 1
 
         def mount(socket) do
-          assigns = unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults))
-          super(assign(socket, assigns))
+          super(assign(socket, unquote(defaults)))
         end
       end
     else
       quote do
         def mount(socket) do
-          assigns = unquote(__MODULE__).default_assigns(unquote(prefix), unquote(defaults))
-          {:ok, assign(socket, assigns)}
+          {:ok, assign(socket, unquote(defaults))}
         end
       end
     end
-  end
-
-  @doc false
-  def default_assigns(prefix, defaults) do
-    [__surface_cid__: "#{prefix}-#{hash_id()}"] ++ defaults
-  end
-
-  defp hash_id() do
-    :crypto.strong_rand_bytes(4)
-    |> Base.encode32(padding: false, case: :lower)
   end
 
   @doc """
