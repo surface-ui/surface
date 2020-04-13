@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.0-alpha.1-dev
+## v0.1.0-alpha.1 (2020-04-13)
 
   * Add support for slots
   * Add built-in LivePath and LiveRedirect components
