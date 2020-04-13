@@ -130,6 +130,6 @@ defmodule LiveComponentTest do
 
   test "handle events in LiveComponent (handled by the component itself)" do
     {:ok, view, _html} = live_isolated(build_conn(), View)
-    assert render_click([view, "theDiv"], :click) =~ "Updated stateful"
+    assert render_click([view, "#theDiv"], :click) =~ "Updated stateful"
   end
 end
