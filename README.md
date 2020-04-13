@@ -3,10 +3,13 @@
 [![Build Status](https://travis-ci.com/msaraiva/surface.svg?branch=master)](https://travis-ci.com/msaraiva/surface)
 [![Hex.pm version](https://img.shields.io/hexpm/v/surface.svg?style=flat)](https://hex.pm/packages/surface)
 
-A component based library for **Phoenix LiveView**.
+Surface is a **server-side rendering** component library that allows developers to
+build **rich interactive user-interfaces**, writing minimal custom Javascript.
 
-Built on top of the new [LiveComponent](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html)
-API, Surface provides a more declarative way to express and use components in Phoenix.
+Built on top of [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/) and its new
+[LiveComponent](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html), Surface
+leverages the amazing Phoenix Framework to provide a **fast** and **productive** solution to build
+modern web applications.
 
 Full documentation and live examples can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io).
 
@@ -17,32 +20,42 @@ A VS Code extension that adds support for syntax highlighting is available at
 
 ![Example](images/example.png?raw=true)
 
-A lot of the concepts behind it were borrowed from some of the most popular frontend
-solutions like `React` and `Vue.js`.
-
 ## How does it work?
 
 At compile time, Surface translates components defined in an extended HTML-like syntax
 into regular Phoenix templates. It also translates standard HTML nodes allowing us to
-extend their behaviour adding new features like syntatic sugar on attributes definition,
+extend their behaviour adding new features like syntactic sugar on attributes definition,
 directives, static validation and more.
 
 In order to have your code translated, you need to use the `~H` sigil when defining your templates.
 
 ## Features
 
-  * **Components as modules** - they can be stateless, stateful, data-only or compile-time
-  * **Declarative properties** - explicitly declare the inputs (properties) of each component (like React)
-  * **An HTML-centric** templating language with built-in directives (`:for`, `:if`, ...) and syntactic sugar for attributes (inspired by Vue.js)
-  * **Contexts** - allows parent components to share data with its children without passing them as properties
-  * **Compile-time checking** of components and their properties
-  * **Integration with editor/tools** for warnings, syntax highlighting, jump-to-definition, auto-completion and more
+  * **An HTML-centric** templating language with built-in directives (`:for`, `:if`, ...) and
+    syntactic sugar for attributes (inspired by Vue.js).
+
+  * **Components as modules** - they can be stateless, stateful, renderless or compile-time.
+
+  * **Declarative properties** - explicitly declare the inputs (properties and events) of each component.
+
+  * **Slots** - placeholders declared by a component that you can fill up with **custom content**.
+
+  * **Contexts** - allows a parent component to share data with its children without passing them as properties..
+
+  * **Compile-time checking** of components and their properties.
+
+  * **Integration with editor/tools** for warnings/errors, syntax highlighting, jump-to-definition,
+    auto-completion (soon!) and more.
 
 > **Note:** Some of the features are still experimental and subject to change.
 
 ## Installation
 
-Install Phoenix LiveView following the [installation guide](https://hexdocs.pm/phoenix_live_view/installation.html).
+Requirements:
+
+  * Install Phoenix (https://hexdocs.pm/phoenix/installation.html).
+  * Install Phoenix LiveView (https://hexdocs.pm/phoenix_live_view/installation.html)
+
 Then add `surface` to the list of dependencies in `mix.exs`:
 
 ```elixir
@@ -69,102 +82,9 @@ file in `lib/my_app_web.ex`:
   end
 ```
 
-## Defining components
-
-To create a component you need to define a module and `use` one of the available component types:
-
-  * **Surface.Component** - A stateless component.
-  * **Surface.LiveComponent** - A live stateful component.
-  * **Surface.LiveView** - A wrapper component around `Phoenix.LiveView`.
-  * **Surface.MacroComponent** - A low-level component which is responsible for translating its own content at compile time.
-
-### Example
-
-```elixir
-  # A stateless component
-
-  defmodule Button do
-    use Surface.Component
-
-    property click, :event
-    property kind, :string, default: "is-info"
-
-    def render(assigns) do
-      ~H"""
-      <button class="button {{ @kind }}" :on-phx-click={{ @click }}>
-        <slot/>
-      </button>
-      """
-    end
-  end
-
-  # A live stateful component
-
-  defmodule Dialog do
-    use Surface.LiveComponent
-
-    @doc "The title of the dialog"
-    property title, :string, required: true
-
-    data show, :boolean, default: false
-
-    def render(assigns) do
-      ~H"""
-      <div class={{ "modal", "is-active": @show }}>
-        <div class="modal-background"></div>
-        <div class="modal-card">
-          <header class="modal-card-head">
-            <p class="modal-card-title">{{ @title }}</p>
-          </header>
-          <section class="modal-card-body">
-            <slot/>
-          </section>
-          <footer class="modal-card-foot" style="justify-content: flex-end">
-            <Button click="hide">Ok</Button>
-          </footer>
-        </div>
-      </div>
-      """
-    end
-
-    # Public API
-
-    def show(dialog_id) do
-      send_update(__MODULE__, id: dialog_id, show: true)
-    end
-
-    # Event handlers
-
-    def handle_event("show", _, socket) do
-      {:noreply, assign(socket, show: true)}
-    end
-
-    def handle_event("hide", _, socket) do
-      {:noreply, assign(socket, show: false)}
-    end
-  end
-
-  # A live view component
-
-  defmodule Example do
-    use Surface.LiveView
-
-    def render(assigns) do
-      ~H"""
-      <Dialog title="Alert" id="dialog">
-        This <b>Dialog</b> is a stateful component. Cool!
-      </Dialog>
-
-      <Button click="show_dialog">Click to open the dialog</Button>
-      """
-    end
-
-    def handle_event("show_dialog", _, socket) do
-      Dialog.show("dialog")
-      {:noreply, socket}
-    end
-  end
-```
+For further information regarding installation, including how to quickly get started
+using a boilerplate, please visit the [Getting Started](http://surface-demo.msaraiva.io/getting_started)
+guide.
 
 ## Static checking
 
@@ -197,7 +117,8 @@ Some experimental work on tooling around the library has been done. Here's a few
 - [x] Jump to definition of modules (components)
 - [ ] Jump to definition of properties
 - [ ] Auto-complete/suggestions for properties (WIP)
-- [ ] Show documentation on hover for components and properties
+- [x] Show documentation on hover for components
+- [ ] Show documentation on hover for properties
 
 ### Other tools
 
@@ -208,6 +129,6 @@ documentation for properties, events, slots, etc.
 
 ## License
 
-Copyright (c) 2019, Marlus Saraiva.
+Copyright (c) 2020, Marlus Saraiva.
 
 Surface source code is licensed under the [MIT License](LICENSE.md).
