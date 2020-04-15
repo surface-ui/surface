@@ -19,9 +19,6 @@ defmodule Surface.Components.Form.TextInput do
 
   import Phoenix.HTML.Form
 
-  @doc "An identifier for the form"
-  property form, :string, required: true
-
   @doc "An identifier for the input"
   property field, :string, required: true
 
