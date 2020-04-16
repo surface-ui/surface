@@ -14,9 +14,9 @@ defmodule Surface.Translator do
 
   @optional_callbacks prepare: 2
 
-  @tag_directives [":for", ":if", ":show", ":debug"]
+  @tag_directives [":for", ":if", ":show", ":debug", ":props"]
 
-  @component_directives [":for", ":if", ":let", ":debug"]
+  @component_directives [":for", ":if", ":let", ":debug", ":props"]
 
   @template_directives [":let"]
 
@@ -407,6 +407,41 @@ defmodule Surface.Translator do
 
   defp handle_directive({":let", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
     parts
+  end
+
+  defp handle_directive({":props", {:attribute_expr, [expr]}, _line}, parts, node, _caller) do
+    {open, children, close} = parts
+    {_, _, _, %{translator: translator}} = node
+
+    case translator do
+      Surface.Translator.ComponentTranslator ->
+        {
+          List.insert_at(
+            open,
+            2,
+            [
+              "<% props = Map.put(props, :__dynamic_props__,",
+              String.trim(expr),
+              ") %>"
+            ]
+          ),
+          children,
+          close
+        }
+
+      Surface.Translator.TagTranslator ->
+        dynamic_props =
+          ~S[<%= Enum.map(assigns.__dynamic_props__, fn {key, val} -> " #{key}=#{val}" end) %>]
+
+        {
+          List.insert_at(open, 3, dynamic_props),
+          children,
+          close
+        }
+
+      _ ->
+        parts
+    end
   end
 
   defp handle_directive({":debug", _value, _line}, parts, node, caller) do

@@ -15,6 +15,32 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithDynamicProps do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div class="myclass" :props={{ @props }}>{{ @inner_content.([]) }}</div>
+      """
+    end
+  end
+
+  describe ":props" do
+    test "with html tags" do
+      code = """
+      <DivWithDynamicProps :props={{ %{id: "myid"} }}>
+        Some Text
+      </DivWithDynamicProps>
+      """
+
+      assert render_live(code, %{}) =~ """
+             <div class="myclass" id="myid">
+               Some Text
+             </div>
+             """
+    end
+  end
+
   describe ":for" do
     test "in components" do
       assigns = %{items: [1, 2]}
