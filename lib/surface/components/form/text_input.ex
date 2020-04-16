@@ -7,6 +7,7 @@ defmodule Surface.Components.Form.TextInput do
   property field, :string, required: true
   property value, :string, default: ""
   property class, :css_class
+  property opts, :keyword, default: []
 
   def render(assigns) do
     ~H"""
@@ -14,8 +15,10 @@ defmodule Surface.Components.Form.TextInput do
       text_input(
         String.to_atom(@form),
         @field,
-        value: @value,
-        class: @class
+        [
+          value: @value,
+          class: @class,
+        ] ++ @opts
       )
     }}
     """
