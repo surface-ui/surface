@@ -14,9 +14,9 @@ defmodule Surface.Translator do
 
   @optional_callbacks prepare: 2
 
-  @tag_directives [":for", ":if", ":show", ":debug", ":props"]
+  @tag_directives [":for", ":if", ":show", ":debug", ":properties"]
 
-  @component_directives [":for", ":if", ":let", ":debug", ":props"]
+  @component_directives [":for", ":if", ":let", ":debug", ":properties"]
 
   @template_directives [":let"]
 
@@ -409,7 +409,7 @@ defmodule Surface.Translator do
     parts
   end
 
-  defp handle_directive({":props", {:attribute_expr, [expr]}, _line}, parts, node, _caller) do
+  defp handle_directive({":properties", {:attribute_expr, [expr]}, _line}, parts, node, _caller) do
     {open, children, close} = parts
     {_, _, _, %{translator: translator}} = node
 
