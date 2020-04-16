@@ -3,7 +3,26 @@ defmodule Surface.Components.Form.TextInputTest do
 
   alias Surface.Components.Form.TextInput, warn: false
 
+  import Surface
   import ComponentTestHelper
+
+  defmodule Input do
+    use Surface.Component
+
+    property value, :string
+    property opts, :keyword
+
+    def render(assigns) do
+      ~H"""
+      <TextInput
+        form="user"
+        field="name"
+        value={{ @value }}
+        opts={{ @opts }}
+      />
+      """
+    end
+  end
 
   describe "Without LiveView" do
     test "empty input" do

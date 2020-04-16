@@ -27,6 +27,7 @@ defmodule Surface.Components.Form.TextInput do
 
   @doc "Class or classes to apply to the input"
   property class, :css_class
+  property opts, :keyword, default: []
 
   @doc "Keyword with options to be passed down to `text_input/3`"
   property opts, :keyword, default: []
