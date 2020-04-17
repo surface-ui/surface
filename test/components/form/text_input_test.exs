@@ -3,7 +3,6 @@ defmodule Surface.Components.Form.TextInputTest do
 
   alias Surface.Components.Form.TextInput
 
-  import Surface
   import ComponentTestHelper
 
   describe "Without LiveView" do
@@ -13,7 +12,7 @@ defmodule Surface.Components.Form.TextInputTest do
       """
 
       assert render_live(code) =~ """
-             <input id="user_name" name="user[name]" type="text" value=""/>
+             <input id="user_name" name="user[name]" type="text"/>
              """
     end
 

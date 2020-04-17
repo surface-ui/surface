@@ -5,7 +5,7 @@ defmodule Surface.Components.Form.TextInput do
 
   property form, :string, required: true
   property field, :string, required: true
-  property value, :string, default: ""
+  property value, :string
   property class, :css_class
   property opts, :keyword, default: []
 
