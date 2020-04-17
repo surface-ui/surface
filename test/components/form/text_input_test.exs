@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.TextInputTest do
       """
 
       assert render_live(code) =~ """
-             <input autofocus="autofocus" id="myid" name="user[name]" type="text" value=""/>
+             <input autofocus="autofocus" id="myid" name="user[name]" type="text"/>
              """
     end
   end
