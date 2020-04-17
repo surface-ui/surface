@@ -3,7 +3,6 @@ defmodule Surface.Components.Form.TextInputTest do
 
   alias Surface.Components.Form.TextInput, warn: false
 
-  import Surface
   import ComponentTestHelper
 
   describe "Without LiveView" do
