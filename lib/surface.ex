@@ -58,8 +58,10 @@ defmodule Surface do
   @doc """
   Translates Surface code into Phoenix templates.
   """
-  defmacro sigil_H({:<<>>, _, [string]}, _) do
+  defmacro sigil_H({:<<>>, _, [string]}, opts) do
     line_offset = __CALLER__.line + 1
+
+    string = if opts == 'i', do: String.trim_trailing(string), else: string
 
     string
     |> Surface.Translator.run(line_offset, __CALLER__, __CALLER__.file)
