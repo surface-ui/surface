@@ -9,15 +9,15 @@ defmodule Surface.ContentHandler do
         defoverridable render: 1
 
         def render(assigns) do
-          assigns = unquote(__MODULE__).init_contents(assigns)
+          assigns = unquote(__MODULE__).init_contents(assigns, __MODULE__)
           super(assigns)
         end
       end
     end
   end
 
-  def init_contents(assigns) do
-    {%{__default__: default_slot}, other_slots} =
+  def init_contents(assigns, module) do
+    {%{__default__: default_slot}, _other_slots} =
       case assigns[:__surface__][:slots] do
         nil ->
           {%{__default__: %{size: 0}}, []}
@@ -26,18 +26,22 @@ defmodule Surface.ContentHandler do
           Map.split(slots, [:__default__])
       end
 
+    declared_slots = Enum.map(module.__slots__(), fn slot -> slot.name end)
+
     props =
-      for {name, %{size: _size}} <- other_slots, into: %{} do
+      for name <- declared_slots, name != :default, into: %{} do
         value =
-          assigns[name]
-          |> Enum.with_index()
-          |> Enum.map(fn {assign, index} ->
-            Map.put(
-              assign,
-              :inner_content,
-              data_content_fun(assigns, name, index)
-            )
-          end)
+          if assigns[name] do
+            assigns[name]
+            |> Enum.with_index()
+            |> Enum.map(fn {assign, index} ->
+              Map.put(
+                assign,
+                :inner_content,
+                data_content_fun(assigns, name, index)
+              )
+            end)
+          end
 
         {name, value}
       end
@@ -48,7 +52,7 @@ defmodule Surface.ContentHandler do
       if default_slot.size > 0 do
         Map.put(assigns, :inner_content, content)
       else
-        Map.delete(assigns, :inner_content)
+        Map.put(assigns, :inner_content, nil)
       end
 
     Map.merge(assigns, props)
