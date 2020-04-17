@@ -18,7 +18,8 @@ defmodule Surface.API do
     :atom,
     :module,
     :changeset,
-    :form
+    :form,
+    :keyword
   ]
 
   @private_opts [:action, :to]
