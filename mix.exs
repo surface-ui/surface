@@ -33,6 +33,7 @@ defmodule Surface.MixProject do
       {:jason, "~> 1.0"},
       {:phoenix_live_view, "~> 0.11.1"},
       {:floki, "~> 0.25.0", only: :test},
+      {:ecto, "~> 3.4.2", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
     ]
   end

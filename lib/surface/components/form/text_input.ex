@@ -19,6 +19,8 @@ defmodule Surface.Components.Form.TextInput do
 
   import Phoenix.HTML.Form
 
+  alias Surface.Components.Form.Form
+
   @doc "An identifier for the input"
   property field, :string, required: true
 
@@ -31,11 +33,13 @@ defmodule Surface.Components.Form.TextInput do
   @doc "Keyword with options to be passed down to `text_input/3`"
   property opts, :keyword, default: []
 
+  context get form, from: Form
+
   def render(assigns) do
     ~H"""
     {{
       text_input(
-        String.to_atom(@form),
+        @form,
         @field,
         [
           value: @value,
