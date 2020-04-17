@@ -520,6 +520,7 @@ defmodule Surface.APITest do
     test "valid options" do
       code = """
       alias Surface.APITest.ContextSetter
+      ContextSetter
       context get form, from: ContextSetter, as: :my_form
       """
 

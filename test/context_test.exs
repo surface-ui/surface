@@ -35,7 +35,9 @@ defmodule ContextTest do
     use Surface.Component
 
     alias ContextTest.InnerWrapper
+    InnerWrapper
     alias ContextTest.Outer
+    Outer
 
     context get field, from: Outer
     context get field, from: InnerWrapper, as: :other_field
