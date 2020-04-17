@@ -17,9 +17,12 @@ defmodule Surface.Components.Form.TextInput do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form
+  import Phoenix.HTML.Form, only: [text_input: 3]
 
-  alias Surface.Components.Form.Form
+  alias Surface.Components.Form.Form, warn: false
+
+  @doc "An identifier for the form"
+  property form, :string
 
   @doc "An identifier for the input"
   property field, :string, required: true
@@ -33,13 +36,15 @@ defmodule Surface.Components.Form.TextInput do
   @doc "Keyword with options to be passed down to `text_input/3`"
   property opts, :keyword, default: []
 
-  context get form, from: Form
+  context get form, from: Form, as: :form_context
 
   def render(assigns) do
+    form = get_form(assigns)
+
     ~H"""
     {{
       text_input(
-        @form,
+        form,
         @field,
         [
           value: @value,
@@ -48,5 +53,13 @@ defmodule Surface.Components.Form.TextInput do
       )
     }}
     """
+  end
+
+  defp get_form(%{form: form}) when is_binary(form) do
+    String.to_atom(form)
+  end
+
+  defp get_form(%{form: nil, form_context: form_context}) do
+    form_context
   end
 end

@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.Form do
   def render(assigns) do
     ~H"""
     {{ @form }}
-      {{ @inner_content.([]) }}
+      {{ @inner_content && @inner_content.([]) }}
     <#Raw></form></#Raw>
     """
   end
