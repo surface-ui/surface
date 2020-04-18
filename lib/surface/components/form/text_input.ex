@@ -40,18 +40,16 @@ defmodule Surface.Components.Form.TextInput do
 
   def render(assigns) do
     form = get_form(assigns)
+    props = get_non_nil_props(assigns, [:value, :class])
 
     ~H"""
-    {{
-      text_input(
-        form,
-        @field,
-        [
-          value: @value,
-          class: @class,
-        ] ++ @opts
-      )
-    }}
+      {{
+        text_input(
+          form,
+          String.to_atom(@field),
+          props ++ @opts
+        )
+      }}
     """
   end
 
@@ -61,5 +59,15 @@ defmodule Surface.Components.Form.TextInput do
 
   defp get_form(%{form: nil, form_context: form_context}) do
     form_context
+  end
+
+  defp get_non_nil_props(assigns, props) do
+    Enum.reduce(props, [], fn prop, acc ->
+      if assigns[prop] do
+        [{prop, assigns[prop]} | acc]
+      else
+        acc
+      end
+    end)
   end
 end

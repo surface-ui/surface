@@ -52,6 +52,13 @@ defmodule ComponentTestHelper do
     end
   end
 
+  def render_live(module, assigns, _env) when is_atom(module) do
+    conn = Phoenix.ConnTest.build_conn()
+    {:ok, _view, html} = Phoenix.LiveViewTest.live_isolated(conn, module, session: assigns)
+
+    clean_html(html)
+  end
+
   def render_live(code, assigns, env) do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
@@ -68,10 +75,7 @@ defmodule ComponentTestHelper do
     conn = Phoenix.ConnTest.build_conn()
     {:ok, _view, html} = Phoenix.LiveViewTest.live_isolated(conn, module)
 
-    html
-    |> String.replace(~r/^<div.+>/U, "")
-    |> String.replace(~r/<\/div>$/, "\n")
-    |> String.replace(~r/\n+/, "\n")
+    clean_html(html)
   end
 
   def extract_line(message) do
@@ -82,5 +86,12 @@ defmodule ComponentTestHelper do
       _ ->
         :not_found
     end
+  end
+
+  defp clean_html(html) do
+    html
+    |> String.replace(~r/^<div.+>/U, "")
+    |> String.replace(~r/<\/div>$/, "\n")
+    |> String.replace(~r/\n+/, "\n")
   end
 end
