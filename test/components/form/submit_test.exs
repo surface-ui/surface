@@ -1,0 +1,49 @@
+defmodule Surface.Components.Form.SubmitTest do
+  use ExUnit.Case
+
+  alias Surface.Components.Form.Submit, warn: false
+
+  import ComponentTestHelper
+
+  test "text only" do
+    code = """
+    <Submit text="Submit" />
+    """
+
+    assert render_live(code) =~ """
+           <button type="submit">Submit</button>
+           """
+  end
+
+  test "with class" do
+    code = """
+    <Submit text="Submit" class="btn" />
+    """
+
+    assert render_live(code) =~ """
+           <button class="btn" type="submit">Submit</button>
+           """
+  end
+
+  test "with options" do
+    code = """
+    <Submit text="Submit" class="btn" opts={{ id: "submit-btn" }} />
+    """
+
+    assert render_live(code) =~ """
+           <button class="btn" id="submit-btn" type="submit">Submit</button>
+           """
+  end
+
+  test "with children" do
+    code = """
+    <Submit class="btn">
+      <span>Submit</span>
+    </Submit>
+    """
+
+    assert render_live(code) =~ """
+           <button class="btn" type="submit"><span>Submit</span></button>
+           """
+  end
+end
