@@ -52,6 +52,18 @@ defmodule HtmlTagTest do
              <div title="My title"></div>
              """
     end
+
+    test "with `@` and `.`" do
+      assigns = %{}
+
+      code = ~H"""
+      <div @click.away="open = false"/>
+      """
+
+      assert render_static(code) =~ """
+             <div @click.away="open = false"></div>
+             """
+    end
   end
 
   describe "css class attributes" do

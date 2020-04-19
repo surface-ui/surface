@@ -58,7 +58,7 @@ defmodule Surface.Translator.Parser do
     |> ignore(ascii_char([?"]))
     |> wrap()
 
-  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:], min: 1)
+  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:, ?@], min: 1)
   whitespace = ascii_string([?\s, ?\n], min: 0)
 
   attribute =
