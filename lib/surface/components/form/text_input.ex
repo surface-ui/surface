@@ -33,7 +33,7 @@ defmodule Surface.Components.Form.TextInput do
   @doc "Class or classes to apply to the input"
   property class, :css_class
 
-  @doc "Keyword with options to be passed down to `text_input/3`"
+  @doc "Keyword list with options to be passed down to `text_input/3`"
   property opts, :keyword, default: []
 
   context get form, from: Form, as: :form_context
@@ -43,13 +43,13 @@ defmodule Surface.Components.Form.TextInput do
     props = get_non_nil_props(assigns, [:value, :class])
 
     ~H"""
-      {{
-        text_input(
-          form,
-          String.to_atom(@field),
-          props ++ @opts
-        )
-      }}
+    {{
+      text_input(
+        form,
+        String.to_atom(@field),
+        props ++ @opts
+      )
+    }}
     """
   end
 
