@@ -29,7 +29,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div phx-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
+      <div :on-phx-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
       """
     end
 
@@ -130,6 +130,6 @@ defmodule LiveComponentTest do
 
   test "handle events in LiveComponent (handled by the component itself)" do
     {:ok, view, _html} = live_isolated(build_conn(), View)
-    assert render_click([view, "#theDiv"], :click) =~ "Updated stateful"
+    assert render_click(element(view, "#theDiv")) =~ "Updated stateful"
   end
 end
