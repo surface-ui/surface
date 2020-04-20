@@ -1,11 +1,8 @@
-defmodule Surface.Components.Form.FormTest do
+defmodule Surface.Components.FormTest do
   use ExUnit.Case
 
-  alias Surface.Components.Form.{
-          Form,
-          TextInput
-        },
-        warn: false
+  alias Surface.Components.Form, warn: false
+  alias Surface.Components.Form.TextInput, warn: false
 
   import ComponentTestHelper
 

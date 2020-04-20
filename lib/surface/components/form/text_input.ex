@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.TextInput do
 
   import Phoenix.HTML.Form, only: [text_input: 3]
 
-  alias Surface.Components.Form.Form, warn: false
+  alias Surface.Components.Form, warn: false
 
   @doc "An identifier for the form"
   property form, :string

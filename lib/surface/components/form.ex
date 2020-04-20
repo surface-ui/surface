@@ -1,4 +1,4 @@
-defmodule Surface.Components.Form.Form do
+defmodule Surface.Components.Form do
   use Surface.Component
 
   import Phoenix.HTML.Form
