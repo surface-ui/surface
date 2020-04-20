@@ -17,6 +17,7 @@ defmodule Surface.Components.Form do
   @doc "The content of the `<form>`"
   slot default
 
+  @doc "The form instance initialized by the Form component"
   context set form, :form
 
   def init_context(assigns) do
