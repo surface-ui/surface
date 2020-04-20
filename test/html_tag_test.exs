@@ -64,6 +64,18 @@ defmodule HtmlTagTest do
              <div @click.away="open = false"></div>
              """
     end
+
+    test "with utf-8 attribute value" do
+      assigns = %{}
+
+      code = ~H"""
+      <div title="héllo"/>
+      """
+
+      assert render_static(code) =~ """
+             <div title="héllo"></div>
+             """
+    end
   end
 
   describe "css class attributes" do
