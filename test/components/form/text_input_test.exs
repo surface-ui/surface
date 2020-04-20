@@ -28,7 +28,7 @@ defmodule Surface.Components.Form.TextInputTest do
 
     test "passing other options" do
       code = """
-      <TextInput form="user" field="name" opts={{ [id: "myid", autofocus: "autofocus"] }} />
+      <TextInput form="user" field="name" opts={{ id: "myid", autofocus: "autofocus" }} />
       """
 
       assert render_live(code) =~ """

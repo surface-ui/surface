@@ -17,10 +17,12 @@ defmodule Surface.Components.Form.TextInput do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form
+  import Phoenix.HTML.Form, only: [text_input: 3]
+
+  alias Surface.Components.Form, warn: false
 
   @doc "An identifier for the form"
-  property form, :string, required: true
+  property form, :string
 
   @doc "An identifier for the input"
   property field, :string, required: true
@@ -31,21 +33,41 @@ defmodule Surface.Components.Form.TextInput do
   @doc "Class or classes to apply to the input"
   property class, :css_class
 
-  @doc "Keyword with options to be passed down to `text_input/3`"
+  @doc "Keyword list with options to be passed down to `text_input/3`"
   property opts, :keyword, default: []
 
+  context get form, from: Form, as: :form_context
+
   def render(assigns) do
+    form = get_form(assigns)
+    props = get_non_nil_props(assigns, [:value, :class])
+
     ~H"""
     {{
       text_input(
-        String.to_atom(@form),
-        @field,
-        [
-          value: @value,
-          class: @class,
-        ] ++ @opts
+        form,
+        String.to_atom(@field),
+        props ++ @opts
       )
     }}
     """
+  end
+
+  defp get_form(%{form: form}) when is_binary(form) do
+    String.to_atom(form)
+  end
+
+  defp get_form(%{form: nil, form_context: form_context}) do
+    form_context
+  end
+
+  defp get_non_nil_props(assigns, props) do
+    Enum.reduce(props, [], fn prop, acc ->
+      if assigns[prop] do
+        [{prop, assigns[prop]} | acc]
+      else
+        acc
+      end
+    end)
   end
 end
