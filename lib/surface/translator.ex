@@ -47,7 +47,7 @@ defmodule Surface.Translator do
     |> prepare(caller)
     |> prepend_context()
     |> translate(caller)
-    |> IO.iodata_to_binary()
+    |> IO.chardata_to_string()
   end
 
   @doc """
