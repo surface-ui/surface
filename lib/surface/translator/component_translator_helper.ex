@@ -35,7 +35,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   defp find_bindings_from_lists(module, attributes) do
     # TODO: Warn if :binding is not defined and we have lhs
-    for {name, {:attribute_expr, [expr]}, _line} <- attributes,
+    for {name, {:attribute_expr, [expr], _}, _line} <- attributes,
         [lhs, _] <- [String.split(expr, "<-")],
         prop_info = module.__get_prop__(String.to_atom(name)),
         prop_info.type == :list,
@@ -46,7 +46,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   defp find_let_bindings(attributes) do
     case Enum.find(attributes, fn attr -> match?({":let", _, _}, attr) end) do
-      {":let", {:attribute_expr, [expr]}, %{line: line}} ->
+      {":let", {:attribute_expr, [expr], _}, %{line: line}} ->
         bindings =
           "[#{String.trim(expr)}]"
           |> Code.string_to_quoted!()
@@ -142,8 +142,8 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   def translate_value(:event, key, value, caller, line) do
     case value do
-      {:attribute_expr, [expr]} ->
-        {:attribute_expr, ["event_value(\"#{key}\", [#{expr}], assigns[:myself])"]}
+      {:attribute_expr, [expr], meta} ->
+        {:attribute_expr, ["event_value(\"#{key}\", [#{expr}], assigns[:myself])"], meta}
 
       event ->
         if Module.open?(caller.module) do
@@ -151,11 +151,13 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
           Module.put_attribute(caller.module, :event_references, event_reference)
         end
 
-        {:attribute_expr, ["event_value(\"#{key}\", \"#{event}\", assigns[:myself])"]}
+        # TODO: We need to validate if this line is correct after the compiler is ready
+        {:attribute_expr, ["event_value(\"#{key}\", \"#{event}\", assigns[:myself])"],
+         %{line: line}}
     end
   end
 
-  def translate_value(:list, _key, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:list, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
     value =
       case String.split(expr, "<-") do
         [_lhs, value] ->
@@ -165,29 +167,29 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
           value
       end
 
-    {:attribute_expr, [value]}
+    {:attribute_expr, [value], meta}
   end
 
-  def translate_value(:css_class, _key, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:css_class, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
     # TODO: Validate expression
     new_expr = maybe_wrap_keyword(expr)
-    {:attribute_expr, ["css_class(#{new_expr})"]}
+    {:attribute_expr, ["css_class(#{new_expr})"], meta}
   end
 
-  def translate_value(:keyword, _key, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:keyword, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
     # TODO: Validate expression
-    {:attribute_expr, [maybe_wrap_keyword(expr)]}
+    {:attribute_expr, [maybe_wrap_keyword(expr)], meta}
   end
 
-  def translate_value(:map, _key, {:attribute_expr, [expr]}, _caller, _line) do
+  def translate_value(:map, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
     # TODO: Validate expression
-    {:attribute_expr, [maybe_wrap_map(expr)]}
+    {:attribute_expr, [maybe_wrap_map(expr)], meta}
   end
 
   def translate_value(_type, _key, value, _caller, _line) when is_list(value) do
     for item <- value do
       case item do
-        {:attribute_expr, [expr]} ->
+        {:attribute_expr, [expr], _} ->
           ["\#{", expr, "}"]
 
         _ ->
@@ -331,7 +333,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   defp translate_prop(key, value, spaces, comma) do
     rhs =
       case value do
-        {:attribute_expr, value} ->
+        {:attribute_expr, value, _} ->
           expr = value |> IO.iodata_to_binary() |> String.trim()
           ["(", expr, ")"]
 

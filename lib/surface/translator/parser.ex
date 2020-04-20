@@ -40,10 +40,10 @@ defmodule Surface.Translator.Parser do
 
   attribute_expr =
     ignore(string("{{"))
+    |> line()
     |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
-    |> ignore(string("}}"))
-    |> reduce({List, :to_string, []})
-    |> tag(:attribute_expr)
+    |> optional(string("}}"))
+    |> post_traverse(:attribute_expr)
 
   attribute_value =
     ignore(ascii_char([?"]))
@@ -199,6 +199,14 @@ defmodule Surface.Translator.Parser do
 
   defp interpolation(_rest, _, _context, _line, _offset),
     do: {:error, "expected closing for interpolation"}
+
+  defp attribute_expr(_rest, ["}}" | nodes], context, _line, _offset) do
+    [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
+    {[{:attribute_expr, [IO.iodata_to_binary(rest)], %{line: opening_line}}], context}
+  end
+
+  defp attribute_expr(_rest, _, _context, _line, _offset),
+    do: {:error, "expected closing for attribute exprression"}
 
   defp build_attributes(attr_nodes) do
     Enum.map(attr_nodes, fn

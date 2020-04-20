@@ -84,7 +84,7 @@ defmodule Surface.Translator do
         {"name", value, _meta}, {_, props_expr} ->
           {List.to_atom(value), props_expr}
 
-        {":props", {:attribute_expr, [expr]}, _meta}, {name, _} ->
+        {":props", {:attribute_expr, [expr], _}, _meta}, {name, _} ->
           {name, String.trim(expr)}
       end)
 
@@ -345,7 +345,7 @@ defmodule Surface.Translator do
     end)
   end
 
-  defp handle_pre_directive({":show", {:attribute_expr, [dir_expr]}, dir_meta}, node, _caller) do
+  defp handle_pre_directive({":show", {:attribute_expr, [dir_expr], _}, dir_meta}, node, _caller) do
     {mod_str, attributes, children, meta} = node
 
     build_style_attr = fn value, meta ->
@@ -385,7 +385,7 @@ defmodule Surface.Translator do
     node
   end
 
-  defp handle_directive({":if", {:attribute_expr, [expr]}, _line}, parts, _node, _caller) do
+  defp handle_directive({":if", {:attribute_expr, [expr], _}, _line}, parts, _node, _caller) do
     {open, children, close} = parts
 
     {
@@ -395,7 +395,7 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":for", {:attribute_expr, [expr]}, _line}, parts, _node, _caller) do
+  defp handle_directive({":for", {:attribute_expr, [expr], _}, _line}, parts, _node, _caller) do
     {open, children, close} = parts
 
     {
@@ -405,7 +405,7 @@ defmodule Surface.Translator do
     }
   end
 
-  defp handle_directive({":let", {:attribute_expr, [_expr]}, _line}, parts, _node, _caller) do
+  defp handle_directive({":let", {:attribute_expr, [_expr], _}, _line}, parts, _node, _caller) do
     parts
   end
 

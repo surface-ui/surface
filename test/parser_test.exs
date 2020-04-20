@@ -375,7 +375,8 @@ defmodule Surface.Translator.ParserTest do
       attributes = [
         {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
         {"prop2", 'value 2', %{line: 3, spaces: ["", " ", " "]}},
-        {"prop3", {:attribute_expr, [" var3 "]}, %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
+        {"prop3", {:attribute_expr, [" var3 "], %{line: 5}},
+         %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
         {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
       ]
 
@@ -396,7 +397,8 @@ defmodule Surface.Translator.ParserTest do
       attributes = [
         {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
         {"prop2", '2', %{line: 3, spaces: ["", " ", " "]}},
-        {"prop3", {:attribute_expr, [" var3 "]}, %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
+        {"prop3", {:attribute_expr, [" var3 "], %{line: 5}},
+         %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
         {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
       ]
 
@@ -412,8 +414,9 @@ defmodule Surface.Translator.ParserTest do
       """
 
       attributes = [
-        {"prop1", {:attribute_expr, [" var1 "]}, %{line: 2, spaces: ["\n  ", "", ""]}},
-        {"prop2", {:attribute_expr, [" var2 "]}, %{line: 3, spaces: ["\n  ", "", ""]}}
+        {"prop1", {:attribute_expr, [" var1 "], %{line: 2}},
+         %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", {:attribute_expr, [" var2 "], %{line: 3}}, %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}

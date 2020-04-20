@@ -125,7 +125,7 @@ defmodule Surface.Translator.TagTranslator do
     ]
   end
 
-  defp translate_attribute_assignment(key, {:attribute_expr, [expr]}, %{spaces: spaces})
+  defp translate_attribute_assignment(key, {:attribute_expr, [expr], _}, %{spaces: spaces})
        when key in @boolean_attributes do
     [space1, space2, space3] = spaces
     [space1, "<%= boolean_attr(\"", key, "\",", space2, expr, ") %>", space3]
@@ -169,7 +169,7 @@ defmodule Surface.Translator.TagTranslator do
     [space1, key, space2, "=", space3, wrap_unsafe_value(key, value)]
   end
 
-  defp value_to_code({:attribute_expr, expr}) do
+  defp value_to_code({:attribute_expr, expr, _}) do
     expr |> IO.iodata_to_binary() |> String.trim()
   end
 
@@ -188,7 +188,7 @@ defmodule Surface.Translator.TagTranslator do
   defp replace_attribute_expr(value) when is_list(value) do
     for item <- value do
       case item do
-        {:attribute_expr, [expr]} ->
+        {:attribute_expr, [expr], _} ->
           ["\#{", expr, "}"]
 
         _ ->
