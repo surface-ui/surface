@@ -9,8 +9,8 @@ defmodule Surface.Components.Form.Submit do
 
   import Phoenix.HTML.Form, only: [submit: 2]
 
-  @doc "The text to be used in the button"
-  property text, :string
+  @doc "The label to be used in the button"
+  property label, :string
 
   @doc "Class or classes to apply to the button"
   property class, :css_class
@@ -18,11 +18,11 @@ defmodule Surface.Components.Form.Submit do
   @doc "Keyword list with options to be passed down to `submit/3`"
   property opts, :keyword, default: []
 
-  @doc "Slot used for having children other than plaintext in the button"
+  @doc "Slot used for having children other than plain text in the button"
   slot default
 
   def render(assigns) do
-    children = ~H"<slot>{{ @text }}</slot>"
+    children = ~H"<slot>{{ @label }}</slot>"
 
     ~H"""
     {{

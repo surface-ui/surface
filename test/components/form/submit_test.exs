@@ -5,9 +5,9 @@ defmodule Surface.Components.Form.SubmitTest do
 
   import ComponentTestHelper
 
-  test "text only" do
+  test "label only" do
     code = """
-    <Submit text="Submit" />
+    <Submit label="Submit" />
     """
 
     assert render_live(code) =~ """
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.SubmitTest do
 
   test "with class" do
     code = """
-    <Submit text="Submit" class="btn" />
+    <Submit label="Submit" class="btn" />
     """
 
     assert render_live(code) =~ """
@@ -27,7 +27,7 @@ defmodule Surface.Components.Form.SubmitTest do
 
   test "with options" do
     code = """
-    <Submit text="Submit" class="btn" opts={{ id: "submit-btn" }} />
+    <Submit label="Submit" class="btn" opts={{ id: "submit-btn" }} />
     """
 
     assert render_live(code) =~ """
