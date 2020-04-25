@@ -280,6 +280,19 @@ defmodule Surface do
     )
   end
 
+  @doc false
+  def event_to_opts(%{name: name, target: :live_view}, event_name) do
+    [{event_name, name}]
+  end
+
+  def event_to_opts(%{name: name, target: target}, event_name) do
+    [{event_name, name}, {:phx_target, target}]
+  end
+
+  def event_to_opts(nil, _event_name) do
+    []
+  end
+
   defp quot(value) do
     [{:safe, "\""}, value, {:safe, "\""}]
   end
