@@ -170,7 +170,10 @@ defmodule TranslatorTest do
     """
 
     translated = Surface.Translator.run(code, 0, __ENV__)
-    assert translated =~ "<% props = %{ id: \"my_id\", session: (%{user_id: 1}) } %>"
+
+    assert translated =~
+             "<% props = %{ id: \"my_id\", session: (map_value(\"session\",  %{user_id: 1} )) } %>"
+
     assert translated =~ "<%= live_render(@socket, MyLiveViewWith, Keyword.new(props)) %>"
   end
 

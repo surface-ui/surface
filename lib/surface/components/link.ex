@@ -44,6 +44,9 @@ defmodule Surface.Components.Link do
   """
   property label, :string
 
+  @doc "Triggered on click"
+  property click, :event
+
   @doc """
   The content of the generated `<a>` element. If no content is provided,
   the value of property `label` is used instead.
@@ -52,9 +55,10 @@ defmodule Surface.Components.Link do
 
   def render(assigns) do
     children = ~H"<slot>{{ @label }}</slot>"
+    click_opts = event_to_opts(assigns.click, :phx_click)
 
     ~H"""
-    {{ link [to: @to, class: @class] ++ @opts, do: children }}
+    {{ link [to: @to, class: @class] ++ @opts ++ click_opts, do: children }}
     """
   end
 end

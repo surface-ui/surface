@@ -5,6 +5,18 @@ defmodule Surface.Components.LinkTest do
 
   import ComponentTestHelper
 
+  defmodule ComponentWithLink do
+    use Surface.LiveComponent
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <Link to="/users/1" click="my_click" />
+      </div>
+      """
+    end
+  end
+
   describe "Without LiveView" do
     test "creates a link with label" do
       code = """
@@ -53,6 +65,26 @@ defmodule Surface.Components.LinkTest do
 
       assert render_live(code) =~ """
              <a class="link" data-confirm="Really?" data-csrf="token" data-method="delete" data-to="/users/1" href="/users/1" rel="nofollow">user</a>
+             """
+    end
+
+    test "click event with parent live view as target" do
+      code = """
+      <Link to="/users/1" click="my_click" />
+      """
+
+      assert render_live(code) =~ """
+             <a href="/users/1" phx-click="my_click"></a>
+             """
+    end
+
+    test "click event with @myself as target" do
+      code = """
+      <ComponentWithLink id="comp"/>
+      """
+
+      assert render_live(code) =~ """
+             <div data-phx-component="0"><a href="/users/1" phx-click="my_click" phx-target="0"></a></div>
              """
     end
   end
