@@ -167,8 +167,16 @@ defmodule Surface do
   end
 
   @doc false
-  def css_class(list) when is_list(list) do
-    Enum.reduce(list, [], fn item, classes ->
+  def css_class([value]) when is_list(value) do
+    css_class(value)
+  end
+
+  def css_class(value) when is_binary(value) do
+    value
+  end
+
+  def css_class(value) when is_list(value) do
+    Enum.reduce(value, [], fn item, classes ->
       case item do
         {class, true} ->
           [to_string(class) | classes]
@@ -184,8 +192,11 @@ defmodule Surface do
     |> Enum.join(" ")
   end
 
-  def css_class(value) when is_binary(value) do
-    value
+  def css_class(value) do
+    runtime_error(
+      "invalid value for property of type :css_class. " <>
+        "Expected a string or a keyword list, got: #{inspect(value)}"
+    )
   end
 
   @doc false
@@ -194,6 +205,32 @@ defmodule Surface do
       name
     else
       ""
+    end
+  end
+
+  @doc false
+  def keyword_value(key, value) do
+    if Keyword.keyword?(value) do
+      value
+    else
+      runtime_error(
+        "invalid value for property \"#{key}\". Expected a :keyword, got: #{inspect(value)}"
+      )
+    end
+  end
+
+  @doc false
+  def map_value(_key, value) when is_map(value) do
+    value
+  end
+
+  def map_value(key, value) do
+    if Keyword.keyword?(value) do
+      Map.new(value)
+    else
+      runtime_error(
+        "invalid value for property \"#{key}\". Expected a :map, got: #{inspect(value)}"
+      )
     end
   end
 

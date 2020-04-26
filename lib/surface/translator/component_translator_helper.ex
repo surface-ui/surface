@@ -172,18 +172,17 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   def translate_value(:css_class, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
     # TODO: Validate expression
-    new_expr = maybe_wrap_keyword(expr)
-    {:attribute_expr, ["css_class(#{new_expr})"], meta}
+    {:attribute_expr, ["css_class([", expr, "])"], meta}
   end
 
-  def translate_value(:keyword, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
+  def translate_value(:keyword, key, {:attribute_expr, [expr], meta}, _caller, _line) do
     # TODO: Validate expression
-    {:attribute_expr, [maybe_wrap_keyword(expr)], meta}
+    {:attribute_expr, ["keyword_value(\"", key, "\", ", expr, ")"], meta}
   end
 
-  def translate_value(:map, _key, {:attribute_expr, [expr], meta}, _caller, _line) do
+  def translate_value(:map, key, {:attribute_expr, [expr], meta}, _caller, _line) do
     # TODO: Validate expression
-    {:attribute_expr, [maybe_wrap_map(expr)], meta}
+    {:attribute_expr, ["map_value(\"", key, "\", ", expr, ")"], meta}
   end
 
   def translate_value(_type, _key, value, _caller, _line) when is_list(value) do
@@ -425,29 +424,6 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
       true ->
         :ok
-    end
-  end
-
-  defp maybe_wrap_keyword(expr) do
-    case String.trim(expr) do
-      "[" <> _ ->
-        expr
-
-      _ ->
-        "[#{expr}]"
-    end
-  end
-
-  defp maybe_wrap_map(expr) do
-    case String.trim(expr) do
-      "%{" <> _ ->
-        expr
-
-      "[" <> _ ->
-        "Map.new(#{expr})"
-
-      _ ->
-        "%{#{expr}}"
     end
   end
 end
