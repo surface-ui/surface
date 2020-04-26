@@ -57,13 +57,14 @@ defmodule Surface.Components.Form.TelephoneInput do
   def render(assigns) do
     form = get_form(assigns)
     props = get_non_nil_props(assigns, [:value, :pattern, :class])
+    event_opts = get_events_to_opts(assigns)
 
     ~H"""
     {{
       telephone_input(
         form,
         String.to_atom(@field),
-        props ++ @opts
+        props ++ @opts ++ event_opts
       )
     }}
     """

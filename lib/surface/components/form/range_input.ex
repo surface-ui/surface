@@ -63,13 +63,14 @@ defmodule Surface.Components.Form.RangeInput do
   def render(assigns) do
     form = get_form(assigns)
     props = get_non_nil_props(assigns, [:value, :min, :max, :class])
+    event_opts = get_events_to_opts(assigns)
 
     ~H"""
     {{
       range_input(
         form,
         String.to_atom(@field),
-        props ++ @opts
+        props ++ @opts ++ event_opts
       )
     }}
     """

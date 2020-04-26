@@ -1,9 +1,9 @@
 defmodule Surface.Components.Form.SubmitTest do
   use ExUnit.Case
 
-  alias Surface.Components.Form.Submit, warn: false
-
   import ComponentTestHelper
+
+  alias Surface.Components.Form.Submit, warn: false
 
   test "label only" do
     code = """
