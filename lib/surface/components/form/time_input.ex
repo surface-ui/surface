@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.TimeInput do
   import Phoenix.HTML.Form, only: [time_input: 3]
   import Surface.Components.Form.Utils
 
-  alias Surface.Components.Form, warn: false
+  alias Surface.Components.Form
 
   @doc "An identifier for the form"
   property form, :form

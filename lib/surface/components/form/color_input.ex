@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.ColorInput do
   import Phoenix.HTML.Form, only: [color_input: 3]
   import Surface.Components.Form.Utils
 
-  alias Surface.Components.Form, warn: false
+  alias Surface.Components.Form
 
   @doc "An identifier for the form"
   property form, :form
