@@ -51,12 +51,15 @@ defmodule Surface.Translator.TagTranslator do
 
   @phx_events [
     "phx-click",
+    "phx-capture-click",
     "phx-blur",
     "phx-focus",
     "phx-change",
     "phx-submit",
     "phx-keydown",
-    "phx-keyup"
+    "phx-keyup",
+    "phx-window-keydown",
+    "phx-window-keyup"
   ]
 
   @impl true

@@ -62,14 +62,15 @@ defmodule ComponentTestHelper do
   def render_live(code, assigns, env) do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
-    view_code =
-      "defmodule TestLiveView_#{id} do; " <>
-        "  use Surface.LiveView; " <>
-        "  def render(assigns) do; " <>
-        "    assigns = Map.merge(assigns, #{inspect(assigns)}); " <>
-        "    ~H(#{code});" <>
-        "  end; " <>
-        "end"
+    view_code = """
+    defmodule TestLiveView_#{id} do; \
+      use Surface.LiveView; \
+      def render(assigns) do; \
+        assigns = Map.merge(assigns, #{inspect(assigns)}); \
+        ~H(#{code}); \
+      end; \
+    end\
+    """
 
     {{:module, module, _, _}, _} = Code.eval_string(view_code, [], %{env | file: "code", line: 0})
     conn = Phoenix.ConnTest.build_conn()
