@@ -171,18 +171,6 @@ defmodule HtmlTagTest do
            """
   end
 
-  test "attributes with no value" do
-    assigns = %{}
-
-    code = ~H"""
-    <p class="" id=" ">Hello World</p>
-    """
-
-    assert render_static(code) =~ """
-           <p>Hello World</p>
-           """
-  end
-
   describe "style attibute" do
     test "as string" do
       assigns = %{}

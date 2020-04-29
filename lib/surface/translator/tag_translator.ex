@@ -81,8 +81,7 @@ defmodule Surface.Translator.TagTranslator do
   defp translate_attributes(attributes) do
     for {key, value, meta} <- attributes do
       value = replace_attribute_expr(value)
-
-      if value_is_empty_list?(value), do: [], else: translate_attribute(key, value, meta)
+      translate_attribute(key, value, meta)
     end
   end
 
@@ -203,11 +202,5 @@ defmodule Surface.Translator.TagTranslator do
 
   defp replace_attribute_expr(value) do
     value
-  end
-
-  defp value_is_empty_list?(value) do
-    whitespace_codepoint = 32
-
-    value |> is_list and value |> Enum.filter(&(&1 !== whitespace_codepoint)) |> Enum.empty?
   end
 end
