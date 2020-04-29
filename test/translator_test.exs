@@ -156,11 +156,10 @@ defmodule TranslatorTest do
 
     assert translated =~ """
            <div
-             label="<%= attr_value("label", "label") %>"
+             <%= attr("label","label") %>
              disabled
-             click=
-               "<%= attr_value("click", "event") %>"
-           ></div>\
+             <%= attr("click","event") %>
+               \n></div>
            """
   end
 

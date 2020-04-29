@@ -76,6 +76,18 @@ defmodule HtmlTagTest do
              <div title="héllo"></div>
              """
     end
+
+    test "attributes as nil" do
+      assigns = %{id: nil, title: nil}
+
+      code = ~H"""
+      <p id={{ @id }} title={{ @title }}>Hello World</p>
+      """
+
+      assert render_static(code) =~ """
+             <p  >Hello World</p>
+             """
+    end
   end
 
   describe "css class attributes" do

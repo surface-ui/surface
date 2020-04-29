@@ -169,7 +169,7 @@ defmodule Surface.Translator.TagTranslator do
 
   defp translate_attribute_assignment(key, value, %{spaces: spaces}) do
     [space1, space2, space3] = spaces
-    [space1, key, space2, "=", space3, wrap_unsafe_value(key, value)]
+    [space1, "<%= attr(\"", key, "\",", space2, value_to_code(value), ") %>", space3]
   end
 
   defp value_to_code({:attribute_expr, expr, _}) do
