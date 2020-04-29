@@ -1,23 +1,23 @@
-defmodule Surface.Components.Form.TextInput do
+defmodule Surface.Components.Form.UrlInput do
   @moduledoc """
-  Generates a text input.
+  Generates a time input.
 
-  Provides a wrapper for Phoenix.HTML.Form's `text_input/3` function.
+  Provides a wrapper for Phoenix.HTML.Form's `url_input/3` function.
 
-  All options passed via `opts` will be sent to `text_input/3`, `value` and
+  All options passed via `opts` will be sent to `url_input/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
 
 
   ## Examples
 
   ```
-  <TextInput form="user" field="name" opts={{ [autofocus: "autofocus"] }}>
+  <UrlInput form="user" field="name" opts={{ [autofocus: "autofocus"] }}>
   ```
   """
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [text_input: 3]
+  import Phoenix.HTML.Form, only: [url_input: 3]
   import Surface.Components.Form.Utils
 
   alias Surface.Components.Form
@@ -34,7 +34,7 @@ defmodule Surface.Components.Form.TextInput do
   @doc "Class or classes to apply to the input"
   property class, :css_class
 
-  @doc "Keyword list with options to be passed down to `text_input/3`"
+  @doc "Keyword list with options to be passed down to `url_input/3`"
   property opts, :keyword, default: []
 
   @doc "Triggered when the component loses focus"
@@ -61,7 +61,7 @@ defmodule Surface.Components.Form.TextInput do
 
     ~H"""
     {{
-      text_input(
+      url_input(
         form,
         String.to_atom(@field),
         props ++ @opts ++ event_opts

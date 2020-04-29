@@ -14,6 +14,12 @@ defmodule Surface.Components.Form do
   @doc "Keyword list with options to be passed down to `form_for/3`"
   property opts, :keyword, default: []
 
+  @doc "Triggered when the form is changed"
+  property change, :event
+
+  @doc "Triggered when the form is submitted"
+  property submit, :event
+
   @doc "The content of the `<form>`"
   slot default
 
