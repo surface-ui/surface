@@ -213,7 +213,7 @@ defmodule Surface.API do
   end
 
   defp suggestion_for_duplicated_assign(%{func: :context, opts: opts}) do
-    "\nHint: " <>
+    "\n\nHint: " <>
       case Keyword.get(opts, :action) do
         :set ->
           """
@@ -617,7 +617,8 @@ defmodule Surface.API do
           cannot bind slot prop `#{name}` to property `#{generator}`. \
           Expected a existing property after `^`, \
           got: an undefined property `#{generator}`.
-          Hint: Existing properties are #{inspect(existing_properties_names)}\
+
+          Hint: Available properties are #{inspect(existing_properties_names)}\
           """
 
           IOHelper.compile_error(message, env.file, slot.line)

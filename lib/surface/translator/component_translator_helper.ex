@@ -372,8 +372,10 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     cond do
       child_bindings_keys != [] && slot_args_keys == [] ->
         message = """
-        there's no `#{slot_name}` slot defined in `#{inspect(mod)}`. \
+        there's no `#{slot_name}` slot defined in `#{inspect(mod)}`.
+
         Directive :let can only be used on explicitly defined slots.
+
         Hint: You can define a `#{slot_name}` slot and its props using: \
         `slot #{slot_name}, props: #{inspect(child_bindings_keys)}\
         """
@@ -384,8 +386,10 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         [prop | _] = undefined_keys
 
         message = """
-        undefined prop `#{inspect(prop)}` for slot `#{slot_name}` in `#{inspect(mod)}`. \
-        Existing props are: #{inspect(slot_args_keys)}.
+        undefined prop `#{inspect(prop)}` for slot `#{slot_name}` in `#{inspect(mod)}`.
+
+        Available props: #{inspect(slot_args_keys)}.
+
         Hint: You can define a new slot prop using the `props` option: \
         `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
         """

@@ -133,6 +133,7 @@ defmodule Surface.APITest do
 
     message = ~r"""
     cannot use name "label". There's already a data assign with the same name at line 4.
+
     Hint: you can use the :as option to set another name for the context assign.\
     """
 
@@ -145,6 +146,7 @@ defmodule Surface.APITest do
 
     message = ~r"""
     cannot use name "form". There's already a property assign with the same name at line 4.
+
     Hint: if you only need this context assign in the child components, \
     you can set option :scope as :only_children to solve the issue.\
     """
@@ -255,7 +257,8 @@ defmodule Surface.APITest do
       message = """
       code.exs:7: cannot bind slot prop `item` to property `unknown`. \
       Expected a existing property after `^`, got: an undefined property `unknown`.
-      Hint: Existing properties are [:items, :label]\
+
+      Hint: Available properties are [:items, :label]\
       """
 
       assert_raise(CompileError, message, fn ->

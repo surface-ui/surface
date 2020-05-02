@@ -390,8 +390,10 @@ defmodule SlotTest do
     """
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `cols` in `SlotTest.Column`. \
-    Existing props are: [:item, :info].
+    code:2: undefined prop `:non_existing` for slot `cols` in `SlotTest.Column`.
+
+    Available props: [:item, :info].
+
     Hint: You can define a new slot prop using the `props` option: \
     `slot cols, props: [..., :non_existing]`\
     """
@@ -425,8 +427,10 @@ defmodule SlotTest do
     """
 
     message = """
-    code:1: there's no `default` slot defined in `SlotTest.OuterWithoutDefaultSlot`. \
+    code:1: there's no `default` slot defined in `SlotTest.OuterWithoutDefaultSlot`.
+
     Directive :let can only be used on explicitly defined slots.
+
     Hint: You can define a `default` slot and its props using: \
     `slot default, props: [:info]\
     """
@@ -445,7 +449,10 @@ defmodule SlotTest do
 
     message = """
     code:1: undefined prop `:non_existing` for slot `default` in \
-    `SlotTest.OuterWithDefaultSlotAndProps`. Existing props are: [:info].
+    `SlotTest.OuterWithDefaultSlotAndProps`.
+
+    Available props: [:info].
+
     Hint: You can define a new slot prop using the `props` option: \
     `slot default, props: [..., :non_existing]`\
     """
@@ -466,7 +473,10 @@ defmodule SlotTest do
 
     message = """
     code:2: undefined prop `:non_existing` for slot `body` in \
-    `SlotTest.OuterWithSlotNotationAndProps`. Existing props are: [:info].
+    `SlotTest.OuterWithSlotNotationAndProps`.
+
+    Available props: [:info].
+
     Hint: You can define a new slot prop using the `props` option: \
     `slot body, props: [..., :non_existing]`\
     """
