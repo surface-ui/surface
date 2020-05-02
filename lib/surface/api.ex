@@ -131,7 +131,7 @@ defmodule Surface.API do
     The type is already defined by a parent component using action :set\
     """
 
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   defmacro context({:get, _, [name_ast, invalid_opts]}) do
@@ -145,7 +145,7 @@ defmodule Surface.API do
 
   defmacro context({:get, _, nil}) do
     message = "no name defined for context get"
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   # context set
@@ -157,7 +157,7 @@ defmodule Surface.API do
 
   defmacro context({:set, _, [_name_ast, opts]}) when is_list(opts) do
     message = "no type defined for context set. Type is required after the name."
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   defmacro context({:set, _, [name_ast, type]}) do
@@ -167,7 +167,7 @@ defmodule Surface.API do
 
   defmacro context({:set, _, [_name_ast]}) do
     message = "no type defined for context set. Type is required after the name."
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   # invalid usage
@@ -178,12 +178,12 @@ defmodule Surface.API do
     or `context set name, type, opts \\ []`\
     """
 
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   defmacro context({action, _, _}) do
     message = "invalid context action. Expected :get or :set, got: #{Macro.to_string(action)}"
-    raise %CompileError{line: __CALLER__.line, file: __CALLER__.file, description: message}
+    IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   @doc false
@@ -201,7 +201,7 @@ defmodule Surface.API do
         at line #{existing_assign.line}.#{suggestion_for_duplicated_assign(assign)}\
         """
 
-        raise %CompileError{line: assign.line, file: caller.file, description: message}
+        IOHelper.compile_error(message, caller.file, assign.line)
       else
         assigns = Map.put(assigns, name, assign)
         Module.put_attribute(caller.module, :assigns, assigns)
@@ -368,7 +368,7 @@ defmodule Surface.API do
     else
       {:error, message} ->
         file = Path.relative_to_cwd(caller.file)
-        raise %CompileError{line: caller.line, file: file, description: message}
+        IOHelper.compile_error(message, file, caller.line)
     end
   end
 
@@ -620,7 +620,7 @@ defmodule Surface.API do
           Hint: Existing properties are #{inspect(existing_properties_names)}\
           """
 
-          raise %CompileError{line: slot.line, file: env.file, description: message}
+          IOHelper.compile_error(message, env.file, slot.line)
 
         %{type: type} when type != :list ->
           message = """
@@ -629,7 +629,7 @@ defmodule Surface.API do
           got: a property of type #{inspect(type)}\
           """
 
-          raise %CompileError{line: slot.line, file: env.file, description: message}
+          IOHelper.compile_error(message, env.file, slot.line)
 
         _ ->
           :ok
@@ -643,7 +643,7 @@ defmodule Surface.API do
         name <- mod.__required_slots_names__(),
         !MapSet.member?(assigned_slots, name) do
       message = "missing required slot \"#{name}\" for component <#{parent_node_alias}>"
-      raise %CompileError{line: line, file: env.file, description: message}
+      IOHelper.compile_error(message, env.file, line)
     end
   end
 

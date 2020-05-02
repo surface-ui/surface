@@ -22,6 +22,8 @@ defmodule Surface.Component do
   If you need to handle them, please use a `Surface.LiveComponent` instead.
   """
 
+  alias Surface.Translator.IOHelper
+
   defmacro __using__(opts \\ []) do
     slot_name = Keyword.get(opts, :slot)
 
@@ -59,7 +61,7 @@ defmodule Surface.Component do
   defp validate_slot_name!(name, caller) do
     if !is_binary(name) do
       message = "invalid value for option :slot. Expected a string, got: #{inspect(name)}"
-      raise %CompileError{line: caller.line, file: caller.file, description: message}
+      IOHelper.compile_error(message, caller.file, caller.line)
     end
   end
 

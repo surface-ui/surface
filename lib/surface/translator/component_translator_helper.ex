@@ -378,7 +378,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         `slot #{slot_name}, props: #{inspect(child_bindings_keys)}\
         """
 
-        raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+        IOHelper.compile_error(message, caller.file, caller.line + line)
 
       undefined_keys != [] ->
         [prop | _] = undefined_keys
@@ -390,7 +390,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
         """
 
-        raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+        IOHelper.compile_error(message, caller.file, caller.line + line)
 
       true ->
         nil
@@ -405,7 +405,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         Cannot insert component #{inspect(caller.module)} here.
         """
 
-        raise %CompileError{line: caller.line, file: caller.file, description: message}
+        IOHelper.compile_error(message, caller.file, caller.line)
 
       parent_mod.__get_slot__(slot_name) == nil ->
         parent_slots = parent_mod.__slots__() |> Enum.map(& &1.name)
@@ -434,10 +434,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         #{existing_slots_message}\
         """
 
-        reraise(
-          %CompileError{line: caller.line + line, file: caller.file, description: message},
-          []
-        )
+        IOHelper.compile_error(message, caller.file, caller.line + line)
 
       true ->
         :ok

@@ -126,7 +126,7 @@ defmodule Surface.Translator do
       dot-notation. Use `inner_content.()` instead of `inner_content()`\
       """
 
-      raise %CompileError{line: caller.line + line, file: file, description: message}
+      IOHelper.compile_error(message, file, caller.line + line)
     else
       ["<%=", expr, "%>"]
     end
