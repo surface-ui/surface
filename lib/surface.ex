@@ -55,6 +55,8 @@ defmodule Surface do
   You can visit the documentation of each type of component for further explanation and examples.
   """
 
+  alias Surface.Translator.IOHelper
+
   @doc """
   Translates Surface code into Phoenix templates.
   """
@@ -100,10 +102,10 @@ defmodule Surface do
           []
 
         {:error, message} ->
-          runtime_error(message)
+          IOHelper.runtime_error(message)
 
         result ->
-          runtime_error(
+          IOHelper.runtime_error(
             "unexpected return value from init_context/1. " <>
               "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
           )
@@ -141,7 +143,7 @@ defmodule Surface do
     if String.Chars.impl_for(value) do
       value
     else
-      runtime_error(
+      IOHelper.runtime_error(
         "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
           "the String.Chars protocol (e.g. string, boolean, integer, atom, ...), " <>
           "got: #{inspect(value)}"
@@ -160,7 +162,7 @@ defmodule Surface do
   end
 
   def style(value, _show) do
-    runtime_error(
+    IOHelper.runtime_error(
       "invalid value for attribute \"style\". Expected a string " <>
         "got: #{inspect(value)}"
     )
@@ -193,7 +195,7 @@ defmodule Surface do
   end
 
   def css_class(value) do
-    runtime_error(
+    IOHelper.runtime_error(
       "invalid value for property of type :css_class. " <>
         "Expected a string or a keyword list, got: #{inspect(value)}"
     )
@@ -213,7 +215,7 @@ defmodule Surface do
     if Keyword.keyword?(value) do
       value
     else
-      runtime_error(
+      IOHelper.runtime_error(
         "invalid value for property \"#{key}\". Expected a :keyword, got: #{inspect(value)}"
       )
     end
@@ -228,7 +230,7 @@ defmodule Surface do
     if Keyword.keyword?(value) do
       Map.new(value)
     else
-      runtime_error(
+      IOHelper.runtime_error(
         "invalid value for property \"#{key}\". Expected a :map, got: #{inspect(value)}"
       )
     end
@@ -261,7 +263,7 @@ defmodule Surface do
   end
 
   def event_value(key, event, _caller_cid) do
-    runtime_error(
+    IOHelper.runtime_error(
       "invalid value for event \"#{key}\". Expected an :event or :string, got: #{inspect(event)}"
     )
   end
@@ -298,7 +300,7 @@ defmodule Surface do
   end
 
   def on_phx_event(phx_event, event, _caller_cid) do
-    runtime_error(
+    IOHelper.runtime_error(
       "invalid value for \":on-#{phx_event}\". " <>
         "Expected a :string or :event, got: #{inspect(event)}"
     )
@@ -310,7 +312,7 @@ defmodule Surface do
   end
 
   def phx_event(phx_event, value) do
-    runtime_error(
+    IOHelper.runtime_error(
       "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
         "of type :string. If you want to pass an :event, please use directive " <>
         ":on-#{phx_event} instead. Expected a :string, got: #{inspect(value)}"
@@ -332,16 +334,6 @@ defmodule Surface do
 
   defp quot(value) do
     [{:safe, "\""}, value, {:safe, "\""}]
-  end
-
-  defp runtime_error(message) do
-    stacktrace =
-      self()
-      |> Process.info(:current_stacktrace)
-      |> elem(1)
-      |> Enum.drop(2)
-
-    reraise(message, stacktrace)
   end
 
   defp put_gets_into_assigns(assigns, context, gets) do
