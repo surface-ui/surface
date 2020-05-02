@@ -30,7 +30,7 @@ defmodule Surface.Component do
     translator =
       if slot_name do
         validate_slot_name!(slot_name, __CALLER__)
-        Surface.Translator.SlotTranslator
+        Surface.Translator.SlotableTranslator
       else
         Surface.Translator.ComponentTranslator
       end
@@ -44,7 +44,7 @@ defmodule Surface.Component do
       @behaviour unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
-      if unquote(translator) == Surface.Translator.SlotTranslator do
+      if unquote(translator) == Surface.Translator.SlotableTranslator do
         def render(var!(assigns)) do
           ~H()
         end

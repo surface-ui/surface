@@ -1,7 +1,7 @@
 defmodule Surface.Translator.ComponentTranslatorHelper do
   @moduledoc false
 
-  alias Surface.Translator.SlotTranslator
+  alias Surface.Translator.SlotableTranslator
   alias Surface.Translator.IOHelper
 
   def add_render_call(renderer, args, has_children? \\ false) do
@@ -217,7 +217,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
   def blank?(_), do: false
 
-  defp handle_child({_, _, _, %{translator: SlotTranslator}} = child, acc) do
+  defp handle_child({_, _, _, %{translator: SlotableTranslator}} = child, acc) do
     {mod_str, attributes, children, meta} = child
     %{module: module, space: space, directives: directives, line: child_line} = meta
     {slots_props, slots_meta, contents, _, opts} = maybe_add_default_content(acc)

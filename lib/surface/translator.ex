@@ -239,7 +239,7 @@ defmodule Surface.Translator do
           put_assigned_slot(caller, slot, parent_key)
 
           meta
-          |> Map.put(:translator, Surface.Translator.SlotTranslator)
+          |> Map.put(:translator, Surface.Translator.SlotableTranslator)
           |> Map.put(:slot, {slot, slot_line})
           |> Map.put(:module, nil)
           |> Map.put(:directives, directives)
