@@ -308,8 +308,8 @@ defmodule Surface.APITest do
       """
 
       message = """
-      code.exs:6: missing required slot `default` for \
-      `Surface.APITest.ComponentWithRequiredDefaultSlot`\
+      code.exs:6: missing required slot "default" for component \
+      <ComponentWithRequiredDefaultSlot>\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -336,8 +336,8 @@ defmodule Surface.APITest do
       """
 
       message = """
-      code.exs:6: missing required slot `default` for \
-      `Surface.APITest.ComponentWithRequiredDefaultSlot`\
+      code.exs:6: missing required slot "default" for component \
+      <ComponentWithRequiredDefaultSlot>\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -364,8 +364,7 @@ defmodule Surface.APITest do
       """
 
       message = """
-      code.exs:6: missing required slot `header` for \
-      `Surface.APITest.ComponentWithRequiredSlots`\
+      code.exs:6: missing required slot "header" for component <ComponentWithRequiredSlots>\
       """
 
       assert_raise(CompileError, message, fn ->

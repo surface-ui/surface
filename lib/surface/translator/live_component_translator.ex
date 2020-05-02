@@ -18,7 +18,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
     %{module: mod, directives: directives, space: space} = meta
 
     {children_props, slots_meta, children_contents} =
-      translate_children(mod, attributes, directives, children, caller)
+      translate_children(mod_str, mod, attributes, directives, children, caller)
 
     children_props_str = ["%{", Enum.join(children_props, ", "), "}"]
     has_children? = children != []

@@ -60,7 +60,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  def translate_children(mod, attributes, directives, children, caller) do
+  def translate_children(mod_str, mod, attributes, directives, children, caller) do
     {parent_bindings, line} = find_let_bindings(directives)
     slots_with_args = get_slots_with_args(mod, attributes)
 
@@ -75,6 +75,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
     opts = %{
       parent: mod,
+      parent_mod_str: mod_str,
       parent_args: parent_bindings,
       slots_with_args: slots_with_args,
       caller: caller
@@ -237,7 +238,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} -> v end)
 
     {child_bindings, line} = find_let_bindings(directives)
-    validate_slot!(slot_name, opts.parent, opts.caller, slot_name_line)
+    validate_slot!(slot_name, opts.parent, opts.parent_mod_str, opts.caller, slot_name_line)
 
     validate_let_bindings!(
       slot_name,
@@ -395,7 +396,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  defp validate_slot!(slot_name, parent_mod, caller, line) do
+  defp validate_slot!(slot_name, parent_mod, parent_alias, caller, line) do
     cond do
       !function_exported?(parent_mod, :__slots__, 0) ->
         message = """
@@ -408,22 +409,59 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
       parent_mod.__get_slot__(slot_name) == nil ->
         parent_slots = parent_mod.__slots__() |> Enum.map(& &1.name)
 
+        similar_slot_message =
+          case did_you_mean(slot_name, parent_slots) do
+            {similar, score} when score > 0.8 ->
+              "\n\n  Did you mean #{inspect(to_string(similar))}?"
+
+            _ ->
+              ""
+          end
+
         existing_slots_message =
           if parent_slots == [] do
             ""
           else
-            ". Existing slots are: #{inspect(parent_slots)}"
+            slots = Enum.map(parent_slots, &to_string/1)
+            available = list_to_string("slot:", "slots:", slots)
+            "\n\n  Available #{available}"
           end
 
         message = """
-        there's no slot `#{slot_name}` defined in parent \
-        `#{inspect(parent_mod)}`#{existing_slots_message}\
+        no slot "#{slot_name}" defined in parent component <#{parent_alias}>\
+        #{similar_slot_message}\
+        #{existing_slots_message}\
         """
 
-        raise %CompileError{line: caller.line + line, file: caller.file, description: message}
+        reraise(
+          %CompileError{line: caller.line + line, file: caller.file, description: message},
+          []
+        )
 
       true ->
         :ok
     end
+  end
+
+  defp did_you_mean(target, list) do
+    Enum.reduce(list, {nil, 0}, &max_similar(&1, to_string(target), &2))
+  end
+
+  defp max_similar(source, target, {_, current} = best) do
+    score = source |> to_string() |> String.jaro_distance(target)
+    if score < current, do: best, else: {source, score}
+  end
+
+  defp list_to_string(_singular, _plural, []) do
+    ""
+  end
+
+  defp list_to_string(singular, _plural, [item]) do
+    "#{singular} #{inspect(item)}"
+  end
+
+  defp list_to_string(_singular, plural, items) do
+    [last | rest] = items |> Enum.map(&inspect/1) |> Enum.reverse()
+    "#{plural} #{rest |> Enum.reverse() |> Enum.join(", ")} and #{last}"
   end
 end

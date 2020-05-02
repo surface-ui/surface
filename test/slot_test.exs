@@ -483,7 +483,7 @@ defmodule SlotTest do
     </StatefulComponent>
     """
 
-    message = "code:2: there's no slot `inner` defined in parent `SlotTest.StatefulComponent`"
+    message = "code:2: no slot \"inner\" defined in parent component <StatefulComponent>"
 
     assert_raise(CompileError, message, fn ->
       render_live(code)
@@ -498,8 +498,9 @@ defmodule SlotTest do
     """
 
     message = """
-    code:2: there's no slot `inner` defined in parent `SlotTest.Grid`. \
-    Existing slots are: [:cols]\
+    code:2: no slot "inner" defined in parent component <Grid>
+
+      Available slot: "cols"\
     """
 
     assert_raise(CompileError, message, fn ->

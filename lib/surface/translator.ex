@@ -221,7 +221,7 @@ defmodule Surface.Translator do
     end
 
     node_id = :erlang.unique_integer([:positive, :monotonic])
-    node_key = {meta.module, node_id, caller.line + meta.line}
+    node_key = {meta.module, node_id, name, caller.line + meta.line}
     init_assigned_slots(caller, node_key)
     children = build_metadata(children, node_key, caller)
 
@@ -441,7 +441,7 @@ defmodule Surface.Translator do
   end
 
   defp init_assigned_slots(caller, parent_key) do
-    {mod, _, _} = parent_key
+    {mod, _, _, _} = parent_key
 
     if Module.open?(caller.module) && function_exported?(mod, :__slots__, 0) do
       assigned_slots_by_parent =
