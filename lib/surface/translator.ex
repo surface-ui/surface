@@ -252,7 +252,7 @@ defmodule Surface.Translator do
           |> Map.put(:directives, directives)
       end
 
-    children = build_metadata(children, parent_key, caller)
+    children = build_metadata(children, nil, caller)
     updated_node = {tag_name, attributes, children, meta}
     [updated_node | build_metadata(nodes, parent_key, caller)]
   end
@@ -269,7 +269,7 @@ defmodule Surface.Translator do
       |> Map.put(:translator, Surface.Translator.TagTranslator)
       |> Map.put(:directives, directives)
 
-    children = build_metadata(children, parent_key, caller)
+    children = build_metadata(children, nil, caller)
     updated_node = {tag_name, attributes, children, meta}
     [updated_node | build_metadata(nodes, parent_key, caller)]
   end

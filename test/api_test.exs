@@ -294,7 +294,7 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "raise compile error if a required slot is not assigned (self-closed)" do
+    test "raise compile error if required default slot is not assigned (self-closed)" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestComponentWithRequiredDefaultSlot_#{id}"
 
@@ -321,7 +321,7 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "raise compile error if a required slot is not assigned (blank content)" do
+    test "raise compile error if required slot is not assigned (blank content)" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestComponentWithRequiredDefaultSlot_#{id}"
 
@@ -332,6 +332,37 @@ defmodule Surface.APITest do
         def render(assigns) do
           ~H"\""
           <ComponentWithRequiredDefaultSlot>
+          </ComponentWithRequiredDefaultSlot>
+          "\""
+        end
+      end
+      """
+
+      message = """
+      code.exs:6: missing required slot "default" for component \
+      <ComponentWithRequiredDefaultSlot>\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+    end
+
+    test "raise compile error if required default slot is not assigned (other slots present)" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot>
+            <template slot="header">
+              Header
+            </template>
           </ComponentWithRequiredDefaultSlot>
           "\""
         end
