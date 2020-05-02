@@ -1,6 +1,8 @@
 defmodule Surface.API do
   @moduledoc false
 
+  alias Surface.Translator.IOHelper
+
   @types [
     :any,
     :css_class,
@@ -597,7 +599,7 @@ defmodule Surface.API do
         value by returning {:ok, #{var.name}: ...}\
         """
 
-        Surface.Translator.IO.warn(message, env, fn _ -> var.line end)
+        IOHelper.warn(message, env, fn _ -> var.line end)
       end
     end
   end

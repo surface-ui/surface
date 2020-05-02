@@ -2,6 +2,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   @moduledoc false
 
   alias Surface.Translator.SlotTranslator
+  alias Surface.Translator.IOHelper
 
   def add_render_call(renderer, args, has_children? \\ false) do
     ["<%= ", renderer, "(", Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>"]
@@ -108,7 +109,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
 
           if mod.__props__() != [] && !mod.__validate_prop__(key_atom) do
             message = "Unknown property \"#{key}\" for component <#{mod_str}>"
-            Surface.Translator.IO.warn(message, caller, &(&1 + line))
+            IOHelper.warn(message, caller, &(&1 + line))
           end
 
           value = translate_value(prop[:type], key, value, caller, line)

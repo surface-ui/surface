@@ -6,7 +6,7 @@ defmodule Surface.Translator do
   """
 
   alias Surface.Translator.Parser
-  import Surface.Translator.IO, only: [warn: 3]
+  alias Surface.Translator.IOHelper
 
   @callback prepare(nodes :: [any], caller: Macro.Env.t()) :: any
 
@@ -60,13 +60,13 @@ defmodule Surface.Translator do
   end
 
   def translate({tag, attributes, children, %{warn: message, line: line} = meta}, caller) do
-    warn(message, caller, &(&1 + line))
+    IOHelper.warn(message, caller, &(&1 + line))
     meta = Map.delete(meta, :warn)
     translate({tag, attributes, children, meta}, caller)
   end
 
   def translate({_, _, _, %{error: message, line: line} = meta}, caller) do
-    warn(message, caller, &(&1 + line))
+    IOHelper.warn(message, caller, &(&1 + line))
     encoded_message = Plug.HTML.html_escape_to_iodata(message)
     require_code = if meta[:module], do: ["<% require ", meta[:module], " %>"], else: []
 
@@ -324,7 +324,7 @@ defmodule Surface.Translator do
 
       for prop <- missing_props do
         message = "Missing required property \"#{prop}\" for component <#{mod_str}>"
-        warn(message, caller, &(&1 + line))
+        IOHelper.warn(message, caller, &(&1 + line))
       end
     end
   end
@@ -379,7 +379,7 @@ defmodule Surface.Translator do
     if (translator == Surface.Translator.TagTranslator && name not in @tag_directives) ||
          (translator == Surface.Translator.ComponentTranslator &&
             name not in @component_directives) do
-      warn("unknown directive #{inspect(name)} for <#{tag_name}>", caller, &(&1 + line))
+      IOHelper.warn("unknown directive #{inspect(name)} for <#{tag_name}>", caller, &(&1 + line))
     end
 
     node

@@ -3,6 +3,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
 
   alias Surface.Translator
   alias Surface.Translator.TagTranslator
+  alias Surface.Translator.IOHelper
   import Surface.Translator.ComponentTranslatorHelper
 
   @behaviour Translator
@@ -66,14 +67,14 @@ defmodule Surface.Translator.LiveComponentTranslator do
           true ->
             {_, _, _, %{line: line}} = child
             message = "stateful live components must have a single HTML root element"
-            Surface.Translator.IO.warn(message, caller, &(&1 + line))
+            IOHelper.warn(message, caller, &(&1 + line))
             {[child | nodes], n_tags + 1, n_non_tags}
         end
       end)
 
     if n_tags == 0 do
       message = "stateful live components must have a HTML root element"
-      Surface.Translator.IO.warn(message, caller, &(&1 + 1))
+      IOHelper.warn(message, caller, &(&1 + 1))
     end
 
     Enum.reverse(nodes)
