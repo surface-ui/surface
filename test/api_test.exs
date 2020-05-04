@@ -294,7 +294,7 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "raise compile error if required default slot is not assigned (self-closed)" do
+    test "warn if required default slot is not assigned (self-closed)" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestComponentWithRequiredDefaultSlot_#{id}"
 
@@ -310,18 +310,19 @@ defmodule Surface.APITest do
       end
       """
 
-      message = """
-      code.exs:6: missing required slot "default" for component \
-      <ComponentWithRequiredDefaultSlot>\
-      """
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
 
-      assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+      assert output =~ ~r"""
+             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
+               code.exs:6:\
+             """
     end
 
-    test "raise compile error if required slot is not assigned (blank content)" do
+    test "warn if required slot is not assigned (blank content)" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestComponentWithRequiredDefaultSlot_#{id}"
 
@@ -338,18 +339,19 @@ defmodule Surface.APITest do
       end
       """
 
-      message = """
-      code.exs:6: missing required slot "default" for component \
-      <ComponentWithRequiredDefaultSlot>\
-      """
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
 
-      assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+      assert output =~ ~r"""
+             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
+               code.exs:6:\
+             """
     end
 
-    test "raise compile error if required default slot is not assigned (other slots present)" do
+    test "warn if required default slot is not assigned (other slots present)" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestComponentWithRequiredDefaultSlot_#{id}"
 
@@ -369,18 +371,19 @@ defmodule Surface.APITest do
       end
       """
 
-      message = """
-      code.exs:6: missing required slot "default" for component \
-      <ComponentWithRequiredDefaultSlot>\
-      """
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
 
-      assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+      assert output =~ ~r"""
+             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
+               code.exs:6:\
+             """
     end
 
-    test "raise compile error if a required named slot is not assigned" do
+    test "warn if a required named slot is not assigned" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestComponentWithRequiredSlots_#{id}"
 
@@ -397,14 +400,16 @@ defmodule Surface.APITest do
       end
       """
 
-      message = """
-      code.exs:6: missing required slot "header" for component <ComponentWithRequiredSlots>\
-      """
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
 
-      assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+      assert output =~ ~r"""
+             missing required slot "header" for component <ComponentWithRequiredSlots>
+               code.exs:6:\
+             """
     end
   end
 

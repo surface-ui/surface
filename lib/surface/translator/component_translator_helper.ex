@@ -438,7 +438,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
         #{existing_slots_message}\
         """
 
-        IOHelper.compile_error(message, caller.file, caller.line + line)
+        IOHelper.warn(message, caller, fn _ -> caller.line + line end)
 
       true ->
         :ok

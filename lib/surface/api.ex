@@ -644,7 +644,7 @@ defmodule Surface.API do
         name <- mod.__required_slots_names__(),
         !MapSet.member?(assigned_slots, name) do
       message = "missing required slot \"#{name}\" for component <#{parent_node_alias}>"
-      IOHelper.compile_error(message, env.file, line)
+      IOHelper.warn(message, env, fn _ -> line end)
     end
   end
 

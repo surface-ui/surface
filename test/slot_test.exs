@@ -2,6 +2,7 @@ defmodule SlotTest do
   use ExUnit.Case
   use Phoenix.ConnTest
   import ComponentTestHelper
+  import ExUnit.CaptureIO
 
   defmodule StatefulComponent do
     use Surface.LiveComponent
@@ -486,35 +487,66 @@ defmodule SlotTest do
     end)
   end
 
-  test "raise compile error if parent component does not define any slots" do
+  test "warn if parent component does not define any slots" do
     code = """
     <StatefulComponent>
       <InnerData/>
     </StatefulComponent>
     """
 
-    message = "code:2: no slot \"inner\" defined in parent component <StatefulComponent>"
+    output =
+      capture_io(:standard_error, fn ->
+        render_live(code)
+      end)
 
-    assert_raise(CompileError, message, fn ->
-      render_live(code)
-    end)
+    assert output =~ ~r"""
+           no slot "inner" defined in parent component <StatefulComponent>
+             code:2:\
+           """
   end
 
-  test "raise compile error if parent component does not define the slot" do
+  test "warn if parent component does not define the slot" do
     code = """
     <Grid items={{[]}}>
       <InnerData/>
+      <Column title="ID"/>
     </Grid>
     """
 
-    message = """
-    code:2: no slot "inner" defined in parent component <Grid>
+    output =
+      capture_io(:standard_error, fn ->
+        render_live(code)
+      end)
 
-      Available slot: "cols"\
+    assert output =~ ~r"""
+           no slot "inner" defined in parent component <Grid>
+
+             Available slot: "cols"
+             code:2:\
+           """
+  end
+
+  test "warn and suggest similar slot if parent component does not define the slot" do
+    code = """
+    <OuterWithSlotNotation>
+      <template slot="foot">
+        My footer
+      </template>
+    </OuterWithSlotNotation>
     """
 
-    assert_raise(CompileError, message, fn ->
-      render_live(code)
-    end)
+    output =
+      capture_io(:standard_error, fn ->
+        render_live(code)
+      end)
+
+    assert output =~ ~r"""
+           no slot "foot" defined in parent component <OuterWithSlotNotation>
+
+             Did you mean "footer"\?
+
+             Available slots: "footer", "header" and "default"
+             code:2:\
+           """
   end
 end
