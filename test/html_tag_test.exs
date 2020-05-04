@@ -162,6 +162,18 @@ defmodule HtmlTagTest do
              <div class="Default Prop1"></div>
              """
     end
+
+    test "css class with nil value" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class={{nil}}/>
+      """
+
+      assert render_static(code) =~ """
+             <div class=\"\"></div>
+             """
+    end
   end
 
   test "boolean attributes" do
@@ -217,6 +229,18 @@ defmodule HtmlTagTest do
 
       assert render_static(code) =~ """
              <div style="height: 10px;"></div>
+             """
+    end
+
+    test "properties with nil values" do
+      assigns = %{nil_value: nil}
+
+      code = ~H"""
+      <div style="height: {{ @nil_value }}, width: {{ @nil_value }};"/>
+      """
+
+      assert render_static(code) =~ """
+             <div style=\"\"></div>
              """
     end
 

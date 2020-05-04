@@ -219,6 +219,18 @@ defmodule Surface.DirectivesTest do
              """
     end
 
+    test "nil events" do
+      assigns = %{click: nil}
+
+      code = ~H"""
+      <button :on-phx-click={{ @click }}>No handler attached</button>
+      """
+
+      assert render_static(code) =~ """
+             <button >No handler attached</button>
+             """
+    end
+
     test "do not translate invalid events" do
       assigns = %{}
 
