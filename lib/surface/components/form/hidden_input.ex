@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.HiddenInput do
   ## Examples
 
   ```
-  <HiddenInput form="user" field="name" opts={{ [autofocus: "autofocus"] }}>
+  <HiddenInput form="user" field="token" opts={{ [autofocus: "autofocus"] }}>
   ```
   """
 

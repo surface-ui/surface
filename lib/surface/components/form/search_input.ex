@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.SearchInput do
   ## Examples
 
   ```
-  <SearchInput form="song" field="title" opts={{ [autofocus: "autofocus"] }}>
+  <SearchInput form="song" field="title" opts={{ [autofocus: "autofocus"] }} />
   ```
   """
 

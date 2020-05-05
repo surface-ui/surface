@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.TelephoneInput do
   ## Examples
 
   ```
-  <TelephoneInput form="user" field="phone" opts={{ [autofocus: "autofocus"] }}>
+  <TelephoneInput form="user" field="phone" opts={{ [autofocus: "autofocus"] }} />
   ```
   """
 

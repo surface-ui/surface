@@ -4,14 +4,14 @@ defmodule Surface.Components.Form.RangeInput do
 
   Provides a wrapper for Phoenix.HTML.Form's `range_input/3` function.
 
-  All options passed via `opts` will be sent to `range_input/3`, `value` and
-  `class` can be set directly and will override anything in `opts`.
+  All options passed via `opts` will be sent to `range_input/3`, `value`, `min, `max`
+  and `class` can be set directly and will override anything in `opts`.
 
 
   ## Examples
 
   ```
-  <RangeInput form="volume" field="percent" min: "0" max: "100"/>
+  <RangeInput form="volume" field="percent" min="0" max="100" step="5" value="40" opts={{ [autofocus: "autofocus"] }} />
   ```
   """
 
@@ -36,6 +36,9 @@ defmodule Surface.Components.Form.RangeInput do
 
   @doc "Maximum value for the input"
   property max, :string
+
+  @doc "Sets or returns the value of the step attribute of the slider control"
+  property step, :string
 
   @doc "Class or classes to apply to the input"
   property class, :css_class
@@ -62,7 +65,7 @@ defmodule Surface.Components.Form.RangeInput do
 
   def render(assigns) do
     form = get_form(assigns)
-    props = get_non_nil_props(assigns, [:value, :min, :max, :class])
+    props = get_non_nil_props(assigns, [:value, :min, :max, :step, :class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""

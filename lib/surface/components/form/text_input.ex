@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.TextInput do
   ## Examples
 
   ```
-  <TextInput form="user" field="name" opts={{ [autofocus: "autofocus"] }}>
+  <TextInput form="user" field="name" opts={{ [autofocus: "autofocus"] }} />
   ```
   """
 

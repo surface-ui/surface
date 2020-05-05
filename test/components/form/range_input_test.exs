@@ -8,11 +8,21 @@ defmodule Surface.Components.Form.RangeInputTest do
   describe "Without LiveView" do
     test "empty input" do
       code = """
-      <RangeInput form="volume" field="percent" min="0" max="100"/>
+      <RangeInput form="volume" field="percent"/>
       """
 
       assert render_live(code) =~ """
-             <input id="volume_percent" max="100" min="0" name="volume[percent]" type="range"/>
+             <input id="volume_percent" name="volume[percent]" type="range"/>
+             """
+    end
+
+    test "setting min, max and step" do
+      code = """
+      <RangeInput form="volume" field="percent" min="0" max="100" step="50"/>
+      """
+
+      assert render_live(code) =~ """
+             <input id="volume_percent" max="100" min="0" name="volume[percent]" step="50" type="range"/>
              """
     end
 
