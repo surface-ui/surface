@@ -132,6 +132,40 @@ defmodule Surface.Translator do
     end
   end
 
+  # MacroComponent
+  def translate({_, _, _, %{translator: mod, module: mod}} = node, caller) do
+    {mod_str, attributes, _, %{line: line}} = node
+    validate_required_props(attributes, mod, mod_str, caller, line)
+
+    try do
+      mod.translate(node, caller)
+      |> translate_directives(node, caller)
+      |> Tuple.to_list()
+    rescue
+      error in CompileError ->
+        reraise(error, __STACKTRACE__)
+
+      exception ->
+        prefix =
+          case exception do
+            %exception_mod{} ->
+              "(#{inspect(exception_mod)}) "
+
+            _ ->
+              ""
+          end
+
+        message = """
+        cannot translate component <#{mod_str}>. Reason:
+
+        #{prefix}#{Exception.message(exception)}
+        """
+
+        error = %CompileError{line: caller.line + line, file: caller.file, description: message}
+        reraise(error, __STACKTRACE__)
+    end
+  end
+
   def translate({_, _, _, %{translator: translator, module: mod}} = node, caller) do
     {mod_str, attributes, _, %{line: line}} = node
     validate_required_props(attributes, mod, mod_str, caller, line)

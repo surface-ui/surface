@@ -32,6 +32,7 @@ defmodule Surface.MixProject do
       {:nimble_parsec, "~> 0.5.0"},
       {:jason, "~> 1.0"},
       {:phoenix_live_view, "~> 0.12.1"},
+      {:earmark, "~> 1.3"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
       {:ecto, "~> 3.4.2", only: :test},
