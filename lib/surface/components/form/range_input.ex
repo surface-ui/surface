@@ -11,25 +11,14 @@ defmodule Surface.Components.Form.RangeInput do
   ## Examples
 
   ```
-  <RangeInput form="volume" field="percent" min="0" max="100" step="5" value="40" opts={{ [autofocus: "autofocus"] }} />
+  <RangeInput form="volume" field="percent" min="0" max="100" step="5" value="40" opts={{ autofocus: "autofocus" }} />
   ```
   """
 
-  use Surface.Component
+  use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [range_input: 3]
   import Surface.Components.Form.Utils
-
-  alias Surface.Components.Form
-
-  @doc "An identifier for the form"
-  property form, :form
-
-  @doc "An identifier for the input"
-  property field, :string, required: true
-
-  @doc "Value to pre-populated the input"
-  property value, :string
 
   @doc "Minimum value for the input"
   property min, :string
@@ -39,27 +28,6 @@ defmodule Surface.Components.Form.RangeInput do
 
   @doc "Sets or returns the value of the step attribute of the slider control"
   property step, :string
-
-  @doc "Class or classes to apply to the input"
-  property class, :css_class
-
-  @doc "Keyword list with options to be passed down to `range_input/3`"
-  property opts, :keyword, default: []
-
-  @doc "Triggered when the component loses focus"
-  property blur, :event
-
-  @doc "Triggered when the component receives focus"
-  property focus, :event
-
-  @doc "Triggered when the component receives click"
-  property capture_click, :event
-
-  @doc "Triggered when a button on the keyboard is pressed"
-  property keydown, :event
-
-  @doc "Triggered when a button on the keyboard is released"
-  property keyup, :event
 
   context get form, from: Form, as: :form_context
 
