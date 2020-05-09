@@ -6,8 +6,9 @@ defmodule Surface.Components.Raw do
   and write regular Phoenix templates code directly or when you
   don't want your HTML to be translated at all.
 
-  > **Note**: By skipping translation, any syntactic sugar provided
-  by Surface will not apply.
+  > **Note**: By skipping translation, all Surface specific features
+  are automatically disabled, including code interpolation with `{{...}}`,
+  syntactic sugar for attributes and markup validation.
   """
 
   use Surface.MacroComponent
