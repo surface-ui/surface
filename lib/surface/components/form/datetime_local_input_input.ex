@@ -1,23 +1,23 @@
-defmodule Surface.Components.Form.UrlInput do
+defmodule Surface.Components.Form.DateTimeLocalInput do
   @moduledoc """
-  Generates a time input.
+  Generates a color input.
 
-  Provides a wrapper for Phoenix.HTML.Form's `url_input/3` function.
+  Provides a wrapper for Phoenix.HTML.Form's `datetime_local_input/3` function.
 
-  All options passed via `opts` will be sent to `url_input/3`, `value` and
+  All options passed via `opts` will be sent to `datetime_local_input/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
 
 
   ## Examples
 
   ```
-  <UrlInput form="user" field="name" opts={{ autofocus: "autofocus" }}>
+  <DateTimeLocalInput form="order" field="completed_at" opts={{ autofocus: "autofocus" }} />
   ```
   """
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [url_input: 3]
+  import Phoenix.HTML.Form, only: [datetime_local_input: 3]
   import Surface.Components.Form.Utils
 
   context get form, from: Form, as: :form_context
@@ -29,7 +29,7 @@ defmodule Surface.Components.Form.UrlInput do
 
     ~H"""
     {{
-      url_input(
+      datetime_local_input(
         form,
         String.to_atom(@field),
         props ++ @opts ++ event_opts
