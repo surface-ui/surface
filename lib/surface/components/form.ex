@@ -1,4 +1,16 @@
 defmodule Surface.Components.Form do
+  @moduledoc """
+  Generates a form.
+
+  Provides a wrapper for `Phoenix.HTML.Form.form_for/3`. Additionally,
+  adds the form instance that is returned by `form_for/3` into the context,
+  making it available to any child input.
+
+  All options passed via `opts` will be sent to `form_for/3`, `for`
+  and `action` can be set directly and will override anything in `opts`.
+
+  """
+
   use Surface.Component
 
   import Phoenix.HTML.Form
