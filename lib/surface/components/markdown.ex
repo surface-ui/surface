@@ -54,6 +54,9 @@ defmodule Surface.Components.Markdown do
   """
   property opts, :keyword, default: []
 
+  @doc "The markdown text to be translated to HTML"
+  slot default
+
   @impl true
   def translate({_, attributes, children, %{line: tag_line}}, caller) do
     props = MacroComponent.eval_static_props!(__MODULE__, attributes, caller)
