@@ -65,4 +65,15 @@ defmodule Surface.Components.FormTest do
            </form>
            """
   end
+
+  test "form with events" do
+    code = """
+    <Form for={{:user}} action="#" change="change" submit="sumit">
+    </Form>
+    """
+
+    assert render_live(code) =~ """
+           <form action="#" method="post" phx-change="change" phx-submit="sumit">\
+           """
+  end
 end

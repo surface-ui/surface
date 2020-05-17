@@ -14,7 +14,6 @@ defmodule Surface.Components.Form do
   use Surface.Component
 
   import Phoenix.HTML.Form
-
   alias Surface.Components.Raw
 
   @doc "Atom or changeset to inform the form data"
@@ -39,7 +38,12 @@ defmodule Surface.Components.Form do
   context set form, :form
 
   def init_context(assigns) do
-    form = form_for(assigns.for, assigns.action, assigns.opts)
+    opts =
+      assigns.opts ++
+        event_to_opts(assigns.change, :phx_change) ++
+        event_to_opts(assigns.submit, :phx_submit)
+
+    form = form_for(assigns.for, assigns.action, opts)
     {:ok, form: form}
   end
 
