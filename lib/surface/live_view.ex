@@ -61,6 +61,7 @@ defmodule Surface.LiveView do
       for %{name: name, opts: opts} <- Module.get_attribute(env.module, :data) do
         {name, Keyword.get(opts, :default)}
       end
+      |> Macro.escape()
 
     if Module.defines?(env.module, {:mount, 3}) do
       quote do

@@ -168,7 +168,7 @@ defmodule Surface.APITest do
     context set form, :form, scope: :only_children
     """
 
-    assert eval(code) == :ok
+    assert {:ok, _} = eval(code)
   end
 
   test "allow context :get with existing assign name when using :as" do
@@ -177,7 +177,16 @@ defmodule Surface.APITest do
     context get form, from: Surface.APITest.ContextSetter, as: :my_form
     """
 
-    assert eval(code) == :ok
+    assert {:ok, _} = eval(code)
+  end
+
+  test "accept invalid quoted expressions like literal maps as default value" do
+    code = """
+    property map, :map, default: %{a: 1, b: 2}
+    """
+
+    assert {:ok, module} = eval(code)
+    assert module.__get_prop__(:map)[:opts][:default] == %{a: 1, b: 2}
   end
 
   describe "property" do
@@ -192,7 +201,7 @@ defmodule Surface.APITest do
 
     test "common type options" do
       code = "property count, :integer, required: false, default: 0, values: [0, 1, 2]"
-      assert eval(code) == :ok
+      assert {:ok, _} = eval(code)
     end
 
     test "validate unknown type options" do
@@ -425,7 +434,7 @@ defmodule Surface.APITest do
 
     test "common type options" do
       code = "data count, :integer, default: 0, values: [0, 1, 2]"
-      assert eval(code) == :ok
+      assert {:ok, _} = eval(code)
     end
 
     test "validate unknown type options" do
@@ -487,7 +496,7 @@ defmodule Surface.APITest do
 
     test "valid options" do
       code = "context set field, :atom, scope: :only_children"
-      assert eval(code) == :ok
+      assert {:ok, _} = eval(code)
     end
 
     test "validate :scope" do
@@ -503,7 +512,7 @@ defmodule Surface.APITest do
 
     test "no required options" do
       code = "context set field, :atom"
-      assert eval(code) == :ok
+      assert {:ok, _} = eval(code)
     end
 
     test "unknown options" do
@@ -560,7 +569,7 @@ defmodule Surface.APITest do
       context get form, from: Surface.APITest.ContextSetter, as: :my_form
       """
 
-      assert eval(code) == :ok
+      assert {:ok, _} = eval(code)
     end
 
     test "invalid :from" do
@@ -652,10 +661,10 @@ defmodule Surface.APITest do
 
   defp eval(code) do
     id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestLiveComponent_#{id}"
+    module_name = "TestLiveComponent_#{id}"
 
     comp_code = """
-    defmodule #{module} do
+    defmodule #{module_name} do
       use Surface.LiveComponent
 
       #{code}
@@ -670,8 +679,8 @@ defmodule Surface.APITest do
     end
     """
 
-    {{:module, _, _, _}, _} = Code.eval_string(comp_code, [], file: "code")
-    :ok
+    {{:module, module, _, _}, _} = Code.eval_string(comp_code, [], file: "code")
+    {:ok, module}
   end
 
   defp get_docs(module) do
