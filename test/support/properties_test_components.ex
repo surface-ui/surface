@@ -34,4 +34,22 @@ defmodule Surface.PropertiesTest.Components do
       """
     end
   end
+
+  defmodule MyComponentWithModuledocFalse do
+    use Surface.Component
+
+    @moduledoc false
+
+    @doc "The label"
+    property label, :string, required: true, default: ""
+
+    @doc "The class"
+    property class, :css_class
+
+    def render(assigns) do
+      ~H"""
+      <div />
+      """
+    end
+  end
 end

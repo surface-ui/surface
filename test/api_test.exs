@@ -713,6 +713,10 @@ defmodule Surface.APITest do
            """
   end
 
+  test "do not generate documentation when @moduledoc is false" do
+    assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledocFalse) == nil
+  end
+
   defp eval(code) do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module_name = "TestLiveComponent_#{id}"
@@ -738,7 +742,12 @@ defmodule Surface.APITest do
   end
 
   defp get_docs(module) do
-    {:docs_v1, _, _, "text/markdown", %{"en" => docs}, %{}, _} = Code.fetch_docs(module)
-    docs
+    case Code.fetch_docs(module) do
+      {:docs_v1, _, _, "text/markdown", %{"en" => docs}, %{}, _} ->
+        docs
+
+      _ ->
+        nil
+    end
   end
 end

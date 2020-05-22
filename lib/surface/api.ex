@@ -378,6 +378,7 @@ defmodule Surface.API do
     message = """
     invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}\
     """
+
     IOHelper.compile_error(message, caller.file, caller.line)
   end
 
@@ -497,6 +498,7 @@ defmodule Surface.API do
         message =
           "invalid slot prop #{Macro.to_string(ast)}. " <>
             "Expected an atom or a binding to a generator as `key: ^property_name`"
+
         IOHelper.compile_error(message, caller.file, caller.line)
     end)
   end
@@ -559,18 +561,18 @@ defmodule Surface.API do
   end
 
   defp generate_docs(env) do
-    props_doc = generate_props_docs(env.module)
+    case Module.get_attribute(env.module, :moduledoc) do
+      {_line, false} ->
+        :ok
 
-    {line, doc} =
-      case Module.get_attribute(env.module, :moduledoc) do
-        nil ->
-          {env.line, props_doc}
+      nil ->
+        props_doc = generate_props_docs(env.module)
+        Module.put_attribute(env.module, :moduledoc, {env.line, props_doc})
 
-        {line, doc} ->
-          {line, doc <> "\n" <> props_doc}
-      end
-
-    Module.put_attribute(env.module, :moduledoc, {line, doc})
+      {line, doc} ->
+        props_doc = generate_props_docs(env.module)
+        Module.put_attribute(env.module, :moduledoc, {line, doc <> "\n" <> props_doc})
+    end
   end
 
   defp generate_props_docs(module) do
@@ -661,13 +663,13 @@ defmodule Surface.API do
 
   defp build_assign_ast(func, name_ast, type_ast, opts_ast, caller) do
     quote bind_quoted: [
-      func: func,
-      name: validate_name_ast!(func, name_ast, caller),
-      type: type_ast,
-      opts: validate_opts_ast!(func, opts_ast, caller),
-      opts_ast: Macro.escape(opts_ast),
-      line: caller.line
-    ] do
+            func: func,
+            name: validate_name_ast!(func, name_ast, caller),
+            type: type_ast,
+            opts: validate_opts_ast!(func, opts_ast, caller),
+            opts_ast: Macro.escape(opts_ast),
+            line: caller.line
+          ] do
       Surface.API.put_assign!(__ENV__, func, name, type, opts, opts_ast, line)
     end
   end
