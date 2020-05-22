@@ -393,7 +393,7 @@ defmodule SlotTest do
     message = """
     code:2: undefined prop `:non_existing` for slot `cols` in `SlotTest.Column`.
 
-    Available props: [:item, :info].
+    Available props: [:info, :item].
 
     Hint: You can define a new slot prop using the `props` option: \
     `slot cols, props: [..., :non_existing]`\

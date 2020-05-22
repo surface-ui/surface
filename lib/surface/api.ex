@@ -85,18 +85,18 @@ defmodule Surface.API do
   end
 
   @doc "Defines a property for the component"
-  defmacro property(name_ast, type, opts \\ []) do
-    build_assign_ast(:property, name_ast, type, opts, __CALLER__)
+  defmacro property(name_ast, type_ast, opts_ast \\ []) do
+    build_assign_ast(:property, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
   @doc "Defines a slot for the component"
-  defmacro slot(name_ast, opts \\ []) do
-    build_assign_ast(:slot, name_ast, :any, opts, __CALLER__)
+  defmacro slot(name_ast, opts_ast \\ []) do
+    build_assign_ast(:slot, name_ast, :any, opts_ast, __CALLER__)
   end
 
   @doc "Defines a data assign for the component"
-  defmacro data(name_ast, type, opts \\ []) do
-    build_assign_ast(:data, name_ast, type, opts, __CALLER__)
+  defmacro data(name_ast, type_ast, opts_ast \\ []) do
+    build_assign_ast(:data, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
   @doc """
@@ -120,9 +120,9 @@ defmodule Surface.API do
 
   # context get
 
-  defmacro context({:get, _, [name_ast, opts]}) when is_list(opts) do
-    opts = [{:action, :get} | opts]
-    build_assign_ast(:context, name_ast, :any, opts, __CALLER__)
+  defmacro context({:get, _, [name_ast, opts_ast]}) when is_list(opts_ast) do
+    opts_ast = [{:action, :get} | opts_ast]
+    build_assign_ast(:context, name_ast, :any, opts_ast, __CALLER__)
   end
 
   defmacro context({:get, _, [_name_ast, type]}) when type in @types do
@@ -134,25 +134,31 @@ defmodule Surface.API do
     IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
-  defmacro context({:get, _, [name_ast, invalid_opts]}) do
-    build_assign_ast(:context, name_ast, :any, invalid_opts, __CALLER__)
+  defmacro context({:get, _, [name_ast, invalid_opts_ast]}) do
+    build_assign_ast(:context, name_ast, :any, invalid_opts_ast, __CALLER__)
   end
 
   defmacro context({:get, _, [name_ast]}) do
-    opts = [action: :get]
-    build_assign_ast(:context, name_ast, :any, opts, __CALLER__)
+    opts_ast = [action: :get]
+    build_assign_ast(:context, name_ast, :any, opts_ast, __CALLER__)
   end
 
   defmacro context({:get, _, nil}) do
-    message = "no name defined for context get"
+    message = """
+    no name defined for context get
+
+    Usage: context get name, opts
+    """
+
     IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
   # context set
 
-  defmacro context({:set, _, [name_ast, type, opts]}) when is_list(opts) do
-    opts = Keyword.merge(opts, action: :set, to: __CALLER__.module)
-    build_assign_ast(:context, name_ast, type, opts, __CALLER__)
+  defmacro context({:set, _, [name_ast, type_ast, opts_ast]}) when is_list(opts_ast) do
+    opts_ast = Keyword.merge(opts_ast, action: :set, to: __CALLER__.module)
+
+    build_assign_ast(:context, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
   defmacro context({:set, _, [_name_ast, opts]}) when is_list(opts) do
@@ -160,9 +166,10 @@ defmodule Surface.API do
     IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
   end
 
-  defmacro context({:set, _, [name_ast, type]}) do
-    opts = [action: :set, to: __CALLER__.module]
-    build_assign_ast(:context, name_ast, type, opts, __CALLER__)
+  defmacro context({:set, _, [name_ast, type_ast]}) do
+    opts_ast = [action: :set, to: __CALLER__.module]
+
+    build_assign_ast(:context, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
   defmacro context({:set, _, [_name_ast]}) do
@@ -187,8 +194,19 @@ defmodule Surface.API do
   end
 
   @doc false
-  def maybe_put_assign!(caller, assign) do
-    assign = %{assign | doc: pop_doc(caller.module)}
+  def put_assign!(caller, func, name, type, opts, opts_ast, line) do
+    Surface.API.validate!(func, name, type, opts, caller)
+
+    assign = %{
+      func: func,
+      name: name,
+      type: type,
+      doc: pop_doc(caller.module),
+      opts: opts,
+      opts_ast: opts_ast,
+      line: line
+    }
+
     assigns = Module.get_attribute(caller.module, :assigns) || %{}
     name = Keyword.get(assign.opts, :as, assign.name)
     existing_assign = assigns[name]
@@ -209,7 +227,6 @@ defmodule Surface.API do
     end
 
     Module.put_attribute(caller.module, assign.func, assign)
-    assign
   end
 
   defp suggestion_for_duplicated_assign(%{func: :context, opts: opts}) do
@@ -339,32 +356,12 @@ defmodule Surface.API do
     end
   end
 
-  defp build_assign_ast(func, name_ast, type, opts, caller) do
-    evaluated_opts = validate!(func, name_ast, type, opts, caller)
-
-    {name, _, _} = name_ast
-
-    quote do
-      unquote(__MODULE__).maybe_put_assign!(__ENV__, %{
-        func: unquote(func),
-        name: unquote(name),
-        type: unquote(type),
-        doc: nil,
-        opts: unquote(Macro.escape(evaluated_opts)),
-        opts_ast: unquote(Macro.escape(opts)),
-        line: unquote(caller.line)
-      })
-    end
-  end
-
-  defp validate!(func, name_ast, type, opts, caller) do
-    with {:ok, name} <- validate_name(func, name_ast),
-         :ok <- validate_type(func, name, type),
+  def validate!(func, name, type, opts, caller) do
+    with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
-         {:ok, evaluated_opts} <- eval_opts_values(func, opts, caller),
-         :ok <- validate_opts(func, type, evaluated_opts),
-         :ok <- validate_required_opts(func, type, evaluated_opts) do
-      evaluated_opts
+         :ok <- validate_opts(func, type, opts),
+         :ok <- validate_required_opts(func, type, opts) do
+      :ok
     else
       {:error, message} ->
         file = Path.relative_to_cwd(caller.file)
@@ -372,13 +369,16 @@ defmodule Surface.API do
     end
   end
 
-  defp validate_name(_func, {name, meta, context})
+  defp validate_name_ast!(_func, {name, meta, context}, _caller)
        when is_atom(name) and is_list(meta) and is_atom(context) do
-    {:ok, name}
+    name
   end
 
-  defp validate_name(func, name_ast) do
-    {:error, "invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}"}
+  defp validate_name_ast!(func, name_ast, caller) do
+    message = """
+    invalid #{func} name. Expected a variable name, got: #{Macro.to_string(name_ast)}\
+    """
+    IOHelper.compile_error(message, caller.file, caller.line)
   end
 
   defp validate_type(_func, _name, type) when type in @types do
@@ -405,7 +405,7 @@ defmodule Surface.API do
       false ->
         {:error,
          "invalid options for #{func} #{name}. " <>
-           "Expected a keyword list of options, got: #{inspect(opts)}"}
+           "Expected a keyword list of options, got: #{inspect(remove_private_opts(opts))}"}
 
       unknown_options ->
         valid_opts = get_valid_opts(func, type, opts)
@@ -413,16 +413,18 @@ defmodule Surface.API do
     end
   end
 
-  defp eval_opts_values(func, opts, caller) do
-    Enum.reduce_while(opts, {:ok, []}, fn {key, value}, {:ok, acc} ->
-      case eval_opt_value(func, key, value, caller) do
-        {:ok, evaluated_value} ->
-          {:cont, {:ok, [{key, evaluated_value} | acc]}}
-
-        error ->
-          {:halt, error}
+  defp validate_opts_ast!(func, opts, caller) when is_list(opts) do
+    if Keyword.keyword?(opts) do
+      for {key, value} <- opts do
+        {key, validate_opt_ast!(func, key, value, caller)}
       end
-    end)
+    else
+      opts
+    end
+  end
+
+  defp validate_opts_ast!(_func, opts, _caller) do
+    opts
   end
 
   defp validate_opts(func, type, opts) do
@@ -483,26 +485,24 @@ defmodule Surface.API do
     []
   end
 
-  defp eval_opt_value(:slot, :props, args_ast, _caller) do
-    Enum.reduce_while(args_ast, {:ok, []}, fn
-      {name, {:^, _, [{generator, _, context}]}}, {:ok, acc} when context in [Elixir, nil] ->
-        {:cont, {:ok, [%{name: name, generator: generator} | acc]}}
+  defp validate_opt_ast!(:slot, :props, args_ast, caller) do
+    Enum.map(args_ast, fn
+      {name, {:^, _, [{generator, _, context}]}} when context in [Elixir, nil] ->
+        Macro.escape(%{name: name, generator: generator})
 
-      name, {:ok, acc} when is_atom(name) ->
-        {:cont, {:ok, [%{name: name, generator: nil} | acc]}}
+      name when is_atom(name) ->
+        Macro.escape(%{name: name, generator: nil})
 
-      ast, _ ->
+      ast ->
         message =
           "invalid slot prop #{Macro.to_string(ast)}. " <>
             "Expected an atom or a binding to a generator as `key: ^property_name`"
-
-        {:halt, {:error, message}}
+        IOHelper.compile_error(message, caller.file, caller.line)
     end)
   end
 
-  defp eval_opt_value(_func, _key, value, caller) do
-    {evaluated_value, _} = Code.eval_quoted(value, [], caller)
-    {:ok, evaluated_value}
+  defp validate_opt_ast!(_func, _key, value, _caller) do
+    value
   end
 
   defp validate_opt(_func, _type, :required, value) when not is_boolean(value) do
@@ -657,5 +657,26 @@ defmodule Surface.API do
 
     Module.delete_attribute(module, :doc)
     doc
+  end
+
+  defp build_assign_ast(func, name_ast, type_ast, opts_ast, caller) do
+    quote bind_quoted: [
+      func: func,
+      name: validate_name_ast!(func, name_ast, caller),
+      type: type_ast,
+      opts: validate_opts_ast!(func, opts_ast, caller),
+      opts_ast: Macro.escape(opts_ast),
+      line: caller.line
+    ] do
+      Surface.API.put_assign!(__ENV__, func, name, type, opts, opts_ast, line)
+    end
+  end
+
+  defp remove_private_opts(opts) do
+    if is_list(opts) do
+      Enum.reject(opts, fn o -> Enum.any?(@private_opts, fn p -> match?({^p, _}, o) end) end)
+    else
+      opts
+    end
   end
 end

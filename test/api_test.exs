@@ -64,8 +64,8 @@ defmodule Surface.APITest do
   end
 
   test "validate type" do
-    code = "property label, {a, b}"
-    message = ~r/invalid type {a, b} for property label.\nExpected one of \[:any/
+    code = "property label, {:a, :b}"
+    message = ~r/invalid type {:a, :b} for property label.\nExpected one of \[:any/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -187,6 +187,18 @@ defmodule Surface.APITest do
 
     assert {:ok, module} = eval(code)
     assert module.__get_prop__(:map)[:opts][:default] == %{a: 1, b: 2}
+  end
+
+  test "accept module attributes as default value" do
+    code = """
+    @default_map %{a: 1, b: 2}
+    data my_map, :map, default: @default_map
+    """
+
+    assert {:ok, module} = eval(code)
+    [data | _] = module.__data__()
+    assert data[:name] == :my_map
+    assert data[:opts][:default] == %{a: 1, b: 2}
   end
 
   describe "property" do
@@ -570,6 +582,48 @@ defmodule Surface.APITest do
       """
 
       assert {:ok, _} = eval(code)
+    end
+
+    test "invalid options" do
+      code = """
+      context get form, {:a, :b}
+      """
+
+      message = ~r"""
+      invalid options for context form. Expected a keyword list of options, got: {:a, :b}\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+
+      code = """
+      context get form, [:a, :b]
+      """
+
+      message = ~r"""
+      invalid options for context form. Expected a keyword list of options, got: \[:a, :b\]\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "no name defined" do
+      code = """
+      context get
+      """
+
+      message = ~r"""
+      no name defined for context get
+
+      Usage: context get name, opts
+      """
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
     end
 
     test "invalid :from" do
