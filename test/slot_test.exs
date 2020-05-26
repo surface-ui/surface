@@ -1,6 +1,5 @@
 defmodule SlotTest do
   use ExUnit.Case
-  use Phoenix.ConnTest
   import ComponentTestHelper
   import ExUnit.CaptureIO
 

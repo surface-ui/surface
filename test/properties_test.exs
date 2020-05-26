@@ -1,6 +1,5 @@
 defmodule Surface.PropertiesTest do
   use ExUnit.Case
-  use Phoenix.ConnTest
 
   import Surface
   import ComponentTestHelper

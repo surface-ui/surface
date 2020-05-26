@@ -1,6 +1,6 @@
 defmodule Surface.ComponentTest do
   use ExUnit.Case
-  use Phoenix.ConnTest
+  import Phoenix.ConnTest
 
   import Phoenix.LiveViewTest
   import Surface
