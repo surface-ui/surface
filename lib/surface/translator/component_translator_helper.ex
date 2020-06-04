@@ -24,16 +24,6 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     ["<% context = end_context(context, ", mod_str, ") %><% _ = context %>"]
   end
 
-  def maybe_add_fallback_content(condition) do
-    maybe_add(
-      [
-        "<% {prop, i, arg} -> %>",
-        ~S[<%= raise "no matching content function for #{inspect(prop)}\##{i} with argument #{inspect(arg)}" %>]
-      ],
-      condition
-    )
-  end
-
   defp find_bindings_from_lists(module, attributes) do
     # TODO: Warn if :binding is not defined and we have lhs
     for {name, {:attribute_expr, [expr], _}, _line} <- attributes,
@@ -45,13 +35,12 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
-  defp find_let_bindings(attributes) do
+  defp find_let_bindings(attributes, caller) do
     case Enum.find(attributes, fn attr -> match?({":let", _, _}, attr) end) do
       {":let", {:attribute_expr, [expr], _}, %{line: line}} ->
         bindings =
-          "[#{String.trim(expr)}]"
-          |> Code.string_to_quoted!()
-          |> List.flatten()
+          expr
+          |> validate_let_bindings_expr!(caller, line)
           |> Enum.map(fn {k, v} -> {k, Macro.to_string(v)} end)
 
         {bindings, line}
@@ -61,8 +50,39 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     end
   end
 
+  defp validate_let_bindings_expr!(expr, caller, line) do
+    expr = String.trim(expr)
+
+    with {:ok, quoted_expr} <- expr_to_quoted(expr),
+         true <- Keyword.keyword?(quoted_expr) do
+      quoted_expr
+    else
+      _ ->
+        message = """
+        invalid value for directive :let. Expected a keyword list of bindings, \
+        got: #{expr}.\
+        """
+
+        IOHelper.compile_error(message, caller.file, caller.line + line)
+    end
+  end
+
+  defp expr_to_quoted(expr) do
+    try do
+      quoted_expr =
+        "[#{expr}]"
+        |> Code.string_to_quoted!()
+        |> List.flatten()
+
+      {:ok, quoted_expr}
+    rescue
+      e ->
+        {:error, e}
+    end
+  end
+
   def translate_children(mod_str, mod, attributes, directives, children, caller) do
-    {parent_bindings, line} = find_let_bindings(directives)
+    {parent_bindings, line} = find_let_bindings(directives, caller)
     slots_with_args = get_slots_with_args(mod, attributes)
 
     validate_let_bindings!(
@@ -238,7 +258,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
     slot_args = opts.slots_with_args[slot_name] || []
     slot_args_with_generators = Enum.filter(slot_args, fn {_k, v} -> v end)
 
-    {child_bindings, line} = find_let_bindings(directives)
+    {child_bindings, line} = find_let_bindings(directives, opts.caller)
     validate_slot!(slot_name, opts.parent, opts.parent_mod_str, opts.caller, slot_name_line)
 
     validate_let_bindings!(

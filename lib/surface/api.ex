@@ -604,6 +604,8 @@ defmodule Surface.API do
         IOHelper.warn(message, env, fn _ -> var.line end)
       end
     end
+
+    :ok
   end
 
   defp validate_slot_props_bindings!(env) do
@@ -638,6 +640,8 @@ defmodule Surface.API do
           :ok
       end
     end
+
+    :ok
   end
 
   defp validate_required_slots!(env) do

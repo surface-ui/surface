@@ -403,6 +403,27 @@ defmodule SlotTest do
     end)
   end
 
+  test "raise compile error for invalid :let expression" do
+    assigns = %{items: [%{id: 1, name: "First"}]}
+
+    code = """
+    <OuterWithSlotNotationAndProps>
+      <template slot="body" :let={{ :an_atom }}>
+        Info: {{ my_info }}
+      </template>
+    </OuterWithSlotNotationAndProps>
+    """
+
+    message = """
+    code:2: invalid value for directive :let. \
+    Expected a keyword list of bindings, got: :an_atom.\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code, assigns)
+    end)
+  end
+
   test "render default inner_content with slot props" do
     code = """
     <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>

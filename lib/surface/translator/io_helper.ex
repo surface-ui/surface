@@ -10,10 +10,12 @@ defmodule Surface.Translator.IOHelper do
     IO.warn(message, stacktrace)
   end
 
+  @spec compile_error(String.t(), String.t(), integer()) :: no_return()
   def compile_error(message, file, line) do
     reraise(%CompileError{line: line, file: file, description: message}, [])
   end
 
+  @spec runtime_error(String.t()) :: no_return()
   def runtime_error(message) do
     stacktrace =
       self()
