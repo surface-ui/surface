@@ -432,6 +432,38 @@ defmodule Surface.APITest do
                code.exs:6:\
              """
     end
+
+    test "do not validate required slots of non-existing components" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot>
+            <NonExisting>
+              Don't validate me!
+            </NonExisting>
+          </ComponentWithRequiredDefaultSlot>
+          "\""
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             cannot render <NonExisting> \(module NonExisting could not be loaded\)
+               code.exs:7:\
+             """
+    end
   end
 
   describe "data" do

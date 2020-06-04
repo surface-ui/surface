@@ -647,6 +647,7 @@ defmodule Surface.API do
   defp validate_required_slots!(env) do
     for {{mod, _parent_node_id, parent_node_alias, line}, assigned_slots} <-
           env.module.__assigned_slots_by_parent__(),
+        mod != nil,
         name <- mod.__required_slots_names__(),
         !MapSet.member?(assigned_slots, name) do
       message = "missing required slot \"#{name}\" for component <#{parent_node_alias}>"
