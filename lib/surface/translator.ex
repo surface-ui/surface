@@ -86,6 +86,9 @@ defmodule Surface.Translator do
 
         {":props", {:attribute_expr, [expr], _}, _meta}, {name, _} ->
           {name, String.trim(expr)}
+
+        _, acc ->
+          acc
       end)
 
     props_expr = if props_expr in [nil, ""], do: "[]", else: props_expr
@@ -146,19 +149,12 @@ defmodule Surface.Translator do
         reraise(error, __STACKTRACE__)
 
       exception ->
-        prefix =
-          case exception do
-            %exception_mod{} ->
-              "(#{inspect(exception_mod)}) "
-
-            _ ->
-              ""
-          end
+        %exception_mod{} = exception
 
         message = """
         cannot translate component <#{mod_str}>. Reason:
 
-        #{prefix}#{Exception.message(exception)}
+        (#{inspect(exception_mod)}) #{Exception.message(exception)}
         """
 
         error = %CompileError{line: caller.line + line, file: caller.file, description: message}
@@ -360,6 +356,8 @@ defmodule Surface.Translator do
         message = "Missing required property \"#{prop}\" for component <#{mod_str}>"
         IOHelper.warn(message, caller, &(&1 + line))
       end
+
+      :ok
     end
   end
 

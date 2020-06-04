@@ -40,7 +40,6 @@ defmodule Surface.Translator.LiveComponentTranslator do
     ]
 
     close = [
-      maybe_add_fallback_content(has_children?),
       maybe_add("<% end %>", has_children?),
       add_end_context(mod, mod_str)
     ]

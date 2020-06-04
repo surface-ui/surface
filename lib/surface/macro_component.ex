@@ -39,31 +39,21 @@ defmodule Surface.MacroComponent do
     config[component][key] || default
   end
 
-  @doc false
-  def identity(value), do: value
-
   defp eval_value(component, {name, {:attribute_expr, [expr], %{line: line}}, _meta}, caller) do
     env = %Macro.Env{caller | line: caller.line + line}
     prop_info = component.__get_prop__(String.to_atom(name))
 
     {evaluated_value, _} =
       try do
-        Code.eval_string("Surface.MacroComponent.identity(#{expr})", [], env)
+        Code.eval_string("Surface.Util.identity(#{expr})", [], env)
       rescue
         exception ->
-          prefix =
-            case exception do
-              %exception_mod{} ->
-                "(#{inspect(exception_mod)}) "
-
-              _ ->
-                ""
-            end
+          %exception_mod{} = exception
 
           message = """
           could not evaluate expression {{ #{expr} }}. Reason:
 
-          #{prefix}#{Exception.message(exception)}
+          (#{inspect(exception_mod)}) #{Exception.message(exception)}
           """
 
           error = %CompileError{line: caller.line + line, file: caller.file, description: message}
