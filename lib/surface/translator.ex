@@ -485,11 +485,11 @@ defmodule Surface.Translator do
   end
 
   defp put_assigned_slot(caller, slot, parent_key) do
-    if parent_key &&
-         Module.open?(caller.module) &&
-         Module.has_attribute?(caller.module, :assigned_slots_by_parent) do
-      assigned_slots_by_parent = Module.get_attribute(caller.module, :assigned_slots_by_parent)
-
+    with true <- parent_key != nil,
+         true <- Module.open?(caller.module),
+         assigned_slots_by_parent <-
+           Module.get_attribute(caller.module, :assigned_slots_by_parent),
+         true <- assigned_slots_by_parent != nil do
       assigned_slots_by_parent =
         Map.update(assigned_slots_by_parent, parent_key, MapSet.new([slot]), fn slots ->
           MapSet.put(slots, slot)
@@ -497,5 +497,7 @@ defmodule Surface.Translator do
 
       Module.put_attribute(caller.module, :assigned_slots_by_parent, assigned_slots_by_parent)
     end
+
+    :ok
   end
 end
