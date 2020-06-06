@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.RadioButton do
   @moduledoc """
-  Generates a color input.
+  Generates a radio button.
 
   Provides a wrapper for Phoenix.HTML.Form's `radio_button/4` function.
 
@@ -21,21 +21,16 @@ defmodule Surface.Components.Form.RadioButton do
   import Surface.Components.Form.Utils
 
   context get form, from: Form, as: :form_context
+  context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
+    field = get_field(assigns)
     props = get_non_nil_props(assigns, [:class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      radio_button(
-        form,
-        String.to_atom(@field),
-        assigns[:value],
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ radio_button(form, field, assigns[:value], props ++ @opts ++ event_opts) }}
     """
   end
 end

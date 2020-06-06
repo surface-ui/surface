@@ -6,12 +6,13 @@ defmodule Surface.Components.Form.Input do
       use Surface.Component
 
       alias Surface.Components.Form
+      alias Surface.Components.Form.Field
 
       @doc "An identifier for the form"
       property form, :form
 
       @doc "An identifier for the input"
-      property field, :string, required: true
+      property field, :string
 
       @doc "Value to pre-populated the input"
       property value, :string

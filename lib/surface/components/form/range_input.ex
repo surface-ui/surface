@@ -1,10 +1,11 @@
 defmodule Surface.Components.Form.RangeInput do
   @moduledoc """
-  Generates a text input.
+  An input field that let the user specify a numeric value in a given **range**,
+  usually using a slider.
 
   Provides a wrapper for Phoenix.HTML.Form's `range_input/3` function.
 
-  All options passed via `opts` will be sent to `range_input/3`, `value`, `min, `max`
+  All options passed via `opts` will be sent to `range_input/3`, `value`, `min`, `max`
   and `class` can be set directly and will override anything in `opts`.
 
 
@@ -30,20 +31,16 @@ defmodule Surface.Components.Form.RangeInput do
   property step, :string
 
   context get form, from: Form, as: :form_context
+  context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
+    field = get_field(assigns)
     props = get_non_nil_props(assigns, [:value, :min, :max, :step, :class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      range_input(
-        form,
-        String.to_atom(@field),
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ range_input(form, field, props ++ @opts ++ event_opts) }}
     """
   end
 end
