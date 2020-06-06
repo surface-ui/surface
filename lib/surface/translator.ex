@@ -485,7 +485,9 @@ defmodule Surface.Translator do
   end
 
   defp put_assigned_slot(caller, slot, parent_key) do
-    if parent_key && Module.open?(caller.module) do
+    if parent_key &&
+         Module.open?(caller.module) &&
+         Module.has_attribute?(caller.module, :assigned_slots_by_parent) do
       assigned_slots_by_parent = Module.get_attribute(caller.module, :assigned_slots_by_parent)
 
       assigned_slots_by_parent =

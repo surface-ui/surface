@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form do
   @moduledoc """
-  Generates a form.
+  Generates a form that lets the user submit information.
 
   Provides a wrapper for `Phoenix.HTML.Form.form_for/3`. Additionally,
   adds the form instance that is returned by `form_for/3` into the context,
@@ -20,7 +20,7 @@ defmodule Surface.Components.Form do
   property for, :any, required: true
 
   @doc "URL to where the form is submitted"
-  property action, :string, required: true
+  property action, :string, default: "#"
 
   @doc "Keyword list with options to be passed down to `form_for/3`"
   property opts, :keyword, default: []

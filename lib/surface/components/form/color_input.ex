@@ -1,6 +1,7 @@
 defmodule Surface.Components.Form.ColorInput do
   @moduledoc """
-  Generates a color input.
+  An input field that let the user specify a **color**, either with a
+  text field or a color picker interface.
 
   Provides a wrapper for Phoenix.HTML.Form's `color_input/3` function.
 
@@ -21,20 +22,16 @@ defmodule Surface.Components.Form.ColorInput do
   import Surface.Components.Form.Utils
 
   context get form, from: Form, as: :form_context
+  context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
-    props = get_non_nil_props(assigns, [:value, :class])
+    field = get_field(assigns)
+    props = get_non_nil_props(assigns, [:id, :value, :class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      color_input(
-        form,
-        String.to_atom(@field),
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ color_input(form, field, props ++ @opts ++ event_opts) }}
     """
   end
 end

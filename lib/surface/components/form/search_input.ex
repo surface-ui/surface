@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.SearchInput do
   @moduledoc """
-  Generates a text input.
+  An input field that let the user enter **search** queries.
 
   Provides a wrapper for Phoenix.HTML.Form's `search_input/3` function.
 
@@ -21,20 +21,16 @@ defmodule Surface.Components.Form.SearchInput do
   import Surface.Components.Form.Utils
 
   context get form, from: Form, as: :form_context
+  context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
+    field = get_field(assigns)
     props = get_non_nil_props(assigns, [:value, :class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      search_input(
-        form,
-        String.to_atom(@field),
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ search_input(form, field, props ++ @opts ++ event_opts) }}
     """
   end
 end

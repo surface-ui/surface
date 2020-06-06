@@ -89,10 +89,11 @@ defmodule ComponentTestHelper do
     end
   end
 
-  defp clean_html(html) do
+  def clean_html(html) do
     html
     |> String.replace(~r/^<div.+>/U, "")
     |> String.replace(~r/<\/div>$/, "\n")
     |> String.replace(~r/\n+/, "\n")
+    |> String.replace(~r/\n\s+\n/, "\n")
   end
 end

@@ -1,6 +1,7 @@
 defmodule Surface.Components.Form.DateInput do
   @moduledoc """
-  Generates a date input.
+  An input field that let the user enter a **date**, either with a text field
+  or a date picker interface.
 
   Provides a wrapper for Phoenix.HTML.Form's `date_input/3` function.
 
@@ -21,20 +22,16 @@ defmodule Surface.Components.Form.DateInput do
   import Surface.Components.Form.Utils
 
   context get form, from: Form, as: :form_context
+  context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
+    field = get_field(assigns)
     props = get_non_nil_props(assigns, [:value, :class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      date_input(
-        form,
-        String.to_atom(@field),
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ date_input( form, field, props ++ @opts ++ event_opts) }}
     """
   end
 end

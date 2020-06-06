@@ -1,12 +1,12 @@
 defmodule Surface.Components.Form.TextArea do
   @moduledoc """
-  Generates a color input.
+  An input field that let the user enter a **multi-line** text.
 
   Provides a wrapper for Phoenix.HTML.Form's `textarea/3` function.
 
-  All options passed via `opts` will be sent to `textarea/3`, `value` and
-  `class` can be set directly and will override anything in `opts`.
-
+  All options passed via `opts` will be sent to `textarea/3`. Explicitly
+  defined properties like `value` and `class` can be set directly and will
+  override anything in `opts`.
 
   ## Examples
 
@@ -27,20 +27,16 @@ defmodule Surface.Components.Form.TextArea do
   property cols, :string
 
   context get form, from: Form, as: :form_context
+  context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
-    props = get_non_nil_props(assigns, [:value, :class])
+    field = get_field(assigns)
+    props = get_non_nil_props(assigns, [:value, :class, :rows, :cols])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      textarea(
-        form,
-        String.to_atom(@field),
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ textarea(form, field, props ++ @opts ++ event_opts) }}
     """
   end
 end
