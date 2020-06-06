@@ -7,6 +7,14 @@ defmodule Surface.Components.MarkdownTest do
 
   alias Surface.Components.Markdown
 
+  setup do
+    config = Application.get_env(:surface, :components)
+
+    on_exit(fn ->
+      Application.put_env(:surface, :components, config)
+    end)
+  end
+
   test "translate markdown into HTML" do
     assigns = %{}
 
@@ -33,6 +41,8 @@ defmodule Surface.Components.MarkdownTest do
         {Markdown, default_class: "content"}
       ])
 
+      recompile(Surface.Components.Markdown)
+
       html =
         render_live("""
         <#Markdown>
@@ -51,6 +61,8 @@ defmodule Surface.Components.MarkdownTest do
       Application.put_env(:surface, :components, [
         {Markdown, default_opts: [code_class_prefix: "language-"]}
       ])
+
+      recompile(Surface.Components.Markdown)
 
       html =
         render_live(~S"""
@@ -193,6 +205,8 @@ defmodule Surface.Components.MarkdownTest do
         {Markdown, default_opts: [code_class_prefix: "language-", smartypants: false]}
       ])
 
+      recompile(Surface.Components.Markdown)
+
       html =
         render_live("""
         <#Markdown>
@@ -219,8 +233,17 @@ defmodule Surface.Components.MarkdownTest do
                """
                <div><p>“Elixir”</p><pre><code class="elixir language-elixir">code</code></pre></div>
                """
-
-      Application.put_env(:surface, :components, [])
     end
+  end
+
+  defp recompile(module) do
+    capture_io(:standard_error, fn ->
+      module.module_info(:compile)
+      |> Keyword.fetch!(:source)
+      |> to_string()
+      |> Code.compile_file()
+    end)
+
+    :ok
   end
 end

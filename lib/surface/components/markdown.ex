@@ -60,9 +60,9 @@ defmodule Surface.Components.Markdown do
   @impl true
   def translate({_, attributes, children, %{line: tag_line}}, caller) do
     props = MacroComponent.eval_static_props!(__MODULE__, attributes, caller)
-    class = props[:class] || MacroComponent.get_config(__MODULE__, :default_class)
+    class = props[:class] || get_config(:default_class)
     unwrap = props[:unwrap] || false
-    config_opts = MacroComponent.get_config(__MODULE__, :default_opts, [])
+    config_opts = get_config(:default_opts) || []
     opts = Keyword.merge(config_opts, props[:opts] || [])
 
     html =

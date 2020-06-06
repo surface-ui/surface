@@ -13,7 +13,7 @@ defmodule Surface.Components.Form.Field do
   property field, :string, required: true
 
   @doc "The CSS class for the generated `<div>` element"
-  property class, :css_class, default: ""
+  property class, :css_class
 
   @doc "The field name specified by the <Field/> component"
   context set field, :atom, scope: :only_children
@@ -29,9 +29,13 @@ defmodule Surface.Components.Form.Field do
 
   def render(assigns) do
     ~H"""
-    <div class={{ @class }}>
+    <div class={{ class_value(@class) }}>
       <slot/>
     </div>
     """
+  end
+
+  defp class_value(class) do
+    class || get_config(:default_class) || ""
   end
 end

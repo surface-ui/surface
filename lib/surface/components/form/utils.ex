@@ -9,8 +9,8 @@ defmodule Surface.Components.Form.Utils do
   def get_field(%{field: nil, field_context: field_context}), do: field_context
 
   def get_non_nil_props(assigns, props) do
-    for prop <- props, not is_nil(assigns[prop]) do
-      {prop, assigns[prop]}
+    for prop <- props, {key, value} = prop_value(assigns, prop), value != nil do
+      {key, value}
     end
   end
 
@@ -23,5 +23,13 @@ defmodule Surface.Components.Form.Utils do
       event_to_opts(assigns.keyup, :phx_keyup)
     ]
     |> List.flatten()
+  end
+
+  defp prop_value(assigns, {prop, default}) do
+    {prop, assigns[prop] || default}
+  end
+
+  defp prop_value(assigns, prop) do
+    {prop, assigns[prop]}
   end
 end

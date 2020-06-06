@@ -33,12 +33,6 @@ defmodule Surface.MacroComponent do
     end
   end
 
-  @doc "Retrieve a component's config based on the `key`"
-  def get_config(component, key, default \\ nil) do
-    config = Application.get_env(:surface, :components, [])
-    config[component][key] || default
-  end
-
   defp eval_value(component, {name, {:attribute_expr, [expr], %{line: line}}, _meta}, caller) do
     env = %Macro.Env{caller | line: caller.line + line}
     prop_info = component.__get_prop__(String.to_atom(name))

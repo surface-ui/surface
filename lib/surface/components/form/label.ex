@@ -39,7 +39,7 @@ defmodule Surface.Components.Form.Label do
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)
-    props = get_non_nil_props(assigns, [:class])
+    props = get_non_nil_props(assigns, class: get_config(:default_class))
     children = ~H"<slot>{{ Phoenix.Naming.humanize(field) }}</slot>"
 
     ~H"""

@@ -72,6 +72,23 @@ defmodule Surface do
     )
   end
 
+  @doc "Retrieve a component's config based on the `key`"
+  defmacro get_config(component, key) do
+    config = get_components_config()
+    quote bind_quoted: [config: config, component: component, key: key] do
+      config[component][key]
+    end
+  end
+
+  @doc "Retrieve the component's config based on the `key`"
+  defmacro get_config(key) do
+    component = __CALLER__.module
+    config = get_components_config()
+    quote do
+      unquote(config[component][key])
+    end
+  end
+
   @doc false
   def component(module, assigns) do
     module.render(assigns)
@@ -369,5 +386,9 @@ defmodule Surface do
           {assigns, context}
       end
     end)
+  end
+
+  defp get_components_config() do
+    Application.get_env(:surface, :components, [])
   end
 end
