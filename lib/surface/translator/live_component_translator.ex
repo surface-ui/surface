@@ -3,7 +3,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
 
   alias Surface.Translator
   alias Surface.Translator.TagTranslator
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
   import Surface.Translator.ComponentTranslatorHelper
 
   @behaviour Translator

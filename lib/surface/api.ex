@@ -1,7 +1,7 @@
 defmodule Surface.API do
   @moduledoc false
 
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   @types [
     :any,

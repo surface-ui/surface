@@ -55,7 +55,7 @@ defmodule Surface do
   You can visit the documentation of each type of component for further explanation and examples.
   """
 
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   @doc """
   Translates Surface code into Phoenix templates.

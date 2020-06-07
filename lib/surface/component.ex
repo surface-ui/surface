@@ -22,7 +22,7 @@ defmodule Surface.Component do
   If you need to handle them, please use a `Surface.LiveComponent` instead.
   """
 
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   defmacro __using__(opts \\ []) do
     slot_name = Keyword.get(opts, :slot)

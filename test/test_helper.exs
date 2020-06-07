@@ -97,7 +97,7 @@ defmodule ComponentTestHelper do
       Please set `async: false` on the test module.
       """
 
-      Surface.Translator.IOHelper.warn(message, __CALLER__, & &1)
+      Surface.IOHelper.warn(message, __CALLER__, & &1)
     end
 
     quote do

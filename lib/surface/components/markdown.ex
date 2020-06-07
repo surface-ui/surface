@@ -37,7 +37,7 @@ defmodule Surface.Components.Markdown do
   use Surface.MacroComponent
 
   alias Surface.MacroComponent
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   @doc "The CSS class for the wrapping `<div>`"
   property class, :string
@@ -121,7 +121,7 @@ defmodule Surface.Components.Markdown do
 
     Enum.each(warnings_and_deprecations, fn {_type, line, message} ->
       actual_line = caller.line + tag_line + line
-      Surface.Translator.IOHelper.warn(message, caller, fn _ -> actual_line end)
+      IOHelper.warn(message, caller, fn _ -> actual_line end)
     end)
 
     if errors != [] do

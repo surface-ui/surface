@@ -2,7 +2,7 @@ defmodule Surface.Translator.ComponentTranslatorHelper do
   @moduledoc false
 
   alias Surface.Translator.SlotableTranslator
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   def add_render_call(renderer, args, has_children? \\ false) do
     ["<%= ", renderer, "(", Enum.join(args, ", "), ") ", maybe_add("do ", has_children?), "%>"]

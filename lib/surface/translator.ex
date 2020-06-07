@@ -6,7 +6,7 @@ defmodule Surface.Translator do
   """
 
   alias Surface.Translator.Parser
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   @callback prepare(nodes :: [any], caller: Macro.Env.t()) :: any
 

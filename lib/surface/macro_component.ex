@@ -4,7 +4,7 @@ defmodule Surface.MacroComponent do
   content at compile time.
   """
 
-  alias Surface.Translator.IOHelper
+  alias Surface.IOHelper
 
   defmacro __using__(_) do
     quote do

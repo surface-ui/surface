@@ -1,4 +1,4 @@
-defmodule Surface.Translator.IOHelper do
+defmodule Surface.IOHelper do
   @moduledoc false
 
   def warn(message, caller, update_line_fun) do
