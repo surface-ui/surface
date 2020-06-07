@@ -19,9 +19,20 @@ defmodule Surface.Components.MarkdownTest do
 
     assert render_static(code) =~ """
            <div>
-           <h1>Head 1</h1>
-           <p>Bold: <strong>bold</strong>
-           Code: <code class="inline">code</code></p>
+           <h1>
+             Head 1
+           </h1>
+           <p>
+             Bold: \
+
+             <strong>
+               bold
+             </strong>
+             \
+
+           Code: \
+
+           <code class="inline">code</code></p>
            </div>
            """
   end
@@ -86,7 +97,9 @@ defmodule Surface.Components.MarkdownTest do
 
     assert render_static(code) =~ """
            <div class="markdown">
-           <h1>Head 1</h1>
+           <h1>
+             Head 1
+           </h1>
            </div>
            """
   end
@@ -101,7 +114,9 @@ defmodule Surface.Components.MarkdownTest do
     """
 
     assert render_static(code) == """
-           <h1>Head 1</h1>
+           <h1>
+             Head 1
+           </h1>
            """
   end
 
@@ -138,7 +153,9 @@ defmodule Surface.Components.MarkdownConfigTest do
         """)
 
       assert html =~ """
-             <div class="content"><h1>Head 1</h1></div>
+             <div class="content"><h1>
+               Head 1
+             </h1></div>
              """
     end
   end
@@ -153,7 +170,9 @@ defmodule Surface.Components.MarkdownConfigTest do
         """)
 
       assert html =~ """
-             <div class="markdown"><h1>Head 1</h1></div>
+             <div class="markdown"><h1>
+               Head 1
+             </h1></div>
              """
     end
   end
@@ -185,7 +204,9 @@ defmodule Surface.Components.MarkdownConfigTest do
         """)
 
       assert html =~ """
-             <div><p>&quot;Elixir&quot;</p></div>
+             <div><p>
+               &quot;Elixir&quot;
+             </p></div>
              """
 
       html =
@@ -201,7 +222,9 @@ defmodule Surface.Components.MarkdownConfigTest do
 
       assert html =~
                """
-               <div><p>“Elixir”</p><pre><code class="elixir language-elixir">code</code></pre></div>
+               <div><p>
+                 “Elixir”
+               </p><pre><code class="elixir language-elixir">code</code></pre></div>
                """
     end
   end
