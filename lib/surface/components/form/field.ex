@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.Field do
   @moduledoc """
-  Generates a form field.
+  Defines a form field.
 
   The `Field` component sets the provided field name into the context so child
   components like input fields and labels can retrieve it and use it as

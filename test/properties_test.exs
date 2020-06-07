@@ -1,5 +1,5 @@
 defmodule Surface.PropertiesTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import Surface
   import ComponentTestHelper

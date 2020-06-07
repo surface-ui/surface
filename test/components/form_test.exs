@@ -1,5 +1,5 @@
 defmodule Surface.Components.FormTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Surface.Components.Form, warn: false
   alias Surface.Components.Form.TextInput, warn: false

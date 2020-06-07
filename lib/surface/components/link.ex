@@ -1,6 +1,6 @@
 defmodule Surface.Components.Link do
   @moduledoc """
-  Generates a hyperlink.
+  Defines a hyperlink.
 
   Provides a wrapper for Phoenix.HTML.Link's `link/2` function.
 

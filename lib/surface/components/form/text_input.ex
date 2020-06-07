@@ -19,12 +19,9 @@ defmodule Surface.Components.Form.TextInput do
 
   import Phoenix.HTML.Form, only: [text_input: 3]
   import Surface.Components.Form.Utils
-  alias Surface.Components.Form.Input
 
   context get form, from: Form, as: :form_context
   context get field, from: Field, as: :field_context
-
-  @default_class get_config(:default_class) || get_config(Input, :default_class)
 
   def render(assigns) do
     form = get_form(assigns)

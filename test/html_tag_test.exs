@@ -1,5 +1,5 @@
 defmodule HtmlTagTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import Surface
   import ComponentTestHelper

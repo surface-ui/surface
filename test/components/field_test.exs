@@ -1,5 +1,5 @@
 defmodule Surface.Components.FieldTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Surface.Components.Form.{Field, TextInput}, warn: false
 
@@ -41,5 +41,22 @@ defmodule Surface.Components.FieldTest do
     """
 
     assert render_live(code) =~ ~S(name="my_form[my_field]")
+  end
+end
+
+defmodule Surface.Components.Form.FieldConfigTest do
+  use ExUnit.Case
+
+  alias Surface.Components.Form.Field, warn: false
+  import ComponentTestHelper
+
+  test ":default_class config" do
+    using_config Field, default_class: "default_class" do
+      code = """
+      <Field field="name">Hi</Field>
+      """
+
+      assert render_live(code) =~ ~r/class="default_class"/
+    end
   end
 end

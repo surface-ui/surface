@@ -1,5 +1,5 @@
 defmodule Surface.Translator.ParserTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import Surface.Translator.Parser
 

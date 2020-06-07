@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form do
   @moduledoc """
-  Generates a form that lets the user submit information.
+  Defines a **form** that lets the user submit information.
 
   Provides a wrapper for `Phoenix.HTML.Form.form_for/3`. Additionally,
   adds the form instance that is returned by `form_for/3` into the context,

@@ -26,7 +26,7 @@ defmodule Surface.Components.Form.TelephoneInput do
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)
-    props = get_non_nil_props(assigns, [:value, :pattern, :class])
+    props = get_non_nil_props(assigns, [:value, :pattern, class: @default_class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""

@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.Reset do
   @moduledoc """
-  Generates a color input.
+  Defines a reset button.
 
   Provides a wrapper for Phoenix.HTML.Form's `reset/2` function.
 

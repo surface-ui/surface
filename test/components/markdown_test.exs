@@ -1,19 +1,10 @@
 defmodule Surface.Components.MarkdownTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import Surface
   import ComponentTestHelper
   import ExUnit.CaptureIO
-
   alias Surface.Components.Markdown
-
-  setup do
-    config = Application.get_env(:surface, :components)
-
-    on_exit(fn ->
-      Application.put_env(:surface, :components, config)
-    end)
-  end
 
   test "translate markdown into HTML" do
     assigns = %{}
@@ -33,52 +24,6 @@ defmodule Surface.Components.MarkdownTest do
            Code: <code class="inline">code</code></p>
            </div>
            """
-  end
-
-  describe "global configuration" do
-    test "use the :default_class config as the default class" do
-      Application.put_env(:surface, :components, [
-        {Markdown, default_class: "content"}
-      ])
-
-      recompile(Surface.Components.Markdown)
-
-      html =
-        render_live("""
-        <#Markdown>
-          # Head 1
-        </#Markdown>
-        """)
-
-      Application.put_env(:surface, :components, [])
-
-      assert html =~ """
-             <div class="content"><h1>Head 1</h1></div>
-             """
-    end
-
-    test "use the :default_opts config as the default Earmark options" do
-      Application.put_env(:surface, :components, [
-        {Markdown, default_opts: [code_class_prefix: "language-"]}
-      ])
-
-      recompile(Surface.Components.Markdown)
-
-      html =
-        render_live(~S"""
-        <#Markdown>
-          ```elixir
-          var = 1
-          ```
-        </#Markdown>
-        """)
-
-      Application.put_env(:surface, :components, [])
-
-      assert html =~ """
-             <div><pre><code class="elixir language-elixir">var = 1</code></pre></div>
-             """
-    end
   end
 
   test "do not accept runtime expressions" do
@@ -130,28 +75,76 @@ defmodule Surface.Components.MarkdownTest do
            """
   end
 
-  describe "property :class" do
-    test "sets the class attribute" do
-      assigns = %{}
+  test "setting the class" do
+    assigns = %{}
 
-      code = ~H"""
-      <#Markdown class="markdown">
-        # Head 1
-      </#Markdown>
-      """
+    code = ~H"""
+    <#Markdown class="markdown">
+      # Head 1
+    </#Markdown>
+    """
 
-      assert render_static(code) =~ """
-             <div class="markdown">
-             <h1>Head 1</h1>
-             </div>
+    assert render_static(code) =~ """
+           <div class="markdown">
+           <h1>Head 1</h1>
+           </div>
+           """
+  end
+
+  test "setting unwrap removes the wrapping <div>" do
+    assigns = %{}
+
+    code = ~H"""
+    <#Markdown unwrap>
+      # Head 1
+    </#Markdown>
+    """
+
+    assert render_static(code) == """
+           <h1>Head 1</h1>
+           """
+  end
+
+  test "setting opts forward options to Earmark" do
+    assigns = %{}
+
+    code = ~H"""
+    <#Markdown opts={{ code_class_prefix: "language-" }}>
+      ```elixir
+      code
+      ```
+    </#Markdown>
+    """
+
+    assert render_static(code) =~ """
+           <pre><code class="elixir language-elixir">code</code></pre>
+           """
+  end
+end
+
+defmodule Surface.Components.MarkdownConfigTest do
+  use ExUnit.Case
+
+  import ComponentTestHelper
+  alias Surface.Components.Markdown
+
+  test ":default_class config" do
+    using_config Markdown, default_class: "content" do
+      html =
+        render_live("""
+        <#Markdown>
+          # Head 1
+        </#Markdown>
+        """)
+
+      assert html =~ """
+             <div class="content"><h1>Head 1</h1></div>
              """
     end
+  end
 
-    test "override the :default_class config" do
-      Application.put_env(:surface, :components, [
-        {Markdown, default_class: "content"}
-      ])
-
+  test "override the :default_class config" do
+    using_config Markdown, default_class: "content" do
       html =
         render_live("""
         <#Markdown class="markdown">
@@ -159,54 +152,31 @@ defmodule Surface.Components.MarkdownTest do
         </#Markdown>
         """)
 
-      Application.put_env(:surface, :components, [])
-
       assert html =~ """
              <div class="markdown"><h1>Head 1</h1></div>
              """
     end
   end
 
-  describe "property :unwrap" do
-    test "if true, removes the wrapping <div>" do
-      assigns = %{}
+  test ":default_opts config" do
+    using_config Markdown, default_opts: [code_class_prefix: "language-"] do
+      html =
+        render_live(~S"""
+        <#Markdown>
+          ```elixir
+          var = 1
+          ```
+        </#Markdown>
+        """)
 
-      code = ~H"""
-      <#Markdown unwrap>
-        # Head 1
-      </#Markdown>
-      """
-
-      assert render_static(code) == """
-             <h1>Head 1</h1>
+      assert html =~ """
+             <div><pre><code class="elixir language-elixir">var = 1</code></pre></div>
              """
     end
   end
 
-  describe "property :opts" do
-    test "forward options to Earmark" do
-      assigns = %{}
-
-      code = ~H"""
-      <#Markdown opts={{ code_class_prefix: "language-" }}>
-        ```elixir
-        code
-        ```
-      </#Markdown>
-      """
-
-      assert render_static(code) =~ """
-             <pre><code class="elixir language-elixir">code</code></pre>
-             """
-    end
-
-    test "gets merged with global config :opts (overrides existing keys)" do
-      Application.put_env(:surface, :components, [
-        {Markdown, default_opts: [code_class_prefix: "language-", smartypants: false]}
-      ])
-
-      recompile(Surface.Components.Markdown)
-
+  test "property opts gets merged with global config :opts (overriding existing keys)" do
+    using_config Markdown, default_opts: [code_class_prefix: "language-", smartypants: false] do
       html =
         render_live("""
         <#Markdown>
@@ -234,16 +204,5 @@ defmodule Surface.Components.MarkdownTest do
                <div><p>“Elixir”</p><pre><code class="elixir language-elixir">code</code></pre></div>
                """
     end
-  end
-
-  defp recompile(module) do
-    capture_io(:standard_error, fn ->
-      module.module_info(:compile)
-      |> Keyword.fetch!(:source)
-      |> to_string()
-      |> Code.compile_file()
-    end)
-
-    :ok
   end
 end

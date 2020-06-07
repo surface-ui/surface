@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.Submit do
   @moduledoc """
-  Generates a submit button to send the form.
+  Defines a submit button to send the form.
 
   All options are forwarded to the underlying `Phoenix.HTML.Form.submit/3`
   """

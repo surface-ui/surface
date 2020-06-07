@@ -1,6 +1,6 @@
 defmodule Surface.Components.LiveRedirect do
   @moduledoc """
-  Generates a link that will **redirect** to a new LiveView.
+  Defines a link that will **redirect** to a new LiveView.
 
   Provides similar capabilities to Phoenix's built-in `live_redirect/2`
   function.

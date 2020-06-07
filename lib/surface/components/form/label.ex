@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.Label do
   @moduledoc """
-  Generates a label.
+  Defines a label.
 
   Provides a wrapper for Phoenix.HTML.Form's `label/3` function.
 

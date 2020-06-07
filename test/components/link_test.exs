@@ -1,5 +1,5 @@
 defmodule Surface.Components.LinkTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Surface.Components.Link, warn: false
 

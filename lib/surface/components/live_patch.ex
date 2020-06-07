@@ -1,6 +1,6 @@
 defmodule Surface.Components.LivePatch do
   @moduledoc """
-  Generates a link that will **patch** the current LiveView.
+  Defines a link that will **patch** the current LiveView.
 
   Provides similar capabilities to Phoenix's built-in `live_patch/2`
   function.

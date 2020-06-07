@@ -75,6 +75,7 @@ defmodule Surface do
   @doc "Retrieve a component's config based on the `key`"
   defmacro get_config(component, key) do
     config = get_components_config()
+
     quote bind_quoted: [config: config, component: component, key: key] do
       config[component][key]
     end
@@ -84,6 +85,7 @@ defmodule Surface do
   defmacro get_config(key) do
     component = __CALLER__.module
     config = get_components_config()
+
     quote do
       unquote(config[component][key])
     end

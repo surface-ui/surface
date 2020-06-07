@@ -89,7 +89,46 @@ defmodule ComponentTestHelper do
     end
   end
 
-  def clean_html(html) do
+  defmacro using_config(component, config, do: block) do
+    if Module.get_attribute(__CALLER__.module, :ex_unit_async) do
+      message = """
+      Using `using_config` with `async: true` might lead to race conditions.
+
+      Please set `async: false` on the test module.
+      """
+
+      Surface.Translator.IOHelper.warn(message, __CALLER__, & &1)
+    end
+
+    quote do
+      component = unquote(component)
+      old_config = Application.get_env(:surface, :components, [])
+      value = unquote(config)
+      new_config = Keyword.update(old_config, component, value, fn _ -> value end)
+      Application.put_env(:surface, :components, new_config)
+      recompile(component)
+
+      try do
+        unquote(block)
+      after
+        Application.put_env(:surface, :components, old_config)
+        recompile(component)
+      end
+    end
+  end
+
+  def recompile(module) do
+    ExUnit.CaptureIO.capture_io(:standard_error, fn ->
+      module.module_info(:compile)
+      |> Keyword.fetch!(:source)
+      |> to_string()
+      |> Code.compile_file()
+    end)
+
+    :ok
+  end
+
+  defp clean_html(html) do
     html
     |> String.replace(~r/^<div.+>/U, "")
     |> String.replace(~r/<\/div>$/, "\n")

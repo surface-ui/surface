@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.RadioButton do
   @moduledoc """
-  Generates a radio button.
+  Defines a radio button.
 
   Provides a wrapper for Phoenix.HTML.Form's `radio_button/4` function.
 
@@ -20,13 +20,16 @@ defmodule Surface.Components.Form.RadioButton do
   import Phoenix.HTML.Form, only: [radio_button: 4]
   import Surface.Components.Form.Utils
 
+  @doc "Indicates whether or not the radio button is the selected item in the group"
+  property checked, :boolean
+
   context get form, from: Form, as: :form_context
   context get field, from: Field, as: :field_context
 
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)
-    props = get_non_nil_props(assigns, [:class])
+    props = get_non_nil_props(assigns, [:checked, class: get_config(:default_class)])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""

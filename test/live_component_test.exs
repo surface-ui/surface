@@ -1,5 +1,6 @@
 defmodule LiveComponentTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
   import ComponentTestHelper

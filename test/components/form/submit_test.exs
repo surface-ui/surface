@@ -1,5 +1,5 @@
 defmodule Surface.Components.Form.SubmitTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import ComponentTestHelper
 

@@ -36,7 +36,10 @@ defmodule Surface.Components.Form.RangeInput do
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)
-    props = get_non_nil_props(assigns, [:value, :min, :max, :step, :class])
+
+    props =
+      get_non_nil_props(assigns, [:value, :min, :max, :step, class: get_config(:default_class)])
+
     event_opts = get_events_to_opts(assigns)
 
     ~H"""

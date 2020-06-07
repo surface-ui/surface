@@ -37,6 +37,8 @@ defmodule Surface.Components.Form.Input do
 
       @doc "Triggered when a button on the keyboard is released"
       property keyup, :event
+
+      @default_class get_config(:default_class) || get_config(unquote(__MODULE__), :default_class)
     end
   end
 end

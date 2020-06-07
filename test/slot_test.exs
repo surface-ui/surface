@@ -1,5 +1,6 @@
 defmodule SlotTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+
   import ComponentTestHelper
   import ExUnit.CaptureIO
 
