@@ -199,7 +199,7 @@ defmodule Surface do
   def css_class(value) when is_list(value) do
     Enum.reduce(value, [], fn item, classes ->
       case item do
-        {class, true} ->
+        {class, val} when val not in [nil, false] ->
           [to_string(class) | classes]
 
         class when is_binary(class) or is_atom(class) ->

@@ -185,7 +185,7 @@ defmodule Surface.PropertiesTest do
 
     test "passing a keywod list" do
       code = """
-      <CSSClassProp prop={{ [class1: true, class2: false, class3: true] }}/>
+      <CSSClassProp prop={{ [class1: true, class2: false, class3: "truthy"] }}/>
       """
 
       assert render_live(code) =~ """
@@ -195,7 +195,7 @@ defmodule Surface.PropertiesTest do
 
     test "passing a keywod list without brackets" do
       code = """
-      <CSSClassProp prop={{ class1: true, class2: false, class3: true }}/>
+      <CSSClassProp prop={{ class1: true, class2: false, class3: "truthy" }}/>
       """
 
       assert render_live(code) =~ """
