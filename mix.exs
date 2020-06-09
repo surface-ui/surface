@@ -1,7 +1,7 @@
 defmodule Surface.MixProject do
   use Mix.Project
 
-  @version "0.1.0-alpha.1"
+  @version "0.1.0-alpha.2"
 
   def project do
     [

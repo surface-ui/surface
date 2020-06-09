@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.0-alpha.2 (2020-06-09)
+
+  * New Markdown component
+  * New Link component
+  * New form components Form, Field, TextArea, Label, TextInput, RadioButton,
+    HiddenInput, ColorInput, DateInput, DateTimeLocalInput, EmailInput, NumberInput,
+    PasswordInput, RangeInput, SearchInput, TelephoneInput, TimeInput, UrlInput,
+    Reset and Submit.
+  * Automatically define a required :id property for live components that implement
+    `handle_event/3`
+  * New config API for components
+  * Update LiveView to v0.13
+
 ## v0.1.0-alpha.1 (2020-04-13)
 
   * Add support for slots
