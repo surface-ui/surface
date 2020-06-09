@@ -7,7 +7,7 @@ defmodule Surface.Components.FieldTest do
 
   test "creates a wrapping <div> for the field's content" do
     code = """
-    <Field field="name">
+    <Field name="name">
       Hi
     </Field>
     """
@@ -21,7 +21,7 @@ defmodule Surface.Components.FieldTest do
 
   test "property class" do
     code = """
-    <Field field="name" class={{ :field }}>
+    <Field name="name" class={{ :field }}>
       Hi
     </Field>
     """
@@ -35,7 +35,7 @@ defmodule Surface.Components.FieldTest do
 
   test "sets the provided field into the context" do
     code = """
-    <Field field="my_field">
+    <Field name="my_field">
       <TextInput form="my_form"/>
     </Field>
     """
@@ -53,7 +53,7 @@ defmodule Surface.Components.Form.FieldConfigTest do
   test ":default_class config" do
     using_config Field, default_class: "default_class" do
       code = """
-      <Field field="name">Hi</Field>
+      <Field name="name">Hi</Field>
       """
 
       assert render_live(code) =~ ~r/class="default_class"/

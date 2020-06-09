@@ -10,7 +10,7 @@ defmodule Surface.Components.Form.Field do
   use Surface.Component
 
   @doc "The field name"
-  property field, :string, required: true
+  property name, :string, required: true
 
   @doc "The CSS class for the generated `<div>` element"
   property class, :css_class
@@ -24,7 +24,7 @@ defmodule Surface.Components.Form.Field do
   slot default, required: true
 
   def init_context(props) do
-    {:ok, field: props.field}
+    {:ok, field: props.name}
   end
 
   def render(assigns) do

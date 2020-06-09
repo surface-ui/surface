@@ -33,7 +33,7 @@ defmodule Surface.Components.LabelTest do
   test "use context's form and field by default" do
     code = """
     <Form for={{ :user }}>
-      <Field field="name">
+      <Field name="name">
         <Label/>
       </Field>
     </Form>
