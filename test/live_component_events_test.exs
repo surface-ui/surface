@@ -61,6 +61,10 @@ defmodule Surface.EventsTest do
       <button phx-click={{ @click }}/>
       """
     end
+
+    def handle_event("click", _, socket) do
+      {:noreply, socket}
+    end
   end
 
   defmodule View do

@@ -279,7 +279,7 @@ defmodule Surface.APITest do
       code.exs:7: cannot bind slot prop `item` to property `unknown`. \
       Expected a existing property after `^`, got: an undefined property `unknown`.
 
-      Hint: Available properties are [:items, :label]\
+      Hint: Available properties are [:label, :items]\
       """
 
       assert_raise(CompileError, message, fn ->

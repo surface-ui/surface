@@ -54,25 +54,19 @@ defmodule Surface.LiveComponent do
     quote do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
+
+      @before_compile unquote(__MODULE__)
+
       use Surface.API, include: [:property, :slot, :data, :context]
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
-      @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
-
-      @doc """
-      Defines the id of the live component.
-
-      Set a unique id for this property if you need to handle events
-      in your component. This is required by LiveView.
-      """
-      property id, :integer
     end
   end
 
   defmacro __before_compile__(env) do
-    [quoted_mount(env), quoted_update(env)]
+    [maybe_quoted_id(env), quoted_mount(env), quoted_update(env)]
   end
 
   defp quoted_update(env) do
@@ -107,6 +101,17 @@ defmodule Surface.LiveComponent do
         def mount(socket) do
           {:ok, assign(socket, unquote(defaults))}
         end
+      end
+    end
+  end
+
+  defp maybe_quoted_id(env) do
+    if Module.defines?(env.module, {:handle_event, 3}) do
+      quote do
+        @doc """
+        The id of the live component (required by LiveView).
+        """
+        property id, :integer, required: true
       end
     end
   end
