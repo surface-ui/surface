@@ -173,7 +173,10 @@ defmodule Surface.Translator.TagTranslator do
   end
 
   defp value_to_code({:attribute_expr, expr, _}) do
-    expr |> IO.iodata_to_binary() |> String.trim()
+    expr
+    |> IO.iodata_to_binary()
+    |> :binary.bin_to_list()
+    |> IO.chardata_to_string()
   end
 
   defp value_to_code(value) do

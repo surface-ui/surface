@@ -76,6 +76,18 @@ defmodule HtmlTagTest do
              <div title="héllo"></div>
              """
     end
+
+    test "with utf-8 expression attribute value" do
+      assigns = %{}
+
+      code = ~H"""
+      <div title={{ "héllo" }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div title="héllo"></div>
+             """
+    end
   end
 
   describe "css class attributes" do
