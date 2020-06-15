@@ -202,5 +202,15 @@ defmodule Surface.PropertiesTest do
              <span class="class1 class3"></span>
              """
     end
+
+    test "trim class items" do
+      code = """
+      <CSSClassProp prop={{ "", " class1 " , "", " ", "  ", " class2 class3 ", "" }}/>
+      """
+
+      assert render_live(code) =~ """
+             <span class="class1 class2 class3"></span>
+             """
+    end
   end
 end

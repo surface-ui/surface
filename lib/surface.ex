@@ -200,10 +200,10 @@ defmodule Surface do
     Enum.reduce(value, [], fn item, classes ->
       case item do
         {class, val} when val not in [nil, false] ->
-          [to_string(class) | classes]
+          maybe_add_class(classes, class)
 
         class when is_binary(class) or is_atom(class) ->
-          [to_string(class) | classes]
+          maybe_add_class(classes, class)
 
         _ ->
           classes
@@ -388,6 +388,16 @@ defmodule Surface do
           {assigns, context}
       end
     end)
+  end
+
+  defp maybe_add_class(classes, class) do
+    case class |> to_string() |> String.trim() do
+      "" ->
+        classes
+
+      class ->
+        [class | classes]
+    end
   end
 
   defp get_components_config() do
