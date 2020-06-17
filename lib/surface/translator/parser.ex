@@ -206,7 +206,7 @@ defmodule Surface.Translator.Parser do
   end
 
   defp attribute_expr(_rest, _, _context, _line, _offset),
-    do: {:error, "expected closing for attribute exprression"}
+    do: {:error, "expected closing for attribute expression"}
 
   defp build_attributes(attr_nodes) do
     Enum.map(attr_nodes, fn
