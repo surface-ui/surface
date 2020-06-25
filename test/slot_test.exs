@@ -1,8 +1,7 @@
-defmodule SlotTest do
+defmodule Surface.SlotTest do
   use ExUnit.Case, async: true
 
   import ComponentTestHelper
-  import ExUnit.CaptureIO
 
   defmodule StatefulComponent do
     use Surface.LiveComponent
@@ -391,7 +390,7 @@ defmodule SlotTest do
     """
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `cols` in `SlotTest.Column`.
+    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Column`.
 
     Available props: [:info, :item].
 
@@ -449,7 +448,7 @@ defmodule SlotTest do
     """
 
     message = """
-    code:1: there's no `default` slot defined in `SlotTest.OuterWithoutDefaultSlot`.
+    code:1: there's no `default` slot defined in `Surface.SlotTest.OuterWithoutDefaultSlot`.
 
     Directive :let can only be used on explicitly defined slots.
 
@@ -471,7 +470,7 @@ defmodule SlotTest do
 
     message = """
     code:1: undefined prop `:non_existing` for slot `default` in \
-    `SlotTest.OuterWithDefaultSlotAndProps`.
+    `Surface.SlotTest.OuterWithDefaultSlotAndProps`.
 
     Available props: [:info].
 
@@ -495,7 +494,7 @@ defmodule SlotTest do
 
     message = """
     code:2: undefined prop `:non_existing` for slot `body` in \
-    `SlotTest.OuterWithSlotNotationAndProps`.
+    `Surface.SlotTest.OuterWithSlotNotationAndProps`.
 
     Available props: [:info].
 
@@ -507,6 +506,18 @@ defmodule SlotTest do
       render_live(code)
     end)
   end
+end
+
+defmodule Surface.SlotSyncTest do
+  use ExUnit.Case
+
+  import ComponentTestHelper
+  import ExUnit.CaptureIO
+
+  alias Surface.SlotTest.OuterWithSlotNotation, warn: false
+  alias Surface.SlotTest.InnerData, warn: false
+  alias Surface.SlotTest.{Grid, Column}, warn: false
+  alias Surface.SlotTest.StatefulComponent, warn: false
 
   test "warn if parent component does not define any slots" do
     code = """

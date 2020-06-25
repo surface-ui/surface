@@ -1,6 +1,5 @@
 defmodule Surface.APITest do
   use ExUnit.Case, async: true
-  import ExUnit.CaptureIO
 
   defmodule ContextSetter do
     use Surface.Component
@@ -16,42 +15,6 @@ defmodule Surface.APITest do
 
     def render(assigns) do
       ~H"""
-      """
-    end
-  end
-
-  defmodule ComponentWithRequiredDefaultSlot do
-    use Surface.Component
-
-    slot default, required: true
-    slot header
-    slot footer
-
-    def render(assigns) do
-      ~H"""
-      <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
-      </div>
-      """
-    end
-  end
-
-  defmodule ComponentWithRequiredSlots do
-    use Surface.Component
-
-    slot default
-    slot header, required: true
-    slot footer
-
-    def render(assigns) do
-      ~H"""
-      <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
-      </div>
       """
     end
   end
@@ -314,156 +277,6 @@ defmodule Surface.APITest do
           Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
-
-    test "warn if required default slot is not assigned (self-closed)" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestComponentWithRequiredDefaultSlot_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Surface.Component
-
-        def render(assigns) do
-          ~H"\""
-          <ComponentWithRequiredDefaultSlot/>
-          "\""
-        end
-      end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-
-      assert output =~ ~r"""
-             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
-             """
-    end
-
-    test "warn if required slot is not assigned (blank content)" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestComponentWithRequiredDefaultSlot_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Surface.Component
-
-        def render(assigns) do
-          ~H"\""
-          <ComponentWithRequiredDefaultSlot>
-          </ComponentWithRequiredDefaultSlot>
-          "\""
-        end
-      end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-
-      assert output =~ ~r"""
-             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
-             """
-    end
-
-    test "warn if required default slot is not assigned (other slots present)" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestComponentWithRequiredDefaultSlot_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Surface.Component
-
-        def render(assigns) do
-          ~H"\""
-          <ComponentWithRequiredDefaultSlot>
-            <template slot="header">
-              Header
-            </template>
-          </ComponentWithRequiredDefaultSlot>
-          "\""
-        end
-      end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-
-      assert output =~ ~r"""
-             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
-             """
-    end
-
-    test "warn if a required named slot is not assigned" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestComponentWithRequiredSlots_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Surface.Component
-
-        def render(assigns) do
-          ~H"\""
-          <ComponentWithRequiredSlots>
-          </ComponentWithRequiredSlots>
-          "\""
-        end
-      end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-
-      assert output =~ ~r"""
-             missing required slot "header" for component <ComponentWithRequiredSlots>
-               code.exs:6:\
-             """
-    end
-
-    test "do not validate required slots of non-existing components" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestComponentWithRequiredDefaultSlot_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Surface.Component
-
-        def render(assigns) do
-          ~H"\""
-          <ComponentWithRequiredDefaultSlot>
-            <NonExisting>
-              Don't validate me!
-            </NonExisting>
-          </ComponentWithRequiredDefaultSlot>
-          "\""
-        end
-      end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-
-      assert output =~ ~r"""
-             cannot render <NonExisting> \(module NonExisting could not be loaded\)
-               code.exs:7:\
-             """
-    end
   end
 
   describe "data" do
@@ -566,35 +379,6 @@ defmodule Surface.APITest do
       assert_raise(CompileError, message, fn ->
         eval(code)
       end)
-    end
-
-    test "warn on context :set if there's no init_context/1" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestLiveComponent_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Surface.LiveComponent
-
-        context set field, :atom
-
-        def render(assigns) do
-          ~H(<div></div>)
-        end
-      end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-
-      assert output =~ ~r"""
-             context assign "field" not initialized. You should implement an init_context/1 \
-             callback and initialize its value by returning {:ok, field: ...}
-               code.exs:4:\
-             """
     end
   end
 
@@ -780,6 +564,230 @@ defmodule Surface.APITest do
 
       _ ->
         nil
+    end
+  end
+end
+
+defmodule Surface.APISyncTest do
+  use ExUnit.Case
+  import ExUnit.CaptureIO
+
+  defmodule ComponentWithRequiredDefaultSlot do
+    use Surface.Component
+
+    slot default, required: true
+    slot header
+    slot footer
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header"/>
+        <slot/>
+        <slot name="footer"/>
+      </div>
+      """
+    end
+  end
+
+  defmodule ComponentWithRequiredSlots do
+    use Surface.Component
+
+    slot default
+    slot header, required: true
+    slot footer
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header"/>
+        <slot/>
+        <slot name="footer"/>
+      </div>
+      """
+    end
+  end
+
+  describe "slot error/warnings" do
+    test "warn if required default slot is not assigned (self-closed)" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot/>
+          "\""
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
+               code.exs:6:\
+             """
+    end
+
+    test "warn if required slot is not assigned (blank content)" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot>
+          </ComponentWithRequiredDefaultSlot>
+          "\""
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
+               code.exs:6:\
+             """
+    end
+
+    test "warn if required default slot is not assigned (other slots present)" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot>
+            <template slot="header">
+              Header
+            </template>
+          </ComponentWithRequiredDefaultSlot>
+          "\""
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
+               code.exs:6:\
+             """
+    end
+
+    test "warn if a required named slot is not assigned" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredSlots_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredSlots>
+          </ComponentWithRequiredSlots>
+          "\""
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             missing required slot "header" for component <ComponentWithRequiredSlots>
+               code.exs:6:\
+             """
+    end
+
+    test "do not validate required slots of non-existing components" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.Component
+
+        def render(assigns) do
+          ~H"\""
+          <ComponentWithRequiredDefaultSlot>
+            <NonExisting>
+              Don't validate me!
+            </NonExisting>
+          </ComponentWithRequiredDefaultSlot>
+          "\""
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             cannot render <NonExisting> \(module NonExisting could not be loaded\)
+               code.exs:7:\
+             """
+    end
+  end
+
+  describe "context :set error/warnings" do
+    test "warn on context :set if there's no init_context/1" do
+      id = :erlang.unique_integer([:positive]) |> to_string()
+      module = "TestLiveComponent_#{id}"
+
+      code = """
+      defmodule #{module} do
+        use Surface.LiveComponent
+
+        context set field, :atom
+
+        def render(assigns) do
+          ~H(<div></div>)
+        end
+      end
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+
+      assert output =~ ~r"""
+             context assign "field" not initialized. You should implement an init_context/1 \
+             callback and initialize its value by returning {:ok, field: ...}
+               code.exs:4:\
+             """
     end
   end
 end

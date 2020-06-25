@@ -1,8 +1,6 @@
-defmodule TranslatorTest do
+defmodule Surface.TranslatorTest do
   use ExUnit.Case
 
-  require Logger
-  import ExUnit.CaptureIO
   import ComponentTestHelper
 
   defmodule Button do
@@ -187,59 +185,6 @@ defmodule TranslatorTest do
   end
 
   describe "errors/warnings" do
-    test "warning when component cannot be loaded" do
-      code = """
-      <div>
-        <But />
-      </div>
-      """
-
-      {:warn, line, message} = run_translate(code, __ENV__)
-
-      assert message =~ "cannot render <But> (module But could not be loaded)"
-      assert line == 2
-    end
-
-    test "warning when module is not a component" do
-      code = """
-      <div>
-        <Enum />
-      </div>
-      """
-
-      {:warn, line, message} = run_translate(code, __ENV__)
-
-      assert message =~ "cannot render <Enum> (module Enum is not a component)"
-      assert line == 2
-    end
-
-    test "warning on non-existent property" do
-      code = """
-      <div>
-        <Button
-          label="test"
-          nonExistingProp="1"
-        />
-      </div>
-      """
-
-      {:warn, line, message} = run_translate(code, __ENV__)
-
-      assert message =~ ~S(Unknown property "nonExistingProp" for component <Button>)
-      assert line == 4
-    end
-
-    test "warning on missing required property" do
-      code = """
-      <Column />
-      """
-
-      {:warn, line, message} = run_translate(code, __ENV__)
-
-      assert message =~ ~S(Missing required property "title" for component <Column>)
-      assert line == 1
-    end
-
     test "raise error for invalid expressions on properties" do
       code = """
       <div>
@@ -390,75 +335,137 @@ defmodule TranslatorTest do
           Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
       end)
     end
+  end
+end
 
-    test "warning on stateful components with more than one root element" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
+defmodule Surface.TranslatorSyncTest do
+  use ExUnit.Case
 
-      view_code = """
-      defmodule TestLiveComponent_#{id} do
-        use Surface.LiveComponent
+  import ExUnit.CaptureIO
+  import ComponentTestHelper
 
-        def render(assigns) do
-          ~H(<div>1</div><div>2</div>)
-        end
+  alias Surface.TranslatorTest.{Button, Column}, warn: false
+
+  test "warning when component cannot be loaded" do
+    code = """
+    <div>
+      <But />
+    </div>
+    """
+
+    {:warn, line, message} = run_translate(code, __ENV__)
+
+    assert message =~ "cannot render <But> (module But could not be loaded)"
+    assert line == 2
+  end
+
+  test "warning when module is not a component" do
+    code = """
+    <div>
+      <Enum />
+    </div>
+    """
+
+    {:warn, line, message} = run_translate(code, __ENV__)
+
+    assert message =~ "cannot render <Enum> (module Enum is not a component)"
+    assert line == 2
+  end
+
+  test "warning on non-existent property" do
+    code = """
+    <div>
+      <Button
+        label="test"
+        nonExistingProp="1"
+      />
+    </div>
+    """
+
+    {:warn, line, message} = run_translate(code, __ENV__)
+
+    assert message =~ ~S(Unknown property "nonExistingProp" for component <Button>)
+    assert line == 4
+  end
+
+  test "warning on missing required property" do
+    code = """
+    <Column />
+    """
+
+    {:warn, line, message} = run_translate(code, __ENV__)
+
+    assert message =~ ~S(Missing required property "title" for component <Column>)
+    assert line == 1
+  end
+
+  test "warning on stateful components with more than one root element" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H(<div>1</div><div>2</div>)
       end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
-        end)
-
-      assert output =~ "stateful live components must have a single HTML root element"
-      assert extract_line(output) == 5
     end
+    """
 
-    test "warning on stateful components with text root element" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+      end)
 
-      view_code = """
-      defmodule TestLiveComponent_#{id} do
-        use Surface.LiveComponent
+    assert output =~ "stateful live components must have a single HTML root element"
+    assert extract_line(output) == 5
+  end
 
-        def render(assigns) do
-          ~H(just text)
-        end
+  test "warning on stateful components with text root element" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H(just text)
       end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
-        end)
-
-      assert output =~ "stateful live components must have a HTML root element"
-      assert extract_line(output) == 5
     end
+    """
 
-    test "warning on stateful components with interpolation root element" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+      end)
 
-      view_code = """
-      defmodule TestLiveComponent_#{id} do
-        use Surface.LiveComponent
+    assert output =~ "stateful live components must have a HTML root element"
+    assert extract_line(output) == 5
+  end
 
-        def render(assigns) do
-          ~H({{ 1 }})
-        end
+  test "warning on stateful components with interpolation root element" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H({{ 1 }})
       end
-      """
-
-      output =
-        capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
-        end)
-
-      assert output =~ "stateful live components must have a HTML root element"
-      assert extract_line(output) == 5
     end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 0})
+      end)
+
+    assert output =~ "stateful live components must have a HTML root element"
+    assert extract_line(output) == 5
   end
 
   defp run_translate(code, env) do
