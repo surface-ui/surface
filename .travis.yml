@@ -6,18 +6,18 @@ script:
 matrix:
   include:
     - elixir: 1.7.4
-      otp_release: 21.3.8.16
+      otp_release: 21.3.8
     - elixir: 1.7.4
-      otp_release: 22.3.4.2
+      otp_release: 22.3.4
     - elixir: 1.8.2
-      otp_release: 21.3.8.16
+      otp_release: 21.3.8
     - elixir: 1.8.2
-      otp_release: 22.3.4.2
+      otp_release: 22.3.4
     - elixir: 1.9.4
-      otp_release: 21.3.8.16
+      otp_release: 21.3.8
     - elixir: 1.9.4
-      otp_release: 22.3.4.2
+      otp_release: 22.3.4
     - elixir: 1.10.3
-      otp_release: 21.3.8.16
+      otp_release: 21.3.8
     - elixir: 1.10.3
       otp_release: 23.0.2
