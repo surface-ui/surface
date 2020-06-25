@@ -1,7 +1,7 @@
 language: elixir
 sudo: false
 script:
-  - if [[ $(elixir --version) =~ "1.(8|9|10)." ]]; then mix format --check-formatted; fi
+  - if [ "$CHECK_FORMATTED" = true ]; then mix format --check-formatted; fi
   - mix test
 matrix:
   include:
@@ -15,3 +15,4 @@ matrix:
       otp_release: 21.3.8
     - elixir: 1.10.3
       otp_release: 23.0.2
+      env: CHECK_FORMATTED=true
