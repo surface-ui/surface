@@ -63,11 +63,11 @@ defmodule Surface.Translator.LiveComponentTranslator do
           n_tags + n_non_tags == 0 && match?({_, _, _, %{translator: TagTranslator}}, child) ->
             updated_child =
               case Module.get_attribute(caller.module, :style) do
-                %{dynamic: dynamic} when dynamic != nil ->
-                  add_dynamic_style_node(child, dynamic, caller)
-
-                _ ->
+                nil ->
                   child
+
+                style ->
+                  decorate_root_node_for_style(child, style, caller)
               end
 
             {[updated_child | nodes], n_tags + 1, n_non_tags}
@@ -88,20 +88,26 @@ defmodule Surface.Translator.LiveComponentTranslator do
     Enum.reverse(nodes)
   end
 
-  def add_dynamic_style_node(root_node, dynamic_style, caller) do
+  def decorate_root_node_for_style(root_node, style, caller) do
     {mod_str, attributes, children, %{line: line} = meta} = root_node
     value = caller.module |> inspect() |> to_charlist()
     new_attr = {"data-sface-module", value, %{line: line, spaces: [" ", "", ""]}}
 
-    new_child =
-      {"style", [], ["\n", dynamic_style],
-       %{
-         directives: [],
-         line: line,
-         space: "",
-         translator: Surface.Translator.TagTranslator
-       }}
+    updated_children =
+      if style.dynamic do
+        new_child =
+          {"style", [], ["\n", style.dynamic],
+           %{
+             directives: [],
+             line: line,
+             space: "",
+             translator: Surface.Translator.TagTranslator
+           }}
+        [new_child | children]
+      else
+        children
+      end
 
-    {mod_str, [new_attr | attributes], [new_child | children], meta}
+    {mod_str, [new_attr | attributes], updated_children, meta}
   end
 end
