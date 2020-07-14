@@ -26,6 +26,8 @@ defmodule Surface.API do
 
   @private_opts [:action, :to]
 
+  @default_style_processor Surface.Style.SassProcessor
+
   defmacro __using__(include: include) do
     arities = %{
       property: [2, 3],
@@ -34,10 +36,15 @@ defmodule Surface.API do
       context: [1]
     }
 
-    functions = for func <- include, arity <- arities[func], into: [], do: {func, arity}
+    imports = for func <- include, arity <- arities[func], do: {func, arity}
+
+    Module.put_attribute(__CALLER__.module, :style_processors,
+      css: @default_style_processor,
+      scss: @default_style_processor
+    )
 
     quote do
-      import unquote(__MODULE__), only: unquote(functions)
+      import unquote(__MODULE__), only: unquote(imports ++ [style: 1, style: 2])
       @before_compile unquote(__MODULE__)
       @after_compile unquote(__MODULE__)
 
@@ -82,6 +89,28 @@ defmodule Surface.API do
 
   def init_func(_func, _caller) do
     :ok
+  end
+
+  defmacro style(do: block) do
+    build_style_ast(:scss, [], block, __CALLER__)
+  end
+
+  defmacro style(type, do: block) when is_atom(type) do
+    build_style_ast(type, [], block, __CALLER__)
+  end
+
+  defmacro style(opts, do: block) when is_list(opts) do
+    build_style_ast(:scss, opts, block, __CALLER__)
+  end
+
+  def process_style!(processor, code, opts, caller, code_line) do
+    case processor.process(code, opts, caller) do
+      {:ok, static, dynamic} ->
+        %{static: static, dynamic: dynamic}
+
+      {:error, message, line} ->
+        IOHelper.compile_error(message, caller.file, code_line + line)
+    end
   end
 
   @doc "Defines a property for the component"
@@ -687,6 +716,25 @@ defmodule Surface.API do
       Enum.reject(opts, fn o -> Enum.any?(@private_opts, fn p -> match?({^p, _}, o) end) end)
     else
       opts
+    end
+  end
+
+  defp build_style_ast(type, opts, block, caller) do
+    processors = Module.get_attribute(caller.module, :style_processors) || []
+    processor = processors[type]
+
+    quote bind_quoted: [
+            processor: processor,
+            opts: Macro.escape(processor.normalize_opts(opts)),
+            code: processor.normalize_block(block),
+            line: caller.line
+          ] do
+      @style Surface.API.process_style!(processor, code, opts, __ENV__, line)
+
+      @doc false
+      def __style__() do
+        @style.static
+      end
     end
   end
 end

@@ -37,7 +37,8 @@ defmodule Surface.MixProject do
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
       {:ecto, "~> 3.4.2", only: :test},
-      {:ex_doc, ">= 0.19.0", only: :docs}
+      {:ex_doc, ">= 0.19.0", only: :docs},
+      {:sass, "~> 1.0"}
     ]
   end
 

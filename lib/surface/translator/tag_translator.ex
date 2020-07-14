@@ -159,7 +159,7 @@ defmodule Surface.Translator.TagTranslator do
       space2,
       "=",
       space3,
-      "<%= style(",
+      "<%= attr_style(",
       value_to_code(value),
       ", ",
       show_expr,

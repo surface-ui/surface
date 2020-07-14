@@ -171,7 +171,7 @@ defmodule Surface do
   end
 
   @doc false
-  def style(value, show) when is_binary(value) do
+  def attr_style(value, show) when is_binary(value) do
     if show do
       quot(value)
     else
@@ -180,7 +180,7 @@ defmodule Surface do
     end
   end
 
-  def style(value, _show) do
+  def attr_style(value, _show) do
     IOHelper.runtime_error(
       "invalid value for attribute \"style\". Expected a string " <>
         "got: #{inspect(value)}"
