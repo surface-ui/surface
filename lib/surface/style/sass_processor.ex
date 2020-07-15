@@ -67,8 +67,7 @@ defmodule Surface.Style.SassProcessor do
                 static
               else
                 new_selector = String.replace(selector, @selector_marker, static_root)
-                section =
-                  [new_selector | Enum.reverse(["}" | static_tmp])] |> Enum.join("\n")
+                section = [new_selector | Enum.reverse(["}" | static_tmp])] |> Enum.join("\n")
 
                 [section | static]
               end
@@ -78,6 +77,7 @@ defmodule Surface.Style.SassProcessor do
                 dynamic
               else
                 new_selector = String.replace(selector, @selector_marker, dynamic_root)
+
                 section =
                   [new_selector | Enum.reverse(["}" | dynamic_tmp])]
                   |> Enum.join("\n")
@@ -177,6 +177,7 @@ defmodule Surface.Style.SassProcessor do
       }
 
       """
+
       dynamic_parts_section = dynamic_parts |> Enum.reverse() |> Enum.join("\n\n")
       dynamic_vars_section <> dynamic_parts_section
     end

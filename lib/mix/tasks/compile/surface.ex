@@ -34,7 +34,8 @@ defmodule Mix.Tasks.Compile.Surface do
 
   defp modules_with_static_style(modules) do
     Enum.filter(modules, fn mod ->
-      Code.ensure_loaded?(mod) and function_exported?(mod, :__style__, 0) and mod.__style__() != nil
+      Code.ensure_loaded?(mod) and function_exported?(mod, :__style__, 0) and
+        mod.__style__() != nil
     end)
   end
 end

@@ -103,6 +103,7 @@ defmodule Surface.Translator.LiveComponentTranslator do
              space: "",
              translator: Surface.Translator.TagTranslator
            }}
+
         [new_child | children]
       else
         children
