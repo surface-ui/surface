@@ -36,6 +36,7 @@ defmodule Surface.LiveView do
       use Surface.API, include: [:property, :data]
       import Phoenix.HTML
 
+      @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
 
       @doc "The id of the live view"

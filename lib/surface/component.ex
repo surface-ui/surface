@@ -42,6 +42,7 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @before_compile Surface.Renderer
       @before_compile Surface.ContentHandler
 
       if unquote(translator) == Surface.Translator.SlotableTranslator do

@@ -55,6 +55,7 @@ defmodule Surface.LiveComponent do
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
 
+      @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
 
       use Surface.API, include: [:property, :slot, :data, :context]
