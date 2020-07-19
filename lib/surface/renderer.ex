@@ -24,7 +24,7 @@ defmodule Surface.Renderer do
         ast =
           template
           |> File.read!()
-          |> Surface.Translator.run(0, env.module, template)
+          |> Surface.Translator.run(0, env, template)
           |> EEx.compile_string(
             engine: Phoenix.LiveView.Engine,
             line: 0,
@@ -56,7 +56,12 @@ defmodule Surface.Renderer do
 
         IO.warn(message, Macro.Env.stacktrace(env))
 
-        :ok
+        quote do
+          @external_resource unquote(template)
+          def render(_assigns) do
+            raise unquote(message)
+          end
+        end
     end
   end
 
