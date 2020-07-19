@@ -36,13 +36,13 @@ defmodule Surface.Component do
       end
 
     quote do
+      @before_compile Surface.Renderer
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: unquote(translator)
       use Surface.API, include: [:property, :slot, :context]
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
-      @before_compile Surface.Renderer
       @before_compile Surface.ContentHandler
 
       if unquote(translator) == Surface.Translator.SlotableTranslator do
