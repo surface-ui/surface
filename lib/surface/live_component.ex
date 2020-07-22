@@ -52,6 +52,7 @@ defmodule Surface.LiveComponent do
 
   defmacro __using__(_) do
     quote do
+      @before_compile Surface.Renderer
       use Phoenix.LiveComponent
       use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
 
