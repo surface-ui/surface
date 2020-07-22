@@ -10,5 +10,4 @@ defmodule Surface.RendererTest.Components do
   defmodule LiveViewWithExternalTemplate do
     use Surface.LiveView
   end
-
 end
