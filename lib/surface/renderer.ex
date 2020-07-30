@@ -24,12 +24,8 @@ defmodule Surface.Renderer do
         ast =
           template
           |> File.read!()
-          |> Surface.Translator.run(0, env, template)
-          |> EEx.compile_string(
-            engine: Phoenix.LiveView.Engine,
-            line: 0,
-            file: template
-          )
+          |> Surface.Compiler.compile(0, env, template)
+          |> Surface.Compiler.to_live_struct()
 
         quote do
           @file unquote(template)

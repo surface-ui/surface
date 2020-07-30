@@ -390,7 +390,7 @@ defmodule Surface.SlotTest do
     """
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Column`.
+    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
 
     Available props: [:info, :item].
 

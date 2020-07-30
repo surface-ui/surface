@@ -61,15 +61,11 @@ defmodule Surface do
   Translates Surface code into Phoenix templates.
   """
   defmacro sigil_H({:<<>>, _, [string]}, _) do
-    line_offset = __CALLER__.line + 1
+    line_offset = __CALLER__.line
 
     string
-    |> Surface.Translator.run(line_offset, __CALLER__, __CALLER__.file)
-    |> EEx.compile_string(
-      engine: Phoenix.LiveView.Engine,
-      line: line_offset,
-      file: __CALLER__.file
-    )
+    |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file)
+    |> Surface.Compiler.to_live_struct()
   end
 
   @doc "Retrieve a component's config based on the `key`"

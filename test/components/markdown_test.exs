@@ -228,7 +228,7 @@ defmodule Surface.Components.MarkdownSyncTest do
 
       assert output =~ ~r"""
              Closing unclosed backquotes ` at end of input
-               code:3:\
+               code:2:\
              """
     end
   end

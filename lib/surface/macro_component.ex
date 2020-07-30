@@ -33,8 +33,67 @@ defmodule Surface.MacroComponent do
     end
   end
 
+  defp eval_value(
+         _component,
+         %Surface.AST.Attribute{name: name, value: [%Surface.AST.Text{value: value}]},
+         _caller
+       )
+       when is_list(value) do
+    {name, to_string(value)}
+  end
+
+  defp eval_value(
+         _component,
+         %Surface.AST.Attribute{name: name, value: [%Surface.AST.Text{value: value}]},
+         _caller
+       ) do
+    {name, value}
+  end
+
+  defp eval_value(
+         component,
+         %Surface.AST.Attribute{
+           name: name,
+           value: [
+             %Surface.AST.AttributeExpr{
+               original: value,
+               value: expr,
+               meta: %{line: line, file: file}
+             }
+           ]
+         },
+         caller
+       ) do
+    env = %Macro.Env{caller | line: line}
+    prop_info = component.__get_prop__(name)
+
+    {evaluated_value, _} =
+      try do
+        Code.eval_quoted(expr, [], env)
+      rescue
+        exception ->
+          %exception_mod{} = exception
+
+          message = """
+          could not evaluate expression {{#{value}}}. Reason:
+
+          (#{inspect(exception_mod)}) #{Exception.message(exception)}
+          """
+
+          error = %CompileError{line: line, file: file, description: message}
+          reraise(error, __STACKTRACE__)
+      end
+
+    if valid_value?(prop_info.type, evaluated_value) do
+      {prop_info.name, evaluated_value}
+    else
+      message = invalid_value_error(prop_info.name, prop_info.type, evaluated_value, value)
+      IOHelper.compile_error(message, file, line)
+    end
+  end
+
   defp eval_value(component, {name, {:attribute_expr, [expr], %{line: line}}, _meta}, caller) do
-    env = %Macro.Env{caller | line: caller.line + line}
+    env = %Macro.Env{caller | line: line}
     prop_info = component.__get_prop__(String.to_atom(name))
 
     {evaluated_value, _} =

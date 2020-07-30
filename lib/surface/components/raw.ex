@@ -19,4 +19,8 @@ defmodule Surface.Components.Raw do
   def translate({_, _, children, _}, _caller) do
     {[], children, []}
   end
+
+  def expand(_directives, _attributes, templates, _children, _meta) do
+    Enum.flat_map(templates[:default], fn %{children: children} -> children end)
+  end
 end

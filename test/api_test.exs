@@ -633,7 +633,7 @@ defmodule Surface.APISyncTest do
 
       assert output =~ ~r"""
              missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
+               code.exs:5:\
              """
     end
 
@@ -662,7 +662,7 @@ defmodule Surface.APISyncTest do
 
       assert output =~ ~r"""
              missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
+               code.exs:5:\
              """
     end
 
@@ -694,7 +694,7 @@ defmodule Surface.APISyncTest do
 
       assert output =~ ~r"""
              missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
+               code.exs:5:\
              """
     end
 
@@ -723,7 +723,7 @@ defmodule Surface.APISyncTest do
 
       assert output =~ ~r"""
              missing required slot "header" for component <ComponentWithRequiredSlots>
-               code.exs:6:\
+               code.exs:5:\
              """
     end
 

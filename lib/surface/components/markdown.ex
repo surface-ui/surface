@@ -90,6 +90,51 @@ defmodule Surface.Components.Markdown do
     {open, html, close}
   end
 
+  def expand(directives, attributes, _templates, children, meta) do
+    props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
+    class = props[:class] || get_config(:default_class)
+    unwrap = props[:unwrap] || false
+    config_opts = get_config(:default_opts) || []
+    opts = Keyword.merge(config_opts, props[:opts] || [])
+
+    html =
+      children
+      |> IO.iodata_to_binary()
+      |> trim_leading_space()
+      # Need to reconstruct the relative line
+      |> markdown_as_html!(meta.caller, meta.line, opts)
+
+    node = %Surface.AST.Text{value: html}
+
+    cond do
+      unwrap ->
+        node
+
+      class ->
+        %Surface.AST.Tag{
+          element: "div",
+          directives: directives,
+          attributes: [
+            %Surface.AST.Attribute{
+              name: "class",
+              value: %Surface.AST.Text{value: class}
+            }
+          ],
+          children: [node],
+          meta: meta
+        }
+
+      true ->
+        %Surface.AST.Tag{
+          element: "div",
+          directives: directives,
+          attributes: [],
+          children: [node],
+          meta: meta
+        }
+    end
+  end
+
   defp trim_leading_space(markdown) do
     lines =
       markdown
@@ -120,13 +165,13 @@ defmodule Surface.Components.Markdown do
       Enum.split_with(messages, fn {type, _line, _message} -> type == :error end)
 
     Enum.each(warnings_and_deprecations, fn {_type, line, message} ->
-      actual_line = caller.line + tag_line + line
+      actual_line = tag_line + line - 1
       IOHelper.warn(message, caller, fn _ -> actual_line end)
     end)
 
     if errors != [] do
       [{_type, line, message} | _] = errors
-      actual_line = caller.line + tag_line + line
+      actual_line = tag_line + line - 1
       IOHelper.compile_error(message, caller.file, actual_line)
     end
 
