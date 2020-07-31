@@ -140,16 +140,28 @@ defmodule Surface.Compiler.Helpers do
     {:error,
      """
      the `inner_content` anonymous function should be called using \
-     the dot-notation. Use `inner_content.([])` instead of `inner_content([])`\
+     the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
      """}
   end
 
-  defp validate_interpolation({{:., _, dotted_args} = expr, metadata, args}, meta) do
+  defp validate_interpolation({{:., _, dotted_args} = expr, metadata, args} = expression, meta) do
     if List.last(dotted_args) == :inner_content and !Keyword.get(metadata, :no_parens, false) do
+      bad_str = Macro.to_string(expression)
+
+      args = if Enum.empty?(args), do: [args], else: args
+
+      # This constructs the syntax tree for dot-notation access to the inner_content function
+      replacement_str =
+        Macro.to_string(
+          {{:., [line: meta.line, file: meta.file],
+            [{expr, Keyword.put(metadata, :no_parens, true), []}]},
+           [line: meta.line, file: meta.file], args}
+        )
+
       {:error,
        """
        the `inner_content` anonymous function should be called using \
-       the dot-notation. Use `inner_content.([])` instead of `inner_content([])`\
+       the dot-notation. Use `#{replacement_str}` instead of `#{bad_str}`\
        """}
     else
       [expr | args]
