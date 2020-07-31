@@ -12,8 +12,6 @@ defmodule Surface.Directive.Let do
 
   def extract(_, _), do: []
 
-  def process(node), do: node
-
   defp directive_value(value, meta) do
     expr = Helpers.attribute_expr_to_quoted!(value, :keyword, meta)
 

@@ -2,7 +2,10 @@ defmodule Surface.Directive do
   @callback extract(node :: any, meta :: Surface.AST.Meta.t()) ::
               [Surface.AST.Directive.t()]
               | Surface.AST.Directive.t()
-  @callback process(node :: Surface.AST.t()) :: Surface.AST.t()
+  @callback process(directive :: Surface.AST.Directive.t(), node :: Surface.AST.t()) ::
+              Surface.AST.t()
+
+  @optional_callbacks process: 2
 
   defmacro __using__(_) do
     quote do

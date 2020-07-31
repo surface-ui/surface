@@ -1,36 +1,83 @@
 defmodule Surface.Directive.Show do
-  @behaviour Surface.Directive
+  use Surface.Directive
 
   def extract({":show", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
-    %Surface.AST.Directive{
+    expr_meta = Helpers.to_meta(expr_meta, meta)
+    attr_meta = Helpers.to_meta(attr_meta, meta)
+
+    %AST.Directive{
       module: __MODULE__,
       name: :show,
-      value: directive_value(value, Map.merge(meta, expr_meta)),
-      meta: Map.merge(meta, attr_meta)
+      value: directive_value(value, expr_meta),
+      meta: attr_meta
     }
   end
 
   def extract({":show", value, attr_meta}, meta) do
-    %Surface.AST.Directive{
+    attr_meta = Helpers.to_meta(attr_meta, meta)
+
+    %AST.Directive{
       module: __MODULE__,
       name: :show,
-      value: %Surface.AST.Text{value: to_string(value)},
-      meta: Map.merge(meta, attr_meta)
+      value: %AST.Text{value: value},
+      meta: attr_meta
     }
   end
 
   def extract(_, _), do: []
 
-  def process(node), do: node
+  def process(%AST.Directive{value: %AST.Text{value: value}}, node) do
+    if value do
+      node
+    else
+      add_value_to_attribute(node, :style, %AST.Text{value: "display: none;"})
+    end
+  end
+
+  def process(%AST.Directive{value: %AST.AttributeExpr{} = expr}, node) do
+    add_value_to_attribute(node, :style, expr)
+  end
+
+  defp add_value_to_attribute(%{attributes: attributes} = node, name, new_value) do
+    {%{value: values} = style, non_style} = extract_attribute(attributes || [], name)
+    updated_style_attribute = %{style | value: [new_value | values]}
+    attributes = [updated_style_attribute | non_style]
+    %{node | attributes: attributes}
+  end
+
+  defp extract_attribute(attributes, attr_name) do
+    attributes
+    |> Enum.split_with(fn
+      %{name: name} when name == attr_name -> true
+      _ -> false
+    end)
+    |> case do
+      {[style], non_style} ->
+        {style, non_style}
+
+      {_, non_style} ->
+        {%AST.Attribute{
+           name: :style,
+           type: :string,
+           value: []
+         }, non_style}
+    end
+  end
 
   defp directive_value(value, meta) do
-    {:identity, _, value} =
-      Code.string_to_quoted!("identity(#{value})", line: meta.line, file: meta.file)
+    expr = Helpers.attribute_expr_to_quoted!(value, :boolean, meta)
 
-    if Enum.count(value) == 1 do
-      Enum.at(value, 0)
-    else
-      value
-    end
+    expr =
+      quote generated: true do
+        if !unquote(expr) do
+          "display: none;"
+        end
+      end
+
+    %AST.AttributeExpr{
+      original: value,
+      value: expr,
+      meta: meta
+    }
   end
 end

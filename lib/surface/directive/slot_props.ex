@@ -5,14 +5,12 @@ defmodule Surface.Directive.SlotProps do
     %AST.Directive{
       module: __MODULE__,
       name: :props,
-      value: directive_value(value, Map.merge(meta, expr_meta)),
-      meta: Map.merge(meta, attr_meta)
+      value: directive_value(value, Helpers.to_meta(expr_meta, meta)),
+      meta: Helpers.to_meta(attr_meta, meta)
     }
   end
 
   def extract(_, _), do: []
-
-  def process(node), do: node
 
   defp directive_value(value, meta) do
     expr = Helpers.attribute_expr_to_quoted!(value, :keyword, meta)

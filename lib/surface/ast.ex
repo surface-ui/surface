@@ -5,6 +5,8 @@ defmodule Surface.AST do
           | Surface.AST.Tag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
+          | Surface.AST.Conditional.t()
+          | Surface.AST.Comprehension.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
           | Surface.AST.Error.t()
@@ -70,6 +72,42 @@ defmodule Surface.AST.Directive do
           name: atom(),
           # the value here is defined by the individual directive
           value: any(),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.Comprehension do
+  @moduledoc """
+  An AST node representing a for comprehension.binary()
+
+  ## Properties
+      * `:generator` - a quoted expression
+      * `:children` - the children to collect over the generator
+      * `:meta` - compilation meta data
+  """
+  defstruct [:generator, :children, :meta]
+
+  @type t :: %__MODULE__{
+          generator: any(),
+          children: list(Surface.AST.t()),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.Conditional do
+  @moduledoc """
+  An AST node representing a conditionally rendered block
+
+  ## Properties
+      * `:condition` - a quoted expression
+      * `:children` - the children to insert into the dom if the condition evaluates truthy
+      * `:meta` - compilation meta data
+  """
+  defstruct [:condition, :children, :meta]
+
+  @type t :: %__MODULE__{
+          condition: any(),
+          children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
 end

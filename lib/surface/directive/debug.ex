@@ -12,5 +12,11 @@ defmodule Surface.Directive.Debug do
 
   def extract(_, _), do: []
 
-  def process(node), do: node
+  def process(_, node) do
+    IO.puts(">>> DEBUG: #{node.meta.file}:#{node.meta.line}")
+    IO.puts(inspect(node, pretty: true))
+    IO.puts("<<<")
+
+    node
+  end
 end

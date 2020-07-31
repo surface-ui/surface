@@ -11,23 +11,23 @@ defmodule Surface.Compiler do
   alias Surface.Compiler.Helpers
 
   @tag_directive_handlers [
-    Surface.Directive.For,
-    Surface.Directive.If,
+    Surface.Directive.Events,
     Surface.Directive.Show,
-    Surface.Directive.Debug,
-    Surface.Directive.Events
+    Surface.Directive.If,
+    Surface.Directive.For,
+    Surface.Directive.Debug
   ]
 
   @component_directive_handlers [
-    Surface.Directive.For,
+    Surface.Directive.Events,
     Surface.Directive.If,
-    Surface.Directive.Debug,
-    Surface.Directive.Events
+    Surface.Directive.For,
+    Surface.Directive.Debug
   ]
 
   @meta_component_directive_handlers [
-    Surface.Directive.For,
     Surface.Directive.If,
+    Surface.Directive.For,
     Surface.Directive.Debug
   ]
 
@@ -190,7 +190,7 @@ defmodule Surface.Compiler do
     for node <- nodes do
       case convert_node_to_ast(node_type(node), node, compile_meta) do
         {:ok, ast} ->
-          ast
+          process_directives(ast)
 
         {:error, {message, line}, meta} ->
           IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
@@ -207,6 +207,16 @@ defmodule Surface.Compiler do
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
   defp node_type(_), do: :text
+
+  defp process_directives(%{directives: directives} = node) do
+    directives
+    |> Enum.filter(fn %AST.Directive{module: mod} -> function_exported?(mod, :process, 2) end)
+    |> Enum.reduce(node, fn %AST.Directive{module: mod} = directive, node ->
+      mod.process(directive, node)
+    end)
+  end
+
+  defp process_directives(node), do: node
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Text{value: text}}
@@ -645,11 +655,19 @@ defmodule Surface.Compiler do
       |> Enum.map(fn handler -> handler.extract(attr, meta) end)
       |> List.flatten()
 
-    if Enum.empty?(directives) do
-      {:ok, dirs, [attr | attrs]}
-    else
-      {:ok, directives ++ dirs, attrs}
-    end
+    attributes =
+      if Enum.empty?(directives) do
+        [attr | attrs]
+      else
+        attrs
+      end
+
+    directives =
+      Enum.sort_by(directives ++ dirs, fn %{module: mod} ->
+        Enum.find_index(handlers, fn handler -> handler == mod end)
+      end)
+
+    {:ok, directives, attributes}
   end
 
   defp validate_properties(module, props, meta) do

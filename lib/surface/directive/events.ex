@@ -28,8 +28,6 @@ defmodule Surface.Directive.Events do
 
   def extract(_, _), do: []
 
-  def process(node), do: node
-
   defp to_quoted_expr({:attribute_expr, [original], expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
 
