@@ -5,8 +5,18 @@ defmodule Surface.AST do
           | Surface.AST.Tag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
+          | Surface.AST.Container.t()
           | Surface.AST.Component.t()
           | Surface.AST.Error.t()
+end
+
+defmodule Surface.AST.Container do
+  defstruct [:children, :directives]
+
+  @type t :: %__MODULE__{
+          children: list(Surface.AST.t()),
+          directives: list(Surface.AST.Directive.t())
+        }
 end
 
 defmodule Surface.AST.Meta do
@@ -58,9 +68,10 @@ defmodule Surface.AST.AttributeExpr do
 end
 
 defmodule Surface.AST.Interpolation do
-  defstruct [:value, :meta]
+  defstruct [:original, :value, :meta]
 
   @type t :: %__MODULE__{
+          original: binary(),
           # quoted
           value: any(),
           meta: Surface.AST.Meta.t()

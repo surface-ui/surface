@@ -131,7 +131,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  defp validate_attribute_expression(_expr, _, _meta) do
+  def validate_attribute_expression(_expr, _, _meta) do
     # TODO: Add any validation here
     :ok
   end
@@ -209,5 +209,72 @@ defmodule Surface.Compiler.Helpers do
     parent_meta
     |> Map.merge(tree_meta)
     |> Map.put(:line, line + offset)
+  end
+
+  def did_you_mean(target, list) do
+    Enum.reduce(list, {nil, 0}, &max_similar(&1, to_string(target), &2))
+  end
+
+  defp max_similar(source, target, {_, current} = best) do
+    score = source |> to_string() |> String.jaro_distance(target)
+    if score < current, do: best, else: {source, score}
+  end
+
+  def list_to_string(_singular, _plural, []) do
+    ""
+  end
+
+  def list_to_string(singular, _plural, [item]) do
+    "#{singular} #{inspect(item)}"
+  end
+
+  def list_to_string(_singular, plural, items) do
+    [last | rest] = items |> Enum.map(&inspect/1) |> Enum.reverse()
+    "#{plural} #{rest |> Enum.reverse() |> Enum.join(", ")} and #{last}"
+  end
+
+  def is_blank_or_empty(%AST.Text{value: value}),
+    do: Surface.Translator.ComponentTranslatorHelper.blank?(value)
+
+  def is_blank_or_empty(%AST.Template{children: children}),
+    do: Enum.all?(children, &is_blank_or_empty/1)
+
+  def is_blank_or_empty(_node), do: false
+
+  def actual_module(mod_str, env) do
+    {:ok, ast} = Code.string_to_quoted(mod_str)
+
+    case Macro.expand(ast, env) do
+      mod when is_atom(mod) ->
+        {:ok, mod}
+
+      _ ->
+        {:error, "#{mod_str} is not a valid module name"}
+    end
+  end
+
+  def check_module_loaded(module, mod_str) do
+    case Code.ensure_compiled(module) do
+      {:module, mod} ->
+        {:ok, mod}
+
+      {:error, _reason} ->
+        {:error, "module #{mod_str} could not be loaded"}
+    end
+  end
+
+  def check_module_is_component(module, mod_str) do
+    if function_exported?(module, :translator, 0) do
+      {:ok, module}
+    else
+      {:error, "module #{mod_str} is not a component"}
+    end
+  end
+
+  def module_name(name, caller) do
+    with {:ok, mod} <- actual_module(name, caller),
+         {:ok, mod} <- check_module_loaded(mod, name) do
+      check_module_is_component(mod, name)
+    end
   end
 end

@@ -43,6 +43,10 @@ defmodule Surface.Compiler.Renderer do
     [text | to_dynamic_nested_html(nodes)]
   end
 
+  defp to_dynamic_nested_html([%AST.Container{children: children} | nodes]) do
+    [children, to_dynamic_nested_html(nodes)]
+  end
+
   defp to_dynamic_nested_html([
          %AST.Tag{
            element: element,

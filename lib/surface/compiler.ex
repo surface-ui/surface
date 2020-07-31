@@ -25,6 +25,12 @@ defmodule Surface.Compiler do
     Surface.Directive.Events
   ]
 
+  @meta_component_directive_handlers [
+    Surface.Directive.For,
+    Surface.Directive.If,
+    Surface.Directive.Debug
+  ]
+
   @template_directive_handlers [Surface.Directive.Let]
 
   @boolean_tag_attributes [
@@ -87,23 +93,17 @@ defmodule Surface.Compiler do
       caller: caller
     }
 
-    ast =
-      string
-      |> Parser.parse()
-      |> case do
-        {:ok, nodes} ->
-          nodes
+    string
+    |> Parser.parse()
+    |> case do
+      {:ok, nodes} ->
+        nodes
 
-        {:error, message, line} ->
-          raise %ParseError{line: line + line_offset - 1, file: file, message: message}
-      end
-      |> process_nodes(compile_meta)
-
-    if is_stateful_component(caller.module) do
-      validate_stateful_component(ast, compile_meta)
-    else
-      ast
+      {:error, message, line} ->
+        raise %ParseError{line: line + line_offset - 1, file: file, message: message}
     end
+    |> to_ast(compile_meta)
+    |> validate_component_structure(compile_meta, caller.module)
   end
 
   def to_live_struct(_nodes) do
@@ -121,6 +121,14 @@ defmodule Surface.Compiler do
       require Phoenix.LiveView.Engine
       unquote(rendered)
     end
+  end
+
+  def validate_component_structure(ast, meta, module) do
+    if is_stateful_component(module) do
+      validate_stateful_component(ast, meta)
+    end
+
+    ast
   end
 
   defp is_stateful_component(module) do
@@ -159,68 +167,109 @@ defmodule Surface.Compiler do
       true ->
         :noop
     end
-
-    ast
   end
 
-  defp process_nodes([], _compile_meta) do
-    []
-  end
+  defp to_ast(nodes, compile_meta) do
+    for node <- nodes do
+      case convert_node_to_ast(node_type(node), node, compile_meta) do
+        {:ok, ast} ->
+          ast
 
-  defp process_nodes([{"#" <> name, attributes, children, node_meta} | nodes], compile_meta) do
-    meta = Helpers.to_meta(node_meta, compile_meta)
-
-    # Some of this should likely be removed as macro components should
-    # be minimally processed
-    with {:ok, mod} <- module_name(name, meta.caller),
-         meta <- Map.merge(meta, %{module: mod, node_alias: name}),
-         true <- function_exported?(mod, :expand, 5),
-         # Passing in and modifying attributes here because :let on the parent is used
-         # to indicate the props for the :default slot's template
-         # Is this something we actually want to do for macro components?
-         {:ok, templates, attributes} <-
-           collect_templates(mod, attributes, children, meta),
-         :ok <- validate_templates(mod, templates, meta),
-         {:ok, directives, attributes} <-
-           collect_directives(@component_directive_handlers, attributes, meta),
-         attributes <- process_attributes(mod, attributes, meta),
-         :ok <- validate_properties(mod, attributes, meta),
-         siblings <- process_nodes(nodes, compile_meta) do
-      # Unsure if this is the appropriate place to expand macros
-      # but it feels reasonable
-      case mod.expand(directives, attributes, templates, children, meta) do
-        result when is_list(result) -> result ++ siblings
-        result -> [result | siblings]
+        {:error, {message, line}, meta} ->
+          IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
+          %AST.Error{message: message, meta: meta}
       end
-    else
-      false ->
-        message = "cannot render <#{name}> (MacroComponents must export an expand/6 function)"
-        IOHelper.warn(message, meta.caller, fn _ -> meta.line - 1 end)
-
-        [
-          %AST.Error{message: message, meta: meta}
-          | process_nodes(nodes, compile_meta)
-        ]
-
-      {:error, message} ->
-        message = "cannot render <#{name}> (#{message})"
-        IOHelper.warn(message, meta.caller, fn _ -> meta.line - 1 end)
-
-        [
-          %AST.Error{message: message, meta: meta}
-          | process_nodes(nodes, compile_meta)
-        ]
     end
   end
 
-  defp process_nodes(
-         [{<<first, _::binary>> = name, attributes, children, node_meta} | nodes],
-         compile_meta
-       )
-       when first in ?A..?Z do
+  defp node_type({"#" <> _, _, _, _}), do: :macro_component
+  defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
+  defp node_type({"template", _, _, _}), do: :template
+  defp node_type({"slot", _, _, _}), do: :slot
+  defp node_type({_, _, _, _}), do: :tag
+  defp node_type({:interpolation, _, _}), do: :interpolation
+  defp node_type(_), do: :text
+
+  defp convert_node_to_ast(:text, text, _),
+    do: {:ok, %AST.Text{value: text}}
+
+  defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    with {:ok, mod} <- module_name(name, meta.caller),
+    {:ok,
+     %AST.Interpolation{
+       original: text,
+       value: Helpers.interpolation_to_quoted!(text, meta),
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(:template, {_, attributes, children, node_meta}, compile_meta) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    with {:ok, directives, attributes} <-
+           collect_directives(@template_directive_handlers, attributes, meta),
+         slot <- attribute_value(attributes, "slot", :default) do
+      {:ok,
+       %AST.Template{
+         name: slot,
+         children: to_ast(children, compile_meta),
+         props: template_props(directives),
+         meta: meta
+       }}
+    else
+      _ -> {:error, {"failed to parse template", meta.line}, meta}
+    end
+  end
+
+  defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    with name when not is_nil(name) and is_atom(name) <- attribute_value(attributes, "name"),
+         {:ok, props, _attributes} <-
+           collect_directives([Surface.Directive.SlotProps], attributes, meta) do
+      {:ok,
+       %AST.Slot{
+         name: name,
+         default: to_ast(children, compile_meta),
+         props: props,
+         meta: meta
+       }}
+    else
+      _ -> {:error, {"failed to parse slot", meta.line}, meta}
+    end
+  end
+
+  defp convert_node_to_ast(:tag, {name, attributes, children, node_meta}, compile_meta) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    with {:ok, directives, attributes} <-
+           collect_directives(@tag_directive_handlers, attributes, meta),
+         attributes <- process_attributes(nil, attributes, meta),
+         children <- to_ast(children, compile_meta),
+         :ok <- validate_tag_children(children) do
+      {:ok,
+       %AST.Tag{
+         element: name,
+         attributes: attributes,
+         directives: directives,
+         children: children,
+         meta: meta
+       }}
+    else
+      {:error, message} ->
+        message = "cannot render <#{name}> (#{message})"
+        {:error, message}
+
+      _ ->
+        {:error, {"cannot render <#{name}>", meta.line}, meta}
+    end
+  end
+
+  defp convert_node_to_ast(:component, {name, attributes, children, node_meta}, compile_meta) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    with {:ok, mod} <- Helpers.module_name(name, meta.caller),
          meta <- Map.merge(meta, %{module: mod, node_alias: name}),
          # Passing in and modifying attributes here because :let on the parent is used
          # to indicate the props for the :default slot's template
@@ -236,170 +285,93 @@ defmodule Surface.Compiler do
            collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta),
          :ok <- validate_properties(mod, attributes, meta) do
-      [
-        maybe_slotable_component(
-          mod,
-          attributes,
-          template_directives,
-          directives,
-          templates,
-          meta
-        )
-        | process_nodes(nodes, compile_meta)
-      ]
-    else
-      {:error, message} ->
-        message = "cannot render <#{name}> (#{message})"
-        IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
-
-        [
-          %AST.Error{message: message, meta: meta}
-          | process_nodes(nodes, compile_meta)
-        ]
-    end
-  end
-
-  defp process_nodes([{"template", attributes, children, node_meta} | nodes], compile_meta) do
-    meta = Helpers.to_meta(node_meta, compile_meta)
-
-    {:ok, props, attributes} = collect_directives(@template_directive_handlers, attributes, meta)
-
-    name =
-      case find_attribute_and_line(attributes, "slot") do
-        {slot, _} -> slot
-        _ -> :default
-      end
-
-    [
-      %AST.Template{
-        name: name,
-        children: process_nodes(children, compile_meta),
-        props: if(Enum.empty?(props), do: :no_props, else: Enum.at(props, 0)),
+      component = %AST.Component{
+        module: mod,
+        props: attributes,
+        directives: directives,
+        templates: templates,
         meta: meta
       }
-      | process_nodes(nodes, compile_meta)
-    ]
-  end
 
-  defp process_nodes([{"slot", attributes, children, node_meta} | nodes], compile_meta) do
-    meta = Helpers.to_meta(node_meta, compile_meta)
-
-    slot =
-      attributes
-      |> Enum.reduce(
-        {nil, "[]"},
-        fn
-          {"name", value, _meta}, {_, props_expr} ->
-            {List.to_atom(value), props_expr}
-
-          {":props", {:attribute_expr, [expr], _}, _meta}, {name, _} ->
-            {name, expr}
-
-          _, acc ->
-            acc
+      result =
+        if component_slotable?(mod) do
+          %AST.Template{
+            name: mod.__slot_name__(),
+            props: template_props(template_directives),
+            children: [component],
+            meta: meta
+          }
+        else
+          component
         end
-      )
-      |> case do
-        {name, props_expr} when is_binary(props_expr) ->
-          %AST.Slot{
-            name: name,
-            default: process_nodes(children, compile_meta),
-            props: props_expr,
-            meta: meta
-          }
 
-        {name, _} ->
-          %AST.Error{
-            message: "could not parse slot #{name}",
-            meta: meta
-          }
-      end
-
-    [slot | process_nodes(nodes, compile_meta)]
-  end
-
-  defp process_nodes([{tag_name, attributes, children, node_meta} | nodes], compile_meta) do
-    meta = Helpers.to_meta(node_meta, compile_meta)
-
-    with {:ok, directives, attributes} <-
-           collect_directives(@tag_directive_handlers, attributes, meta),
-         attributes <- process_attributes(nil, attributes, meta),
-         children <- process_nodes(children, compile_meta),
-         :ok <- validate_tag_children(children) do
-      [
-        %AST.Tag{
-          element: tag_name,
-          attributes: attributes,
-          directives: directives,
-          children: children,
-          meta: meta
-        }
-        | process_nodes(nodes, compile_meta)
-      ]
+      {:ok, result}
     else
       {:error, message} ->
-        message = "cannot render <#{tag_name}> (#{message})"
-        IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+        {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
 
-        [
-          %AST.Error{message: message, meta: meta}
-          | process_nodes(nodes, compile_meta)
-        ]
+      _ ->
+        {:error, {"cannot render <#{name}>", meta.line}, meta}
     end
   end
 
-  defp process_nodes([{:interpolation, text, node_meta} | nodes], compile_meta) do
+  defp convert_node_to_ast(
+         :macro_component,
+         {"#" <> name, attributes, children, node_meta},
+         compile_meta
+       ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    expr = Helpers.interpolation_to_quoted!(text, meta)
+    with {:ok, mod} <- Helpers.module_name(name, meta.caller),
+         meta <- Map.merge(meta, %{module: mod, node_alias: name}),
+         true <- function_exported?(mod, :expand, 3),
+         {:ok, directives, attributes} <-
+           collect_directives(@meta_component_directive_handlers, attributes, meta),
+         attributes <- process_attributes(mod, attributes, meta),
+         :ok <- validate_properties(mod, attributes, meta) do
+      expanded = mod.expand(attributes, children, meta)
 
-    [
-      %AST.Interpolation{value: expr, meta: meta}
-      | process_nodes(nodes, compile_meta)
-    ]
+      {:ok,
+       %AST.Container{
+         children: coerce_to_list(expanded),
+         directives: directives
+       }}
+    else
+      false ->
+        {:error,
+         {"cannot render <#{name}> (MacroComponents must export an expand/3 function)",
+          meta.line - 1}, meta}
+
+      {:error, message} ->
+        {:error, {"cannot render <#{name}> (#{message})", meta.line - 1}, meta}
+
+      _ ->
+        {:error, {"cannot render <#{name}>", meta.line - 1}, meta}
+    end
   end
 
-  defp process_nodes([text | nodes], compile_meta) do
-    [%AST.Text{value: text} | process_nodes(nodes, compile_meta)]
+  defp attribute_value(attributes, attr_name, default \\ nil) do
+    Enum.find_value(attributes, default, fn {name, value, _} ->
+      if name == attr_name do
+        List.to_atom(value)
+      end
+    end)
   end
+
+  defp coerce_to_list(list) when is_list(list), do: list
+  defp coerce_to_list(not_list), do: [not_list]
+
+  defp template_props([]), do: :no_props
+  defp template_props([%AST.Directive{module: Surface.Directive.Let} = props | _]), do: props
+  defp template_props([_ | directives]), do: template_props(directives)
+
+  defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 
   defp maybe_collect_template_directives(mod, attributes, meta) do
-    if function_exported?(mod, :__slot_name__, 0) do
+    if component_slotable?(mod) do
       collect_directives(@template_directive_handlers, attributes, meta)
     else
       {:ok, [], attributes}
-    end
-  end
-
-  defp maybe_slotable_component(
-         mod,
-         attributes,
-         template_directives,
-         directives,
-         templates,
-         meta
-       ) do
-    component = %AST.Component{
-      module: mod,
-      props: attributes,
-      directives: directives,
-      templates: templates,
-      meta: meta
-    }
-
-    if function_exported?(mod, :__slot_name__, 0) do
-      %AST.Template{
-        name: mod.__slot_name__(),
-        props:
-          if(Enum.empty?(template_directives),
-            do: :no_props,
-            else: Enum.at(template_directives, 0)
-          ),
-        children: [component],
-        meta: meta
-      }
-    else
-      component
     end
   end
 
@@ -580,17 +552,10 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
 
-  defp module_name(name, caller) do
-    with {:ok, mod} <- actual_module(name, caller),
-         {:ok, mod} <- check_module_loaded(mod, name) do
-      check_module_is_component(mod, name)
-    end
-  end
-
   defp collect_templates(mod, attributes, nodes, meta) do
     # Don't extract the template directives if this module is slotable
     {:ok, default_props, attributes} =
-      if function_exported?(mod, :__slot_name__, 0) do
+      if component_slotable?(mod) do
         {:ok, [], attributes}
       else
         collect_directives(@template_directive_handlers, attributes, meta)
@@ -598,7 +563,7 @@ defmodule Surface.Compiler do
 
     templates =
       nodes
-      |> process_nodes(meta)
+      |> to_ast(meta)
       |> Enum.group_by(fn
         %AST.Template{name: name} -> name
         _ -> :default
@@ -612,7 +577,7 @@ defmodule Surface.Compiler do
         _ -> false
       end)
 
-    if Enum.all?(default_children, &is_blank_or_empty/1) do
+    if Enum.all?(default_children, &Helpers.is_blank_or_empty/1) do
       {:ok, Map.put(templates, :default, already_wrapped), attributes}
     else
       wrapped = %AST.Template{
@@ -679,7 +644,7 @@ defmodule Surface.Compiler do
 
     for name <- mod.__required_slots_names__(),
         !Map.has_key?(templates, name) or
-          Enum.all?(Map.get(templates, name, []), &is_blank_or_empty/1) do
+          Enum.all?(Map.get(templates, name, []), &Helpers.is_blank_or_empty/1) do
       message = "missing required slot \"#{name}\" for component <#{meta.node_alias}>"
       IOHelper.warn(message, meta.caller, fn _ -> meta.line - 1 end)
     end
@@ -753,7 +718,7 @@ defmodule Surface.Compiler do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
     similar_slot_message =
-      case did_you_mean(slot_name, parent_slots) do
+      case Helpers.did_you_mean(slot_name, parent_slots) do
         {similar, score} when score > 0.8 ->
           "\n\n  Did you mean #{inspect(to_string(similar))}?"
 
@@ -766,7 +731,7 @@ defmodule Surface.Compiler do
         ""
       else
         slots = Enum.map(parent_slots, &to_string/1)
-        available = list_to_string("slot:", "slots:", slots)
+        available = Helpers.list_to_string("slot:", "slots:", slots)
         "\n\n  Available #{available}"
       end
 
@@ -777,73 +742,5 @@ defmodule Surface.Compiler do
     """
 
     IOHelper.warn(message, meta.caller, fn _ -> meta.line + 1 end)
-  end
-
-  defp did_you_mean(target, list) do
-    Enum.reduce(list, {nil, 0}, &max_similar(&1, to_string(target), &2))
-  end
-
-  defp max_similar(source, target, {_, current} = best) do
-    score = source |> to_string() |> String.jaro_distance(target)
-    if score < current, do: best, else: {source, score}
-  end
-
-  defp list_to_string(_singular, _plural, []) do
-    ""
-  end
-
-  defp list_to_string(singular, _plural, [item]) do
-    "#{singular} #{inspect(item)}"
-  end
-
-  defp list_to_string(_singular, plural, items) do
-    [last | rest] = items |> Enum.map(&inspect/1) |> Enum.reverse()
-    "#{plural} #{rest |> Enum.reverse() |> Enum.join(", ")} and #{last}"
-  end
-
-  defp is_blank_or_empty(%AST.Text{value: value}),
-    do: Surface.Translator.ComponentTranslatorHelper.blank?(value)
-
-  defp is_blank_or_empty(%AST.Template{children: children}),
-    do: Enum.all?(children, &is_blank_or_empty/1)
-
-  defp is_blank_or_empty(_node), do: false
-
-  defp actual_module(mod_str, env) do
-    {:ok, ast} = Code.string_to_quoted(mod_str)
-
-    case Macro.expand(ast, env) do
-      mod when is_atom(mod) ->
-        {:ok, mod}
-
-      _ ->
-        {:error, "#{mod_str} is not a valid module name"}
-    end
-  end
-
-  defp check_module_loaded(module, mod_str) do
-    case Code.ensure_compiled(module) do
-      {:module, mod} ->
-        {:ok, mod}
-
-      {:error, _reason} ->
-        {:error, "module #{mod_str} could not be loaded"}
-    end
-  end
-
-  defp check_module_is_component(module, mod_str) do
-    if function_exported?(module, :translator, 0) do
-      {:ok, module}
-    else
-      {:error, "module #{mod_str} is not a component"}
-    end
-  end
-
-  defp find_attribute_and_line(attributes, name) do
-    Enum.find_value(attributes, fn {attr_name, value, %{line: line}} ->
-      if name == attr_name do
-        {List.to_atom(value), line}
-      end
-    end)
   end
 end
