@@ -47,6 +47,23 @@ defmodule Surface.Compiler.Renderer do
     [children, to_dynamic_nested_html(nodes)]
   end
 
+  # TODO: validate void elements don't have children?
+  defp to_dynamic_nested_html([
+         %AST.VoidTag{
+           element: element,
+           attributes: attributes
+         }
+         | nodes
+       ]) do
+    [
+      "<",
+      element,
+      to_html_attributes(attributes),
+      ">",
+      to_dynamic_nested_html(nodes)
+    ]
+  end
+
   defp to_dynamic_nested_html([
          %AST.Tag{
            element: element,

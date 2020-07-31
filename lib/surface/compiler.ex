@@ -61,6 +61,22 @@ defmodule Surface.Compiler do
     :typemustmatch
   ]
 
+  @void_elements [
+    "area",
+    "base",
+    "br",
+    "col",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "command",
+    "keygen",
+    "source"
+  ]
+
   defmodule ParseError do
     defexception file: "", line: 0, message: "error parsing HTML/Surface"
 
@@ -144,6 +160,7 @@ defmodule Surface.Compiler do
       ast
       |> Enum.filter(fn
         %AST.Tag{} -> true
+        %AST.VoidTag{} -> true
         %AST.Component{} -> true
         _ -> false
       end)
@@ -186,6 +203,7 @@ defmodule Surface.Compiler do
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({"template", _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
+  defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
   defp node_type(_), do: :text
@@ -254,6 +272,31 @@ defmodule Surface.Compiler do
          attributes: attributes,
          directives: directives,
          children: children,
+         meta: meta
+       }}
+    else
+      {:error, message} ->
+        message = "cannot render <#{name}> (#{message})"
+        {:error, message}
+
+      _ ->
+        {:error, {"cannot render <#{name}>", meta.line}, meta}
+    end
+  end
+
+  defp convert_node_to_ast(:void_tag, {name, attributes, children, node_meta}, compile_meta) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    with {:ok, directives, attributes} <-
+           collect_directives(@tag_directive_handlers, attributes, meta),
+         attributes <- process_attributes(nil, attributes, meta),
+         # a void element containing content is an error
+         [] <- to_ast(children, compile_meta) do
+      {:ok,
+       %AST.VoidTag{
+         element: name,
+         attributes: attributes,
+         directives: directives,
          meta: meta
        }}
     else
