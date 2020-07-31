@@ -65,7 +65,7 @@ defmodule Surface.CompilerTest do
     <Button label={{ @label }}/>
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.Button,
@@ -89,7 +89,7 @@ defmodule Surface.CompilerTest do
     <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.Button,
@@ -119,7 +119,7 @@ defmodule Surface.CompilerTest do
     <Button click="click_event" />
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.Button,
@@ -143,7 +143,7 @@ defmodule Surface.CompilerTest do
     />
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.Button,
@@ -177,7 +177,7 @@ defmodule Surface.CompilerTest do
     ></Button>
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.Button,
@@ -211,7 +211,7 @@ defmodule Surface.CompilerTest do
     ></div>
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Tag{
              element: "div",
@@ -240,7 +240,7 @@ defmodule Surface.CompilerTest do
     <MyLiveViewWith id="my_id" session={{ %{user_id: 1} }} />
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.MyLiveViewWith,
@@ -271,7 +271,7 @@ defmodule Surface.CompilerTest do
     <MyLiveViewWith />
     """
 
-    [node | _] = Surface.Compiler.compile(code, 0, __ENV__)
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.MyLiveViewWith,
@@ -323,7 +323,7 @@ defmodule Surface.CompilerTest do
       """
 
       assert_raise(SyntaxError, "nofile:3: syntax error before: ','", fn ->
-        Surface.Compiler.compile(code, 0, __ENV__)
+        Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
 
@@ -340,7 +340,7 @@ defmodule Surface.CompilerTest do
       """
 
       assert_raise(SyntaxError, "nofile:6: syntax error before: ','", fn ->
-        Surface.Compiler.compile(code, 0, __ENV__)
+        Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
 
@@ -356,7 +356,7 @@ defmodule Surface.CompilerTest do
       """
 
       assert_raise(SyntaxError, "nofile:6: syntax error before: ','", fn ->
-        Surface.Compiler.compile(code, 0, __ENV__)
+        Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
 
@@ -370,7 +370,7 @@ defmodule Surface.CompilerTest do
       """
 
       assert_raise(SyntaxError, "nofile:1: syntax error before: ','", fn ->
-        Surface.Compiler.compile(code, 0, __ENV__)
+        Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
 
@@ -387,7 +387,7 @@ defmodule Surface.CompilerTest do
       """
 
       assert_raise(SyntaxError, "nofile:5: syntax error before: ','", fn ->
-        Surface.Compiler.compile(code, 0, __ENV__)
+        Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
 
@@ -401,7 +401,7 @@ defmodule Surface.CompilerTest do
       """
 
       assert_raise(SyntaxError, "nofile:1: syntax error before: ','", fn ->
-        Surface.Compiler.compile(code, 0, __ENV__)
+        Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
 
@@ -413,13 +413,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ @inner_content([]) }} </div>"
+          ~H"\""
+          <div> {{ @inner_content([]) }} </div>
+          "\""
         end
       end
       """
 
       message = """
-      code.exs:5: the `inner_content` anonymous function should be called using \
+      code.exs:6: the `inner_content` anonymous function should be called using \
       the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
       """
 
@@ -437,13 +439,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ @inner_content([]) }} </div>"
+          ~H"\""
+          <div> {{ @inner_content([]) }} </div>
+          "\""
         end
       end
       """
 
       message = """
-      code.exs:5: the `inner_content` anonymous function should be called using \
+      code.exs:6: the `inner_content` anonymous function should be called using \
       the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
       """
 
@@ -461,13 +465,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ @inner_content([]) }} </div>"
+          ~H"\""
+          <div> {{ @inner_content([]) }} </div>
+          "\""
         end
       end
       """
 
       message = """
-      code.exs:5: the `inner_content` anonymous function should be called using \
+      code.exs:6: the `inner_content` anonymous function should be called using \
       the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
       """
 
@@ -485,13 +491,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ col.inner_content() }} </div>"
+          ~H"\""
+          <div> {{ col.inner_content() }} </div>
+          "\""
         end
       end
       """
 
       message =
-        "code.exs:5: the `inner_content` anonymous function should be called using " <>
+        "code.exs:6: the `inner_content` anonymous function should be called using " <>
           "the dot-notation. Use `col.inner_content.([])` instead of `col.inner_content()`"
 
       assert_raise(CompileError, message, fn ->
@@ -508,13 +516,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ col.inner_content(prop: 1) }} </div>"
+          ~H"\""
+          <div> {{ col.inner_content(prop: 1) }} </div>
+          "\""
         end
       end
       """
 
       message =
-        "code.exs:5: the `inner_content` anonymous function should be called using " <>
+        "code.exs:6: the `inner_content` anonymous function should be called using " <>
           "the dot-notation. Use `col.inner_content.(prop: 1)` instead of `col.inner_content(prop: 1)`"
 
       assert_raise(CompileError, message, fn ->
@@ -531,13 +541,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ col.inner_content() }} </div>"
+          ~H"\""
+          <div> {{ col.inner_content() }} </div>
+          "\""
         end
       end
       """
 
       message =
-        "code.exs:5: the `inner_content` anonymous function should be called using " <>
+        "code.exs:6: the `inner_content` anonymous function should be called using " <>
           "the dot-notation. Use `col.inner_content.([])` instead of `col.inner_content()`"
 
       assert_raise(CompileError, message, fn ->
@@ -554,13 +566,15 @@ defmodule Surface.CompilerTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"<div> {{ col.inner_content([]) }} </div>"
+          ~H"\""
+          <div> {{ col.inner_content([]) }} </div>
+          "\""
         end
       end
       """
 
       message =
-        "code.exs:5: the `inner_content` anonymous function should be called using " <>
+        "code.exs:6: the `inner_content` anonymous function should be called using " <>
           "the dot-notation. Use `col.inner_content.([])` instead of `col.inner_content([])`"
 
       assert_raise(CompileError, message, fn ->
@@ -640,7 +654,9 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H(<div>1</div><div>2</div>)
+        ~H"\""
+        <div>1</div><div>2</div>
+        "\""
       end
     end
     """
@@ -652,7 +668,7 @@ defmodule Surface.CompilerSyncTest do
       end)
 
     assert output =~ "stateful live components must have a single HTML root element"
-    assert extract_line(output) == 5
+    assert extract_line(output) == 6
   end
 
   test "warning on stateful components with text root element" do
@@ -663,7 +679,9 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H(just text)
+        ~H"\""
+        just text
+        "\""
       end
     end
     """
@@ -675,7 +693,7 @@ defmodule Surface.CompilerSyncTest do
       end)
 
     assert output =~ "stateful live components must have a HTML root element"
-    assert extract_line(output) == 5
+    assert extract_line(output) == 6
   end
 
   test "warning on stateful components with interpolation root element" do
@@ -686,7 +704,9 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H({{ 1 }})
+        ~H"\""
+        {{ 1 }}
+        "\""
       end
     end
     """
@@ -698,7 +718,7 @@ defmodule Surface.CompilerSyncTest do
       end)
 
     assert output =~ "stateful live components must have a HTML root element"
-    assert extract_line(output) == 5
+    assert extract_line(output) == 6
   end
 
   defp run_compile(code, env) do
@@ -706,7 +726,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        result = Surface.Compiler.compile(code, 0, env)
+        result = Surface.Compiler.compile(code, 1, env)
         send(self(), {:result, result})
       end)
 

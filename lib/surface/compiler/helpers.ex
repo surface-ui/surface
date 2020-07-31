@@ -12,7 +12,7 @@ defmodule Surface.Compiler.Helpers do
         IOHelper.syntax_error(error <> token, meta.file, line)
 
       {:error, message} ->
-        IOHelper.compile_error(message, meta.file, meta.line - 1)
+        IOHelper.compile_error(message, meta.file, meta.line)
 
       _ ->
         IOHelper.syntax_error(
@@ -211,7 +211,9 @@ defmodule Surface.Compiler.Helpers do
       }) do
     AST.Meta
     |> Kernel.struct(tree_meta)
-    |> Map.put(:line, line + offset)
+    # The rational here is that offset is the offset from the start of the file to the first line in the
+    # surface expression.
+    |> Map.put(:line, line + offset - 1)
     |> Map.put(:line_offset, offset)
     |> Map.put(:file, file)
     |> Map.put(:caller, caller)
@@ -220,7 +222,7 @@ defmodule Surface.Compiler.Helpers do
   def to_meta(%{line: line} = tree_meta, %AST.Meta{line_offset: offset} = parent_meta) do
     parent_meta
     |> Map.merge(tree_meta)
-    |> Map.put(:line, line + offset)
+    |> Map.put(:line, line + offset - 1)
   end
 
   def did_you_mean(target, list) do

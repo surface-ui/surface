@@ -24,7 +24,7 @@ defmodule Surface.Renderer do
         ast =
           template
           |> File.read!()
-          |> Surface.Compiler.compile(0, env, template)
+          |> Surface.Compiler.compile(1, env, template)
           |> Surface.Compiler.to_live_struct()
 
         quote do

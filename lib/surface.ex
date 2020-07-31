@@ -61,7 +61,9 @@ defmodule Surface do
   Translates Surface code into Phoenix templates.
   """
   defmacro sigil_H({:<<>>, _, [string]}, _) do
-    line_offset = __CALLER__.line
+    # This will create accurate line numbers for heredoc usages of the sigil, but
+    # not for ~H* variants. See https://github.com/msaraiva/surface/issues/15#issuecomment-667305899
+    line_offset = __CALLER__.line + 1
 
     string
     |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file)

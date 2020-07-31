@@ -96,12 +96,14 @@ defmodule Surface.Compiler do
           }
   end
 
-  @spec compile(
-          binary,
-          any,
-          atom | %{:__struct__ => atom, :module => atom, optional(atom) => any},
-          any
-        ) :: [any]
+  @doc """
+  This function compiles a string into the Surface AST.This is used by ~H and Surface.Renderer to parse and compile templates.
+
+  A special note for line_offset: This is considered the line number for the first line in the string. If the first line of the
+  string is also the first line of the file, then this should be 1. If this is being called within a macro (say to process a heredoc
+  passed to ~H), this should be __CALLER__.line + 1.
+  """
+  @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary()) :: [Surface.AST.t()]
   def compile(string, line_offset, caller, file \\ "nofile") do
     compile_meta = %CompileMeta{
       line_offset: line_offset,
@@ -394,13 +396,13 @@ defmodule Surface.Compiler do
       false ->
         {:error,
          {"cannot render <#{name}> (MacroComponents must export an expand/3 function)",
-          meta.line - 1}, meta}
+          meta.line}, meta}
 
       {:error, message} ->
-        {:error, {"cannot render <#{name}> (#{message})", meta.line - 1}, meta}
+        {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
 
       _ ->
-        {:error, {"cannot render <#{name}>", meta.line - 1}, meta}
+        {:error, {"cannot render <#{name}>", meta.line}, meta}
     end
   end
 
@@ -708,7 +710,7 @@ defmodule Surface.Compiler do
         !Map.has_key?(templates, name) or
           Enum.all?(Map.get(templates, name, []), &Helpers.is_blank_or_empty/1) do
       message = "missing required slot \"#{name}\" for component <#{meta.node_alias}>"
-      IOHelper.warn(message, meta.caller, fn _ -> meta.line - 1 end)
+      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
     end
 
     for slot_name <- names,
