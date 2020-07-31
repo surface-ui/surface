@@ -11,6 +11,15 @@ defmodule Surface.AST do
 end
 
 defmodule Surface.AST.Container do
+  @moduledoc """
+  An AST node representing a container of other nodes. This does not
+  have content itself, just contains children which have content, and
+  directives that operate on the entirety of the children (i.e. for, if, debug)
+
+  ## Properties
+      * `:children` - children AST nodes
+      * `:directives` - directives associated with this container
+  """
   defstruct [:children, :directives]
 
   @type t :: %__MODULE__{
@@ -20,6 +29,17 @@ defmodule Surface.AST.Container do
 end
 
 defmodule Surface.AST.Meta do
+  @moduledoc """
+  A container for metadata about compilation.
+
+  ## Properties
+      * `:line` - the line from the source code where the parent was extracted
+      * `:module` - the component module (e.g. `Surface.Components.LivePatch`)
+      * `:node_alias` - the alias used inside the source code (e.g. `LivePatch`)
+      * `:file` - the file from which the source was extracted
+      * `:line_offset` - the line offset from the caller's line to the start of this source
+      * `:caller` - a Macro.Env struct representing the caller
+  """
   @derive {Inspect, only: [:line, :module, :node_alias, :file, :line_offset]}
   defstruct [:line, :module, :node_alias, :line_offset, :file, :caller]
 
@@ -34,6 +54,15 @@ defmodule Surface.AST.Meta do
 end
 
 defmodule Surface.AST.Directive do
+  @moduledoc """
+  An AST node representing a directive
+
+  ## Properties
+      * `:module` - the module which implements logic for this directive (e.g. `Surface.Directive.Let`)
+      * `:name` - the name of the directive (e.g. `:let`)
+      * `:value` - the code/configuration for this directive. typically a quoted expression
+      * `:meta` - compilation meta data
+  """
   defstruct [:module, :name, :value, :meta]
 
   @type t :: %__MODULE__{
@@ -46,6 +75,15 @@ defmodule Surface.AST.Directive do
 end
 
 defmodule Surface.AST.Attribute do
+  @moduledoc """
+  An AST node representing an attribute or property
+
+  ## Properties
+      * `:type` - an atom representing the type of attribute. See Surface.API for the list of supported types
+      * `:name` - the name of the attribute (e.g. `:class`)
+      * `:value` - a list of nodes that can be concatenated to form the value for this attribute. Potentially contains dynamic data
+      * `:meta` - compilation meta data
+  """
   defstruct [:name, :type, :value, :meta]
 
   @type t :: %__MODULE__{
@@ -57,6 +95,14 @@ defmodule Surface.AST.Attribute do
 end
 
 defmodule Surface.AST.AttributeExpr do
+  @moduledoc """
+  An AST node representing an attribute expression (i.e. a dynamic value for an attribute, directive, or property)
+
+  ## Properties
+      * `:original` - the original text, useful for debugging and error messages
+      * `:value` - a quoted expression
+      * `:meta` - compilation meta data
+  """
   defstruct [:original, :value, :meta]
 
   @type t :: %__MODULE__{
@@ -68,6 +114,14 @@ defmodule Surface.AST.AttributeExpr do
 end
 
 defmodule Surface.AST.Interpolation do
+  @moduledoc """
+  An AST node representing interpolation within a node
+
+  ## Properties
+      * `:original` - the original text, useful for debugging and error messages
+      * `:value` - a quoted expression
+      * `:meta` - compilation meta data
+  """
   defstruct [:original, :value, :meta]
 
   @type t :: %__MODULE__{
@@ -79,6 +133,15 @@ defmodule Surface.AST.Interpolation do
 end
 
 defmodule Surface.AST.Slot do
+  @moduledoc """
+  An AST node representing a <slot /> element
+
+  ## Properties
+      * `:name` - the slot name
+      * `:default` - a list of AST nodes representing the default content for this slot
+      * `:props` - either an atom or a quoted expression representing bindings for this slot
+      * `:meta` - compilation meta data
+  """
   defstruct [:name, :props, :default, :meta]
 
   @type t :: %__MODULE__{
@@ -91,6 +154,12 @@ defmodule Surface.AST.Slot do
 end
 
 defmodule Surface.AST.Text do
+  @moduledoc """
+  An AST node representing static text
+
+  ## Properties
+      * `:value` - the text
+  """
   defstruct [:value]
 
   @type t :: %__MODULE__{
@@ -99,6 +168,16 @@ defmodule Surface.AST.Text do
 end
 
 defmodule Surface.AST.Tag do
+  @moduledoc """
+  An AST node representing a standard HTML tag
+
+  ## Properties
+      * `:element` - the element name
+      * `:attributes` - the attributes for this tag
+      * `:directives` - any directives to be applied to this tag
+      * `:children` - the tag children
+      * `:meta` - compilation meta data
+  """
   defstruct [:element, :attributes, :directives, :children, :meta]
 
   @type t :: %__MODULE__{
@@ -110,7 +189,36 @@ defmodule Surface.AST.Tag do
         }
 end
 
+defmodule Surface.AST.VoidTag do
+  @moduledoc """
+  An AST node representing a void (empty) HTML tag
+
+  ## Properties
+      * `:element` - the element name
+      * `:attributes` - the attributes for this tag
+      * `:directives` - any directives to be applied to this tag
+      * `:meta` - compilation meta data
+  """
+  defstruct [:element, :attributes, :directives, :meta]
+
+  @type t :: %__MODULE__{
+          element: binary(),
+          attributes: list(Surface.AST.Attribute.t()),
+          directives: list(Surface.AST.Directive.t()),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
 defmodule Surface.AST.Template do
+  @moduledoc """
+  An AST node representing a <template> element. This is used to provide content for slots
+
+  ## Properties
+      * `:name` - the template name
+      * `:props` - the props expression for this template
+      * `:children` - the template children
+      * `:meta` - compilation meta data
+  """
   defstruct [:name, :children, :props, :meta]
 
   @type t :: %__MODULE__{
@@ -123,6 +231,13 @@ defmodule Surface.AST.Template do
 end
 
 defmodule Surface.AST.Error do
+  @moduledoc """
+  An AST node representing an error. This will be rendered as an html element.
+
+  ## Properties
+      * `:message` - the error message
+      * `:meta` - compilation meta data
+  """
   defstruct [:message, :meta]
 
   @type t :: %__MODULE__{
@@ -132,6 +247,16 @@ defmodule Surface.AST.Error do
 end
 
 defmodule Surface.AST.Component do
+  @moduledoc """
+  An AST node representing a standard HTML tag
+
+  ## Properties
+      * `:module` - the component module
+      * `:attributes` - the attributes for this tag
+      * `:directives` - any directives to be applied to this tag
+      * `:children` - the tag children
+      * `:meta` - compilation meta data
+  """
   defstruct [:module, :props, :directives, :templates, :meta]
 
   @type t :: %__MODULE__{
