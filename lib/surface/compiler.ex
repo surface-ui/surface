@@ -320,6 +320,7 @@ defmodule Surface.Compiler do
   end
 
   defp convert_node_to_ast(:component, {name, attributes, children, node_meta}, compile_meta) do
+    # TODO: validate live views vs live components ?
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, mod} <- Helpers.module_name(name, meta.caller),
