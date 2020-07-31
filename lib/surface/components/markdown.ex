@@ -90,7 +90,7 @@ defmodule Surface.Components.Markdown do
     {open, html, close}
   end
 
-  def expand(directives, attributes, _templates, children, meta) do
+  def expand(attributes, children, meta) do
     props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
     class = props[:class] || get_config(:default_class)
     unwrap = props[:unwrap] || false
@@ -113,7 +113,7 @@ defmodule Surface.Components.Markdown do
       class ->
         %Surface.AST.Tag{
           element: "div",
-          directives: directives,
+          directives: [],
           attributes: [
             %Surface.AST.Attribute{
               name: "class",
@@ -127,7 +127,7 @@ defmodule Surface.Components.Markdown do
       true ->
         %Surface.AST.Tag{
           element: "div",
-          directives: directives,
+          directives: [],
           attributes: [],
           children: [node],
           meta: meta
