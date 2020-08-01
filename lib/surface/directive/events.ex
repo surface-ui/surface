@@ -49,10 +49,9 @@ defmodule Surface.Directive.Events do
   def process(
         %AST.Directive{
           name: event_name,
-          value: %AST.AttributeExpr{value: value} = expr,
-          meta: meta
+          value: %AST.AttributeExpr{value: value} = expr
         },
-        %type{dynamic_attributes: dynamics} = node
+        %type{attributes: attributes} = node
       )
       when type in [AST.Tag, AST.VoidTag] do
     value =
@@ -80,7 +79,7 @@ defmodule Surface.Directive.Events do
         end
       end
 
-    %{node | dynamic_attributes: [%AST.DynamicAttribute{expr: %{expr | value: value}} | dynamics]}
+    %{node | attributes: [%AST.DynamicAttribute{expr: %{expr | value: value}} | attributes]}
   end
 
   defp to_quoted_expr({:attribute_expr, [original], expr_meta}, meta) do

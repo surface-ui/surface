@@ -232,12 +232,11 @@ defmodule Surface.AST.Tag do
       * `:children` - the tag children
       * `:meta` - compilation meta data
   """
-  defstruct [:element, :attributes, :directives, :children, :meta, dynamic_attributes: []]
+  defstruct [:element, :attributes, :directives, :children, :meta]
 
   @type t :: %__MODULE__{
           element: binary(),
-          attributes: list(Surface.AST.Attribute.t()),
-          dynamic_attributes: list(Surface.AST.DynamicAttribute.t()),
+          attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
@@ -254,13 +253,11 @@ defmodule Surface.AST.VoidTag do
       * `:directives` - any directives to be applied to this tag
       * `:meta` - compilation meta data
   """
-  defstruct [:element, :attributes, :directives, :meta, dynamic_attributes: []]
+  defstruct [:element, :attributes, :directives, :meta]
 
   @type t :: %__MODULE__{
           element: binary(),
-          attributes: list(Surface.AST.Attribute.t()),
-          # TODO: should these just be included in the list of attributes?
-          dynamic_attributes: list(Surface.AST.DynamicAttribute.t()),
+          attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }

@@ -170,8 +170,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_dynamic_nested_html([
          %AST.VoidTag{
            element: element,
-           attributes: attributes,
-           dynamic_attributes: dynamics
+           attributes: attributes
          }
          | nodes
        ]) do
@@ -179,7 +178,6 @@ defmodule Surface.Compiler.EExEngine do
       "<",
       element,
       to_html_attributes(attributes),
-      to_html_attributes(dynamics),
       ">",
       to_dynamic_nested_html(nodes)
     ]
@@ -189,7 +187,6 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Tag{
            element: element,
            attributes: attributes,
-           dynamic_attributes: dynamics,
            children: children
          }
          | nodes
@@ -198,7 +195,6 @@ defmodule Surface.Compiler.EExEngine do
       "<",
       element,
       to_html_attributes(attributes),
-      to_html_attributes(dynamics),
       ">",
       to_dynamic_nested_html(children),
       "</",
