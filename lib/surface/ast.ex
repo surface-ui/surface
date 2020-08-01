@@ -132,6 +132,22 @@ defmodule Surface.AST.Attribute do
         }
 end
 
+defmodule Surface.AST.DynamicAttribute do
+  @moduledoc """
+  An AST node representing a dynamic attribute (or attributes).
+
+  ## Properties
+      * `:expr` - an expression which will generate a keyword list of attributes and value tuples of the form {type, value}
+      * `:meta` - compilation meta data
+  """
+  defstruct [:name, :expr, :meta]
+
+  @type t :: %__MODULE__{
+          expr: Surface.AST.AttributeExpr.t(),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
 defmodule Surface.AST.AttributeExpr do
   @moduledoc """
   An AST node representing an attribute expression (i.e. a dynamic value for an attribute, directive, or property)
@@ -216,11 +232,12 @@ defmodule Surface.AST.Tag do
       * `:children` - the tag children
       * `:meta` - compilation meta data
   """
-  defstruct [:element, :attributes, :directives, :children, :meta]
+  defstruct [:element, :attributes, :directives, :children, :meta, dynamic_attributes: []]
 
   @type t :: %__MODULE__{
           element: binary(),
           attributes: list(Surface.AST.Attribute.t()),
+          dynamic_attributes: list(Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
@@ -237,11 +254,13 @@ defmodule Surface.AST.VoidTag do
       * `:directives` - any directives to be applied to this tag
       * `:meta` - compilation meta data
   """
-  defstruct [:element, :attributes, :directives, :meta]
+  defstruct [:element, :attributes, :directives, :meta, dynamic_attributes: []]
 
   @type t :: %__MODULE__{
           element: binary(),
           attributes: list(Surface.AST.Attribute.t()),
+          # TODO: should these just be included in the list of attributes?
+          dynamic_attributes: list(Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }

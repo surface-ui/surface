@@ -75,10 +75,6 @@ defmodule Surface.Compiler.EExEngine do
     [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
   end
 
-  defp to_expression([node]) do
-    to_expression(node)
-  end
-
   defp to_expression(nodes) when is_list(nodes) do
     children =
       for node <- nodes do
@@ -88,31 +84,31 @@ defmodule Surface.Compiler.EExEngine do
     {:__block__, [], children}
   end
 
-  defp to_expression({:text, value}), do: Phoenix.HTML.raw(value)
+  defp to_expression({:text, value}), do: {:safe, value}
+
   defp to_expression(%AST.AttributeExpr{value: expr}), do: expr
-  defp to_expression(%AST.Interpolation{value: expr}), do: expr
+
+  defp to_expression(%AST.Interpolation{value: expr}) do
+    quote do
+      Phoenix.HTML.html_escape(unquote(expr))
+    end
+  end
+
   defp to_expression(%AST.Container{children: children}), do: to_expression(children)
 
   defp to_expression(%AST.Comprehension{generator: generator, children: children}) do
-    children_expr = to_expression(children)
-    generator_expr = to_expression(generator)
+    {:__block__, [], children_expr} = to_expression(children)
 
-    quote generated: true do
-      for unquote(generator_expr) do
-        unquote(children_expr)
-      end
-    end
+    generator_expr = to_expression(generator) ++ [[do: {:__block__, [], [children_expr]}]]
+
+    {:for, [generated: true], generator_expr}
   end
 
   defp to_expression(%AST.Conditional{condition: condition, children: children}) do
     children_expr = to_expression(children)
     condition_expr = to_expression(condition)
 
-    quote generated: true do
-      if unquote(condition_expr) do
-        unquote(children_expr)
-      end
-    end
+    {:if, [generated: true], [condition_expr, [do: children_expr]]}
   end
 
   defp to_expression(%AST.Slot{default: default}) do
@@ -178,7 +174,8 @@ defmodule Surface.Compiler.EExEngine do
   defp to_dynamic_nested_html([
          %AST.VoidTag{
            element: element,
-           attributes: attributes
+           attributes: attributes,
+           dynamic_attributes: dynamics
          }
          | nodes
        ]) do
@@ -186,6 +183,7 @@ defmodule Surface.Compiler.EExEngine do
       "<",
       element,
       to_html_attributes(attributes),
+      to_html_attributes(dynamics),
       ">",
       to_dynamic_nested_html(nodes)
     ]
@@ -195,6 +193,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Tag{
            element: element,
            attributes: attributes,
+           dynamic_attributes: dynamics,
            children: children
          }
          | nodes
@@ -203,6 +202,7 @@ defmodule Surface.Compiler.EExEngine do
       "<",
       element,
       to_html_attributes(attributes),
+      to_html_attributes(dynamics),
       ">",
       to_dynamic_nested_html(children),
       "</",
@@ -256,6 +256,29 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_html_attributes([
+         %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: value_expr} = expr} | attributes
+       ]) do
+    value =
+      quote generated: true do
+        for {name, {type, value}} <- unquote(value_expr) do
+          case type do
+            :boolean ->
+              if value do
+                [" ", to_string(name)]
+              else
+                []
+              end
+
+            _ ->
+              [" ", to_string(name), Phoenix.HTML.raw("=\""), value, Phoenix.HTML.raw("\"")]
+          end
+        end
+      end
+
+    [%{expr | value: value} | to_html_attributes(attributes)]
+  end
+
+  defp to_html_attributes([
          %AST.Attribute{
            name: name,
            type: :boolean,
@@ -267,9 +290,7 @@ defmodule Surface.Compiler.EExEngine do
 
     conditional =
       quote generated: true do
-        result = unquote(value)
-
-        if result do
+        if unquote(value) do
           [~S( ), unquote(attribute_name)]
         end
       end

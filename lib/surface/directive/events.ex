@@ -28,6 +28,61 @@ defmodule Surface.Directive.Events do
 
   def extract(_, _), do: []
 
+  def process(
+        %AST.Directive{name: name, value: %AST.Text{} = value, meta: meta},
+        %type{attributes: attributes} = node
+      )
+      when type in [AST.Tag, AST.VoidTag] do
+    attributes = [
+      %AST.Attribute{
+        name: name,
+        type: :string,
+        value: [value],
+        meta: meta
+      }
+      | attributes
+    ]
+
+    %{node | attributes: attributes}
+  end
+
+  def process(
+        %AST.Directive{
+          name: event_name,
+          value: %AST.AttributeExpr{value: value} = expr,
+          meta: meta
+        },
+        %type{dynamic_attributes: dynamics} = node
+      )
+      when type in [AST.Tag, AST.VoidTag] do
+    value =
+      quote generated: true do
+        case unquote(value) do
+          %{name: name, target: target} -> {name, target}
+          [name | opts] when is_binary(name) -> {name, Keyword.get(opts, :target)}
+          opts when is_list(opts) -> {Keyword.get(opts, :name), Keyword.get(opts, :target)}
+          name when is_binary(name) -> {name, nil}
+          nil -> nil
+          _ -> raise "failed to parse event"
+        end
+        |> case do
+          nil ->
+            []
+
+          {nil, _} ->
+            raise "events require a name"
+
+          {name, nil} ->
+            [{unquote(event_name), {:string, name}}]
+
+          {name, target} ->
+            [{unquote(event_name), {:string, name}}, "phx-target": {:string, target}]
+        end
+      end
+
+    %{node | dynamic_attributes: [%AST.DynamicAttribute{expr: %{expr | value: value}} | dynamics]}
+  end
+
   defp to_quoted_expr({:attribute_expr, [original], expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
 
