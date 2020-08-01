@@ -290,7 +290,7 @@ defmodule Surface.AST.Component do
 
   ## Properties
       * `:module` - the component module
-      * `:attributes` - the attributes for this tag
+      * `:props` - the props for this component
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
