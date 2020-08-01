@@ -67,6 +67,14 @@ defmodule Surface.Compiler.EExEngine do
     [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
   end
 
+  defp to_eex_tokens([%AST.Component{} = expr | tail]) do
+    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
+  end
+
+  defp to_eex_tokens([%AST.Slot{} = expr | tail]) do
+    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
+  end
+
   defp to_expression([node]) do
     to_expression(node)
   end
@@ -107,7 +115,14 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  # TODO: defp to_expression(%AST.Component{})
+  defp to_expression(%AST.Slot{default: default}) do
+    # TODO
+    to_expression(default)
+  end
+
+  defp to_expression(%AST.Component{}) do
+    Phoenix.HTML.raw("<span>This is still TODO</span>")
+  end
 
   defp combine_static_portions(nodes, accumulators \\ {[], []})
   defp combine_static_portions([], {[], node_acc}), do: Enum.reverse(node_acc)
@@ -145,7 +160,11 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_dynamic_nested_html([%AST.Container{children: children} | nodes]) do
-    [children, to_dynamic_nested_html(nodes)]
+    [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.Slot{default: default} = slot | nodes]) do
+    [%{slot | default: to_token_sequence(default)} | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([%AST.Conditional{children: children} = conditional | nodes]) do
@@ -217,7 +236,7 @@ defmodule Surface.Compiler.EExEngine do
     ]
 
   defp to_dynamic_nested_html([%AST.Interpolation{} = value | nodes]),
-    do: [value | nodes]
+    do: [value | to_dynamic_nested_html(nodes)]
 
   defp to_html_attributes([]), do: []
 

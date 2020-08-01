@@ -25,7 +25,7 @@ defmodule Surface.Compiler.Helpers do
 
   def attribute_expr_to_quoted!(value, :css_class, meta) do
     with {:ok, expr} <-
-           Code.string_to_quoted("Surface.css_class(#{value})", line: meta.line, file: meta.file),
+           Code.string_to_quoted("Surface.css_class([#{value}])", line: meta.line, file: meta.file),
          :ok <- validate_attribute_expression(expr, :css_class, meta) do
       expr
     else

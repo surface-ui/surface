@@ -124,21 +124,8 @@ defmodule Surface.Compiler do
     |> validate_component_structure(compile_meta, caller.module)
   end
 
-  def to_live_struct(_nodes) do
-    # TODO: this still needs work
-    rendered =
-      quote do
-        %Phoenix.LiveView.Rendered{
-          static: ["<span>this is not yet implemented</span>"],
-          dynamic: fn _ -> [] end,
-          fingerprint: 1
-        }
-      end
-
-    quote do
-      require Phoenix.LiveView.Engine
-      unquote(rendered)
-    end
+  def to_live_struct(nodes) do
+    Surface.Compiler.EExEngine.translate(nodes)
   end
 
   def validate_component_structure(ast, meta, module) do
@@ -255,7 +242,7 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    with name when not is_nil(name) and is_atom(name) <- attribute_value(attributes, "name"),
+    with name when not is_nil(name) and is_atom(name) <- attribute_value(attributes, "name", :default),
          {:ok, props, _attributes} <-
            collect_directives([Surface.Directive.SlotProps], attributes, meta) do
       {:ok,
