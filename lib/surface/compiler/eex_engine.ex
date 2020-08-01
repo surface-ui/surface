@@ -75,44 +75,55 @@ defmodule Surface.Compiler.EExEngine do
     [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
   end
 
-  defp to_expression(nodes) when is_list(nodes) do
+  defp to_expression(nodes, escape \\ false)
+
+  defp to_expression(nodes, escape) when is_list(nodes) do
     children =
       for node <- nodes do
-        to_expression(node)
+        to_expression(node, escape)
       end
 
     {:__block__, [], children}
   end
 
-  defp to_expression({:text, value}), do: {:safe, value}
+  defp to_expression({:text, value}, _), do: {:safe, value}
 
-  defp to_expression(%AST.AttributeExpr{value: expr}), do: expr
+  defp to_expression(%AST.AttributeExpr{value: expr}, _), do: expr
 
-  defp to_expression(%AST.Interpolation{value: expr}), do: expr
+  defp to_expression(%AST.Interpolation{value: expr}, true) do
+    ## is this something we always want to do?
+    quote generated: true do
+      Phoenix.HTML.html_escape(unquote(expr))
+    end
+  end
 
-  defp to_expression(%AST.Container{children: children}), do: to_expression(children)
+  defp to_expression(%AST.Interpolation{value: expr}, false), do: expr
 
-  defp to_expression(%AST.Comprehension{generator: generator, children: children}) do
-    {:__block__, [], children_expr} = to_expression(children)
+  # defp to_expression(%AST.Interpolation{value: expr}, false), do: expr
+
+  defp to_expression(%AST.Container{children: children}, _), do: to_expression(children)
+
+  defp to_expression(%AST.Comprehension{generator: generator, children: children}, _) do
+    {:__block__, [], children_expr} = to_expression(children, true)
 
     generator_expr = to_expression(generator) ++ [[do: {:__block__, [], [children_expr]}]]
 
     {:for, [generated: true], generator_expr}
   end
 
-  defp to_expression(%AST.Conditional{condition: condition, children: children}) do
-    children_expr = to_expression(children)
+  defp to_expression(%AST.Conditional{condition: condition, children: children}, _) do
+    children_expr = to_expression(children, true)
     condition_expr = to_expression(condition)
 
     {:if, [generated: true], [condition_expr, [do: children_expr]]}
   end
 
-  defp to_expression(%AST.Slot{default: default}) do
+  defp to_expression(%AST.Slot{default: default}, _) do
     # TODO
     to_expression(default)
   end
 
-  defp to_expression(%AST.Component{}) do
+  defp to_expression(%AST.Component{}, _) do
     Phoenix.HTML.raw("<span>This is still TODO</span>")
   end
 

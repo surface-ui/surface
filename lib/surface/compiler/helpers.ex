@@ -6,9 +6,7 @@ defmodule Surface.Compiler.Helpers do
   def interpolation_to_quoted!(text, meta) do
     with {:ok, expr} <- Code.string_to_quoted(text, file: meta.file, line: meta.line),
          :ok <- validate_interpolation(expr, meta) do
-      quote do
-        Phoenix.HTML.html_escape(unquote(expr))
-      end
+      expr
     else
       {:error, {line, error, token}} ->
         IOHelper.syntax_error(error <> token, meta.file, line)
