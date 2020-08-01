@@ -88,11 +88,7 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(%AST.AttributeExpr{value: expr}), do: expr
 
-  defp to_expression(%AST.Interpolation{value: expr}) do
-    quote do
-      Phoenix.HTML.html_escape(unquote(expr))
-    end
-  end
+  defp to_expression(%AST.Interpolation{value: expr}), do: expr
 
   defp to_expression(%AST.Container{children: children}), do: to_expression(children)
 
