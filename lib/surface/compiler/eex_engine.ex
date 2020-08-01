@@ -266,7 +266,13 @@ defmodule Surface.Compiler.EExEngine do
               end
 
             _ ->
-              [" ", to_string(name), Phoenix.HTML.raw("=\""), value, Phoenix.HTML.raw("\"")]
+              [
+                " ",
+                to_string(name),
+                unquote(Phoenix.HTML.raw("=\"")),
+                value,
+                unquote(Phoenix.HTML.raw("\""))
+              ]
           end
         end
       end
