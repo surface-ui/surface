@@ -47,7 +47,7 @@ defmodule Surface.Compiler.EExEngine do
   """
   defp to_eex_tokens([]), do: []
 
-  defp to_eex_tokens([head | tail]) when is_binary(head) do
+  defp to_eex_tokens([{:text, head} | tail]) do
     [{:text, head} | to_eex_tokens(tail)]
   end
 
@@ -67,6 +67,10 @@ defmodule Surface.Compiler.EExEngine do
     [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
   end
 
+  defp to_expression([node]) do
+    to_expression(node)
+  end
+
   defp to_expression(nodes) when is_list(nodes) do
     children =
       for node <- nodes do
@@ -76,16 +80,17 @@ defmodule Surface.Compiler.EExEngine do
     {:__block__, [], children}
   end
 
-  defp to_expression({:text, value}), do: value
+  defp to_expression({:text, value}), do: Phoenix.HTML.raw(value)
   defp to_expression(%AST.AttributeExpr{value: expr}), do: expr
   defp to_expression(%AST.Interpolation{value: expr}), do: expr
   defp to_expression(%AST.Container{children: children}), do: to_expression(children)
 
   defp to_expression(%AST.Comprehension{generator: generator, children: children}) do
     children_expr = to_expression(children)
+    generator_expr = to_expression(generator)
 
     quote generated: true do
-      for unquote(generator) do
+      for unquote(generator_expr) do
         unquote(children_expr)
       end
     end
@@ -93,9 +98,10 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(%AST.Conditional{condition: condition, children: children}) do
     children_expr = to_expression(children)
+    condition_expr = to_expression(condition)
 
     quote generated: true do
-      if unquote(condition) do
+      if unquote(condition_expr) do
         unquote(children_expr)
       end
     end
