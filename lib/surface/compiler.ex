@@ -268,6 +268,8 @@ defmodule Surface.Compiler do
             }
         end
 
+      Module.put_attribute(meta.caller.module, :used_slot, %{name: name, line: meta.line})
+
       {:ok,
        %AST.Slot{
          name: name,
@@ -419,7 +421,7 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp attribute_value(attributes, attr_name, default \\ nil) do
+  defp attribute_value(attributes, attr_name, default) do
     Enum.find_value(attributes, default, fn {name, value, _} ->
       if name == attr_name do
         List.to_atom(value)
