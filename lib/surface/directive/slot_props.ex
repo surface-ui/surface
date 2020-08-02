@@ -13,11 +13,11 @@ defmodule Surface.Directive.SlotProps do
   def extract(_, _), do: []
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, :keyword, meta)
+    expr = Helpers.attribute_expr_to_quoted!(value, :props, :list, meta)
 
     if !Keyword.keyword?(expr) do
       message = """
-      invalid value for directive :let. Expected a keyword list of bindings, \
+      invalid value for directive :props. Expected a keyword list of bindings, \
       got: #{String.trim(value)}.\
       """
 

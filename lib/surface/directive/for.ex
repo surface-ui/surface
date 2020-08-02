@@ -18,7 +18,7 @@ defmodule Surface.Directive.For do
   defp directive_value(value, meta) do
     %AST.AttributeExpr{
       original: value,
-      value: Helpers.attribute_expr_to_quoted!(value, :generator, meta),
+      value: Helpers.attribute_expr_to_quoted!(value, :for, :generator, meta),
       meta: meta
     }
   end

@@ -18,7 +18,7 @@ defmodule Surface.Directive.If do
   defp directive_value(value, meta) do
     %AST.AttributeExpr{
       original: value,
-      value: Helpers.attribute_expr_to_quoted!(value, :boolean, meta),
+      value: Helpers.attribute_expr_to_quoted!(value, :if, :boolean, meta),
       meta: meta
     }
   end

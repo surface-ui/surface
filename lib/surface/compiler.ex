@@ -462,7 +462,7 @@ defmodule Surface.Compiler do
       %AST.Attribute{
         type: type,
         name: name,
-        value: [expr_node(value, expr_meta, type)],
+        value: [expr_node(name, value, expr_meta, type)],
         meta: attr_meta
       }
       | process_attributes(mod, attrs, meta)
@@ -490,7 +490,7 @@ defmodule Surface.Compiler do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     type = determine_attribute_type(mod, name, attr_meta)
-    values = collect_attr_values(meta, values, type)
+    values = collect_attr_values(name, meta, values, type)
 
     [
       %AST.Attribute{
@@ -544,12 +544,13 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp collect_attr_values(meta, values, type, accumulators \\ {[], []})
+  defp collect_attr_values(attribute_name, meta, values, type, accumulators \\ {[], []})
 
-  defp collect_attr_values(_meta, [], _type, {[], acc}), do: Enum.reverse(acc)
+  defp collect_attr_values(_attribute_name, _meta, [], _type, {[], acc}), do: Enum.reverse(acc)
 
-  defp collect_attr_values(meta, [], type, {codepoints, acc}) do
+  defp collect_attr_values(attribute_name, meta, [], type, {codepoints, acc}) do
     collect_attr_values(
+      attribute_name,
       meta,
       [],
       type,
@@ -558,20 +559,23 @@ defmodule Surface.Compiler do
   end
 
   defp collect_attr_values(
+         attribute_name,
          meta,
          [{:attribute_expr, [value], expr_meta} | values],
          type,
          {[], acc}
        ) do
     collect_attr_values(
+      attribute_name,
       meta,
       values,
       type,
-      {[], [expr_node(value, Helpers.to_meta(expr_meta, meta), type) | acc]}
+      {[], [expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type) | acc]}
     )
   end
 
   defp collect_attr_values(
+         attribute_name,
          meta,
          [{:attribute_expr, [value], expr_meta} | values],
          type,
@@ -584,18 +588,19 @@ defmodule Surface.Compiler do
     acc = [text_node | acc]
 
     collect_attr_values(
+      attribute_name,
       meta,
       values,
       type,
-      {[], [expr_node(value, Helpers.to_meta(expr_meta, meta), type) | acc]}
+      {[], [expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type) | acc]}
     )
   end
 
-  defp collect_attr_values(meta, [codepoint | values], type, {codepoint_acc, acc}) do
-    collect_attr_values(meta, values, type, {[codepoint | codepoint_acc], acc})
+  defp collect_attr_values(attribute_name, meta, [codepoint | values], type, {codepoint_acc, acc}) do
+    collect_attr_values(attribute_name, meta, values, type, {[codepoint | codepoint_acc], acc})
   end
 
-  defp expr_node(value, meta, type) do
+  defp expr_node(attribute_name, value, meta, type) do
     # This is required as nimble_parsec appears to generate bitstrings that elixir doesn't
     # want to interpret as actual strings.
     # The exact example is " \"héllo\" " which generates <<32, 34, 104, 233, 108, 108, 111, 34, 32>>.
@@ -607,7 +612,7 @@ defmodule Surface.Compiler do
 
     %AST.AttributeExpr{
       original: binary,
-      value: Helpers.attribute_expr_to_quoted!(binary, type, meta),
+      value: Helpers.attribute_expr_to_quoted!(binary, attribute_name, type, meta),
       meta: meta
     }
   end

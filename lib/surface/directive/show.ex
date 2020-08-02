@@ -65,7 +65,7 @@ defmodule Surface.Directive.Show do
   end
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, :boolean, meta)
+    expr = Helpers.attribute_expr_to_quoted!(value, :show, :boolean, meta)
 
     expr =
       quote generated: true do

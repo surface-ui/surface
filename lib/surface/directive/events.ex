@@ -21,7 +21,7 @@ defmodule Surface.Directive.Events do
     %AST.Directive{
       module: __MODULE__,
       name: name,
-      value: to_quoted_expr(value, meta),
+      value: to_quoted_expr(name, value, meta),
       meta: Helpers.to_meta(attr_meta, meta)
     }
   end
@@ -57,37 +57,26 @@ defmodule Surface.Directive.Events do
     value =
       quote generated: true do
         case unquote(value) do
-          %{name: name, target: target} -> {name, target}
-          [name | opts] when is_binary(name) -> {name, Keyword.get(opts, :target)}
-          opts when is_list(opts) -> {Keyword.get(opts, :name), Keyword.get(opts, :target)}
-          name when is_binary(name) -> {name, nil}
-          nil -> nil
-          _ -> raise "failed to parse event"
-        end
-        |> case do
-          nil ->
-            []
-
-          {nil, _} ->
-            raise "events require a name"
-
-          {name, nil} ->
+          %{name: name, target: :live_view} ->
             [{unquote(event_name), {:string, name}}]
 
-          {name, target} ->
+          %{name: name, target: target} ->
             [{unquote(event_name), {:string, name}}, "phx-target": {:string, target}]
+
+          nil ->
+            []
         end
       end
 
     %{node | attributes: [%AST.DynamicAttribute{expr: %{expr | value: value}} | attributes]}
   end
 
-  defp to_quoted_expr({:attribute_expr, [original], expr_meta}, meta) do
+  defp to_quoted_expr(name, {:attribute_expr, [original], expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
 
     value =
       original
-      |> Helpers.attribute_expr_to_quoted!(:map, expr_meta)
+      |> Helpers.attribute_expr_to_quoted!(name, :event, expr_meta)
       |> case do
         [name, opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
         [name | opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
@@ -101,11 +90,11 @@ defmodule Surface.Directive.Events do
     }
   end
 
-  defp to_quoted_expr(value, _meta) when is_binary(value) or is_bitstring(value) do
+  defp to_quoted_expr(_name, value, _meta) when is_binary(value) or is_bitstring(value) do
     %AST.Text{value: value}
   end
 
-  defp to_quoted_expr(value, _meta) when is_list(value) do
+  defp to_quoted_expr(_name, value, _meta) when is_list(value) do
     %AST.Text{value: to_string(value)}
   end
 end

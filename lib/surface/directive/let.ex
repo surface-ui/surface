@@ -13,7 +13,9 @@ defmodule Surface.Directive.Let do
   def extract(_, _), do: []
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, :keyword, meta)
+    # using a list here because it doesn't wrap the result in a function call
+    # to Surface.<type>_value(...)
+    expr = Helpers.attribute_expr_to_quoted!(value, :let, :list, meta)
 
     if !Keyword.keyword?(expr) do
       message = """
