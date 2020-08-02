@@ -157,26 +157,15 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(
          %AST.Component{
            module: module,
-           type: Surface.LiveView
-         },
-         _
-       ) do
-    quote generated: true do
-      Phoenix.LiveView.Helpers.live_render(@socket, unquote(module), Keyword.new())
-    end
-  end
-
-  defp to_expression(
-         %AST.Component{
-           module: module,
            type: component_type,
            props: props,
            templates: templates,
-           meta: meta
+           meta: _meta
          },
-         escape?
+         _escape?
        ) do
     defaults = Enum.map(module.__props__(), fn prop -> {prop.name, prop.opts[:default]} end)
+    slots = Enum.map(module.__slots__(), fn slot -> {slot.name, []} end)
 
     props_values =
       for %AST.Attribute{name: name, type: type, value: value} <- props do
@@ -186,6 +175,7 @@ defmodule Surface.Compiler.EExEngine do
     assigns =
       Keyword.new(
         defaults ++
+          slots ++
           props_values ++
           [
             __surface__:
@@ -195,8 +185,14 @@ defmodule Surface.Compiler.EExEngine do
           ]
       )
 
-    quote generated: true do
-      Phoenix.LiveView.Helpers.live_component(@socket, unquote(module), unquote(assigns))
+    if component_type == Surface.LiveView do
+      quote generated: true do
+        Phoenix.LiveView.Helpers.live_render(@socket, unquote(module), unquote(assigns))
+      end
+    else
+      quote generated: true do
+        Phoenix.LiveView.Helpers.live_component(@socket, unquote(module), unquote(assigns))
+      end
     end
   end
 
