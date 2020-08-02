@@ -306,7 +306,7 @@ defmodule Surface.CompilerTest do
       use Surface.Component
 
       def render(assigns) do
-        ~H"<div> {{ col.inner_content.([]) }} </div>"
+        ~H"<div :for={{col <- @cols}}> {{ col.inner_content.([]) }} </div>"
       end
     end
     """
