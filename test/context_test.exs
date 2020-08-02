@@ -25,7 +25,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      Context: {{ inspect(context) }}
+      Context: {{ inspect(@__surface__.context) }}
       """
     end
   end
