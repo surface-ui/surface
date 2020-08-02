@@ -71,7 +71,7 @@ defmodule Surface.AST.Directive do
           module: atom(),
           name: atom(),
           # the value here is defined by the individual directive
-          value: any(),
+          value: Surface.AttributeExpr.t() | Surface.Text.t() | nil,
           meta: Surface.AST.Meta.t()
         }
 end
