@@ -99,8 +99,6 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(%AST.Interpolation{value: expr}, false), do: expr
 
-  # defp to_expression(%AST.Interpolation{value: expr}, false), do: expr
-
   defp to_expression(%AST.Container{children: children}, _), do: to_expression(children)
 
   defp to_expression(%AST.Comprehension{generator: generator, children: children}, _) do
@@ -158,28 +156,90 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(
          %AST.Component{
+           module: module,
            type: Surface.LiveView
          },
          _
        ) do
-    Phoenix.HTML.raw("<span>This is still TODO</span>")
+    quote generated: true do
+      Phoenix.LiveView.Helpers.live_render(@socket, unquote(module), Keyword.new())
+    end
   end
 
   defp to_expression(
          %AST.Component{
            module: module,
+           type: component_type,
            props: props,
            templates: templates,
            meta: meta
          },
          escape?
        ) do
-    expression = "<span>This is still TODO</span>"
+    defaults = Enum.map(module.__props__(), fn prop -> {prop.name, prop.opts[:default]} end)
 
-    if escape? do
-      Phoenix.HTML.html_escape(expression)
-    else
-      Phoenix.HTML.raw(expression)
+    props_values =
+      for %AST.Attribute{name: name, type: type, value: value} <- props do
+        {name, to_prop_expr(component_type, type, value)}
+      end
+
+    assigns =
+      Keyword.new(
+        defaults ++
+          props_values ++
+          [
+            __surface__:
+              quote generated: true do
+                %{provided_templates: []}
+              end
+          ]
+      )
+
+    quote generated: true do
+      Phoenix.LiveView.Helpers.live_component(@socket, unquote(module), unquote(assigns))
+    end
+  end
+
+  defp to_prop_expr(_, :boolean, [%AST.Text{value: value}]) do
+    !!value
+  end
+
+  defp to_prop_expr(_, :boolean, [%AST.AttributeExpr{value: expr}]) do
+    quote generated: true do
+      !!unquote(expr)
+    end
+  end
+
+  defp to_prop_expr(Surface.LiveComponent, :event, [%{value: value}]) do
+    quote generated: true do
+      Surface.event_value(nil, unquote(value), @myself)
+    end
+  end
+
+  defp to_prop_expr(_, :event, [%{value: value}]) do
+    quote generated: true do
+      Surface.event_value(nil, unquote(value), nil)
+    end
+  end
+
+  defp to_prop_expr(_, :string, values) do
+    list_expr =
+      for %{value: value} <- values do
+        value
+      end
+
+    quote generated: true do
+      List.to_string(unquote(list_expr))
+    end
+  end
+
+  defp to_prop_expr(_, _, [%AST.Text{value: value}]) do
+    value
+  end
+
+  defp to_prop_expr(_, _, [%AST.AttributeExpr{value: expr}]) do
+    quote generated: true do
+      unquote(expr)
     end
   end
 
