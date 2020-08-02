@@ -15,8 +15,8 @@ defmodule Surface.BaseComponent do
   @callback component_type() :: module()
 
   defmacro __using__(opts \\ []) do
-    translator = Keyword.pop!(opts, :translator)
-    type = Keyword.pop!(opts, :type)
+    {translator, opts} = Keyword.pop!(opts, :translator)
+    {type, _opts} = Keyword.pop!(opts, :type)
 
     quote do
       import Surface
