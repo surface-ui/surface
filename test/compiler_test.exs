@@ -258,7 +258,9 @@ defmodule Surface.CompilerTest do
                  value: [
                    %Surface.AST.AttributeExpr{
                      original: " %{user_id: 1} ",
-                     value: {:%{}, _, [user_id: 1]}
+                     value:
+                       {{:., _, [{:__aliases__, _, [:Surface]}, :map_value]}, _,
+                        [:session, {:%{}, _, [user_id: 1]}]}
                    }
                  ]
                }
