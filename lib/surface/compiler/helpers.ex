@@ -23,7 +23,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def attribute_expr_to_quoted!(value, :css_class, meta) do
+  def attribute_expr_to_quoted!(value, _attribute_name, :css_class, meta) do
     with {:ok, expr} <-
            Code.string_to_quoted("Surface.css_class([#{value}])", line: meta.line, file: meta.file),
          :ok <- validate_attribute_expression(expr, :css_class, meta) do
@@ -36,14 +36,6 @@ defmodule Surface.Compiler.Helpers do
           line
         )
 
-      # Once we do validation
-      # {:error, message} ->
-      #   IOHelper.syntax_error(
-      #     "invalid css class expression '#{value}' (#{message})",
-      #     meta.file,
-      #     meta.line
-      #   )
-
       _ ->
         IOHelper.syntax_error(
           "invalid css class expression '#{value}'",
@@ -53,10 +45,90 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def attribute_expr_to_quoted!(value, type, meta) when type in [:keyword, :list, :map, :event] do
+  def attribute_expr_to_quoted!(value, attribute_name, :map, meta) do
+    # Using :placeholder here because to_string(attribute_name) can screw with the representation
+    with {:ok, {event_value_func, meta, [:placeholder | opts]}} <-
+           Code.string_to_quoted("Surface.map_value(:placeholder, #{value})",
+             line: meta.line,
+             file: meta.file
+           ) do
+      {event_value_func, meta, [attribute_name | opts]}
+    else
+      {:error, {line, error, token}} ->
+        IOHelper.syntax_error(
+          error <> token,
+          meta.file,
+          line
+        )
+
+      _ ->
+        IOHelper.syntax_error(
+          "invalid map expression '#{value}'",
+          meta.file,
+          meta.line
+        )
+    end
+  end
+
+  def attribute_expr_to_quoted!(value, attribute_name, :keyword, meta) do
+    # Using :placeholder here because to_string(attribute_name) can screw with the representation
+    with {:ok, {event_value_func, meta, [:placeholder | opts]}} <-
+           Code.string_to_quoted("Surface.keyword_value(:placeholder, #{value})",
+             line: meta.line,
+             file: meta.file
+           ) do
+      {event_value_func, meta, [attribute_name | opts]}
+    else
+      {:error, {line, error, token}} ->
+        IOHelper.syntax_error(
+          error <> token,
+          meta.file,
+          line
+        )
+
+      _ ->
+        IOHelper.syntax_error(
+          "invalid keyword expression '#{value}'",
+          meta.file,
+          meta.line
+        )
+    end
+  end
+
+  def attribute_expr_to_quoted!(value, attribute_name, :event, meta) do
+    # TODO: figure out what the caller_cid should be.
+    # I'm unsure how to tell when it should be nil and when it should be @myself
+    # Potentially use the meta.caller.module to determine?
+
+    # Using :placeholder here because to_string(attribute_name) can screw with the representation
+    with {:ok, {event_value_func, meta, [:placeholder | opts]}} <-
+           Code.string_to_quoted("Surface.event_value(:placeholder, [#{value}], nil)",
+             line: meta.line,
+             file: meta.file
+           ) do
+      {event_value_func, meta, [attribute_name | opts]}
+    else
+      {:error, {line, error, token}} ->
+        IOHelper.syntax_error(
+          error <> token,
+          meta.file,
+          line
+        )
+
+      _ ->
+        IOHelper.syntax_error(
+          "invalid event expression '#{value}'",
+          meta.file,
+          meta.line
+        )
+    end
+  end
+
+  # TODO: allow generator lists
+  def attribute_expr_to_quoted!(value, _attribute_name, :list, meta) do
     with {:ok, {:identity, _, expr}} <-
            Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file),
-         :ok <- validate_attribute_expression(expr, type, meta) do
+         :ok <- validate_attribute_expression(expr, :list, meta) do
       if Enum.count(expr) == 1 do
         Enum.at(expr, 0)
       else
@@ -70,24 +142,16 @@ defmodule Surface.Compiler.Helpers do
           line
         )
 
-      # Once we do validation
-      # {:error, message} ->
-      #   IOHelper.syntax_error(
-      #     "invalid #{to_string(type)} expression '#{value}' (#{message})",
-      #     meta.file,
-      #     meta.line
-      #   )
-
       _ ->
         IOHelper.syntax_error(
-          "invalid #{to_string(type)} expression '#{value}'",
+          "invalid list expression '#{value}'",
           meta.file,
           meta.line
         )
     end
   end
 
-  def attribute_expr_to_quoted!(value, :generator, meta) do
+  def attribute_expr_to_quoted!(value, _attribute_name, :generator, meta) do
     with {:ok, {:for, _, expr}} when is_list(expr) <-
            Code.string_to_quoted("for #{value}", line: meta.line, file: meta.file),
          :ok <- validate_attribute_expression(expr, :generator, meta) do
@@ -100,14 +164,6 @@ defmodule Surface.Compiler.Helpers do
           line
         )
 
-      # Once we do validation
-      # {:error, message} ->
-      #   IOHelper.syntax_error(
-      #     "invalid generator expression '#{value}' (#{message})",
-      #     meta.file,
-      #     meta.line
-      #   )
-
       _ ->
         IOHelper.syntax_error(
           "invalid generator expression '#{value}'",
@@ -117,7 +173,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def attribute_expr_to_quoted!(value, _type, meta) do
+  def attribute_expr_to_quoted!(value, _attribute_name, _type, meta) do
     case Code.string_to_quoted(value, line: meta.line, file: meta.file) do
       {:ok, expr} ->
         expr
