@@ -1,6 +1,20 @@
 defmodule Surface.Compiler.EExEngine do
+  @moduledoc """
+  This module glues together surface's AST and Phoenix.LiveView.Engine to actually render an AST.
+
+  It takes a list of Surface AST nodes, and processes them into a sequence of static raw html items and
+  dynamic pieces. It then converts these into tokens which an EEx engine can understand (see EEx.Tokenizer
+  for information on this). Finally, it passes these tokens into the engine sequentially in the same
+  manner as EEx.Compiler.compile/2
+
+  Expressions within surface templates are equivalent to <%= ... %> expressions within EEx, other variants such as
+  <% ... %>, <%# ... %>, <%| ... %>, and <%/ ... %> are not supported. This is because surface expressions must always
+  be complete statements. This also limits the EEx.Engine api that we rely on, as :start_expr, :middle_expr, and :end_expr
+  tokens will never be generated.
+  """
   alias Surface.AST
 
+  # while this should technically work with other engines, the main use case is integration with Phoenix.LiveView.Engine
   @default_engine Phoenix.LiveView.Engine
 
   def translate(nodes, opts \\ []) do
@@ -41,10 +55,6 @@ defmodule Surface.Compiler.EExEngine do
     generate_buffer(tail, buffer, state)
   end
 
-  @doc """
-  This converts surface AST nodes into something similar to EEx tokens. There
-  are some differences
-  """
   defp to_eex_tokens([]), do: []
 
   defp to_eex_tokens([{:text, head} | tail]) do
