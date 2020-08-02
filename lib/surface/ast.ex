@@ -202,7 +202,7 @@ defmodule Surface.AST.Slot do
           name: binary(),
           meta: Surface.AST.Meta.t(),
           # quoted ?
-          props: any(),
+          props: Surface.AST.Directive.t(),
           default: list()
         }
 end
@@ -306,15 +306,17 @@ defmodule Surface.AST.Component do
 
   ## Properties
       * `:module` - the component module
+      * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.LiveView)
       * `:props` - the props for this component
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
   """
-  defstruct [:module, :props, :directives, :templates, :meta]
+  defstruct [:module, :type, :props, :directives, :templates, :meta]
 
   @type t :: %__MODULE__{
-          module: atom(),
+          module: module(),
+          type: module(),
           props: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t()),
           templates: %{

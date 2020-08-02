@@ -10,6 +10,10 @@ defmodule Surface.Compiler do
   alias Surface.AST
   alias Surface.Compiler.Helpers
 
+  @stateful_component_types [
+    Surface.LiveComponent
+  ]
+
   @tag_directive_handlers [
     Surface.Directive.Events,
     Surface.Directive.Show,
@@ -137,9 +141,10 @@ defmodule Surface.Compiler do
 
   defp is_stateful_component(module) do
     if Module.open?(module) do
-      Module.get_attribute(module, :__is_stateful__, false)
+      Module.get_attribute(module, :component_type, Surface.BaseComponent) in @stateful_component_types
     else
-      function_exported?(module, :__is_stateful__, 0) and module.__is_stateful__()
+      function_exported?(module, :component_type, 0) and
+        module.component_type() in @stateful_component_types
     end
   end
 
@@ -241,9 +246,28 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    with name when not is_nil(name) and is_atom(name) <- attribute_value(attributes, "name", :default),
+    with name when not is_nil(name) and is_atom(name) <-
+           attribute_value(attributes, "name", :default),
          {:ok, props, _attributes} <-
            collect_directives([Surface.Directive.SlotProps], attributes, meta) do
+      props =
+        case props do
+          [expr] ->
+            expr
+
+          _ ->
+            %AST.Directive{
+              module: Surface.Directive.SlotProps,
+              name: :props,
+              value: %AST.AttributeExpr{
+                original: "",
+                value: [],
+                meta: meta
+              },
+              meta: meta
+            }
+        end
+
       {:ok,
        %AST.Slot{
          name: name,
@@ -312,6 +336,8 @@ defmodule Surface.Compiler do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, mod} <- Helpers.module_name(name, meta.caller),
+         true <- function_exported?(mod, :component_type, 0),
+         component_type <- mod.component_type(),
          meta <- Map.merge(meta, %{module: mod, node_alias: name}),
          # Passing in and modifying attributes here because :let on the parent is used
          # to indicate the props for the :default slot's template
@@ -329,6 +355,7 @@ defmodule Surface.Compiler do
          :ok <- validate_properties(mod, attributes, meta) do
       component = %AST.Component{
         module: mod,
+        type: component_type,
         props: attributes,
         directives: directives,
         templates: templates,

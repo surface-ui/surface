@@ -54,7 +54,10 @@ defmodule Surface.LiveComponent do
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
-      use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
+
+      use Surface.BaseComponent,
+        translator: Surface.Translator.LiveComponentTranslator,
+        type: unquote(__MODULE__)
 
       @before_compile unquote(__MODULE__)
 

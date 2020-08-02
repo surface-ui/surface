@@ -32,7 +32,10 @@ defmodule Surface.LiveView do
 
   defmacro __using__(opts) do
     quote do
-      use Surface.BaseComponent, translator: Surface.Translator.LiveViewTranslator
+      use Surface.BaseComponent,
+        translator: Surface.Translator.LiveViewTranslator,
+        type: unquote(__MODULE__)
+
       use Surface.API, include: [:property, :data]
       import Phoenix.HTML
 

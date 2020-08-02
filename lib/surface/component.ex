@@ -38,7 +38,11 @@ defmodule Surface.Component do
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
-      use Surface.BaseComponent, translator: unquote(translator)
+
+      use Surface.BaseComponent,
+        translator: unquote(translator),
+        type: unquote(__MODULE__)
+
       use Surface.API, include: [:property, :slot, :context]
       import Phoenix.HTML
 

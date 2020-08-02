@@ -106,25 +106,81 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Comprehension{generator: generator, children: children}, _) do
     {:__block__, [], children_expr} = to_expression(children, true)
 
-    generator_expr = to_expression(generator) ++ [[do: {:__block__, [], [children_expr]}]]
+    generator_expr = to_expression(generator, false) ++ [[do: {:__block__, [], [children_expr]}]]
 
     {:for, [generated: true], generator_expr}
   end
 
   defp to_expression(%AST.Conditional{condition: condition, children: children}, _) do
     children_expr = to_expression(children, true)
-    condition_expr = to_expression(condition)
+    condition_expr = to_expression(condition, false)
 
     {:if, [generated: true], [condition_expr, [do: children_expr]]}
   end
 
-  defp to_expression(%AST.Slot{default: default}, _) do
-    # TODO
-    to_expression(default)
+  defp to_expression(
+         %AST.Slot{
+           name: name,
+           props: %AST.Directive{value: %AST.AttributeExpr{value: props_expr}},
+           default: default
+         },
+         _escape
+       ) do
+    default_value = to_expression(default, true)
+
+    # This is an expression which is equivalent to @#{name}
+    # I couldn't figure out a good way to accomplish this using quote, and
+    # I didn't think using Code.string_to_quoted!() made sense because the
+    # AST is fairly minimal
+    slot_name_expr = {:@, [generated: true], [{name, [generated: true], nil}]}
+
+    slot_content_expr =
+      if name == :default do
+        quote generated: true do
+          @inner_content.(unquote(props_expr))
+        end
+      else
+        quote generated: true do
+          for slot <- unquote(slot_name_expr) do
+            slot.inner_content.(unquote(props_expr))
+          end
+        end
+      end
+
+    quote generated: true do
+      if Enum.member?(@__surface__.provided_templates, unquote(name)) do
+        unquote(slot_content_expr)
+      else
+        unquote(default_value)
+      end
+    end
   end
 
-  defp to_expression(%AST.Component{}, _) do
+  defp to_expression(
+         %AST.Component{
+           type: Surface.LiveView
+         },
+         _
+       ) do
     Phoenix.HTML.raw("<span>This is still TODO</span>")
+  end
+
+  defp to_expression(
+         %AST.Component{
+           module: module,
+           props: props,
+           templates: templates,
+           meta: meta
+         },
+         escape?
+       ) do
+    expression = "<span>This is still TODO</span>"
+
+    if escape? do
+      Phoenix.HTML.html_escape(expression)
+    else
+      Phoenix.HTML.raw(expression)
+    end
   end
 
   defp combine_static_portions(nodes, accumulators \\ {[], []})
