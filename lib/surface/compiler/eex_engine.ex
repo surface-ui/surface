@@ -234,18 +234,6 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp to_prop_expr(Surface.LiveComponent, :event, [%{value: value}]) do
-    quote generated: true do
-      Surface.event_value(nil, unquote(value), @myself)
-    end
-  end
-
-  defp to_prop_expr(_, :event, [%{value: value}]) do
-    quote generated: true do
-      Surface.event_value(nil, unquote(value), nil)
-    end
-  end
-
   defp to_prop_expr(_, :string, values) do
     list_expr =
       for %{value: value} <- values do
@@ -262,9 +250,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_prop_expr(_, _, [%AST.AttributeExpr{value: expr}]) do
-    quote generated: true do
-      unquote(expr)
-    end
+    expr
   end
 
   defp combine_static_portions(nodes, accumulators \\ {[], []})
@@ -468,9 +454,16 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_html_string(name, [%AST.AttributeExpr{value: value} = expr | elements]) do
     # TODO: is this the behaviour we want?
+
     value =
-      quote generated: true do
-        Phoenix.HTML.html_escape(Surface.attr_value(unquote(to_string(name)), unquote(value)))
+      if to_string(name) in Surface.Directive.Events.phx_events() do
+        quote generated: true do
+          Phoenix.HTML.html_escape(Surface.phx_event(unquote(to_string(name)), unquote(value)))
+        end
+      else
+        quote generated: true do
+          Phoenix.HTML.html_escape(Surface.attr_value(unquote(to_string(name)), unquote(value)))
+        end
       end
 
     [%{expr | value: value} | to_html_string(name, elements)]
