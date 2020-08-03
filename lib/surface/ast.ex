@@ -71,7 +71,7 @@ defmodule Surface.AST.Directive do
           module: atom(),
           name: atom(),
           # the value here is defined by the individual directive
-          value: Surface.AttributeExpr.t() | Surface.Text.t() | nil,
+          value: Surface.AST.AttributeExpr.t() | Surface.AST.Text.t() | nil,
           meta: Surface.AST.Meta.t()
         }
 end
@@ -207,6 +207,7 @@ defmodule Surface.AST.Slot do
         }
 end
 
+# TODO differentiate between raw HTML and plain text ?
 defmodule Surface.AST.Text do
   @moduledoc """
   An AST node representing static text
@@ -279,7 +280,7 @@ defmodule Surface.AST.Template do
           name: atom(),
           children: list(Surface.AST.t()),
           # quoted?
-          props: any(),
+          props: Surface.AST.Directive.t(),
           meta: Surface.AST.Meta.t()
         }
 end
