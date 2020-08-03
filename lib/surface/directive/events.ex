@@ -14,6 +14,8 @@ defmodule Surface.Directive.Events do
     "phx-window-keyup"
   ]
 
+  def phx_events(), do: @phx_events
+
   def extract({":on-" <> event_name, value, attr_meta}, meta)
       when event_name in @phx_events do
     name = String.to_atom(event_name)
