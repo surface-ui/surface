@@ -486,12 +486,13 @@ defmodule Surface.Compiler do
        when is_bitstring(value) or is_binary(value) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
+    type = determine_attribute_type(mod, name, attr_meta)
 
     [
       %AST.Attribute{
-        type: determine_attribute_type(mod, name, attr_meta),
+        type: type,
         name: name,
-        value: [%AST.Text{value: value}],
+        value: [attr_value(name, type, value, meta)],
         meta: attr_meta
       }
       | process_attributes(mod, attrs, meta)
@@ -520,12 +521,13 @@ defmodule Surface.Compiler do
        when is_boolean(value) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
+    type = determine_attribute_type(mod, name, attr_meta)
 
     [
       %AST.Attribute{
-        type: determine_attribute_type(mod, name, attr_meta),
+        type: type,
         name: name,
-        value: [%AST.Text{value: value}],
+        value: [attr_value(name, type, value, meta)],
         meta: attr_meta
       }
       | process_attributes(mod, attrs, meta)
@@ -567,7 +569,11 @@ defmodule Surface.Compiler do
       meta,
       [],
       type,
-      {[], [%AST.Text{value: codepoints |> Enum.reverse() |> List.to_string()} | acc]}
+      {[],
+       [
+         attr_value(attribute_name, type, codepoints |> Enum.reverse() |> List.to_string(), meta)
+         | acc
+       ]}
     )
   end
 
@@ -594,9 +600,8 @@ defmodule Surface.Compiler do
          type,
          {codepoints, acc}
        ) do
-    text_node = %AST.Text{
-      value: codepoints |> Enum.reverse() |> List.to_string()
-    }
+    text_node =
+      attr_value(attribute_name, type, codepoints |> Enum.reverse() |> List.to_string(), meta)
 
     acc = [text_node | acc]
 
@@ -611,6 +616,18 @@ defmodule Surface.Compiler do
 
   defp collect_attr_values(attribute_name, meta, [codepoint | values], type, {codepoint_acc, acc}) do
     collect_attr_values(attribute_name, meta, values, type, {[codepoint | codepoint_acc], acc})
+  end
+
+  defp attr_value(name, :event, value, meta) do
+    %AST.AttributeExpr{
+      original: value,
+      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, :event, meta),
+      meta: meta
+    }
+  end
+
+  defp attr_value(_name, _type, value, _meta) do
+    %AST.Text{value: value}
   end
 
   defp expr_node(attribute_name, value, meta, type) do
