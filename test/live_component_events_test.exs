@@ -88,7 +88,7 @@ defmodule Surface.EventsTest do
 
     assert_html(
       html =~ """
-      <button data-phx-component="1" phx-click="click">Click me!</button>
+      <button data-phx-component="2" phx-click="click">Click me!</button>
       """
     )
   end
@@ -101,7 +101,7 @@ defmodule Surface.EventsTest do
     """
 
     assert render_live(code) =~ """
-           <button data-phx-component="1" phx-click="click" phx-target="0"\
+           <button data-phx-component="2" phx-click="click" phx-target="1"\
            """
   end
 
@@ -113,7 +113,7 @@ defmodule Surface.EventsTest do
     """
 
     assert render_live(code) =~ """
-           <button data-phx-component="0" phx-click="click" phx-target="0"\
+           <button data-phx-component="1" phx-click="click" phx-target="1"\
            """
   end
 
