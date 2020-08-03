@@ -235,7 +235,7 @@ defmodule Surface.Compiler do
        %AST.Template{
          name: slot,
          children: to_ast(children, compile_meta),
-         props: template_props(directives),
+         props: template_props(directives, meta),
          meta: meta
        }}
     else
@@ -368,7 +368,7 @@ defmodule Surface.Compiler do
         if component_slotable?(mod) do
           %AST.Template{
             name: mod.__slot_name__(),
-            props: template_props(template_directives),
+            props: template_props(template_directives, meta),
             children: [component],
             meta: meta
           }
@@ -432,9 +432,22 @@ defmodule Surface.Compiler do
   defp coerce_to_list(list) when is_list(list), do: list
   defp coerce_to_list(not_list), do: [not_list]
 
-  defp template_props([]), do: :no_props
-  defp template_props([%AST.Directive{module: Surface.Directive.Let} = props | _]), do: props
-  defp template_props([_ | directives]), do: template_props(directives)
+  defp template_props([], meta),
+    do: %AST.Directive{
+      module: Surface.Directive.Let,
+      name: :let,
+      value: %AST.AttributeExpr{
+        value: [],
+        original: "",
+        meta: meta
+      },
+      meta: meta
+    }
+
+  defp template_props([%AST.Directive{module: Surface.Directive.Let} = props | _], _meta),
+    do: props
+
+  defp template_props([_ | directives], meta), do: template_props(directives, meta)
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 
@@ -659,7 +672,7 @@ defmodule Surface.Compiler do
       wrapped = %AST.Template{
         name: :default,
         children: default_children,
-        props: if(Enum.empty?(default_props), do: :no_props, else: Enum.at(default_props, 0)),
+        props: template_props(default_props, meta),
         meta: meta
       }
 
