@@ -172,15 +172,16 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     assigns =
-      defaults ++
-        slots ++
-        props_values ++
-        [
-          __surface__:
-            quote generated: true do
-              %{provided_templates: []}
-            end
-        ]
+      (defaults ++
+         slots ++
+         props_values)
+      |> Keyword.new()
+      |> Enum.reject(fn {name, value} ->
+        case module.__get_prop__(name) do
+          nil -> true
+          prop -> prop.opts[:reject_nil] && is_nil(value)
+        end
+      end)
 
     if component_type == Surface.LiveView do
       quote generated: true do
@@ -191,6 +192,15 @@ defmodule Surface.Compiler.EExEngine do
         )
       end
     else
+      assigns =
+        Keyword.put(
+          assigns,
+          :__surface__,
+          quote generated: true do
+            %{provided_templates: []}
+          end
+        )
+
       quote generated: true do
         Phoenix.LiveView.Helpers.live_component(
           unquote(at_ref(:socket)),
