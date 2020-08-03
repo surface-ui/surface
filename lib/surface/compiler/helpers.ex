@@ -100,9 +100,19 @@ defmodule Surface.Compiler.Helpers do
     # I'm unsure how to tell when it should be nil and when it should be @myself
     # Potentially use the meta.caller.module to determine?
 
+    cid =
+      cond do
+        Module.open?(meta.caller.module) and
+            Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent ->
+          "@myself"
+
+        true ->
+          "nil"
+      end
+
     # Using :placeholder here because to_string(attribute_name) can screw with the representation
     with {:ok, {event_value_func, meta, [:placeholder | opts]}} <-
-           Code.string_to_quoted("Surface.event_value(:placeholder, [#{value}], nil)",
+           Code.string_to_quoted("Surface.event_value(:placeholder, [#{value}], #{cid})",
              line: meta.line,
              file: meta.file
            ) do

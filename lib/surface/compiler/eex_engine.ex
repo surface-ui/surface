@@ -154,8 +154,10 @@ defmodule Surface.Compiler.EExEngine do
                        children: children
                      } ->
         block = handle_nested_block(children, buffer, state)
-        variables = Keyword.keys(let)
-        values = Keyword.values(let)
+        values = Keyword.keys(let)
+        # TODO: validate the let expression is actually what it should be
+        # TODO: possibly translate this based on the slot :props value?
+        variables = Keyword.values(let)
 
         quote do
           (fn unquote(variables) ->
