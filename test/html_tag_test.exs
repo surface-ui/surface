@@ -179,7 +179,7 @@ defmodule HtmlTagTest do
     """
 
     assert render_static(code) =~ """
-           <input\n  \n  checked\n  \n  readonly=\"false\"\n  default\n  \n>
+           <input checked readonly default>
            """
   end
 
