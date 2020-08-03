@@ -127,7 +127,14 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :click,
                  type: :event,
-                 value: [%Surface.AST.Text{value: "click_event"}]
+                 value: [
+                   %Surface.AST.AttributeExpr{
+                     value:
+                       {{:., _, [{:__aliases__, _, [:Surface]}, :event_value]}, _,
+                        [:click, ["click_event"], nil]},
+                     original: "click_event"
+                   }
+                 ]
                }
              ]
            } = node
@@ -161,7 +168,14 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :click,
                  type: :event,
-                 value: [%Surface.AST.Text{value: "event"}]
+                 value: [
+                   %Surface.AST.AttributeExpr{
+                     value:
+                       {{:., _, [{:__aliases__, _, [:Surface]}, :event_value]}, _,
+                        [:click, ["event"], nil]},
+                     original: "event"
+                   }
+                 ]
                }
              ]
            } = node
@@ -195,7 +209,14 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :click,
                  type: :event,
-                 value: [%Surface.AST.Text{value: "event"}]
+                 value: [
+                   %Surface.AST.AttributeExpr{
+                     value:
+                       {{:., _, [{:__aliases__, _, [:Surface]}, :event_value]}, _,
+                        [:click, ["event"], nil]},
+                     original: "event"
+                   }
+                 ]
                }
              ]
            } = node
