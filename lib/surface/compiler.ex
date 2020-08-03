@@ -669,6 +669,8 @@ defmodule Surface.Compiler do
     if Enum.all?(default_children, &Helpers.is_blank_or_empty/1) do
       {:ok, Map.put(templates, :default, already_wrapped), attributes}
     else
+      Module.put_attribute(meta.caller.module, :used_slot, %{name: :default, line: meta.line})
+
       wrapped = %AST.Template{
         name: :default,
         children: default_children,
