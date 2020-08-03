@@ -6,11 +6,6 @@ defmodule Surface.Compiler.EExEngine do
   dynamic pieces. It then converts these into tokens which an EEx engine can understand (see EEx.Tokenizer
   for information on this). Finally, it passes these tokens into the engine sequentially in the same
   manner as EEx.Compiler.compile/2
-
-  Expressions within surface templates are equivalent to <%= ... %> expressions within EEx, other variants such as
-  <% ... %>, <%# ... %>, <%| ... %>, and <%/ ... %> are not supported. This is because surface expressions must always
-  be complete statements. This also limits the EEx.Engine api that we rely on, as :start_expr, :middle_expr, and :end_expr
-  tokens will never be generated.
   """
   alias Surface.AST
 
