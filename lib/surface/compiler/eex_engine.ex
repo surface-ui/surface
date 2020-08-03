@@ -192,20 +192,70 @@ defmodule Surface.Compiler.EExEngine do
         )
       end
     else
-      assigns =
-        Keyword.put(
-          assigns,
-          :__surface__,
-          quote generated: true do
-            %{provided_templates: []}
+      context =
+        quote generated: true do
+          Map.get(var!(assigns)[:__surface__] || %{}, :context, [])
+        end
+
+      context_gets =
+        for ctx <- module.__context_gets__() do
+          from = ctx.opts[:from]
+          name = ctx.name
+          as = ctx.opts[:as] || name
+
+          quote do
+            {unquote(from), unquote(name), unquote(as)}
           end
-        )
+        end
+
+      context_sets_in_scope =
+        for ctx <- module.__context_sets_in_scope__() do
+          ctx[:name]
+        end
+
+      init_func =
+        if function_exported?(module, :init_context, 1) do
+          quote generated: true do
+            fn props -> unquote(module).init_context(props) end
+          end
+        else
+          quote generated: true do
+            fn _ -> {:ok, []} end
+          end
+        end
+
+      assigns =
+        quote generated: true do
+          context = unquote(context)
+
+          from_context =
+            for {from, name, as} <- unquote(context_gets) do
+              value = Keyword.get(Keyword.get(context, from, []), name)
+              {as, value}
+            end
+
+          props = Keyword.merge(unquote(assigns), from_context)
+
+          {:ok, ctx} = unquote(init_func).(Map.new(props))
+
+          from_self =
+            for name <- unquote(context_sets_in_scope) do
+              {name, Keyword.get(ctx, name)}
+            end
+
+          props = Keyword.merge(props, from_self)
+
+          Keyword.put(props, :__surface__, %{
+            provided_templates: [],
+            context: Keyword.put(context, unquote(module), ctx)
+          })
+        end
 
       quote generated: true do
         Phoenix.LiveView.Helpers.live_component(
           unquote(at_ref(:socket)),
           unquote(module),
-          Keyword.new(unquote(assigns)),
+          unquote(assigns),
           do: unquote(do_block)
         )
       end
