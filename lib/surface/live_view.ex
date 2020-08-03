@@ -43,14 +43,14 @@ defmodule Surface.LiveView do
       @before_compile unquote(__MODULE__)
 
       @doc "The id of the live view"
-      property id, :integer
+      property id, :integer, required: true
 
       @doc """
       The request info necessary for the view, such as params, cookie session info, etc.
       The session is signed and stored on the client, then provided back to the server
       when the client connects, or reconnects to the stateful view.
       """
-      property session, :map
+      property session, :map, reject_nil: true
 
       use Phoenix.LiveView, unquote(opts)
     end
