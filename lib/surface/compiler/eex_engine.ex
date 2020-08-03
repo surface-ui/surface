@@ -25,7 +25,6 @@ defmodule Surface.Compiler.EExEngine do
 
     nodes
     |> to_token_sequence()
-    |> to_eex_tokens()
     |> generate_buffer(state.engine.init(opts), state)
   end
 
@@ -45,80 +44,53 @@ defmodule Surface.Compiler.EExEngine do
     generate_buffer(tail, buffer, state)
   end
 
-  defp generate_buffer([{:expr, mark, expr} | tail], buffer, state) do
-    buffer = state.engine.handle_expr(buffer, mark, expr)
+  defp generate_buffer([expr | tail], buffer, state) do
+    buffer = state.engine.handle_expr(buffer, "=", to_expression(expr, buffer, state))
     generate_buffer(tail, buffer, state)
   end
 
-  defp to_eex_tokens([]), do: []
+  defp to_expression(nodes, buffer, state)
 
-  defp to_eex_tokens([{:text, head} | tail]) do
-    [{:text, head} | to_eex_tokens(tail)]
-  end
+  defp to_expression([node], buffer, state), do: to_expression(node, buffer, state)
 
-  defp to_eex_tokens([%AST.AttributeExpr{} = expr | tail]) do
-    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
-  end
-
-  defp to_eex_tokens([%AST.Interpolation{} = expr | tail]) do
-    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
-  end
-
-  defp to_eex_tokens([%AST.Conditional{} = expr | tail]) do
-    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
-  end
-
-  defp to_eex_tokens([%AST.Comprehension{} = expr | tail]) do
-    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
-  end
-
-  defp to_eex_tokens([%AST.Component{} = expr | tail]) do
-    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
-  end
-
-  defp to_eex_tokens([%AST.Slot{} = expr | tail]) do
-    [{:expr, "=", to_expression(expr)} | to_eex_tokens(tail)]
-  end
-
-  defp to_expression(nodes, escape \\ false)
-
-  defp to_expression(nodes, escape) when is_list(nodes) do
+  defp to_expression(nodes, buffer, state) when is_list(nodes) do
     children =
       for node <- nodes do
-        to_expression(node, escape)
+        to_expression(node, buffer, state)
       end
 
     {:__block__, [], children}
   end
 
-  defp to_expression({:text, value}, _), do: {:safe, value}
+  defp to_expression({:text, value}, _buffer, _state), do: {:safe, value}
 
-  defp to_expression(%AST.AttributeExpr{value: expr}, _), do: expr
+  defp to_expression(%AST.AttributeExpr{value: expr}, _buffer, _state), do: expr
 
-  defp to_expression(%AST.Interpolation{value: expr}, true) do
-    ## is this something we always want to do?
-    quote generated: true do
-      Phoenix.HTML.html_escape(unquote(expr))
-    end
-  end
+  defp to_expression(%AST.Interpolation{value: expr}, _buffer, _state), do: expr
 
-  defp to_expression(%AST.Interpolation{value: expr}, false), do: expr
+  defp to_expression(%AST.Container{children: children}, buffer, state),
+    do: to_expression(children, buffer, state)
 
-  defp to_expression(%AST.Container{children: children}, _), do: to_expression(children)
+  defp to_expression(
+         %AST.Comprehension{generator: %AST.AttributeExpr{value: generator}, children: children},
+         buffer,
+         state
+       ) do
+    buffer = handle_nested_block(children, buffer, state)
 
-  defp to_expression(%AST.Comprehension{generator: generator, children: children}, _) do
-    {:__block__, [], children_expr} = to_expression(children, true)
-
-    generator_expr = to_expression(generator, false) ++ [[do: {:__block__, [], [children_expr]}]]
+    generator_expr = generator ++ [[do: buffer]]
 
     {:for, [generated: true], generator_expr}
   end
 
-  defp to_expression(%AST.Conditional{condition: condition, children: children}, _) do
-    children_expr = to_expression(children, true)
-    condition_expr = to_expression(condition, false)
+  defp to_expression(
+         %AST.Conditional{condition: %AST.AttributeExpr{value: condition}, children: children},
+         buffer,
+         state
+       ) do
+    buffer = handle_nested_block(children, buffer, state)
 
-    {:if, [generated: true], [condition_expr, [do: children_expr]]}
+    {:if, [generated: true], [condition, [do: buffer]]}
   end
 
   defp to_expression(
@@ -127,20 +99,17 @@ defmodule Surface.Compiler.EExEngine do
            props: %AST.Directive{value: %AST.AttributeExpr{value: props_expr}},
            default: default
          },
-         _escape
+         buffer,
+         state
        ) do
-    default_value = to_expression(default, true)
+    default_value = to_expression(default, buffer, state)
 
-    # This is an expression which is equivalent to @#{name}
-    # I couldn't figure out a good way to accomplish this using quote, and
-    # I didn't think using Code.string_to_quoted!() made sense because the
-    # AST is fairly minimal
-    slot_name_expr = {:@, [generated: true], [{name, [generated: true], nil}]}
+    slot_name_expr = at_ref(name)
 
     slot_content_expr =
       if name == :default do
         quote generated: true do
-          @inner_content.(unquote(props_expr))
+          unquote(at_ref(:inner_content)).(unquote(props_expr))
         end
       else
         quote generated: true do
@@ -151,7 +120,7 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     quote generated: true do
-      if Enum.member?(@__surface__.provided_templates, unquote(name)) do
+      if Enum.member?(unquote(at_ref(:__surface__)).provided_templates, unquote(name)) do
         unquote(slot_content_expr)
       else
         unquote(default_value)
@@ -167,7 +136,8 @@ defmodule Surface.Compiler.EExEngine do
            templates: templates,
            meta: _meta
          },
-         _escape?
+         buffer,
+         state
        ) do
     defaults = Enum.map(module.__props__(), fn prop -> {prop.name, prop.opts[:default]} end)
     slots = Enum.map(module.__slots__(), fn slot -> {slot.name, []} end)
@@ -177,28 +147,69 @@ defmodule Surface.Compiler.EExEngine do
         {name, to_prop_expr(component_type, type, value)}
       end
 
+    blocks =
+      (templates.default || [])
+      |> Enum.map(fn %AST.Template{
+                       props: %AST.Directive{value: %AST.AttributeExpr{value: let}},
+                       children: children
+                     } ->
+        block = handle_nested_block(children, buffer, state)
+        variables = Keyword.keys(let)
+        values = Keyword.values(let)
+
+        quote do
+          (fn unquote(variables) ->
+             unquote(block)
+           end).(unquote(values))
+        end
+      end)
+
+    do_block =
+      quote generated: true do
+        fn -> unquote(blocks) end
+      end
+
     assigns =
-      Keyword.new(
-        defaults ++
-          slots ++
-          props_values ++
-          [
-            __surface__:
-              quote generated: true do
-                %{provided_templates: []}
-              end
-          ]
-      )
+      defaults ++
+        slots ++
+        props_values ++
+        [
+          __surface__:
+            quote generated: true do
+              %{provided_templates: []}
+            end
+        ]
 
     if component_type == Surface.LiveView do
       quote generated: true do
-        Phoenix.LiveView.Helpers.live_render(@socket, unquote(module), unquote(assigns))
+        Phoenix.LiveView.Helpers.live_render(
+          unquote(at_ref(:socket)),
+          unquote(module),
+          unquote(assigns)
+        )
       end
     else
       quote generated: true do
-        Phoenix.LiveView.Helpers.live_component(@socket, unquote(module), unquote(assigns))
+        Phoenix.LiveView.Helpers.live_component(
+          unquote(at_ref(:socket)),
+          unquote(module),
+          Keyword.new(unquote(assigns)),
+          do: unquote(do_block)
+        )
       end
     end
+  end
+
+  defp handle_nested_block(block, buffer, state) do
+    buffer = state.engine.handle_begin(buffer)
+
+    buffer =
+      Enum.reduce(block, buffer, fn
+        {:text, chars}, buffer -> state.engine.handle_text(buffer, chars)
+        expr, buffer -> state.engine.handle_expr(buffer, "=", to_expression(expr, buffer, state))
+      end)
+
+    state.engine.handle_end(buffer)
   end
 
   defp to_prop_expr(_, :boolean, [%AST.Text{value: value}]) do
@@ -432,19 +443,28 @@ defmodule Surface.Compiler.EExEngine do
       ~S( ),
       to_string(name),
       ~S(="),
-      to_html_string(values),
+      to_html_string(name, values),
       ~S("),
       to_html_attributes(attributes)
     ]
   end
 
-  defp to_html_string([]), do: []
+  defp to_html_string(_name, []), do: []
 
-  defp to_html_string([%AST.Text{value: value} | elements]),
-    do: [value | to_html_string(elements)]
+  defp to_html_string(name, [%AST.Text{value: value} | elements]),
+    do: [value | to_html_string(name, elements)]
 
-  defp to_html_string([%AST.AttributeExpr{} = expr | elements]) do
-    # TODO: escape the result of the expression?
-    [expr | to_html_string(elements)]
+  defp to_html_string(name, [%AST.AttributeExpr{value: value} = expr | elements]) do
+    # TODO: is this the behaviour we want?
+    value =
+      quote generated: true do
+        Phoenix.HTML.html_escape(Surface.attr_value(unquote(to_string(name)), unquote(value)))
+      end
+
+    [%{expr | value: value} | to_html_string(name, elements)]
+  end
+
+  defp at_ref(name) do
+    {:@, [generated: true], [{name, [generated: true], nil}]}
   end
 end
