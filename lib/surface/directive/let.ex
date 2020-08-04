@@ -18,12 +18,13 @@ defmodule Surface.Directive.Let do
     expr = Helpers.attribute_expr_to_quoted!(value, :let, :list, meta)
 
     if !Keyword.keyword?(expr) do
-      message = """
-      invalid value for directive :let. Expected a keyword list of bindings, \
-      got: #{String.trim(value)}.\
-      """
+      invalid_let_binding(value, meta)
+    end
 
-      IOHelper.compile_error(message, meta.file, meta.line)
+    for binding <- expr do
+      if not match?({prop, {binding_name, _, nil}} when is_atom(binding_name), binding) do
+        invalid_let_binding(value, meta)
+      end
     end
 
     %AST.AttributeExpr{
@@ -31,5 +32,14 @@ defmodule Surface.Directive.Let do
       original: value,
       meta: meta
     }
+  end
+
+  defp invalid_let_binding(value, meta) do
+    message = """
+    invalid value for directive :let. Expected a keyword list of bindings, \
+    got: #{String.trim(value)}.\
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
   end
 end
