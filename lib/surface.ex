@@ -168,6 +168,50 @@ defmodule Surface do
     end
   end
 
+  @doc """
+  This is called to build assigns being passed into a component render call.
+  """
+  def build_assigns(assigns, props, context_gets, slots, module) do
+    module_ctx = init_context(module, props)
+
+    context =
+      case assigns do
+        %{__surface_context__: context} -> context
+        _ -> []
+      end
+      |> Keyword.put(module, module_ctx)
+
+    ctx_assigns =
+      Enum.flat_map(context_gets, fn {from, values} ->
+        ctx = Keyword.get(context, from, [])
+
+        Enum.map(values, fn {name, as} ->
+          {as, Keyword.get(ctx, name)}
+        end)
+      end)
+
+    Map.new(props ++ ctx_assigns ++ [__surface_context__: context])
+  end
+
+  defp init_context(module, props) do
+    with true <- function_exported?(module, :init_context, 1),
+         {:ok, values} <- module.init_context(Map.new(props)) do
+      values
+    else
+      false ->
+        []
+
+      {:error, message} ->
+        IOHelper.runtime_error(message)
+
+      result ->
+        IOHelper.runtime_error(
+          "unexpected return value from init_context/1. " <>
+            "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
+        )
+    end
+  end
+
   @doc false
   def style(value, show) when is_binary(value) do
     if show do

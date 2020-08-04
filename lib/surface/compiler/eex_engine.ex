@@ -131,6 +131,28 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(
          %AST.Component{
            module: module,
+           type: Surface.LiveView,
+           props: props,
+           templates: templates,
+           meta: _meta
+         },
+         buffer,
+         state
+       ) do
+    props_expr = collect_component_props(module, props)
+
+    quote generated: true do
+      Phoenix.LiveView.Helpers.live_render(
+        unquote(at_ref(:socket)),
+        unquote(module),
+        Keyword.new(unquote(props_expr))
+      )
+    end
+  end
+
+  defp to_expression(
+         %AST.Component{
+           module: module,
            type: component_type,
            props: props,
            templates: templates,
@@ -139,127 +161,59 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    defaults = Enum.map(module.__props__(), fn prop -> {prop.name, prop.opts[:default]} end)
-    slots = Enum.map(module.__slots__(), fn slot -> {slot.name, []} end)
+    props_expr = collect_component_props(module, props)
 
-    props_values =
-      for %AST.Attribute{name: name, type: type, value: value} <- props do
-        {name, to_prop_expr(component_type, type, value)}
-      end
+    # if we decide to provide the gets in init_context
+    # we'll need to split these out
+    context_assigns = fetch_context_assigns(module)
 
-    blocks =
-      (templates.default || [])
-      |> Enum.map(fn %AST.Template{
-                       props: %AST.Directive{value: %AST.AttributeExpr{value: let}},
-                       children: children
-                     } ->
-        block = handle_nested_block(children, buffer, state)
-        props = Keyword.keys(let)
-        # TODO: validate the let expression is actually what it should be
-        # TODO: possibly translate this based on the slot :props value?
-        bindings = Keyword.values(let)
-
-        quote do
-          (fn unquote(bindings) ->
-             unquote(block)
-           end).(unquote(props))
-        end
-      end)
-
-    do_block =
-      quote generated: true do
-        fn -> unquote(blocks) end
-      end
-
-    assigns =
-      (defaults ++
-         slots ++
-         props_values)
-      |> Keyword.new()
-      |> Enum.reject(fn {name, value} ->
-        case module.__get_prop__(name) do
-          nil -> true
-          prop -> prop.opts[:reject_nil] && is_nil(value)
-        end
-      end)
-
-    if component_type == Surface.LiveView do
-      quote generated: true do
-        Phoenix.LiveView.Helpers.live_render(
-          unquote(at_ref(:socket)),
-          unquote(module),
-          unquote(assigns)
+    quote generated: true do
+      Phoenix.LiveView.Helpers.live_component(
+        unquote(at_ref(:socket)),
+        unquote(module),
+        Surface.build_assigns(
+          var!(assigns),
+          unquote(props_expr),
+          unquote(context_assigns),
+          [],
+          unquote(module)
         )
-      end
-    else
-      context =
-        quote generated: true do
-          Map.get(var!(assigns)[:__surface__] || %{}, :context, [])
-        end
-
-      context_gets =
-        for ctx <- module.__context_gets__() do
-          from = ctx.opts[:from]
-          name = ctx.name
-          as = ctx.opts[:as] || name
-
-          quote do
-            {unquote(from), unquote(name), unquote(as)}
-          end
-        end
-
-      context_sets_in_scope =
-        for ctx <- module.__context_sets_in_scope__() do
-          ctx[:name]
-        end
-
-      init_func =
-        if function_exported?(module, :init_context, 1) do
-          quote generated: true do
-            fn props -> unquote(module).init_context(props) end
-          end
-        else
-          quote generated: true do
-            fn _ -> {:ok, []} end
-          end
-        end
-
-      assigns =
-        quote generated: true do
-          context = unquote(context)
-
-          from_context =
-            for {from, name, as} <- unquote(context_gets) do
-              value = Keyword.get(Keyword.get(context, from, []), name)
-              {as, value}
-            end
-
-          props = Keyword.merge(unquote(assigns), from_context)
-
-          {:ok, ctx} = unquote(init_func).(Map.new(props))
-
-          from_self =
-            for name <- unquote(context_sets_in_scope) do
-              {name, Keyword.get(ctx, name)}
-            end
-
-          props = Keyword.merge(props, from_self)
-
-          Keyword.put(props, :__surface__, %{
-            provided_templates: [],
-            context: Keyword.put(context, unquote(module), ctx)
-          })
-        end
-
-      quote generated: true do
-        Phoenix.LiveView.Helpers.live_component(
-          unquote(at_ref(:socket)),
-          unquote(module),
-          unquote(assigns),
-          do: unquote(do_block)
-        )
-      end
+      )
     end
+  end
+
+  defp fetch_context_assigns(module) do
+    context_gets =
+      module.__context_gets__()
+      |> Enum.map(fn %{name: name, opts: opts} ->
+        {opts[:from], {name, opts[:as] || name}}
+      end)
+      |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
+      |> Keyword.new()
+
+    context_sets_in_scope = [
+      {module, Enum.map(module.__context_sets_in_scope__(), fn %{name: name} -> {name, name} end)}
+    ]
+
+    context_gets ++ context_sets_in_scope
+  end
+
+  defp collect_component_props(module, attrs) do
+    Enum.map(module.__props__(), fn %{name: prop_name, type: type, opts: prop_opts} ->
+      value =
+        case find_attribute_value(attrs, prop_name, nil) do
+          nil -> prop_opts[:default]
+          expr -> to_prop_expr(expr, type)
+        end
+
+      {prop_name, value}
+    end)
+    |> Enum.reject(fn {name, value} ->
+      case module.__get_prop__(name) do
+        nil -> true
+        prop -> prop.opts[:reject_nil] && is_nil(value)
+      end
+    end)
   end
 
   defp handle_nested_block(block, buffer, state) do
@@ -274,17 +228,27 @@ defmodule Surface.Compiler.EExEngine do
     state.engine.handle_end(buffer)
   end
 
-  defp to_prop_expr(_, :boolean, [%AST.Text{value: value}]) do
+  defp find_attribute_value(attrs, name, default)
+  defp find_attribute_value([], _, default), do: default
+
+  defp find_attribute_value([%AST.Attribute{name: attr_name, value: value} | _], name, _)
+       when attr_name == name,
+       do: value
+
+  defp find_attribute_value([_ | tail], name, default),
+    do: find_attribute_value(tail, name, default)
+
+  defp to_prop_expr([%AST.Text{value: value}], :boolean) do
     !!value
   end
 
-  defp to_prop_expr(_, :boolean, [%AST.AttributeExpr{value: expr}]) do
+  defp to_prop_expr([%AST.AttributeExpr{value: expr}], :boolean) do
     quote generated: true do
       !!unquote(expr)
     end
   end
 
-  defp to_prop_expr(_, :string, values) do
+  defp to_prop_expr(values, :string) do
     list_expr =
       for %{value: value} <- values do
         value
@@ -295,11 +259,11 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp to_prop_expr(_, _, [%AST.Text{value: value}]) do
+  defp to_prop_expr([%AST.Text{value: value}], _) do
     value
   end
 
-  defp to_prop_expr(_, _, [%AST.AttributeExpr{value: expr}]) do
+  defp to_prop_expr([%AST.AttributeExpr{value: expr}], _) do
     expr
   end
 
