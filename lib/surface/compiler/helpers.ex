@@ -194,7 +194,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  defp handle_list_expr(_name, [{:<-, _, [binding, value]}]) do
+  defp handle_list_expr(_name, {:<-, _, [binding, value]}) do
     {binding, value}
   end
 
@@ -203,8 +203,13 @@ defmodule Surface.Compiler.Helpers do
   defp handle_list_expr(name, expr) do
     quote generated: true do
       case unquote(expr) do
-        value when is_list(value) -> value
-        value -> raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{inspect(value)}"
+        value when is_list(value) ->
+          value
+
+        value ->
+          raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{
+                  inspect(value)
+                }"
       end
     end
   end

@@ -366,9 +366,11 @@ defmodule Surface.Compiler do
 
       result =
         if component_slotable?(mod) do
+          template_props = template_props(template_directives, meta)
+
           %AST.Template{
             name: mod.__slot_name__(),
-            props: template_props(template_directives, meta),
+            props: template_props,
             children: [component],
             meta: meta
           }
