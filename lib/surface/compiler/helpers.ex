@@ -25,8 +25,7 @@ defmodule Surface.Compiler.Helpers do
 
   def attribute_expr_to_quoted!(value, _attribute_name, :css_class, meta) do
     with {:ok, expr} <-
-           Code.string_to_quoted("Surface.css_class([#{value}])", line: meta.line, file: meta.file),
-         :ok <- validate_attribute_expression(expr, :css_class, meta) do
+           Code.string_to_quoted("Surface.css_class([#{value}])", line: meta.line, file: meta.file) do
       expr
     else
       {:error, {line, error, token}} ->
@@ -137,8 +136,7 @@ defmodule Surface.Compiler.Helpers do
   # TODO: allow generator lists
   def attribute_expr_to_quoted!(value, _attribute_name, :list, meta) do
     with {:ok, {:identity, _, expr}} <-
-           Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file),
-         :ok <- validate_attribute_expression(expr, :list, meta) do
+           Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file) do
       if Enum.count(expr) == 1 do
         Enum.at(expr, 0)
       else
@@ -163,8 +161,7 @@ defmodule Surface.Compiler.Helpers do
 
   def attribute_expr_to_quoted!(value, _attribute_name, :generator, meta) do
     with {:ok, {:for, _, expr}} when is_list(expr) <-
-           Code.string_to_quoted("for #{value}", line: meta.line, file: meta.file),
-         :ok <- validate_attribute_expression(expr, :generator, meta) do
+           Code.string_to_quoted("for #{value}", line: meta.line, file: meta.file) do
       expr
     else
       {:error, {line, error, token}} ->
@@ -195,11 +192,6 @@ defmodule Surface.Compiler.Helpers do
           line
         )
     end
-  end
-
-  def validate_attribute_expression(_expr, _, _meta) do
-    # TODO: Add any validation here
-    :ok
   end
 
   defp validate_interpolation({:@, _, [{:inner_content, _, args}]}, _meta) when is_list(args) do
