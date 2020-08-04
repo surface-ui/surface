@@ -102,22 +102,22 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    default_value = to_expression(default, buffer, state)
-
-    slot_name_expr = at_ref(name)
-
     slot_content_expr =
       if name == :default do
         quote generated: true do
           unquote(at_ref(:inner_content)).(unquote(props_expr))
         end
       else
+        slot_name_expr = at_ref(name)
+
         quote generated: true do
           for slot <- unquote(slot_name_expr) do
             slot.inner_content.(unquote(props_expr))
           end
         end
       end
+
+    default_value = handle_nested_block(default, buffer, state)
 
     quote generated: true do
       if Enum.member?(unquote(at_ref(:__surface__)).provided_templates, unquote(name)) do

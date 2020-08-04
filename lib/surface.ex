@@ -176,7 +176,7 @@ defmodule Surface do
 
     context =
       case assigns do
-        %{__surface_context__: context} -> context
+        %{__surface__: %{context: context}} -> context
         _ -> []
       end
       |> Keyword.put(module, module_ctx)
@@ -190,7 +190,16 @@ defmodule Surface do
         end)
       end)
 
-    Map.new(props ++ ctx_assigns ++ [__surface_context__: context])
+    Map.new(
+      props ++
+        ctx_assigns ++
+        [
+          __surface__: %{
+            context: context,
+            provided_templates: []
+          }
+        ]
+    )
   end
 
   defp init_context(module, props) do
