@@ -134,13 +134,13 @@ defmodule Surface.Compiler.Helpers do
   end
 
   # TODO: allow generator lists
-  def attribute_expr_to_quoted!(value, _attribute_name, :list, meta) do
+  def attribute_expr_to_quoted!(value, attribute_name, :list, meta) do
     with {:ok, {:identity, _, expr}} <-
            Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file) do
       if Enum.count(expr) == 1 do
-        Enum.at(expr, 0)
+        handle_list_expr(attribute_name, Enum.at(expr, 0))
       else
-        expr
+        handle_list_expr(attribute_name, expr)
       end
     else
       {:error, {line, error, token}} ->
@@ -191,6 +191,21 @@ defmodule Surface.Compiler.Helpers do
           meta.file,
           line
         )
+    end
+  end
+
+  defp handle_list_expr(_name, [{:<-, _, [binding, value]}]) do
+    {binding, value}
+  end
+
+  defp handle_list_expr(_name, expr) when is_list(expr), do: expr
+
+  defp handle_list_expr(name, expr) do
+    quote generated: true do
+      case unquote(expr) do
+        value when is_list(value) -> value
+        value -> raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{inspect(value)}"
+      end
     end
   end
 

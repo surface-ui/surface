@@ -17,6 +17,19 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule ListProp do
+    use Surface.Component
+
+    property prop, :list
+
+    def render(assigns) do
+      ~H"""
+      List?: {{ is_list(@prop) }}
+      <span :for={{ v <- @prop }}>value: {{inspect(v)}}</span>
+      """
+    end
+  end
+
   defmodule KeywordProp do
     use Surface.Component
 
@@ -165,6 +178,83 @@ defmodule Surface.PropertiesTest do
       """
 
       message = "invalid value for property \"prop\". Expected a :map, got: 1"
+
+      assert_raise(RuntimeError, message, fn ->
+        render_live(code)
+      end)
+    end
+  end
+
+  describe "list" do
+    test "passing a list" do
+      code = """
+      <ListProp prop={{ [1, 2] }}/>
+      """
+
+      assert render_live(code) =~ """
+             List?: true
+             <span>value: 1</span>\
+             <span>value: 2</span>
+             """
+    end
+
+    test "passing a keyword list without brackets" do
+      code = """
+      <ListProp prop={{ 1, 2 }}/>
+      """
+
+      assert render_live(code) =~ """
+             List?: true
+             <span>value: 1</span>\
+             <span>value: 2</span>
+             """
+    end
+
+    test "passing a list as an expression" do
+      assigns = %{submit: [1, 2]}
+
+      code = """
+      <ListProp prop={{ @submit }}/>
+      """
+
+      assert render_live(code, assigns) =~ """
+             List?: true
+             <span>value: 1</span>\
+             <span>value: 2</span>
+             """
+    end
+
+    test "passing a list with a single value as an expression" do
+      assigns = %{submit: [1]}
+
+      code = """
+      <ListProp prop={{ @submit }}/>
+      """
+
+      assert render_live(code, assigns) =~ """
+             List?: true
+             <span>value: 1</span>
+             """
+    end
+
+    test "passing a keyword list with a single value without brackets is invalid" do
+      code = """
+      <ListProp prop={{ 1 }}/>
+      """
+
+      message = "invalid value for property \"prop\". Expected a :list, got: 1"
+
+      assert_raise(RuntimeError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values" do
+      code = """
+      <ListProp prop={{ %{test: 1} }}/>
+      """
+
+      message = "invalid value for property \"prop\". Expected a :list, got: %{test: 1}"
 
       assert_raise(RuntimeError, message, fn ->
         render_live(code)
