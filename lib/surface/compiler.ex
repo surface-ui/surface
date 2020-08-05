@@ -235,7 +235,7 @@ defmodule Surface.Compiler do
        %AST.Template{
          name: slot,
          children: to_ast(children, compile_meta),
-         props: template_props(directives, meta),
+         let: template_props(directives, meta),
          meta: meta
        }}
     else
@@ -370,7 +370,7 @@ defmodule Surface.Compiler do
 
           %AST.Template{
             name: mod.__slot_name__(),
-            props: template_props,
+            let: template_props,
             children: [component],
             meta: meta
           }
@@ -691,7 +691,7 @@ defmodule Surface.Compiler do
       wrapped = %AST.Template{
         name: :default,
         children: default_children,
-        props: template_props(default_props, meta),
+        let: template_props(default_props, meta),
         meta: meta
       }
 
@@ -775,7 +775,7 @@ defmodule Surface.Compiler do
       slot = mod.__get_slot__(slot_name)
       # TODO validate slot props/lets
       {props, prop_meta} =
-        case template.props do
+        case template.let do
           %AST.Directive{
             value: %AST.AttributeExpr{
               value: value,

@@ -270,17 +270,17 @@ defmodule Surface.AST.Template do
 
   ## Properties
       * `:name` - the template name
-      * `:props` - the props expression for this template
+      * `:let` - the bindings for this template
       * `:children` - the template children
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :children, :props, :meta]
+  defstruct [:name, :children, :let, :meta]
 
   @type t :: %__MODULE__{
           name: atom(),
           children: list(Surface.AST.t()),
           # quoted?
-          props: Surface.AST.Directive.t(),
+          let: Surface.AST.Directive.t(),
           meta: Surface.AST.Meta.t()
         }
 end
