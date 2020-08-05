@@ -140,7 +140,9 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    props_expr = collect_component_props(module, props)
+    props_expr =
+      collect_component_props(module, props)
+      |> Enum.reject(fn {_, value} -> is_nil(value) end)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.live_render(
@@ -197,12 +199,6 @@ defmodule Surface.Compiler.EExEngine do
         end
 
       {prop_name, value}
-    end)
-    |> Enum.reject(fn {name, value} ->
-      case module.__get_prop__(name) do
-        nil -> true
-        prop -> prop.opts[:reject_nil] && is_nil(value)
-      end
     end)
   end
 

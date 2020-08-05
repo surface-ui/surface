@@ -50,7 +50,7 @@ defmodule Surface.LiveView do
       The session is signed and stored on the client, then provided back to the server
       when the client connects, or reconnects to the stateful view.
       """
-      property session, :map, reject_nil: true
+      property session, :map
 
       use Phoenix.LiveView, unquote(opts)
     end
