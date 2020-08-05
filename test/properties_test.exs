@@ -198,18 +198,6 @@ defmodule Surface.PropertiesTest do
              """
     end
 
-    test "passing a keyword list without brackets" do
-      code = """
-      <ListProp prop={{ 1, 2 }}/>
-      """
-
-      assert render_live(code) =~ """
-             List?: true
-             <span>value: 1</span>\
-             <span>value: 2</span>
-             """
-    end
-
     test "passing a list as an expression" do
       assigns = %{submit: [1, 2]}
 
@@ -237,7 +225,19 @@ defmodule Surface.PropertiesTest do
              """
     end
 
-    test "passing a keyword list with a single value without brackets is invalid" do
+    test "passing a list without brackets is invalid" do
+      code = """
+      <ListProp prop={{ 1, 2 }}/>
+      """
+
+      message = "code:1: syntax error before: ','"
+
+      assert_raise(SyntaxError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "passing a list with a single value without brackets is invalid" do
       code = """
       <ListProp prop={{ 1 }}/>
       """
