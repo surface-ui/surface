@@ -229,7 +229,7 @@ defmodule Surface.Compiler.EExEngine do
 
     do_block =
       slot_info
-      |> Enum.flat_map(fn {name, size, infos} ->
+      |> Enum.map(fn {name, size, infos} ->
         infos
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
@@ -239,10 +239,7 @@ defmodule Surface.Compiler.EExEngine do
           end
         end)
       end)
-      |> case do
-        [] -> []
-        [nested] -> nested
-      end
+      |> List.flatten()
 
     slot_props =
       for {name, _, infos} <- slot_info do
@@ -251,8 +248,6 @@ defmodule Surface.Compiler.EExEngine do
 
     slot_meta =
       for {name, size, _} <- slot_info do
-        block_match = if name == :default, do: :__default__, else: name
-
         {name, {:%{}, [generated: true], [size: size]}}
       end
 
