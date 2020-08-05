@@ -172,18 +172,19 @@ defmodule Surface.Compiler.EExEngine do
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
     quote generated: true do
-      Phoenix.LiveView.Helpers.live_component unquote(at_ref(:socket)),
-                                              unquote(module),
-                                              Surface.build_assigns(
-                                                var!(assigns),
-                                                unquote(props_expr),
-                                                unquote(context_assigns),
-                                                unquote(slot_props),
-                                                unquote(slot_meta),
-                                                unquote(module)
-                                              ) do
+      Phoenix.LiveView.Helpers.live_component(
+        unquote(at_ref(:socket)),
+        unquote(module),
+        Surface.build_assigns(
+          var!(assigns),
+          unquote(props_expr),
+          unquote(context_assigns),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module)
+        ),
         unquote(do_block)
-      end
+      )
     end
   end
 
@@ -242,6 +243,10 @@ defmodule Surface.Compiler.EExEngine do
         end)
       end)
       |> List.flatten()
+      |> case do
+        [] -> []
+        block -> [do: block]
+      end
 
     slot_props =
       for {name, _, infos} <- slot_info,
