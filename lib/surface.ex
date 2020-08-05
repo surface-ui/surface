@@ -169,7 +169,7 @@ defmodule Surface do
   end
 
   @doc false
-  def build_assigns(assigns, props, context_gets, slots, module) do
+  def build_assigns(assigns, props, context_gets, slot_props, slots, module) do
     module_ctx = init_context(module, props)
 
     context =
@@ -190,12 +190,13 @@ defmodule Surface do
 
     Map.new(
       props ++
+        slot_props ++
         ctx_assigns ++
         [
           __surface__: %{
             context: context,
             slots: Map.new(slots),
-            provided_templates: Keyword.keys(slots)
+            provided_templates: Keyword.keys(slot_props)
           }
         ]
     )
