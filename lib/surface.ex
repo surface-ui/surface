@@ -168,9 +168,7 @@ defmodule Surface do
     end
   end
 
-  @doc """
-  This is called to build assigns being passed into a component render call.
-  """
+  @doc false
   def build_assigns(assigns, props, context_gets, slots, module) do
     module_ctx = init_context(module, props)
 
@@ -196,7 +194,8 @@ defmodule Surface do
         [
           __surface__: %{
             context: context,
-            provided_templates: []
+            slots: Map.new(slots),
+            provided_templates: Keyword.keys(slots)
           }
         ]
     )

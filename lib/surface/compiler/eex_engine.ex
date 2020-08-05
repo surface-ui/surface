@@ -129,7 +129,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_expression(
-         %AST.Component{
+         %type{
            module: module,
            type: Surface.LiveView,
            props: props,
@@ -151,7 +151,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_expression(
-         %AST.Component{
+         %ast_type{
            module: module,
            type: component_type,
            props: props,
@@ -160,42 +160,29 @@ defmodule Surface.Compiler.EExEngine do
          },
          buffer,
          state
-       ) do
+       )
+       when ast_type in [AST.Component, AST.SlotableComponent] do
     props_expr = collect_component_props(module, props)
 
     # if we decide to provide the gets in init_context
     # we'll need to split these out
     context_assigns = fetch_context_assigns(module)
 
+    {do_block, slot_meta, slot_props} = collect_slot_meta(module, templates, buffer, state)
+
     quote generated: true do
-      Phoenix.LiveView.Helpers.live_component(
-        unquote(at_ref(:socket)),
-        unquote(module),
-        Surface.build_assigns(
-          var!(assigns),
-          unquote(props_expr),
-          unquote(context_assigns),
-          [],
-          unquote(module)
-        )
-      )
+      Phoenix.LiveView.Helpers.live_component unquote(at_ref(:socket)),
+                                              unquote(module),
+                                              Surface.build_assigns(
+                                                var!(assigns),
+                                                unquote(props_expr ++ slot_props),
+                                                unquote(context_assigns),
+                                                unquote(slot_meta),
+                                                unquote(module)
+                                              ) do
+        unquote(do_block)
+      end
     end
-  end
-
-  defp fetch_context_assigns(module) do
-    context_gets =
-      module.__context_gets__()
-      |> Enum.map(fn %{name: name, opts: opts} ->
-        {opts[:from], {name, opts[:as] || name}}
-      end)
-      |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
-      |> Keyword.new()
-
-    context_sets_in_scope = [
-      {module, Enum.map(module.__context_sets_in_scope__(), fn %{name: name} -> {name, name} end)}
-    ]
-
-    context_gets ++ context_sets_in_scope
   end
 
   defp collect_component_props(module, attrs) do
@@ -216,7 +203,63 @@ defmodule Surface.Compiler.EExEngine do
     end)
   end
 
-  defp handle_nested_block(block, buffer, state) do
+  defp fetch_context_assigns(module) do
+    context_gets =
+      module.__context_gets__()
+      |> Enum.map(fn %{name: name, opts: opts} ->
+        {opts[:from], {name, opts[:as] || name}}
+      end)
+      |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
+      |> Keyword.new()
+
+    context_sets_in_scope = [
+      {module, Enum.map(module.__context_sets_in_scope__(), fn %{name: name} -> {name, name} end)}
+    ]
+
+    context_gets ++ context_sets_in_scope
+  end
+
+  defp collect_slot_meta(module, templates, buffer, state) do
+    slot_info =
+      templates
+      |> Enum.map(fn {name, templates_for_slot} ->
+        {if(name == :default, do: :__default__, else: name), Enum.count(templates_for_slot),
+         handle_templates(templates_for_slot, buffer, state)}
+      end)
+
+    do_block =
+      slot_info
+      |> Enum.flat_map(fn {name, size, infos} ->
+        infos
+        |> Enum.with_index()
+        |> Enum.map(fn {{let, _, body}, index} ->
+          quote generated: true do
+            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let})} ->
+              unquote(body)
+          end
+        end)
+      end)
+      |> case do
+        [] -> []
+        [nested] -> nested
+      end
+
+    slot_props =
+      for {name, _, infos} <- slot_info do
+        {name, Enum.map(infos, fn {_, props, _} -> {:%{}, [generated: true], props} end)}
+      end
+
+    slot_meta =
+      for {name, size, _} <- slot_info do
+        block_match = if name == :default, do: :__default__, else: name
+
+        {name, {:%{}, [generated: true], [size: size]}}
+      end
+
+    {do_block, slot_meta, slot_props}
+  end
+
+  defp handle_nested_block(block, buffer, state) when is_list(block) do
     buffer = state.engine.handle_begin(buffer)
 
     buffer =
@@ -226,6 +269,52 @@ defmodule Surface.Compiler.EExEngine do
       end)
 
     state.engine.handle_end(buffer)
+  end
+
+  defp handle_nested_block(block, buffer, state) do
+    buffer = state.engine.handle_begin(buffer)
+
+    buffer = state.engine.handle_expr(buffer, "=", to_expression(block, buffer, state))
+    state.engine.handle_end(buffer)
+  end
+
+  defp handle_templates([], _, _), do: []
+
+  defp handle_templates(
+         [
+           %AST.Template{
+             name: name,
+             let: %AST.Directive{value: %AST.AttributeExpr{value: let}},
+             children: children
+           } = template
+           | tail
+         ],
+         buffer,
+         state
+       ) do
+    [
+      {let, [], handle_nested_block(children, buffer, state)}
+      | handle_templates(tail, buffer, state)
+    ]
+  end
+
+  defp handle_templates(
+         [
+           %AST.SlotableComponent{
+             slot: name,
+             module: module,
+             let: %AST.Directive{value: %AST.AttributeExpr{value: let}},
+             props: props
+           } = component
+           | tail
+         ],
+         buffer,
+         state
+       ) do
+    [
+      {let, collect_component_props(module, props), handle_nested_block(component, buffer, state)}
+      | handle_templates(tail, buffer, state)
+    ]
   end
 
   defp find_attribute_value(attrs, name, default)
