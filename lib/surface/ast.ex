@@ -22,10 +22,11 @@ defmodule Surface.AST.Container do
       * `:children` - children AST nodes
       * `:directives` - directives associated with this container
   """
-  defstruct [:children, :directives]
+  defstruct [:children, :directives, debug: []]
 
   @type t :: %__MODULE__{
           children: list(Surface.AST.t()),
+          debug: Keyword.t(),
           directives: list(Surface.AST.Directive.t())
         }
 end
@@ -85,10 +86,11 @@ defmodule Surface.AST.Comprehension do
       * `:children` - the children to collect over the generator
       * `:meta` - compilation meta data
   """
-  defstruct [:generator, :children, :meta]
+  defstruct [:generator, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
           generator: any(),
+          debug: Keyword.t(),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -103,10 +105,11 @@ defmodule Surface.AST.Conditional do
       * `:children` - the children to insert into the dom if the condition evaluates truthy
       * `:meta` - compilation meta data
   """
-  defstruct [:condition, :children, :meta]
+  defstruct [:condition, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
           condition: any(),
+          debug: Keyword.t(),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -233,10 +236,11 @@ defmodule Surface.AST.Tag do
       * `:children` - the tag children
       * `:meta` - compilation meta data
   """
-  defstruct [:element, :attributes, :directives, :children, :meta]
+  defstruct [:element, :attributes, :directives, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
           element: binary(),
+          debug: Keyword.t(),
           attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
@@ -254,10 +258,11 @@ defmodule Surface.AST.VoidTag do
       * `:directives` - any directives to be applied to this tag
       * `:meta` - compilation meta data
   """
-  defstruct [:element, :attributes, :directives, :meta]
+  defstruct [:element, :attributes, :directives, :meta, debug: []]
 
   @type t :: %__MODULE__{
           element: binary(),
+          debug: Keyword.t(),
           attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
@@ -313,10 +318,11 @@ defmodule Surface.AST.Component do
       * `:children` - the tag children
       * `:meta` - compilation meta data
   """
-  defstruct [:module, :type, :props, :directives, :templates, :meta]
+  defstruct [:module, :type, :props, :directives, :templates, :meta, debug: []]
 
   @type t :: %__MODULE__{
           module: module(),
+          debug: Keyword.t(),
           type: module(),
           props: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t()),
@@ -342,10 +348,11 @@ defmodule Surface.AST.SlotableComponent do
       * `:children` - the tag children
       * `:meta` - compilation meta data
   """
-  defstruct [:module, :slot, :type, :let, :props, :directives, :templates, :meta]
+  defstruct [:module, :slot, :type, :let, :props, :directives, :templates, :meta, debug: []]
 
   @type t :: %__MODULE__{
           module: module(),
+          debug: Keyword.t(),
           type: module(),
           slot: atom(),
           let: Surface.AST.Directive.t(),
