@@ -42,7 +42,7 @@ defmodule Surface.AST.Meta do
       * `:line_offset` - the line offset from the caller's line to the start of this source
       * `:caller` - a Macro.Env struct representing the caller
   """
-  @derive {Inspect, only: [:line, :module, :node_alias, :file, :line_offset]}
+  @derive {Inspect, only: [:line, :module, :node_alias, :file]}
   defstruct [:line, :module, :node_alias, :line_offset, :file, :caller]
 
   @type t :: %__MODULE__{
