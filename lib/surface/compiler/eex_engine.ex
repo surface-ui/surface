@@ -355,13 +355,19 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([%AST.Component{templates: templates_by_name} = component | nodes]) do
+  defp to_dynamic_nested_html([%type{templates: templates_by_name} = component | nodes])
+       when type in [AST.Component, AST.SlotableComponent] do
     templates_by_name =
       templates_by_name
       |> Enum.map(fn {name, templates} ->
         templates =
-          Enum.map(templates, fn %AST.Template{children: children} = template ->
-            %{template | children: to_token_sequence(children)}
+          Enum.map(templates, fn
+            %AST.Template{children: children} = template ->
+              %{template | children: to_token_sequence(children)}
+
+            %AST.SlotableComponent{} = template ->
+              [translated] = to_dynamic_nested_html([template])
+              translated
           end)
 
         {name, templates}

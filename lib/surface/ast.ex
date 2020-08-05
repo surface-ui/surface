@@ -321,6 +321,37 @@ defmodule Surface.AST.Component do
           props: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t()),
           templates: %{
+            :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
+            optional(atom()) => list(Surface.AST.Template.t())
+          },
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.SlotableComponent do
+  @moduledoc """
+  An AST node representing a standard HTML tag
+
+  ## Properties
+      * `:module` - the component module
+      * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.Component)
+      * `:slot` - the name of the slot that this component is for
+      * `:let` - the bindings for this template
+      * `:props` - the props for this component
+      * `:directives` - any directives to be applied to this tag
+      * `:children` - the tag children
+      * `:meta` - compilation meta data
+  """
+  defstruct [:module, :slot, :type, :let, :props, :directives, :templates, :meta]
+
+  @type t :: %__MODULE__{
+          module: module(),
+          type: module(),
+          slot: atom(),
+          let: Surface.AST.Directive.t(),
+          props: list(Surface.AST.Attribute.t()),
+          directives: list(Surface.AST.Directive.t()),
+          templates: %{
             :default => list(Surface.AST.Template.t()),
             optional(atom()) => list(Surface.AST.Template.t())
           },

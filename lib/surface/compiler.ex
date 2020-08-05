@@ -366,16 +366,25 @@ defmodule Surface.Compiler do
 
       result =
         if component_slotable?(mod) do
-          template_props = template_props(template_directives, meta)
-
-          %AST.Template{
-            name: mod.__slot_name__(),
-            let: template_props,
-            children: [component],
+          %AST.SlotableComponent{
+            module: mod,
+            slot: mod.__slot_name__(),
+            type: component_type,
+            let: template_props(template_directives, meta),
+            props: attributes,
+            directives: directives,
+            templates: templates,
             meta: meta
           }
         else
-          component
+          %AST.Component{
+            module: mod,
+            type: component_type,
+            props: attributes,
+            directives: directives,
+            templates: templates,
+            meta: meta
+          }
         end
 
       {:ok, result}
@@ -674,6 +683,7 @@ defmodule Surface.Compiler do
       |> to_ast(meta)
       |> Enum.group_by(fn
         %AST.Template{name: name} -> name
+        %AST.SlotableComponent{slot: name} -> name
         _ -> :default
       end)
 
