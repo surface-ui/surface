@@ -18,7 +18,7 @@ defmodule Surface.Directive.Debug do
       name: :debug,
       value: %AST.AttributeExpr{
         original: "",
-        value: [ast: true, expression: true],
+        value: [:code],
         meta: attr_meta
       },
       meta: attr_meta
@@ -30,7 +30,7 @@ defmodule Surface.Directive.Debug do
   def process(%AST.Directive{value: %AST.AttributeExpr{value: debug}}, node) do
     node = %{node | debug: Keyword.merge(node.debug || [], debug)}
 
-    if node.debug[:ast] do
+    if Enum.member?(node.debug, :ast) do
       IO.puts(">>> DEBUG(AST): #{node.meta.file}:#{node.meta.line}")
       IO.puts(inspect(node, pretty: true))
       IO.puts("<<<")
@@ -40,14 +40,20 @@ defmodule Surface.Directive.Debug do
   end
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, :let, :bindings, meta)
+    expr =
+      case Helpers.attribute_expr_to_quoted!(value, :debug, :bindings, meta) do
+        value when is_atom(value) ->
+          [value]
 
-    if !Keyword.keyword?(expr) do
-      invalid_debug_value(value, meta)
-    end
+        list when is_list(list) ->
+          list
 
-    for binding <- expr do
-      if not match?({prop, value} when is_boolean(value), binding) do
+        _ ->
+          invalid_debug_value(value, meta)
+      end
+
+    for name <- expr do
+      if not is_atom(name) do
         invalid_debug_value(value, meta)
       end
     end
@@ -61,7 +67,7 @@ defmodule Surface.Directive.Debug do
 
   defp invalid_debug_value(value, meta) do
     message = """
-    invalid value for directive :debug. Expected a keyword list with compile-time boolean values, \
+    invalid value for directive :debug. Expected a list of atoms, \
     got: #{String.trim(value)}.\
     """
 

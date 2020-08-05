@@ -26,7 +26,7 @@ defmodule Surface.AST.Container do
 
   @type t :: %__MODULE__{
           children: list(Surface.AST.t()),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           directives: list(Surface.AST.Directive.t())
         }
 end
@@ -90,7 +90,7 @@ defmodule Surface.AST.Comprehension do
 
   @type t :: %__MODULE__{
           generator: any(),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -109,7 +109,7 @@ defmodule Surface.AST.Conditional do
 
   @type t :: %__MODULE__{
           condition: any(),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -240,7 +240,7 @@ defmodule Surface.AST.Tag do
 
   @type t :: %__MODULE__{
           element: binary(),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
@@ -262,7 +262,7 @@ defmodule Surface.AST.VoidTag do
 
   @type t :: %__MODULE__{
           element: binary(),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
@@ -322,7 +322,7 @@ defmodule Surface.AST.Component do
 
   @type t :: %__MODULE__{
           module: module(),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           type: module(),
           props: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t()),
@@ -352,7 +352,7 @@ defmodule Surface.AST.SlotableComponent do
 
   @type t :: %__MODULE__{
           module: module(),
-          debug: Keyword.t(),
+          debug: List.t(atom()),
           type: module(),
           slot: atom(),
           let: Surface.AST.Directive.t(),
