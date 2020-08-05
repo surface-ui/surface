@@ -133,15 +133,35 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  # TODO: allow generator lists
-  def attribute_expr_to_quoted!(value, attribute_name, :list, meta) do
+  def attribute_expr_to_quoted!(value, attribute_name, :bindings, meta) do
     with {:ok, {:identity, _, expr}} <-
            Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file) do
       if Enum.count(expr) == 1 do
-        handle_list_expr(attribute_name, Enum.at(expr, 0))
+        Enum.at(expr, 0)
       else
-        handle_list_expr(attribute_name, expr)
+        expr
       end
+    else
+      {:error, {line, error, token}} ->
+        IOHelper.syntax_error(
+          error <> token,
+          meta.file,
+          line
+        )
+
+      _ ->
+        IOHelper.syntax_error(
+          "invalid list expression '#{value}'",
+          meta.file,
+          meta.line
+        )
+    end
+  end
+
+  def attribute_expr_to_quoted!(value, attribute_name, :list, meta) do
+    with {:ok, expr} <-
+           Code.string_to_quoted(value, line: meta.line, file: meta.file) do
+      handle_list_expr(attribute_name, expr)
     else
       {:error, {line, error, token}} ->
         IOHelper.syntax_error(

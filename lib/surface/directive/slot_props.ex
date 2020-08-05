@@ -13,7 +13,7 @@ defmodule Surface.Directive.SlotProps do
   def extract(_, _), do: []
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, :props, :list, meta)
+    expr = Helpers.attribute_expr_to_quoted!(value, :props, :bindings, meta)
 
     if !Keyword.keyword?(expr) do
       message = """

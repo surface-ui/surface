@@ -15,7 +15,7 @@ defmodule Surface.Directive.Let do
   defp directive_value(value, meta) do
     # using a list here because it doesn't wrap the result in a function call
     # to Surface.<type>_value(...)
-    expr = Helpers.attribute_expr_to_quoted!(value, :let, :list, meta)
+    expr = Helpers.attribute_expr_to_quoted!(value, :let, :bindings, meta)
 
     if !Keyword.keyword?(expr) do
       invalid_let_binding(value, meta)
