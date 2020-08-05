@@ -181,7 +181,9 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "property label, :string, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :default, :values, :reject_nil\]/
+
+      message =
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :reject_nil\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
