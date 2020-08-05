@@ -68,11 +68,12 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(%AST.Interpolation{value: expr}, _buffer, _state), do: expr
 
-  defp to_expression(%AST.Container{children: children}, buffer, state),
-    do: to_expression(children, buffer, state)
+  defp to_expression(%AST.Container{children: children} = container, buffer, state),
+    do: to_expression(children, buffer, state) |> maybe_print_expression(container)
 
   defp to_expression(
-         %AST.Comprehension{generator: %AST.AttributeExpr{value: generator}, children: children},
+         %AST.Comprehension{generator: %AST.AttributeExpr{value: generator}, children: children} =
+           comprehension,
          buffer,
          state
        ) do
@@ -81,16 +82,19 @@ defmodule Surface.Compiler.EExEngine do
     generator_expr = generator ++ [[do: buffer]]
 
     {:for, [generated: true], generator_expr}
+    |> maybe_print_expression(comprehension)
   end
 
   defp to_expression(
-         %AST.Conditional{condition: %AST.AttributeExpr{value: condition}, children: children},
+         %AST.Conditional{condition: %AST.AttributeExpr{value: condition}, children: children} =
+           conditional,
          buffer,
          state
        ) do
     buffer = handle_nested_block(children, buffer, state)
 
     {:if, [generated: true], [condition, [do: buffer]]}
+    |> maybe_print_expression(conditional)
   end
 
   defp to_expression(
@@ -130,13 +134,13 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_expression(
-         %type{
+         %AST.Component{
            module: module,
            type: Surface.LiveView,
            props: props,
            templates: templates,
            meta: _meta
-         },
+         } = component,
          buffer,
          state
        ) do
@@ -151,6 +155,7 @@ defmodule Surface.Compiler.EExEngine do
         unquote(props_expr)
       )
     end
+    |> maybe_print_expression(component)
   end
 
   defp to_expression(
@@ -188,6 +193,7 @@ defmodule Surface.Compiler.EExEngine do
         unquote(do_block)
       )
     end
+    |> maybe_print_expression(component)
   end
 
   defp collect_component_props(module, attrs) do
@@ -604,5 +610,15 @@ defmodule Surface.Compiler.EExEngine do
 
   defp at_ref(name) do
     {:@, [generated: true], [{name, [generated: true], nil}]}
+  end
+
+  defp maybe_print_expression(expr, node) do
+    if Map.has_key?(node, :debug) and node.debug[:expression] do
+      IO.puts(">>> DEBUG(EXPRESSION): #{node.meta.file}:#{node.meta.line}")
+      IO.puts(Macro.to_string(expr))
+      IO.puts("<<<")
+    end
+
+    expr
   end
 end
