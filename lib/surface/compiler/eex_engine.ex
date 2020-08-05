@@ -146,7 +146,7 @@ defmodule Surface.Compiler.EExEngine do
       Phoenix.LiveView.Helpers.live_render(
         unquote(at_ref(:socket)),
         unquote(module),
-        Keyword.new(unquote(props_expr))
+        unquote(props_expr)
       )
     end
   end

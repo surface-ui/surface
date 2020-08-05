@@ -14,8 +14,6 @@ defmodule Surface.Directive do
       alias Surface.IOHelper
 
       @behaviour unquote(__MODULE__)
-
-      # TODO: define default extract to handle base case?
     end
   end
 end

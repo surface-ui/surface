@@ -783,7 +783,6 @@ defmodule Surface.Compiler do
     for slot_name <- Map.keys(templates),
         template <- Map.get(templates, slot_name) do
       slot = mod.__get_slot__(slot_name)
-      # TODO validate slot props/lets
       {props, prop_meta} =
         case template.let do
           %AST.Directive{

@@ -95,10 +95,6 @@ defmodule Surface.Compiler.Helpers do
   end
 
   def attribute_expr_to_quoted!(value, attribute_name, :event, meta) do
-    # TODO: figure out what the caller_cid should be.
-    # I'm unsure how to tell when it should be nil and when it should be @myself
-    # Potentially use the meta.caller.module to determine?
-
     cid =
       cond do
         Module.open?(meta.caller.module) and
