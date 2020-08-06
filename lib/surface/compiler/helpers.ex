@@ -155,8 +155,7 @@ defmodule Surface.Compiler.Helpers do
   end
 
   def attribute_expr_to_quoted!(value, attribute_name, :list, meta) do
-    with {:ok, expr} <-
-           Code.string_to_quoted(value, line: meta.line, file: meta.file) do
+    with {:ok, expr} <- Code.string_to_quoted(value, line: meta.line, file: meta.file) do
       handle_list_expr(attribute_name, expr)
     else
       {:error, {line, error, token}} ->
@@ -237,6 +236,12 @@ defmodule Surface.Compiler.Helpers do
      the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
      """}
   end
+  defp validate_interpolation(
+         {{:., _, [{{:., _, [_, :inner_content]}, _, []}]}, _, _},
+         _meta
+       ) do
+    :ok
+  end
 
   defp validate_interpolation({{:., _, dotted_args} = expr, metadata, args} = expression, meta) do
     if List.last(dotted_args) == :inner_content and !Keyword.get(metadata, :no_parens, false) do
@@ -251,6 +256,8 @@ defmodule Surface.Compiler.Helpers do
             [{expr, Keyword.put(metadata, :no_parens, true), []}]},
            [line: meta.line, file: meta.file], args}
         )
+        # to fix the lack of no_parens metadata on elixir < 1.10
+        |> String.replace("inner_content().(", "inner_content.(")
 
       {:error,
        """
