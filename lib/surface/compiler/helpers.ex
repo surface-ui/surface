@@ -236,6 +236,7 @@ defmodule Surface.Compiler.Helpers do
      the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
      """}
   end
+
   defp validate_interpolation(
          {{:., _, [{{:., _, [_, :inner_content]}, _, []}]}, _, _},
          _meta
