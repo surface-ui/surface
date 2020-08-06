@@ -11,6 +11,10 @@ defmodule Surface.SlotTest do
       <div>Stateful</div>
       """
     end
+
+    def handle_event(_, _, socket) do
+      {:noreply, socket}
+    end
   end
 
   defmodule InnerData do
@@ -187,7 +191,7 @@ defmodule Surface.SlotTest do
       <div>
         <div>
           label 1:<b>content 1</b>
-          <div data-phx-component="0">Stateful</div>
+          <div data-phx-component="1">Stateful</div>
         </div>
         <div>
           label 2:<b>content 2</b>
@@ -197,7 +201,7 @@ defmodule Surface.SlotTest do
           Content 2
             Content 2.1
           Content 3
-          <div data-phx-component="1">Stateful</div>
+          <div data-phx-component="2">Stateful</div>
         </div>
       </div>
       """
@@ -538,7 +542,7 @@ defmodule Surface.SlotSyncTest do
 
   test "warn if parent component does not define any slots" do
     code = """
-    <StatefulComponent>
+    <StatefulComponent id="stateful">
       <InnerData/>
     </StatefulComponent>
     """
