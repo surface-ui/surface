@@ -1,7 +1,7 @@
-defmodule Surface.Translator.ParserTest do
+defmodule Surface.Compiler.ParserTest do
   use ExUnit.Case, async: true
 
-  import Surface.Translator.Parser
+  import Surface.Compiler.Parser
 
   test "empty node" do
     assert parse("") == {:ok, []}

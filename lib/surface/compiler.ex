@@ -5,7 +5,7 @@ defmodule Surface.Compiler do
   This module also contains the main logic to translate Surface code.
   """
 
-  alias Surface.Translator.Parser
+  alias Surface.Compiler.Parser
   alias Surface.IOHelper
   alias Surface.AST
   alias Surface.Compiler.Helpers

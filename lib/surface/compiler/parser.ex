@@ -1,4 +1,4 @@
-defmodule Surface.Translator.Parser do
+defmodule Surface.Compiler.Parser do
   @moduledoc false
 
   import NimbleParsec
