@@ -121,9 +121,9 @@ defmodule Surface.Compiler.EExEngine do
         slot_name_expr = at_ref(name)
 
         quote generated: true do
-          for slot <- unquote(slot_name_expr) do
-            slot.inner_content.(unquote(props_expr))
-          end
+          # TODO: For now, we only handle the first since rendering multiple items requires using `:for` directly in the template. 
+          # Review this after we adding option `join`.
+          Enum.at(unquote(slot_name_expr), 0).inner_content.(unquote(props_expr))
         end
       end
 
