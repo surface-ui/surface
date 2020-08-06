@@ -22,7 +22,7 @@ defmodule Surface.Directive.Let do
     end
 
     for binding <- expr do
-      if not match?({prop, {binding_name, _, nil}} when is_atom(binding_name), binding) do
+      if not match?({_prop, {binding_name, _, nil}} when is_atom(binding_name), binding) do
         invalid_let_binding(value, meta)
       end
     end

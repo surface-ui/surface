@@ -355,15 +355,6 @@ defmodule Surface.Compiler do
            collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta),
          :ok <- validate_properties(mod, attributes, meta) do
-      component = %AST.Component{
-        module: mod,
-        type: component_type,
-        props: attributes,
-        directives: directives,
-        templates: templates,
-        meta: meta
-      }
-
       result =
         if component_slotable?(mod) do
           %AST.SlotableComponent{

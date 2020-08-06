@@ -129,7 +129,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def attribute_expr_to_quoted!(value, attribute_name, :bindings, meta) do
+  def attribute_expr_to_quoted!(value, _attribute_name, :bindings, meta) do
     with {:ok, {:identity, _, expr}} <-
            Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file) do
       if Enum.count(expr) == 1 do

@@ -86,7 +86,7 @@ defmodule ContextTest do
 
   test "pass context to child component using :as option" do
     code = """
-    <Outer>
+    <Outer :debug>
       <InnerWithOptionAs/>
     </Outer>
     """

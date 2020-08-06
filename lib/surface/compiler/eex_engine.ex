@@ -138,11 +138,10 @@ defmodule Surface.Compiler.EExEngine do
            module: module,
            type: Surface.LiveView,
            props: props,
-           templates: templates,
            meta: _meta
          } = component,
-         buffer,
-         state
+         _buffer,
+         _state
        ) do
     props_expr =
       collect_component_props(module, props)
@@ -161,7 +160,6 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(
          %ast_type{
            module: module,
-           type: component_type,
            props: props,
            templates: templates,
            meta: _meta
@@ -234,7 +232,7 @@ defmodule Surface.Compiler.EExEngine do
 
     do_block =
       slot_info
-      |> Enum.map(fn {name, size, infos} ->
+      |> Enum.map(fn {name, _size, infos} ->
         infos
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
@@ -283,7 +281,7 @@ defmodule Surface.Compiler.EExEngine do
     state.engine.handle_end(buffer)
   end
 
-  defp handle_templates(component, [], _, _), do: []
+  defp handle_templates(_component, [], _, _), do: []
 
   defp handle_templates(
          component,
@@ -292,7 +290,7 @@ defmodule Surface.Compiler.EExEngine do
              name: name,
              let: %AST.Directive{value: %AST.AttributeExpr{value: let}},
              children: children
-           } = template
+           }
            | tail
          ],
          buffer,
