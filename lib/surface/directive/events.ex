@@ -31,24 +31,6 @@ defmodule Surface.Directive.Events do
   def extract(_, _), do: []
 
   def process(
-        %AST.Directive{name: name, value: %AST.Text{} = value, meta: meta},
-        %type{attributes: attributes} = node
-      )
-      when type in [AST.Tag, AST.VoidTag] do
-    attributes = [
-      %AST.Attribute{
-        name: name,
-        type: :string,
-        value: [value],
-        meta: meta
-      }
-      | attributes
-    ]
-
-    %{node | attributes: attributes}
-  end
-
-  def process(
         %AST.Directive{
           name: event_name,
           value: %AST.AttributeExpr{value: value} = expr
