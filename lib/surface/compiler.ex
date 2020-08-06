@@ -416,7 +416,8 @@ defmodule Surface.Compiler do
       {:ok,
        %AST.Container{
          children: coerce_to_list(expanded),
-         directives: directives
+         directives: directives,
+         meta: meta
        }}
     else
       false ->
@@ -783,6 +784,7 @@ defmodule Surface.Compiler do
     for slot_name <- Map.keys(templates),
         template <- Map.get(templates, slot_name) do
       slot = mod.__get_slot__(slot_name)
+
       {props, prop_meta} =
         case template.let do
           %AST.Directive{

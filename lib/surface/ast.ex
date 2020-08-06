@@ -22,11 +22,12 @@ defmodule Surface.AST.Container do
       * `:children` - children AST nodes
       * `:directives` - directives associated with this container
   """
-  defstruct [:children, :directives, debug: []]
+  defstruct [:children, :directives, :meta, debug: []]
 
   @type t :: %__MODULE__{
           children: list(Surface.AST.t()),
           debug: List.t(atom()),
+          meta: Surface.AST.Meta.t(),
           directives: list(Surface.AST.Directive.t())
         }
 end
