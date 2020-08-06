@@ -15,7 +15,8 @@ defmodule Surface.Compiler.EExEngine do
   def translate(nodes, opts \\ []) do
     state = %{
       engine: opts[:engine] || @default_engine,
-      depth: 0
+      depth: 0,
+      context: []
     }
 
     nodes
@@ -72,7 +73,12 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    buffer = handle_nested_block(children, buffer, %{state | depth: state.depth + 1})
+    buffer =
+      handle_nested_block(children, buffer, %{
+        state
+        | depth: state.depth + 1,
+          context: [:for | state.context]
+      })
 
     generator_expr = generator ++ [[do: buffer]]
 
@@ -86,7 +92,12 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    buffer = handle_nested_block(children, buffer, %{state | depth: state.depth + 1})
+    buffer =
+      handle_nested_block(children, buffer, %{
+        state
+        | depth: state.depth + 1,
+          context: [:if | state.context]
+      })
 
     {:if, [generated: true], [condition, [do: buffer]]}
     |> maybe_print_expression(conditional)
@@ -116,7 +127,13 @@ defmodule Surface.Compiler.EExEngine do
         end
       end
 
-    default_value = handle_nested_block(default, buffer, %{state | depth: state.depth + 1})
+    default_value =
+      handle_nested_block(default, buffer, %{
+        state
+        | depth: state.depth + 1,
+          context: [:slot | state.context]
+      })
+
     name_to_check = if name == :default, do: :__default__, else: name
 
     quote generated: true do
@@ -170,7 +187,7 @@ defmodule Surface.Compiler.EExEngine do
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
     assigns_expr =
-      if state.depth > 0 do
+      if state.depth > 0 and Enum.member?(state.context, :template) do
         quote generated: true do
           assigns
         end
@@ -231,7 +248,10 @@ defmodule Surface.Compiler.EExEngine do
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
         {if(name == :default, do: :__default__, else: name), Enum.count(templates_for_slot),
-         handle_templates(component, templates_for_slot, buffer, state)}
+         handle_templates(component, templates_for_slot, buffer, %{
+           state
+           | context: [:template | state.context]
+         })}
       end)
 
     do_block =
