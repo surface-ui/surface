@@ -64,9 +64,6 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(%AST.Interpolation{value: expr}, _buffer, _state), do: expr
 
-  defp to_expression(%AST.Container{children: children} = container, buffer, state),
-    do: to_expression(children, buffer, state) |> maybe_print_expression(container)
-
   defp to_expression(
          %AST.Comprehension{generator: %AST.AttributeExpr{value: generator}, children: children} =
            comprehension,
