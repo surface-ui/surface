@@ -15,6 +15,10 @@ defmodule Surface.Components.LinkTest do
       </div>
       """
     end
+
+    def handle_event(_, _, socket) do
+      {:noreply, socket}
+    end
   end
 
   describe "Without LiveView" do
@@ -84,7 +88,7 @@ defmodule Surface.Components.LinkTest do
       """
 
       assert render_live(code) =~ """
-             <div data-phx-component="0"><a href="/users/1" phx-click="my_click" phx-target="0"></a></div>
+             <div data-phx-component="1"><a href="/users/1" phx-click="my_click" phx-target="1"></a></div>
              """
     end
   end
