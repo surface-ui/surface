@@ -169,18 +169,13 @@ defmodule Surface do
   end
 
   @doc false
-  def build_assigns(assigns, props, context_gets, slot_props, slots, module) do
+  def build_assigns(assigns, props, context_assigns, slot_props, slots, module) do
     module_ctx = init_context(module, props)
 
-    context =
-      case assigns do
-        %{__surface__: %{context: context}} -> context
-        _ -> []
-      end
-      |> Keyword.put(module, module_ctx)
+    context = Keyword.put(assigns[:__surface__][:context] || [], module, module_ctx)
 
     ctx_assigns =
-      Enum.flat_map(context_gets, fn {from, values} ->
+      Enum.flat_map(context_assigns, fn {from, values} ->
         ctx = Keyword.get(context, from, [])
 
         Enum.map(values, fn {name, as} ->
