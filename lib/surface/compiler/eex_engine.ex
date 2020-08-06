@@ -15,12 +15,7 @@ defmodule Surface.Compiler.EExEngine do
   def translate(nodes, opts \\ []) do
     state = %{
       engine: opts[:engine] || @default_engine,
-      file: opts[:file] || "nofile",
-      line: opts[:line] || 1,
-      quoted: [],
-      start_line: nil,
-      start_column: nil,
-      parser_options: Code.get_compiler_option(:parser_options)
+      depth: 0
     }
 
     nodes
@@ -77,7 +72,7 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    buffer = handle_nested_block(children, buffer, state)
+    buffer = handle_nested_block(children, buffer, %{state | depth: state.depth + 1})
 
     generator_expr = generator ++ [[do: buffer]]
 
@@ -91,7 +86,7 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    buffer = handle_nested_block(children, buffer, state)
+    buffer = handle_nested_block(children, buffer, %{state | depth: state.depth + 1})
 
     {:if, [generated: true], [condition, [do: buffer]]}
     |> maybe_print_expression(conditional)
@@ -121,7 +116,7 @@ defmodule Surface.Compiler.EExEngine do
         end
       end
 
-    default_value = handle_nested_block(default, buffer, state)
+    default_value = handle_nested_block(default, buffer, %{state | depth: state.depth + 1})
     name_to_check = if name == :default, do: :__default__, else: name
 
     quote generated: true do
@@ -137,8 +132,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Component{
            module: module,
            type: Surface.LiveView,
-           props: props,
-           meta: _meta
+           props: props
          } = component,
          _buffer,
          _state
@@ -161,8 +155,7 @@ defmodule Surface.Compiler.EExEngine do
          %ast_type{
            module: module,
            props: props,
-           templates: templates,
-           meta: _meta
+           templates: templates
          } = component,
          buffer,
          state
@@ -176,12 +169,23 @@ defmodule Surface.Compiler.EExEngine do
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
+    assigns_expr =
+      if state.depth > 0 do
+        quote generated: true do
+          assigns
+        end
+      else
+        quote generated: true do
+          var!(assigns)
+        end
+      end
+
     quote generated: true do
       live_component(
         unquote(at_ref(:socket)),
         unquote(module),
         Surface.build_assigns(
-          var!(assigns),
+          unquote(assigns_expr),
           unquote(props_expr),
           unquote(context_assigns),
           unquote(slot_props),
@@ -237,7 +241,7 @@ defmodule Surface.Compiler.EExEngine do
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let})} ->
+            {unquote(name), unquote(index), {unquote({:%{}, [generated: true], let}), assigns}} ->
               unquote(body)
           end
         end)
@@ -298,7 +302,7 @@ defmodule Surface.Compiler.EExEngine do
        ) do
     [
       {add_default_bindings(component, name, let), [],
-       handle_nested_block(children, buffer, state)}
+       handle_nested_block(children, buffer, %{state | depth: state.depth + 1})}
       | handle_templates(component, tail, buffer, state)
     ]
   end
@@ -319,7 +323,7 @@ defmodule Surface.Compiler.EExEngine do
        ) do
     [
       {add_default_bindings(component, name, let), collect_component_props(module, props),
-       handle_nested_block(template, buffer, state)}
+       handle_nested_block(template, buffer, %{state | depth: state.depth + 1})}
       | handle_templates(component, tail, buffer, state)
     ]
   end
@@ -613,7 +617,7 @@ defmodule Surface.Compiler.EExEngine do
   defp maybe_print_expression(expr, node) do
     if Map.has_key?(node, :debug) and Enum.member?(node.debug, :code) do
       IO.puts(">>> DEBUG(EXPRESSION): #{node.meta.file}:#{node.meta.line}")
-     expr |> Macro.to_string() |> Code.format_string!(line_length: 120) |> IO.puts
+      expr |> Macro.to_string() |> Code.format_string!(line_length: 120) |> IO.puts()
       IO.puts("<<<")
     end
 

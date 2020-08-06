@@ -130,7 +130,7 @@ defmodule ContextTest do
     """
 
     assert render_live(code) =~ """
-           Context: %{}
+           Context: [{ContextTest.RenderContext, []}]
            """
   end
 end
