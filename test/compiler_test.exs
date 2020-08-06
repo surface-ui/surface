@@ -353,7 +353,7 @@ defmodule Surface.CompilerTest do
     test "raise error for invalid expression on interpolation" do
       code = """
       <Grid>
-        <Column>
+        <Column title="Test">
           Test
         </Column>
         <Column>
@@ -386,7 +386,7 @@ defmodule Surface.CompilerTest do
     test "raise error on the right line when components has only data components" do
       code = """
       <Grid items={{ , }}>
-        <Column>
+        <Column title="Test">
           Test
         </Column>
       </Grid>
@@ -400,7 +400,7 @@ defmodule Surface.CompilerTest do
     test "raise error on the right line when error occurs in data components" do
       code = """
       <Grid items={{ user <- users }}>
-        <Column>
+        <Column title="Test">
           Test
         </Column>
         <Column title={{ , }}>
@@ -417,7 +417,7 @@ defmodule Surface.CompilerTest do
     test "raise error on the right line when error occurs in live components" do
       code = """
       <GridLive items={{ , }}>
-        <Column>
+        <Column title="Test">
           Test
         </Column>
       </GridLive>

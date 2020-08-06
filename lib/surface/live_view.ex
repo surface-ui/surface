@@ -41,7 +41,7 @@ defmodule Surface.LiveView do
       @before_compile unquote(__MODULE__)
 
       @doc "The id of the live view"
-      property id, :integer, required: true
+      property id, :integer
 
       @doc """
       The request info necessary for the view, such as params, cookie session info, etc.
