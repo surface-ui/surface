@@ -27,7 +27,7 @@ defmodule Surface.Directive.Debug do
 
   def extract(_, _), do: []
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: debug}}, node) do
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: debug}}, %type{} = node) do
     node = %{node | debug: Keyword.merge(node.debug || [], debug)}
 
     if Enum.member?(node.debug, :ast) do
@@ -36,7 +36,15 @@ defmodule Surface.Directive.Debug do
       IO.puts("<<<")
     end
 
-    node
+    if type in [AST.VoidTag, AST.Tag] do
+      %AST.Container{
+        debug: node.debug,
+        meta: node.meta,
+        children: [node]
+      }
+    else
+      node
+    end
   end
 
   defp directive_value(value, meta) do
