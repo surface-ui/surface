@@ -428,7 +428,7 @@ defmodule Surface.Compiler.EExEngine do
   defp combine_static_portions([str | values], {static_acc, node_acc}) when is_binary(str),
     do: combine_static_portions(values, {[str | static_acc], node_acc})
 
-  defp combine_static_portions([node | values], {static_acc, node_acc}) when is_struct(node) do
+  defp combine_static_portions([node | values], {static_acc, node_acc}) do
     node_acc =
       case static_acc do
         [] -> node_acc
