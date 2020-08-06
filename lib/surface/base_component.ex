@@ -9,7 +9,7 @@ defmodule Surface.BaseComponent do
   @callback component_type() :: module()
 
   defmacro __using__(opts \\ []) do
-    {type, _opts} = Keyword.pop!(opts, :type)
+    type = Keyword.get(opts, :type)
 
     quote do
       import Surface
