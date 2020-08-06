@@ -121,7 +121,7 @@ defmodule Surface.Compiler.EExEngine do
         slot_name_expr = at_ref(name)
 
         quote generated: true do
-          # TODO: For now, we only handle the first since rendering multiple items requires using `:for` directly in the template. 
+          # TODO: For now, we only handle the first since rendering multiple items requires using `:for` directly in the template.
           # Review this after we adding option `join`.
           Enum.at(unquote(slot_name_expr), 0).inner_content.(unquote(props_expr))
         end
@@ -335,13 +335,20 @@ defmodule Surface.Compiler.EExEngine do
              slot: name,
              module: module,
              let: %AST.Directive{value: %AST.AttributeExpr{value: let}},
-             props: props
-           } = template
+             props: props,
+             templates: %{default: default}
+           }
            | tail
          ],
          buffer,
          state
        ) do
+    template =
+      case default do
+        [] -> []
+        [%AST.Template{children: children}] -> children
+      end
+
     [
       {add_default_bindings(component, name, let), collect_component_props(module, props),
        handle_nested_block(template, buffer, %{state | depth: state.depth + 1})}
@@ -446,7 +453,7 @@ defmodule Surface.Compiler.EExEngine do
     [text | to_dynamic_nested_html(nodes)]
   end
 
-  defp to_dynamic_nested_html([%AST.Container{children: children} = container | nodes]) do
+  defp to_dynamic_nested_html([%AST.Container{children: children} | nodes]) do
     [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
 
