@@ -24,6 +24,10 @@ defmodule Surface.CompilerTest do
     property title, :string, required: true
   end
 
+  defmodule ColumnWithoutTitle do
+    use Surface.Component, slot: "cols"
+  end
+
   defmodule Grid do
     use Surface.Component
 
@@ -353,12 +357,12 @@ defmodule Surface.CompilerTest do
     test "raise error for invalid expression on interpolation" do
       code = """
       <Grid>
-        <Column title="Test">
+        <ColumnWithoutTitle>
           Test
-        </Column>
-        <Column>
+        </ColumnWithoutTitle>
+        <ColumnWithoutTitle>
           {{ , }}
-        </Column>
+        </ColumnWithoutTitle>
       </Grid>
       """
 
@@ -386,9 +390,9 @@ defmodule Surface.CompilerTest do
     test "raise error on the right line when components has only data components" do
       code = """
       <Grid items={{ , }}>
-        <Column title="Test">
+        <ColumnWithoutTitle>
           Test
-        </Column>
+        </ColumnWithoutTitle>
       </Grid>
       """
 
@@ -400,9 +404,9 @@ defmodule Surface.CompilerTest do
     test "raise error on the right line when error occurs in data components" do
       code = """
       <Grid items={{ user <- users }}>
-        <Column title="Test">
+        <ColumnWithoutTitle>
           Test
-        </Column>
+        </ColumnWithoutTitle>
         <Column title={{ , }}>
           Test
         </Column>
@@ -417,9 +421,9 @@ defmodule Surface.CompilerTest do
     test "raise error on the right line when error occurs in live components" do
       code = """
       <GridLive items={{ , }}>
-        <Column title="Test">
+        <ColumnWithoutTitle>
           Test
-        </Column>
+        </ColumnWithoutTitle>
       </GridLive>
       """
 
