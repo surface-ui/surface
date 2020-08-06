@@ -8,21 +8,11 @@ defmodule Surface.MacroComponent do
 
   defmacro __using__(_) do
     quote do
-      use Surface.BaseComponent,
-        translator: __MODULE__,
-        type: unquote(__MODULE__)
+      use Surface.BaseComponent, type: unquote(__MODULE__)
 
       use Surface.API, include: [:property, :slot]
-
-      @behaviour Surface.Translator
     end
   end
-
-  @doc """
-  Tranlates the content of the macro component.
-  """
-  @callback translate(code :: any, caller: Macro.Env.t()) ::
-              {open :: iodata(), content :: iodata(), close :: iodata()}
 
   @doc """
   Evaluates the values of the properties of a macro component.
@@ -93,43 +83,6 @@ defmodule Surface.MacroComponent do
       message = invalid_value_error(prop_info.name, prop_info.type, evaluated_value, value)
       IOHelper.compile_error(message, file, line)
     end
-  end
-
-  defp eval_value(component, {name, {:attribute_expr, [expr], %{line: line}}, _meta}, caller) do
-    env = %Macro.Env{caller | line: line}
-    prop_info = component.__get_prop__(String.to_atom(name))
-
-    {evaluated_value, _} =
-      try do
-        Code.eval_string("Surface.Util.identity(#{expr})", [], env)
-      rescue
-        exception ->
-          %exception_mod{} = exception
-
-          message = """
-          could not evaluate expression {{ #{expr} }}. Reason:
-
-          (#{inspect(exception_mod)}) #{Exception.message(exception)}
-          """
-
-          error = %CompileError{line: caller.line + line, file: caller.file, description: message}
-          reraise(error, __STACKTRACE__)
-      end
-
-    if valid_value?(prop_info.type, evaluated_value) do
-      {prop_info.name, evaluated_value}
-    else
-      message = invalid_value_error(prop_info.name, prop_info.type, evaluated_value, expr)
-      IOHelper.compile_error(message, caller.file, caller.line + line)
-    end
-  end
-
-  defp eval_value(_component, {name, value, _meta}, _caller) when is_list(value) do
-    {String.to_atom(name), to_string(value)}
-  end
-
-  defp eval_value(_component, {name, value, _meta}, _caller) do
-    {String.to_atom(name), value}
   end
 
   defp valid_value?(:string, value) when not is_binary(value) do

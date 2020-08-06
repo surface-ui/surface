@@ -341,8 +341,22 @@ defmodule Surface.Compiler.Helpers do
     "#{plural} #{rest |> Enum.reverse() |> Enum.join(", ")} and #{last}"
   end
 
+  @blanks ' \n\r\t\v\b\f\e\d\a'
+
+  def blank?([]), do: true
+
+  def blank?([h | t]), do: blank?(h) && blank?(t)
+
+  def blank?(""), do: true
+
+  def blank?(char) when char in @blanks, do: true
+
+  def blank?(<<h, t::binary>>) when h in @blanks, do: blank?(t)
+
+  def blank?(_), do: false
+
   def is_blank_or_empty(%AST.Text{value: value}),
-    do: Surface.Translator.ComponentTranslatorHelper.blank?(value)
+    do: blank?(value)
 
   def is_blank_or_empty(%AST.Template{children: children}),
     do: Enum.all?(children, &is_blank_or_empty/1)
@@ -372,7 +386,7 @@ defmodule Surface.Compiler.Helpers do
   end
 
   def check_module_is_component(module, mod_str) do
-    if function_exported?(module, :translator, 0) do
+    if function_exported?(module, :component_type, 0) do
       {:ok, module}
     else
       {:error, "module #{mod_str} is not a component"}

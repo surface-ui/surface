@@ -57,39 +57,6 @@ defmodule Surface.Components.Markdown do
   @doc "The markdown text to be translated to HTML"
   slot default
 
-  @impl true
-  def translate({_, attributes, children, %{line: tag_line}}, caller) do
-    props = MacroComponent.eval_static_props!(__MODULE__, attributes, caller)
-    class = props[:class] || get_config(:default_class)
-    unwrap = props[:unwrap] || false
-    config_opts = get_config(:default_opts) || []
-    opts = Keyword.merge(config_opts, props[:opts] || [])
-
-    html =
-      children
-      |> IO.iodata_to_binary()
-      |> trim_leading_space()
-      |> markdown_as_html!(caller, tag_line, opts)
-
-    class_attr = if class, do: ~s( class="#{class}"), else: ""
-
-    {open_div, close_div} =
-      if unwrap do
-        {[], []}
-      else
-        {"<div#{class_attr}>\n", "</div>"}
-      end
-
-    open = [
-      "<% require(#{inspect(__MODULE__)}) %>",
-      open_div
-    ]
-
-    close = [close_div]
-
-    {open, html, close}
-  end
-
   def expand(attributes, children, meta) do
     props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
     class = props[:class] || get_config(:default_class)

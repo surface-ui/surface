@@ -27,21 +27,15 @@ defmodule Surface.Component do
   defmacro __using__(opts \\ []) do
     slot_name = Keyword.get(opts, :slot)
 
-    translator =
-      if slot_name do
-        validate_slot_name!(slot_name, __CALLER__)
-        Surface.Translator.SlotableTranslator
-      else
-        Surface.Translator.ComponentTranslator
-      end
+    if slot_name do
+      validate_slot_name!(slot_name, __CALLER__)
+    end
 
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
 
-      use Surface.BaseComponent,
-        translator: unquote(translator),
-        type: unquote(__MODULE__)
+      use Surface.BaseComponent, type: unquote(__MODULE__)
 
       use Surface.API, include: [:property, :slot, :context]
       import Phoenix.HTML
@@ -49,7 +43,7 @@ defmodule Surface.Component do
       @behaviour unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
-      if unquote(translator) == Surface.Translator.SlotableTranslator do
+      if unquote(slot_name) != nil do
         def render(var!(assigns)) do
           ~H()
         end
