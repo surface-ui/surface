@@ -149,7 +149,7 @@ defmodule Surface.Compiler.EExEngine do
       |> Enum.reject(fn {_, value} -> is_nil(value) end)
 
     quote generated: true do
-      Phoenix.LiveView.Helpers.live_render(
+      live_render(
         unquote(at_ref(:socket)),
         unquote(module),
         unquote(props_expr)
@@ -179,7 +179,7 @@ defmodule Surface.Compiler.EExEngine do
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
     quote generated: true do
-      Phoenix.LiveView.Helpers.live_component(
+      live_component(
         unquote(at_ref(:socket)),
         unquote(module),
         Surface.build_assigns(
