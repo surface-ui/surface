@@ -189,7 +189,7 @@ defmodule Surface.Compiler.EExEngine do
     assigns_expr =
       if state.depth > 0 and Enum.member?(state.context, :template) do
         quote generated: true do
-          assigns
+          ctx_assigns
         end
       else
         quote generated: true do
@@ -261,7 +261,7 @@ defmodule Surface.Compiler.EExEngine do
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index), {unquote({:%{}, [generated: true], let}), assigns}} ->
+            {unquote(name), unquote(index), {unquote({:%{}, [generated: true], let}), ctx_assigns}} ->
               unquote(body)
           end
         end)
