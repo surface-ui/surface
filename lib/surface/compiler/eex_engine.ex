@@ -261,7 +261,8 @@ defmodule Surface.Compiler.EExEngine do
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index), {unquote({:%{}, [generated: true], let}), ctx_assigns}} ->
+            {unquote(name), unquote(index),
+             {unquote({:%{}, [generated: true], let}), ctx_assigns}} ->
               unquote(body)
           end
         end)
@@ -388,6 +389,8 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_prop_expr([%AST.AttributeExpr{value: {_, value}}], :list), do: value
+
+  defp to_prop_expr([%{value: value}], :string), do: value
 
   defp to_prop_expr(values, :string) do
     list_expr =
