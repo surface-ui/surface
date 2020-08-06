@@ -613,7 +613,7 @@ defmodule Surface.Compiler.EExEngine do
   defp maybe_print_expression(expr, node) do
     if Map.has_key?(node, :debug) and Enum.member?(node.debug, :code) do
       IO.puts(">>> DEBUG(EXPRESSION): #{node.meta.file}:#{node.meta.line}")
-      IO.puts(Macro.to_string(expr))
+     expr |> Macro.to_string() |> Code.format_string!(line_length: 120) |> IO.puts
       IO.puts("<<<")
     end
 
