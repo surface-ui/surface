@@ -447,7 +447,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_dynamic_nested_html([%AST.Container{children: children} = container | nodes]) do
-    [%{container | children: to_token_sequence(children)} | to_dynamic_nested_html(nodes)]
+    [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([%AST.Slot{default: default} = slot | nodes]) do
