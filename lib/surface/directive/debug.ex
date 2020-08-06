@@ -36,7 +36,7 @@ defmodule Surface.Directive.Debug do
       IO.puts("<<<")
     end
 
-    if type in [AST.VoidTag, AST.Tag] do
+    if type in [AST.VoidTag, AST.Tag] and Enum.member?(node.debug, :code) do
       %AST.Container{
         debug: node.debug,
         meta: node.meta,

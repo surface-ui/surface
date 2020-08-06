@@ -73,6 +73,20 @@ defmodule Surface.Directive.Events do
     %{node | attributes: [%AST.DynamicAttribute{expr: %{expr | value: value}} | attributes]}
   end
 
+  defp to_quoted_expr(name, value, meta) when is_list(value) do
+    to_quoted_expr(name, to_string(value), meta)
+  end
+
+  defp to_quoted_expr(name, event, meta) when is_binary(event) or is_bitstring(event) do
+    %AST.AttributeExpr{
+      original: event,
+      # using the helpers and quoting this because there is some logic around @myself vs. nil
+      # that I don't want to duplicate
+      value: Helpers.attribute_expr_to_quoted!(~s("#{event}"), name, :event, meta),
+      meta: meta
+    }
+  end
+
   defp to_quoted_expr(name, {:attribute_expr, [original], expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
 
@@ -90,13 +104,5 @@ defmodule Surface.Directive.Events do
       value: value,
       meta: expr_meta
     }
-  end
-
-  defp to_quoted_expr(_name, value, _meta) when is_binary(value) or is_bitstring(value) do
-    %AST.Text{value: value}
-  end
-
-  defp to_quoted_expr(_name, value, _meta) when is_list(value) do
-    %AST.Text{value: to_string(value)}
   end
 end
