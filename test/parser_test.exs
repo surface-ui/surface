@@ -247,6 +247,11 @@ defmodule Surface.Compiler.ParserTest do
                {:ok, [{"#foo", [], ["one</bar>two</baz>three"], %{line: 1, space: ""}}]}
     end
 
+    test "macro issue" do
+      assert parse("<#Macro/>") ==
+               {:ok, [{"#Macro", '', [], %{line: 1, space: ""}}]}
+    end
+
     test "keep track of the line of the definition" do
       code = """
       <div>

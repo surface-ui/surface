@@ -3,6 +3,30 @@ defmodule Surface.CompilerTest do
 
   import ComponentTestHelper
 
+  defmodule Macro do
+    use Surface.MacroComponent
+
+    def expand(_, _, meta) do
+      %Surface.AST.Tag{
+        element: "div",
+        directives: [],
+        attributes: [],
+        children: ["I'm a macro"],
+        meta: meta
+      }
+    end
+  end
+
+  defmodule Div do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div><slot /></div>
+      """
+    end
+  end
+
   defmodule Button do
     use Surface.Component
 
@@ -338,6 +362,70 @@ defmodule Surface.CompilerTest do
 
     assert {{:module, _, _, _}, _} =
              Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+  end
+
+  describe "macro components" do
+    test "expanded at top level" do
+      code = """
+      <#Macro />
+      """
+
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+      assert %Surface.AST.Container{
+               children: [
+                 %Surface.AST.Tag{children: ["I'm a macro"], element: "div"}
+               ]
+             } = node
+    end
+
+    test "expanded within a component" do
+      code = """
+      <Div><#Macro></#Macro></Div>
+      """
+
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+      assert %Surface.AST.Component{
+               module: Surface.CompilerTest.Div,
+               props: [],
+               templates: %{
+                 default: [
+                   %Surface.AST.Template{
+                     children: [
+                       %Surface.AST.Container{
+                         children: [
+                           %Surface.AST.Tag{
+                             children: ["I'm a macro"],
+                             element: "div"
+                           }
+                         ]
+                       }
+                     ]
+                   }
+                 ]
+               }
+             } = node
+    end
+
+    test "expanded within an html tag" do
+      code = """
+      <div><#Macro /></div>
+      """
+
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+      assert %Surface.AST.Tag{
+               element: "div",
+               children: [
+                 %Surface.AST.Container{
+                   children: [
+                     %Surface.AST.Tag{children: ["I'm a macro"], element: "div"}
+                   ]
+                 }
+               ]
+             } = node
+    end
   end
 
   describe "errors/warnings" do
