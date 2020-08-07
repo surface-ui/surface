@@ -216,7 +216,7 @@ defmodule Surface.Compiler.EExEngine do
     Enum.map(module.__props__(), fn %{name: prop_name, type: type, opts: prop_opts} ->
       value =
         case find_attribute_value(attrs, prop_name, nil) do
-          nil -> prop_opts[:default]
+          nil -> Macro.escape(prop_opts[:default])
           expr -> to_prop_expr(expr, type)
         end
 
