@@ -538,9 +538,10 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([]), do: []
 
   defp to_html_attributes([
-         %AST.Attribute{name: name, type: :boolean, value: [%AST.Text{value: value}]}
+         %AST.Attribute{name: name, type: type, value: [%AST.Text{value: value}]}
          | attributes
-       ]) do
+       ])
+       when type == :boolean or is_boolean(value) do
     if value do
       [
         ~S( ),

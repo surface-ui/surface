@@ -29,6 +29,18 @@ defmodule HtmlTagTest do
              """
     end
 
+    test "without a value" do
+      assigns = %{}
+
+      code = ~H"""
+      <div data-option-is-present />
+      """
+
+      assert render_static(code) =~ """
+             <div data-option-is-present></div>
+             """
+    end
+
     test "as expression" do
       assigns = %{title: "My title"}
 
