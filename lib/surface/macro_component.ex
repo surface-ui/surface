@@ -4,6 +4,16 @@ defmodule Surface.MacroComponent do
   content at compile time.
   """
 
+  @doc """
+  This function is called to expand a macro component into a
+  set of Surface.AST nodes.
+  """
+  @callback expand(
+              attribute :: [Surface.Attribute.t()],
+              children :: iodata(),
+              meta :: Surface.AST.Meta.t()
+            ) :: Surface.AST.t() | [Surface.AST.t()]
+
   alias Surface.IOHelper
 
   defmacro __using__(_) do
