@@ -342,10 +342,11 @@ defmodule Surface.CompilerTest do
              element: "div",
              attributes: [
                %Surface.AST.DynamicAttribute{
-                 name: nil,
+                 name: :"phx-click",
                  expr: %Surface.AST.AttributeExpr{
                    original: "",
-                   value: _
+                   # validating that the empty string is treated the same as `nil`
+                   value: {:case, _, [nil, _]}
                  }
                },
                %Surface.AST.Attribute{

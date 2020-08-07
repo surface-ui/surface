@@ -33,7 +33,8 @@ defmodule Surface.Directive.Events do
   def process(
         %AST.Directive{
           name: event_name,
-          value: %AST.AttributeExpr{value: value} = expr
+          value: %AST.AttributeExpr{value: value} = expr,
+          meta: meta
         },
         %type{attributes: attributes} = node
       )
@@ -52,7 +53,21 @@ defmodule Surface.Directive.Events do
         end
       end
 
-    %{node | attributes: [%AST.DynamicAttribute{expr: %{expr | value: value}} | attributes]}
+    %{
+      node
+      | attributes: [
+          %AST.DynamicAttribute{name: event_name, meta: meta, expr: %{expr | value: value}}
+          | attributes
+        ]
+    }
+  end
+
+  defp to_quoted_expr(_name, [], meta) do
+    %AST.AttributeExpr{
+      original: "",
+      value: nil,
+      meta: meta
+    }
   end
 
   defp to_quoted_expr(name, value, meta) when is_list(value) do
