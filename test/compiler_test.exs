@@ -168,6 +168,48 @@ defmodule Surface.CompilerTest do
            } = node
   end
 
+  test "component with empty :css_class property" do
+    code = """
+    <Button class="" />
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Component{
+             module: Surface.CompilerTest.Button,
+             props: [
+               %Surface.AST.Attribute{
+                 name: :class,
+                 type: :css_class,
+                 value: [
+                   %Surface.AST.Text{
+                     value: ""
+                   }
+                 ]
+               }
+             ]
+           } = node
+  end
+
+  test "component with empty :string property" do
+    code = """
+    <Button label="" />
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Component{
+             module: Surface.CompilerTest.Button,
+             props: [
+               %Surface.AST.Attribute{
+                 name: :label,
+                 type: :string,
+                 value: [%Surface.AST.Text{value: ""}]
+               }
+             ]
+           } = node
+  end
+
   test "self-closed component with white spaces between attributes" do
     code = """
     <Button
@@ -279,6 +321,47 @@ defmodule Surface.CompilerTest do
                  name: :click,
                  type: :string,
                  value: [%Surface.AST.Text{value: "event"}]
+               }
+             ]
+           } = node
+  end
+
+  test "HTML node with empty attribute values" do
+    code = """
+    <div
+      label=""
+      disabled=""
+      class=""
+      :on-phx-click=""
+    ></div>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             element: "div",
+             attributes: [
+               %Surface.AST.DynamicAttribute{
+                 name: nil,
+                 expr: %Surface.AST.AttributeExpr{
+                   original: "",
+                   value: _
+                 }
+               },
+               %Surface.AST.Attribute{
+                 name: :label,
+                 type: :string,
+                 value: [%Surface.AST.Text{value: ""}]
+               },
+               %Surface.AST.Attribute{
+                 name: :disabled,
+                 type: :boolean,
+                 value: [%Surface.AST.Text{value: true}]
+               },
+               %Surface.AST.Attribute{
+                 name: :class,
+                 type: :css_class,
+                 value: [%Surface.AST.Text{value: ""}]
                }
              ]
            } = node

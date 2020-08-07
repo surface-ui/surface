@@ -485,6 +485,51 @@ defmodule Surface.Compiler do
     ]
   end
 
+  defp process_attributes(mod, [{name, [], attr_meta} | attrs], meta) do
+    name = String.to_atom(name)
+    attr_meta = Helpers.to_meta(attr_meta, meta)
+    type = determine_attribute_type(mod, name, attr_meta)
+
+    attr_value =
+      case type do
+        :string ->
+          %AST.Text{
+            value: ""
+          }
+
+        :css_class ->
+          %AST.Text{
+            value: ""
+          }
+
+        :event ->
+          %AST.AttributeExpr{
+            original: "",
+            value: nil,
+            meta: attr_meta
+          }
+
+        :boolean ->
+          %AST.Text{value: true}
+
+        type ->
+          message =
+            "invalid property value for #{name}, expected #{type}, but got an empty string"
+
+          IOHelper.compile_error(message, meta.file, meta.line)
+      end
+
+    [
+      %AST.Attribute{
+        type: type,
+        name: name,
+        value: [attr_value],
+        meta: attr_meta
+      }
+      | process_attributes(mod, attrs, meta)
+    ]
+  end
+
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta)
        when is_bitstring(value) or is_binary(value) do
     name = String.to_atom(name)
