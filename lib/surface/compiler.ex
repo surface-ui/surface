@@ -492,12 +492,7 @@ defmodule Surface.Compiler do
 
     attr_value =
       case type do
-        :string ->
-          %AST.Text{
-            value: ""
-          }
-
-        :css_class ->
+        type when type in [:string, :css_class, :any] ->
           %AST.Text{
             value: ""
           }
