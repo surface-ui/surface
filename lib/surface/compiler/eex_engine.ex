@@ -69,6 +69,9 @@ defmodule Surface.Compiler.EExEngine do
       %AST.Error{meta: meta} ->
         [meta.module, meta.requires]
 
+      %AST.Expr{meta: meta} ->
+        [meta.module, meta.requires]
+
       %AST.Slot{default: default, meta: meta} ->
         [meta.module, meta.requires, collect_modules_to_require(default)]
 
@@ -119,6 +122,11 @@ defmodule Surface.Compiler.EExEngine do
     generate_buffer(tail, buffer, state)
   end
 
+  defp generate_buffer([%AST.Expr{} = expr | tail], buffer, state) do
+    buffer = state.engine.handle_expr(buffer, "", to_expression(expr, buffer, state))
+    generate_buffer(tail, buffer, state)
+  end
+
   defp generate_buffer([expr | tail], buffer, state) do
     buffer = state.engine.handle_expr(buffer, "=", to_expression(expr, buffer, state))
     generate_buffer(tail, buffer, state)
@@ -142,6 +150,11 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.AttributeExpr{value: expr}, _buffer, _state), do: expr
 
   defp to_expression(%AST.Interpolation{value: expr}, _buffer, _state), do: expr
+
+  defp to_expression(%AST.Expr{value: expr}, _buffer, _state) when is_list(expr),
+    do: {:__block__, [], expr}
+
+  defp to_expression(%AST.Expr{value: expr}, _buffer, _state), do: {:__block__, [], [expr]}
 
   defp to_expression(
          %AST.Comprehension{generator: %AST.AttributeExpr{value: generator}, children: children} =
@@ -591,6 +604,9 @@ defmodule Surface.Compiler.EExEngine do
     ]
 
   defp to_dynamic_nested_html([%AST.Interpolation{} = value | nodes]),
+    do: [value | to_dynamic_nested_html(nodes)]
+
+  defp to_dynamic_nested_html([%AST.Expr{} = value | nodes]),
     do: [value | to_dynamic_nested_html(nodes)]
 
   defp to_html_attributes([]), do: []

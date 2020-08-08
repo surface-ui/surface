@@ -2,6 +2,7 @@ defmodule Surface.AST do
   @type t ::
           Surface.AST.Text.t()
           | Surface.AST.Interpolation.t()
+          | Surface.AST.Expr.t()
           | Surface.AST.Tag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
@@ -22,7 +23,7 @@ defmodule Surface.AST.Container do
   ## Properties
       * `:children` - children AST nodes
       * `:directives` - directives associated with this container
-      * `:meta` - children AST nodes
+      * `:meta` - compile meta
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:children, :directives, :meta, debug: []]
@@ -32,6 +33,23 @@ defmodule Surface.AST.Container do
           debug: List.t(atom()),
           meta: Surface.AST.Meta.t(),
           directives: list(Surface.AST.Directive.t())
+        }
+end
+
+defmodule Surface.AST.Expr do
+  @moduledoc """
+  An AST node representing an expression which does not resolve to a value printed out to the final DOM.
+
+  ## Properties
+      * `:value` - a quoted expression
+      * `:meta` - compile meta
+  """
+  defstruct [:value, :meta]
+
+  @type t :: %__MODULE__{
+          # quoted expression
+          value: any(),
+          meta: Surface.AST.Meta.t()
         }
 end
 
