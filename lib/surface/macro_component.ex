@@ -21,6 +21,7 @@ defmodule Surface.MacroComponent do
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
       use Surface.API, include: [:property, :slot]
+      @behaviour unquote(__MODULE__)
     end
   end
 
