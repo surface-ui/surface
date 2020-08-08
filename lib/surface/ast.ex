@@ -9,6 +9,7 @@ defmodule Surface.AST do
           | Surface.AST.Comprehension.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
+          | Surface.AST.SlotableComponent.t()
           | Surface.AST.Error.t()
 end
 
@@ -207,7 +208,7 @@ defmodule Surface.AST.Slot do
           meta: Surface.AST.Meta.t(),
           # quoted ?
           props: Surface.AST.Directive.t(),
-          default: list()
+          default: list(Surface.AST.t())
         }
 end
 

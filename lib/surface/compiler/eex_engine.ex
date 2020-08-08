@@ -12,6 +12,10 @@ defmodule Surface.Compiler.EExEngine do
   # while this should technically work with other engines, the main use case is integration with Phoenix.LiveView.Engine
   @default_engine Phoenix.LiveView.Engine
 
+  @spec translate(
+          [Surface.AST.t()],
+          nil | maybe_improper_list | map
+        ) :: any
   def translate(nodes, opts \\ []) do
     state = %{
       engine: opts[:engine] || @default_engine,
