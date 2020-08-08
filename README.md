@@ -1,6 +1,6 @@
 # Surface
 
-[![Build Status](https://travis-ci.com/msaraiva/surface.svg?branch=master)](https://travis-ci.com/msaraiva/surface)
+[![Build Status](https://github.com/msaraiva/surface/workflows/CI/badge.svg)](https://github.com/msaraiva/surface/actions?query=workflow%3A%22CI%22)
 [![Hex.pm version](https://img.shields.io/hexpm/v/surface.svg?style=flat)](https://hex.pm/packages/surface)
 
 Surface is a **server-side rendering** component library that allows developers to
