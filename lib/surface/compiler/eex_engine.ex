@@ -23,87 +23,14 @@ defmodule Surface.Compiler.EExEngine do
       context: []
     }
 
-    required_modules =
-      nodes
-      |> collect_modules_to_require()
-      |> Enum.map(fn module ->
-        quote do
-          require unquote(module)
-        end
-      end)
-
-    require_block = {:__block__, [], required_modules}
-
-    block =
-      nodes
-      |> to_token_sequence()
-      |> generate_buffer(state.engine.init(opts), state)
-
-    quote do
-      unquote(require_block)
-
-      unquote(block)
-    end
+    nodes
+    |> to_token_sequence()
+    |> generate_buffer(state.engine.init(opts), state)
     |> maybe_print_expression(
       opts[:debug],
       opts[:file] || "nofile",
       opts[:line] || 1
     )
-  end
-
-  defp collect_modules_to_require(nodes) do
-    nodes
-    |> Enum.map(fn
-      %AST.Text{} ->
-        []
-
-      %AST.Interpolation{meta: meta} ->
-        [meta.module, meta.requires]
-
-      %AST.Tag{meta: meta} ->
-        [meta.module, meta.requires]
-
-      %AST.VoidTag{meta: meta} ->
-        [meta.module, meta.requires]
-
-      %AST.Error{meta: meta} ->
-        [meta.module, meta.requires]
-
-      %AST.Expr{meta: meta} ->
-        [meta.module, meta.requires]
-
-      %AST.Slot{default: default, meta: meta} ->
-        [meta.module, meta.requires, collect_modules_to_require(default)]
-
-      %AST.Conditional{children: children, meta: meta} ->
-        [meta.module, meta.requires, collect_modules_to_require(children)]
-
-      %AST.Comprehension{children: children, meta: meta} ->
-        [meta.module, meta.requires, collect_modules_to_require(children)]
-
-      %AST.Template{children: children, meta: meta} ->
-        [meta.module, meta.requires, collect_modules_to_require(children)]
-
-      %AST.Container{children: children, meta: meta} ->
-        [meta.module, meta.requires, collect_modules_to_require(children)]
-
-      %AST.Component{templates: templates, module: module, meta: meta} ->
-        [
-          module,
-          meta.requires,
-          collect_modules_to_require(templates |> Map.values() |> List.flatten())
-        ]
-
-      %AST.SlotableComponent{templates: templates, module: module, meta: meta} ->
-        [
-          module,
-          meta.requires,
-          collect_modules_to_require(templates |> Map.values() |> List.flatten())
-        ]
-    end)
-    |> List.flatten()
-    |> Enum.dedup()
-    |> Enum.reject(&is_nil/1)
   end
 
   defp to_token_sequence(nodes) do
@@ -521,6 +448,19 @@ defmodule Surface.Compiler.EExEngine do
     [text | to_dynamic_nested_html(nodes)]
   end
 
+  defp to_dynamic_nested_html([
+         %AST.Container{
+           children: children,
+           meta: %AST.Meta{
+             module: mod
+           }
+         }
+         | nodes
+       ])
+       when not is_nil(mod) do
+    [require_expr(mod), to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
+  end
+
   defp to_dynamic_nested_html([%AST.Container{children: children} | nodes]) do
     [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
@@ -574,7 +514,9 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([%type{templates: templates_by_name} = component | nodes])
+  defp to_dynamic_nested_html([
+         %type{module: mod, templates: templates_by_name} = component | nodes
+       ])
        when type in [AST.Component, AST.SlotableComponent] do
     templates_by_name =
       templates_by_name
@@ -593,8 +535,20 @@ defmodule Surface.Compiler.EExEngine do
       end)
       |> Enum.into(%{})
 
-    [%{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
+    [
+      require_expr(mod),
+      %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)
+    ]
   end
+
+  defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: mod}} | nodes])
+       when not is_nil(mod),
+       do: [
+         require_expr(mod),
+         ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
+         message,
+         ~S(</span>) | to_dynamic_nested_html(nodes)
+       ]
 
   defp to_dynamic_nested_html([%AST.Error{message: message} | nodes]),
     do: [
@@ -733,5 +687,15 @@ defmodule Surface.Compiler.EExEngine do
     end
 
     expr
+  end
+
+  defp require_expr(module) do
+    %AST.Expr{
+      value:
+        quote generated: true do
+          require unquote(module)
+        end,
+      meta: %AST.Meta{}
+    }
   end
 end

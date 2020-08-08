@@ -64,10 +64,9 @@ defmodule Surface.AST.Meta do
       * `:file` - the file from which the source was extracted
       * `:line_offset` - the line offset from the caller's line to the start of this source
       * `:caller` - a Macro.Env struct representing the caller
-      * `:requires` - A list of modules that should be required
   """
-  @derive {Inspect, only: [:line, :module, :node_alias, :file, :requires]}
-  defstruct [:line, :module, :node_alias, :line_offset, :file, :caller, requires: []]
+  @derive {Inspect, only: [:line, :module, :node_alias, :file]}
+  defstruct [:line, :module, :node_alias, :line_offset, :file, :caller]
 
   @type t :: %__MODULE__{
           line: non_neg_integer(),
