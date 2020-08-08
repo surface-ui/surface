@@ -55,6 +55,7 @@ Requirements:
 
   * Install Phoenix (https://hexdocs.pm/phoenix/installation.html).
   * Install Phoenix LiveView (https://hexdocs.pm/phoenix_live_view/installation.html)
+  * Although LiveView supports Elixir 1.7, which is [compatible](https://hexdocs.pm/elixir/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) with Erlang/OTP 19–22, [LiveView requires Erlang/OTP 21+](https://github.com/phoenixframework/phoenix_live_view/blob/7fbdcef6e46135fa111ea3fda29d5e91f9aa7b0e/lib/phoenix_live_view/application.ex#L11) and, thus, so does Surface.
 
 Then add `surface` to the list of dependencies in `mix.exs`:
 
