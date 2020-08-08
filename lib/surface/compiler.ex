@@ -432,8 +432,6 @@ defmodule Surface.Compiler do
     end)
   end
 
-  defp coerce_to_list(list) when is_list(list), do: list
-  defp coerce_to_list(not_list), do: [not_list]
 
   defp template_props([], meta),
     do: %AST.Directive{
