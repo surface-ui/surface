@@ -60,14 +60,18 @@ defmodule Surface do
   @doc """
   Translates Surface code into Phoenix templates.
   """
-  defmacro sigil_H({:<<>>, _, [string]}, _) do
+  defmacro sigil_H({:<<>>, _, [string]}, opts) do
     # This will create accurate line numbers for heredoc usages of the sigil, but
     # not for ~H* variants. See https://github.com/msaraiva/surface/issues/15#issuecomment-667305899
     line_offset = __CALLER__.line + 1
 
     string
     |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file)
-    |> Surface.Compiler.to_live_struct()
+    |> Surface.Compiler.to_live_struct(
+      debug: Enum.member?(opts, ?d),
+      file: __CALLER__.file,
+      line: __CALLER__.line
+    )
   end
 
   @doc "Retrieve a component's config based on the `key`"
