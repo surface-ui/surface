@@ -107,24 +107,35 @@ defmodule Surface do
   end
 
   @doc false
-  def build_assigns(assigns, props, context_assigns, slot_props, slots, module) do
-    module_ctx = init_context(module, props)
+  def build_assigns(assigns, props, slot_props, slots, module) do
+    context = assigns[:__surface__][:context] || []
 
-    context = Keyword.put(assigns[:__surface__][:context] || [], module, module_ctx)
-
-    ctx_assigns =
-      Enum.flat_map(context_assigns, fn {from, values} ->
-        ctx = Keyword.get(context, from, [])
-
+    gets_from_context =
+      module
+      |> context_gets()
+      |> Enum.flat_map(fn {from, values} ->
         Enum.map(values, fn {name, as} ->
+          ctx = Keyword.get(context, from, [])
+
           {as, Keyword.get(ctx, name)}
         end)
       end)
 
+    props = Keyword.merge(gets_from_context, props)
+
+    module_ctx = init_context(module, props)
+
+    sets_in_scope_from_context =
+      Enum.map(module.__context_sets_in_scope__(), fn %{name: name} ->
+        {name, Keyword.get(module_ctx, name)}
+      end)
+
+    context = Keyword.put(context, module, module_ctx)
+
     Map.new(
       props ++
         slot_props ++
-        ctx_assigns ++
+        sets_in_scope_from_context ++
         [
           __surface__: %{
             context: context,
@@ -133,6 +144,15 @@ defmodule Surface do
           }
         ]
     )
+  end
+
+  defp context_gets(module) do
+    module.__context_gets__()
+    |> Enum.map(fn %{name: name, opts: opts} ->
+      {opts[:from], {name, opts[:as] || name}}
+    end)
+    |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
+    |> Keyword.new()
   end
 
   defp init_context(module, props) do

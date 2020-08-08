@@ -127,7 +127,7 @@ defmodule Surface.Compiler do
     |> validate_component_structure(compile_meta, caller.module)
   end
 
-  def to_live_struct(nodes, opts) do
+  def to_live_struct(nodes, opts \\ []) do
     Surface.Compiler.EExEngine.translate(nodes, opts)
   end
 

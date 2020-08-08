@@ -256,10 +256,6 @@ defmodule Surface.Compiler.EExEngine do
        when ast_type in [AST.Component, AST.SlotableComponent] do
     props_expr = collect_component_props(module, props)
 
-    # if we decide to provide the gets in init_context
-    # we'll need to split these out
-    context_assigns = fetch_context_assigns(module)
-
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
     assigns_expr =
@@ -280,7 +276,6 @@ defmodule Surface.Compiler.EExEngine do
         Surface.build_assigns(
           unquote(assigns_expr),
           unquote(props_expr),
-          unquote(context_assigns),
           unquote(slot_props),
           unquote(slot_meta),
           unquote(module)
@@ -301,22 +296,6 @@ defmodule Surface.Compiler.EExEngine do
 
       {prop_name, value}
     end)
-  end
-
-  defp fetch_context_assigns(module) do
-    context_gets =
-      module.__context_gets__()
-      |> Enum.map(fn %{name: name, opts: opts} ->
-        {opts[:from], {name, opts[:as] || name}}
-      end)
-      |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
-      |> Keyword.new()
-
-    context_sets_in_scope = [
-      {module, Enum.map(module.__context_sets_in_scope__(), fn %{name: name} -> {name, name} end)}
-    ]
-
-    context_gets ++ context_sets_in_scope
   end
 
   defp collect_slot_meta(component, templates, buffer, state) do
