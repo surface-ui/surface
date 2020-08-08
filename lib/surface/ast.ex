@@ -22,6 +22,8 @@ defmodule Surface.AST.Container do
   ## Properties
       * `:children` - children AST nodes
       * `:directives` - directives associated with this container
+      * `:meta` - children AST nodes
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:children, :directives, :meta, debug: []]
 
@@ -44,9 +46,10 @@ defmodule Surface.AST.Meta do
       * `:file` - the file from which the source was extracted
       * `:line_offset` - the line offset from the caller's line to the start of this source
       * `:caller` - a Macro.Env struct representing the caller
+      * `:requires` - A list of modules that should be required
   """
-  @derive {Inspect, only: [:line, :module, :node_alias, :file]}
-  defstruct [:line, :module, :node_alias, :line_offset, :file, :caller]
+  @derive {Inspect, only: [:line, :module, :node_alias, :file, :requires]}
+  defstruct [:line, :module, :node_alias, :line_offset, :file, :caller, requires: []]
 
   @type t :: %__MODULE__{
           line: non_neg_integer(),
@@ -87,6 +90,7 @@ defmodule Surface.AST.Comprehension do
       * `:generator` - a quoted expression
       * `:children` - the children to collect over the generator
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:generator, :children, :meta, debug: []]
 
@@ -106,6 +110,7 @@ defmodule Surface.AST.Conditional do
       * `:condition` - a quoted expression
       * `:children` - the children to insert into the dom if the condition evaluates truthy
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:condition, :children, :meta, debug: []]
 
@@ -237,6 +242,7 @@ defmodule Surface.AST.Tag do
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:element, :attributes, :directives, :children, :meta, debug: []]
 
@@ -259,6 +265,7 @@ defmodule Surface.AST.VoidTag do
       * `:attributes` - the attributes for this tag
       * `:directives` - any directives to be applied to this tag
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:element, :attributes, :directives, :meta, debug: []]
 
@@ -280,6 +287,7 @@ defmodule Surface.AST.Template do
       * `:let` - the bindings for this template
       * `:children` - the template children
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:name, :children, :let, :meta]
 
@@ -319,6 +327,7 @@ defmodule Surface.AST.Component do
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:module, :type, :props, :directives, :templates, :meta, debug: []]
 
@@ -349,6 +358,7 @@ defmodule Surface.AST.SlotableComponent do
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
   defstruct [:module, :slot, :type, :let, :props, :directives, :templates, :meta, debug: []]
 

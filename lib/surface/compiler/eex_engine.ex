@@ -57,38 +57,46 @@ defmodule Surface.Compiler.EExEngine do
       %AST.Text{} ->
         []
 
-      %AST.Interpolation{} ->
-        []
+      %AST.Interpolation{meta: meta} ->
+        [meta.module, meta.requires]
 
-      %AST.Tag{} ->
-        []
+      %AST.Tag{meta: meta} ->
+        [meta.module, meta.requires]
 
-      %AST.VoidTag{} ->
-        []
+      %AST.VoidTag{meta: meta} ->
+        [meta.module, meta.requires]
 
-      %AST.Error{} ->
-        []
+      %AST.Error{meta: meta} ->
+        [meta.module, meta.requires]
 
-      %AST.Slot{default: default} ->
-        collect_modules_to_require(default)
+      %AST.Slot{default: default, meta: meta} ->
+        [meta.module, meta.requires, collect_modules_to_require(default)]
 
-      %AST.Conditional{children: children} ->
-        collect_modules_to_require(children)
+      %AST.Conditional{children: children, meta: meta} ->
+        [meta.module, meta.requires, collect_modules_to_require(children)]
 
-      %AST.Comprehension{children: children} ->
-        collect_modules_to_require(children)
+      %AST.Comprehension{children: children, meta: meta} ->
+        [meta.module, meta.requires, collect_modules_to_require(children)]
 
-      %AST.Template{children: children} ->
-        collect_modules_to_require(children)
+      %AST.Template{children: children, meta: meta} ->
+        [meta.module, meta.requires, collect_modules_to_require(children)]
 
-      %AST.Container{children: children} ->
-        collect_modules_to_require(children)
+      %AST.Container{children: children, meta: meta} ->
+        [meta.module, meta.requires, collect_modules_to_require(children)]
 
-      %AST.Component{templates: templates, module: module} ->
-        [module | collect_modules_to_require(templates |> Map.values() |> List.flatten())]
+      %AST.Component{templates: templates, module: module, meta: meta} ->
+        [
+          module,
+          meta.requires,
+          collect_modules_to_require(templates |> Map.values() |> List.flatten())
+        ]
 
-      %AST.SlotableComponent{templates: templates, module: module} ->
-        [module | collect_modules_to_require(templates |> Map.values() |> List.flatten())]
+      %AST.SlotableComponent{templates: templates, module: module, meta: meta} ->
+        [
+          module,
+          meta.requires,
+          collect_modules_to_require(templates |> Map.values() |> List.flatten())
+        ]
     end)
     |> List.flatten()
     |> Enum.dedup()
