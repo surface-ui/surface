@@ -406,7 +406,7 @@ defmodule Surface.Compiler do
 
       {:ok,
        %AST.Container{
-         children: coerce_to_list(expanded),
+         children: List.wrap(expanded),
          directives: directives,
          meta: meta
        }}
