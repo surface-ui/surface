@@ -36,7 +36,7 @@ defmodule Surface.Directive.Debug do
       IO.puts("<<<")
     end
 
-    if type in [AST.VoidTag, AST.Tag] and Enum.member?(node.debug, :code) do
+    if type in [AST.VoidTag, AST.Tag, AST.Container] and Enum.member?(node.debug, :code) do
       %AST.Conditional{
         condition: %AST.AttributeExpr{
           original: "generated from :debug",
