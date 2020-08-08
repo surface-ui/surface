@@ -23,14 +23,76 @@ defmodule Surface.Compiler.EExEngine do
       context: []
     }
 
-    nodes
-    |> to_token_sequence()
-    |> generate_buffer(state.engine.init(opts), state)
+    required_modules =
+      nodes
+      |> collect_modules_to_require()
+      |> Enum.map(fn module ->
+        quote do
+          require unquote(module)
+        end
+      end)
+
+    require_block = {:__block__, [], required_modules}
+
+    block =
+      nodes
+      |> to_token_sequence()
+      |> generate_buffer(state.engine.init(opts), state)
+
+    quote do
+      unquote(require_block)
+
+      unquote(block)
+    end
     |> maybe_print_expression(
       opts[:debug],
       opts[:file] || "nofile",
       opts[:line] || 1
     )
+  end
+
+  defp collect_modules_to_require(nodes) do
+    nodes
+    |> Enum.map(fn
+      %AST.Text{} ->
+        []
+
+      %AST.Interpolation{} ->
+        []
+
+      %AST.Tag{} ->
+        []
+
+      %AST.VoidTag{} ->
+        []
+
+      %AST.Error{} ->
+        []
+
+      %AST.Slot{default: default} ->
+        collect_modules_to_require(default)
+
+      %AST.Conditional{children: children} ->
+        collect_modules_to_require(children)
+
+      %AST.Comprehension{children: children} ->
+        collect_modules_to_require(children)
+
+      %AST.Template{children: children} ->
+        collect_modules_to_require(children)
+
+      %AST.Container{children: children} ->
+        collect_modules_to_require(children)
+
+      %AST.Component{templates: templates, module: module} ->
+        [module | collect_modules_to_require(templates |> Map.values() |> List.flatten())]
+
+      %AST.SlotableComponent{templates: templates, module: module} ->
+        [module | collect_modules_to_require(templates |> Map.values() |> List.flatten())]
+    end)
+    |> List.flatten()
+    |> Enum.dedup()
+    |> Enum.reject(&is_nil/1)
   end
 
   defp to_token_sequence(nodes) do
