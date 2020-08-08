@@ -26,6 +26,11 @@ defmodule Surface.Compiler.EExEngine do
     nodes
     |> to_token_sequence()
     |> generate_buffer(state.engine.init(opts), state)
+    |> maybe_print_expression(
+      opts[:debug],
+      opts[:file] || "nofile",
+      opts[:line] || 1
+    )
   end
 
   defp to_token_sequence(nodes) do
@@ -647,8 +652,17 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp maybe_print_expression(expr, node) do
-    if Map.has_key?(node, :debug) and Enum.member?(node.debug, :code) do
-      IO.puts(">>> DEBUG(EXPRESSION): #{node.meta.file}:#{node.meta.line}")
+    maybe_print_expression(
+      expr,
+      Map.has_key?(node, :debug) and Enum.member?(node.debug, :code),
+      node.meta.file,
+      node.meta.line
+    )
+  end
+
+  defp maybe_print_expression(expr, print?, file, line) do
+    if print? do
+      IO.puts(">>> DEBUG(EXPRESSION): #{file}:#{line}")
       expr |> Macro.to_string() |> Code.format_string!(line_length: 120) |> IO.puts()
       IO.puts("<<<")
     end
