@@ -526,9 +526,38 @@ defmodule Surface.Compiler.EExEngine do
             %AST.Template{children: children} = template ->
               %{template | children: to_token_sequence(children)}
 
-            %AST.SlotableComponent{} = template ->
-              [translated] = to_dynamic_nested_html([template])
-              translated
+            %AST.SlotableComponent{meta: meta} = template ->
+              [require_expression, %{templates: %{default: default_templates}} = translated] =
+                to_dynamic_nested_html([template])
+
+              default_templates =
+                case default_templates do
+                  [] ->
+                    # We still have to add the require expression
+                    # so that if this module is touched, we recompile
+                    [
+                      %AST.Template{
+                        name: :default,
+                        let: %AST.Directive{
+                          module: Surface.Directive.Let,
+                          name: :let,
+                          value: %AST.AttributeExpr{
+                            original: "",
+                            value: [],
+                            meta: meta
+                          },
+                          meta: meta
+                        },
+                        children: [require_expression],
+                        meta: meta
+                      }
+                    ]
+
+                  [%AST.Template{children: children} = first_child | tail] ->
+                    [%{first_child | children: [require_expression | children]} | tail]
+                end
+
+              %{translated | templates: %{default: default_templates}}
           end)
 
         {name, templates}
