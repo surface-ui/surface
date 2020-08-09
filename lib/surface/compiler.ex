@@ -432,7 +432,6 @@ defmodule Surface.Compiler do
     end)
   end
 
-
   defp template_props([], meta),
     do: %AST.Directive{
       module: Surface.Directive.Let,
