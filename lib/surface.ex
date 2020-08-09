@@ -24,6 +24,46 @@ defmodule Surface do
         end
       end
 
+  Additionally, use `Surface.init/1` in your mount function to initialize assigns used internally by surface:
+
+      # A LiveView using surface templates
+
+      defmodule PageLive do
+        use Phoenix.LiveView
+        import Surface
+
+        def mount(socket) do
+          socket = Surface.init(socket)
+          ...
+          {:ok, socket}
+        end
+
+        def render(assigns) do
+          ~H"\""
+          ...
+          "\""
+        end
+      end
+
+      # A LiveComponent using surface templates
+
+      defmodule NavComponent do
+        use Phoenix.LiveComponent
+        import Surface
+
+        def mount(socket) do
+          socket = Surface.init(socket)
+          ...
+          {:ok, socket}
+        end
+
+        def render(assigns) do
+          ~H"\""
+          ...
+          "\""
+        end
+      end
+
   ## Defining components
 
   To create a component you need to define a module and `use` one of the available component types:
