@@ -56,6 +56,7 @@ defmodule Surface do
   """
 
   alias Surface.IOHelper
+  alias Phoenix.LiveView
 
   @doc """
   Translates Surface code into Phoenix templates.
@@ -93,6 +94,12 @@ defmodule Surface do
     end
   end
 
+  @doc "Initialize surface state in the socket"
+  def init(socket) do
+    LiveView.assign_new(socket, :__surface__, fn -> %{} end)
+  end
+
+  @spec attr_value(any, any) :: any
   @doc false
   def attr_value(attr, value) do
     if String.Chars.impl_for(value) do

@@ -104,17 +104,20 @@ defmodule Surface.LiveComponent do
         defoverridable mount: 1
 
         def mount(socket) do
-          socket = assign_new(socket, :__surface__, fn -> %{} end)
-
-          super(assign(socket, unquote(defaults)))
+          super(
+            socket
+            |> Surface.init()
+            |> assign(unquote(defaults))
+          )
         end
       end
     else
       quote do
         def mount(socket) do
-          socket = assign_new(socket, :__surface__, fn -> %{} end)
-
-          {:ok, assign(socket, unquote(defaults))}
+          {:ok,
+           socket
+           |> Surface.init()
+           |> assign(unquote(defaults))}
         end
       end
     end

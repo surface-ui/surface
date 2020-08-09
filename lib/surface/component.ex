@@ -71,13 +71,13 @@ defmodule Surface.Component do
         defoverridable mount: 1
 
         def mount(socket) do
-          super(assign_new(socket, :__surface__, fn -> %{} end))
+          super(Surface.init(socket))
         end
       end
     else
       quote do
         def mount(socket) do
-          {:ok, assign_new(socket, :__surface__, fn -> %{} end)}
+          {:ok, Surface.init(socket)}
         end
       end
     end
