@@ -288,6 +288,7 @@ defmodule Surface.Compiler.EExEngine do
     buffer =
       Enum.reduce(block, buffer, fn
         {:text, chars}, buffer -> state.engine.handle_text(buffer, chars)
+        %AST.Expr{} = expr, buffer -> state.engine.handle_expr(buffer, "", to_expression(expr, buffer, state))
         expr, buffer -> state.engine.handle_expr(buffer, "=", to_expression(expr, buffer, state))
       end)
 
