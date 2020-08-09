@@ -201,11 +201,11 @@ defmodule Surface.Compiler.EExEngine do
     assigns_expr =
       if state.depth > 0 and Enum.member?(state.context, :template) do
         quote generated: true do
-          ctx_assigns
+          ctx_assigns[:__surface__][:context] || []
         end
       else
         quote generated: true do
-          var!(assigns)
+          unquote(at_ref(:__surface__))[:context] || []
         end
       end
 

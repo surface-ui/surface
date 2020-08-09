@@ -41,6 +41,7 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
       if unquote(slot_name) != nil do
@@ -61,6 +62,24 @@ defmodule Surface.Component do
     if !is_binary(name) do
       message = "invalid value for option :slot. Expected a string, got: #{inspect(name)}"
       IOHelper.compile_error(message, caller.file, caller.line)
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    if Module.defines?(env.module, {:mount, 1}) do
+      quote do
+        defoverridable mount: 1
+
+        def mount(socket) do
+          super(assign_new(socket, :__surface__, fn -> %{} end))
+        end
+      end
+    else
+      quote do
+        def mount(socket) do
+          {:ok, assign_new(socket, :__surface__, fn -> %{} end)}
+        end
+      end
     end
   end
 

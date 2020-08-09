@@ -107,9 +107,7 @@ defmodule Surface do
   end
 
   @doc false
-  def build_assigns(assigns, props, slot_props, slots, module) do
-    context = assigns[:__surface__][:context] || []
-
+  def build_assigns(context, props, slot_props, slots, module) do
     gets_from_context =
       module
       |> context_gets()

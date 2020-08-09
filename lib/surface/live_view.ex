@@ -70,12 +70,14 @@ defmodule Surface.LiveView do
         defoverridable mount: 3
 
         def mount(params, session, socket) do
+          socket = assign_new(socket, :__surface__, fn -> %{} end)
           super(params, session, assign(socket, unquote(defaults)))
         end
       end
     else
       quote do
         def mount(_params, _session, socket) do
+          socket = assign_new(socket, :__surface__, fn -> %{} end)
           {:ok, assign(socket, unquote(defaults))}
         end
       end
