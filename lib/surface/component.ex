@@ -42,6 +42,7 @@ defmodule Surface.Component do
 
       @behaviour unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
+      require Surface.ContentHandler
       @before_compile Surface.ContentHandler
 
       if unquote(slot_name) != nil do

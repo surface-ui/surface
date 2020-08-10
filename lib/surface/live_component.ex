@@ -63,6 +63,7 @@ defmodule Surface.LiveComponent do
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      require Surface.ContentHandler
       @before_compile Surface.ContentHandler
       Module.put_attribute(__MODULE__, :__is_stateful__, true)
     end
