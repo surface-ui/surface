@@ -158,6 +158,16 @@ defmodule Surface do
   end
 
   @doc false
+  def attr(_key, nil) do
+    []
+  end
+
+  def attr(key, value) do
+    value = attr_value(key, value)
+    [key, "=", quot(value)]
+  end
+
+  @doc false
   def attr_value(attr, value) do
     if String.Chars.impl_for(value) do
       value

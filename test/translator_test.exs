@@ -154,10 +154,9 @@ defmodule Surface.TranslatorTest do
 
     assert translated =~ """
            <div
-             label="<%= attr_value("label", "label") %>"
+             <%= attr("label", "label") %>
              disabled
-             click=
-               "<%= attr_value("click", "event") %>"
+             <%= attr("click", "event") %>
            ></div>\
            """
   end

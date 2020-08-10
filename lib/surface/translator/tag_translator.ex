@@ -168,8 +168,17 @@ defmodule Surface.Translator.TagTranslator do
   end
 
   defp translate_attribute_assignment(key, value, %{spaces: spaces}) do
-    [space1, space2, space3] = spaces
-    [space1, key, space2, "=", space3, wrap_unsafe_value(key, value)]
+    [space1, space2, _] = spaces
+
+    [
+      space1,
+      "<%= attr(\"",
+      key,
+      "\", ",
+      space2,
+      value_to_code(value),
+      ") %>"
+    ]
   end
 
   defp value_to_code({:attribute_expr, expr, _}) do
@@ -185,10 +194,6 @@ defmodule Surface.Translator.TagTranslator do
 
   defp wrap_safe_value(value) do
     [~S("), "<%= ", value_to_code(value), " %>", ~S(")]
-  end
-
-  defp wrap_unsafe_value(key, value) do
-    [~S("), "<%= attr_value(\"", key, "\", ", value_to_code(value), ") %>", ~S(")]
   end
 
   defp replace_attribute_expr(value) when is_list(value) do

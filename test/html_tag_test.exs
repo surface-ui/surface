@@ -53,6 +53,18 @@ defmodule HtmlTagTest do
              """
     end
 
+    test "as nil" do
+      assigns = %{title: nil}
+
+      code = ~H"""
+      <div title={{ @title }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div ></div>
+             """
+    end
+
     test "with `@` and `.`" do
       assigns = %{}
 
