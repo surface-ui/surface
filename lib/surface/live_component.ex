@@ -54,7 +54,8 @@ defmodule Surface.LiveComponent do
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
-      use Surface.BaseComponent, translator: Surface.Translator.LiveComponentTranslator
+
+      use Surface.BaseComponent, type: unquote(__MODULE__)
 
       @before_compile unquote(__MODULE__)
 
@@ -63,11 +64,20 @@ defmodule Surface.LiveComponent do
 
       @behaviour unquote(__MODULE__)
       @before_compile Surface.ContentHandler
+      Module.put_attribute(__MODULE__, :__is_stateful__, true)
     end
   end
 
   defmacro __before_compile__(env) do
-    [maybe_quoted_id(env), quoted_mount(env), quoted_update(env)]
+    [maybe_quoted_id(env), quoted_mount(env), quoted_update(env), quoted_stateful(env)]
+  end
+
+  defp quoted_stateful(env) do
+    stateful = Module.get_attribute(env.module, :__is_stateful__, false)
+
+    quote do
+      def __is_stateful__(), do: unquote(stateful)
+    end
   end
 
   defp quoted_update(env) do
@@ -94,13 +104,20 @@ defmodule Surface.LiveComponent do
         defoverridable mount: 1
 
         def mount(socket) do
-          super(assign(socket, unquote(defaults)))
+          super(
+            socket
+            |> Surface.init()
+            |> assign(unquote(defaults))
+          )
         end
       end
     else
       quote do
         def mount(socket) do
-          {:ok, assign(socket, unquote(defaults))}
+          {:ok,
+           socket
+           |> Surface.init()
+           |> assign(unquote(defaults))}
         end
       end
     end

@@ -24,6 +24,46 @@ defmodule Surface do
         end
       end
 
+  Additionally, use `Surface.init/1` in your mount function to initialize assigns used internally by surface:
+
+      # A LiveView using surface templates
+
+      defmodule PageLive do
+        use Phoenix.LiveView
+        import Surface
+
+        def mount(socket) do
+          socket = Surface.init(socket)
+          ...
+          {:ok, socket}
+        end
+
+        def render(assigns) do
+          ~H"\""
+          ...
+          "\""
+        end
+      end
+
+      # A LiveComponent using surface templates
+
+      defmodule NavComponent do
+        use Phoenix.LiveComponent
+        import Surface
+
+        def mount(socket) do
+          socket = Surface.init(socket)
+          ...
+          {:ok, socket}
+        end
+
+        def render(assigns) do
+          ~H"\""
+          ...
+          "\""
+        end
+      end
+
   ## Defining components
 
   To create a component you need to define a module and `use` one of the available component types:
@@ -56,19 +96,22 @@ defmodule Surface do
   """
 
   alias Surface.IOHelper
+  alias Phoenix.LiveView
 
   @doc """
   Translates Surface code into Phoenix templates.
   """
-  defmacro sigil_H({:<<>>, _, [string]}, _) do
+  defmacro sigil_H({:<<>>, _, [string]}, opts) do
+    # This will create accurate line numbers for heredoc usages of the sigil, but
+    # not for ~H* variants. See https://github.com/msaraiva/surface/issues/15#issuecomment-667305899
     line_offset = __CALLER__.line + 1
 
     string
-    |> Surface.Translator.run(line_offset, __CALLER__, __CALLER__.file)
-    |> EEx.compile_string(
-      engine: Phoenix.LiveView.Engine,
-      line: line_offset,
-      file: __CALLER__.file
+    |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file)
+    |> Surface.Compiler.to_live_struct(
+      debug: Enum.member?(opts, ?d),
+      file: __CALLER__.file,
+      line: __CALLER__.line
     )
   end
 
@@ -91,72 +134,12 @@ defmodule Surface do
     end
   end
 
-  @doc false
-  def component(module, assigns) do
-    module.render(assigns)
+  @doc "Initialize surface state in the socket"
+  def init(socket) do
+    LiveView.assign_new(socket, :__surface__, fn -> %{} end)
   end
 
-  def component(module, assigns, []) do
-    module.render(assigns)
-  end
-
-  @doc false
-  def put_default_props(props, mod) do
-    Enum.reduce(mod.__props__(), props, fn %{name: name, opts: opts}, acc ->
-      default = Keyword.get(opts, :default)
-      Map.put_new(acc, name, default)
-    end)
-  end
-
-  @doc false
-  def begin_context(props, current_context, mod) do
-    assigns = put_gets_into_assigns(props, current_context, mod.__context_gets__())
-
-    initialized_context_assigns =
-      with true <- function_exported?(mod, :init_context, 1),
-           {:ok, values} <- mod.init_context(assigns) do
-        Map.new(values)
-      else
-        false ->
-          []
-
-        {:error, message} ->
-          IOHelper.runtime_error(message)
-
-        result ->
-          IOHelper.runtime_error(
-            "unexpected return value from init_context/1. " <>
-              "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
-          )
-      end
-
-    {assigns, new_context} =
-      put_sets_into_assigns_and_context(
-        assigns,
-        current_context,
-        initialized_context_assigns,
-        mod.__context_sets__()
-      )
-
-    assigns = Map.put(assigns, :__surface_context__, new_context)
-
-    {assigns, new_context}
-  end
-
-  @doc false
-  def end_context(context, mod) do
-    Enum.reduce(mod.__context_sets__(), context, fn %{name: name, opts: opts}, acc ->
-      to = Keyword.fetch!(opts, :to)
-      context_entry = acc |> Map.get(to, %{}) |> Map.delete(name)
-
-      if context_entry == %{} do
-        Map.delete(acc, to)
-      else
-        Map.put(acc, to, context_entry)
-      end
-    end)
-  end
-
+  @spec attr_value(any, any) :: any
   @doc false
   def attr_value(attr, value) do
     if String.Chars.impl_for(value) do
@@ -171,20 +154,69 @@ defmodule Surface do
   end
 
   @doc false
-  def style(value, show) when is_binary(value) do
-    if show do
-      quot(value)
-    else
-      semicolon = if String.ends_with?(value, ";") || value == "", do: "", else: ";"
-      quot([value, semicolon, "display: none;"])
-    end
+  def build_assigns(context, props, slot_props, slots, module) do
+    gets_from_context =
+      module
+      |> context_gets()
+      |> Enum.flat_map(fn {from, values} ->
+        Enum.map(values, fn {name, as} ->
+          ctx = Keyword.get(context, from, [])
+
+          {as, Keyword.get(ctx, name)}
+        end)
+      end)
+
+    props = Keyword.merge(gets_from_context, props)
+
+    module_ctx = init_context(module, props)
+
+    sets_in_scope_from_context =
+      Enum.map(module.__context_sets_in_scope__(), fn %{name: name} ->
+        {name, Keyword.get(module_ctx, name)}
+      end)
+
+    context = Keyword.put(context, module, module_ctx)
+
+    Map.new(
+      props ++
+        slot_props ++
+        sets_in_scope_from_context ++
+        [
+          __surface__: %{
+            context: context,
+            slots: Map.new(slots),
+            provided_templates: Keyword.keys(slot_props)
+          }
+        ]
+    )
   end
 
-  def style(value, _show) do
-    IOHelper.runtime_error(
-      "invalid value for attribute \"style\". Expected a string " <>
-        "got: #{inspect(value)}"
-    )
+  defp context_gets(module) do
+    module.__context_gets__()
+    |> Enum.map(fn %{name: name, opts: opts} ->
+      {opts[:from], {name, opts[:as] || name}}
+    end)
+    |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
+    |> Keyword.new()
+  end
+
+  defp init_context(module, props) do
+    with true <- function_exported?(module, :init_context, 1),
+         {:ok, values} <- module.init_context(Map.new(props)) do
+      values
+    else
+      false ->
+        []
+
+      {:error, message} ->
+        IOHelper.runtime_error(message)
+
+      result ->
+        IOHelper.runtime_error(
+          "unexpected return value from init_context/1. " <>
+            "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
+        )
+    end
   end
 
   @doc false
@@ -288,44 +320,6 @@ defmodule Surface do
   end
 
   @doc false
-  def on_phx_event(phx_event, [event], caller_cid) do
-    on_phx_event(phx_event, event, caller_cid)
-  end
-
-  def on_phx_event(phx_event, [event | opts], caller_cid) do
-    value = Map.new(opts) |> Map.put(:name, event)
-    on_phx_event(phx_event, value, caller_cid)
-  end
-
-  def on_phx_event(phx_event, %{name: name, target: :live_view}, _caller_cid) do
-    [phx_event, "=", quot(name)]
-  end
-
-  def on_phx_event(phx_event, %{name: name, target: target}, _caller_cid) do
-    [phx_event, "=", quot(name), " phx-target=", quot(target)]
-  end
-
-  # Stateless component or a liveview (no caller_id)
-  def on_phx_event(phx_event, event, nil) when is_binary(event) do
-    [phx_event, "=", quot(event)]
-  end
-
-  def on_phx_event(phx_event, event, caller_cid) when is_binary(event) do
-    [phx_event, "=", quot(event), " phx-target=", to_string(caller_cid)]
-  end
-
-  def on_phx_event(_phx_event, nil, _caller_cid) do
-    []
-  end
-
-  def on_phx_event(phx_event, event, _caller_cid) do
-    IOHelper.runtime_error(
-      "invalid value for \":on-#{phx_event}\". " <>
-        "Expected a :string or :event, got: #{inspect(event)}"
-    )
-  end
-
-  @doc false
   def phx_event(_phx_event, value) when is_binary(value) do
     value
   end
@@ -349,45 +343,6 @@ defmodule Surface do
 
   def event_to_opts(nil, _event_name) do
     []
-  end
-
-  defp quot(value) do
-    [{:safe, "\""}, value, {:safe, "\""}]
-  end
-
-  defp put_gets_into_assigns(assigns, context, gets) do
-    Enum.reduce(gets, assigns, fn %{name: name, opts: opts}, acc ->
-      key = Keyword.get(opts, :as, name)
-      from = Keyword.fetch!(opts, :from)
-      # TODO: raise an error if it's required and it hasn't been set
-      value = context[from][name]
-      Map.put_new(acc, key, value)
-    end)
-  end
-
-  defp put_sets_into_assigns_and_context(assigns, context, values, sets) do
-    Enum.reduce(sets, {assigns, context}, fn %{name: name, opts: opts}, {assigns, context} ->
-      to = Keyword.fetch!(opts, :to)
-      scope = Keyword.get(opts, :scope)
-
-      case Map.fetch(values, name) do
-        {:ok, value} ->
-          new_context_entry =
-            context
-            |> Map.get(to, %{})
-            |> Map.put(name, value)
-
-          new_context = Map.put(context, to, new_context_entry)
-
-          new_assigns =
-            if scope == :only_children, do: assigns, else: Map.put(assigns, name, value)
-
-          {new_assigns, new_context}
-
-        :error ->
-          {assigns, context}
-      end
-    end)
   end
 
   defp maybe_add_class(classes, class) do

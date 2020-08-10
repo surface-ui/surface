@@ -32,7 +32,8 @@ defmodule Surface.LiveView do
 
   defmacro __using__(opts) do
     quote do
-      use Surface.BaseComponent, translator: Surface.Translator.LiveViewTranslator
+      use Surface.BaseComponent, type: unquote(__MODULE__)
+
       use Surface.API, include: [:property, :data]
       import Phoenix.HTML
 
@@ -69,13 +70,21 @@ defmodule Surface.LiveView do
         defoverridable mount: 3
 
         def mount(params, session, socket) do
-          super(params, session, assign(socket, unquote(defaults)))
+          socket =
+            socket
+            |> Surface.init()
+            |> assign(unquote(defaults))
+
+          super(params, session, socket)
         end
       end
     else
       quote do
         def mount(_params, _session, socket) do
-          {:ok, assign(socket, unquote(defaults))}
+          {:ok,
+           socket
+           |> Surface.init()
+           |> assign(unquote(defaults))}
         end
       end
     end

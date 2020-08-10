@@ -55,10 +55,9 @@ defmodule Surface.Components.Link do
 
   def render(assigns) do
     children = ~H"<slot>{{ @label }}</slot>"
-    click_opts = event_to_opts(assigns.click, :phx_click)
 
     ~H"""
-    {{ link [to: @to, class: @class] ++ @opts ++ click_opts, do: children }}
+    {{ link [to: @to, class: @class] ++ @opts ++ event_to_opts(@click, :phx_click), do: children }}
     """
   end
 end

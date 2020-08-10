@@ -59,7 +59,7 @@ defmodule Surface.ContentHandler do
   end
 
   defp data_content_fun(assigns, name, index) do
-    fn args -> assigns.inner_content.({name, index, args_to_map(args)}) end
+    fn args -> assigns.inner_content.({name, index, {args_to_map(args), assigns}}) end
   end
 
   defp default_content_fun(assigns, size) do
@@ -69,7 +69,7 @@ defmodule Surface.ContentHandler do
   defp join_contents(assigns, size, args) do
     ~L"""
     <%= if assigns[:inner_content] != nil do %>
-    <%= for index <- 0..size-1 do %><%= assigns.inner_content.({:__default__, index, args}) %><% end %>
+    <%= for index <- 0..size-1 do %><%= assigns.inner_content.({:__default__, index, {args, assigns}}) %><% end %>
     <% end %>
     """
   end

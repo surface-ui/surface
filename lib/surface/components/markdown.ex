@@ -57,9 +57,8 @@ defmodule Surface.Components.Markdown do
   @doc "The markdown text to be translated to HTML"
   slot default
 
-  @impl true
-  def translate({_, attributes, children, %{line: tag_line}}, caller) do
-    props = MacroComponent.eval_static_props!(__MODULE__, attributes, caller)
+  def expand(attributes, children, meta) do
+    props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
     class = props[:class] || get_config(:default_class)
     unwrap = props[:unwrap] || false
     config_opts = get_config(:default_opts) || []
@@ -69,25 +68,38 @@ defmodule Surface.Components.Markdown do
       children
       |> IO.iodata_to_binary()
       |> trim_leading_space()
-      |> markdown_as_html!(caller, tag_line, opts)
+      # Need to reconstruct the relative line
+      |> markdown_as_html!(meta.caller, meta.line, opts)
 
-    class_attr = if class, do: ~s( class="#{class}"), else: ""
+    node = %Surface.AST.Text{value: html}
 
-    {open_div, close_div} =
-      if unwrap do
-        {[], []}
-      else
-        {"<div#{class_attr}>\n", "</div>"}
-      end
+    cond do
+      unwrap ->
+        node
 
-    open = [
-      "<% require(#{inspect(__MODULE__)}) %>",
-      open_div
-    ]
+      class ->
+        %Surface.AST.Tag{
+          element: "div",
+          directives: [],
+          attributes: [
+            %Surface.AST.Attribute{
+              name: "class",
+              value: [%Surface.AST.Text{value: class}]
+            }
+          ],
+          children: [node],
+          meta: meta
+        }
 
-    close = [close_div]
-
-    {open, html, close}
+      true ->
+        %Surface.AST.Tag{
+          element: "div",
+          directives: [],
+          attributes: [],
+          children: [node],
+          meta: meta
+        }
+    end
   end
 
   defp trim_leading_space(markdown) do
@@ -120,13 +132,13 @@ defmodule Surface.Components.Markdown do
       Enum.split_with(messages, fn {type, _line, _message} -> type == :error end)
 
     Enum.each(warnings_and_deprecations, fn {_type, line, message} ->
-      actual_line = caller.line + tag_line + line
+      actual_line = tag_line + line - 1
       IOHelper.warn(message, caller, fn _ -> actual_line end)
     end)
 
     if errors != [] do
       [{_type, line, message} | _] = errors
-      actual_line = caller.line + tag_line + line
+      actual_line = tag_line + line - 1
       IOHelper.compile_error(message, caller.file, actual_line)
     end
 

@@ -82,6 +82,46 @@ file in `lib/my_app_web.ex`:
   end
 ```
 
+You will also need to call `Surface.init/1` in the mount function:
+
+```elixir
+defmodule PageLive do
+  use Phoenix.LiveView
+  import Surface
+
+  def mount(socket) do
+    socket = Surface.init(socket)
+    ...
+    {:ok, socket}
+  end
+
+  def render(assigns) do
+    ~H"\""
+    ...
+    "\""
+  end
+end
+```
+
+```elixir
+defmodule NavComponent do
+  use Phoenix.LiveComponent
+  import Surface
+
+  def mount(socket) do
+    socket = Surface.init(socket)
+    ...
+    {:ok, socket}
+  end
+
+  def render(assigns) do
+    ~H"\""
+    ...
+    "\""
+  end
+end
+```
+
 For further information regarding installation, including how to quickly get started
 using a boilerplate, please visit the [Getting Started](http://surface-demo.msaraiva.io/getting_started)
 guide.

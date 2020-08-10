@@ -1,4 +1,4 @@
-defmodule Surface.Translator.Parser do
+defmodule Surface.Compiler.Parser do
   @moduledoc false
 
   import NimbleParsec
@@ -230,7 +230,13 @@ defmodule Surface.Translator.Parser do
     |> concat(whitespace)
     |> ignore(string("/>"))
     |> wrap()
+    |> post_traverse(:prepend_hashtag)
     |> post_traverse(:self_closing_tags)
+
+  defp prepend_hashtag(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
+    {[tag], meta} = tag_node
+    {[[{["#" <> tag], meta}, attr_nodes, space]], context}
+  end
 
   ## Macro node
 

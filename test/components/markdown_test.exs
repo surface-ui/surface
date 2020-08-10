@@ -17,7 +17,7 @@ defmodule Surface.Components.MarkdownTest do
     """
 
     assert render_static(code) =~ """
-           <div>
+           <div>\
            <h1>
              Head 1
            </h1>
@@ -46,7 +46,7 @@ defmodule Surface.Components.MarkdownTest do
     """
 
     assert render_static(code) =~ """
-           <div class="markdown">
+           <div class="markdown">\
            <h1>
              Head 1
            </h1>
@@ -228,7 +228,7 @@ defmodule Surface.Components.MarkdownSyncTest do
 
       assert output =~ ~r"""
              Closing unclosed backquotes ` at end of input
-               code:3:\
+               code:2:\
              """
     end
   end

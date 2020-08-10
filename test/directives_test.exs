@@ -62,6 +62,36 @@ defmodule Surface.DirectivesTest do
              <br><br>
              """
     end
+
+    test "with larger generator expression" do
+      assigns = %{items1: [1, 2], items2: [3, 4]}
+
+      code = """
+      <div :for={{ i1 <- @items1, i2 <- @items2, i1 < 4 }}>
+        Item1: {{i1}}
+        Item2: {{i2}}
+      </div>
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div>
+               Item1: 1
+               Item2: 3
+             </div>\
+             <div>
+               Item1: 1
+               Item2: 4
+             </div>\
+             <div>
+               Item1: 2
+               Item2: 3
+             </div>\
+             <div>
+               Item1: 2
+               Item2: 4
+             </div>
+             """
+    end
   end
 
   describe ":if" do
@@ -140,7 +170,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="padding: 1px;display: none;">
+             <col style="display: none;padding: 1px;">
              """
     end
 

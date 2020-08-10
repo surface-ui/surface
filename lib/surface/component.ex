@@ -27,25 +27,24 @@ defmodule Surface.Component do
   defmacro __using__(opts \\ []) do
     slot_name = Keyword.get(opts, :slot)
 
-    translator =
-      if slot_name do
-        validate_slot_name!(slot_name, __CALLER__)
-        Surface.Translator.SlotableTranslator
-      else
-        Surface.Translator.ComponentTranslator
-      end
+    if slot_name do
+      validate_slot_name!(slot_name, __CALLER__)
+    end
 
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
-      use Surface.BaseComponent, translator: unquote(translator)
+
+      use Surface.BaseComponent, type: unquote(__MODULE__)
+
       use Surface.API, include: [:property, :slot, :context]
       import Phoenix.HTML
 
       @behaviour unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
       @before_compile Surface.ContentHandler
 
-      if unquote(translator) == Surface.Translator.SlotableTranslator do
+      if unquote(slot_name) != nil do
         def render(var!(assigns)) do
           ~H()
         end
@@ -63,6 +62,24 @@ defmodule Surface.Component do
     if !is_binary(name) do
       message = "invalid value for option :slot. Expected a string, got: #{inspect(name)}"
       IOHelper.compile_error(message, caller.file, caller.line)
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    if Module.defines?(env.module, {:mount, 1}) do
+      quote do
+        defoverridable mount: 1
+
+        def mount(socket) do
+          super(Surface.init(socket))
+        end
+      end
+    else
+      quote do
+        def mount(socket) do
+          {:ok, Surface.init(socket)}
+        end
+      end
     end
   end
 

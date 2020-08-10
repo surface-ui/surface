@@ -11,6 +11,10 @@ defmodule Surface.SlotTest do
       <div>Stateful</div>
       """
     end
+
+    def handle_event(_, _, socket) do
+      {:noreply, socket}
+    end
   end
 
   defmodule InnerData do
@@ -187,7 +191,7 @@ defmodule Surface.SlotTest do
       <div>
         <div>
           label 1:<b>content 1</b>
-          <div data-phx-component="0">Stateful</div>
+          <div data-phx-component="1">Stateful</div>
         </div>
         <div>
           label 2:<b>content 2</b>
@@ -197,7 +201,7 @@ defmodule Surface.SlotTest do
           Content 2
             Content 2.1
           Content 3
-          <div data-phx-component="1">Stateful</div>
+          <div data-phx-component="2">Stateful</div>
         </div>
       </div>
       """
@@ -383,14 +387,14 @@ defmodule Surface.SlotTest do
 
     code = """
     <Grid items={{ user <- @items }}>
-      <Column title="ID" :let={{ item: my_user, non_existing: 1}}>
+      <Column title="ID" :let={{ item: my_user, non_existing: value}}>
         <b>Id: {{ my_user.id }}</b>
       </Column>
     </Grid>
     """
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Column`.
+    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
 
     Available props: [:info, :item].
 
@@ -463,7 +467,7 @@ defmodule Surface.SlotTest do
 
   test "raise compile error when using :let with undefined props for default slot" do
     code = """
-    <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: 1 }}>
+    <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: value }}>
       Info: {{ my_info }}
     </OuterWithDefaultSlotAndProps>
     """
@@ -476,6 +480,23 @@ defmodule Surface.SlotTest do
 
     Hint: You can define a new slot prop using the `props` option: \
     `slot default, props: [..., :non_existing]`\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code)
+    end)
+  end
+
+  test "raise compile error when using :let with invalid list of bindings" do
+    code = """
+    <OuterWithDefaultSlotAndProps :let={{ info: 1 }}>
+      Info: {{ my_info }}
+    </OuterWithDefaultSlotAndProps>
+    """
+
+    message = """
+    code:1: invalid value for directive :let. Expected a keyword \
+    list of bindings, got: info: 1.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -521,7 +542,7 @@ defmodule Surface.SlotSyncTest do
 
   test "warn if parent component does not define any slots" do
     code = """
-    <StatefulComponent>
+    <StatefulComponent id="stateful">
       <InnerData/>
     </StatefulComponent>
     """
