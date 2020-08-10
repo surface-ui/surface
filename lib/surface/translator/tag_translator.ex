@@ -114,15 +114,14 @@ defmodule Surface.Translator.TagTranslator do
 
   defp translate_attribute_assignment("phx-" <> _ = phx_event, value, %{spaces: spaces})
        when phx_event in @phx_events do
-    [space1, space2, space3] = spaces
+    [space1, space2, _] = spaces
 
     [
       space1,
+      "<%= phx_event(\"",
       phx_event,
+      "\", ",
       space2,
-      "=",
-      space3,
-      "<%= phx_event(\"#{phx_event}\", ",
       value_to_code(value),
       ") %>"
     ]

@@ -336,8 +336,12 @@ defmodule Surface do
   end
 
   @doc false
-  def phx_event(_phx_event, value) when is_binary(value) do
-    value
+  def phx_event(_phx_event, nil) do
+    []
+  end
+
+  def phx_event(phx_event, value) when is_binary(value) do
+    [phx_event, "=", quot(value)]
   end
 
   def phx_event(phx_event, value) do

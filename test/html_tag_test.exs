@@ -244,4 +244,30 @@ defmodule HtmlTagTest do
       end)
     end
   end
+
+  describe "phx event attributes" do
+    test "as nil" do
+      assigns = %{click: nil}
+
+      code = ~H"""
+      <div phx-click={{ @click }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div ></div>
+             """
+    end
+
+    test "as not string or nil" do
+      assert_raise(RuntimeError, ~r/invalid value for "phx-click"/, fn ->
+        assigns = %{click: %{notstring: "notstring"}}
+
+        code = ~H"""
+        <div phx-click={{ @click }}/>
+        """
+
+        render_static(code)
+      end)
+    end
+  end
 end
