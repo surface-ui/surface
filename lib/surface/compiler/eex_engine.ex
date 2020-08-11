@@ -666,6 +666,41 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_html_attributes([
+         %AST.Attribute{
+           name: attr_name,
+           value: [%AST.AttributeExpr{value: value_expr} = expr]
+         }
+         | attributes
+       ]) do
+    value =
+      quote generated: true do
+        value = unquote(value_expr)
+        name = unquote(to_string(attr_name))
+
+        if is_nil(value) do
+          []
+        else
+          value =
+            if name in Surface.Directive.Events.phx_events() do
+              Phoenix.HTML.html_escape(Surface.phx_event(name, value))
+            else
+              Phoenix.HTML.html_escape(Surface.attr_value(name, value))
+            end
+
+          [
+            " ",
+            name,
+            unquote(Phoenix.HTML.raw("=\"")),
+            value,
+            unquote(Phoenix.HTML.raw("\""))
+          ]
+        end
+      end
+
+    [%{expr | value: value} | to_html_attributes(attributes)]
+  end
+
+  defp to_html_attributes([
          %AST.Attribute{name: name, value: values}
          | attributes
        ]) do

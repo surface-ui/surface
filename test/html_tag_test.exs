@@ -100,6 +100,42 @@ defmodule HtmlTagTest do
              <div title="héllo"></div>
              """
     end
+
+    test "with nil parameter" do
+      assigns = %{nilvalue: nil}
+
+      code = ~H"""
+      <div nilvalue={{ @nilvalue }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div></div>
+             """
+    end
+
+    test "with nil value" do
+      assigns = %{}
+
+      code = ~H"""
+      <div nilvalue={{ nil }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div></div>
+             """
+    end
+
+    test "with phx-event nil parameter" do
+      assigns = %{nilvalue: nil}
+
+      code = ~H"""
+      <div phx-click={{ @nilvalue }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div></div>
+             """
+    end
   end
 
   describe "css class attributes" do
