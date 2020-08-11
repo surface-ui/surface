@@ -6,8 +6,8 @@ defmodule Surface.AST do
           | Surface.AST.Tag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
-          | Surface.AST.Conditional.t()
-          | Surface.AST.Comprehension.t()
+          | Surface.AST.If.t()
+          | Surface.AST.For.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
           | Surface.AST.SlotableComponent.t()
@@ -99,9 +99,9 @@ defmodule Surface.AST.Directive do
         }
 end
 
-defmodule Surface.AST.Comprehension do
+defmodule Surface.AST.For do
   @moduledoc """
-  An AST node representing a for comprehension.binary()
+  An AST node representing a for comprehension.
 
   ## Properties
       * `:generator` - a quoted expression
@@ -119,9 +119,9 @@ defmodule Surface.AST.Comprehension do
         }
 end
 
-defmodule Surface.AST.Conditional do
+defmodule Surface.AST.If do
   @moduledoc """
-  An AST node representing a conditionally rendered block
+  An AST node representing an if expression
 
   ## Properties
       * `:condition` - a quoted expression
