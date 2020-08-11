@@ -682,9 +682,9 @@ defmodule Surface.Compiler.EExEngine do
         else
           value =
             if name in Surface.Directive.Events.phx_events() do
-                Phoenix.HTML.html_escape(Surface.phx_event(name, value))
+              Phoenix.HTML.html_escape(Surface.phx_event(name, value))
             else
-                Phoenix.HTML.html_escape(Surface.attr_value(name, value))
+              Phoenix.HTML.html_escape(Surface.attr_value(name, value))
             end
 
           [
