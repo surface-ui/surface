@@ -101,7 +101,7 @@ end
 
 defmodule Surface.AST.For do
   @moduledoc """
-  An AST node representing a for comprehension.binary()
+  An AST node representing a for comprehension.
 
   ## Properties
       * `:generator` - a quoted expression
@@ -121,7 +121,7 @@ end
 
 defmodule Surface.AST.If do
   @moduledoc """
-  An AST node representing a conditionally rendered block
+  An AST node representing an if expression
 
   ## Properties
       * `:condition` - a quoted expression
