@@ -6,7 +6,7 @@ defmodule Surface.AST do
           | Surface.AST.Tag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
-          | Surface.AST.Conditional.t()
+          | Surface.AST.If.t()
           | Surface.AST.Comprehension.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
@@ -119,7 +119,7 @@ defmodule Surface.AST.Comprehension do
         }
 end
 
-defmodule Surface.AST.Conditional do
+defmodule Surface.AST.If do
   @moduledoc """
   An AST node representing a conditionally rendered block
 

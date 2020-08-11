@@ -103,7 +103,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_expression(
-         %AST.Conditional{condition: %AST.AttributeExpr{value: condition}, children: children} =
+         %AST.If{condition: %AST.AttributeExpr{value: condition}, children: children} =
            conditional,
          buffer,
          state
@@ -475,7 +475,7 @@ defmodule Surface.Compiler.EExEngine do
     [%{slot | default: to_token_sequence(default)} | to_dynamic_nested_html(nodes)]
   end
 
-  defp to_dynamic_nested_html([%AST.Conditional{children: children} = conditional | nodes]) do
+  defp to_dynamic_nested_html([%AST.If{children: children} = conditional | nodes]) do
     [%{conditional | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
   end
 
