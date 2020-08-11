@@ -7,7 +7,7 @@ defmodule Surface.AST do
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
           | Surface.AST.If.t()
-          | Surface.AST.Comprehension.t()
+          | Surface.AST.For.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
           | Surface.AST.SlotableComponent.t()
@@ -99,7 +99,7 @@ defmodule Surface.AST.Directive do
         }
 end
 
-defmodule Surface.AST.Comprehension do
+defmodule Surface.AST.For do
   @moduledoc """
   An AST node representing a for comprehension.binary()
 

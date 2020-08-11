@@ -13,7 +13,7 @@ defmodule Surface.Directive.For do
   def extract(_, _), do: []
 
   def process(%AST.Directive{value: %AST.AttributeExpr{} = expr, meta: meta}, node),
-    do: %AST.Comprehension{generator: expr, children: [node], meta: meta}
+    do: %AST.For{generator: expr, children: [node], meta: meta}
 
   defp directive_value(value, meta) do
     %AST.AttributeExpr{
