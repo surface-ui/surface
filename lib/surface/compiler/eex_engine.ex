@@ -128,10 +128,19 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
+    slot_prop_expr =
+      if state.depth > 0 and Enum.member?(state.context, :template) do
+        quote generated: true do
+          {unquote(props_expr), ctx_assigns}
+        end
+      else
+        props_expr
+      end
+
     slot_content_expr =
       if name == :default do
         quote generated: true do
-          unquote(at_ref(:inner_content)).(unquote(props_expr))
+          unquote(at_ref(:inner_content)).(unquote(slot_prop_expr))
         end
       else
         slot_name_expr = at_ref(name)
@@ -139,7 +148,7 @@ defmodule Surface.Compiler.EExEngine do
         quote generated: true do
           # TODO: For now, we only handle the first since rendering multiple items requires using `:for` directly in the template.
           # Review this after we adding option `join`.
-          Enum.at(unquote(slot_name_expr), 0).inner_content.(unquote(props_expr))
+          Enum.at(unquote(slot_name_expr), 0).inner_content.(unquote(slot_prop_expr))
         end
       end
 
