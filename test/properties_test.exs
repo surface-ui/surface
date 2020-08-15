@@ -55,6 +55,18 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule CSSClassPropInspect do
+    use Surface.Component
+
+    property prop, :css_class
+
+    def render(assigns) do
+      ~H"""
+      <div :for={{ c <- @prop }}>{{ c }}</div>
+      """
+    end
+  end
+
   describe "keyword" do
     test "passing a keyword list" do
       code = """
@@ -95,14 +107,20 @@ defmodule Surface.PropertiesTest do
     end
 
     test "validate invalid values" do
+      assigns = %{var: 1}
+
       code = """
-      <KeywordProp prop={{ 1 }}/>
+      <KeywordProp prop={{ @var }}/>
       """
 
-      message = "invalid value for property \"prop\". Expected a :keyword, got: 1"
+      message = """
+      invalid value for property "prop". Expected a :keyword, got: 1.
+
+      Original expression: {{ @var }}
+      """
 
       assert_raise(RuntimeError, message, fn ->
-        render_live(code)
+        render_live(code, assigns)
       end)
     end
   end
@@ -173,14 +191,20 @@ defmodule Surface.PropertiesTest do
     end
 
     test "validate invalid values" do
+      assigns = %{var: 1}
+
       code = """
-      <MapProp prop={{ 1 }}/>
+      <MapProp prop={{ @var }}/>
       """
 
-      message = "invalid value for property \"prop\". Expected a :map, got: 1"
+      message = """
+      invalid value for property "prop". Expected a :map, got: 1.
+
+      Original expression: {{ @var }}
+      """
 
       assert_raise(RuntimeError, message, fn ->
-        render_live(code)
+        render_live(code, assigns)
       end)
     end
   end
@@ -300,6 +324,24 @@ defmodule Surface.PropertiesTest do
 
       assert render_live(code) =~ """
              <span class="class1 class2 class3"></span>
+             """
+    end
+
+    test "values are always converted to a list of strings" do
+      code = """
+      <CSSClassPropInspect prop="class1 class2   class3"/>
+      """
+
+      assert render_live(code) =~ """
+             <div>class1</div><div>class2</div><div>class3</div>
+             """
+
+      code = """
+      <CSSClassPropInspect prop={{ ["class1"] ++ ["class2 class3", :class4, class5: true] }}/>
+      """
+
+      assert render_live(code) =~ """
+             <div>class1</div><div>class2</div><div>class3</div><div>class4</div><div>class5</div>
              """
     end
   end

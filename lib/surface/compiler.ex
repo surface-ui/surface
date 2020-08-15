@@ -64,6 +64,8 @@ defmodule Surface.Compiler do
     :typemustmatch
   ]
 
+  @phx_event_attributes Surface.Directive.Events.phx_events() |> Enum.map(&String.to_atom/1)
+
   @void_elements [
     "area",
     "base",
@@ -489,6 +491,7 @@ defmodule Surface.Compiler do
 
     attr_value =
       case type do
+        # TODO: [Type] Move this logic to type handlers
         type when type in [:string, :css_class, :any] ->
           %AST.Text{
             value: ""
@@ -574,10 +577,14 @@ defmodule Surface.Compiler do
     ]
   end
 
+  # TODO: [Type] Move this logic to TypeHandler
   defp determine_attribute_type(nil, :class, _meta), do: :css_class
 
   defp determine_attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
     do: :boolean
+
+  defp determine_attribute_type(nil, name, _meta) when name in @phx_event_attributes,
+    do: :phx_event
 
   defp determine_attribute_type(nil, _name, _meta), do: :string
 
@@ -658,10 +665,11 @@ defmodule Surface.Compiler do
     collect_attr_values(attribute_name, meta, values, type, {[codepoint | codepoint_acc], acc})
   end
 
-  defp attr_value(name, :event, value, meta) do
+  # TODO: [Type] Find a way remove this guard or move this logic to Surface.Types
+  defp attr_value(name, type, value, meta) when type in [:css_class, :map, :keyword, :event] do
     %AST.AttributeExpr{
       original: value,
-      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, :event, meta),
+      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, type, meta),
       meta: meta
     }
   end

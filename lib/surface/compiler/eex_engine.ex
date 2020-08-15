@@ -102,6 +102,7 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(comprehension)
   end
 
+  # TODO: Should we move this logic to Surface.Directive.If?
   defp to_expression(
          %AST.If{condition: %AST.AttributeExpr{value: condition}, children: children} =
            conditional,
@@ -399,10 +400,10 @@ defmodule Surface.Compiler.EExEngine do
     !!value
   end
 
-  defp to_prop_expr([%AST.AttributeExpr{value: expr}], :boolean) do
-    quote generated: true do
-      !!unquote(expr)
-    end
+  defp to_prop_expr([%AST.AttributeExpr{value: value, meta: meta}], type)
+       # TODO: [Type] Remove this guard after `update_prop_expr/3` works for all types
+       when type in [:css_class, :map, :keyword, :event, :boolean] do
+    Surface.TypeHandler.update_prop_expr(type, value, meta)
   end
 
   defp to_prop_expr([%AST.AttributeExpr{value: {_, value}}], :list), do: value
@@ -613,6 +614,8 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Attribute{name: name, type: type, value: [%AST.Text{value: value}]}
          | attributes
        ])
+       # TODO: [Type] Should we have something like Surface.TypeHandler.literal_to_html(...) which
+       # would allow type specific validation? e.g. we could warn on disable="false".
        when type == :boolean or is_boolean(value) do
     if value do
       [
@@ -626,28 +629,12 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_html_attributes([
-         %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: value_expr} = expr} | attributes
+         %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr_value} = expr} | attributes
        ]) do
     value =
       quote generated: true do
-        for {name, {type, value}} <- unquote(value_expr) do
-          case type do
-            :boolean ->
-              if value do
-                [" ", to_string(name)]
-              else
-                []
-              end
-
-            _ ->
-              [
-                " ",
-                to_string(name),
-                unquote(Phoenix.HTML.raw("=\"")),
-                value,
-                unquote(Phoenix.HTML.raw("\""))
-              ]
-          end
+        for {name, {type, value}} <- unquote(expr_value) do
+          Surface.attr(name, type, value)
         end
       end
 
@@ -657,53 +644,14 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([
          %AST.Attribute{
            name: name,
-           type: :boolean,
-           value: [%AST.AttributeExpr{value: value} = expr]
-         }
-         | attributes
-       ]) do
-    attribute_name = to_string(name)
-
-    conditional =
-      quote generated: true do
-        if unquote(value) do
-          [~S( ), unquote(attribute_name)]
-        end
-      end
-
-    [%{expr | value: conditional} | to_html_attributes(attributes)]
-  end
-
-  defp to_html_attributes([
-         %AST.Attribute{
-           name: attr_name,
-           value: [%AST.AttributeExpr{value: value_expr} = expr]
+           type: type,
+           value: [%AST.AttributeExpr{value: expr_value} = expr]
          }
          | attributes
        ]) do
     value =
       quote generated: true do
-        value = unquote(value_expr)
-        name = unquote(to_string(attr_name))
-
-        if is_nil(value) do
-          []
-        else
-          value =
-            if name in Surface.Directive.Events.phx_events() do
-              Phoenix.HTML.html_escape(Surface.phx_event(name, value))
-            else
-              Phoenix.HTML.html_escape(Surface.attr_value(name, value))
-            end
-
-          [
-            " ",
-            name,
-            unquote(Phoenix.HTML.raw("=\"")),
-            value,
-            unquote(Phoenix.HTML.raw("\""))
-          ]
-        end
+        Surface.attr(unquote(name), unquote(type), unquote(expr_value))
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]
@@ -723,6 +671,10 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
+  # TODO: [Type] We should probably convert an attribute value containing interpolation
+  # into a single %AST.AttributeExpr{} earlier so we don't need to handle it
+  # separately here. This would make sure it goes to attr/3 as well and be properly
+  # validated.
   defp to_html_string(_name, []), do: []
 
   defp to_html_string(name, [%AST.Text{value: value} | elements]),
@@ -732,14 +684,8 @@ defmodule Surface.Compiler.EExEngine do
     # TODO: is this the behaviour we want?
 
     value =
-      if to_string(name) in Surface.Directive.Events.phx_events() do
-        quote generated: true do
-          Phoenix.HTML.html_escape(Surface.phx_event(unquote(to_string(name)), unquote(value)))
-        end
-      else
-        quote generated: true do
-          Phoenix.HTML.html_escape(Surface.attr_value(unquote(to_string(name)), unquote(value)))
-        end
+      quote generated: true do
+        Phoenix.HTML.html_escape(unquote(value))
       end
 
     [%{expr | value: value} | to_html_string(name, elements)]

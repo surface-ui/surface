@@ -210,6 +210,18 @@ defmodule HtmlTagTest do
              <div class="Default Prop1"></div>
              """
     end
+
+    test "don't render attribute if value is nil" do
+      assigns = %{value1: nil}
+
+      code = ~H"""
+      <div class={{ @value1 }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div></div>
+             """
+    end
   end
 
   test "boolean attributes" do

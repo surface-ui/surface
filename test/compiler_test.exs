@@ -104,7 +104,7 @@ defmodule Surface.CompilerTest do
                  value: [
                    %Surface.AST.AttributeExpr{
                      original: " @label ",
-                     value: {:@, _, [{:label, _, _}]}
+                     value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _]}
                    }
                  ]
                }
@@ -129,12 +129,21 @@ defmodule Surface.CompilerTest do
                    %Surface.AST.Text{value: "str_1 "},
                    %Surface.AST.AttributeExpr{
                      original: "@str_2",
-                     value: {:@, _, [{:str_2, _, _}]}
+                     value: {_, _, [_, _, [{:@, _, [{:str_2, _, _}]}], [], _, _]}
                    },
                    %Surface.AST.Text{value: " str_3 "},
                    %Surface.AST.AttributeExpr{
                      original: "@str_4 <> @str_5",
-                     value: {:<>, _, [{:@, _, [{:str_4, _, _}]}, {:@, _, [{:str_5, _, _}]}]}
+                     value:
+                       {_, _,
+                        [
+                          _,
+                          _,
+                          [{:<>, _, [{:@, _, [{:str_4, _, _}]}, {:@, _, [{:str_5, _, _}]}]}],
+                          [],
+                          _,
+                          _
+                        ]}
                    }
                  ]
                }
@@ -157,9 +166,7 @@ defmodule Surface.CompilerTest do
                  type: :event,
                  value: [
                    %Surface.AST.AttributeExpr{
-                     value:
-                       {{:., _, [{:__aliases__, _, [:Surface]}, :event_value]}, _,
-                        [:click, ["click_event"], nil]},
+                     value: _,
                      original: "click_event"
                    }
                  ]
@@ -240,9 +247,7 @@ defmodule Surface.CompilerTest do
                  type: :event,
                  value: [
                    %Surface.AST.AttributeExpr{
-                     value:
-                       {{:., _, [{:__aliases__, _, [:Surface]}, :event_value]}, _,
-                        [:click, ["event"], nil]},
+                     value: _expr,
                      original: "event"
                    }
                  ]
@@ -281,9 +286,7 @@ defmodule Surface.CompilerTest do
                  type: :event,
                  value: [
                    %Surface.AST.AttributeExpr{
-                     value:
-                       {{:., _, [{:__aliases__, _, [:Surface]}, :event_value]}, _,
-                        [:click, ["event"], nil]},
+                     value: _expr,
                      original: "event"
                    }
                  ]
@@ -345,8 +348,7 @@ defmodule Surface.CompilerTest do
                  name: :"phx-click",
                  expr: %Surface.AST.AttributeExpr{
                    original: "",
-                   # validating that the empty string is treated the same as `nil`
-                   value: {:case, _, [nil, _]}
+                   value: _
                  }
                },
                %Surface.AST.Attribute{
@@ -391,9 +393,7 @@ defmodule Surface.CompilerTest do
                  value: [
                    %Surface.AST.AttributeExpr{
                      original: " %{user_id: 1} ",
-                     value:
-                       {{:., _, [{:__aliases__, _, [:Surface]}, :map_value]}, _,
-                        [:session, {:%{}, _, [user_id: 1]}]}
+                     value: _
                    }
                  ]
                }

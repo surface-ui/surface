@@ -76,6 +76,19 @@ defmodule Surface.AST.Meta do
           caller: Macro.Env.t(),
           file: binary()
         }
+
+  def quoted_caller_cid(meta) do
+    cond do
+      Module.open?(meta.caller.module) and
+          Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent ->
+        quote generated: true do
+          @myself
+        end
+
+      true ->
+        nil
+    end
+  end
 end
 
 defmodule Surface.AST.Directive do

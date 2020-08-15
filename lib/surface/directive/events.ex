@@ -39,18 +39,14 @@ defmodule Surface.Directive.Events do
         %type{attributes: attributes} = node
       )
       when type in [AST.Tag, AST.VoidTag] do
+    cid = AST.Meta.quoted_caller_cid(meta)
+
     value =
       quote generated: true do
-        case unquote(value) do
-          %{name: name, target: :live_view} ->
-            [{unquote(event_name), {:string, name}}]
-
-          %{name: name, target: target} ->
-            [{unquote(event_name), {:string, name}}, "phx-target": {:string, target}]
-
-          nil ->
-            []
-        end
+        [
+          {unquote(event_name), {:string, unquote(__MODULE__).event_name(unquote(value))}},
+          "phx-target": {:string, unquote(__MODULE__).event_target(unquote(value), unquote(cid))}
+        ]
       end
 
     %{
@@ -101,5 +97,25 @@ defmodule Surface.Directive.Events do
       value: value,
       meta: expr_meta
     }
+  end
+
+  def event_name(%{name: name}) do
+    name
+  end
+
+  def event_name(_) do
+    ""
+  end
+
+  def event_target(%{target: nil}, cid) do
+    to_string(cid)
+  end
+
+  def event_target(%{target: target}, _cid) when target != :live_view do
+    to_string(target)
+  end
+
+  def event_target(_, _cid) do
+    ""
   end
 end

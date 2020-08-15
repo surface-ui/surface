@@ -54,7 +54,7 @@ defmodule Surface.Directive.Debug do
 
   defp directive_value(value, meta) do
     expr =
-      case Helpers.attribute_expr_to_quoted!(value, :debug, :bindings, meta) do
+      case Helpers.attribute_expr_to_quoted!(value, ":debug", :bindings, meta) do
         value when is_atom(value) ->
           [value]
 
