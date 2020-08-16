@@ -6,7 +6,8 @@ defmodule Surface.TypeHandler do
   # TODO: [Type] Validate the expression at compile-time if possible, e.g. literals, typed assigns
   # @callback validate_expr(clauses :: [Macro.t()], opts :: keyword(Macro.t())) :: {:ok, clauses, opts} | :error | {:error, message}
 
-  @callback expr_to_value(clauses :: list(), opts :: keyword()) :: any()
+  @callback expr_to_value(clauses :: list(), opts :: keyword()) ::
+              {:ok, any()} | {:error, any()} | {:error, any(), Striong.t()}
 
   @callback value_to_html(name :: atom(), value :: any()) :: String.t()
 
