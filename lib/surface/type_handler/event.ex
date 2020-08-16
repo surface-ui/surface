@@ -12,13 +12,8 @@ defmodule Surface.TypeHandler.Event do
     {:ok, event}
   end
 
-  def expr_to_value([[name, {:target, target}]], [])
-      when is_binary(name) and (is_binary(target) or is_atom(target)) do
-    {:ok, %{name: name, target: target}}
-  end
-
   def expr_to_value([name], opts) when is_atom(name) or is_binary(name) do
-    {:ok, %{name: name, target: Keyword.get(opts, :target)}}
+    {:ok, %{name: to_string(name), target: Keyword.get(opts, :target)}}
   end
 
   def expr_to_value(clauses, opts) do

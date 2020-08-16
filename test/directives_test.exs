@@ -224,19 +224,7 @@ defmodule Surface.DirectivesTest do
              """
     end
 
-    test "as a keyword list" do
-      assigns = %{}
-
-      code = ~H"""
-      <button :on-phx-click={{ ["ok", target: "#comp"] }}>OK</button>
-      """
-
-      assert render_static(code) =~ """
-             <button phx-click="ok" phx-target="#comp">OK</button>
-             """
-    end
-
-    test "as a keyword list without square brackets" do
+    test "as event name + target option" do
       assigns = %{}
 
       code = ~H"""
