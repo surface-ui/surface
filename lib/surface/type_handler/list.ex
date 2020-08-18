@@ -36,4 +36,13 @@ defmodule Surface.TypeHandler.List do
       end
     end
   end
+
+  @impl true
+  def update_prop_expr({_, value}, _meta) do
+    value
+  end
+
+  def update_prop_expr(value, _meta) do
+    value
+  end
 end
