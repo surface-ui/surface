@@ -400,15 +400,9 @@ defmodule Surface.Compiler.EExEngine do
     !!value
   end
 
-  defp to_prop_expr([%AST.AttributeExpr{value: value, meta: meta}], type)
-       # TODO: [Type] Remove this guard after `update_prop_expr/3` works for all types
-       when type in [:css_class, :map, :keyword, :event, :boolean] do
+  defp to_prop_expr([%AST.AttributeExpr{value: value, meta: meta}], type) do
     Surface.TypeHandler.update_prop_expr(type, value, meta)
   end
-
-  defp to_prop_expr([%AST.AttributeExpr{value: {_, value}}], :list), do: value
-
-  defp to_prop_expr([%{value: value}], :string), do: value
 
   defp to_prop_expr(values, :string) do
     list_expr =
