@@ -102,7 +102,6 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(comprehension)
   end
 
-  # TODO: Should we move this logic to Surface.Directive.If?
   defp to_expression(
          %AST.If{condition: %AST.AttributeExpr{value: condition}, children: children} =
            conditional,

@@ -577,7 +577,6 @@ defmodule Surface.Compiler do
     ]
   end
 
-  # TODO: [Type] Move this logic to TypeHandler
   defp determine_attribute_type(nil, :class, _meta), do: :css_class
 
   defp determine_attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
