@@ -419,10 +419,6 @@ defmodule Surface.Compiler.EExEngine do
     value
   end
 
-  defp to_prop_expr([%AST.AttributeExpr{value: expr}], _) do
-    expr
-  end
-
   defp combine_static_portions(nodes, accumulators \\ {[], []})
   defp combine_static_portions([], {[], node_acc}), do: Enum.reverse(node_acc)
 
