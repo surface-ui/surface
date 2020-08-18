@@ -18,7 +18,7 @@ defmodule Surface.TypeHandler do
             ) :: Macro.t()
 
   @callback expr_to_value(clauses :: list(), opts :: keyword()) ::
-              {:ok, any()} | {:error, any()} | {:error, any(), Striong.t()}
+              {:ok, any()} | {:error, any()} | {:error, any(), String.t()}
 
   @callback value_to_html(name :: atom(), value :: any()) :: String.t()
 
