@@ -23,124 +23,8 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  # TODO: [Type] Move to type handlers
-  def attribute_expr_to_quoted!(value, _attribute_name, :bindings, meta) do
-    with {:ok, {:identity, _, expr}} <-
-           Code.string_to_quoted("identity(#{value})", line: meta.line, file: meta.file) do
-      if Enum.count(expr) == 1 do
-        Enum.at(expr, 0)
-      else
-        expr
-      end
-    else
-      {:error, {line, error, token}} ->
-        IOHelper.syntax_error(
-          error <> token,
-          meta.file,
-          line
-        )
-
-      _ ->
-        IOHelper.syntax_error(
-          "invalid list expression '#{value}'",
-          meta.file,
-          meta.line
-        )
-    end
-  end
-
-  # TODO: [Type] Move to type handlers
-  def attribute_expr_to_quoted!(value, attribute_name, :list, meta) do
-    with {:ok, expr} <- Code.string_to_quoted(value, line: meta.line, file: meta.file) do
-      handle_list_expr(attribute_name, expr)
-    else
-      {:error, {line, error, token}} ->
-        IOHelper.syntax_error(
-          error <> token,
-          meta.file,
-          line
-        )
-
-      _ ->
-        IOHelper.syntax_error(
-          "invalid list expression '#{value}'",
-          meta.file,
-          meta.line
-        )
-    end
-  end
-
-  # TODO: [Type] Move to type handlers
-  def attribute_expr_to_quoted!(value, _attribute_name, :generator, meta) do
-    with {:ok, {:for, _, expr}} when is_list(expr) <-
-           Code.string_to_quoted("for #{value}", line: meta.line, file: meta.file) do
-      expr
-    else
-      {:error, {line, error, token}} ->
-        IOHelper.syntax_error(
-          error <> token,
-          meta.file,
-          line
-        )
-
-      _ ->
-        IOHelper.syntax_error(
-          "invalid generator expression '#{value}'",
-          meta.file,
-          meta.line
-        )
-    end
-  end
-
   def attribute_expr_to_quoted!(value, attribute_name, type, meta) do
-    with {:ok, ast} <- expr_to_quoted(value, line: meta.line, file: meta.file),
-         {clauses, opts} <- split_clauses_and_options(ast),
-         true <- clauses != [] or opts != [] do
-      quote generated: true do
-        Surface.expr(
-          unquote(attribute_name),
-          unquote(type),
-          unquote(clauses),
-          unquote(opts),
-          unquote(meta.module),
-          unquote(value)
-        )
-      end
-    else
-      {:error, {line, error, token}} ->
-        IOHelper.syntax_error(
-          error <> token,
-          meta.file,
-          line
-        )
-
-      _ ->
-        IOHelper.syntax_error(
-          "invalid #{inspect(type)} expression '#{value}'",
-          meta.file,
-          meta.line
-        )
-    end
-  end
-
-  defp handle_list_expr(_name, {:<-, _, [binding, value]}) do
-    {binding, value}
-  end
-
-  defp handle_list_expr(_name, expr) when is_list(expr), do: expr
-
-  defp handle_list_expr(name, expr) do
-    quote generated: true do
-      case unquote(expr) do
-        value when is_list(value) ->
-          value
-
-        value ->
-          raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{
-                  inspect(value)
-                }"
-      end
-    end
+    Surface.TypeHandler.expr_to_quoted!(value, attribute_name, type, meta)
   end
 
   defp validate_interpolation({:@, _, [{:inner_content, _, args}]}, _meta) when is_list(args) do
@@ -319,19 +203,6 @@ defmodule Surface.Compiler.Helpers do
     with {:ok, mod} <- actual_module(name, caller),
          {:ok, mod} <- check_module_loaded(mod, name) do
       check_module_is_component(mod, name)
-    end
-  end
-
-  defp expr_to_quoted(expr, opts) do
-    with {:ok, {:wrap, _, ast}} <- Code.string_to_quoted("wrap(#{expr})", opts) do
-      {:ok, ast}
-    end
-  end
-
-  defp split_clauses_and_options(clauses_and_options) do
-    case Enum.split_while(clauses_and_options, &(not Keyword.keyword?(&1))) do
-      {_clauses, []} = result -> result
-      {clauses, [options]} -> {clauses, options}
     end
   end
 end

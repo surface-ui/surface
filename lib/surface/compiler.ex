@@ -665,7 +665,7 @@ defmodule Surface.Compiler do
     collect_attr_values(attribute_name, meta, values, type, {[codepoint | codepoint_acc], acc})
   end
 
-  # TODO: [Type] Find a way remove this guard or move this logic to Surface.Types
+  # TODO: [Type] Find a way remove this guard or move this logic to type handlers
   defp attr_value(name, type, value, meta) when type in [:css_class, :map, :keyword, :event] do
     %AST.AttributeExpr{
       original: value,

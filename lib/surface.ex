@@ -145,11 +145,6 @@ defmodule Surface do
   end
 
   @doc false
-  def expr(name, type, clauses, opts, module, original) do
-    Surface.TypeHandler.expr_to_value(type, name, clauses, opts, module, original)
-  end
-
-  @doc false
   def build_assigns(context, props, slot_props, slots, module) do
     gets_from_context =
       module

@@ -6,6 +6,25 @@ defmodule Surface.TypeHandler.Default do
   alias Surface.IOHelper
 
   @impl true
+  def validate_expr(_clauses, _opts, _module) do
+    :ok
+  end
+
+  @impl true
+  def expr_to_quoted(type, attribute_name, clauses, opts, module, original) do
+    quote generated: true do
+      Surface.TypeHandler.expr_to_value!(
+        unquote(type),
+        unquote(attribute_name),
+        unquote(clauses),
+        unquote(opts),
+        unquote(module),
+        unquote(original)
+      )
+    end
+  end
+
+  @impl true
   def expr_to_value([value], []) do
     {:ok, value}
   end

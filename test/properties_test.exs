@@ -254,9 +254,9 @@ defmodule Surface.PropertiesTest do
       <ListProp prop={{ 1, 2 }}/>
       """
 
-      message = "code:1: syntax error before: ','"
+      message = ~S(code:1: invalid value for property "prop". Expected a :list, got: {{ 1, 2 }}.)
 
-      assert_raise(SyntaxError, message, fn ->
+      assert_raise(CompileError, message, fn ->
         render_live(code)
       end)
     end
