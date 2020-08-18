@@ -678,18 +678,9 @@ defmodule Surface.Compiler do
   end
 
   defp expr_node(attribute_name, value, meta, type) do
-    # This is required as nimble_parsec appears to generate bitstrings that elixir doesn't
-    # want to interpret as actual strings.
-    # The exact example is " \"héllo\" " which generates <<32, 34, 104, 233, 108, 108, 111, 34, 32>>.
-    # When that sequence is passed to Code.string_to_quoted(), it results in:
-    # ** (UnicodeConversionError) invalid encoding starting at <<233, 108, 108, 111, 34, 32>>
-    # (elixir 1.10.4) lib/string.ex:2251: String.to_charlist/1
-    # (elixir 1.10.4) lib/code.ex:834: Code.string_to_quoted/2
-    binary = List.to_string(for <<c <- value>>, into: [], do: c)
-
     %AST.AttributeExpr{
-      original: binary,
-      value: Helpers.attribute_expr_to_quoted!(binary, attribute_name, type, meta),
+      original: value,
+      value: Helpers.attribute_expr_to_quoted!(value, attribute_name, type, meta),
       meta: meta
     }
   end
