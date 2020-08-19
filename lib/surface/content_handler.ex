@@ -61,7 +61,7 @@ defmodule Surface.ContentHandler do
   defp data_content_fun(assigns, name, index) do
     fn
       {args, ctx_assigns} ->
-        assigns.inner_content({name, index, {args_to_map(args), ctx_assigns}})
+        assigns.inner_content.({name, index, {args_to_map(args), ctx_assigns}})
 
       args ->
         assigns.inner_content.({name, index, {args_to_map(args), assigns}})
