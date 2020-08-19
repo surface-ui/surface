@@ -605,63 +605,32 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp collect_attr_values(attribute_name, meta, values, type, accumulators \\ {[], []})
+  defp collect_attr_values(attribute_name, meta, values, type)
 
-  defp collect_attr_values(_attribute_name, _meta, [], _type, {[], acc}), do: Enum.reverse(acc)
-
-  defp collect_attr_values(attribute_name, meta, [], type, {codepoints, acc}) do
-    collect_attr_values(
-      attribute_name,
-      meta,
-      [],
-      type,
-      {[],
-       [
-         attr_value(attribute_name, type, codepoints |> Enum.reverse() |> List.to_string(), meta)
-         | acc
-       ]}
-    )
-  end
+  defp collect_attr_values(_attribute_name, _meta, [], _type), do: []
 
   defp collect_attr_values(
          attribute_name,
          meta,
          [{:attribute_expr, [value], expr_meta} | values],
-         type,
-         {[], acc}
+         type
        ) do
-    collect_attr_values(
-      attribute_name,
-      meta,
-      values,
-      type,
-      {[], [expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type) | acc]}
-    )
+    [
+      expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type)
+      | collect_attr_values(
+          attribute_name,
+          meta,
+          values,
+          type
+        )
+    ]
   end
 
-  defp collect_attr_values(
-         attribute_name,
-         meta,
-         [{:attribute_expr, [value], expr_meta} | values],
-         type,
-         {codepoints, acc}
-       ) do
-    text_node =
-      attr_value(attribute_name, type, codepoints |> Enum.reverse() |> List.to_string(), meta)
-
-    acc = [text_node | acc]
-
-    collect_attr_values(
-      attribute_name,
-      meta,
-      values,
-      type,
-      {[], [expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type) | acc]}
-    )
-  end
-
-  defp collect_attr_values(attribute_name, meta, [codepoint | values], type, {codepoint_acc, acc}) do
-    collect_attr_values(attribute_name, meta, values, type, {[codepoint | codepoint_acc], acc})
+  defp collect_attr_values(attribute_name, meta, [value | values], type) do
+    [
+      attr_value(attribute_name, type, value, meta)
+      | collect_attr_values(attribute_name, meta, values, type)
+    ]
   end
 
   # TODO: [Type] Find a way remove this guard or move this logic to type handlers
