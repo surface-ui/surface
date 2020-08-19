@@ -463,100 +463,75 @@ defmodule Surface.Compiler do
 
   defp process_attributes(_module, [], _meta), do: []
 
-  defp process_attributes(
-         mod,
-         [{name, {:attribute_expr, value, expr_meta}, attr_meta} | attrs],
-         meta
-       ) do
-    name = String.to_atom(name)
-    expr_meta = Helpers.to_meta(expr_meta, meta)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
-
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [expr_node(name, value, expr_meta, type)],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
-  end
-
-  defp process_attributes(mod, [{name, "", attr_meta} | attrs], meta) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
-
-    attr_value =
-      case type do
-        # TODO: [Type] Move this logic to type handlers
-        type when type in [:string, :css_class, :any] ->
-          %AST.Text{
-            value: ""
-          }
-
-        :event ->
-          %AST.AttributeExpr{
-            original: "",
-            value: nil,
-            meta: attr_meta
-          }
-
-        :boolean ->
-          %AST.Text{value: true}
-
-        type ->
-          message =
-            "invalid property value for #{name}, expected #{type}, but got an empty string"
-
-          IOHelper.compile_error(message, meta.file, meta.line)
-      end
-
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [attr_value],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
-  end
-
-  defp process_attributes(mod, [{name, values, attr_meta} | attrs], meta)
-       when is_list(values) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
-    values = collect_attr_values(name, meta, values, type)
-
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: values,
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
-  end
-
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     type = determine_attribute_type(mod, name, attr_meta)
 
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [attr_value(name, type, value, meta)],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
+    node = %AST.Attribute{
+      type: type,
+      name: name,
+      value: List.wrap(attr_value(name, type, value, attr_meta)),
+      meta: attr_meta
+    }
+
+    [node | process_attributes(mod, attrs, meta)]
+  end
+
+  defp attr_value(_name, _type, [], _attr_meta) do
+    []
+  end
+
+  defp attr_value(name, type, [value | values], attr_meta) do
+    [attr_value(name, type, value, attr_meta) | attr_value(name, type, values, attr_meta)]
+  end
+
+  defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
+    expr_meta = Helpers.to_meta(expr_meta, attr_meta)
+
+    %AST.AttributeExpr{
+      original: value,
+      value: Helpers.attribute_expr_to_quoted!(value, name, type, expr_meta),
+      meta: expr_meta
+    }
+  end
+
+  defp attr_value(name, type, "", attr_meta) do
+    case type do
+      # TODO: [Type] Move this logic to type handlers
+      type when type in [:string, :css_class, :any] ->
+        %AST.Text{
+          value: ""
+        }
+
+      :event ->
+        %AST.AttributeExpr{
+          original: "",
+          value: nil,
+          meta: attr_meta
+        }
+
+      :boolean ->
+        %AST.Text{value: true}
+
+      type ->
+        message = "invalid property value for #{name}, expected #{type}, but got an empty string"
+
+        IOHelper.compile_error(message, attr_meta.file, attr_meta.line)
+    end
+  end
+
+  # TODO: [Type] Move this logic to type handlers
+  defp attr_value(name, type, value, meta) when type in [:css_class, :map, :keyword, :event] do
+    %AST.AttributeExpr{
+      original: value,
+      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, type, meta),
+      meta: meta
+    }
+  end
+
+  defp attr_value(_name, _type, value, _meta) do
+    %AST.Text{value: value}
   end
 
   defp determine_attribute_type(nil, :class, _meta), do: :css_class
@@ -585,55 +560,6 @@ defmodule Surface.Compiler do
 
         :string
     end
-  end
-
-  defp collect_attr_values(attribute_name, meta, values, type)
-
-  defp collect_attr_values(_attribute_name, _meta, [], _type), do: []
-
-  defp collect_attr_values(
-         attribute_name,
-         meta,
-         [{:attribute_expr, value, expr_meta} | values],
-         type
-       ) do
-    [
-      expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type)
-      | collect_attr_values(
-          attribute_name,
-          meta,
-          values,
-          type
-        )
-    ]
-  end
-
-  defp collect_attr_values(attribute_name, meta, [value | values], type) do
-    [
-      attr_value(attribute_name, type, value, meta)
-      | collect_attr_values(attribute_name, meta, values, type)
-    ]
-  end
-
-  # TODO: [Type] Find a way remove this guard or move this logic to type handlers
-  defp attr_value(name, type, value, meta) when type in [:css_class, :map, :keyword, :event] do
-    %AST.AttributeExpr{
-      original: value,
-      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, type, meta),
-      meta: meta
-    }
-  end
-
-  defp attr_value(_name, _type, value, _meta) do
-    %AST.Text{value: value}
-  end
-
-  defp expr_node(attribute_name, value, meta, type) do
-    %AST.AttributeExpr{
-      original: value,
-      value: Helpers.attribute_expr_to_quoted!(value, attribute_name, type, meta),
-      meta: meta
-    }
   end
 
   defp validate_tag_children([]), do: :ok
