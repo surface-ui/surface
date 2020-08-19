@@ -215,6 +215,9 @@ defmodule Surface.Compiler.Parser do
         [node] when not is_tuple(node) ->
           node
 
+        [] ->
+          ""
+
         nodes ->
           nodes
       end

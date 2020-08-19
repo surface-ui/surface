@@ -463,6 +463,34 @@ defmodule Surface.Compiler.ParserTest do
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
 
+    test "string values" do
+      code = """
+      <foo prop="str"/>
+      """
+
+      attr_value = "str"
+
+      attributes = [
+        {"prop", attr_value, %{line: 1, spaces: [" ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
+
+    test "empty string" do
+      code = """
+      <foo prop=""/>
+      """
+
+      attr_value = ""
+
+      attributes = [
+        {"prop", attr_value, %{line: 1, spaces: [" ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
+
     test "string with embedded interpolation" do
       code = """
       <foo prop="before {{ var }} after"/>

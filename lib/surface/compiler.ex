@@ -484,7 +484,7 @@ defmodule Surface.Compiler do
     ]
   end
 
-  defp process_attributes(mod, [{name, [], attr_meta} | attrs], meta) do
+  defp process_attributes(mod, [{name, "", attr_meta} | attrs], meta) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     type = determine_attribute_type(mod, name, attr_meta)
