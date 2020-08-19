@@ -80,7 +80,7 @@ defmodule Surface.Directive.Events do
     }
   end
 
-  defp to_quoted_expr(name, {:attribute_expr, [original], expr_meta}, meta) do
+  defp to_quoted_expr(name, {:attribute_expr, original, expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
 
     value =

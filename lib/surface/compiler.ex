@@ -465,7 +465,7 @@ defmodule Surface.Compiler do
 
   defp process_attributes(
          mod,
-         [{name, {:attribute_expr, [value], expr_meta}, attr_meta} | attrs],
+         [{name, {:attribute_expr, value, expr_meta}, attr_meta} | attrs],
          meta
        ) do
     name = String.to_atom(name)
@@ -525,23 +525,6 @@ defmodule Surface.Compiler do
     ]
   end
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta)
-       when is_bitstring(value) or is_binary(value) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
-
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [attr_value(name, type, value, meta)],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
-  end
-
   defp process_attributes(mod, [{name, values, attr_meta} | attrs], meta)
        when is_list(values) do
     name = String.to_atom(name)
@@ -560,8 +543,7 @@ defmodule Surface.Compiler do
     ]
   end
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta)
-       when is_boolean(value) do
+  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     type = determine_attribute_type(mod, name, attr_meta)
@@ -612,7 +594,7 @@ defmodule Surface.Compiler do
   defp collect_attr_values(
          attribute_name,
          meta,
-         [{:attribute_expr, [value], expr_meta} | values],
+         [{:attribute_expr, value, expr_meta} | values],
          type
        ) do
     [

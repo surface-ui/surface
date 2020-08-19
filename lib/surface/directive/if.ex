@@ -1,7 +1,7 @@
 defmodule Surface.Directive.If do
   use Surface.Directive
 
-  def extract({":if", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
+  def extract({":if", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
       name: :if,

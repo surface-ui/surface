@@ -1,7 +1,7 @@
 defmodule Surface.Directive.Debug do
   use Surface.Directive
 
-  def extract({":debug", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
+  def extract({":debug", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
       name: :debug,

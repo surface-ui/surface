@@ -203,7 +203,7 @@ defmodule Surface.Compiler.Parser do
 
   defp attribute_expr(_rest, ["}}" | nodes], context, _line, _offset) do
     [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
-    {[{:attribute_expr, [IO.chardata_to_string(rest)], %{line: opening_line}}], context}
+    {[{:attribute_expr, IO.chardata_to_string(rest), %{line: opening_line}}], context}
   end
 
   defp attribute_expr(_rest, _, _context, _line, _offset),

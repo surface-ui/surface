@@ -1,7 +1,7 @@
 defmodule Surface.Directive.For do
   use Surface.Directive
 
-  def extract({":for", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
+  def extract({":for", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
       name: :for,

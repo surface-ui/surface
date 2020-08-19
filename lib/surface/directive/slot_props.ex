@@ -1,7 +1,7 @@
 defmodule Surface.Directive.SlotProps do
   use Surface.Directive
 
-  def extract({":props", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
+  def extract({":props", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
       name: :props,
