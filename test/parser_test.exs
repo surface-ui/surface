@@ -419,8 +419,7 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       attributes = [
-        {"prop1", {:attribute_expr, " var1 ", %{line: 2}},
-         %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop1", {:attribute_expr, " var1 ", %{line: 2}}, %{line: 2, spaces: ["\n  ", "", ""]}},
         {"prop2", {:attribute_expr, " var2 ", %{line: 3}}, %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
