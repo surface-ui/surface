@@ -429,7 +429,7 @@ defmodule Surface.Compiler do
   defp attribute_value(attributes, attr_name, default) do
     Enum.find_value(attributes, default, fn {name, value, _} ->
       if name == attr_name do
-        List.to_atom(value)
+        String.to_atom(value)
       end
     end)
   end

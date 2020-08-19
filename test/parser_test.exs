@@ -61,7 +61,7 @@ defmodule Surface.Compiler.ParserTest do
     assert node ==
              {"MyComponent",
               [
-                {"label", 'My label', %{line: 1, spaces: [" ", "", ""]}}
+                {"label", "My label", %{line: 1, spaces: [" ", "", ""]}}
               ], [], %{line: 1, space: ""}}
   end
 
@@ -147,8 +147,8 @@ defmodule Surface.Compiler.ParserTest do
       assert node ==
                {"img",
                 [
-                  {"src", 'file.gif', %{line: 3, spaces: ["\n    ", "", ""]}},
-                  {"alt", 'My image', %{line: 4, spaces: ["\n    ", "", ""]}}
+                  {"src", "file.gif", %{line: 3, spaces: ["\n    ", "", ""]}},
+                  {"alt", "My image", %{line: 4, spaces: ["\n    ", "", ""]}}
                 ], [], %{line: 2, space: "\n  "}}
     end
   end
@@ -318,8 +318,8 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       attributes = [
-        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
-        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
+        {"prop1", "value1", %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", "value2", %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       children = [
@@ -340,8 +340,8 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       attributes = [
-        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
-        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
+        {"prop1", "value1", %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", "value2", %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: "\n"}}, "\n"]}
@@ -358,8 +358,8 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       attributes = [
-        {"prop1", 'value1', %{line: 2, spaces: ["\n  ", "", ""]}},
-        {"prop2", 'value2', %{line: 3, spaces: ["\n  ", "", ""]}}
+        {"prop1", "value1", %{line: 2, spaces: ["\n  ", "", ""]}},
+        {"prop2", "value2", %{line: 3, spaces: ["\n  ", "", ""]}}
       ]
 
       assert parse(code) ==
@@ -379,7 +379,7 @@ defmodule Surface.Compiler.ParserTest do
 
       attributes = [
         {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
-        {"prop2", 'value 2', %{line: 3, spaces: ["", " ", " "]}},
+        {"prop2", "value 2", %{line: 3, spaces: ["", " ", " "]}},
         {"prop3", {:attribute_expr, [" var3 "], %{line: 5}},
          %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
         {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
@@ -401,7 +401,7 @@ defmodule Surface.Compiler.ParserTest do
 
       attributes = [
         {"prop1", true, %{line: 2, spaces: ["\n  ", "\n  "]}},
-        {"prop2", '2', %{line: 3, spaces: ["", " ", " "]}},
+        {"prop2", "2", %{line: 3, spaces: ["", " ", " "]}},
         {"prop3", {:attribute_expr, [" var3 "], %{line: 5}},
          %{line: 4, spaces: ["\n  ", " ", "\n    "]}},
         {"prop4", true, %{line: 6, spaces: ["\n  ", "\n"]}}
@@ -458,6 +458,34 @@ defmodule Surface.Compiler.ParserTest do
         {"prop2", true, %{line: 3, spaces: ["", "", ""]}},
         {"prop3", false, %{line: 4, spaces: ["\n  ", "", ""]}},
         {"prop4", true, %{line: 5, spaces: ["\n  ", "\n"]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
+
+    test "string with embedded interpolation" do
+      code = """
+      <foo prop="before {{ var }} after"/>
+      """
+
+      attr_value = ["before ", {:attribute_expr, [" var "], %{line: 1}}, " after"]
+
+      attributes = [
+        {"prop", attr_value, %{line: 1, spaces: [" ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
+
+    test "string with only an embedded interpolation" do
+      code = """
+      <foo prop="{{ var }}"/>
+      """
+
+      attr_value = [{:attribute_expr, [" var "], %{line: 1}}]
+
+      attributes = [
+        {"prop", attr_value, %{line: 1, spaces: [" ", "", ""]}}
       ]
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
