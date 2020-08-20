@@ -471,19 +471,32 @@ defmodule Surface.Compiler do
     node = %AST.Attribute{
       type: type,
       name: name,
-      value: List.wrap(attr_value(name, type, value, attr_meta)),
+      value: attr_value(name, type, value, attr_meta),
       meta: attr_meta
     }
 
     [node | process_attributes(mod, attrs, meta)]
   end
 
-  defp attr_value(_name, _type, [], _attr_meta) do
-    []
-  end
+  defp attr_value(name, type, values, attr_meta) when is_list(values) do
+    {originals, quoted_values} =
+      Enum.reduce(values, {[], []}, fn
+        {:attribute_expr, value, expr_meta}, {originals, quoted_values} ->
+          {["{{#{value}}}" | originals], [quote_embedded_expr(value, expr_meta) | quoted_values]}
 
-  defp attr_value(name, type, [value | values], attr_meta) do
-    [attr_value(name, type, value, attr_meta) | attr_value(name, type, values, attr_meta)]
+        value, {originals, quoted_values} ->
+          {[value | originals], [value | quoted_values]}
+      end)
+
+    original = originals |> Enum.reverse() |> Enum.join()
+    quoted_values = Enum.reverse(quoted_values)
+    expr_value = {:<<>>, [line: attr_meta.line], quoted_values}
+
+    %AST.AttributeExpr{
+      original: original,
+      value: Helpers.attribute_expr_to_quoted!(expr_value, name, type, attr_meta, original),
+      meta: attr_meta
+    }
   end
 
   defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
@@ -534,7 +547,20 @@ defmodule Surface.Compiler do
     %AST.Text{value: value}
   end
 
+  defp quote_embedded_expr(value, expr_meta) do
+    meta = [line: expr_meta.line]
+    quoted_value = Code.string_to_quoted!(value, meta)
+
+    {:"::", meta,
+     [
+       {{:., meta, [Kernel, :to_string]}, meta, [quoted_value]},
+       {:binary, meta, Elixir}
+     ]}
+  end
+
   defp determine_attribute_type(nil, :class, _meta), do: :css_class
+
+  defp determine_attribute_type(nil, :style, _meta), do: :style
 
   defp determine_attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
     do: :boolean

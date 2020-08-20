@@ -101,12 +101,10 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [
-                   %Surface.AST.AttributeExpr{
-                     original: " @label ",
-                     value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _]}
-                   }
-                 ]
+                 value: %Surface.AST.AttributeExpr{
+                   original: " @label ",
+                   value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _]}
+                 }
                }
              ]
            } = node
@@ -125,27 +123,45 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [
-                   %Surface.AST.Text{value: "str_1 "},
-                   %Surface.AST.AttributeExpr{
-                     original: "@str_2",
-                     value: {_, _, [_, _, [{:@, _, [{:str_2, _, _}]}], [], _, _]}
+                 value: %Surface.AST.AttributeExpr{
+                   value: {
+                     {:., [generated: true],
+                      [
+                        {:__aliases__, [generated: true, alias: false], [:Surface, :TypeHandler]},
+                        :expr_to_value!
+                      ]},
+                     [generated: true],
+                     [
+                       :string,
+                       :label,
+                       [
+                         {:<<>>, _,
+                          [
+                            "str_1 ",
+                            {:"::", _,
+                             [
+                               {{:., _, [Kernel, :to_string]}, _, [{:@, _, [{:str_2, _, nil}]}]},
+                               {:binary, _, Elixir}
+                             ]},
+                            " str_3 ",
+                            {:"::", _,
+                             [
+                               {{:., _, [Kernel, :to_string]}, _,
+                                [
+                                  {:<>, _,
+                                   [{:@, _, [{:str_4, _, nil}]}, {:@, _, [{:str_5, _, nil}]}]}
+                                ]},
+                               {:binary, _, Elixir}
+                             ]}
+                          ]}
+                       ],
+                       [],
+                       Surface.CompilerTest.Button,
+                       "str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"
+                     ]
                    },
-                   %Surface.AST.Text{value: " str_3 "},
-                   %Surface.AST.AttributeExpr{
-                     original: "@str_4 <> @str_5",
-                     value:
-                       {_, _,
-                        [
-                          _,
-                          _,
-                          [{:<>, _, [{:@, _, [{:str_4, _, _}]}, {:@, _, [{:str_5, _, _}]}]}],
-                          [],
-                          _,
-                          _
-                        ]}
-                   }
-                 ]
+                   original: "str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"
+                 }
                }
              ]
            } = node
@@ -164,12 +180,10 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :click,
                  type: :event,
-                 value: [
-                   %Surface.AST.AttributeExpr{
-                     value: _,
-                     original: "click_event"
-                   }
-                 ]
+                 value: %Surface.AST.AttributeExpr{
+                   value: _,
+                   original: "click_event"
+                 }
                }
              ]
            } = node
@@ -188,11 +202,7 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :class,
                  type: :css_class,
-                 value: [
-                   %Surface.AST.Text{
-                     value: ""
-                   }
-                 ]
+                 value: %Surface.AST.Text{value: ""}
                }
              ]
            } = node
@@ -211,7 +221,7 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [%Surface.AST.Text{value: ""}]
+                 value: %Surface.AST.Text{value: ""}
                }
              ]
            } = node
@@ -235,22 +245,20 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [%Surface.AST.Text{value: "label"}]
+                 value: %Surface.AST.Text{value: "label"}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: [%Surface.AST.Text{value: true}]
+                 value: %Surface.AST.Text{value: true}
                },
                %Surface.AST.Attribute{
                  name: :click,
                  type: :event,
-                 value: [
-                   %Surface.AST.AttributeExpr{
-                     value: _expr,
-                     original: "event"
-                   }
-                 ]
+                 value: %Surface.AST.AttributeExpr{
+                   value: _expr,
+                   original: "event"
+                 }
                }
              ]
            } = node
@@ -274,22 +282,20 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [%Surface.AST.Text{value: "label"}]
+                 value: %Surface.AST.Text{value: "label"}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: [%Surface.AST.Text{value: true}]
+                 value: %Surface.AST.Text{value: true}
                },
                %Surface.AST.Attribute{
                  name: :click,
                  type: :event,
-                 value: [
-                   %Surface.AST.AttributeExpr{
-                     value: _expr,
-                     original: "event"
-                   }
-                 ]
+                 value: %Surface.AST.AttributeExpr{
+                   value: _expr,
+                   original: "event"
+                 }
                }
              ]
            } = node
@@ -313,17 +319,17 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [%Surface.AST.Text{value: "label"}]
+                 value: %Surface.AST.Text{value: "label"}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: [%Surface.AST.Text{value: true}]
+                 value: %Surface.AST.Text{value: true}
                },
                %Surface.AST.Attribute{
                  name: :click,
                  type: :string,
-                 value: [%Surface.AST.Text{value: "event"}]
+                 value: %Surface.AST.Text{value: "event"}
                }
              ]
            } = node
@@ -354,17 +360,17 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: [%Surface.AST.Text{value: ""}]
+                 value: %Surface.AST.Text{value: ""}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: [%Surface.AST.Text{value: true}]
+                 value: %Surface.AST.Text{value: true}
                },
                %Surface.AST.Attribute{
                  name: :class,
                  type: :css_class,
-                 value: [%Surface.AST.Text{value: ""}]
+                 value: %Surface.AST.Text{value: ""}
                }
              ]
            } = node
@@ -385,17 +391,15 @@ defmodule Surface.CompilerTest do
                  # This is supposedly an integer, but the value is a string
                  # :-(
                  type: :integer,
-                 value: [%Surface.AST.Text{value: "my_id"}]
+                 value: %Surface.AST.Text{value: "my_id"}
                },
                %Surface.AST.Attribute{
                  name: :session,
                  type: :map,
-                 value: [
-                   %Surface.AST.AttributeExpr{
-                     original: " %{user_id: 1} ",
-                     value: _
-                   }
-                 ]
+                 value: %Surface.AST.AttributeExpr{
+                   original: " %{user_id: 1} ",
+                   value: _
+                 }
                }
              ]
            } = node

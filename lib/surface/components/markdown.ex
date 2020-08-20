@@ -84,7 +84,7 @@ defmodule Surface.Components.Markdown do
           attributes: [
             %Surface.AST.Attribute{
               name: "class",
-              value: [%Surface.AST.Text{value: class}]
+              value: %Surface.AST.Text{value: class}
             }
           ],
           children: [node],

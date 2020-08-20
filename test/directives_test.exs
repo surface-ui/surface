@@ -157,7 +157,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="padding: 1px;">
+             <col style="padding: 1px">
              <col>
              """
     end
@@ -170,7 +170,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="display: none;padding: 1px;">
+             <col style="display: none; padding: 1px">
              """
     end
 
@@ -182,7 +182,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="display: none;">
+             <col style="display: none">
              """
     end
   end

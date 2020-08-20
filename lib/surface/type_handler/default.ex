@@ -5,6 +5,11 @@ defmodule Surface.TypeHandler.Default do
 
   alias Surface.IOHelper
 
+  # @impl true
+  # def attr_value_to_ast(name, value, meta) do
+  #   value
+  # end
+
   @impl true
   def validate_expr(_clauses, _opts, _module) do
     :ok

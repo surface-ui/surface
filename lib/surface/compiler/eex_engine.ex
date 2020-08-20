@@ -374,7 +374,7 @@ defmodule Surface.Compiler.EExEngine do
     end)
     |> Enum.map(fn %{generator: gen, name: name} ->
       case find_attribute_value(props, gen, nil) do
-        [%AST.AttributeExpr{value: {binding, _}}] ->
+        %AST.AttributeExpr{value: {binding, _}} ->
           {name, binding}
 
         _ ->
@@ -395,26 +395,15 @@ defmodule Surface.Compiler.EExEngine do
   defp find_attribute_value([_ | tail], name, default),
     do: find_attribute_value(tail, name, default)
 
-  defp to_prop_expr([%AST.Text{value: value}], :boolean) do
+  defp to_prop_expr(%AST.Text{value: value}, :boolean) do
     !!value
   end
 
-  defp to_prop_expr([%AST.AttributeExpr{value: value, meta: meta}], type) do
+  defp to_prop_expr(%AST.AttributeExpr{value: value, meta: meta}, type) do
     Surface.TypeHandler.update_prop_expr(type, value, meta)
   end
 
-  defp to_prop_expr(values, :string) do
-    list_expr =
-      for %{value: value} <- values do
-        value
-      end
-
-    quote generated: true do
-      List.to_string(unquote(list_expr))
-    end
-  end
-
-  defp to_prop_expr([%AST.Text{value: value}], _) do
+  defp to_prop_expr(%AST.Text{value: value}, _) do
     value
   end
 
@@ -600,7 +589,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([]), do: []
 
   defp to_html_attributes([
-         %AST.Attribute{name: name, type: type, value: [%AST.Text{value: value}]}
+         %AST.Attribute{name: name, type: type, value: %AST.Text{value: value}}
          | attributes
        ])
        # TODO: [Type] Should we have something like Surface.TypeHandler.literal_to_html(...) which
@@ -634,7 +623,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Attribute{
            name: name,
            type: type,
-           value: [%AST.AttributeExpr{value: expr_value} = expr]
+           value: %AST.AttributeExpr{value: expr_value} = expr
          }
          | attributes
        ]) do
@@ -647,29 +636,24 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_html_attributes([
-         %AST.Attribute{name: name, value: values}
+         %AST.Attribute{name: name, value: value}
          | attributes
        ]) do
     [
       ~S( ),
       to_string(name),
       ~S(="),
-      to_html_string(name, values),
+      to_html_string(name, value),
       ~S("),
       to_html_attributes(attributes)
     ]
   end
 
-  # TODO: [Type] We should probably convert an attribute value containing interpolation
-  # into a single %AST.AttributeExpr{} earlier so we don't need to handle it
-  # separately here. This would make sure it goes to attr/3 as well and be properly
-  # validated.
-  defp to_html_string(_name, []), do: []
+  defp to_html_string(_name, %AST.Text{value: value}) do
+    value
+  end
 
-  defp to_html_string(name, [%AST.Text{value: value} | elements]),
-    do: [value | to_html_string(name, elements)]
-
-  defp to_html_string(name, [%AST.AttributeExpr{value: value} = expr | elements]) do
+  defp to_html_string(_name, %AST.AttributeExpr{value: value} = expr) do
     # TODO: is this the behaviour we want?
 
     value =
@@ -677,7 +661,7 @@ defmodule Surface.Compiler.EExEngine do
         Phoenix.HTML.html_escape(unquote(value))
       end
 
-    [%{expr | value: value} | to_html_string(name, elements)]
+    %{expr | value: value}
   end
 
   defp at_ref(name) do

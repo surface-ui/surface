@@ -167,7 +167,7 @@ defmodule Surface.AST.Attribute do
   @type t :: %__MODULE__{
           type: atom(),
           name: atom(),
-          value: list(Surface.AST.Text.t() | Surface.AST.AttributeExpr.t()),
+          value: Surface.AST.Text.t() | Surface.AST.AttributeExpr.t(),
           meta: Surface.AST.Meta.t()
         }
 end

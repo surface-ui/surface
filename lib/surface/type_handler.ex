@@ -54,13 +54,15 @@ defmodule Surface.TypeHandler do
     end
   end
 
-  def expr_to_quoted!(value, name, type, meta) do
+  def expr_to_quoted!(value, name, type, meta, original \\ nil) do
+    original = original || value
+
     with {:ok, ast} <- normalize_expr(value, line: meta.line, file: meta.file),
          {clauses, opts} <- split_clauses_and_options(ast),
          true <- clauses != [] or opts != [],
          handler <- handler(type),
          :ok <- handler.validate_expr(clauses, opts, meta.module) do
-      handler.expr_to_quoted(type, name, clauses, opts, meta.module, value)
+      handler.expr_to_quoted(type, name, clauses, opts, meta.module, original)
     else
       {:error, {line, error, token}} ->
         IOHelper.syntax_error(
@@ -70,11 +72,11 @@ defmodule Surface.TypeHandler do
         )
 
       {:error, expected} ->
-        message = compile_error_message(type, name, value, meta.module, expected)
+        message = compile_error_message(type, name, original, meta.module, expected)
         IOHelper.compile_error(message, meta.file, meta.line)
 
       _ ->
-        message = compile_error_message(type, name, value, meta.module)
+        message = compile_error_message(type, name, original, meta.module)
         IOHelper.compile_error(message, meta.file, meta.line)
     end
   end
@@ -122,7 +124,7 @@ defmodule Surface.TypeHandler do
 
     """
     invalid value for #{attr_kind} #{attr_name}. \
-    Expected a #{inspect(type)}, got: #{value}.
+    Expected a #{inspect(type)}, got: #{inspect(value)}.
 
     Original expression: {{#{original}}}
     #{details}\
@@ -152,10 +154,14 @@ defmodule Surface.TypeHandler do
     end
   end
 
-  defp normalize_expr(expr, opts) do
+  defp normalize_expr(expr, opts) when is_binary(expr) do
     with {:ok, {:wrap, _, ast}} <- Code.string_to_quoted("wrap(#{expr})", opts) do
       {:ok, ast}
     end
+  end
+
+  defp normalize_expr(expr, _opts) do
+    {:ok, [expr]}
   end
 
   defp split_clauses_and_options(clauses_and_options) do
@@ -172,6 +178,7 @@ defmodule Surface.TypeHandler do
   defp handler(:map), do: __MODULE__.Map
   defp handler(:keyword), do: __MODULE__.Keyword
   defp handler(:css_class), do: __MODULE__.CssClass
+  defp handler(:style), do: __MODULE__.Style
   defp handler(:event), do: __MODULE__.Event
   defp handler(:phx_event), do: __MODULE__.PhxEvent
   defp handler(:generator), do: __MODULE__.Generator

@@ -4,6 +4,18 @@ defmodule Surface.PropertiesTest do
   import Surface
   import ComponentTestHelper
 
+  defmodule StringProp do
+    use Surface.Component
+
+    property label, :string
+
+    def render(assigns) do
+      ~H"""
+      {{ @label }}
+      """
+    end
+  end
+
   defmodule MapProp do
     use Surface.Component
 
@@ -64,6 +76,16 @@ defmodule Surface.PropertiesTest do
       ~H"""
       <div :for={{ c <- @prop }}>{{ c }}</div>
       """
+    end
+  end
+
+  describe "string" do
+    test "passing a string with interpolation" do
+      code = """
+      <StringProp label="begin {{ @a }} {{ @b }} end"/>
+      """
+
+      assert render_live(code, %{a: 1, b: "two"}) =~ "begin 1 two end"
     end
   end
 
