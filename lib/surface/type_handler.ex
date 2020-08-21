@@ -62,7 +62,7 @@ defmodule Surface.TypeHandler do
          true <- clauses != [] or opts != [],
          handler <- handler(type),
          :ok <- handler.validate_expr(clauses, opts, meta.module) do
-      handler.expr_to_quoted(type, name, clauses, opts, meta.module, original)
+      handler.expr_to_quoted(type, name, clauses, opts, meta, original)
     else
       {:error, {line, error, token}} ->
         IOHelper.syntax_error(

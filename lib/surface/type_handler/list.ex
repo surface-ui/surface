@@ -13,7 +13,7 @@ defmodule Surface.TypeHandler.List do
   end
 
   @impl true
-  def expr_to_quoted(_type, attribute_name, [clause], _opts, _module, _original) do
+  def expr_to_quoted(_type, attribute_name, [clause], _opts, _meta, _original) do
     handle_list_expr(attribute_name, clause)
   end
 

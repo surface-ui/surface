@@ -11,14 +11,14 @@ defmodule Surface.TypeHandler.Default do
   end
 
   @impl true
-  def expr_to_quoted(type, attribute_name, clauses, opts, module, original) do
+  def expr_to_quoted(type, attribute_name, clauses, opts, meta, original) do
     quote generated: true do
       Surface.TypeHandler.expr_to_value!(
         unquote(type),
         unquote(attribute_name),
         unquote(clauses),
         unquote(opts),
-        unquote(module),
+        unquote(meta.module),
         unquote(original)
       )
     end
