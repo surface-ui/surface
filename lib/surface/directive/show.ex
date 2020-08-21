@@ -82,7 +82,7 @@ defmodule Surface.Directive.Show do
   end
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, ":show", :boolean, meta)
+    expr = Surface.TypeHandler.expr_to_quoted!(value, ":show", :boolean, meta)
 
     %AST.AttributeExpr{
       original: value,
@@ -95,7 +95,7 @@ defmodule Surface.Directive.Show do
     %AST.AttributeExpr{
       original: value,
       value:
-        Helpers.attribute_expr_to_quoted!(Macro.to_string(value), ":style", :style, attr_meta),
+        Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), ":style", :style, attr_meta),
       meta: attr_meta
     }
   end

@@ -612,7 +612,7 @@ defmodule Surface.Compiler.EExEngine do
     value =
       quote generated: true do
         for {name, {type, value}} <- unquote(expr_value) do
-          Surface.attr(name, type, value)
+          Surface.TypeHandler.attr_to_html(type, name, value)
         end
       end
 
@@ -629,7 +629,7 @@ defmodule Surface.Compiler.EExEngine do
        ]) do
     value =
       quote generated: true do
-        Surface.attr(unquote(name), unquote(type), unquote(expr_value))
+        Surface.TypeHandler.attr_to_html(unquote(type), unquote(name), unquote(expr_value))
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]

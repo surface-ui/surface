@@ -140,11 +140,6 @@ defmodule Surface do
   end
 
   @doc false
-  def attr(name, type, value) do
-    Surface.TypeHandler.attr_to_html(type, name, value)
-  end
-
-  @doc false
   def build_assigns(context, props, slot_props, slots, module) do
     gets_from_context =
       module

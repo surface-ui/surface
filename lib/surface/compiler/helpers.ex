@@ -23,10 +23,6 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def attribute_expr_to_quoted!(value, attribute_name, type, meta, original \\ nil) do
-    Surface.TypeHandler.expr_to_quoted!(value, attribute_name, type, meta, original)
-  end
-
   defp validate_interpolation({:@, _, [{:inner_content, _, args}]}, _meta) when is_list(args) do
     {:error,
      """

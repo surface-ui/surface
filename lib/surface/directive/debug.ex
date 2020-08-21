@@ -53,7 +53,7 @@ defmodule Surface.Directive.Debug do
   end
 
   defp directive_value(value, meta) do
-    expr = Helpers.attribute_expr_to_quoted!(value, ":debug", :static_list, meta)
+    expr = Surface.TypeHandler.expr_to_quoted!(value, ":debug", :static_list, meta)
 
     for name <- expr do
       if not is_atom(name) do

@@ -494,7 +494,7 @@ defmodule Surface.Compiler do
 
     %AST.AttributeExpr{
       original: original,
-      value: Helpers.attribute_expr_to_quoted!(expr_value, name, type, attr_meta, original),
+      value: Surface.TypeHandler.expr_to_quoted!(expr_value, name, type, attr_meta, original),
       meta: attr_meta
     }
   end
@@ -504,7 +504,7 @@ defmodule Surface.Compiler do
 
     %AST.AttributeExpr{
       original: value,
-      value: Helpers.attribute_expr_to_quoted!(value, name, type, expr_meta),
+      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
       meta: expr_meta
     }
   end
@@ -538,7 +538,7 @@ defmodule Surface.Compiler do
   defp attr_value(name, type, value, meta) when type in [:css_class, :map, :keyword, :event] do
     %AST.AttributeExpr{
       original: value,
-      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, type, meta),
+      value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
       meta: meta
     }
   end

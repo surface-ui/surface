@@ -73,9 +73,7 @@ defmodule Surface.Directive.Events do
   defp to_quoted_expr(name, event, meta) when is_binary(event) or is_bitstring(event) do
     %AST.AttributeExpr{
       original: event,
-      # using the helpers and quoting this because there is some logic around @myself vs. nil
-      # that I don't want to duplicate
-      value: Helpers.attribute_expr_to_quoted!(~s("#{event}"), name, :event, meta),
+      value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(event), name, :event, meta),
       meta: meta
     }
   end
@@ -85,7 +83,7 @@ defmodule Surface.Directive.Events do
 
     value =
       original
-      |> Helpers.attribute_expr_to_quoted!(name, :event, expr_meta)
+      |> Surface.TypeHandler.expr_to_quoted!(name, :event, expr_meta)
       |> case do
         [name, opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
         [name | opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
