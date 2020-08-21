@@ -395,10 +395,6 @@ defmodule Surface.Compiler.EExEngine do
   defp find_attribute_value([_ | tail], name, default),
     do: find_attribute_value(tail, name, default)
 
-  defp to_prop_expr(%AST.Text{value: value}, :boolean) do
-    !!value
-  end
-
   defp to_prop_expr(%AST.AttributeExpr{value: value, meta: meta}, type) do
     Surface.TypeHandler.update_prop_expr(type, value, meta)
   end
