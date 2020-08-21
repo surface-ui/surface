@@ -509,42 +509,8 @@ defmodule Surface.Compiler do
     }
   end
 
-  defp attr_value(name, type, "", attr_meta) do
-    case type do
-      # TODO: [Type] Move this logic to type handlers
-      type when type in [:string, :css_class, :any] ->
-        %AST.Text{
-          value: ""
-        }
-
-      :event ->
-        %AST.AttributeExpr{
-          original: "",
-          value: nil,
-          meta: attr_meta
-        }
-
-      :boolean ->
-        %AST.Text{value: true}
-
-      type ->
-        message = "invalid property value for #{name}, expected #{type}, but got an empty string"
-
-        IOHelper.compile_error(message, attr_meta.file, attr_meta.line)
-    end
-  end
-
-  # TODO: [Type] Move this logic to type handlers
-  defp attr_value(name, type, value, meta) when type in [:css_class, :map, :keyword, :event] do
-    %AST.AttributeExpr{
-      original: value,
-      value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
-      meta: meta
-    }
-  end
-
-  defp attr_value(_name, _type, value, _meta) do
-    %AST.Text{value: value}
+  defp attr_value(name, type, value, meta) do
+    Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
   end
 
   defp quote_embedded_expr(value, expr_meta) do

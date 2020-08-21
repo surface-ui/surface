@@ -4,6 +4,20 @@ defmodule Surface.TypeHandler.Event do
   use Surface.TypeHandler
 
   @impl true
+  def literal_to_ast_node(type, name, value, meta) when is_binary(value) do
+    {:ok,
+     %Surface.AST.AttributeExpr{
+       original: value,
+       value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
+       meta: meta
+     }}
+  end
+
+  def literal_to_ast_node(_type, _name, _value, _meta) do
+    :error
+  end
+
+  @impl true
   def expr_to_quoted(type, name, clauses, opts, meta, original) do
     caller_cid = Surface.AST.Meta.quoted_caller_cid(meta)
 

@@ -6,9 +6,16 @@ defmodule Surface.TypeHandler do
   @type clauses :: list(Macro.t())
   @type opts :: keyword(Macro.t())
 
+  @callback literal_to_ast_node(
+              type :: atom(),
+              name :: atom(),
+              value :: any(),
+              meta :: Surface.AST.Meta.t()
+            ) :: Surface.AST.Text | Surface.AST.AttributeExpr
+
   @callback expr_to_quoted(
               type :: atom(),
-              attribute_name :: atom(),
+              name :: atom(),
               clauses(),
               opts(),
               module(),
@@ -23,6 +30,7 @@ defmodule Surface.TypeHandler do
   @callback update_prop_expr(expr :: Macro.t(), meta :: Surface.AST.Meta.t()) :: Macro.t()
 
   @optional_callbacks [
+    literal_to_ast_node: 4,
     expr_to_quoted: 6,
     expr_to_value: 2,
     value_to_html: 2,
@@ -34,6 +42,8 @@ defmodule Surface.TypeHandler do
       @behaviour unquote(__MODULE__)
       @default_handler unquote(__MODULE__).Default
 
+      defdelegate literal_to_ast_node(type, name, value, meta), to: @default_handler
+
       defdelegate expr_to_quoted(type, name, clauses, opts, module, original),
         to: @default_handler
 
@@ -41,10 +51,26 @@ defmodule Surface.TypeHandler do
       defdelegate value_to_html(name, value), to: @default_handler
       defdelegate update_prop_expr(expr, meta), to: @default_handler
 
-      defoverridable expr_to_quoted: 6,
+      defoverridable literal_to_ast_node: 4,
+                     expr_to_quoted: 6,
                      expr_to_value: 2,
                      value_to_html: 2,
                      update_prop_expr: 2
+    end
+  end
+
+  def literal_to_ast_node!(type, name, value, meta) do
+    case handler(type).literal_to_ast_node(type, name, value, meta) do
+      {:ok, attr_value} ->
+        attr_value
+
+      {:error, expected} ->
+        message = compile_error_message(type, name, value, meta.module, expected)
+        IOHelper.compile_error(message, meta.file, meta.line)
+
+      _ ->
+        message = compile_error_message(type, name, value, meta.module)
+        IOHelper.compile_error(message, meta.file, meta.line)
     end
   end
 

@@ -4,6 +4,16 @@ defmodule Surface.TypeHandler.Map do
   use Surface.TypeHandler
 
   @impl true
+  def literal_to_ast_node(type, name, value, meta) do
+    {:ok,
+     %Surface.AST.AttributeExpr{
+       original: value,
+       value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
+       meta: meta
+     }}
+  end
+
+  @impl true
   def expr_to_value([value], []) do
     cond do
       is_map(value) ->

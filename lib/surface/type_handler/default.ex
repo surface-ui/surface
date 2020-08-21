@@ -6,6 +6,11 @@ defmodule Surface.TypeHandler.Default do
   alias Surface.IOHelper
 
   @impl true
+  def literal_to_ast_node(_type, _name, value, _meta) do
+    {:ok, %Surface.AST.Text{value: value}}
+  end
+
+  @impl true
   def expr_to_quoted(type, name, clauses, opts, meta, original) do
     quoted_expr =
       quote generated: true do
