@@ -4,17 +4,12 @@ defmodule Surface.TypeHandler.List do
   use Surface.TypeHandler
 
   @impl true
-  def validate_expr([_clause], [], _module) do
-    :ok
+  def expr_to_quoted(_type, attribute_name, [clause], [], _meta, _original) do
+    {:ok, handle_list_expr(attribute_name, clause)}
   end
 
-  def validate_expr(_clauses, _opts, _module) do
+  def expr_to_quoted(_type, _attribute_name, _clauses, _opts, _meta, _original) do
     :error
-  end
-
-  @impl true
-  def expr_to_quoted(_type, attribute_name, [clause], _opts, _meta, _original) do
-    handle_list_expr(attribute_name, clause)
   end
 
   defp handle_list_expr(_name, {:<-, _, [binding, value]}) do

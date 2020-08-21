@@ -6,8 +6,6 @@ defmodule Surface.TypeHandler do
   @type clauses :: list(Macro.t())
   @type opts :: keyword(Macro.t())
 
-  @callback validate_expr(clauses(), opts(), module()) :: :ok | {:error, String.t()}
-
   @callback expr_to_quoted(
               type :: atom(),
               attribute_name :: atom(),
@@ -15,7 +13,7 @@ defmodule Surface.TypeHandler do
               opts(),
               module(),
               original :: String.t()
-            ) :: Macro.t()
+            ) :: {:ok, Macro.t()} | {:error, String.t()} | :error
 
   @callback expr_to_value(clauses :: list(), opts :: keyword()) ::
               {:ok, any()} | {:error, any()} | {:error, any(), String.t()}
@@ -25,7 +23,6 @@ defmodule Surface.TypeHandler do
   @callback update_prop_expr(expr :: Macro.t(), meta :: Surface.AST.Meta.t()) :: Macro.t()
 
   @optional_callbacks [
-    validate_expr: 3,
     expr_to_quoted: 6,
     expr_to_value: 2,
     value_to_html: 2,
@@ -37,8 +34,6 @@ defmodule Surface.TypeHandler do
       @behaviour unquote(__MODULE__)
       @default_handler unquote(__MODULE__).Default
 
-      defdelegate validate_expr(clauses, opts, module), to: @default_handler
-
       defdelegate expr_to_quoted(type, name, clauses, opts, module, original),
         to: @default_handler
 
@@ -46,8 +41,7 @@ defmodule Surface.TypeHandler do
       defdelegate value_to_html(name, value), to: @default_handler
       defdelegate update_prop_expr(expr, meta), to: @default_handler
 
-      defoverridable validate_expr: 3,
-                     expr_to_quoted: 6,
+      defoverridable expr_to_quoted: 6,
                      expr_to_value: 2,
                      value_to_html: 2,
                      update_prop_expr: 2
@@ -61,8 +55,8 @@ defmodule Surface.TypeHandler do
          {clauses, opts} <- split_clauses_and_options(ast),
          true <- clauses != [] or opts != [],
          handler <- handler(type),
-         :ok <- handler.validate_expr(clauses, opts, meta.module) do
-      handler.expr_to_quoted(type, name, clauses, opts, meta, original)
+         {:ok, value} <- handler.expr_to_quoted(type, name, clauses, opts, meta, original) do
+      value
     else
       {:error, {line, error, token}} ->
         IOHelper.syntax_error(
