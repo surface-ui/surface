@@ -128,7 +128,20 @@ defmodule Surface.PropertiesTest do
              """
     end
 
-    test "validate invalid values" do
+    test "validate invalid literals at compile-time" do
+      code = """
+      <KeywordProp prop="some string"/>
+      """
+
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :keyword, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values at runtime" do
       assigns = %{var: 1}
 
       code = """
@@ -212,7 +225,20 @@ defmodule Surface.PropertiesTest do
              """
     end
 
-    test "validate invalid values" do
+    test "validate invalid literals at compile-time" do
+      code = """
+      <MapProp prop="some string"/>
+      """
+
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :map, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values at runtime" do
       assigns = %{var: 1}
 
       code = """

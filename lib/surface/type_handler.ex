@@ -65,11 +65,11 @@ defmodule Surface.TypeHandler do
         attr_value
 
       {:error, expected} ->
-        message = compile_error_message(type, name, value, meta.module, expected)
+        message = compile_error_message(type, name, as_literal(value), meta.module, expected)
         IOHelper.compile_error(message, meta.file, meta.line)
 
       _ ->
-        message = compile_error_message(type, name, value, meta.module)
+        message = compile_error_message(type, name, as_literal(value), meta.module)
         IOHelper.compile_error(message, meta.file, meta.line)
     end
   end
@@ -92,11 +92,11 @@ defmodule Surface.TypeHandler do
         )
 
       {:error, expected} ->
-        message = compile_error_message(type, name, original, meta.module, expected)
+        message = compile_error_message(type, name, as_expr(original), meta.module, expected)
         IOHelper.compile_error(message, meta.file, meta.line)
 
       _ ->
-        message = compile_error_message(type, name, original, meta.module)
+        message = compile_error_message(type, name, as_expr(original), meta.module)
         IOHelper.compile_error(message, meta.file, meta.line)
     end
   end
@@ -157,7 +157,7 @@ defmodule Surface.TypeHandler do
 
     """
     invalid value for #{attr_kind} #{attr_name}. \
-    #{expected}, got: {{#{value}}}.\
+    #{expected}, got: #{value}.\
     """
   end
 
@@ -192,6 +192,14 @@ defmodule Surface.TypeHandler do
       _ ->
         {clauses_and_options, []}
     end
+  end
+
+  defp as_literal(value) do
+    inspect(value)
+  end
+
+  defp as_expr(value) do
+    "{{#{value}}}"
   end
 
   defp handler(:boolean), do: __MODULE__.Boolean
