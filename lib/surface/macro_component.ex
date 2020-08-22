@@ -39,7 +39,7 @@ defmodule Surface.MacroComponent do
 
   defp eval_value(
          _component,
-         %Surface.AST.Attribute{name: name, value: [%Surface.AST.Text{value: value}]},
+         %Surface.AST.Attribute{name: name, value: %Surface.AST.Text{value: value}},
          _caller
        )
        when is_list(value) do
@@ -48,7 +48,7 @@ defmodule Surface.MacroComponent do
 
   defp eval_value(
          _component,
-         %Surface.AST.Attribute{name: name, value: [%Surface.AST.Text{value: value}]},
+         %Surface.AST.Attribute{name: name, value: %Surface.AST.Text{value: value}},
          _caller
        ) do
     {name, value}
@@ -58,13 +58,11 @@ defmodule Surface.MacroComponent do
          component,
          %Surface.AST.Attribute{
            name: name,
-           value: [
-             %Surface.AST.AttributeExpr{
-               original: value,
-               value: expr,
-               meta: %{line: line, file: file}
-             }
-           ]
+           value: %Surface.AST.AttributeExpr{
+             original: value,
+             value: expr,
+             meta: %{line: line, file: file}
+           }
          },
          caller
        ) do

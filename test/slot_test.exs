@@ -420,7 +420,7 @@ defmodule Surface.SlotTest do
 
     message = """
     code:2: invalid value for directive :let. \
-    Expected a keyword list of bindings, got: :an_atom.\
+    Expected a keyword list of bindings, got: {{ :an_atom }}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -496,7 +496,7 @@ defmodule Surface.SlotTest do
 
     message = """
     code:1: invalid value for directive :let. Expected a keyword \
-    list of bindings, got: info: 1.\
+    list of bindings, got: {{ info: 1 }}.\
     """
 
     assert_raise(CompileError, message, fn ->

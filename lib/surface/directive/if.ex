@@ -1,7 +1,7 @@
 defmodule Surface.Directive.If do
   use Surface.Directive
 
-  def extract({":if", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
+  def extract({":if", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
       name: :if,
@@ -18,7 +18,7 @@ defmodule Surface.Directive.If do
   defp directive_value(value, meta) do
     %AST.AttributeExpr{
       original: value,
-      value: Helpers.attribute_expr_to_quoted!(value, :if, :boolean, meta),
+      value: Surface.TypeHandler.expr_to_quoted!(value, ":if", :boolean, meta),
       meta: meta
     }
   end

@@ -157,7 +157,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="padding: 1px;">
+             <col style="padding: 1px">
              <col>
              """
     end
@@ -170,7 +170,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="display: none;padding: 1px;">
+             <col style="display: none; padding: 1px">
              """
     end
 
@@ -182,7 +182,7 @@ defmodule Surface.DirectivesTest do
       """
 
       assert render_static(code) == """
-             <col style="display: none;">
+             <col style="display: none">
              """
     end
   end
@@ -224,19 +224,7 @@ defmodule Surface.DirectivesTest do
              """
     end
 
-    test "as a keyword list" do
-      assigns = %{}
-
-      code = ~H"""
-      <button :on-phx-click={{ ["ok", target: "#comp"] }}>OK</button>
-      """
-
-      assert render_static(code) =~ """
-             <button phx-click="ok" phx-target="#comp">OK</button>
-             """
-    end
-
-    test "as a keyword list without square brackets" do
+    test "as event name + target option" do
       assigns = %{}
 
       code = ~H"""

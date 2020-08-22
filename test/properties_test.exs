@@ -4,6 +4,18 @@ defmodule Surface.PropertiesTest do
   import Surface
   import ComponentTestHelper
 
+  defmodule StringProp do
+    use Surface.Component
+
+    property label, :string
+
+    def render(assigns) do
+      ~H"""
+      {{ @label }}
+      """
+    end
+  end
+
   defmodule MapProp do
     use Surface.Component
 
@@ -55,6 +67,28 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule CSSClassPropInspect do
+    use Surface.Component
+
+    property prop, :css_class
+
+    def render(assigns) do
+      ~H"""
+      <div :for={{ c <- @prop }}>{{ c }}</div>
+      """
+    end
+  end
+
+  describe "string" do
+    test "passing a string with interpolation" do
+      code = """
+      <StringProp label="begin {{ @a }} {{ @b }} end"/>
+      """
+
+      assert render_live(code, %{a: 1, b: "two"}) =~ "begin 1 two end"
+    end
+  end
+
   describe "keyword" do
     test "passing a keyword list" do
       code = """
@@ -94,15 +128,34 @@ defmodule Surface.PropertiesTest do
              """
     end
 
-    test "validate invalid values" do
+    test "validate invalid literals at compile-time" do
       code = """
-      <KeywordProp prop={{ 1 }}/>
+      <KeywordProp prop="some string"/>
       """
 
-      message = "invalid value for property \"prop\". Expected a :keyword, got: 1"
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :keyword, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values at runtime" do
+      assigns = %{var: 1}
+
+      code = """
+      <KeywordProp prop={{ @var }}/>
+      """
+
+      message = """
+      invalid value for property "prop". Expected a :keyword, got: 1.
+
+      Original expression: {{ @var }}
+      """
 
       assert_raise(RuntimeError, message, fn ->
-        render_live(code)
+        render_live(code, assigns)
       end)
     end
   end
@@ -172,15 +225,34 @@ defmodule Surface.PropertiesTest do
              """
     end
 
-    test "validate invalid values" do
+    test "validate invalid literals at compile-time" do
       code = """
-      <MapProp prop={{ 1 }}/>
+      <MapProp prop="some string"/>
       """
 
-      message = "invalid value for property \"prop\". Expected a :map, got: 1"
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :map, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values at runtime" do
+      assigns = %{var: 1}
+
+      code = """
+      <MapProp prop={{ @var }}/>
+      """
+
+      message = """
+      invalid value for property "prop". Expected a :map, got: 1.
+
+      Original expression: {{ @var }}
+      """
 
       assert_raise(RuntimeError, message, fn ->
-        render_live(code)
+        render_live(code, assigns)
       end)
     end
   end
@@ -230,9 +302,9 @@ defmodule Surface.PropertiesTest do
       <ListProp prop={{ 1, 2 }}/>
       """
 
-      message = "code:1: syntax error before: ','"
+      message = ~S(code:1: invalid value for property "prop". Expected a :list, got: {{ 1, 2 }}.)
 
-      assert_raise(SyntaxError, message, fn ->
+      assert_raise(CompileError, message, fn ->
         render_live(code)
       end)
     end
@@ -249,7 +321,20 @@ defmodule Surface.PropertiesTest do
       end)
     end
 
-    test "validate invalid values" do
+    test "validate invalid literals at compile-time" do
+      code = """
+      <ListProp prop="some string"/>
+      """
+
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :list, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values at runtime" do
       code = """
       <ListProp prop={{ %{test: 1} }}/>
       """
@@ -300,6 +385,24 @@ defmodule Surface.PropertiesTest do
 
       assert render_live(code) =~ """
              <span class="class1 class2 class3"></span>
+             """
+    end
+
+    test "values are always converted to a list of strings" do
+      code = """
+      <CSSClassPropInspect prop="class1 class2   class3"/>
+      """
+
+      assert render_live(code) =~ """
+             <div>class1</div><div>class2</div><div>class3</div>
+             """
+
+      code = """
+      <CSSClassPropInspect prop={{ ["class1"] ++ ["class2 class3", :class4, class5: true] }}/>
+      """
+
+      assert render_live(code) =~ """
+             <div>class1</div><div>class2</div><div>class3</div><div>class4</div><div>class5</div>
              """
     end
   end

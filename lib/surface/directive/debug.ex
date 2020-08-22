@@ -1,7 +1,7 @@
 defmodule Surface.Directive.Debug do
   use Surface.Directive
 
-  def extract({":debug", {:attribute_expr, [value], expr_meta}, attr_meta}, meta) do
+  def extract({":debug", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
       name: :debug,
@@ -53,17 +53,7 @@ defmodule Surface.Directive.Debug do
   end
 
   defp directive_value(value, meta) do
-    expr =
-      case Helpers.attribute_expr_to_quoted!(value, :debug, :bindings, meta) do
-        value when is_atom(value) ->
-          [value]
-
-        list when is_list(list) ->
-          list
-
-        _ ->
-          invalid_debug_value(value, meta)
-      end
+    expr = Surface.TypeHandler.expr_to_quoted!(value, ":debug", :static_list, meta)
 
     for name <- expr do
       if not is_atom(name) do

@@ -13,7 +13,7 @@ defmodule Surface.Components.FieldTest do
     """
 
     assert render_live(code) =~ """
-           <div class="">
+           <div>
              Hi
            </div>
            """

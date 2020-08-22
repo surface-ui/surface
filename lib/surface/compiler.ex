@@ -64,6 +64,8 @@ defmodule Surface.Compiler do
     :typemustmatch
   ]
 
+  @phx_event_attributes Surface.Directive.Events.phx_events() |> Enum.map(&String.to_atom/1)
+
   @void_elements [
     "area",
     "base",
@@ -427,7 +429,7 @@ defmodule Surface.Compiler do
   defp attribute_value(attributes, attr_name, default) do
     Enum.find_value(attributes, default, fn {name, value, _} ->
       if name == attr_name do
-        List.to_atom(value)
+        String.to_atom(value)
       end
     end)
   end
@@ -461,123 +463,76 @@ defmodule Surface.Compiler do
 
   defp process_attributes(_module, [], _meta), do: []
 
-  defp process_attributes(
-         mod,
-         [{name, {:attribute_expr, [value], expr_meta}, attr_meta} | attrs],
-         meta
-       ) do
+  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
     name = String.to_atom(name)
-    expr_meta = Helpers.to_meta(expr_meta, meta)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     type = determine_attribute_type(mod, name, attr_meta)
 
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [expr_node(name, value, expr_meta, type)],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
+    node = %AST.Attribute{
+      type: type,
+      name: name,
+      value: attr_value(name, type, value, attr_meta),
+      meta: attr_meta
+    }
+
+    [node | process_attributes(mod, attrs, meta)]
   end
 
-  defp process_attributes(mod, [{name, [], attr_meta} | attrs], meta) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
+  defp attr_value(name, type, values, attr_meta) when is_list(values) do
+    {originals, quoted_values} =
+      Enum.reduce(values, {[], []}, fn
+        {:attribute_expr, value, expr_meta}, {originals, quoted_values} ->
+          {["{{#{value}}}" | originals], [quote_embedded_expr(value, expr_meta) | quoted_values]}
 
-    attr_value =
-      case type do
-        type when type in [:string, :css_class, :any] ->
-          %AST.Text{
-            value: ""
-          }
+        value, {originals, quoted_values} ->
+          {[value | originals], [value | quoted_values]}
+      end)
 
-        :event ->
-          %AST.AttributeExpr{
-            original: "",
-            value: nil,
-            meta: attr_meta
-          }
+    original = originals |> Enum.reverse() |> Enum.join()
+    quoted_values = Enum.reverse(quoted_values)
+    expr_value = {:<<>>, [line: attr_meta.line], quoted_values}
 
-        :boolean ->
-          %AST.Text{value: true}
-
-        type ->
-          message =
-            "invalid property value for #{name}, expected #{type}, but got an empty string"
-
-          IOHelper.compile_error(message, meta.file, meta.line)
-      end
-
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [attr_value],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
+    %AST.AttributeExpr{
+      original: original,
+      value: Surface.TypeHandler.expr_to_quoted!(expr_value, name, type, attr_meta, original),
+      meta: attr_meta
+    }
   end
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta)
-       when is_bitstring(value) or is_binary(value) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
+  defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
+    expr_meta = Helpers.to_meta(expr_meta, attr_meta)
 
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [attr_value(name, type, value, meta)],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
+    %AST.AttributeExpr{
+      original: value,
+      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
+      meta: expr_meta
+    }
   end
 
-  defp process_attributes(mod, [{name, values, attr_meta} | attrs], meta)
-       when is_list(values) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
-    values = collect_attr_values(name, meta, values, type)
-
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: values,
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
+  defp attr_value(name, type, value, meta) do
+    Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
   end
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta)
-       when is_boolean(value) do
-    name = String.to_atom(name)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
+  defp quote_embedded_expr(value, expr_meta) do
+    meta = [line: expr_meta.line]
+    quoted_value = Code.string_to_quoted!(value, meta)
 
-    [
-      %AST.Attribute{
-        type: type,
-        name: name,
-        value: [attr_value(name, type, value, meta)],
-        meta: attr_meta
-      }
-      | process_attributes(mod, attrs, meta)
-    ]
+    {:"::", meta,
+     [
+       {{:., meta, [Kernel, :to_string]}, meta, [quoted_value]},
+       {:binary, meta, Elixir}
+     ]}
   end
 
   defp determine_attribute_type(nil, :class, _meta), do: :css_class
 
+  defp determine_attribute_type(nil, :style, _meta), do: :style
+
   defp determine_attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
     do: :boolean
+
+  defp determine_attribute_type(nil, name, _meta) when name in @phx_event_attributes,
+    do: :phx_event
 
   defp determine_attribute_type(nil, _name, _meta), do: :string
 
@@ -597,94 +552,6 @@ defmodule Surface.Compiler do
 
         :string
     end
-  end
-
-  defp collect_attr_values(attribute_name, meta, values, type, accumulators \\ {[], []})
-
-  defp collect_attr_values(_attribute_name, _meta, [], _type, {[], acc}), do: Enum.reverse(acc)
-
-  defp collect_attr_values(attribute_name, meta, [], type, {codepoints, acc}) do
-    collect_attr_values(
-      attribute_name,
-      meta,
-      [],
-      type,
-      {[],
-       [
-         attr_value(attribute_name, type, codepoints |> Enum.reverse() |> List.to_string(), meta)
-         | acc
-       ]}
-    )
-  end
-
-  defp collect_attr_values(
-         attribute_name,
-         meta,
-         [{:attribute_expr, [value], expr_meta} | values],
-         type,
-         {[], acc}
-       ) do
-    collect_attr_values(
-      attribute_name,
-      meta,
-      values,
-      type,
-      {[], [expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type) | acc]}
-    )
-  end
-
-  defp collect_attr_values(
-         attribute_name,
-         meta,
-         [{:attribute_expr, [value], expr_meta} | values],
-         type,
-         {codepoints, acc}
-       ) do
-    text_node =
-      attr_value(attribute_name, type, codepoints |> Enum.reverse() |> List.to_string(), meta)
-
-    acc = [text_node | acc]
-
-    collect_attr_values(
-      attribute_name,
-      meta,
-      values,
-      type,
-      {[], [expr_node(attribute_name, value, Helpers.to_meta(expr_meta, meta), type) | acc]}
-    )
-  end
-
-  defp collect_attr_values(attribute_name, meta, [codepoint | values], type, {codepoint_acc, acc}) do
-    collect_attr_values(attribute_name, meta, values, type, {[codepoint | codepoint_acc], acc})
-  end
-
-  defp attr_value(name, :event, value, meta) do
-    %AST.AttributeExpr{
-      original: value,
-      value: Helpers.attribute_expr_to_quoted!(Macro.to_string(value), name, :event, meta),
-      meta: meta
-    }
-  end
-
-  defp attr_value(_name, _type, value, _meta) do
-    %AST.Text{value: value}
-  end
-
-  defp expr_node(attribute_name, value, meta, type) do
-    # This is required as nimble_parsec appears to generate bitstrings that elixir doesn't
-    # want to interpret as actual strings.
-    # The exact example is " \"héllo\" " which generates <<32, 34, 104, 233, 108, 108, 111, 34, 32>>.
-    # When that sequence is passed to Code.string_to_quoted(), it results in:
-    # ** (UnicodeConversionError) invalid encoding starting at <<233, 108, 108, 111, 34, 32>>
-    # (elixir 1.10.4) lib/string.ex:2251: String.to_charlist/1
-    # (elixir 1.10.4) lib/code.ex:834: Code.string_to_quoted/2
-    binary = List.to_string(for <<c <- value>>, into: [], do: c)
-
-    %AST.AttributeExpr{
-      original: binary,
-      value: Helpers.attribute_expr_to_quoted!(binary, attribute_name, type, meta),
-      meta: meta
-    }
   end
 
   defp validate_tag_children([]), do: :ok

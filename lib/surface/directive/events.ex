@@ -39,18 +39,14 @@ defmodule Surface.Directive.Events do
         %type{attributes: attributes} = node
       )
       when type in [AST.Tag, AST.VoidTag] do
+    cid = AST.Meta.quoted_caller_cid(meta)
+
     value =
       quote generated: true do
-        case unquote(value) do
-          %{name: name, target: :live_view} ->
-            [{unquote(event_name), {:string, name}}]
-
-          %{name: name, target: target} ->
-            [{unquote(event_name), {:string, name}}, "phx-target": {:string, target}]
-
-          nil ->
-            []
-        end
+        [
+          {unquote(event_name), {:string, unquote(__MODULE__).event_name(unquote(value))}},
+          "phx-target": {:string, unquote(__MODULE__).event_target(unquote(value), unquote(cid))}
+        ]
       end
 
     %{
@@ -77,19 +73,17 @@ defmodule Surface.Directive.Events do
   defp to_quoted_expr(name, event, meta) when is_binary(event) or is_bitstring(event) do
     %AST.AttributeExpr{
       original: event,
-      # using the helpers and quoting this because there is some logic around @myself vs. nil
-      # that I don't want to duplicate
-      value: Helpers.attribute_expr_to_quoted!(~s("#{event}"), name, :event, meta),
+      value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(event), name, :event, meta),
       meta: meta
     }
   end
 
-  defp to_quoted_expr(name, {:attribute_expr, [original], expr_meta}, meta) do
+  defp to_quoted_expr(name, {:attribute_expr, original, expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
 
     value =
       original
-      |> Helpers.attribute_expr_to_quoted!(name, :event, expr_meta)
+      |> Surface.TypeHandler.expr_to_quoted!(name, :event, expr_meta)
       |> case do
         [name, opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
         [name | opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
@@ -101,5 +95,25 @@ defmodule Surface.Directive.Events do
       value: value,
       meta: expr_meta
     }
+  end
+
+  def event_name(%{name: name}) do
+    name
+  end
+
+  def event_name(_) do
+    ""
+  end
+
+  def event_target(%{target: nil}, cid) do
+    to_string(cid)
+  end
+
+  def event_target(%{target: target}, _cid) when target != :live_view do
+    to_string(target)
+  end
+
+  def event_target(_, _cid) do
+    ""
   end
 end

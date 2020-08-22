@@ -11,7 +11,7 @@ defmodule Surface.Components.LinkTest do
     def render(assigns) do
       ~H"""
       <div>
-        <Link to="/users/1" click="my_click" />
+        <Link to="/users/1" click="my_click"/>
       </div>
       """
     end

@@ -139,20 +139,6 @@ defmodule Surface do
     LiveView.assign_new(socket, :__surface__, fn -> %{} end)
   end
 
-  @spec attr_value(any, any) :: any
-  @doc false
-  def attr_value(attr, value) do
-    if String.Chars.impl_for(value) do
-      value
-    else
-      IOHelper.runtime_error(
-        "invalid value for attribute \"#{attr}\". Expected a type that implements " <>
-          "the String.Chars protocol (e.g. string, boolean, integer, atom, ...), " <>
-          "got: #{inspect(value)}"
-      )
-    end
-  end
-
   @doc false
   def build_assigns(context, props, slot_props, slots, module) do
     gets_from_context =
@@ -220,119 +206,6 @@ defmodule Surface do
   end
 
   @doc false
-  def css_class([value]) when is_list(value) do
-    css_class(value)
-  end
-
-  def css_class(value) when is_binary(value) do
-    value
-  end
-
-  def css_class(value) when is_list(value) do
-    Enum.reduce(value, [], fn item, classes ->
-      case item do
-        {class, val} when val not in [nil, false] ->
-          maybe_add_class(classes, class)
-
-        class when is_binary(class) or is_atom(class) ->
-          maybe_add_class(classes, class)
-
-        _ ->
-          classes
-      end
-    end)
-    |> Enum.reverse()
-    |> Enum.join(" ")
-  end
-
-  def css_class(value) do
-    IOHelper.runtime_error(
-      "invalid value for property of type :css_class. " <>
-        "Expected a string or a keyword list, got: #{inspect(value)}"
-    )
-  end
-
-  @doc false
-  def boolean_attr(name, value) do
-    if value do
-      name
-    else
-      ""
-    end
-  end
-
-  @doc false
-  def keyword_value(key, value) do
-    if Keyword.keyword?(value) do
-      value
-    else
-      IOHelper.runtime_error(
-        "invalid value for property \"#{key}\". Expected a :keyword, got: #{inspect(value)}"
-      )
-    end
-  end
-
-  @doc false
-  def map_value(_key, value) when is_map(value) do
-    value
-  end
-
-  def map_value(key, value) do
-    if Keyword.keyword?(value) do
-      Map.new(value)
-    else
-      IOHelper.runtime_error(
-        "invalid value for property \"#{key}\". Expected a :map, got: #{inspect(value)}"
-      )
-    end
-  end
-
-  @doc false
-  def event_value(key, [event], caller_cid) do
-    event_value(key, event, caller_cid)
-  end
-
-  def event_value(key, [name | opts], caller_cid) do
-    event = Map.new(opts) |> Map.put(:name, name)
-    event_value(key, event, caller_cid)
-  end
-
-  def event_value(_key, nil, _caller_cid) do
-    nil
-  end
-
-  def event_value(_key, name, nil) when is_binary(name) do
-    %{name: name, target: :live_view}
-  end
-
-  def event_value(_key, name, caller_cid) when is_binary(name) do
-    %{name: name, target: to_string(caller_cid)}
-  end
-
-  def event_value(_key, %{name: _, target: _} = event, _caller_cid) do
-    event
-  end
-
-  def event_value(key, event, _caller_cid) do
-    IOHelper.runtime_error(
-      "invalid value for event \"#{key}\". Expected an :event or :string, got: #{inspect(event)}"
-    )
-  end
-
-  @doc false
-  def phx_event(_phx_event, value) when is_binary(value) do
-    value
-  end
-
-  def phx_event(phx_event, value) do
-    IOHelper.runtime_error(
-      "invalid value for \"#{phx_event}\". LiveView bindings only accept values " <>
-        "of type :string. If you want to pass an :event, please use directive " <>
-        ":on-#{phx_event} instead. Expected a :string, got: #{inspect(value)}"
-    )
-  end
-
-  @doc false
   def event_to_opts(%{name: name, target: :live_view}, event_name) do
     [{event_name, name}]
   end
@@ -343,16 +216,6 @@ defmodule Surface do
 
   def event_to_opts(nil, _event_name) do
     []
-  end
-
-  defp maybe_add_class(classes, class) do
-    case class |> to_string() |> String.trim() do
-      "" ->
-        classes
-
-      class ->
-        [class | classes]
-    end
   end
 
   defp get_components_config() do

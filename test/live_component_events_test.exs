@@ -130,15 +130,27 @@ defmodule Surface.EventsTest do
   end
 
   test "override target with keyword list notation" do
+    expected = """
+    phx-click="ok" phx-target="#comp"\
+    """
+
+    # Event name as string
     code = """
     <div>
       <Button id="button_id" click={{ "ok", target: "#comp" }}/>
     </div>
     """
 
-    assert render_live(code) =~ """
-           phx-click="ok" phx-target="#comp"\
-           """
+    assert render_live(code) =~ expected
+
+    # Event name as atom
+    code = """
+    <div>
+      <Button id="button_id" click={{ :ok, target: "#comp" }}/>
+    </div>
+    """
+
+    assert render_live(code) =~ expected
   end
 
   test "passing event as nil does not render phx-*" do

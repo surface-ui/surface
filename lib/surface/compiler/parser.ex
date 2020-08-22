@@ -57,6 +57,7 @@ defmodule Surface.Compiler.Parser do
     )
     |> ignore(ascii_char([?"]))
     |> wrap()
+    |> post_traverse(:attribute_value)
 
   attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:, ?@], min: 1)
   whitespace = ascii_string([?\s, ?\n], min: 0)
@@ -202,11 +203,49 @@ defmodule Surface.Compiler.Parser do
 
   defp attribute_expr(_rest, ["}}" | nodes], context, _line, _offset) do
     [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
-    {[{:attribute_expr, [IO.iodata_to_binary(rest)], %{line: opening_line}}], context}
+    {[{:attribute_expr, IO.chardata_to_string(rest), %{line: opening_line}}], context}
   end
 
   defp attribute_expr(_rest, _, _context, _line, _offset),
     do: {:error, "expected closing for attribute expression"}
+
+  defp attribute_value(_rest, [nodes], context, _line, _offset) do
+    value =
+      case reduce_attribute_value(nodes, {[], []}) do
+        [node] when not is_tuple(node) ->
+          node
+
+        [] ->
+          ""
+
+        nodes ->
+          nodes
+      end
+
+    {[value], context}
+  end
+
+  defp reduce_attribute_value([], {[], result}) do
+    Enum.reverse(result)
+  end
+
+  defp reduce_attribute_value([], {chars, result}) do
+    new_node = chars |> Enum.reverse() |> IO.chardata_to_string()
+    reduce_attribute_value([], {[], [new_node | result]})
+  end
+
+  defp reduce_attribute_value([{_, _, _} = node | nodes], {[] = chars, result}) do
+    reduce_attribute_value(nodes, {chars, [node | result]})
+  end
+
+  defp reduce_attribute_value([{_, _, _} = node | nodes], {chars, result}) do
+    new_node = chars |> Enum.reverse() |> IO.chardata_to_string()
+    reduce_attribute_value(nodes, {[], [node, new_node | result]})
+  end
+
+  defp reduce_attribute_value([node | nodes], {chars, result}) do
+    reduce_attribute_value(nodes, {[node | chars], result})
+  end
 
   defp build_attributes(attr_nodes) do
     Enum.map(attr_nodes, fn

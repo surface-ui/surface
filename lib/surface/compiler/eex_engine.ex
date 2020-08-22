@@ -374,7 +374,7 @@ defmodule Surface.Compiler.EExEngine do
     end)
     |> Enum.map(fn %{generator: gen, name: name} ->
       case find_attribute_value(props, gen, nil) do
-        [%AST.AttributeExpr{value: {binding, _}}] ->
+        %AST.AttributeExpr{value: {binding, _}} ->
           {name, binding}
 
         _ ->
@@ -395,37 +395,12 @@ defmodule Surface.Compiler.EExEngine do
   defp find_attribute_value([_ | tail], name, default),
     do: find_attribute_value(tail, name, default)
 
-  defp to_prop_expr([%AST.Text{value: value}], :boolean) do
-    !!value
+  defp to_prop_expr(%AST.AttributeExpr{value: value, meta: meta}, type) do
+    Surface.TypeHandler.update_prop_expr(type, value, meta)
   end
 
-  defp to_prop_expr([%AST.AttributeExpr{value: expr}], :boolean) do
-    quote generated: true do
-      !!unquote(expr)
-    end
-  end
-
-  defp to_prop_expr([%AST.AttributeExpr{value: {_, value}}], :list), do: value
-
-  defp to_prop_expr([%{value: value}], :string), do: value
-
-  defp to_prop_expr(values, :string) do
-    list_expr =
-      for %{value: value} <- values do
-        value
-      end
-
-    quote generated: true do
-      List.to_string(unquote(list_expr))
-    end
-  end
-
-  defp to_prop_expr([%AST.Text{value: value}], _) do
+  defp to_prop_expr(%AST.Text{value: value}, _) do
     value
-  end
-
-  defp to_prop_expr([%AST.AttributeExpr{value: expr}], _) do
-    expr
   end
 
   defp combine_static_portions(nodes, accumulators \\ {[], []})
@@ -610,44 +585,20 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([]), do: []
 
   defp to_html_attributes([
-         %AST.Attribute{name: name, type: type, value: [%AST.Text{value: value}]}
+         %AST.Attribute{name: name, type: type, value: %AST.Text{value: value}}
          | attributes
-       ])
-       when type == :boolean or is_boolean(value) do
-    if value do
-      [
-        ~S( ),
-        to_string(name),
-        to_html_attributes(attributes)
-      ]
-    else
-      to_html_attributes(attributes)
-    end
+       ]) do
+    runtime_value = Surface.TypeHandler.expr_to_value!(type, name, [value], [], nil, value)
+    [Surface.TypeHandler.attr_to_html!(type, name, runtime_value), to_html_attributes(attributes)]
   end
 
   defp to_html_attributes([
-         %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: value_expr} = expr} | attributes
+         %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr_value} = expr} | attributes
        ]) do
     value =
       quote generated: true do
-        for {name, {type, value}} <- unquote(value_expr) do
-          case type do
-            :boolean ->
-              if value do
-                [" ", to_string(name)]
-              else
-                []
-              end
-
-            _ ->
-              [
-                " ",
-                to_string(name),
-                unquote(Phoenix.HTML.raw("=\"")),
-                value,
-                unquote(Phoenix.HTML.raw("\""))
-              ]
-          end
+        for {name, {type, value}} <- unquote(expr_value) do
+          Phoenix.HTML.raw(Surface.TypeHandler.attr_to_html!(type, name, value))
         end
       end
 
@@ -657,92 +608,19 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([
          %AST.Attribute{
            name: name,
-           type: :boolean,
-           value: [%AST.AttributeExpr{value: value} = expr]
-         }
-         | attributes
-       ]) do
-    attribute_name = to_string(name)
-
-    conditional =
-      quote generated: true do
-        if unquote(value) do
-          [~S( ), unquote(attribute_name)]
-        end
-      end
-
-    [%{expr | value: conditional} | to_html_attributes(attributes)]
-  end
-
-  defp to_html_attributes([
-         %AST.Attribute{
-           name: attr_name,
-           value: [%AST.AttributeExpr{value: value_expr} = expr]
+           type: type,
+           value: %AST.AttributeExpr{value: expr_value} = expr
          }
          | attributes
        ]) do
     value =
       quote generated: true do
-        value = unquote(value_expr)
-        name = unquote(to_string(attr_name))
-
-        if is_nil(value) do
-          []
-        else
-          value =
-            if name in Surface.Directive.Events.phx_events() do
-              Phoenix.HTML.html_escape(Surface.phx_event(name, value))
-            else
-              Phoenix.HTML.html_escape(Surface.attr_value(name, value))
-            end
-
-          [
-            " ",
-            name,
-            unquote(Phoenix.HTML.raw("=\"")),
-            value,
-            unquote(Phoenix.HTML.raw("\""))
-          ]
-        end
+        Phoenix.HTML.raw(
+          Surface.TypeHandler.attr_to_html!(unquote(type), unquote(name), unquote(expr_value))
+        )
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]
-  end
-
-  defp to_html_attributes([
-         %AST.Attribute{name: name, value: values}
-         | attributes
-       ]) do
-    [
-      ~S( ),
-      to_string(name),
-      ~S(="),
-      to_html_string(name, values),
-      ~S("),
-      to_html_attributes(attributes)
-    ]
-  end
-
-  defp to_html_string(_name, []), do: []
-
-  defp to_html_string(name, [%AST.Text{value: value} | elements]),
-    do: [value | to_html_string(name, elements)]
-
-  defp to_html_string(name, [%AST.AttributeExpr{value: value} = expr | elements]) do
-    # TODO: is this the behaviour we want?
-
-    value =
-      if to_string(name) in Surface.Directive.Events.phx_events() do
-        quote generated: true do
-          Phoenix.HTML.html_escape(Surface.phx_event(unquote(to_string(name)), unquote(value)))
-        end
-      else
-        quote generated: true do
-          Phoenix.HTML.html_escape(Surface.attr_value(unquote(to_string(name)), unquote(value)))
-        end
-      end
-
-    [%{expr | value: value} | to_html_string(name, elements)]
   end
 
   defp at_ref(name) do
