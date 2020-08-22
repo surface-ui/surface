@@ -197,6 +197,7 @@ defmodule Surface.Compiler.EExEngine do
          %ast_type{
            module: module,
            props: props,
+           dynamic_props: dynamic_props,
            templates: templates
          } = component,
          buffer,
@@ -204,6 +205,8 @@ defmodule Surface.Compiler.EExEngine do
        )
        when ast_type in [AST.Component, AST.SlotableComponent] do
     props_expr = collect_component_props(module, props)
+
+    dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
@@ -224,7 +227,7 @@ defmodule Surface.Compiler.EExEngine do
         unquote(module),
         Surface.build_assigns(
           unquote(assigns_expr),
-          unquote(props_expr),
+          Keyword.merge(unquote(props_expr), unquote(dynamic_props_expr)),
           unquote(slot_props),
           unquote(slot_meta),
           unquote(module)
@@ -233,6 +236,17 @@ defmodule Surface.Compiler.EExEngine do
       )
     end
     |> maybe_print_expression(component)
+  end
+
+  defp handle_dynamic_props(nil), do: []
+
+  defp handle_dynamic_props(%AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr}}) do
+    # TODO: how much processing should we actually do on these values?
+    quote generated: true do
+      for {name, {type, value}} <- unquote(expr) do
+        {name, value}
+      end
+    end
   end
 
   defp collect_component_props(module, attrs) do

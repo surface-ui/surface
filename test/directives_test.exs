@@ -14,6 +14,66 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithProps do
+    use Surface.Component
+
+    property(class, :string)
+    property(hidden, :boolean)
+    property(content, :string)
+
+    def render(assigns) do
+      ~H"""
+      <div class={{ @class, hidden: @hidden, block: !@hidden }}>
+        {{ @content }}
+      </div>
+      """
+    end
+  end
+
+  describe ":props for a component" do
+    test "passing keyword list of props" do
+      assigns = %{}
+
+      code = """
+      <DivWithProps :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
+
+    test "static props override dynamic props" do
+      assigns = %{}
+
+      code = """
+      <DivWithProps content="static content" :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div class="text-xs block">
+               static content
+             </div>
+             """
+    end
+
+    test "using an assign" do
+      assigns = %{opts: %{class: "text-xs", hidden: false, content: "dynamic props content"}}
+
+      code = """
+      <DivWithProps :props={{ @opts }} />
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
+  end
+
   describe ":attrs in html tags" do
     test "passing a keyword list" do
       assigns = %{}

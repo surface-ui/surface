@@ -359,13 +359,14 @@ defmodule Surface.AST.Component do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :type, :props, :directives, :templates, :meta, debug: []]
+  defstruct [:module, :type, :props, :dynamic_props, :directives, :templates, :meta, debug: []]
 
   @type t :: %__MODULE__{
           module: module(),
           debug: List.t(atom()),
           type: module(),
           props: list(Surface.AST.Attribute.t()),
+          dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
           templates: %{
             :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
@@ -390,7 +391,18 @@ defmodule Surface.AST.SlotableComponent do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :slot, :type, :let, :props, :directives, :templates, :meta, debug: []]
+  defstruct [
+    :module,
+    :slot,
+    :type,
+    :let,
+    :props,
+    :dynamic_props,
+    :directives,
+    :templates,
+    :meta,
+    debug: []
+  ]
 
   @type t :: %__MODULE__{
           module: module(),
@@ -399,6 +411,7 @@ defmodule Surface.AST.SlotableComponent do
           slot: atom(),
           let: Surface.AST.Directive.t(),
           props: list(Surface.AST.Attribute.t()),
+          dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
           templates: %{
             :default => list(Surface.AST.Template.t()),
