@@ -25,7 +25,8 @@ defmodule Surface.TypeHandler do
   @callback expr_to_value(clauses :: list(), opts :: keyword()) ::
               {:ok, any()} | {:error, any()} | {:error, any(), String.t()}
 
-  @callback value_to_html(name :: atom(), value :: any()) :: String.t()
+  @callback value_to_html(name :: atom(), value :: any()) ::
+              {:ok, String.t() | nil | boolean()} | {:error, String.t()}
 
   @callback update_prop_expr(expr :: Macro.t(), meta :: Surface.AST.Meta.t()) :: Macro.t()
 
@@ -116,21 +117,19 @@ defmodule Surface.TypeHandler do
     end
   end
 
-  def attr_to_html(:boolean, name, value) do
-    if value do
-      [~S( ), to_string(name)]
-    else
-      ""
-    end
-  end
-
-  def attr_to_html(type, name, value) do
+  def attr_to_html!(type, name, value) do
     case handler(type).value_to_html(name, value) do
-      string when string in ["", nil] ->
+      {:ok, val} when val in ["", nil, false] ->
         ""
 
-      string ->
-        Phoenix.HTML.raw([" ", to_string(name), "=", ~S("), string, ~S(")])
+      {:ok, true} ->
+        [~S( ), to_string(name)]
+
+      {:ok, val} ->
+        [" ", to_string(name), "=", ~S("), val, ~S(")]
+
+      {:error, message} ->
+        IOHelper.runtime_error(message)
     end
   end
 

@@ -252,7 +252,7 @@ defmodule HtmlTagTest do
       """
 
       assert render_static(code) =~ """
-             <div style="height: 10px;"></div>
+             <div style="height: 10px"></div>
              """
     end
 

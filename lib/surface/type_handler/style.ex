@@ -32,6 +32,6 @@ defmodule Surface.TypeHandler.Style do
 
   @impl true
   def value_to_html(_name, value) do
-    value |> Enum.map_join("; ", fn {k, v} -> "#{k}: #{v}" end)
+    {:ok, value |> Enum.map_join("; ", fn {k, v} -> "#{k}: #{v}" end)}
   end
 end

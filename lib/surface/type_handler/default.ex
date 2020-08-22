@@ -3,8 +3,6 @@ defmodule Surface.TypeHandler.Default do
 
   use Surface.TypeHandler
 
-  alias Surface.IOHelper
-
   @impl true
   def literal_to_ast_node(_type, _name, value, _meta) do
     {:ok, %Surface.AST.Text{value: value}}
@@ -39,13 +37,15 @@ defmodule Surface.TypeHandler.Default do
   @impl true
   def value_to_html(name, value) do
     if String.Chars.impl_for(value) do
-      value
+      {:ok, value}
     else
-      IOHelper.runtime_error(
-        "invalid value for attribute \"#{name}\". Expected a type that implements " <>
-          "the String.Chars protocol (e.g. string, boolean, integer, atom, ...), " <>
-          "got: #{inspect(value)}"
-      )
+      message = """
+      invalid value for attribute "#{name}". Expected a type that implements \
+      the String.Chars protocol (e.g. string, boolean, integer, atom, ...), \
+      got: #{inspect(value)}\
+      """
+
+      {:error, message}
     end
   end
 

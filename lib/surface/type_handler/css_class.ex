@@ -43,7 +43,7 @@ defmodule Surface.TypeHandler.CssClass do
 
   @impl true
   def value_to_html(_name, value) do
-    Enum.join(value, " ")
+    {:ok, Enum.join(value, " ")}
   end
 
   defp maybe_add_class(classes, class) do

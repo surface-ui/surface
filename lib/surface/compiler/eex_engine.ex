@@ -587,19 +587,9 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([
          %AST.Attribute{name: name, type: type, value: %AST.Text{value: value}}
          | attributes
-       ])
-       # TODO: [Type] Should we have something like Surface.TypeHandler.literal_to_html(...) which
-       # would allow type specific validation? e.g. we could warn on disable="false".
-       when type == :boolean or is_boolean(value) do
-    if value do
-      [
-        ~S( ),
-        to_string(name),
-        to_html_attributes(attributes)
-      ]
-    else
-      to_html_attributes(attributes)
-    end
+       ]) do
+    runtime_value = Surface.TypeHandler.expr_to_value!(type, name, [value], [], nil, value)
+    [Surface.TypeHandler.attr_to_html!(type, name, runtime_value), to_html_attributes(attributes)]
   end
 
   defp to_html_attributes([
@@ -608,7 +598,7 @@ defmodule Surface.Compiler.EExEngine do
     value =
       quote generated: true do
         for {name, {type, value}} <- unquote(expr_value) do
-          Surface.TypeHandler.attr_to_html(type, name, value)
+          Phoenix.HTML.raw(Surface.TypeHandler.attr_to_html!(type, name, value))
         end
       end
 
@@ -625,39 +615,12 @@ defmodule Surface.Compiler.EExEngine do
        ]) do
     value =
       quote generated: true do
-        Surface.TypeHandler.attr_to_html(unquote(type), unquote(name), unquote(expr_value))
+        Phoenix.HTML.raw(
+          Surface.TypeHandler.attr_to_html!(unquote(type), unquote(name), unquote(expr_value))
+        )
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]
-  end
-
-  defp to_html_attributes([
-         %AST.Attribute{name: name, value: value}
-         | attributes
-       ]) do
-    [
-      ~S( ),
-      to_string(name),
-      ~S(="),
-      to_html_string(name, value),
-      ~S("),
-      to_html_attributes(attributes)
-    ]
-  end
-
-  defp to_html_string(_name, %AST.Text{value: value}) do
-    value
-  end
-
-  defp to_html_string(_name, %AST.AttributeExpr{value: value} = expr) do
-    # TODO: is this the behaviour we want?
-
-    value =
-      quote generated: true do
-        Phoenix.HTML.html_escape(unquote(value))
-      end
-
-    %{expr | value: value}
   end
 
   defp at_ref(name) do
