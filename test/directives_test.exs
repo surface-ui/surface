@@ -14,6 +14,88 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  describe ":props in html tags" do
+    test "passing a keyword list" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" :props={{ id: "myid" }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div id="myid" class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "passing a map" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" :props={{ %{id: "myid"} }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div id="myid" class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "using an assign" do
+      assigns = %{div_props: [id: "myid", "aria-label": "A div"]}
+
+      code = ~H"""
+      <div class="myclass" :props={{ @div_props }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div aria-label="A div" id="myid" class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "with boolean properties" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" :props={{ disabled: true }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div disabled class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "static properties override dyanmic properties" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" id="static-id" :props={{ id: "dynamic-id" }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div class="myclass" id="static-id">
+               Some Text
+             </div>
+             """
+    end
+  end
+
   describe ":for" do
     test "in components" do
       assigns = %{items: [1, 2]}
