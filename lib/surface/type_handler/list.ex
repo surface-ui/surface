@@ -4,6 +4,11 @@ defmodule Surface.TypeHandler.List do
   use Surface.TypeHandler
 
   @impl true
+  def literal_to_ast_node(_type, _name, _value, _meta) do
+    :error
+  end
+
+  @impl true
   def expr_to_quoted(_type, attribute_name, [clause], [], _meta, _original) do
     {:ok, handle_list_expr(attribute_name, clause)}
   end

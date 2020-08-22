@@ -321,7 +321,20 @@ defmodule Surface.PropertiesTest do
       end)
     end
 
-    test "validate invalid values" do
+    test "validate invalid literals at compile-time" do
+      code = """
+      <ListProp prop="some string"/>
+      """
+
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :list, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "validate invalid values at runtime" do
       code = """
       <ListProp prop={{ %{test: 1} }}/>
       """
