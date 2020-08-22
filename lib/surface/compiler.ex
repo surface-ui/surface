@@ -15,7 +15,7 @@ defmodule Surface.Compiler do
   ]
 
   @tag_directive_handlers [
-    Surface.Directive.TagProps,
+    Surface.Directive.TagAttrs,
     Surface.Directive.Events,
     Surface.Directive.Show,
     Surface.Directive.If,

@@ -14,12 +14,12 @@ defmodule Surface.DirectivesTest do
     end
   end
 
-  describe ":props in html tags" do
+  describe ":attrs in html tags" do
     test "passing a keyword list" do
       assigns = %{}
 
       code = ~H"""
-      <div class="myclass" :props={{ id: "myid" }}>
+      <div class="myclass" :attrs={{ id: "myid" }}>
         Some Text
       </div>
       """
@@ -35,7 +35,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{}
 
       code = ~H"""
-      <div class="myclass" :props={{ %{id: "myid"} }}>
+      <div class="myclass" :attrs={{ %{id: "myid"} }}>
         Some Text
       </div>
       """
@@ -51,7 +51,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{div_props: [id: "myid", "aria-label": "A div"]}
 
       code = ~H"""
-      <div class="myclass" :props={{ @div_props }}>
+      <div class="myclass" :attrs={{ @div_props }}>
         Some Text
       </div>
       """
@@ -67,7 +67,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{}
 
       code = ~H"""
-      <div class="myclass" :props={{ disabled: true }}>
+      <div class="myclass" :attrs={{ disabled: true }}>
         Some Text
       </div>
       """
@@ -83,7 +83,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{}
 
       code = ~H"""
-      <div class="myclass" id="static-id" :props={{ id: "dynamic-id" }}>
+      <div class="myclass" id="static-id" :attrs={{ id: "dynamic-id" }}>
         Some Text
       </div>
       """

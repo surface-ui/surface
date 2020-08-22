@@ -1,13 +1,13 @@
-defmodule Surface.Directive.TagProps do
+defmodule Surface.Directive.TagAttrs do
   use Surface.Directive
 
-  def extract({":props", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
+  def extract({":attrs", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
     attr_meta = Helpers.to_meta(attr_meta, meta)
 
     %AST.Directive{
       module: __MODULE__,
-      name: :props,
+      name: :attrs,
       value: directive_value(value, expr_meta),
       meta: attr_meta
     }
@@ -39,7 +39,7 @@ defmodule Surface.Directive.TagProps do
     %{
       node
       | attributes: [
-          %AST.DynamicAttribute{name: :props, meta: meta, expr: %{expr | value: new_expr}}
+          %AST.DynamicAttribute{name: :attrs, meta: meta, expr: %{expr | value: new_expr}}
           | attributes
         ]
     }
@@ -48,7 +48,7 @@ defmodule Surface.Directive.TagProps do
   defp directive_value(value, meta) do
     %AST.AttributeExpr{
       original: value,
-      value: Surface.TypeHandler.expr_to_quoted!(value, ":props", :map, meta),
+      value: Surface.TypeHandler.expr_to_quoted!(value, ":attrs", :map, meta),
       meta: meta
     }
   end
