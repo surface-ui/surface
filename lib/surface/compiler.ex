@@ -36,36 +36,6 @@ defmodule Surface.Compiler do
 
   @template_directive_handlers [Surface.Directive.Let]
 
-  @boolean_tag_attributes [
-    :allowfullscreen,
-    :allowpaymentrequest,
-    :async,
-    :autofocus,
-    :autoplay,
-    :checked,
-    :controls,
-    :default,
-    :defer,
-    :disabled,
-    :formnovalidate,
-    :hidden,
-    :ismap,
-    :itemscope,
-    :loop,
-    :multiple,
-    :muted,
-    :nomodule,
-    :novalidate,
-    :open,
-    :readonly,
-    :required,
-    :reversed,
-    :selected,
-    :typemustmatch
-  ]
-
-  @phx_event_attributes Surface.Directive.Events.phx_events() |> Enum.map(&String.to_atom/1)
-
   @void_elements [
     "area",
     "base",
@@ -466,7 +436,7 @@ defmodule Surface.Compiler do
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = determine_attribute_type(mod, name, attr_meta)
+    type = Surface.TypeHandler.attribute_type(mod, name, attr_meta)
 
     node = %AST.Attribute{
       type: type,
@@ -522,36 +492,6 @@ defmodule Surface.Compiler do
        {{:., meta, [Kernel, :to_string]}, meta, [quoted_value]},
        {:binary, meta, Elixir}
      ]}
-  end
-
-  defp determine_attribute_type(nil, :class, _meta), do: :css_class
-
-  defp determine_attribute_type(nil, :style, _meta), do: :style
-
-  defp determine_attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
-    do: :boolean
-
-  defp determine_attribute_type(nil, name, _meta) when name in @phx_event_attributes,
-    do: :phx_event
-
-  defp determine_attribute_type(nil, _name, _meta), do: :string
-
-  defp determine_attribute_type(module, name, meta) do
-    with true <- function_exported?(module, :__get_prop__, 1),
-         prop when not is_nil(prop) <- module.__get_prop__(name) do
-      prop.type
-    else
-      _ ->
-        IOHelper.warn(
-          "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
-          meta.caller,
-          fn _ ->
-            meta.line
-          end
-        )
-
-        :string
-    end
   end
 
   defp validate_tag_children([]), do: :ok

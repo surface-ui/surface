@@ -38,6 +38,36 @@ defmodule Surface.TypeHandler do
     update_prop_expr: 2
   ]
 
+  @boolean_tag_attributes [
+    :allowfullscreen,
+    :allowpaymentrequest,
+    :async,
+    :autofocus,
+    :autoplay,
+    :checked,
+    :controls,
+    :default,
+    :defer,
+    :disabled,
+    :formnovalidate,
+    :hidden,
+    :ismap,
+    :itemscope,
+    :loop,
+    :multiple,
+    :muted,
+    :nomodule,
+    :novalidate,
+    :open,
+    :readonly,
+    :required,
+    :reversed,
+    :selected,
+    :typemustmatch
+  ]
+
+  @phx_event_attributes Surface.Directive.Events.phx_events() |> Enum.map(&String.to_atom/1)
+
   defmacro __using__(_) do
     quote do
       @behaviour unquote(__MODULE__)
@@ -135,6 +165,40 @@ defmodule Surface.TypeHandler do
 
   def update_prop_expr(type, value, meta) do
     handler(type).update_prop_expr(value, meta)
+  end
+
+  def attribute_type(name) do
+    attribute_type(nil, name, nil)
+  end
+
+  def attribute_type(nil, :class, _meta), do: :css_class
+
+  def attribute_type(nil, :style, _meta), do: :style
+
+  def attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
+    do: :boolean
+
+  def attribute_type(nil, name, _meta) when name in @phx_event_attributes,
+    do: :phx_event
+
+  def attribute_type(nil, _name, _meta), do: :string
+
+  def attribute_type(module, name, meta) do
+    with true <- function_exported?(module, :__get_prop__, 1),
+         prop when not is_nil(prop) <- module.__get_prop__(name) do
+      prop.type
+    else
+      _ ->
+        IOHelper.warn(
+          "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
+          meta.caller,
+          fn _ ->
+            meta.line
+          end
+        )
+
+        :string
+    end
   end
 
   defp runtime_error_message(type, name, value, module, original, details \\ nil) do
