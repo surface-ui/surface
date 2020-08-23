@@ -31,12 +31,7 @@ defmodule Surface.Directive.ComponentProps do
       quote generated: true do
         for {name, value} <- unquote(value) || [],
             not Enum.member?(unquote(Macro.escape(static_prop_names)), name) do
-          {name,
-           {Surface.TypeHandler.attribute_type(
-              unquote(module),
-              name,
-              unquote(Macro.escape(meta))
-            ), value}}
+          {name, Surface.TypeHandler.runtime_prop_value!(unquote(module), name, value, unquote(meta.node_alias))}
         end
       end
 

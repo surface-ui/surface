@@ -241,7 +241,6 @@ defmodule Surface.Compiler.EExEngine do
   defp handle_dynamic_props(nil), do: []
 
   defp handle_dynamic_props(%AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr}}) do
-    # TODO: how much processing should we actually do on these values?
     quote generated: true do
       for {name, {type, value}} <- unquote(expr) do
         {name, value}

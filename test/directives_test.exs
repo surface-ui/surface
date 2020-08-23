@@ -391,3 +391,54 @@ defmodule Surface.DirectivesTest do
     end
   end
 end
+
+defmodule Surface.DirectivesSyncTest do
+  use ExUnit.Case
+
+  import ExUnit.CaptureIO
+  import ComponentTestHelper
+
+  alias Surface.DirectivesTest.{DivWithProps}, warn: false
+
+  describe ":props on a component" do
+    test "emits a warning with an unknown prop at runtime" do
+      assigns = %{
+        opts: %{
+          unknown: "value",
+          class: "text-xs",
+          hidden: false,
+          content: "dynamic props content"
+        }
+      }
+
+      code = """
+      <DivWithProps :props={{ @opts }} />
+      """
+
+      {:warn, message} = capture_warning(code, assigns)
+
+      assert message =~ "Unknown property \"unknown\" for component <DivWithProps>"
+    end
+  end
+
+  defp capture_warning(code, assigns) do
+    output =
+      capture_io(:standard_error, fn ->
+        result = render_live(code, assigns)
+        send(self(), {:result, result})
+      end)
+
+    result =
+      receive do
+        {:result, result} -> result
+      end
+
+    case output do
+      "" ->
+        {:ok, result}
+
+      message ->
+        {:warn, message}
+    end
+  end
+end

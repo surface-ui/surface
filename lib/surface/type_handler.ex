@@ -167,6 +167,17 @@ defmodule Surface.TypeHandler do
     handler(type).update_prop_expr(value, meta)
   end
 
+  def runtime_prop_value!(module, name, value, node_alias) do
+    type =
+      attribute_type(module, name, %{
+        node_alias: node_alias || module,
+        caller: __ENV__,
+        line: __ENV__.line
+      })
+
+    {type, expr_to_value!(type, name, [value], [], module, value)}
+  end
+
   def attribute_type(name) do
     attribute_type(nil, name, nil)
   end
