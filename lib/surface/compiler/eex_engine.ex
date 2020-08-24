@@ -367,8 +367,11 @@ defmodule Surface.Compiler.EExEngine do
         [%AST.Template{children: children}] -> children
       end
 
+    props = collect_component_props(module, props)
+    default_props = Surface.default_props(module)
+
     [
-      {add_default_bindings(component, name, let), collect_component_props(module, props),
+      {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
        handle_nested_block(template, buffer, %{state | depth: state.depth + 1})}
       | handle_templates(component, tail, buffer, state)
     ]

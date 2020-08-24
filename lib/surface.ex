@@ -140,6 +140,11 @@ defmodule Surface do
   end
 
   @doc false
+  def default_props(module) do
+    Enum.map(module.__props__(), fn %{name: name, opts: opts} -> {name, opts[:default]} end)
+  end
+
+  @doc false
   def build_assigns(
         context,
         static_props,
@@ -149,9 +154,6 @@ defmodule Surface do
         module,
         node_alias
       ) do
-    prop_defaults =
-      Enum.map(module.__props__(), fn %{name: name, opts: opts} -> {name, opts[:default]} end)
-
     static_prop_names = Keyword.keys(static_props)
 
     dynamic_props =
@@ -161,7 +163,7 @@ defmodule Surface do
         {name, Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias || module)}
       end)
 
-    props = Keyword.merge(Keyword.merge(prop_defaults, dynamic_props), static_props)
+    props = Keyword.merge(Keyword.merge(default_props(module), dynamic_props), static_props)
 
     gets_from_context =
       module
