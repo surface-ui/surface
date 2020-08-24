@@ -29,6 +29,11 @@ defmodule Surface.Components.LiveRedirect do
   property label, :string
 
   @doc """
+  Additional attributes to add onto the generated element
+  """
+  property opts, :keyword
+
+  @doc """
   The content of the generated `<a>` element. If no content is provided,
   the value of property `label` is used instead.
   """
@@ -44,6 +49,7 @@ defmodule Surface.Components.LiveRedirect do
       class={{ @class }}
       href={{ @to }}
       to={{ @to }}
+      :attrs={{ @opts }}
     >
       <slot>{{ @label }}</slot>
     </a>
