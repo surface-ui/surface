@@ -198,7 +198,8 @@ defmodule Surface.Compiler.EExEngine do
            module: module,
            props: props,
            dynamic_props: dynamic_props,
-           templates: templates
+           templates: templates,
+           meta: meta
          } = component,
          buffer,
          state
@@ -227,10 +228,12 @@ defmodule Surface.Compiler.EExEngine do
         unquote(module),
         Surface.build_assigns(
           unquote(assigns_expr),
-          Keyword.merge(unquote(props_expr), unquote(dynamic_props_expr)),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
           unquote(slot_props),
           unquote(slot_meta),
-          unquote(module)
+          unquote(module),
+          unquote(meta.node_alias)
         ),
         unquote(do_block)
       )
@@ -241,22 +244,14 @@ defmodule Surface.Compiler.EExEngine do
   defp handle_dynamic_props(nil), do: []
 
   defp handle_dynamic_props(%AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr}}) do
-    quote generated: true do
-      for {name, {type, value}} <- unquote(expr) do
-        {name, value}
-      end
-    end
+    expr
   end
 
   defp collect_component_props(module, attrs) do
-    Enum.map(module.__props__(), fn %{name: prop_name, type: type, opts: prop_opts} ->
-      value =
-        case find_attribute_value(attrs, prop_name, nil) do
-          nil -> Macro.escape(prop_opts[:default])
-          expr -> to_prop_expr(expr, type)
-        end
-
-      {prop_name, value}
+    attrs
+    |> Enum.filter(fn %AST.Attribute{name: prop_name} -> module.__validate_prop__(prop_name) end)
+    |> Enum.map(fn %AST.Attribute{name: prop_name, type: type, value: expr} ->
+      {prop_name, to_prop_expr(expr, type)}
     end)
   end
 

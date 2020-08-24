@@ -16,37 +16,15 @@ defmodule Surface.Directive.ComponentProps do
   def extract(_, _), do: []
 
   def process(
-        %AST.Directive{value: %AST.AttributeExpr{value: value} = expr, meta: meta},
-        %AST.Component{module: module, props: props} = node
+        %AST.Directive{value: %AST.AttributeExpr{} = expr, meta: meta},
+        %AST.Component{} = node
       ) do
-    static_prop_names =
-      props
-      |> Enum.filter(fn
-        %AST.Attribute{} -> true
-        _ -> false
-      end)
-      |> Enum.map(fn %AST.Attribute{name: name} -> name end)
-
-    new_expr =
-      quote generated: true do
-        for {name, value} <- unquote(value) || [],
-            not Enum.member?(unquote(Macro.escape(static_prop_names)), name) do
-          {name,
-           Surface.TypeHandler.runtime_prop_value!(
-             unquote(module),
-             name,
-             value,
-             unquote(meta.node_alias)
-           )}
-        end
-      end
-
     %{
       node
       | dynamic_props: %AST.DynamicAttribute{
           name: :props,
           meta: meta,
-          expr: %{expr | value: new_expr}
+          expr: expr
         }
     }
   end

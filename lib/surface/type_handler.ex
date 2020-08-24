@@ -175,7 +175,7 @@ defmodule Surface.TypeHandler do
         line: __ENV__.line
       })
 
-    {type, expr_to_value!(type, name, [value], [], module, value)}
+    expr_to_value!(type, name, [value], [], module, value)
   end
 
   def attribute_type(name) do
