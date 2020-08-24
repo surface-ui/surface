@@ -197,13 +197,17 @@ defmodule Surface.Compiler.EExEngine do
          %ast_type{
            module: module,
            props: props,
-           templates: templates
+           dynamic_props: dynamic_props,
+           templates: templates,
+           meta: meta
          } = component,
          buffer,
          state
        )
        when ast_type in [AST.Component, AST.SlotableComponent] do
     props_expr = collect_component_props(module, props)
+
+    dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
@@ -225,9 +229,11 @@ defmodule Surface.Compiler.EExEngine do
         Surface.build_assigns(
           unquote(assigns_expr),
           unquote(props_expr),
+          unquote(dynamic_props_expr),
           unquote(slot_props),
           unquote(slot_meta),
-          unquote(module)
+          unquote(module),
+          unquote(meta.node_alias)
         ),
         unquote(do_block)
       )
@@ -235,15 +241,17 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(component)
   end
 
-  defp collect_component_props(module, attrs) do
-    Enum.map(module.__props__(), fn %{name: prop_name, type: type, opts: prop_opts} ->
-      value =
-        case find_attribute_value(attrs, prop_name, nil) do
-          nil -> Macro.escape(prop_opts[:default])
-          expr -> to_prop_expr(expr, type)
-        end
+  defp handle_dynamic_props(nil), do: []
 
-      {prop_name, value}
+  defp handle_dynamic_props(%AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr}}) do
+    expr
+  end
+
+  defp collect_component_props(module, attrs) do
+    attrs
+    |> Enum.filter(fn %AST.Attribute{name: prop_name} -> module.__validate_prop__(prop_name) end)
+    |> Enum.map(fn %AST.Attribute{name: prop_name, type: type, value: expr} ->
+      {prop_name, to_prop_expr(expr, type)}
     end)
   end
 
@@ -359,8 +367,11 @@ defmodule Surface.Compiler.EExEngine do
         [%AST.Template{children: children}] -> children
       end
 
+    props = collect_component_props(module, props)
+    default_props = Surface.default_props(module)
+
     [
-      {add_default_bindings(component, name, let), collect_component_props(module, props),
+      {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
        handle_nested_block(template, buffer, %{state | depth: state.depth + 1})}
       | handle_templates(component, tail, buffer, state)
     ]

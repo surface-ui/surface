@@ -14,6 +14,148 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithProps do
+    use Surface.Component
+
+    property(class, :string)
+    property(hidden, :boolean)
+    property(content, :string)
+
+    def render(assigns) do
+      ~H"""
+      <div class={{ @class, hidden: @hidden, block: !@hidden }}>
+        {{ @content }}
+      </div>
+      """
+    end
+  end
+
+  describe ":props for a component" do
+    test "passing keyword list of props" do
+      assigns = %{}
+
+      code = """
+      <DivWithProps :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
+
+    test "static props override dynamic props" do
+      assigns = %{}
+
+      code = """
+      <DivWithProps content="static content" :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div class="text-xs block">
+               static content
+             </div>
+             """
+    end
+
+    test "using an assign" do
+      assigns = %{opts: %{class: "text-xs", hidden: false, content: "dynamic props content"}}
+
+      code = """
+      <DivWithProps :props={{ @opts }} />
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
+  end
+
+  describe ":attrs in html tags" do
+    test "passing a keyword list" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" :attrs={{ id: "myid" }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div id="myid" class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "passing a map" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" :attrs={{ %{id: "myid"} }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div id="myid" class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "using an assign" do
+      assigns = %{div_props: [id: "myid", "aria-label": "A div"]}
+
+      code = ~H"""
+      <div class="myclass" :attrs={{ @div_props }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div aria-label="A div" id="myid" class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "with boolean properties" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" :attrs={{ disabled: true }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div disabled class="myclass">
+               Some Text
+             </div>
+             """
+    end
+
+    test "static properties override dyanmic properties" do
+      assigns = %{}
+
+      code = ~H"""
+      <div class="myclass" id="static-id" :attrs={{ id: "dynamic-id" }}>
+        Some Text
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div class="myclass" id="static-id">
+               Some Text
+             </div>
+             """
+    end
+  end
+
   describe ":for" do
     test "in components" do
       assigns = %{items: [1, 2]}
@@ -246,6 +388,57 @@ defmodule Surface.DirectivesTest do
       assert render_static(code) =~ """
              <button :on-phx-invalid="ok">OK</button>
              """
+    end
+  end
+end
+
+defmodule Surface.DirectivesSyncTest do
+  use ExUnit.Case
+
+  import ExUnit.CaptureIO
+  import ComponentTestHelper
+
+  alias Surface.DirectivesTest.{DivWithProps}, warn: false
+
+  describe ":props on a component" do
+    test "emits a warning with an unknown prop at runtime" do
+      assigns = %{
+        opts: %{
+          unknown: "value",
+          class: "text-xs",
+          hidden: false,
+          content: "dynamic props content"
+        }
+      }
+
+      code = """
+      <DivWithProps :props={{ @opts }} />
+      """
+
+      {:warn, message} = capture_warning(code, assigns)
+
+      assert message =~ "Unknown property \"unknown\" for component <DivWithProps>"
+    end
+  end
+
+  defp capture_warning(code, assigns) do
+    output =
+      capture_io(:standard_error, fn ->
+        result = render_live(code, assigns)
+        send(self(), {:result, result})
+      end)
+
+    result =
+      receive do
+        {:result, result} -> result
+      end
+
+    case output do
+      "" ->
+        {:ok, result}
+
+      message ->
+        {:warn, message}
     end
   end
 end

@@ -141,6 +141,14 @@ defmodule Surface.SlotTest do
     def render(assigns), do: ~H()
   end
 
+  defmodule ColumnWithDefaultTitle do
+    use Surface.Component, slot: "cols"
+
+    property title, :string, default: "default title"
+
+    def render(assigns), do: ~H()
+  end
+
   defmodule Grid do
     use Surface.LiveComponent
 
@@ -317,6 +325,32 @@ defmodule Surface.SlotTest do
         Default fallback
         Footer fallback
       </div>
+      """
+    )
+  end
+
+  test "slottable component with default value for prop" do
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+
+    code = """
+    <Grid items={{ user <- @items }}>
+      <ColumnWithDefaultTitle>
+        <b>Id: {{ user.id }}</b>
+      </ColumnWithDefaultTitle>
+    </Grid>
+    """
+
+    assert_html(
+      render_live(code, assigns) =~ """
+      <table>
+        <tr>
+          <th>default title</th>
+        </tr><tr>
+          <td><b>Id: 1</b></td>
+        </tr><tr>
+          <td><b>Id: 2</b></td>
+        </tr>
+      </table>
       """
     )
   end
