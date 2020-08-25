@@ -31,7 +31,7 @@ defmodule Surface.Components.LiveRedirect do
   @doc """
   Additional attributes to add onto the generated element
   """
-  property opts, :keyword
+  property opts, :keyword, default: []
 
   @doc """
   The content of the generated `<a>` element. If no content is provided,
@@ -44,15 +44,12 @@ defmodule Surface.Components.LiveRedirect do
 
     ~H"""
     <a
+      class={{ @class }}
       data-phx-link="redirect"
       data-phx-link-state={{ link_state }}
-      class={{ @class }}
       href={{ @to }}
-      to={{ @to }}
       :attrs={{ @opts }}
-    >
-      <slot>{{ @label }}</slot>
-    </a>
+    ><slot>{{ @label }}</slot></a>
     """
   end
 end
