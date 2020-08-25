@@ -39,14 +39,12 @@ defmodule Surface.Components.LivePatch do
   """
   slot default
 
-  def render(%{replace: replace} = assigns) do
-    link_state = if replace, do: "replace", else: "push"
-
+  def render(assigns) do
     ~H"""
     <a
       class={{ @class }}
       data-phx-link="patch"
-      data-phx-link-state={{ link_state }}
+      data-phx-link-state={{ if @replace, do: "replace", else: "push" }}
       href={{ @to }}
       :attrs={{ @opts }}
     ><slot>{{ @label }}</slot></a>
