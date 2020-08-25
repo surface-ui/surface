@@ -13,6 +13,11 @@ defmodule Surface.TypeHandler.List do
     {:ok, handle_list_expr(attribute_name, clause)}
   end
 
+  @impl true
+  def expr_to_quoted(_type, attribute_name, [], opts, _meta, _original) do
+    {:ok, handle_list_expr(attribute_name, opts)}
+  end
+
   def expr_to_quoted(_type, _attribute_name, _clauses, _opts, _meta, _original) do
     :error
   end

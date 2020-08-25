@@ -321,6 +321,28 @@ defmodule Surface.PropertiesTest do
       end)
     end
 
+    test "passing a keyword list" do
+      code = """
+      <ListProp prop={{ [a: 1, b: 2] }}/>
+      """
+
+      assert render_live(code, %{}) =~ """
+             List?: true
+             <span>value: {:a, 1}</span><span>value: {:b, 2}</span>
+             """
+    end
+
+    test "passing a keyword list without brackets" do
+      code = """
+      <ListProp prop={{ a: 1, b: 2 }}/>
+      """
+
+      assert render_live(code, %{}) =~ """
+             List?: true
+             <span>value: {:a, 1}</span><span>value: {:b, 2}</span>
+             """
+    end
+
     test "validate invalid literals at compile-time" do
       code = """
       <ListProp prop="some string"/>
