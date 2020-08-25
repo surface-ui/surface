@@ -29,24 +29,25 @@ defmodule Surface.Components.LivePatch do
   property label, :string
 
   @doc """
+  Additional attributes to add onto the generated element
+  """
+  property opts, :keyword, default: []
+
+  @doc """
   The content of the generated `<a>` element. If no content is provided,
   the value of property `label` is used instead.
   """
   slot default
 
-  def render(%{replace: replace} = assigns) do
-    link_state = if replace, do: "replace", else: "push"
-
+  def render(assigns) do
     ~H"""
     <a
-      data-phx-link="patch"
-      data-phx-link-state={{ link_state }}
       class={{ @class }}
+      data-phx-link="patch"
+      data-phx-link-state={{ if @replace, do: "replace", else: "push" }}
       href={{ @to }}
-      to={{ @to }}
-    >
-      <slot>{{ @label }}</slot>
-    </a>
+      :attrs={{ @opts }}
+    ><slot>{{ @label }}</slot></a>
     """
   end
 end
