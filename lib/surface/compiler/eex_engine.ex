@@ -140,7 +140,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_content_expr =
       if name == :default do
         quote generated: true do
-          unquote(at_ref(:inner_content)).(unquote(slot_prop_expr))
+          @inner_content.(unquote(slot_prop_expr))
         end
       else
         slot_name_expr = at_ref(name)
@@ -162,7 +162,7 @@ defmodule Surface.Compiler.EExEngine do
     name_to_check = if name == :default, do: :__default__, else: name
 
     quote generated: true do
-      if Enum.member?(unquote(at_ref(:__surface__)).provided_templates, unquote(name_to_check)) do
+      if Enum.member?(@__surface__.provided_templates, unquote(name_to_check)) do
         unquote(slot_content_expr)
       else
         unquote(default_value)
@@ -185,7 +185,7 @@ defmodule Surface.Compiler.EExEngine do
 
     quote generated: true do
       live_render(
-        unquote(at_ref(:socket)),
+        @socket,
         unquote(module),
         unquote(props_expr)
       )
@@ -218,13 +218,13 @@ defmodule Surface.Compiler.EExEngine do
         end
       else
         quote generated: true do
-          unquote(at_ref(:__surface__))[:context] || []
+          @__surface__[:context] || []
         end
       end
 
     quote generated: true do
       live_component(
-        unquote(at_ref(:socket)),
+        @socket,
         unquote(module),
         Surface.build_assigns(
           unquote(assigns_expr),
