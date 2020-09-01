@@ -128,27 +128,24 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    slot_prop_expr =
-      if state.depth > 0 and Enum.member?(state.context, :template) do
-        quote generated: true do
-          {unquote(props_expr), ctx_assigns}
-        end
-      else
-        props_expr
+    slot_name = if name == :default, do: :__default__, else: name
+
+    props_expr =
+      quote generated: true do
+        Keyword.put(unquote(props_expr), :__surface__, @__surface__)
       end
 
+    # TODO: map names somehow?
     slot_content_expr =
-      if name == :default do
+      if slot_name == :__default__ do
         quote generated: true do
-          @inner_content.(unquote(slot_prop_expr))
+          @inner_content.(unquote(props_expr))
         end
       else
-        slot_name_expr = at_ref(name)
-
         quote generated: true do
           # TODO: For now, we only handle the first since rendering multiple items requires using `:for` directly in the template.
           # Review this after we adding option `join`.
-          Enum.at(unquote(slot_name_expr), 0).inner_content.(unquote(slot_prop_expr))
+          Enum.at(unquote(at_ref(slot_name)), 0).inner_content.(unquote(props_expr))
         end
       end
 
@@ -159,10 +156,8 @@ defmodule Surface.Compiler.EExEngine do
           context: [:slot | state.context]
       })
 
-    name_to_check = if name == :default, do: :__default__, else: name
-
     quote generated: true do
-      if Enum.member?(@__surface__.provided_templates, unquote(name_to_check)) do
+      if Enum.member?(@__surface__.provided_templates, unquote(slot_name)) do
         unquote(slot_content_expr)
       else
         unquote(default_value)
@@ -209,34 +204,42 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
+    {case_expression, slot_meta, slot_props} =
+      collect_slot_meta(component, templates, buffer, state)
 
-    assigns_expr =
-      if state.depth > 0 and Enum.member?(state.context, :template) do
-        quote generated: true do
-          ctx_assigns[:__surface__][:context] || []
-        end
-      else
-        quote generated: true do
-          @__surface__[:context] || []
-        end
-      end
-
-    quote generated: true do
-      live_component(
-        @socket,
-        unquote(module),
-        Surface.build_assigns(
-          unquote(assigns_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
+    if case_expression == [] do
+      quote generated: true do
+        live_component(
+          @socket,
           unquote(module),
-          unquote(meta.node_alias)
-        ),
-        unquote(do_block)
-      )
+          Surface.build_assigns(
+            @__surface__[:context] || [],
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          )
+        )
+      end
+    else
+      quote generated: true do
+        live_component(
+          @socket,
+          unquote(module),
+          Surface.build_assigns(
+            @__surface__[:context] || [],
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          do: unquote(case_expression)
+        )
+      end
     end
     |> maybe_print_expression(component)
   end
@@ -259,30 +262,44 @@ defmodule Surface.Compiler.EExEngine do
     slot_info =
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
-        {if(name == :default, do: :__default__, else: name), Enum.count(templates_for_slot),
-         handle_templates(component, templates_for_slot, buffer, %{
-           state
-           | context: [:template | state.context]
-         })}
+        name =
+          if name == :default,
+            do: :__default__,
+            else: name
+
+        state = %{state | context: [:template | state.context]}
+
+        nested_templates = handle_templates(component, templates_for_slot, buffer, state)
+
+        {name, Enum.count(templates_for_slot), nested_templates}
       end)
 
-    do_block =
+    case_expression =
       slot_info
       |> Enum.map(fn {name, _size, infos} ->
         infos
         |> Enum.with_index()
-        |> Enum.map(fn {{let, _, body}, index} ->
+        |> Enum.map(fn {{_let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index),
-             {unquote({:%{}, [generated: true], let}), ctx_assigns}} ->
+            {unquote(name), unquote(index)} ->
               unquote(body)
           end
         end)
       end)
       |> List.flatten()
       |> case do
-        [] -> []
-        block -> [do: block]
+        [] ->
+          []
+
+        block ->
+          expr =
+            quote generated: true do
+              case @__slot__, do: unquote(block)
+            end
+
+          buffer = state.engine.handle_begin(buffer)
+          buffer = state.engine.handle_expr(buffer, "=", expr)
+          state.engine.handle_end(buffer)
       end
 
     slot_props =
@@ -292,11 +309,24 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     slot_meta =
-      for {name, size, _} <- slot_info do
-        {name, {:%{}, [generated: true], [size: size]}}
+      for {name, size, infos} <- slot_info do
+        prop_assign_mappings =
+          Enum.map(infos, fn {let, _, _} ->
+            Enum.map(let, fn {prop_name, {binding_name, _, _}} -> {prop_name, binding_name} end)
+          end)
+
+        meta_value =
+          quote generated: true do
+            %{
+              size: unquote(size),
+              prop_assigns: unquote(prop_assign_mappings)
+            }
+          end
+
+        {name, meta_value}
       end
 
-    {do_block, slot_meta, slot_props}
+    {case_expression, slot_meta, slot_props}
   end
 
   defp handle_nested_block(block, buffer, state) when is_list(block) do

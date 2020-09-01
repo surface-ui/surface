@@ -220,7 +220,7 @@ defmodule Surface.SlotTest do
     code = """
     <OuterWithSlotNotationAndProps>
       <template slot="body" :let={{ info: my_info }}>
-        Info: {{ my_info }}
+        Info: {{ @my_info }}
       </template>
     </OuterWithSlotNotationAndProps>
     """
@@ -237,7 +237,7 @@ defmodule Surface.SlotTest do
   test "assign default slot with props using <slot/> notation" do
     code = """
     <OuterWithSlotNotationDefaultAndProps :let={{ info: my_info }}>
-      Info: {{ my_info }}
+      Info: {{ @my_info }}
     </OuterWithSlotNotationDefaultAndProps>
     """
 
@@ -335,7 +335,7 @@ defmodule Surface.SlotTest do
     code = """
     <Grid items={{ user <- @items }}>
       <ColumnWithDefaultTitle>
-        <b>Id: {{ user.id }}</b>
+        <b>Id: {{ @user.id }}</b>
       </ColumnWithDefaultTitle>
     </Grid>
     """
@@ -361,10 +361,10 @@ defmodule Surface.SlotTest do
     code = """
     <Grid items={{ user <- @items }}>
       <Column title="ID">
-        <b>Id: {{ user.id }}</b>
+        <b>Id: {{ @user.id }}</b>
       </Column>
       <Column title="NAME">
-        Name: {{ user.name }}
+        Name: {{ @user.name }}
       </Column>
     </Grid>
     """
@@ -392,11 +392,11 @@ defmodule Surface.SlotTest do
     code = """
     <Grid items={{ user <- @items }}>
       <Column title="ID" :let={{ item: my_user }}>
-        <b>Id: {{ my_user.id }}</b>
+        <b>Id: {{ @my_user.id }}</b>
       </Column>
       <Column title="NAME" :let={{ info: my_info }}>
-        Name: {{ user.name }}
-        Info: {{ my_info }}
+        Name: {{ @user.name }}
+        Info: {{ @my_info }}
       </Column>
     </Grid>
     """
@@ -422,7 +422,7 @@ defmodule Surface.SlotTest do
     code = """
     <Grid items={{ user <- @items }}>
       <Column title="ID" :let={{ item: my_user, non_existing: value}}>
-        <b>Id: {{ my_user.id }}</b>
+        <b>Id: {{ @my_user.id }}</b>
       </Column>
     </Grid>
     """
@@ -447,7 +447,7 @@ defmodule Surface.SlotTest do
     code = """
     <OuterWithSlotNotationAndProps>
       <template slot="body" :let={{ :an_atom }}>
-        Info: {{ my_info }}
+        Info: {{ @my_info }}
       </template>
     </OuterWithSlotNotationAndProps>
     """
@@ -465,7 +465,7 @@ defmodule Surface.SlotTest do
   test "render default inner_content with slot props" do
     code = """
     <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
-      Info: {{ my_info }}
+      Info: {{ @my_info }}
     </OuterWithDefaultSlotAndProps>
     """
 
@@ -481,7 +481,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when using :let and there's no default slot defined" do
     code = """
     <OuterWithoutDefaultSlot :let={{ info: my_info }}>
-      Info: {{ my_info }}
+      Info: {{ @my_info }}
     </OuterWithoutDefaultSlot>
     """
 
@@ -502,7 +502,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when using :let with undefined props for default slot" do
     code = """
     <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: value }}>
-      Info: {{ my_info }}
+      Info: {{ @my_info }}
     </OuterWithDefaultSlotAndProps>
     """
 
@@ -524,7 +524,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when using :let with invalid list of bindings" do
     code = """
     <OuterWithDefaultSlotAndProps :let={{ info: 1 }}>
-      Info: {{ my_info }}
+      Info: {{ @my_info }}
     </OuterWithDefaultSlotAndProps>
     """
 
@@ -542,7 +542,7 @@ defmodule Surface.SlotTest do
     code = """
     <OuterWithSlotNotationAndProps>
       <template slot="body" :let={{ non_existing: my_info }}>
-        Info: {{ my_info }}
+        Info: {{ @my_info }}
       </template>
     </OuterWithSlotNotationAndProps>
     """
