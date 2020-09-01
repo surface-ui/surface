@@ -132,7 +132,7 @@ defmodule Surface.Compiler.EExEngine do
 
     props_expr =
       quote generated: true do
-        Keyword.put(unquote(props_expr), :__surface__, @__surface__)
+        Keyword.put(unquote(props_expr), :__context__, @__context__)
       end
 
     # TODO: map names somehow?
@@ -213,7 +213,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__surface__[:context] || [],
+            @__context__ || [],
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),
@@ -229,7 +229,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__surface__[:context] || [],
+            @__context__ || [],
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),

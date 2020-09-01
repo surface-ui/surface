@@ -71,10 +71,10 @@ defmodule Surface.ContentHandler do
         end)
 
       # TODO [Context]: Update this to be only the appropriate assigns for context
-      surface_assign = args[:__surface__] || assigns.__surface__
+      context_assign = args[:__context__] || assigns.__context__
 
       assigns.inner_content.(
-        Keyword.merge(prop_assigns, __slot__: {name, index}, __surface__: surface_assign)
+        Keyword.merge(prop_assigns, __slot__: {name, index}, __context__: context_assign)
       )
     end
   end
@@ -82,7 +82,7 @@ defmodule Surface.ContentHandler do
   defp default_content_fun(assigns, size, all_prop_assign_mappings) do
     fn args ->
       # TODO [Context]: Update this to be only the appropriate assigns for context
-      surface_assign = args[:__surface__] || assigns.__surface__
+      context_assign = args[:__context__] || assigns.__context__
 
       prop_assigns =
         Enum.map(all_prop_assign_mappings, fn mappings_for_index ->
@@ -91,14 +91,27 @@ defmodule Surface.ContentHandler do
           end)
         end)
 
-      join_contents(assigns, size, surface_assign, prop_assigns)
+      join_contents(assigns, size, context_assign, prop_assigns)
     end
   end
 
-  defp join_contents(assigns, size, surface_assign, assign_mappings) do
+  defp join_contents(assigns, 1, context_assign, assign_mappings) do
+    if assigns[:inner_content] == nil do
+      ""
+    else
+      assigns.inner_content.(
+        Keyword.merge(Enum.at(assign_mappings, 0),
+          __slot__: {:__default__, 0},
+          __context__: context_assign
+        )
+      )
+    end
+  end
+
+  defp join_contents(assigns, size, context_assign, assign_mappings) do
     ~L"""
-    <%= if assigns[:inner_content] != nil do %>
-    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __surface__: surface_assign])) %><% end %>
+    <%= if assigns[:inner_content] == nil do %>
+    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __context__: context_assign])) %><% end %>
     <% end %>
     """
   end
