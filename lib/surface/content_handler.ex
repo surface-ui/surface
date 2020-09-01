@@ -75,7 +75,7 @@ defmodule Surface.ContentHandler do
         if Keyword.has_key?(args, :__surface__) do
           [__surface__: args[:__surface__]]
         else
-          []
+          [__surface__: assigns.__surface__]
         end
 
       assigns.inner_content.(
@@ -91,7 +91,7 @@ defmodule Surface.ContentHandler do
         if Keyword.has_key?(args, :__surface__) do
           [__surface__: args[:__surface__]]
         else
-          []
+          [__surface__: assigns.__surface__]
         end
 
       prop_assigns =
