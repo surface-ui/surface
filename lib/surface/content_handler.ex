@@ -109,12 +109,10 @@ defmodule Surface.ContentHandler do
   end
 
   defp join_contents(assigns, size, context_assign, assign_mappings) do
-    if assigns[:inner_content] == nil do
-      ""
-    else
-      ~L"""
-      <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __context__: context_assign])) %><% end %>
-      """
-    end
+    ~L"""
+    <%= if assigns[:inner_content] == nil do %>
+    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __context__: context_assign])) %><% end %>
+    <% end %>
+    """
   end
 end
