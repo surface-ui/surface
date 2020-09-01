@@ -12,7 +12,9 @@ defmodule Surface.TypeHandler do
               value :: any(),
               meta :: Surface.AST.Meta.t()
             ) ::
-              {:ok, Surface.AST.Text.t() | Surface.AST.AttributeExpr.t()} | {:error, String.t()} | :error
+              {:ok, Surface.AST.Text.t() | Surface.AST.AttributeExpr.t()}
+              | {:error, String.t()}
+              | :error
 
   @callback expr_to_quoted(
               type :: atom(),
