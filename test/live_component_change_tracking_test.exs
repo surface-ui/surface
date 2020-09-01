@@ -6,29 +6,7 @@ defmodule LiveComponentChangeTrackingTest do
 
   @endpoint Endpoint
 
-  defmodule CheckUpdated do
-    use Surface.LiveComponent
-
-    @doc "The process to send the :updated message"
-    property dest, :any, required: true
-
-    @doc "Something to inspect"
-    property content, :any, default: %{}
-
-    def update(assigns, socket) do
-      if connected?(socket) do
-        send(assigns.dest, :updated)
-      end
-
-      {:ok, assign(socket, assigns)}
-    end
-
-    def render(assigns) do
-      ~H"""
-      <div>{{ inspect(@content) }}</div>
-      """
-    end
-  end
+  alias Surface.CheckUpdated
 
   defmodule ViewPassingAssignsMap do
     use Surface.LiveView
@@ -42,7 +20,7 @@ defmodule LiveComponentChangeTrackingTest do
     def render(assigns) do
       ~H"""
       Count: {{ @count }}
-      <CheckUpdated dest={{ @test_pid }} content={{ assigns }} />
+      <CheckUpdated id="1" dest={{ @test_pid }} content={{ assigns }} />
       """
     end
 
@@ -64,7 +42,7 @@ defmodule LiveComponentChangeTrackingTest do
     def render(assigns) do
       ~H"""
       Count: {{ @count }}
-      <CheckUpdated dest={{ @test_pid }} content={{ @passing_count }} />
+      <CheckUpdated id="1" dest={{ @test_pid }} content={{ @passing_count }} />
       """
     end
 
@@ -81,29 +59,29 @@ defmodule LiveComponentChangeTrackingTest do
     {:ok, view, html} =
       live_isolated(build_conn(), ViewPassingAssignsMap, session: %{"test_pid" => self()})
 
-    assert_receive :updated
+    assert_receive {:updated, _}
     assert html =~ "Count: 0"
 
     html = render_click(view, :update_count)
     assert html =~ "Count: 1"
-    assert_receive :updated
+    assert_receive {:updated, _}
   end
 
   test "passing data as props works with change tracking" do
     {:ok, view, html} =
       live_isolated(build_conn(), ViewPassingDataAsProp, session: %{"test_pid" => self()})
 
-    assert_receive :updated
+    assert_receive {:updated, _}
     assert html =~ "Count: 0"
 
     # Don't update the component if changed assigns are not passed as props
     html = render_click(view, :update_count)
     assert html =~ "Count: 1"
-    refute_receive :updated
+    refute_receive {:updated, _}
 
     # Update the component if changed assigns are passed as props
     html = render_click(view, :update_passing_count)
     assert html =~ "Count: 1"
-    assert_receive :updated
+    assert_receive {:updated, _}
   end
 end

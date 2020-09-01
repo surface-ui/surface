@@ -71,11 +71,15 @@ defmodule Surface.ContentHandler do
         end)
 
       # TODO [Context]: Update this to be only the appropriate assigns for context
-      context_assign = args[:__context__] || assigns.__context__
+      case args[:__context__] || assigns.__context__ do
+        [] ->
+          assigns.inner_content.(Keyword.merge(prop_assigns, __slot__: {name, index}))
 
-      assigns.inner_content.(
-        Keyword.merge(prop_assigns, __slot__: {name, index}, __context__: context_assign)
-      )
+        context_assign ->
+          assigns.inner_content.(
+            Keyword.merge(prop_assigns, __slot__: {name, index}, __context__: context_assign)
+          )
+      end
     end
   end
 
@@ -95,14 +99,13 @@ defmodule Surface.ContentHandler do
     end
   end
 
-  defp join_contents(assigns, 1, context_assign, assign_mappings) do
+  defp join_contents(assigns, 1, [], assign_mappings) do
     if assigns[:inner_content] == nil do
       ""
     else
       assigns.inner_content.(
         Keyword.merge(Enum.at(assign_mappings, 0),
-          __slot__: {:__default__, 0},
-          __context__: context_assign
+          __slot__: {:__default__, 0}
         )
       )
     end
