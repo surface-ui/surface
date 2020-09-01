@@ -74,7 +74,7 @@ defmodule Surface.ContentHandler do
       surface_assign = args[:__surface__] || assigns.__surface__
 
       assigns.inner_content.(
-        Keyword.merge(prop_assigns, [__slot__: {name, index}, __surface__: surface_assign])
+        Keyword.merge(prop_assigns, __slot__: {name, index}, __surface__: surface_assign)
       )
     end
   end
