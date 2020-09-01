@@ -30,7 +30,7 @@ defmodule Surface.AST.Container do
 
   @type t :: %__MODULE__{
           children: list(Surface.AST.t()),
-          debug: List.t(atom()),
+          debug: list(atom()),
           meta: Surface.AST.Meta.t(),
           directives: list(Surface.AST.Directive.t())
         }
@@ -126,7 +126,7 @@ defmodule Surface.AST.For do
 
   @type t :: %__MODULE__{
           generator: any(),
-          debug: List.t(atom()),
+          debug: list(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -146,7 +146,7 @@ defmodule Surface.AST.If do
 
   @type t :: %__MODULE__{
           condition: any(),
-          debug: List.t(atom()),
+          debug: list(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -278,7 +278,7 @@ defmodule Surface.AST.Tag do
 
   @type t :: %__MODULE__{
           element: binary(),
-          debug: List.t(atom()),
+          debug: list(atom()),
           attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
@@ -301,7 +301,7 @@ defmodule Surface.AST.VoidTag do
 
   @type t :: %__MODULE__{
           element: binary(),
-          debug: List.t(atom()),
+          debug: list(atom()),
           attributes: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
@@ -342,7 +342,7 @@ defmodule Surface.AST.Error do
 
   @type t :: %__MODULE__{
           message: binary(),
-          meta: Surface.HTML.Meta.t()
+          meta: Surface.AST.Meta.t()
         }
 end
 
@@ -363,7 +363,7 @@ defmodule Surface.AST.Component do
 
   @type t :: %__MODULE__{
           module: module(),
-          debug: List.t(atom()),
+          debug: list(atom()),
           type: module(),
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
@@ -406,7 +406,7 @@ defmodule Surface.AST.SlotableComponent do
 
   @type t :: %__MODULE__{
           module: module(),
-          debug: List.t(atom()),
+          debug: list(atom()),
           type: module(),
           slot: atom(),
           let: Surface.AST.Directive.t(),

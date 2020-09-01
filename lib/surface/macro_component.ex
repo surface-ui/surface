@@ -9,7 +9,7 @@ defmodule Surface.MacroComponent do
   set of Surface.AST nodes.
   """
   @callback expand(
-              attributes :: [Surface.Attribute.t()],
+              attributes :: [Surface.AST.Attribute.t()],
               children :: iodata(),
               meta :: Surface.AST.Meta.t()
             ) :: Surface.AST.t() | [Surface.AST.t()]
