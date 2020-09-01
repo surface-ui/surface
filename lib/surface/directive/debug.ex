@@ -57,7 +57,7 @@ defmodule Surface.Directive.Debug do
 
     for name <- expr do
       if not is_atom(name) do
-        invalid_debug_value(value, meta)
+        invalid_debug_value!(value, meta)
       end
     end
 
@@ -68,7 +68,8 @@ defmodule Surface.Directive.Debug do
     }
   end
 
-  defp invalid_debug_value(value, meta) do
+  @spec invalid_debug_value!(any(), Surface.AST.Meta.t()) :: no_return()
+  defp invalid_debug_value!(value, meta) do
     message = """
     invalid value for directive :debug. Expected a list of atoms, \
     got: #{String.trim(value)}.\
