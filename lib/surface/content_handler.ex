@@ -71,15 +71,10 @@ defmodule Surface.ContentHandler do
         end)
 
       # TODO [Context]: Update this to be only the appropriate assigns for context
-      surface_assign =
-        if Keyword.has_key?(args, :__surface__) do
-          [__surface__: args[:__surface__]]
-        else
-          [__surface__: assigns.__surface__]
-        end
+      surface_assign = args[:__surface__] || assigns.__surface__
 
       assigns.inner_content.(
-        Keyword.merge(prop_assigns ++ surface_assign, __slot__: {name, index})
+        Keyword.merge(prop_assigns, [__slot__: {name, index}, __surface__: surface_assign])
       )
     end
   end
@@ -87,12 +82,7 @@ defmodule Surface.ContentHandler do
   defp default_content_fun(assigns, size, all_prop_assign_mappings) do
     fn args ->
       # TODO [Context]: Update this to be only the appropriate assigns for context
-      surface_assign =
-        if Keyword.has_key?(args, :__surface__) do
-          [__surface__: args[:__surface__]]
-        else
-          [__surface__: assigns.__surface__]
-        end
+      surface_assign = args[:__surface__] || assigns.__surface__
 
       prop_assigns =
         Enum.map(all_prop_assign_mappings, fn mappings_for_index ->
@@ -108,7 +98,7 @@ defmodule Surface.ContentHandler do
   defp join_contents(assigns, size, surface_assign, assign_mappings) do
     ~L"""
     <%= if assigns[:inner_content] != nil do %>
-    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index) ++ surface_assign, [__slot__: {:__default__, index}])) %><% end %>
+    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __surface__: surface_assign])) %><% end %>
     <% end %>
     """
   end
