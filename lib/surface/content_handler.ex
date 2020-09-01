@@ -112,19 +112,4 @@ defmodule Surface.ContentHandler do
     <% end %>
     """
   end
-
-  defp args_to_keyword(args) do
-    if Keyword.keyword?(args) do
-      args
-    else
-      stacktrace =
-        self()
-        |> Process.info(:current_stacktrace)
-        |> elem(1)
-        |> Enum.drop(3)
-
-      message = "invalid slot props. Expected a keyword list, got: #{inspect(args)}"
-      reraise(message, stacktrace)
-    end
-  end
 end
