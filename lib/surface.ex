@@ -187,7 +187,11 @@ defmodule Surface do
         {name, Keyword.get(module_ctx, name)}
       end)
 
-    context = Keyword.put(context, module, module_ctx)
+    context =
+      case module_ctx do
+        [] -> context
+        _ -> Keyword.put(context, module, module_ctx)
+      end
 
     Map.new(
       props ++

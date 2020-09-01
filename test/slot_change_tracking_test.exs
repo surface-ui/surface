@@ -32,7 +32,7 @@ defmodule Surface.SlotChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Outer id="outer" :debug>
+      <Outer id="outer">
         Count: {{ @count }}
         <CheckUpdated id="1" dest={{ @test_pid }} />
       </Outer>
@@ -55,8 +55,6 @@ defmodule Surface.SlotChangeTrackingTest do
     html = render_click(view, :update_count)
     assert html =~ "Count: 1"
 
-    # TODO: It fails! Fix it.
-    # The component should not be updated
     refute_receive {:updated, "1"}
   end
 end
