@@ -136,7 +136,9 @@ defmodule Surface do
 
   @doc "Initialize surface state in the socket"
   def init(socket) do
-    LiveView.assign_new(socket, :__surface__, fn -> %{} end)
+    socket
+    |> LiveView.assign_new(:__surface__, fn -> %{} end)
+    |> LiveView.assign_new(:__context__, fn -> [] end)
   end
 
   @doc false
@@ -193,10 +195,10 @@ defmodule Surface do
         sets_in_scope_from_context ++
         [
           __surface__: %{
-            context: context,
             slots: Map.new(slots),
             provided_templates: Keyword.keys(slot_props)
-          }
+          },
+          __context__: context
         ]
     )
   end
