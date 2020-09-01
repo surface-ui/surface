@@ -17,10 +17,10 @@ defmodule Surface.ContentHandler do
   end
 
   def init_contents(assigns, module) do
-    {%{__default__: default_slot}, _other_slots} =
+    {%{__default__: default_slot}, other_slots} =
       case assigns[:__surface__][:slots] do
         nil ->
-          {%{__default__: %{size: 0}}, []}
+          {%{__default__: %{size: 0, prop_assigns: []}}, []}
 
         slots ->
           Map.split(slots, [:__default__])
@@ -38,7 +38,12 @@ defmodule Surface.ContentHandler do
               Map.put(
                 assign,
                 :inner_content,
-                data_content_fun(assigns, name, index)
+                data_content_fun(
+                  assigns,
+                  name,
+                  index,
+                  Enum.at(other_slots[name][:prop_assigns] || [], index, [])
+                )
               )
             end)
           end
@@ -46,7 +51,7 @@ defmodule Surface.ContentHandler do
         {name, value}
       end
 
-    content = default_content_fun(assigns, default_slot.size)
+    content = default_content_fun(assigns, default_slot.size, default_slot.prop_assigns)
 
     assigns =
       if default_slot.size > 0 do
@@ -58,43 +63,43 @@ defmodule Surface.ContentHandler do
     Map.merge(assigns, props)
   end
 
-  defp data_content_fun(assigns, name, index) do
-    fn
-      {args, ctx_assigns} ->
-        assigns.inner_content.({name, index, {args_to_map(args), ctx_assigns}})
+  defp data_content_fun(assigns, name, index, prop_assign_mappings) do
+    fn args ->
+      prop_assigns =
+        Enum.map(prop_assign_mappings, fn {prop_name, assign_name} ->
+          {assign_name, args[prop_name]}
+        end)
 
-      args ->
-        assigns.inner_content.({name, index, {args_to_map(args), assigns}})
+      # TODO [Context]: Update this to be only the appropriate assigns for context
+      surface_assign = args[:__surface__] || assigns.__surface__
+
+      assigns.inner_content.(
+        Keyword.merge(prop_assigns, __slot__: {name, index}, __surface__: surface_assign)
+      )
     end
   end
 
-  defp default_content_fun(assigns, size) do
-    fn
-      {args, ctx_assigns} -> join_contents(assigns, size, args_to_map(args), ctx_assigns)
-      args -> join_contents(assigns, size, args_to_map(args), assigns)
+  defp default_content_fun(assigns, size, all_prop_assign_mappings) do
+    fn args ->
+      # TODO [Context]: Update this to be only the appropriate assigns for context
+      surface_assign = args[:__surface__] || assigns.__surface__
+
+      prop_assigns =
+        Enum.map(all_prop_assign_mappings, fn mappings_for_index ->
+          Enum.map(mappings_for_index, fn {prop_name, assign_name} ->
+            {assign_name, args[prop_name]}
+          end)
+        end)
+
+      join_contents(assigns, size, surface_assign, prop_assigns)
     end
   end
 
-  defp join_contents(assigns, size, args, assigns_to_pass) do
+  defp join_contents(assigns, size, surface_assign, assign_mappings) do
     ~L"""
     <%= if assigns[:inner_content] != nil do %>
-    <%= for index <- 0..size-1 do %><%= assigns.inner_content.({:__default__, index, {args, assigns_to_pass}}) %><% end %>
+    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __surface__: surface_assign])) %><% end %>
     <% end %>
     """
-  end
-
-  defp args_to_map(args) do
-    if Keyword.keyword?(args) do
-      Map.new(args)
-    else
-      stacktrace =
-        self()
-        |> Process.info(:current_stacktrace)
-        |> elem(1)
-        |> Enum.drop(3)
-
-      message = "invalid slot props. Expected a keyword list, got: #{inspect(args)}"
-      reraise(message, stacktrace)
-    end
   end
 end

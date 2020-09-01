@@ -85,7 +85,7 @@ defmodule Surface.ComponentTest do
     def render(assigns) do
       ~H"""
       <OuterWithSlotProps :let={{ info: my_info }}>
-        {{ my_info }}
+        {{ @my_info }}
       </OuterWithSlotProps>
       """
     end
@@ -174,7 +174,7 @@ defmodule Surface.ComponentTest do
     test "render content with slot props" do
       code = """
       <OuterWithSlotProps :let={{ info: my_info }}>
-        {{ my_info }}
+        {{ @my_info }}
       </OuterWithSlotProps>
       """
 
