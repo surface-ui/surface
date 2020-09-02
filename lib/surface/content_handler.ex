@@ -55,7 +55,9 @@ defmodule Surface.ContentHandler do
 
     assigns =
       if default_slot.size > 0 do
-        Map.put(assigns, :inner_content, content)
+        assigns
+        |> Map.put(:__original_inner_content, assigns.inner_content)
+        |> Map.put(:inner_content, content)
       else
         Map.put(assigns, :inner_content, nil)
       end
@@ -87,6 +89,7 @@ defmodule Surface.ContentHandler do
     fn args ->
       # TODO [Context]: Update this to be only the appropriate assigns for context
       context_assign = args[:__context__] || assigns.__context__
+      context2_assign = args[:__context2__] || assigns.__context2__
 
       prop_assigns =
         Enum.map(all_prop_assign_mappings, fn mappings_for_index ->
@@ -95,11 +98,12 @@ defmodule Surface.ContentHandler do
           end)
         end)
 
-      join_contents(assigns, size, context_assign, prop_assigns)
+      join_contents(assigns, size, context_assign, context2_assign, prop_assigns)
     end
   end
 
-  defp join_contents(assigns, 1, [], assign_mappings) do
+  defp join_contents(assigns, 1, [], context2_assign, assign_mappings)
+       when context2_assign == %{} do
     if assigns[:inner_content] == nil do
       ""
     else
@@ -111,10 +115,10 @@ defmodule Surface.ContentHandler do
     end
   end
 
-  defp join_contents(assigns, size, context_assign, assign_mappings) do
+  defp join_contents(assigns, size, context_assign, context2_assign, assign_mappings) do
     ~L"""
     <%= if assigns[:inner_content] != nil do %>
-    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __context__: context_assign])) %><% end %>
+    <%= for index <- 0..size-1 do %><%= assigns.inner_content.(Keyword.merge(Enum.at(assign_mappings, index), [__slot__: {:__default__, index}, __context__: context_assign, __context2__: context2_assign])) %><% end %>
     <% end %>
     """
   end

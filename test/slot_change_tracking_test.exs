@@ -11,16 +11,16 @@ defmodule Surface.SlotChangeTrackingTest do
 
     property id, :string
 
-    slot default
+    slot default, props: [:param]
 
     def render(assigns) do
       ~H"""
-      <div>{{ @inner_content.([]) }}</div>
+      <div>{{ @inner_content.(param: "Param from Outer") }}</div>
       """
     end
   end
 
-  defmodule ViewComponentWithSlot do
+  defmodule ViewComponentWithInnerContent do
     use Surface.LiveView
     alias Surface.CheckUpdated
 
@@ -32,9 +32,10 @@ defmodule Surface.SlotChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Outer id="outer">
+      <Outer id="outer" :let={{ param: param }}>
         Count: {{ @count }}
-        <CheckUpdated id="1" dest={{ @test_pid }} />
+        <CheckUpdated id="1" dest={{ @test_pid }} content={{ @param }} />
+        <CheckUpdated id="2" dest={{ @test_pid }} />
       </Outer>
       """
     end
@@ -44,17 +45,23 @@ defmodule Surface.SlotChangeTrackingTest do
     end
   end
 
-  test "change tracking is enabled" do
+  test "change tracking is disabled if a child component uses a passed slot prop" do
     {:ok, view, html} =
-      live_isolated(build_conn(), ViewComponentWithSlot, session: %{"test_pid" => self()})
+      live_isolated(build_conn(), ViewComponentWithInnerContent, session: %{"test_pid" => self()})
 
     assert html =~ "Count: 0"
     assert_receive {:updated, "1"}
+    assert_receive {:updated, "2"}
     refute_receive {:updated, _}
 
     html = render_click(view, :update_count)
+
     assert html =~ "Count: 1"
 
-    refute_receive {:updated, "1"}
+    # Component using slot props should be updated
+    assert_receive {:updated, "1"}
+
+    # Component not using the slot props should not be updated
+    refute_receive {:updated, "2"}
   end
 end

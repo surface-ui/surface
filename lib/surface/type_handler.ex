@@ -304,5 +304,6 @@ defmodule Surface.TypeHandler do
   defp handler(:bindings), do: __MODULE__.Bindings
   defp handler(:list), do: __MODULE__.List
   defp handler(:static_list), do: __MODULE__.StaticList
+  defp handler(:context_set), do: __MODULE__.ContextSet
   defp handler(_), do: __MODULE__.Default
 end

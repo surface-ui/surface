@@ -86,6 +86,15 @@ defmodule Surface.LiveComponent do
       quote do
         defoverridable update: 2
 
+        def update(%{__surface__: surface, __context2__: context2} = assigns, socket) do
+          super(
+            assigns,
+            socket
+            |> Phoenix.LiveView.assign(:__surface__, surface)
+            |> Phoenix.LiveView.assign(:__context2__, context2)
+          )
+        end
+
         def update(%{__surface__: surface, __context__: context} = assigns, socket) do
           super(
             assigns,
