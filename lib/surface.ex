@@ -139,6 +139,7 @@ defmodule Surface do
     socket
     |> LiveView.assign_new(:__surface__, fn -> %{} end)
     |> LiveView.assign_new(:__context__, fn -> [] end)
+    |> LiveView.assign_new(:__context2__, fn -> %{} end)
   end
 
   @doc false
@@ -149,6 +150,7 @@ defmodule Surface do
   @doc false
   def build_assigns(
         context,
+        context2,
         static_props,
         dynamic_props,
         slot_props,
@@ -202,7 +204,8 @@ defmodule Surface do
             slots: Map.new(slots),
             provided_templates: Keyword.keys(slot_props)
           },
-          __context__: context
+          __context__: context,
+          __context2__: context2
         ]
     )
   end
