@@ -15,22 +15,21 @@ defmodule Surface.Components.Form.Field do
   @doc "The CSS class for the generated `<div>` element"
   property class, :css_class
 
-  @doc "The field name specified by the <Field/> component"
-  context set field, :atom, scope: :only_children
+  # TODO: Should we keep it for documentation?
+  # @doc "The field name specified by the <Field/> component"
+  # context set field, :atom, scope: :only_children
 
   @doc """
   The content for the field
   """
   slot default, required: true
 
-  def init_context(props) do
-    {:ok, field: props.name}
-  end
-
   def render(assigns) do
     ~H"""
     <div class={{ class_value(@class) }}>
-      <slot/>
+      <Context set={{ :field, @name, scope: __MODULE__ }}>
+        <slot/>
+      </Context>
     </div>
     """
   end

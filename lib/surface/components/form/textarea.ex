@@ -26,9 +26,6 @@ defmodule Surface.Components.Form.TextArea do
   @doc "Specifies the visible width of a text area"
   property cols, :string
 
-  context get form, from: Form, as: :form_context
-  context get field, from: Field, as: :field_context
-
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)

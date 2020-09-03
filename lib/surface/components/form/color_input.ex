@@ -21,9 +21,6 @@ defmodule Surface.Components.Form.ColorInput do
   import Phoenix.HTML.Form, only: [color_input: 3]
   import Surface.Components.Form.Utils
 
-  context get form, from: Form, as: :form_context
-  context get field, from: Field, as: :field_context
-
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)

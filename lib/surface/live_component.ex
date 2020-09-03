@@ -66,6 +66,7 @@ defmodule Surface.LiveComponent do
       require Surface.ContentHandler
       @before_compile Surface.ContentHandler
       Module.put_attribute(__MODULE__, :__is_stateful__, true)
+      alias Surface.Components.Context
     end
   end
 

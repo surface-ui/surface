@@ -23,9 +23,6 @@ defmodule Surface.Components.Form.RadioButton do
   @doc "Indicates whether or not the radio button is the selected item in the group"
   property checked, :boolean
 
-  context get form, from: Form, as: :form_context
-  context get field, from: Field, as: :field_context
-
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)

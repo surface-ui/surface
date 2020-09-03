@@ -12,6 +12,17 @@ defmodule Surface.Components.Context do
     """
   end
 
+  @doc """
+  Retrieve a value from the context.
+
+  The `opts` argument can contain any option accepted by the `get` property,
+  except `:as`, which is ignored.
+  """
+  def get(assigns, key, opts) do
+    {key, _as} = normalize_get({key, opts})
+    assigns.__context2__[key]
+  end
+
   defp slot_kw() do
     [__slot__: {:__default__, 0}]
   end

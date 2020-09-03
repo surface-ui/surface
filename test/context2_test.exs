@@ -7,8 +7,6 @@ defmodule Context2Test do
   defmodule Outer do
     use Surface.Component
 
-    alias Surface.Components.Context
-
     def render(assigns) do
       ~H"""
       <Context set={{ :field, "field from Outer", scope: __MODULE__ }}>
@@ -31,8 +29,6 @@ defmodule Context2Test do
   defmodule Inner do
     use Surface.Component
 
-    alias Surface.Components.Context
-
     def render(assigns) do
       ~H"""
       <Context
@@ -48,8 +44,6 @@ defmodule Context2Test do
   defmodule InnerWrapper do
     use Surface.Component
 
-    alias Surface.Components.Context
-
     def render(assigns) do
       ~H"""
       <Context set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
@@ -61,8 +55,6 @@ defmodule Context2Test do
 
   defmodule InnerWithOptionAs do
     use Surface.Component
-
-    alias Surface.Components.Context
 
     def render(assigns) do
       ~H"""

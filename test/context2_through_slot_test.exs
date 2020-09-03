@@ -7,8 +7,6 @@ defmodule Surface.Context2ThroughSlotTest do
   defmodule Parent.ContextProvider do
     use Surface.Component
 
-    alias Surface.Components.Context
-
     property foo, :string
     slot default
 
@@ -39,8 +37,6 @@ defmodule Surface.Context2ThroughSlotTest do
 
   defmodule Child do
     use Surface.Component
-
-    alias Surface.Components.Context
 
     def render(assigns) do
       # @foo is nil here
