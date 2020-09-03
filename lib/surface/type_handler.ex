@@ -292,5 +292,6 @@ defmodule Surface.TypeHandler do
   defp handler(:list), do: __MODULE__.List
   defp handler(:static_list), do: __MODULE__.StaticList
   defp handler(:context_set), do: __MODULE__.ContextSet
+  defp handler(:context_get), do: __MODULE__.ContextGet
   defp handler(_), do: __MODULE__.Default
 end

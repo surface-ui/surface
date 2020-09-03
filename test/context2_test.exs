@@ -35,7 +35,9 @@ defmodule Context2Test do
 
     def render(assigns) do
       ~H"""
-      <Context get={{ %{{Context2Test.Outer, :field} => :field, {Context2Test.InnerWrapper, :field} => :other_field} }}>
+      <Context
+        get={{ :field, scope: Context2Test.Outer }}
+        get={{ :field, scope: Context2Test.InnerWrapper, as: :other_field }}>
         <span id="field">{{ @field }}</span>
         <span id="other_field">{{ @other_field }}</span>
       </Context>
@@ -64,7 +66,7 @@ defmodule Context2Test do
 
     def render(assigns) do
       ~H"""
-      <Context get={{ %{{Context2Test.Outer, :field} => :my_field} }}>
+      <Context get={{ :field, scope: Context2Test.Outer, as: :my_field }}>
         <span>{{ @my_field }}</span>
       </Context>
       """

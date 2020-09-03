@@ -1,8 +1,8 @@
 defmodule Surface.Components.Context do
   use Surface.Component
 
-  property set, :context_set, default: %{}
-  property get, :map, default: %{}
+  property set, :context_set, accumulate: true, default: []
+  property get, :context_get, accumulate: true, default: []
 
   slot default, required: true
 
@@ -16,9 +16,15 @@ defmodule Surface.Components.Context do
     [__slot__: {:__default__, 0}]
   end
 
-  defp context_assigns_kw(context, set, get) do
-    updated_context = Map.merge(context, Map.new(set))
-    context_kw(updated_context, set) ++ context_gets_kw(updated_context, get)
+  defp context_assigns_kw(context, sets, gets) do
+    consolidated_sets =
+      Enum.reduce(sets, %{}, fn set, acc ->
+        {key, value} = normalize_set(set)
+        Map.put(acc, key, value)
+      end)
+
+    updated_context = Map.merge(context, consolidated_sets)
+    context_kw(updated_context, consolidated_sets) ++ context_gets_kw(updated_context, gets)
   end
 
   defp context_kw(context, set) do
@@ -29,7 +35,33 @@ defmodule Surface.Components.Context do
     end
   end
 
-  defp context_gets_kw(context, get) do
-    Enum.map(get, fn {k, v} -> {v, context[k]} end)
+  defp context_gets_kw(context, gets) do
+    Enum.map(gets, fn get ->
+      {key, name} = normalize_get(get)
+      {name, context[key]}
+    end)
+  end
+
+  defp normalize_set({key, value, opts}) do
+    case Keyword.get(opts, :scope) do
+      nil ->
+        {key, value}
+
+      scope ->
+        {{scope, key}, value}
+    end
+  end
+
+  defp normalize_get({key, opts}) do
+    full_key =
+      case Keyword.get(opts, :scope) do
+        nil ->
+          key
+
+        scope ->
+          {scope, key}
+      end
+
+    {full_key, Keyword.get(opts, :as, key)}
   end
 end

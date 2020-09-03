@@ -22,7 +22,8 @@ defmodule Surface.API do
     :changeset,
     :form,
     :keyword,
-    :context_set
+    :context_set,
+    :context_get
   ]
 
   @private_opts [:action, :to]
