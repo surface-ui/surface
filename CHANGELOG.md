@@ -1,5 +1,15 @@
 # Changelog
 
+## UNRELEASED
+  
+  * Update LiveView to v0.14
+  * Add `Surface.init/1` to initialize internal assigns when not using `Surface.LiveView`
+  * Update slot props to create inner assigns instead of variables
+  * Add support for co-located template files using `.sface` suffix
+  * Add `:props` directive to pass dynamic props to a component
+  * Add `:attrs` directive to pass dynamic attributes to a tag
+  * Update html tag generation to remove the tag if it's value computes to nil
+
 ## v0.1.0-alpha.2 (2020-06-09)
 
   * New Markdown component
