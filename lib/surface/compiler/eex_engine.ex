@@ -251,11 +251,25 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp collect_component_props(module, attrs) do
-    attrs
-    |> Enum.filter(fn %AST.Attribute{name: prop_name} -> module.__validate_prop__(prop_name) end)
-    |> Enum.map(fn %AST.Attribute{name: prop_name, type: type, value: expr} ->
-      {prop_name, to_prop_expr(expr, type)}
-    end)
+    {props, props_acc} =
+      Enum.reduce(attrs, {[], %{}}, fn attr, {props, props_acc} ->
+        %AST.Attribute{name: prop_name, type: type, type_opts: type_opts, value: expr} = attr
+
+        cond do
+          !module.__validate_prop__(prop_name) ->
+            {props, props_acc}
+
+          type_opts[:accumulate] ->
+            current_value = props_acc[prop_name] || []
+            updated_value = [to_prop_expr(expr, type) | current_value]
+            {props, Map.put(props_acc, prop_name, updated_value)}
+
+          true ->
+            {[{prop_name, to_prop_expr(expr, type)} | props], props_acc}
+        end
+      end)
+
+    Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
   end
 
   defp collect_slot_meta(component, templates, buffer, state) do

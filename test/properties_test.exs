@@ -79,6 +79,19 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule AccumulateProp do
+    use Surface.Component
+
+    property prop, :string, accumulate: true, default: ["default"]
+
+    def render(assigns) do
+      ~H"""
+      List?: {{ is_list(@prop) }}
+      <span :for={{ v <- @prop }}>value: {{v}}</span>
+      """
+    end
+  end
+
   describe "string" do
     test "passing a string with interpolation" do
       code = """
@@ -425,6 +438,42 @@ defmodule Surface.PropertiesTest do
 
       assert render_live(code) =~ """
              <div>class1</div><div>class2</div><div>class3</div><div>class4</div><div>class5</div>
+             """
+    end
+  end
+
+  describe "accumulate" do
+    test "if true, groups all props with the same name in a single list" do
+      code = """
+      <AccumulateProp prop="str_1" prop={{ "str_2" }}/>
+      """
+
+      assert render_live(code) =~ """
+             List?: true
+             <span>value: str_1</span>\
+             <span>value: str_2</span>
+             """
+    end
+
+    test "if true and there's a single prop, it stills creates a list" do
+      code = """
+      <AccumulateProp prop="str_1"/>
+      """
+
+      assert render_live(code) =~ """
+             List?: true
+             <span>value: str_1</span>
+             """
+    end
+
+    test "without any props, takes the default value" do
+      code = """
+      <AccumulateProp/>
+      """
+
+      assert render_live(code) =~ """
+             List?: true
+             <span>value: default</span>
              """
     end
   end

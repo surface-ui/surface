@@ -173,7 +173,7 @@ defmodule Surface.TypeHandler do
 
   def runtime_prop_value!(module, name, value, node_alias) do
     type =
-      attribute_type(module, name, %{
+      attribute_type_and_opts(module, name, %{
         node_alias: node_alias || module,
         caller: __ENV__,
         line: __ENV__.line
@@ -182,26 +182,26 @@ defmodule Surface.TypeHandler do
     expr_to_value!(type, name, [value], [], module, value)
   end
 
-  def attribute_type(name) do
-    attribute_type(nil, name, nil)
+  def attribute_type_and_opts(name) do
+    attribute_type_and_opts(nil, name, nil)
   end
 
-  def attribute_type(nil, :class, _meta), do: :css_class
+  def attribute_type_and_opts(nil, :class, _meta), do: {:css_class, []}
 
-  def attribute_type(nil, :style, _meta), do: :style
+  def attribute_type_and_opts(nil, :style, _meta), do: {:style, []}
 
-  def attribute_type(nil, name, _meta) when name in @boolean_tag_attributes,
-    do: :boolean
+  def attribute_type_and_opts(nil, name, _meta) when name in @boolean_tag_attributes,
+    do: {:boolean, []}
 
-  def attribute_type(nil, name, _meta) when name in @phx_event_attributes,
-    do: :phx_event
+  def attribute_type_and_opts(nil, name, _meta) when name in @phx_event_attributes,
+    do: {:phx_event, []}
 
-  def attribute_type(nil, _name, _meta), do: :string
+  def attribute_type_and_opts(nil, _name, _meta), do: {:string, []}
 
-  def attribute_type(module, name, meta) do
+  def attribute_type_and_opts(module, name, meta) do
     with true <- function_exported?(module, :__get_prop__, 1),
          prop when not is_nil(prop) <- module.__get_prop__(name) do
-      prop.type
+      {prop.type, prop.opts}
     else
       _ ->
         IOHelper.warn(
@@ -212,7 +212,7 @@ defmodule Surface.TypeHandler do
           end
         )
 
-        :string
+        {:string, []}
     end
   end
 

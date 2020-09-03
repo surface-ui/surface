@@ -175,14 +175,17 @@ defmodule Surface.APITest do
     end
 
     test "common type options" do
-      code = "property count, :integer, required: false, default: 0, values: [0, 1, 2]"
+      code =
+        "property count, :integer, required: false, default: [], values: [0, 1, 2], accumulate: true"
+
       assert {:ok, _} = eval(code)
     end
 
     test "validate unknown type options" do
       code = "property label, :string, a: 1"
 
-      message = ~r/unknown option :a. Available options: \[:required, :default, :values\]/
+      message =
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :accumulate\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
