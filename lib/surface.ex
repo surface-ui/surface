@@ -95,7 +95,6 @@ defmodule Surface do
   You can visit the documentation of each type of component for further explanation and examples.
   """
 
-  alias Surface.IOHelper
   alias Phoenix.LiveView
 
   @doc """
@@ -138,8 +137,7 @@ defmodule Surface do
   def init(socket) do
     socket
     |> LiveView.assign_new(:__surface__, fn -> %{} end)
-    |> LiveView.assign_new(:__context__, fn -> [] end)
-    |> LiveView.assign_new(:__context2__, fn -> %{} end)
+    |> LiveView.assign_new(:__context__, fn -> %{} end)
   end
 
   @doc false
@@ -150,7 +148,6 @@ defmodule Surface do
   @doc false
   def build_assigns(
         context,
-        context2,
         static_props,
         dynamic_props,
         slot_props,
@@ -169,73 +166,17 @@ defmodule Surface do
 
     props = Keyword.merge(Keyword.merge(default_props(module), dynamic_props), static_props)
 
-    gets_from_context =
-      module
-      |> context_gets()
-      |> Enum.flat_map(fn {from, values} ->
-        Enum.map(values, fn {name, as} ->
-          ctx = Keyword.get(context, from, [])
-
-          {as, Keyword.get(ctx, name)}
-        end)
-      end)
-
-    props = Keyword.merge(gets_from_context, props)
-
-    module_ctx = init_context(module, props)
-
-    sets_in_scope_from_context =
-      Enum.map(module.__context_sets_in_scope__(), fn %{name: name} ->
-        {name, Keyword.get(module_ctx, name)}
-      end)
-
-    context =
-      case module_ctx do
-        [] -> context
-        _ -> Keyword.put(context, module, module_ctx)
-      end
-
     Map.new(
       props ++
         slot_props ++
-        sets_in_scope_from_context ++
         [
           __surface__: %{
             slots: Map.new(slots),
             provided_templates: Keyword.keys(slot_props)
           },
-          __context__: context,
-          __context2__: context2
+          __context__: context
         ]
     )
-  end
-
-  defp context_gets(module) do
-    module.__context_gets__()
-    |> Enum.map(fn %{name: name, opts: opts} ->
-      {opts[:from], {name, opts[:as] || name}}
-    end)
-    |> Enum.group_by(fn {from, _} -> from end, fn {_, opts} -> opts end)
-    |> Keyword.new()
-  end
-
-  defp init_context(module, props) do
-    with true <- function_exported?(module, :init_context, 1),
-         {:ok, values} <- module.init_context(Map.new(props)) do
-      values
-    else
-      false ->
-        []
-
-      {:error, message} ->
-        IOHelper.runtime_error(message)
-
-      result ->
-        IOHelper.runtime_error(
-          "unexpected return value from init_context/1. " <>
-            "Expected {:ok, keyword()} | {:error, String.t()}, got: #{inspect(result)}"
-        )
-    end
   end
 
   @doc false

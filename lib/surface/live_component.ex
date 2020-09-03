@@ -59,10 +59,9 @@ defmodule Surface.LiveComponent do
 
       @before_compile unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :slot, :data, :context]
+      use Surface.API, include: [:property, :slot, :data]
       import Phoenix.HTML
 
-      @behaviour unquote(__MODULE__)
       require Surface.ContentHandler
       @before_compile Surface.ContentHandler
       Module.put_attribute(__MODULE__, :__is_stateful__, true)
@@ -86,15 +85,6 @@ defmodule Surface.LiveComponent do
     if Module.defines?(env.module, {:update, 2}) do
       quote do
         defoverridable update: 2
-
-        def update(%{__surface__: surface, __context2__: context2} = assigns, socket) do
-          super(
-            assigns,
-            socket
-            |> Phoenix.LiveView.assign(:__surface__, surface)
-            |> Phoenix.LiveView.assign(:__context2__, context2)
-          )
-        end
 
         def update(%{__surface__: surface, __context__: context} = assigns, socket) do
           super(
@@ -153,12 +143,4 @@ defmodule Surface.LiveComponent do
       end
     end
   end
-
-  @doc """
-  This optional callback is invoked in order to set up a
-  context that can be retrieved for any descendent component.
-  """
-  @callback init_context(props :: map()) :: map()
-
-  @optional_callbacks init_context: 1
 end

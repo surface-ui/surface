@@ -34,10 +34,6 @@ defmodule Surface.Components.Form do
   @doc "The content of the `<form>`"
   slot default
 
-  # TODO: Should we keep it for documentation?
-  # @doc "The form instance initialized by the Form component"
-  # context set form, :form
-
   def render(assigns) do
     ~H"""
     {{ form = form_for(@for, @action, get_opts(assigns)) }}
