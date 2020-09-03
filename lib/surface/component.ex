@@ -45,6 +45,8 @@ defmodule Surface.Component do
       require Surface.ContentHandler
       @before_compile Surface.ContentHandler
 
+      alias Surface.Components.Context
+
       if unquote(slot_name) != nil do
         def render(var!(assigns)) do
           ~H()

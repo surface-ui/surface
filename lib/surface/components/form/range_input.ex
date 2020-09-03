@@ -30,9 +30,6 @@ defmodule Surface.Components.Form.RangeInput do
   @doc "Sets or returns the value of the step attribute of the slider control"
   property step, :string
 
-  context get form, from: Form, as: :form_context
-  context get field, from: Field, as: :field_context
-
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)

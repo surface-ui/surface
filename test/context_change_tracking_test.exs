@@ -9,8 +9,6 @@ defmodule Surface.ContextChangeTrackingTest do
   defmodule ContextSetter do
     use Surface.LiveComponent
 
-    alias Surface.Components.Context
-
     def render(assigns) do
       ~H"""
       <Context set={{ :field, "field value" }}>
@@ -24,7 +22,6 @@ defmodule Surface.ContextChangeTrackingTest do
     use Surface.Component
 
     alias Surface.CheckUpdated
-    alias Surface.Components.Context
 
     property test_pid, :any, required: true
 

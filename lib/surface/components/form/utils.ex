@@ -2,11 +2,19 @@ defmodule Surface.Components.Form.Utils do
   @moduledoc false
   import Surface, only: [event_to_opts: 2, prop_to_opts: 2]
 
-  def get_form(%{form: form}) when is_binary(form), do: String.to_atom(form)
-  def get_form(%{form: nil, form_context: form_context}), do: form_context
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Field
+  alias Surface.Components.Context
 
-  def get_field(%{field: field}) when is_binary(field), do: String.to_atom(field)
-  def get_field(%{field: nil, field_context: field_context}), do: field_context
+  def get_form(assigns) do
+    context_form = Context.get(assigns, :form, scope: Form)
+    maybe_to_atom(assigns[:form] || context_form)
+  end
+
+  def get_field(assigns) do
+    context_field = Context.get(assigns, :field, scope: Field)
+    maybe_to_atom(assigns[:field] || context_field)
+  end
 
   defmacro get_non_nil_props(assigns, props) do
     quote do
@@ -38,5 +46,13 @@ defmodule Surface.Components.Form.Utils do
 
   def prop_value(assigns, prop) do
     {prop, assigns[prop]}
+  end
+
+  defp maybe_to_atom(form) do
+    if is_binary(form) do
+      String.to_atom(form)
+    else
+      form
+    end
   end
 end
