@@ -438,10 +438,11 @@ defmodule Surface.Compiler do
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
-    type = Surface.TypeHandler.attribute_type(mod, name, attr_meta)
+    {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
 
     node = %AST.Attribute{
       type: type,
+      type_opts: type_opts,
       name: name,
       value: attr_value(name, type, value, attr_meta),
       meta: attr_meta

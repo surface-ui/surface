@@ -32,7 +32,7 @@ defmodule Surface.Directive.TagAttrs do
       quote generated: true do
         for {name, value} <- unquote(value) || [],
             not Enum.member?(unquote(Macro.escape(attr_names)), name) do
-          {name, {Surface.TypeHandler.attribute_type(name), value}}
+          {name, {Surface.TypeHandler.attribute_type_and_opts(name), value}}
         end
       end
 
