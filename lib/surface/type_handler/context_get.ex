@@ -1,4 +1,4 @@
-defmodule Surface.TypeHandler.ContextSet do
+defmodule Surface.TypeHandler.ContextGet do
   @moduledoc false
 
   use Surface.TypeHandler
@@ -9,9 +9,9 @@ defmodule Surface.TypeHandler.ContextSet do
   end
 
   @impl true
-  def expr_to_value([key, value], opts) when is_atom(key) do
+  def expr_to_value([key], opts) when is_atom(key) do
     # TODO: Validate opts at compile-time
-    {:ok, {key, value, opts}}
+    {:ok, {key, opts}}
   end
 
   def expr_to_value(clauses, opts) do
