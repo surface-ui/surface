@@ -8,7 +8,7 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context2__, @set, @get)) }}
+    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @set, @get)) }}
     """
   end
 
@@ -20,7 +20,7 @@ defmodule Surface.Components.Context do
   """
   def get(assigns, key, opts) do
     {key, _as} = normalize_get({key, opts})
-    assigns.__context2__[key]
+    assigns.__context__[key]
   end
 
   defp slot_kw() do
@@ -42,7 +42,7 @@ defmodule Surface.Components.Context do
     if set == %{} do
       []
     else
-      [__context2__: context]
+      [__context__: context]
     end
   end
 

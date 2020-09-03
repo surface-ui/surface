@@ -15,10 +15,6 @@ defmodule Surface.Components.Form.Field do
   @doc "The CSS class for the generated `<div>` element"
   property class, :css_class
 
-  # TODO: Should we keep it for documentation?
-  # @doc "The field name specified by the <Field/> component"
-  # context set field, :atom, scope: :only_children
-
   @doc """
   The content for the field
   """

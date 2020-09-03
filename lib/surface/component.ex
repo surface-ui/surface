@@ -37,10 +37,9 @@ defmodule Surface.Component do
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :slot, :context]
+      use Surface.API, include: [:property, :slot]
       import Phoenix.HTML
 
-      @behaviour unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
       require Surface.ContentHandler
       @before_compile Surface.ContentHandler
@@ -85,12 +84,4 @@ defmodule Surface.Component do
       end
     end
   end
-
-  @doc """
-  This optional callback is invoked in order to set up a
-  context that can be retrieved for any descendent component.
-  """
-  @callback init_context(props :: map()) :: {:ok, keyword} | {:error, String.t()}
-
-  @optional_callbacks init_context: 1
 end
