@@ -4,6 +4,7 @@ defmodule Surface.AST do
           | Surface.AST.Interpolation.t()
           | Surface.AST.Expr.t()
           | Surface.AST.Tag.t()
+          | Surface.AST.VoidTag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
           | Surface.AST.If.t()
