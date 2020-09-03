@@ -1,6 +1,6 @@
 # Changelog
 
-## UNRELEASED
+## v0.1.0-dev
   
   * Update LiveView to v0.14
   * Add `Surface.init/1` to initialize internal assigns when not using `Surface.LiveView`
