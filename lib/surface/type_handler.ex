@@ -66,7 +66,8 @@ defmodule Surface.TypeHandler do
     :required,
     :reversed,
     :selected,
-    :typemustmatch
+    :typemustmatch,
+    :"phx-page-loading"
   ]
 
   @phx_event_attributes Surface.Directive.Events.phx_events() |> Enum.map(&String.to_atom/1)
