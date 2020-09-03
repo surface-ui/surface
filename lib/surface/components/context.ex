@@ -1,9 +1,71 @@
 defmodule Surface.Components.Context do
+  @moduledoc """
+  A built-in component that allows users to set and retrieve values from the context.
+  """
+
   use Surface.Component
 
+  @doc """
+  Set a value to the context.
+
+  ## Usage
+
+  ```
+  <Context set={{ key, value, options }}>
+    ...
+  </Context>
+  ```
+
+  Where `key` is the key which will be used to store the `value`.
+
+  Available options:
+
+    * `scope` - The scope where the value will be stored. If no scope is
+    provided, the value is stored in root of the context map.
+
+  ## Example
+
+  ```
+  <Context set={{ :form, form, scope: __MODULE__ }}>
+    ...
+  </Context>
+  ```
+  """
   property set, :context_set, accumulate: true, default: []
+
+  @doc """
+  Retrieves a value from the context.
+
+  ## Usage
+
+  ```
+  <Context get={{ key, options }}>
+    ...
+  </Context>
+  ```
+
+  Where `key` is the key that was be used to store the `value`.
+
+  Available options:
+
+    * `scope` - The scope where the value was previously stored. If no scope is
+    provided, the value is retrieved from the root of the context map.
+
+    * `as` - The name of the assign that will hold the retrieved value.
+
+  ## Example
+
+  ```
+  <Context
+    get={{ :form, scope: Form }}
+    get={{ :field, scope: Field, as: :my_field }}>
+    <MyTextInput form={{ @form }} field={{ @my_field }} />
+  </Context>
+  ```
+  """
   property get, :context_get, accumulate: true, default: []
 
+  @doc "The content of the `<Context>`"
   slot default, required: true
 
   def render(assigns) do
