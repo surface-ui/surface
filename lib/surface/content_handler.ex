@@ -74,7 +74,7 @@ defmodule Surface.ContentHandler do
 
       # TODO [Context]: Update this to be only the appropriate assigns for context
       case args[:__context__] || assigns.__context__ do
-        %{} ->
+        context when context == %{} ->
           assigns.inner_content.(Keyword.merge(prop_assigns, __slot__: {name, index}))
 
         context_assign ->
