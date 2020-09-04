@@ -3,10 +3,6 @@ locals_without_parens = [
   # Surface.Component
   property: 3,
   property: 2,
-  context: 1,
-  get: 2,
-  set: 2,
-  set: 3,
   data: 3,
   data: 2,
   slot: 1,
