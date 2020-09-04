@@ -4,6 +4,8 @@ defmodule ContextTest do
   import Surface
   import ComponentTestHelper
 
+  alias Surface.Components.Context
+
   defmodule Outer do
     use Surface.Component
 
@@ -21,8 +23,8 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from OuterUsingInnerContent", scope: __MODULE__ }}>
-        <div>{{ @inner_content.([]) }}</div>
+      <Context set={{ :field, "field from OuterUsingInnerContent", scope: Outer }}>
+        <div>{{ @inner_content.([__context__: @__context__]) }}</div>
       </Context>
       """
     end
@@ -77,6 +79,22 @@ defmodule ContextTest do
     end
   end
 
+  defmodule OuterWithNamedSlots do
+    use Surface.Component
+
+    slot my_slot
+
+    def render(assigns) do
+      ~H"""
+      <Context set={{ :field, "field from OuterWithNamedSlots" }}>
+        <span :for={{ slot <- @my_slot }}>
+          {{ slot.inner_content.([__context__: @__context__]) }}
+        </span>
+      </Context>
+      """
+    end
+  end
+
   test "pass context to child component" do
     code = """
     <Outer>
@@ -89,18 +107,17 @@ defmodule ContextTest do
            """
   end
 
-  # TODO: Fix it!
-  # test "pass context to child component with @inner_content" do
-  #   code = """
-  #   <OuterUsingInnerContent>
-  #     <Inner/>
-  #   </OuterUsingInnerContent>
-  #   """
+  test "pass context to child component with @inner_content" do
+    code = """
+    <OuterUsingInnerContent>
+      <Inner/>
+    </OuterUsingInnerContent>
+    """
 
-  #   assert render_live(code) =~ """
-  #          <span id="field">field from OuterUsingInnerContent</span>\
-  #          """
-  # end
+    assert render_live(code) =~ """
+           <span id="field">field from OuterUsingInnerContent</span>\
+           """
+  end
 
   test "pass context to child component using :as option" do
     code = """
@@ -150,5 +167,19 @@ defmodule ContextTest do
     assert render_live(code) =~ """
            Context: %{}
            """
+  end
+
+  test "pass context to named slots" do
+    code = """
+    <OuterWithNamedSlots>
+      <template slot="my_slot">
+        <Context get={{ :field }}>
+          {{ @field }}
+        </Context>
+      </template>
+    </OuterWithNamedSlots>
+    """
+
+    assert render_live(code) =~ "field from OuterWithNamedSlots"
   end
 end
