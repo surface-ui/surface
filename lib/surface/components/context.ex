@@ -95,11 +95,12 @@ defmodule Surface.Components.Context do
         {key, value} = normalize_set(set)
         Map.put(acc, key, value)
       end)
-    context_kw(updated_context, consolidated_sets) ++ context_gets_kw(updated_context, gets)
+
+    context_kw(updated_context, sets) ++ context_gets_kw(updated_context, gets)
   end
 
-  defp context_kw(context, set) do
-    if set == %{} do
+  defp context_kw(context, sets) do
+    if sets == [] do
       []
     else
       [__context__: context]
