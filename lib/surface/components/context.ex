@@ -90,13 +90,11 @@ defmodule Surface.Components.Context do
   end
 
   defp context_assigns_kw(context, sets, gets) do
-    consolidated_sets =
-      Enum.reduce(sets, %{}, fn set, acc ->
+    updated_context =
+      Enum.reduce(sets, context, fn set, acc ->
         {key, value} = normalize_set(set)
         Map.put(acc, key, value)
       end)
-
-    updated_context = Map.merge(context, consolidated_sets)
     context_kw(updated_context, consolidated_sets) ++ context_gets_kw(updated_context, gets)
   end
 
