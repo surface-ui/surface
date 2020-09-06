@@ -41,7 +41,7 @@ defmodule Surface.ContextThroughSlotTest do
     def render(assigns) do
       # @foo is nil here
       ~H"""
-      <Context get={{ :foo }}>
+      <Context :get={{ :foo }}>
         <div>{{ @foo }}</div>
       </Context>
       """

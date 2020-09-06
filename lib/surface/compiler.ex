@@ -18,6 +18,7 @@ defmodule Surface.Compiler do
     Surface.Directive.TagAttrs,
     Surface.Directive.Events,
     Surface.Directive.Show,
+    Surface.Directive.ContextGet,
     Surface.Directive.ContextSet,
     Surface.Directive.If,
     Surface.Directive.For,
@@ -26,6 +27,7 @@ defmodule Surface.Compiler do
 
   @component_directive_handlers [
     Surface.Directive.ComponentProps,
+    Surface.Directive.ContextGet,
     Surface.Directive.ContextSet,
     Surface.Directive.If,
     Surface.Directive.For,

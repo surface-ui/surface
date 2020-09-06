@@ -39,7 +39,7 @@ defmodule Surface.Components.Context do
   ## Usage
 
   ```
-  <Context get={{ key, options }}>
+  <Context :get={{ key, options }}>
     ...
   </Context>
   ```
@@ -57,13 +57,13 @@ defmodule Surface.Components.Context do
 
   ```
   <Context
-    get={{ :form, scope: Form }}
-    get={{ :field, scope: Field, as: :my_field }}>
+    :get={{ :form, scope: Form }}
+    :get={{ :field, scope: Field, as: :my_field }}>
     <MyTextInput form={{ @form }} field={{ @my_field }} />
   </Context>
   ```
   """
-  property get, :context_get, accumulate: true, default: []
+  property __get__, :context_get, accumulate: true, default: []
 
   property __default_content__, :fun
   property __slot_content__, :keyword, default: []
@@ -73,7 +73,7 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @__set__, @get, @__default_content__, @__slot_content__)) }}
+    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @__set__, @__get__, @__default_content__, @__slot_content__)) }}
     """
   end
 

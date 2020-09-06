@@ -56,11 +56,26 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context
-        get={{ :field, scope: ContextTest.Outer }}
-        get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
+        :get={{ :field, scope: ContextTest.Outer }}
+        :get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
         <span id="field">{{ @field }}</span>
         <span id="other_field">{{ @other_field }}</span>
       </Context>
+      """
+    end
+  end
+
+  defmodule InnerWithoutExplicitComponent do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div
+        :get={{ :field, scope: ContextTest.Outer }}
+        :get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
+        <span id="field">{{ @field }}</span>
+        <span id="other_field">{{ @other_field }}</span>
+      </div>
       """
     end
   end
@@ -82,7 +97,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
+      <Context :get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
         <span>{{ @my_field }}</span>
       </Context>
       """
@@ -117,7 +132,19 @@ defmodule ContextTest do
            """
   end
 
-  test "pass context to child component without explcit <Context> component" do
+  test "pass context to child component without explicit <Context> component (:get)" do
+    code = """
+    <Outer>
+      <InnerWithoutExplicitComponent/>
+    </Outer>
+    """
+
+    assert render_live(code) =~ """
+           <span id="field">field from Outer</span>\
+           """
+  end
+
+  test "pass context to child component without explcit <Context> component (:set)" do
     code = """
     <OuterWithoutExplicitComponent>
       <Inner/>
@@ -195,7 +222,7 @@ defmodule ContextTest do
     code = """
     <OuterWithNamedSlots>
       <template slot="my_slot">
-        <Context get={{ :field }}>
+        <Context :get={{ :field }}>
           {{ @field }}
         </Context>
       </template>
