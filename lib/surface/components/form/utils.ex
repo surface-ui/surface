@@ -25,6 +25,18 @@ defmodule Surface.Components.Form.Utils do
     |> List.flatten()
   end
 
+  def join_css_class(%{class: nil} = assigns) do
+    assigns
+  end
+
+  def join_css_class(%{class: class} = assigns) do
+    %{assigns | class: Enum.join(class, " ")}
+  end
+
+  def join_css_class(assigns) do
+    assigns
+  end
+
   defp prop_value(assigns, {prop, default}) do
     {prop, assigns[prop] || default}
   end

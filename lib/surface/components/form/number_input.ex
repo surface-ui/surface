@@ -24,6 +24,7 @@ defmodule Surface.Components.Form.NumberInput do
   context get field, from: Field, as: :field_context
 
   def render(assigns) do
+    assigns = join_css_class(assigns)
     form = get_form(assigns)
     field = get_field(assigns)
     props = get_non_nil_props(assigns, [:value, class: @default_class])
