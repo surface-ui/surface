@@ -60,6 +60,44 @@ defmodule Surface.Directive.ContextSet do
     }
   end
 
+  def process(
+        directive,
+        %{meta: meta} = node
+      ) do
+    process(
+      directive,
+      # TODO: if we want to keep this, then we should probably abstract some of this away
+      %AST.Component{
+        type: Surface.Component,
+        module: Surface.Components.Context,
+        props: [],
+        dynamic_props: nil,
+        directives: [],
+        templates: %{
+          default: [
+            %AST.Template{
+              name: :default,
+              children: [node],
+              let: %AST.Directive{
+                module: Surface.Directive.Let,
+                name: :let,
+                value: %AST.AttributeExpr{
+                  value: [],
+                  original: "",
+                  meta: meta
+                },
+                meta: meta
+              },
+              meta: meta
+            }
+          ]
+        },
+        debug: [],
+        meta: meta
+      }
+    )
+  end
+
   defp directive_value(value, meta) do
     expr = Surface.TypeHandler.expr_to_quoted!(value, ":set", :context_set, meta)
 

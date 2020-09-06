@@ -18,6 +18,16 @@ defmodule ContextTest do
     end
   end
 
+  defmodule OuterWithoutExplicitComponent do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div :set={{ :field, "field from OuterWithoutExplicitComponent", scope: Outer}}><slot/></div>
+      """
+    end
+  end
+
   defmodule OuterUsingInnerContent do
     use Surface.Component
 
@@ -104,6 +114,18 @@ defmodule ContextTest do
 
     assert render_live(code) =~ """
            <span id="field">field from Outer</span>\
+           """
+  end
+
+  test "pass context to child component without explcit <Context> component" do
+    code = """
+    <OuterWithoutExplicitComponent>
+      <Inner/>
+    </OuterWithoutExplicitComponent>
+    """
+
+    assert render_live(code) =~ """
+           <span id="field">field from OuterWithoutExplicitComponent</span>\
            """
   end
 

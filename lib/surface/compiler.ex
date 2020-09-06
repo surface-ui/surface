@@ -18,6 +18,7 @@ defmodule Surface.Compiler do
     Surface.Directive.TagAttrs,
     Surface.Directive.Events,
     Surface.Directive.Show,
+    Surface.Directive.ContextSet,
     Surface.Directive.If,
     Surface.Directive.For,
     Surface.Directive.Debug
