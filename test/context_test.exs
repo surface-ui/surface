@@ -11,7 +11,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from Outer", scope: __MODULE__ }}>
+      <Context :set={{ :field, "field from Outer", scope: __MODULE__ }}>
         <div><slot/></div>
       </Context>
       """
@@ -23,8 +23,8 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from OuterUsingInnerContent", scope: Outer }}>
-        <div>{{ @inner_content.([__context__: @__context__]) }}</div>
+      <Context :set={{ :field, "field from OuterUsingInnerContent", scope: Outer }}>
+        <div>{{ @inner_content.([]) }}</div>
       </Context>
       """
     end
@@ -60,7 +60,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
+      <Context :set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
         <Inner />
       </Context>
       """
@@ -86,9 +86,9 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from OuterWithNamedSlots" }}>
+      <Context :set={{ :field, "field from OuterWithNamedSlots" }}>
         <span :for={{ slot <- @my_slot }}>
-          {{ slot.inner_content.([__context__: @__context__]) }}
+          {{ slot.inner_content.([]) }}
         </span>
       </Context>
       """

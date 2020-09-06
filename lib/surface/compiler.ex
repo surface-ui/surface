@@ -25,6 +25,7 @@ defmodule Surface.Compiler do
 
   @component_directive_handlers [
     Surface.Directive.ComponentProps,
+    Surface.Directive.ContextSet,
     Surface.Directive.If,
     Surface.Directive.For,
     Surface.Directive.Debug

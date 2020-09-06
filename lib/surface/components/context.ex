@@ -11,7 +11,7 @@ defmodule Surface.Components.Context do
   ## Usage
 
   ```
-  <Context set={{ key, value, options }}>
+  <Context :set={{ key, value, options }}>
     ...
   </Context>
   ```
@@ -26,12 +26,12 @@ defmodule Surface.Components.Context do
   ## Example
 
   ```
-  <Context set={{ :form, form, scope: __MODULE__ }}>
+  <Context :set={{ :form, form, scope: __MODULE__ }}>
     ...
   </Context>
   ```
   """
-  property set, :context_set, accumulate: true, default: []
+  property __set__, :context_set, accumulate: true, default: []
 
   @doc """
   Retrieves a value from the context.
@@ -65,12 +65,15 @@ defmodule Surface.Components.Context do
   """
   property get, :context_get, accumulate: true, default: []
 
+  property __default_content__, :fun
+  property __slot_content__, :keyword, default: []
+
   @doc "The content of the `<Context>`"
   slot default, required: true
 
   def render(assigns) do
     ~H"""
-    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @set, @get)) }}
+    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @__set__, @get, @__default_content__, @__slot_content__)) }}
     """
   end
 
@@ -89,14 +92,38 @@ defmodule Surface.Components.Context do
     [__slot__: {:__default__, 0}]
   end
 
-  defp context_assigns_kw(context, sets, gets) do
+  defp context_assigns_kw(context, sets, gets, default_content, slot_content) do
     updated_context =
       Enum.reduce(sets, context, fn set, acc ->
         {key, value} = normalize_set(set)
         Map.put(acc, key, value)
       end)
 
-    context_kw(updated_context, sets) ++ context_gets_kw(updated_context, gets)
+    context_kw(updated_context, sets) ++
+      context_gets_kw(updated_context, gets) ++
+      updated_inner_content(updated_context, default_content) ++
+      updated_slot_inner_content(updated_context, slot_content)
+  end
+
+  defp updated_slot_inner_content(context, slots) do
+    Enum.map(slots, fn {slot_name, slot_entries} ->
+      slot_entries =
+        Enum.map(slot_entries, fn slot ->
+          Map.put(slot, :inner_content, fn args ->
+            slot.inner_content.(Keyword.merge([__context__: context], args))
+          end)
+        end)
+
+      {slot_name, slot_entries}
+    end)
+  end
+
+  defp updated_inner_content(_context, nil) do
+    []
+  end
+
+  defp updated_inner_content(context, inner_content) do
+    [inner_content: fn args -> inner_content.(Keyword.merge([__context__: context], args)) end]
   end
 
   defp context_kw(context, sets) do

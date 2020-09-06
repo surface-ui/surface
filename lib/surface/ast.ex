@@ -168,7 +168,7 @@ defmodule Surface.AST.Attribute do
 
   @type t :: %__MODULE__{
           type: atom(),
-          type: keyword(),
+          type_opts: keyword(),
           name: atom(),
           value: Surface.AST.Text.t() | Surface.AST.AttributeExpr.t(),
           meta: Surface.AST.Meta.t()

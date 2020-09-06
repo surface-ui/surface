@@ -166,14 +166,19 @@ defmodule Surface.API do
     end
   end
 
-  defp quoted_slot_funcs(env) do
+  @doc false
+  def get_slots(env) do
     used_slots =
       for %{name: name, line: line} <- Module.get_attribute(env.module, :used_slot) || [] do
         %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
       end
 
     slots = (Module.get_attribute(env.module, :slot) || []) ++ used_slots
-    slots = Enum.uniq_by(slots, & &1.name)
+    Enum.uniq_by(slots, & &1.name)
+  end
+
+  defp quoted_slot_funcs(env) do
+    slots = get_slots(env)
     slots_names = Enum.map(slots, fn slot -> slot.name end)
     slots_by_name = for p <- slots, into: %{}, do: {p.name, p}
 

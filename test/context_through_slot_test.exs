@@ -12,7 +12,7 @@ defmodule Surface.ContextThroughSlotTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :foo, @foo }}>
+      <Context :set={{ :foo, @foo }}>
         <slot />
       </Context>
       """
