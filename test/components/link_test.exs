@@ -62,6 +62,16 @@ defmodule Surface.Components.LinkTest do
              """
     end
 
+    test "setting multiple classes" do
+      code = """
+      <Link label="user" to="/users/1" class="link primary" />
+      """
+
+      assert render_live(code) =~ """
+             <a class="link primary" href="/users/1">user</a>
+             """
+    end
+
     test "passing other options" do
       code = """
       <Link label="user" to="/users/1" class="link" opts={{ method: :delete, data: [confirm: "Really?"], csrf_token: "token" }} />
