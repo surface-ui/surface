@@ -1,30 +1,9 @@
 defmodule Surface.Directive.Show do
-  use Surface.Directive
-
-  def extract({":show", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
-    expr_meta = Helpers.to_meta(expr_meta, meta)
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-
-    %AST.Directive{
-      module: __MODULE__,
-      name: :show,
-      value: directive_value(value, expr_meta),
-      meta: attr_meta
-    }
-  end
-
-  def extract({":show", value, attr_meta}, meta) do
-    attr_meta = Helpers.to_meta(attr_meta, meta)
-
-    %AST.Directive{
-      module: __MODULE__,
-      name: :show,
-      value: %AST.Text{value: value},
-      meta: attr_meta
-    }
-  end
-
-  def extract(_, _), do: []
+  use Surface.Directive,
+    extract: [
+      name: ":show",
+      type: :boolean
+    ]
 
   def process(%AST.Directive{value: %AST.Text{value: value}}, node) do
     if value do
@@ -79,16 +58,6 @@ defmodule Surface.Directive.Show do
            meta: meta
          }, non_style}
     end
-  end
-
-  defp directive_value(value, meta) do
-    expr = Surface.TypeHandler.expr_to_quoted!(value, ":show", :boolean, meta)
-
-    %AST.AttributeExpr{
-      original: value,
-      value: expr,
-      meta: meta
-    }
   end
 
   defp style_value_to_expr(%AST.Text{value: value}, attr_meta) do

@@ -1,5 +1,9 @@
 defmodule Surface.Directive.Let do
-  use Surface.Directive
+  use Surface.Directive,
+    extract: [
+      name: ":let",
+      type: :bindings
+    ]
 
   def extract({":let", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
