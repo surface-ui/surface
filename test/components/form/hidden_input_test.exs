@@ -24,6 +24,22 @@ defmodule Surface.Components.Form.HiddenInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <HiddenInput form="user" field="token" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <HiddenInput form="user" field="token" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <HiddenInput form="user" field="token" opts={{ id: "myid", autofocus: "autofocus" }} />

@@ -24,6 +24,22 @@ defmodule Surface.Components.Form.NumberInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <NumberInput form="user" field="age" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <NumberInput form="user" field="age" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <NumberInput form="user" field="age" opts={{ id: "myid", autofocus: "autofocus" }} />

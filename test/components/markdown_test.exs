@@ -54,6 +54,24 @@ defmodule Surface.Components.MarkdownTest do
            """
   end
 
+  test "setting multiple classes" do
+    assigns = %{}
+
+    code = ~H"""
+    <#Markdown class="markdown small">
+      # Head 1
+    </#Markdown>
+    """
+
+    assert render_static(code) =~ """
+           <div class="markdown small">\
+           <h1>
+             Head 1
+           </h1>
+           </div>
+           """
+  end
+
   test "setting unwrap removes the wrapping <div>" do
     assigns = %{}
 

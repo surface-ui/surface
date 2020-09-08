@@ -25,6 +25,22 @@ defmodule Surface.Components.Form.ResetTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <Reset class="button" />
+    """
+
+    assert render_live(code) =~ ~r/class="button"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <Reset class="button primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="button primary"/
+  end
+
   test "passing other options" do
     code = """
     <Reset opts={{ id: "myid", autofocus: "autofocus" }} />

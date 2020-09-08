@@ -35,6 +35,22 @@ defmodule Surface.Components.Form.RangeInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <RangeInput form="volume" field="percent" min="0" max="100" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <RangeInput form="volume" field="percent" min="0" max="100" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <RangeInput form="volume" field="percent" min="0" max="100" opts={{ id: "myid" }} />

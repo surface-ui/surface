@@ -17,12 +17,18 @@ defmodule Surface.Components.Form.SubmitTest do
 
   test "with class" do
     code = """
-    <Submit label="Submit" class="btn" />
+    <Submit label="Submit" class="button" />
     """
 
-    assert render_live(code) =~ """
-           <button class="btn" type="submit">Submit</button>
-           """
+    assert render_live(code) =~ ~r/class="button"/
+  end
+
+  test "with multiple classes" do
+    code = """
+    <Submit label="Submit" class="button primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="button primary"/
   end
 
   test "with options" do

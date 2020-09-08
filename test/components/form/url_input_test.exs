@@ -25,6 +25,22 @@ defmodule Surface.Components.Form.UrlInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <UrlInput form="user" field="website" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <UrlInput form="user" field="website" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <UrlInput form="user" field="website" opts={{ id: "myid", autofocus: "autofocus" }} />

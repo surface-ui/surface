@@ -27,10 +27,18 @@ defmodule Surface.Components.Form.DateTimeLocalInputTest do
 
   test "setting the class" do
     code = """
-    <DateTimeLocalInput class="my_class"/>
+    <DateTimeLocalInput form="order" field="completed_at" class="input"/>
     """
 
-    assert render_live(code) =~ ~r/class="my_class"/
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <DateTimeLocalInput form="order" field="completed_at" class="input primary"/>
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do

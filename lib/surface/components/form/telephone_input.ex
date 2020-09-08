@@ -23,6 +23,9 @@ defmodule Surface.Components.Form.TelephoneInput do
   context get form, from: Form, as: :form_context
   context get field, from: Field, as: :field_context
 
+  @doc "A regular expression to validate the entered value"
+  property pattern, :string
+
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)

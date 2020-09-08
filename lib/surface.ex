@@ -248,6 +248,18 @@ defmodule Surface do
     []
   end
 
+  @doc false
+  def prop_to_opts(nil, _prop_name, _caller) do
+    []
+  end
+
+  def prop_to_opts(prop_value, prop_name, caller) do
+    module = caller.module
+    meta = %{caller: caller, line: caller.line, node_alias: module}
+    {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, prop_name, meta)
+    Surface.TypeHandler.attr_to_opts!(type, prop_name, prop_value)
+  end
+
   defp get_components_config() do
     Application.get_env(:surface, :components, [])
   end

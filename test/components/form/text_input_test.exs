@@ -26,10 +26,18 @@ defmodule Surface.Components.Form.TextInputTest do
 
   test "setting the class" do
     code = """
-    <TextInput class="my_class"/>
+    <TextInput form="user" field="name" class="input" />
     """
 
-    assert render_live(code) =~ ~r/class="my_class"/
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <TextInput form="user" field="name" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do

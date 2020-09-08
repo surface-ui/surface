@@ -25,6 +25,22 @@ defmodule Surface.Components.Form.TelephoneInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <TelephoneInput form="user" field="phone" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <TelephoneInput form="user" field="phone" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <TelephoneInput form="user" field="phone" opts={{ id: "myid", autofocus: "autofocus" }} />
