@@ -24,6 +24,22 @@ defmodule Surface.Components.Form.SearchInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <SearchInput form="song" field="title" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <SearchInput form="song" field="title" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <SearchInput form="song" field="title" opts={{ id: "myid", autofocus: "autofocus" }} />

@@ -25,6 +25,22 @@ defmodule Surface.Components.Form.TimeInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <TimeInput form="user" field="time" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <TimeInput form="user" field="time" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <TimeInput form="user" field="time" opts={{ id: "myid", autofocus: "autofocus" }} />

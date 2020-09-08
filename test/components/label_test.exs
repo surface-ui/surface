@@ -22,6 +22,14 @@ defmodule Surface.Components.LabelTest do
     assert render_live(code) =~ ~S(class="label")
   end
 
+  test "property multiple classes" do
+    code = """
+    <Label class={{ :label, :primary }}/>
+    """
+
+    assert render_live(code) =~ ~S(class="label primary")
+  end
+
   test "properties form and field" do
     code = """
     <Label form="user" field="name"/>

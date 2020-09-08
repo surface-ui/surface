@@ -55,6 +55,15 @@ defmodule Surface.Components.LiveRedirectTest do
                actual_content("user", to: "/users/1", class: "link")
     end
 
+    test "setting multiple classes" do
+      code = """
+      <LiveRedirect label="user" to="/users/1" class="link primary" />
+      """
+
+      assert render_live(code) =~
+               actual_content("user", to: "/users/1", class: "link primary")
+    end
+
     test "passing other options" do
       code = """
       <LiveRedirect label="user" to="/users/1" class="link" opts={{ method: :delete, "data-confirm": "Really?", "csrf-token": "token" }} />

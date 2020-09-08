@@ -26,12 +26,18 @@ defmodule Surface.Components.Form.NumberInputTest do
 
   test "setting the class" do
     code = """
-    <NumberInput form="user" field="age" class="test1 test2" />
+    <NumberInput form="user" field="age" class="input" />
     """
 
-    assert render_live(code) =~ """
-           <input class="test1 test2" id="user_age" name="user[age]" type="number"/>
-           """
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <NumberInput form="user" field="age" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do

@@ -15,6 +15,22 @@ defmodule Surface.Components.Form.RadioButtonTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <RadioButton form="user" field="role" value="admin" class="radio" />
+    """
+
+    assert render_live(code) =~ ~r/class="radio"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <RadioButton form="user" field="role" value="admin" class="radio primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="radio primary"/
+  end
+
   test "passing other options" do
     code = """
     <RadioButton form="user" field="role" value="admin" opts={{ id: "myid", autofocus: "autofocus" }} />

@@ -27,10 +27,18 @@ defmodule Surface.Components.Form.DateInputTest do
 
   test "setting the class" do
     code = """
-    <DateInput class="my_class"/>
+    <DateInput form="user" field="birthday" class="input"/>
     """
 
-    assert render_live(code) =~ ~r/class="my_class"/
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <DateInput form="user" field="birthday" class="input primary"/>
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do

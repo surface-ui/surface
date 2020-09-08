@@ -24,6 +24,22 @@ defmodule Surface.Components.Form.PasswordInputTest do
            """
   end
 
+  test "setting the class" do
+    code = """
+    <PasswordInput form="user" field="password" class="input" />
+    """
+
+    assert render_live(code) =~ ~r/class="input"/
+  end
+
+  test "setting multiple classes" do
+    code = """
+    <PasswordInput form="user" field="password" class="input primary" />
+    """
+
+    assert render_live(code) =~ ~r/class="input primary"/
+  end
+
   test "passing other options" do
     code = """
     <PasswordInput form="user" field="password" opts={{ id: "myid", autofocus: "autofocus" }} />
