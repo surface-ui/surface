@@ -8,10 +8,25 @@ defmodule Surface.Components.Form.Utils do
   def get_field(%{field: field}) when is_binary(field), do: String.to_atom(field)
   def get_field(%{field: nil, field_context: field_context}), do: field_context
 
-  def get_non_nil_props(assigns, props) do
-    for prop <- props, {key, value} = prop_value(assigns, prop), value != nil do
-      {key, value}
+  defmacro get_non_nil_props(assigns, props) do
+    quote do
+      unquote(__MODULE__).get_non_nil_props(unquote(assigns), unquote(props), __ENV__)
     end
+  end
+
+  def get_non_nil_props(assigns, props, caller) do
+    module = caller.module
+    meta = %{caller: caller, line: caller.line, node_alias: module}
+
+    Enum.reduce(props, [], fn prop, acc ->
+      {key, value} = prop_value(assigns, prop)
+      {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, key, meta)
+
+      internal_value =
+        Surface.TypeHandler.expr_to_value!(type, key, [value], [], module, inspect(value))
+
+      Surface.TypeHandler.attr_to_opts!(type, key, internal_value) ++ acc
+    end)
   end
 
   def get_events_to_opts(assigns) do

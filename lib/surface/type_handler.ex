@@ -167,6 +167,19 @@ defmodule Surface.TypeHandler do
     end
   end
 
+  def attr_to_opts!(type, name, value) do
+    case handler(type).value_to_html(name, value) do
+      {:ok, val} when val in ["", nil, false] ->
+        []
+
+      {:ok, val} ->
+        [{name, to_string(val)}]
+
+      {:error, message} ->
+        IOHelper.runtime_error(message)
+    end
+  end
+
   def update_prop_expr(type, value, meta) do
     handler(type).update_prop_expr(value, meta)
   end

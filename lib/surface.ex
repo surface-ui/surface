@@ -253,24 +253,16 @@ defmodule Surface do
     []
   end
 
-  def prop_to_opts(module, prop, value) do
-    {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, prop, nil)
+  @doc false
+  def prop_to_opts(nil, _prop, _caller) do
+    []
+  end
 
-    {:safe, html} = Phoenix.HTML.raw(Surface.TypeHandler.attr_to_html!(type, prop, value))
-
-    # HACK:
-    # It seems like opts should be tuples of type and value e.g. {:class, "link primary"},
-    # But attr_to_html!\3 return the full html for the html attribute e.g. [" ", "class", "=", "\"", "link primary", "\""]
-    # How to we go from one form to the other?
-    html = Enum.at(html, -2)
-
-    # HACK:
-    # attribute_type_and_opts\3 gives us the internal surface type for a property e.g. :css_class
-    # How do we convert back from type to html attribute? E.g. :css_class -> :class
-    case type do
-      :css_class -> [{:class, html}]
-      _ -> [{type, html}]
-    end
+  def prop_to_opts(prop_value, prop_name, caller) do
+    module = caller.module
+    meta = %{caller: caller, line: caller.line, node_alias: module}
+    {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, prop_name, meta)
+    Surface.TypeHandler.attr_to_opts!(type, prop_name, prop_value)
   end
 
   defp get_components_config() do

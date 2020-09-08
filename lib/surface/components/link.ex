@@ -57,7 +57,7 @@ defmodule Surface.Components.Link do
     children = ~H"<slot>{{ @label }}</slot>"
 
     ~H"""
-    {{ link [to: @to] ++ prop_to_opts(__MODULE__, :class, @class) ++ @opts ++ event_to_opts(@click, :phx_click), do: children }}
+    {{ link [to: @to] ++ prop_to_opts(@class, :class, __ENV__) ++ @opts ++ event_to_opts(@click, :phx_click), do: children }}
     """
   end
 end
