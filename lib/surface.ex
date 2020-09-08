@@ -249,11 +249,6 @@ defmodule Surface do
   end
 
   @doc false
-  def prop_to_opts(_module, _prop, nil) do
-    []
-  end
-
-  @doc false
   def prop_to_opts(nil, _prop, _caller) do
     []
   end
