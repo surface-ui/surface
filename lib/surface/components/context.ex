@@ -95,41 +95,42 @@ defmodule Surface.Components.Context do
           node
       ) do
     case Enum.find(props, fn %{name: name} -> name == :set end) do
-      nil -> node
+      nil ->
+        node
+
       _ ->
+        {default_content_prop, props} =
+          extract_or_create_prop(
+            props,
+            :__default_content__,
+            :fun,
+            %AST.AttributeExpr{
+              original: " @inner_content ",
+              value:
+                quote do
+                  @inner_content
+                end,
+              meta: node_meta
+            },
+            node_meta
+          )
 
-    {default_content_prop, props} =
-      extract_or_create_prop(
-        props,
-        :__default_content__,
-        :fun,
-        %AST.AttributeExpr{
-          original: " @inner_content ",
-          value:
-            quote do
-              @inner_content
-            end,
-          meta: node_meta
-        },
-        node_meta
-      )
+        {slot_content_prop, props} =
+          extract_or_create_prop(
+            props,
+            :__slot_content__,
+            :keyword,
+            slot_content_prop_value(node_meta),
+            node_meta
+          )
 
-    {slot_content_prop, props} =
-      extract_or_create_prop(
-        props,
-        :__slot_content__,
-        :keyword,
-        slot_content_prop_value(node_meta),
-        node_meta
-      )
+        props = [default_content_prop | [slot_content_prop | props]]
 
-    props = [default_content_prop | [slot_content_prop | props]]
-
-    %{
-      node
-      | props: props
-    }
-  end
+        %{
+          node
+          | props: props
+        }
+    end
   end
 
   defp slot_content_prop_value(%{caller: caller} = meta) do
