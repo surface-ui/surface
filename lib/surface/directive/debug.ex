@@ -5,7 +5,7 @@ defmodule Surface.Directive.Debug do
       type: :static_list
     ]
 
-  def handle_value(%AST.Text{value: true}, _meta) do
+  def handle_value(%AST.Text{value: true}, meta) do
     {:ok,
      %AST.AttributeExpr{
        original: "",
@@ -14,7 +14,7 @@ defmodule Surface.Directive.Debug do
      }}
   end
 
-  def handle_value(%AST.AttributeExpr{value: expr} = value, meta) do
+  def handle_value(%AST.AttributeExpr{value: expr} = value, _meta) do
     if Enum.any?(expr, &(not is_atom(&1))) do
       {:error,
        """
