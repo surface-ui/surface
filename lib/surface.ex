@@ -249,6 +249,13 @@ defmodule Surface do
   end
 
   @doc false
+  defmacro prop_to_opts(prop_value, prop_name) do
+    quote do
+      prop_to_opts(unquote(prop_value), unquote(prop_name), __ENV__)
+    end
+  end
+
+  @doc false
   def prop_to_opts(nil, _prop_name, _caller) do
     []
   end
