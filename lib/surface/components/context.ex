@@ -5,13 +5,15 @@ defmodule Surface.Components.Context do
 
   use Surface.Component
 
+  alias Surface.AST
+
   @doc """
   Set a value to the context.
 
   ## Usage
 
   ```
-  <Context :set={{ key, value, options }}>
+  <Context set={{ key, value, options }}>
     ...
   </Context>
   ```
@@ -26,12 +28,12 @@ defmodule Surface.Components.Context do
   ## Example
 
   ```
-  <Context :set={{ :form, form, scope: __MODULE__ }}>
+  <Context set={{ :form, form, scope: __MODULE__ }}>
     ...
   </Context>
   ```
   """
-  property __set__, :context_set, accumulate: true, default: []
+  property set, :context_set, accumulate: true, default: []
 
   @doc """
   Retrieves a value from the context.
@@ -39,7 +41,7 @@ defmodule Surface.Components.Context do
   ## Usage
 
   ```
-  <Context :get={{ key, options }}>
+  <Context get={{ key, options }}>
     ...
   </Context>
   ```
@@ -57,13 +59,13 @@ defmodule Surface.Components.Context do
 
   ```
   <Context
-    :get={{ :form, scope: Form }}
-    :get={{ :field, scope: Field, as: :my_field }}>
+    get={{ :form, scope: Form }}
+    get={{ :field, scope: Field, as: :my_field }}>
     <MyTextInput form={{ @form }} field={{ @my_field }} />
   </Context>
   ```
   """
-  property __get__, :context_get, accumulate: true, default: []
+  property get, :context_get, accumulate: true, default: []
 
   property __default_content__, :fun
   property __slot_content__, :keyword, default: []
@@ -73,7 +75,7 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @__set__, @__get__, @__default_content__, @__slot_content__)) }}
+    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @set, @get, @__default_content__, @__slot_content__)) }}
     """
   end
 
@@ -86,6 +88,86 @@ defmodule Surface.Components.Context do
   def get(assigns, key, opts) do
     {key, _as} = normalize_get({key, opts})
     assigns.__context__[key]
+  end
+
+  def transform(
+        %Surface.AST.Component{module: Surface.Components.Context, props: props, meta: node_meta} =
+          node
+      ) do
+    case Enum.find(props, fn %{name: name} -> name == :set end) do
+      nil -> node
+      _ ->
+
+    {default_content_prop, props} =
+      extract_or_create_prop(
+        props,
+        :__default_content__,
+        :fun,
+        %AST.AttributeExpr{
+          original: " @inner_content ",
+          value:
+            quote do
+              @inner_content
+            end,
+          meta: node_meta
+        },
+        node_meta
+      )
+
+    {slot_content_prop, props} =
+      extract_or_create_prop(
+        props,
+        :__slot_content__,
+        :keyword,
+        slot_content_prop_value(node_meta),
+        node_meta
+      )
+
+    props = [default_content_prop | [slot_content_prop | props]]
+
+    %{
+      node
+      | props: props
+    }
+  end
+  end
+
+  defp slot_content_prop_value(%{caller: caller} = meta) do
+    value =
+      caller
+      |> Surface.API.get_slots()
+      |> Enum.reject(fn %{name: name} -> name == :default end)
+      |> Enum.map(fn %{name: name} -> {name, at_ref(name)} end)
+
+    %AST.AttributeExpr{
+      original: Macro.to_string(value),
+      value: value,
+      meta: meta
+    }
+  end
+
+  defp at_ref(name) do
+    {:@, [generated: true], [{name, [generated: true], nil}]}
+  end
+
+  defp extract_or_create_prop(props, attr_name, attr_type, default, meta) do
+    props
+    |> Enum.split_with(fn
+      %{name: name} when name == attr_name -> true
+      _ -> false
+    end)
+    |> case do
+      {[prop], not_prop} ->
+        {prop, not_prop}
+
+      {_, not_prop} ->
+        {%AST.Attribute{
+           name: attr_name,
+           type: attr_type,
+           value: default,
+           meta: meta
+         }, not_prop}
+    end
   end
 
   defp slot_kw() do

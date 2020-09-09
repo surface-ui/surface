@@ -11,7 +11,7 @@ defmodule Surface.ContextChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Context :set={{ :field, "field value" }}>
+      <Context set={{ :field, "field value" }}>
         <div><slot/></div>
       </Context>
       """
@@ -27,7 +27,7 @@ defmodule Surface.ContextChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Context :get={{ :field }}>
+      <Context get={{ :field }}>
         <CheckUpdated id="1" dest={{ @test_pid }} content={{ @field }}/>
         <CheckUpdated id="2" dest={{ @test_pid }}/>
         <div><slot/></div>

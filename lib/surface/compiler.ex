@@ -18,8 +18,6 @@ defmodule Surface.Compiler do
     Surface.Directive.TagAttrs,
     Surface.Directive.Events,
     Surface.Directive.Show,
-    Surface.Directive.ContextGet,
-    Surface.Directive.ContextSet,
     Surface.Directive.If,
     Surface.Directive.For,
     Surface.Directive.Debug
@@ -27,8 +25,6 @@ defmodule Surface.Compiler do
 
   @component_directive_handlers [
     Surface.Directive.ComponentProps,
-    Surface.Directive.ContextGet,
-    Surface.Directive.ContextSet,
     Surface.Directive.If,
     Surface.Directive.For,
     Surface.Directive.Debug
@@ -356,7 +352,7 @@ defmodule Surface.Compiler do
           }
         end
 
-      {:ok, result}
+      {:ok, maybe_call_transform(result)}
     else
       {:error, message} ->
         {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
@@ -399,6 +395,14 @@ defmodule Surface.Compiler do
 
       _ ->
         {:error, {"cannot render <#{name}>", meta.line}, meta}
+    end
+  end
+
+  defp maybe_call_transform(%{module: module} = node) do
+    if function_exported?(module, :transform, 1) do
+      module.transform(node)
+    else
+      node
     end
   end
 

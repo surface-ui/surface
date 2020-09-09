@@ -11,19 +11,9 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context :set={{ :field, "field from Outer", scope: __MODULE__ }}>
+      <Context set={{ :field, "field from Outer", scope: __MODULE__ }}>
         <div><slot/></div>
       </Context>
-      """
-    end
-  end
-
-  defmodule OuterWithoutExplicitComponent do
-    use Surface.Component
-
-    def render(assigns) do
-      ~H"""
-      <div :set={{ :field, "field from OuterWithoutExplicitComponent", scope: Outer}}><slot/></div>
       """
     end
   end
@@ -33,7 +23,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context :set={{ :field, "field from OuterUsingInnerContent", scope: Outer }}>
+      <Context set={{ :field, "field from OuterUsingInnerContent", scope: Outer }}>
         <div>{{ @inner_content.([]) }}</div>
       </Context>
       """
@@ -56,26 +46,11 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context
-        :get={{ :field, scope: ContextTest.Outer }}
-        :get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
+        get={{ :field, scope: ContextTest.Outer }}
+        get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
         <span id="field">{{ @field }}</span>
         <span id="other_field">{{ @other_field }}</span>
       </Context>
-      """
-    end
-  end
-
-  defmodule InnerWithoutExplicitComponent do
-    use Surface.Component
-
-    def render(assigns) do
-      ~H"""
-      <div
-        :get={{ :field, scope: ContextTest.Outer }}
-        :get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
-        <span id="field">{{ @field }}</span>
-        <span id="other_field">{{ @other_field }}</span>
-      </div>
       """
     end
   end
@@ -85,7 +60,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context :set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
+      <Context set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
         <Inner />
       </Context>
       """
@@ -97,7 +72,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context :get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
+      <Context get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
         <span>{{ @my_field }}</span>
       </Context>
       """
@@ -111,7 +86,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context :set={{ :field, "field from OuterWithNamedSlots" }}>
+      <Context set={{ :field, "field from OuterWithNamedSlots" }}>
         <span :for={{ slot <- @my_slot }}>
           {{ slot.inner_content.([]) }}
         </span>
@@ -129,30 +104,6 @@ defmodule ContextTest do
 
     assert render_live(code) =~ """
            <span id="field">field from Outer</span>\
-           """
-  end
-
-  test "pass context to child component without explicit <Context> component (:get)" do
-    code = """
-    <Outer>
-      <InnerWithoutExplicitComponent/>
-    </Outer>
-    """
-
-    assert render_live(code) =~ """
-           <span id="field">field from Outer</span>\
-           """
-  end
-
-  test "pass context to child component without explcit <Context> component (:set)" do
-    code = """
-    <OuterWithoutExplicitComponent>
-      <Inner/>
-    </OuterWithoutExplicitComponent>
-    """
-
-    assert render_live(code) =~ """
-           <span id="field">field from OuterWithoutExplicitComponent</span>\
            """
   end
 
@@ -222,7 +173,7 @@ defmodule ContextTest do
     code = """
     <OuterWithNamedSlots>
       <template slot="my_slot">
-        <Context :get={{ :field }}>
+        <Context get={{ :field }}>
           {{ @field }}
         </Context>
       </template>
