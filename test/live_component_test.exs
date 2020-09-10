@@ -85,6 +85,18 @@ defmodule LiveComponentTest do
     end
   end
 
+  defmodule LiveComponentWithEvent do
+    use Surface.LiveComponent
+
+    property event, :event
+
+    def render(assigns) do
+      ~H"""
+      <button :on-phx-click={{ @event }} />
+      """
+    end
+  end
+
   test "render content without slot props" do
     code = """
     <InfoProviderWithoutSlotProps>
@@ -106,6 +118,16 @@ defmodule LiveComponentTest do
 
     assert render_live(code) =~ """
            <div><span>Hi there!</span></div>
+           """
+  end
+
+  test "render stateful component with event" do
+    code = """
+    <LiveComponentWithEvent event="click-event" />
+    """
+
+    assert render_live(code) =~ """
+           <button data-phx-component=\"1\" phx-click=\"click-event\"></button>
            """
   end
 
