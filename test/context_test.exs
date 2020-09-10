@@ -18,18 +18,6 @@ defmodule ContextTest do
     end
   end
 
-  defmodule OuterUsingInnerContent do
-    use Surface.Component
-
-    def render(assigns) do
-      ~H"""
-      <Context set={{ :field, "field from OuterUsingInnerContent", scope: Outer }}>
-        <div>{{ @inner_content.([__context__: @__context__]) }}</div>
-      </Context>
-      """
-    end
-  end
-
   defmodule RenderContext do
     use Surface.Component
 
@@ -87,8 +75,8 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context set={{ :field, "field from OuterWithNamedSlots" }}>
-        <span :for={{ slot <- @my_slot }}>
-          {{ slot.inner_content.([__context__: @__context__]) }}
+        <span :for={{ {_slot, index} <- Enum.with_index(@my_slot) }}>
+          <slot name="my_slot" index={{ index }}/>
         </span>
       </Context>
       """
@@ -104,18 +92,6 @@ defmodule ContextTest do
 
     assert render_live(code) =~ """
            <span id="field">field from Outer</span>\
-           """
-  end
-
-  test "pass context to child component with @inner_content" do
-    code = """
-    <OuterUsingInnerContent>
-      <Inner/>
-    </OuterUsingInnerContent>
-    """
-
-    assert render_live(code) =~ """
-           <span id="field">field from OuterUsingInnerContent</span>\
            """
   end
 

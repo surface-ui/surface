@@ -32,11 +32,11 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <div :for={{ data <- @inner }}>
-          {{ data.label }}: {{ data.inner_content.([]) }}
+        <div :for={{ {data, index} <- Enum.with_index(@inner) }}>
+          {{ data.label }}: <slot name="inner" index={{ index }}/>
         </div>
         <div>
-          {{ @inner_content.([]) }}
+          <slot/>
         </div>
       </div>
       """
@@ -115,7 +115,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        {{ @inner_content.(info: "Info from slot") }}
+        <slot :props={{ info: "Info from slot" }}/>
       </div>
       """
     end
@@ -126,9 +126,7 @@ defmodule Surface.SlotTest do
 
     def render(assigns) do
       ~H"""
-      <div>
-        {{ @inner_content.(info: "Info from slot") }}
-      </div>
+      <div></div>
       """
     end
   end
@@ -167,8 +165,8 @@ defmodule Surface.SlotTest do
           </th>
         </tr>
         <tr :for={{ item <- @items }}>
-          <td :for={{ col <- @cols }}>
-            {{ col.inner_content.(item: item, info: info) }}
+          <td :for={{ {_col, index} <- Enum.with_index(@cols) }}>
+            <slot name="cols" index={{ index }} :props={{ item: item, info: info }}/>
           </td>
         </tr>
       </table>

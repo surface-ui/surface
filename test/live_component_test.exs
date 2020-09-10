@@ -67,7 +67,7 @@ defmodule LiveComponentTest do
 
       ~H"""
         <div>
-          {{ @inner_content.(info: info) }}
+          <slot :props={{ info: info }}/>
         </div>
       """
     end
@@ -79,7 +79,7 @@ defmodule LiveComponentTest do
     def render(assigns) do
       ~H"""
         <div>
-          {{ @inner_content.([]) }}
+          <slot/>
         </div>
       """
     end

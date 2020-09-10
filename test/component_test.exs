@@ -28,7 +28,7 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ @inner_content.([]) }}</div>
+      <div><slot/></div>
       """
     end
   end
@@ -52,7 +52,7 @@ defmodule Surface.ComponentTest do
       info = "My info"
 
       ~H"""
-      <div>{{ @inner_content.(info: info) }}</div>
+      <div><slot :props={{ info: info }}/></div>
       """
     end
   end

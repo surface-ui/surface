@@ -9,6 +9,7 @@ defmodule Surface.Compiler do
   alias Surface.IOHelper
   alias Surface.AST
   alias Surface.Compiler.Helpers
+  alias Surface.Directive.SlotProps
 
   @stateful_component_types [
     Surface.LiveComponent
@@ -220,10 +221,12 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    with name when not is_nil(name) and is_atom(name) <-
-           attribute_value(attributes, "name", :default),
-         {:ok, props, _attributes} <-
-           collect_directives([Surface.Directive.SlotProps], attributes, meta) do
+    # TODO: Validate attributes with custom messages
+    name = attribute_value(attributes, "name", :default)
+    index = attribute_value_as_ast(attributes, "index", %Surface.AST.Text{value: 0}, compile_meta)
+
+    with true <- not is_nil(name) and is_atom(name),
+         {:ok, props, _attrs} <- collect_directives([SlotProps], attributes, meta) do
       props =
         case props do
           [expr] ->
@@ -231,7 +234,7 @@ defmodule Surface.Compiler do
 
           _ ->
             %AST.Directive{
-              module: Surface.Directive.SlotProps,
+              module: SlotProps,
               name: :props,
               value: %AST.AttributeExpr{
                 original: "",
@@ -247,6 +250,7 @@ defmodule Surface.Compiler do
       {:ok,
        %AST.Slot{
          name: name,
+         index: index,
          default: to_ast(children, compile_meta),
          props: props,
          meta: meta
@@ -411,6 +415,26 @@ defmodule Surface.Compiler do
       if name == attr_name do
         String.to_atom(value)
       end
+    end)
+  end
+
+  defp attribute_value_as_ast(attributes, attr_name, default, meta) do
+    Enum.find_value(attributes, default, fn
+      {^attr_name, {:attribute_expr, value, expr_meta}, _attr_meta} ->
+        expr_meta = Helpers.to_meta(expr_meta, meta)
+
+        %AST.AttributeExpr{
+          original: value,
+          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, :integer, expr_meta),
+          meta: expr_meta
+        }
+
+      {^attr_name, value, attr_meta} ->
+        attr_meta = Helpers.to_meta(attr_meta, meta)
+        Surface.TypeHandler.literal_to_ast_node!(:integer, attr_name, value, attr_meta)
+
+      _ ->
+        nil
     end)
   end
 

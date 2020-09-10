@@ -15,7 +15,7 @@ defmodule Surface.SlotChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ @inner_content.(param: "Param from Outer") }}</div>
+      <div><slot :props={{ param: "Param from Outer" }}/></div>
       """
     end
   end

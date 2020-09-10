@@ -70,7 +70,7 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ @__original_inner_content.(slot_kw() ++ context_assigns_kw(@__context__, @set, @get)) }}
+    {{ @__original_inner_content__.(slot_kw() ++ context_assigns_kw(@__context__, @set, @get)) }}
     """
   end
 

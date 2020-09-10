@@ -235,14 +235,16 @@ defmodule Surface.AST.Slot do
 
   ## Properties
       * `:name` - the slot name
+      * `:index` - the index of the slotable entry assinged to this slot
       * `:default` - a list of AST nodes representing the default content for this slot
       * `:props` - either an atom or a quoted expression representing bindings for this slot
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :props, :default, :meta]
+  defstruct [:name, :index, :props, :default, :meta]
 
   @type t :: %__MODULE__{
           name: binary(),
+          index: any(),
           meta: Surface.AST.Meta.t(),
           # quoted ?
           props: Surface.AST.Directive.t(),
