@@ -8,6 +8,17 @@ defmodule Surface.BaseComponent do
   """
   @callback component_type() :: module()
 
+  @doc """
+  This function will be invoked with parsed AST node as the only argument. The result
+  will replace the original node in the AST.
+
+  This callback is invoked before directives are handled for this node, but after all
+  children of this node have been fully processed.
+  """
+  @callback transform(node :: Surface.AST.t()) :: Surface.AST.t()
+
+  @optional_callbacks transform: 1
+
   defmacro __using__(opts \\ []) do
     type = Keyword.get(opts, :type)
 
