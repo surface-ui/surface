@@ -24,7 +24,7 @@ defmodule Surface.SlotTest do
   end
 
   defmodule OuterWithMultipleSlotableEntries do
-    use Surface.LiveComponent
+    use Surface.Component
 
     slot default
     slot inner
@@ -134,7 +134,7 @@ defmodule Surface.SlotTest do
   end
 
   defmodule Grid do
-    use Surface.LiveComponent
+    use Surface.Component
 
     property items, :list, required: true
 

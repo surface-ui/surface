@@ -388,9 +388,7 @@ defmodule Surface.CompilerTest do
              props: [
                %Surface.AST.Attribute{
                  name: :id,
-                 # This is supposedly an integer, but the value is a string
-                 # :-(
-                 type: :integer,
+                 type: :string,
                  value: %Surface.AST.Text{value: "my_id"}
                },
                %Surface.AST.Attribute{
@@ -407,14 +405,16 @@ defmodule Surface.CompilerTest do
 
   test "LiveView has no default properties" do
     code = """
-    <MyLiveViewWith />
+    <MyLiveViewWith id="live_view" />
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
     assert %Surface.AST.Component{
              module: Surface.CompilerTest.MyLiveViewWith,
-             props: []
+             props: [
+               %Surface.AST.Attribute{name: :id, type: :string}
+             ]
            } = node
   end
 

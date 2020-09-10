@@ -9,8 +9,6 @@ defmodule Surface.SlotChangeTrackingTest do
   defmodule Outer do
     use Surface.LiveComponent
 
-    property id, :string
-
     slot default, props: [:param]
 
     def render(assigns) do

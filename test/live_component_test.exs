@@ -8,7 +8,7 @@ defmodule LiveComponentTest do
   @endpoint Endpoint
 
   defmodule StatelessComponent do
-    use Surface.LiveComponent
+    use Surface.Component
 
     property label, :string
 
@@ -58,7 +58,7 @@ defmodule LiveComponentTest do
   end
 
   defmodule InfoProvider do
-    use Surface.LiveComponent
+    use Surface.Component
 
     slot default, props: [:info]
 
@@ -74,7 +74,7 @@ defmodule LiveComponentTest do
   end
 
   defmodule InfoProviderWithoutSlotProps do
-    use Surface.LiveComponent
+    use Surface.Component
 
     def render(assigns) do
       ~H"""
