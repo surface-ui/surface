@@ -123,7 +123,7 @@ defmodule LiveComponentTest do
 
   test "render stateful component with event" do
     code = """
-    <LiveComponentWithEvent event="click-event" />
+    <LiveComponentWithEvent event="click-event" id="button" />
     """
 
     assert render_live(code) =~ """
