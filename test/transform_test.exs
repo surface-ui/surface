@@ -20,6 +20,7 @@ defmodule Surface.TransformTest do
       """
     end
 
+    @impl Surface.BaseComponent
     def transform(node) do
       send(self(), {DivToSpan, "transforming node"})
       %{node | module: Span}
@@ -35,6 +36,7 @@ defmodule Surface.TransformTest do
       """
     end
 
+    @impl Surface.BaseComponent
     def transform(node) do
       send(self(), {LiveDivToSpan, "transforming node"})
       %{node | module: Span, type: Surface.Component}
@@ -44,12 +46,14 @@ defmodule Surface.TransformTest do
   defmodule LiveDivViewToSpan do
     use Surface.LiveView
 
+    @impl true
     def render(assigns) do
       ~H"""
       <div><slot /></div>
       """
     end
 
+    @impl Surface.BaseComponent
     def transform(node) do
       send(self(), {LiveDivViewToSpan, "transforming node"})
       %{node | module: Span, type: Surface.Component}
@@ -59,6 +63,7 @@ defmodule Surface.TransformTest do
   defmodule MacroDivToSpan do
     use Surface.MacroComponent
 
+    @impl true
     def expand(_, _, _) do
       Surface.Compiler.compile(
         """
@@ -69,6 +74,7 @@ defmodule Surface.TransformTest do
       )
     end
 
+    @impl Surface.BaseComponent
     def transform(node) do
       send(self(), {MacroDivToSpan, "transforming node"})
       node
@@ -86,6 +92,7 @@ defmodule Surface.TransformTest do
       """
     end
 
+    @impl Surface.BaseComponent
     def transform(node) do
       send(self(), {ListProp, "transforming node"})
       node
