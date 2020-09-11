@@ -235,7 +235,7 @@ defmodule Surface.AST.Slot do
 
   ## Properties
       * `:name` - the slot name
-      * `:index` - the index of the slotable entry assinged to this slot
+      * `:index` - the index of the slotable entry assigned to this slot
       * `:default` - a list of AST nodes representing the default content for this slot
       * `:props` - either an atom or a quoted expression representing bindings for this slot
       * `:meta` - compilation meta data
