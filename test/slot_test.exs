@@ -23,7 +23,7 @@ defmodule Surface.SlotTest do
     property label, :string
   end
 
-  defmodule Outer do
+  defmodule OuterWithMultipleSlotableEntries do
     use Surface.LiveComponent
 
     slot default
@@ -43,7 +43,7 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule OuterWithSlotNotation do
+  defmodule OuterWithNamedSlot do
     use Surface.Component
 
     slot default
@@ -65,7 +65,7 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule OuterWithSlotNotationWithoutDeclaring do
+  defmodule OuterWithoutDeclaringSlots do
     use Surface.Component
 
     def render(assigns) do
@@ -79,7 +79,7 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule OuterWithSlotNotationAndProps do
+  defmodule OuterWithNamedSlotAndProps do
     use Surface.Component
 
     slot body, props: [:info]
@@ -88,20 +88,6 @@ defmodule Surface.SlotTest do
       ~H"""
       <div>
         <slot name="body" :props={{ info: "Info from slot" }}/>
-      </div>
-      """
-    end
-  end
-
-  defmodule OuterWithSlotNotationDefaultAndProps do
-    use Surface.Component
-
-    slot default, props: [:info]
-
-    def render(assigns) do
-      ~H"""
-      <div>
-        <slot :props={{ info: "Info from slot" }}/>
       </div>
       """
     end
@@ -174,9 +160,9 @@ defmodule Surface.SlotTest do
     end
   end
 
-  test "render inner content without slot props" do
+  test "render slot without slot props" do
     code = """
-    <Outer>
+    <OuterWithMultipleSlotableEntries>
       Content 1
       <InnerData label="label 1">
         <b>content 1</b>
@@ -189,7 +175,7 @@ defmodule Surface.SlotTest do
       </InnerData>
       Content 3
       <StatefulComponent id="stateful2"/>
-    </Outer>
+    </OuterWithMultipleSlotableEntries>
     """
 
     assert_html(
@@ -214,13 +200,13 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "assign slots with props using <slot/> notation" do
+  test "assign named slots with props" do
     code = """
-    <OuterWithSlotNotationAndProps>
+    <OuterWithNamedSlotAndProps>
       <template slot="body" :let={{ info: my_info }}>
         Info: {{ @my_info }}
       </template>
-    </OuterWithSlotNotationAndProps>
+    </OuterWithNamedSlotAndProps>
     """
 
     assert_html(
@@ -232,11 +218,11 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "assign default slot with props using <slot/> notation" do
+  test "assign default slot with props" do
     code = """
-    <OuterWithSlotNotationDefaultAndProps :let={{ info: my_info }}>
+    <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
       Info: {{ @my_info }}
-    </OuterWithSlotNotationDefaultAndProps>
+    </OuterWithDefaultSlotAndProps>
     """
 
     assert_html(
@@ -250,9 +236,9 @@ defmodule Surface.SlotTest do
 
   test "assign default slot ignoring all props" do
     code = """
-    <OuterWithSlotNotationDefaultAndProps>
+    <OuterWithDefaultSlotAndProps>
       Info
-    </OuterWithSlotNotationDefaultAndProps>
+    </OuterWithDefaultSlotAndProps>
     """
 
     assert_html(
@@ -264,9 +250,9 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "assign slots without props using <slot/> notation" do
+  test "assign named slots without props" do
     code = """
-    <OuterWithSlotNotation>
+    <OuterWithNamedSlot>
       <template slot="header">
         My header
       </template>
@@ -274,7 +260,7 @@ defmodule Surface.SlotTest do
       <template slot="footer">
         My footer
       </template>
-    </OuterWithSlotNotation>
+    </OuterWithNamedSlot>
     """
 
     assert_html(
@@ -288,9 +274,9 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "assign undeclared slots without props using <slot/> notation" do
+  test "assign undeclared slots without props" do
     code = """
-    <OuterWithSlotNotationWithoutDeclaring>
+    <OuterWithoutDeclaringSlots>
       <template slot="header">
         My header
       </template>
@@ -298,7 +284,7 @@ defmodule Surface.SlotTest do
       <template slot="footer">
         My footer
       </template>
-    </OuterWithSlotNotationWithoutDeclaring>
+    </OuterWithoutDeclaringSlots>
     """
 
     assert_html(
@@ -312,9 +298,9 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "fallback content using <slot/> notation" do
+  test "fallback content" do
     code = """
-    <OuterWithSlotNotation/>
+    <OuterWithNamedSlot/>
     """
 
     assert_html(
@@ -327,7 +313,7 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "slottable component with default value for prop" do
+  test "slotable component with default value for prop" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
     code = """
@@ -353,7 +339,7 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "render inner content with slot props containing parent bindings" do
+  test "render slot with slot props containing parent bindings" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
     code = """
@@ -384,7 +370,7 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "render inner content renaming slot props" do
+  test "render slot renaming slot props" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
     code = """
@@ -443,11 +429,11 @@ defmodule Surface.SlotTest do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
     code = """
-    <OuterWithSlotNotationAndProps>
+    <OuterWithNamedSlotAndProps>
       <template slot="body" :let={{ :an_atom }}>
         Info: {{ @my_info }}
       </template>
-    </OuterWithSlotNotationAndProps>
+    </OuterWithNamedSlotAndProps>
     """
 
     message = """
@@ -458,22 +444,6 @@ defmodule Surface.SlotTest do
     assert_raise(CompileError, message, fn ->
       render_live(code, assigns)
     end)
-  end
-
-  test "render default inner_content with slot props" do
-    code = """
-    <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
-      Info: {{ @my_info }}
-    </OuterWithDefaultSlotAndProps>
-    """
-
-    assert_html(
-      render_live(code) == """
-      <div>
-        Info: Info from slot
-      </div>
-      """
-    )
   end
 
   test "raise compile error when using :let and there's no default slot defined" do
@@ -538,16 +508,16 @@ defmodule Surface.SlotTest do
 
   test "raise compile error when using :let with undefined slot props" do
     code = """
-    <OuterWithSlotNotationAndProps>
+    <OuterWithNamedSlotAndProps>
       <template slot="body" :let={{ non_existing: my_info }}>
         Info: {{ @my_info }}
       </template>
-    </OuterWithSlotNotationAndProps>
+    </OuterWithNamedSlotAndProps>
     """
 
     message = """
     code:2: undefined prop `:non_existing` for slot `body` in \
-    `Surface.SlotTest.OuterWithSlotNotationAndProps`.
+    `Surface.SlotTest.OuterWithNamedSlotAndProps`.
 
     Available props: [:info].
 
@@ -567,7 +537,7 @@ defmodule Surface.SlotSyncTest do
   import ComponentTestHelper
   import ExUnit.CaptureIO
 
-  alias Surface.SlotTest.OuterWithSlotNotation, warn: false
+  alias Surface.SlotTest.OuterWithNamedSlot, warn: false
   alias Surface.SlotTest.InnerData, warn: false
   alias Surface.SlotTest.{Grid, Column}, warn: false
   alias Surface.SlotTest.StatefulComponent, warn: false
@@ -613,11 +583,11 @@ defmodule Surface.SlotSyncTest do
 
   test "warn and suggest similar slot if parent component does not define the slot" do
     code = """
-    <OuterWithSlotNotation>
+    <OuterWithNamedSlot>
       <template slot="foot">
         My footer
       </template>
-    </OuterWithSlotNotation>
+    </OuterWithNamedSlot>
     """
 
     output =
@@ -626,7 +596,7 @@ defmodule Surface.SlotSyncTest do
       end)
 
     assert output =~ ~r"""
-           no slot "foot" defined in parent component <OuterWithSlotNotation>
+           no slot "foot" defined in parent component <OuterWithNamedSlot>
 
              Did you mean "footer"\?
 
