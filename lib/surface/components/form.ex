@@ -34,24 +34,19 @@ defmodule Surface.Components.Form do
   @doc "The content of the `<form>`"
   slot default
 
-  @doc "The form instance initialized by the Form component"
-  context set form, :form
-
-  def init_context(assigns) do
-    opts =
-      assigns.opts ++
-        event_to_opts(assigns.change, :phx_change) ++
-        event_to_opts(assigns.submit, :phx_submit)
-
-    form = form_for(assigns.for, assigns.action, opts)
-    {:ok, form: form}
-  end
-
   def render(assigns) do
     ~H"""
-    {{ @form }}
-      <slot/>
+    {{ form = form_for(@for, @action, get_opts(assigns)) }}
+      <Context set={{ :form, form, scope: __MODULE__ }}>
+        <slot/>
+      </Context>
     <#Raw></form></#Raw>
     """
+  end
+
+  defp get_opts(assigns) do
+    assigns.opts ++
+      event_to_opts(assigns.change, :phx_change) ++
+      event_to_opts(assigns.submit, :phx_submit)
   end
 end

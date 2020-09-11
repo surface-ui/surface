@@ -4,18 +4,16 @@ defmodule ContextTest do
   import Surface
   import ComponentTestHelper
 
+  alias Surface.Components.Context
+
   defmodule Outer do
     use Surface.Component
 
-    context set field, :any, scope: :only_children
-
-    def init_context(_assigns) do
-      {:ok, field: "field from Outer"}
-    end
-
     def render(assigns) do
       ~H"""
-      <div>{{ @inner_content.([]) }}</div>
+      <Context set={{ :field, "field from Outer", scope: __MODULE__ }}>
+        <div><slot/></div>
+      </Context>
       """
     end
   end
@@ -33,13 +31,14 @@ defmodule ContextTest do
   defmodule Inner do
     use Surface.Component
 
-    context get field, from: ContextTest.Outer
-    context get field, from: ContextTest.InnerWrapper, as: :other_field
-
     def render(assigns) do
       ~H"""
-      <span id="field">{{ @field }}</span>
-      <span id="other_field">{{ @other_field }}</span>
+      <Context
+        get={{ :field, scope: ContextTest.Outer }}
+        get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
+        <span id="field">{{ @field }}</span>
+        <span id="other_field">{{ @other_field }}</span>
+      </Context>
       """
     end
   end
@@ -47,15 +46,11 @@ defmodule ContextTest do
   defmodule InnerWrapper do
     use Surface.Component
 
-    context set field, :any
-
-    def init_context(_assigns) do
-      {:ok, field: "field from InnerWrapper"}
-    end
-
     def render(assigns) do
       ~H"""
-      <Inner />
+      <Context set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
+        <Inner />
+      </Context>
       """
     end
   end
@@ -63,11 +58,27 @@ defmodule ContextTest do
   defmodule InnerWithOptionAs do
     use Surface.Component
 
-    context get field, from: Outer, as: :my_field
+    def render(assigns) do
+      ~H"""
+      <Context get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
+        <span>{{ @my_field }}</span>
+      </Context>
+      """
+    end
+  end
+
+  defmodule OuterWithNamedSlots do
+    use Surface.Component
+
+    slot my_slot
 
     def render(assigns) do
       ~H"""
-      <span>{{ @my_field }}</span>
+      <Context set={{ :field, "field from OuterWithNamedSlots" }}>
+        <span :for={{ {_slot, index} <- Enum.with_index(@my_slot) }}>
+          <slot name="my_slot" index={{ index }}/>
+        </span>
+      </Context>
       """
     end
   end
@@ -130,7 +141,21 @@ defmodule ContextTest do
     """
 
     assert render_live(code) =~ """
-           Context: []
+           Context: %{}
            """
+  end
+
+  test "pass context to named slots" do
+    code = """
+    <OuterWithNamedSlots>
+      <template slot="my_slot">
+        <Context get={{ :field }}>
+          {{ @field }}
+        </Context>
+      </template>
+    </OuterWithNamedSlots>
+    """
+
+    assert render_live(code) =~ "field from OuterWithNamedSlots"
   end
 end

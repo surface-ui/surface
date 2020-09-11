@@ -55,15 +55,18 @@ defmodule Surface.ContentHandler do
 
     assigns =
       if default_slot.size > 0 do
-        Map.put(assigns, :inner_content, content)
+        assigns
+        |> Map.put(:__original_inner_content__, assigns.inner_content)
+        |> Map.put(:inner_content, content)
       else
-        Map.put(assigns, :inner_content, nil)
+        assigns
+        |> Map.put(:inner_content, nil)
       end
 
     Map.merge(assigns, props)
   end
 
-  defp data_content_fun(assigns, name, index, prop_assign_mappings) do
+  defp data_content_fun(assigns, _name, _index, prop_assign_mappings) do
     fn args ->
       prop_assigns =
         Enum.map(prop_assign_mappings, fn {prop_name, assign_name} ->
@@ -72,12 +75,12 @@ defmodule Surface.ContentHandler do
 
       # TODO [Context]: Update this to be only the appropriate assigns for context
       case args[:__context__] || assigns.__context__ do
-        [] ->
-          assigns.inner_content.(Keyword.merge(prop_assigns, __slot__: {name, index}))
+        context when context == %{} ->
+          assigns.inner_content.(prop_assigns ++ [__slot__: args[:__slot__]])
 
         context_assign ->
           assigns.inner_content.(
-            Keyword.merge(prop_assigns, __slot__: {name, index}, __context__: context_assign)
+            prop_assigns ++ [__slot__: args[:__slot__], __context__: context_assign]
           )
       end
     end
@@ -99,7 +102,7 @@ defmodule Surface.ContentHandler do
     end
   end
 
-  defp join_contents(assigns, 1, [], assign_mappings) do
+  defp join_contents(assigns, 1, context_assign, assign_mappings) when context_assign == %{} do
     if assigns[:inner_content] == nil do
       ""
     else

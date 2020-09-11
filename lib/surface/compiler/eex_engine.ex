@@ -122,6 +122,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(
          %AST.Slot{
            name: name,
+           index: index_ast,
            props: %AST.Directive{value: %AST.AttributeExpr{value: props_expr}},
            default: default
          },
@@ -132,20 +133,34 @@ defmodule Surface.Compiler.EExEngine do
 
     props_expr =
       quote generated: true do
-        Keyword.put(unquote(props_expr), :__context__, @__context__)
+        Keyword.merge(unquote(props_expr), __context__: @__context__)
+      end
+
+    slot_index =
+      case index_ast do
+        %AST.AttributeExpr{value: expr} -> expr
+        %AST.Text{value: value} -> value
       end
 
     # TODO: map names somehow?
     slot_content_expr =
       if slot_name == :__default__ do
         quote generated: true do
-          @inner_content.(unquote(props_expr))
+          if @inner_content do
+            @inner_content.(
+              unquote(props_expr) ++ [__slot__: {:__default__, unquote(slot_index)}]
+            )
+          end
         end
       else
+        slot_assign = at_ref(slot_name)
+
         quote generated: true do
-          # TODO: For now, we only handle the first since rendering multiple items requires using `:for` directly in the template.
-          # Review this after we adding option `join`.
-          Enum.at(unquote(at_ref(slot_name)), 0).inner_content.(unquote(props_expr))
+          if unquote(slot_assign) do
+            Enum.at(unquote(slot_assign), unquote(slot_index)).inner_content.(
+              unquote(props_expr) ++ [__slot__: {unquote(slot_name), unquote(slot_index)}]
+            )
+          end
         end
       end
 
@@ -213,7 +228,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__context__ || [],
+            @__context__ || %{},
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),
@@ -229,7 +244,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__context__ || [],
+            @__context__ || %{},
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),

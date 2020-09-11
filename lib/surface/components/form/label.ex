@@ -10,9 +10,6 @@ defmodule Surface.Components.Form.Label do
 
   use Surface.Component
 
-  alias Surface.Components.Form
-  alias Surface.Components.Form.Field
-
   import Phoenix.HTML.Form, only: [label: 4]
   import Surface.Components.Form.Utils
 
@@ -27,9 +24,6 @@ defmodule Surface.Components.Form.Label do
 
   @doc "Options list"
   property opts, :keyword, default: []
-
-  context get form, from: Form, as: :form_context
-  context get field, from: Field, as: :field_context
 
   @doc """
   The content for the label
