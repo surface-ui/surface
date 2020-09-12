@@ -156,6 +156,64 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  describe "modifiers" do
+    test "using multiple modifiers" do
+      assigns = %{items: [:a, :b]}
+
+      code = """
+      <div :for.index.with_index={{ {i, j} <- @items }}>
+        i: {{ i }}, j: {{ j }}
+      </div>
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div>
+               i: 0, j: 0
+             </div><div>
+               i: 1, j: 1
+             </div>
+             """
+    end
+
+    test "raise compile error for unknown modifiers" do
+      assigns = %{items: [%{id: 1, name: "First"}]}
+
+      code = """
+      <br/>
+      <div :for.unknown={{ @items }}>
+        Index: {{ index }}
+      </div>
+      """
+
+      message = """
+      code:2: unknown modifier "unknown" for directive :for\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code, assigns)
+      end)
+    end
+
+    test "raise compile error for modifiers with multiple clauses" do
+      assigns = %{a: [1, 2], b: [1, 2]}
+
+      code = """
+      <br/>
+      <div :for.with_index={{ i <- a, j <- b }}>
+        Index: {{ index }}
+      </div>
+      """
+
+      message = """
+      code:2: cannot apply modifier "with_index" on generators with multiple clauses\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code, assigns)
+      end)
+    end
+  end
+
   describe ":for" do
     test "in components" do
       assigns = %{items: [1, 2]}
@@ -287,44 +345,6 @@ defmodule Surface.DirectivesTest do
                Index: 1
              </div>
              """
-    end
-
-    test "raise compile error for unknown modifiers" do
-      assigns = %{items: [%{id: 1, name: "First"}]}
-
-      code = """
-      <br/>
-      <div :for.unknown={{ @items }}>
-        Index: {{ index }}
-      </div>
-      """
-
-      message = """
-      code:2: unknown modifier "unknown" for directive :for\
-      """
-
-      assert_raise(CompileError, message, fn ->
-        render_live(code, assigns)
-      end)
-    end
-
-    test "raise compile error for modifiers with multiple clauses" do
-      assigns = %{a: [1, 2], b: [1, 2]}
-
-      code = """
-      <br/>
-      <div :for.with_index={{ i <- a, j <- b }}>
-        Index: {{ index }}
-      </div>
-      """
-
-      message = """
-      code:2: cannot apply modifier "with_index" on generators with multiple clauses\
-      """
-
-      assert_raise(CompileError, message, fn ->
-        render_live(code, assigns)
-      end)
     end
   end
 
