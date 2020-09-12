@@ -1,4 +1,7 @@
 defmodule Surface.Directive do
+  alias Surface.AST
+  alias Surface.Compiler.Helpers
+
   @callback extract(node :: any, meta :: Surface.AST.Meta.t()) ::
               [Surface.AST.Directive.t()]
               | Surface.AST.Directive.t()
@@ -35,48 +38,24 @@ defmodule Surface.Directive do
   end
 
   def extract_function(opts) do
-    name = opts[:name]
-    atom_name = String.to_atom(name)
-    type = opts[:type]
-
     quote do
-      def extract({unquote(name), {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
-        expr_meta = Helpers.to_meta(expr_meta, meta)
-        attr_meta = Helpers.to_meta(attr_meta, meta)
+      @extract_opts unquote(opts)
 
-        expr = Surface.TypeHandler.expr_to_quoted!(value, unquote(name), unquote(type), expr_meta)
+      def extract(attr, meta) do
+        attr
+        |> Surface.Directive.extract_directive(meta, @extract_opts[:name], @extract_opts[:type])
+        |> case do
+          {ast, directive_meta} -> handle_value(ast, directive_meta)
+          _ -> :empty
+        end
+        |> case do
+          :empty ->
+            []
 
-        ast = %AST.AttributeExpr{
-          original: value,
-          value: expr,
-          meta: expr_meta
-        }
-
-        ast_value_to_directive(ast, attr_meta)
-      end
-
-      def extract({unquote(name), value, attr_meta}, meta) do
-        attr_meta = Helpers.to_meta(attr_meta, meta)
-
-        ast =
-          Surface.TypeHandler.literal_to_ast_node!(
-            unquote(name),
-            unquote(type),
-            value,
-            attr_meta
-          )
-
-        ast_value_to_directive(ast, attr_meta)
-      end
-
-      def extract(_, _), do: []
-
-      defp ast_value_to_directive(value, meta) do
-        case handle_value(value, meta) do
           {:ok, ast} ->
             %AST.Directive{
               module: __MODULE__,
-              name: unquote(atom_name),
+              name: String.to_atom(@extract_opts[:name]),
               value: ast,
               meta: meta
             }
@@ -86,5 +65,31 @@ defmodule Surface.Directive do
         end
       end
     end
+  end
+
+  @doc false
+  def extract_directive({attr_name, value, attr_meta}, meta, name, type) when attr_name == name do
+    # expr_meta = Helpers.to_meta(expr_meta, meta)
+    attr_meta = Helpers.to_meta(attr_meta, meta)
+
+    ast = to_ast!(value, name, type, attr_meta)
+
+    {ast, attr_meta}
+  end
+
+  def extract_directive(_attr, _meta, _name, _type), do: nil
+
+  defp to_ast!({:attribute_expr, value, expr_meta}, name, type, meta) do
+    expr_meta = Helpers.to_meta(expr_meta, meta)
+
+    %AST.AttributeExpr{
+      original: value,
+      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
+      meta: expr_meta
+    }
+  end
+
+  defp to_ast!(value, name, type, meta) do
+    Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
   end
 end
