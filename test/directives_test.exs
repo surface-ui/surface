@@ -234,6 +234,98 @@ defmodule Surface.DirectivesTest do
              </div>
              """
     end
+
+    test "with_index modifier" do
+      assigns = %{items: [1, 2]}
+
+      code = """
+      <div :for.with_index={{ {item, index} <- @items }}>
+        Item: {{ item }}, Index: {{ index }}
+      </div>
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div>
+               Item: 1, Index: 0
+             </div><div>
+               Item: 2, Index: 1
+             </div>
+             """
+    end
+
+    test "index modifier with generator" do
+      assigns = %{items: [1, 2]}
+
+      code = """
+      <div :for.index={{ index <- @items }}>
+        Index: {{ index }}
+      </div>
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div>
+               Index: 0
+             </div><div>
+               Index: 1
+             </div>
+             """
+    end
+
+    test "index modifier with list" do
+      assigns = %{items: [1, 2]}
+
+      code = """
+      <div :for.index={{ @items }}>
+        Index: {{ index }}
+      </div>
+      """
+
+      assert render_live(code, assigns) =~ """
+             <div>
+               Index: 0
+             </div><div>
+               Index: 1
+             </div>
+             """
+    end
+
+    test "raise compile error for unknown modifiers" do
+      assigns = %{items: [%{id: 1, name: "First"}]}
+
+      code = """
+      <br/>
+      <div :for.unknown={{ @items }}>
+        Index: {{ index }}
+      </div>
+      """
+
+      message = """
+      code:2: unknown modifier "unknown" for directive :for\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code, assigns)
+      end)
+    end
+
+    test "raise compile error for modifiers with multiple clauses" do
+      assigns = %{a: [1, 2], b: [1, 2]}
+
+      code = """
+      <br/>
+      <div :for.with_index={{ i <- a, j <- b }}>
+        Index: {{ index }}
+      </div>
+      """
+
+      message = """
+      code:2: cannot apply modifier "with_index" on generators with multiple clauses\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code, assigns)
+      end)
+    end
   end
 
   describe ":if" do
