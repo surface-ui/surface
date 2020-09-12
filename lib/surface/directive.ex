@@ -1,6 +1,7 @@
 defmodule Surface.Directive do
   alias Surface.AST
   alias Surface.Compiler.Helpers
+  alias Surface.IOHelper
 
   @callback extract(node :: any, meta :: Surface.AST.Meta.t()) ::
               [Surface.AST.Directive.t()]
@@ -44,32 +45,13 @@ defmodule Surface.Directive do
       def extract(attr, meta) do
         attr
         |> Surface.Directive.extract_directive(meta, @extract_opts[:name], @extract_opts[:type])
-        |> case do
-          {ast, directive_meta} -> handle_value(ast, directive_meta)
-          _ -> :empty
-        end
-        |> case do
-          :empty ->
-            []
-
-          {:ok, ast} ->
-            %AST.Directive{
-              module: __MODULE__,
-              name: String.to_atom(@extract_opts[:name]),
-              value: ast,
-              meta: meta
-            }
-
-          {:error, message} ->
-            IOHelper.compile_error(message, meta.file, meta.line)
-        end
+        |> Surface.Directive.handle_directive_value(@extract_opts[:name], __MODULE__)
       end
     end
   end
 
   @doc false
   def extract_directive({attr_name, value, attr_meta}, meta, name, type) when attr_name == name do
-    # expr_meta = Helpers.to_meta(expr_meta, meta)
     attr_meta = Helpers.to_meta(attr_meta, meta)
 
     ast = to_ast!(value, name, type, attr_meta)
@@ -78,6 +60,24 @@ defmodule Surface.Directive do
   end
 
   def extract_directive(_attr, _meta, _name, _type), do: nil
+
+  @doc false
+  def handle_directive_value({ast, meta}, name, module) do
+    case module.handle_value(ast, meta) do
+      {:ok, ast} ->
+        %AST.Directive{
+          module: module,
+          name: String.to_atom(name),
+          value: ast,
+          meta: meta
+        }
+
+      {:error, message} ->
+        IOHelper.compile_error(message, meta.file, meta.line)
+    end
+  end
+
+  def handle_directive_value(_value, _name, _module), do: []
 
   defp to_ast!({:attribute_expr, value, expr_meta}, name, type, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
