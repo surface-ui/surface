@@ -67,7 +67,7 @@ defmodule Surface.LiveComponent do
       alias Surface.Components.Context
 
       @doc """
-      The id of the live component (required by LiveView).
+      The id of the live component (required by LiveView for stateful components).
       """
       property id, :string, required: true
     end
