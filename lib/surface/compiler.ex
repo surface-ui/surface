@@ -547,8 +547,6 @@ defmodule Surface.Compiler do
   defp collect_directives(handlers, [attr | attributes], meta) do
     {:ok, dirs, attrs} = collect_directives(handlers, attributes, meta)
 
-    attr = extract_modifiers(attr)
-
     directives =
       handlers
       |> Enum.map(fn handler -> handler.extract(attr, meta) end)
@@ -567,23 +565,6 @@ defmodule Surface.Compiler do
       end)
 
     {:ok, directives, attributes}
-  end
-
-  defp extract_modifiers({":" <> _ = attr_name, value, meta}) do
-    {name, modifiers} =
-      case String.split(attr_name, ".") do
-        [name] ->
-          {name, []}
-
-        [name | modifiers] ->
-          {name, modifiers}
-      end
-
-    {name, value, Map.put(meta, :modifiers, modifiers)}
-  end
-
-  defp extract_modifiers(attr) do
-    attr
   end
 
   defp validate_properties(module, props, meta) do

@@ -175,7 +175,7 @@ defmodule Surface.DirectivesTest do
              """
     end
 
-    test "raise compile error for unknown modifiers" do
+    test "raise compile error for unknown modifiers (:for)" do
       assigns = %{items: [%{id: 1, name: "First"}]}
 
       code = """
@@ -187,6 +187,25 @@ defmodule Surface.DirectivesTest do
 
       message = """
       code:2: unknown modifier "unknown" for directive :for\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code, assigns)
+      end)
+    end
+
+    test "raise compile error for unknown modifiers (:if)" do
+      assigns = %{value: true}
+
+      code = """
+      <br/>
+      <div :if.unknown={{ @value }}>
+        True
+      </div>
+      """
+
+      message = """
+      code:2: unknown modifier "unknown" for directive :if\
       """
 
       assert_raise(CompileError, message, fn ->

@@ -98,14 +98,16 @@ defmodule Surface.AST.Directive do
 
   ## Properties
       * `:module` - the module which implements logic for this directive (e.g. `Surface.Directive.Let`)
+      * `:modifiers` - a list of applied modifiers
       * `:name` - the name of the directive (e.g. `:let`)
       * `:value` - the code/configuration for this directive. typically a quoted expression
       * `:meta` - compilation meta data
   """
-  defstruct [:module, :name, :value, :meta]
+  defstruct [:module, :modifiers, :name, :value, :meta]
 
   @type t :: %__MODULE__{
           module: atom(),
+          modifiers: list(atom()),
           name: atom(),
           # the value here is defined by the individual directive
           value: Surface.AST.AttributeExpr.t() | Surface.AST.Text.t() | nil,
