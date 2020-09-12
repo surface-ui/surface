@@ -35,11 +35,11 @@ defmodule Surface.Components.Form.Inputs do
 
   def render(assigns) do
     ~H"""
-    <div :for={{ f <- inputs_for(get_form(assigns), @for, @opts) }}>
-      <Context set={{ :form, f, scope: Surface.Components.Form }}>
-        <slot :props={{ form: f }}/>
-      </Context>
-    </div>
+    <Context
+      :for={{ f <- inputs_for(get_form(assigns), @for, @opts) }}
+      set={{ :form, f, scope: Surface.Components.Form }}>
+      <slot :props={{ form: f }}/>
+    </Context>
     """
   end
 end

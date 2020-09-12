@@ -19,10 +19,8 @@ defmodule Surface.Components.Form.InputsTest do
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
-           <div>\
            <input id="parent_children_name" name="parent[children][name]" type="text"/>\
            <input id="parent_children_email" name="parent[children][email]" type="text"/>\
-           </div>\
            </form>
            """
   end
@@ -39,10 +37,8 @@ defmodule Surface.Components.Form.InputsTest do
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
-           <div>\
            <input id="parent_children_name" name="parent[children][name]" type="text"/>\
            <input id="parent_children_email" name="parent[children][email]" type="text"/>\
-           </div>\
            </form>
            """
   end
@@ -59,10 +55,8 @@ defmodule Surface.Components.Form.InputsTest do
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
-           <div>\
            <input id="parent_children_name" name="custom_name[name]" type="text"/>\
            <input id="parent_children_email" name="custom_name[email]" type="text"/>\
-           </div>\
            </form>
            """
   end
