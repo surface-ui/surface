@@ -115,7 +115,7 @@ defmodule Surface.TransformTest do
 
   test "transform is run on compile when defined for Surface.LiveComponent" do
     code = """
-    <LiveDivToSpan>Some content</LiveDivToSpan>
+    <LiveDivToSpan id="div">Some content</LiveDivToSpan>
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -129,7 +129,7 @@ defmodule Surface.TransformTest do
 
   test "transform is run on compile when defined for Surface.LiveView" do
     code = """
-    <LiveDivViewToSpan>Some content</LiveDivViewToSpan>
+    <LiveDivViewToSpan id="view">Some content</LiveDivViewToSpan>
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
