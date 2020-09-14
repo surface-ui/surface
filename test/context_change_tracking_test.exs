@@ -7,7 +7,7 @@ defmodule Surface.ContextChangeTrackingTest do
   @endpoint Endpoint
 
   defmodule ContextSetter do
-    use Surface.LiveComponent
+    use Surface.Component
 
     def render(assigns) do
       ~H"""

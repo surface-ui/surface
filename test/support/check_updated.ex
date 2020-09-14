@@ -1,9 +1,6 @@
 defmodule Surface.CheckUpdated do
   use Surface.LiveComponent
 
-  @doc "The id of the component"
-  property id, :string, required: true
-
   @doc "The process to send the :updated message"
   property dest, :any, required: true
 

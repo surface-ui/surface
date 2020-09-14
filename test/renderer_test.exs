@@ -13,7 +13,7 @@ defmodule Surface.RendererTest do
     def render(assigns) do
       ~H"""
       <ComponentWithExternalTemplate/>
-      <LiveComponentWithExternalTemplate/>
+      <LiveComponentWithExternalTemplate id="live_component"/>
       <LiveViewWithExternalTemplate id="live_view" />
       """
     end

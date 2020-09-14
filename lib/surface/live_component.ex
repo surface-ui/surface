@@ -64,21 +64,17 @@ defmodule Surface.LiveComponent do
 
       require Surface.ContentHandler
       @before_compile Surface.ContentHandler
-      Module.put_attribute(__MODULE__, :__is_stateful__, true)
       alias Surface.Components.Context
+
+      @doc """
+      The id of the live component (required by LiveView for stateful components).
+      """
+      property id, :string, required: true
     end
   end
 
   defmacro __before_compile__(env) do
-    [maybe_quoted_id(env), quoted_mount(env), quoted_update(env), quoted_stateful(env)]
-  end
-
-  defp quoted_stateful(env) do
-    stateful = Module.get_attribute(env.module, :__is_stateful__, false)
-
-    quote do
-      def __is_stateful__(), do: unquote(stateful)
-    end
+    [quoted_mount(env), quoted_update(env)]
   end
 
   defp quoted_update(env) do
@@ -129,17 +125,6 @@ defmodule Surface.LiveComponent do
            |> Surface.init()
            |> assign(unquote(defaults))}
         end
-      end
-    end
-  end
-
-  defp maybe_quoted_id(env) do
-    if Module.defines?(env.module, {:handle_event, 3}) do
-      quote do
-        @doc """
-        The id of the live component (required by LiveView).
-        """
-        property id, :integer, required: true
       end
     end
   end
