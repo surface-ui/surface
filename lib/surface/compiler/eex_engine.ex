@@ -341,7 +341,7 @@ defmodule Surface.Compiler.EExEngine do
       for {name, size, infos} <- slot_info do
         prop_assign_mappings =
           Enum.map(infos, fn {let, _, _} ->
-            Enum.map(let, fn {prop_name, {binding_name, _, _}} -> {prop_name, binding_name} end)
+            Enum.map(let, fn {prop_name, binding_name} -> {prop_name, binding_name} end)
           end)
 
         meta_value =
@@ -444,7 +444,7 @@ defmodule Surface.Compiler.EExEngine do
     end)
     |> Enum.map(fn %{generator: gen, name: name} ->
       case find_attribute_value(props, gen, nil) do
-        %AST.AttributeExpr{value: {binding, _}} ->
+        %AST.AttributeExpr{value: {{binding, _, _}, _}} ->
           {name, binding}
 
         _ ->
@@ -601,11 +601,13 @@ defmodule Surface.Compiler.EExEngine do
                         let: %AST.Directive{
                           module: Surface.Directive.Let,
                           name: :let,
-                          value: %AST.AttributeExpr{
-                            original: "",
-                            value: [],
-                            meta: meta
-                          },
+                          value: [
+                            %AST.AttributeExpr{
+                              original: "",
+                              value: [],
+                              meta: meta
+                            }
+                          ],
                           meta: meta
                         },
                         children: [require_expression],

@@ -10,7 +10,7 @@ defmodule Surface.Components.Form.InputsTest do
   test "using generated form received as slot props" do
     code = """
     <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-      <Inputs for={{ :children }} :let={{ form: f }}>
+      <Inputs for={{ :children }} :let={{ :form, as: :f }}>
         <TextInput form={{ @f }} field="name" />
         <TextInput form={{ @f }} field="email" />
       </Inputs>

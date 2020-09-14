@@ -438,8 +438,8 @@ defmodule Surface.Compiler do
     end)
   end
 
-  defp template_props([], meta),
-    do: %AST.Directive{
+  defp template_props([], meta) do
+    %AST.Directive{
       module: Surface.Directive.Let,
       name: :let,
       value: %AST.AttributeExpr{
@@ -449,11 +449,26 @@ defmodule Surface.Compiler do
       },
       meta: meta
     }
+  end
 
-  defp template_props([%AST.Directive{module: Surface.Directive.Let} = props | _], _meta),
-    do: props
+  defp template_props(directives, meta) do
+    values =
+      for %AST.Directive{module: Surface.Directive.Let, value: %AST.AttributeExpr{value: value}} <-
+            directives do
+        value
+      end
 
-  defp template_props([_ | directives], meta), do: template_props(directives, meta)
+    %AST.Directive{
+      module: Surface.Directive.Let,
+      name: :let,
+      value: %AST.AttributeExpr{
+        value: values,
+        original: "",
+        meta: meta
+      },
+      meta: meta
+    }
+  end
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 

@@ -99,7 +99,7 @@ defmodule LiveComponentTest do
 
   test "render content with slot props" do
     code = """
-    <InfoProvider :let={{ info: my_info }}>
+    <InfoProvider :let={{ :info, as: :my_info }}>
       <span>{{ @my_info }}</span>
     </InfoProvider>
     """

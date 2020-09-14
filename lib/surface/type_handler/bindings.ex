@@ -4,13 +4,24 @@ defmodule Surface.TypeHandler.Bindings do
   use Surface.TypeHandler
 
   @impl true
-  def expr_to_quoted(_type, _name, clauses, opts, _meta, _original) do
-    match_binding? = &match?({_prop, {var, _, nil}} when is_atom(var), &1)
+  def literal_to_ast_node(_type, _name, _value, _meta) do
+    :error
+  end
 
-    if clauses == [] and Enum.all?(opts, match_binding?) do
-      {:ok, opts}
-    else
-      {:error, "Expected a keyword list of bindings"}
-    end
+  @impl true
+  def expr_to_quoted(_type, _name, [key], [as: as], _meta, _original)
+      when is_atom(key) and is_atom(as) do
+    {:ok, {key, as}}
+  end
+
+  @impl true
+  def expr_to_quoted(_type, _name, [key], [], _meta, _original) when is_atom(key) do
+    {:ok, {key, key}}
+  end
+
+  @impl true
+  def expr_to_quoted(_type, _name, _clauses, _opts, _meta, _original) do
+    {:error,
+     "Expected a mapping from a slot prop to an assign, e.g. {{ :item }} or {{ :item, as: :user }}"}
   end
 end
