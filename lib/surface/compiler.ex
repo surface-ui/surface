@@ -229,7 +229,8 @@ defmodule Surface.Compiler do
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Text{value: 0}, compile_meta)
 
     with true <- not is_nil(name) and is_atom(name),
-         {:ok, directives, _attrs} <- collect_directives(@slot_directive_handlers, attributes, meta) do
+         {:ok, directives, _attrs} <-
+           collect_directives(@slot_directive_handlers, attributes, meta) do
       Module.put_attribute(meta.caller.module, :used_slot, %{name: name, line: meta.line})
 
       {:ok,
