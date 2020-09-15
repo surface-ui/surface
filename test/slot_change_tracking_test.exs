@@ -30,7 +30,7 @@ defmodule Surface.SlotChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Outer id="outer" :let={{ param: param }}>
+      <Outer id="outer" :let={{ :param }}>
         Count: {{ @count }}
         <CheckUpdated id="1" dest={{ @test_pid }} content={{ @param }} />
         <CheckUpdated id="2" dest={{ @test_pid }} />
