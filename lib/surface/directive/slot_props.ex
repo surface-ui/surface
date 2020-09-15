@@ -12,6 +12,10 @@ defmodule Surface.Directive.SlotProps do
 
   def extract(_, _), do: []
 
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %AST.Slot{} = slot) do
+    %{slot | props: value}
+  end
+
   defp directive_value(value, meta) do
     %AST.AttributeExpr{
       value: Surface.TypeHandler.expr_to_quoted!(value, ":props", :keyword, meta),

@@ -9,7 +9,6 @@ defmodule Surface.Compiler do
   alias Surface.IOHelper
   alias Surface.AST
   alias Surface.Compiler.Helpers
-  alias Surface.Directive.SlotProps
 
   @stateful_component_types [
     Surface.LiveComponent
@@ -25,6 +24,7 @@ defmodule Surface.Compiler do
   ]
 
   @component_directive_handlers [
+    Surface.Directive.Let,
     Surface.Directive.ComponentProps,
     Surface.Directive.If,
     Surface.Directive.For,
@@ -38,6 +38,8 @@ defmodule Surface.Compiler do
   ]
 
   @template_directive_handlers [Surface.Directive.Let]
+
+  @slot_directive_handlers [Surface.Directive.SlotProps]
 
   @void_elements [
     "area",
@@ -210,7 +212,8 @@ defmodule Surface.Compiler do
        %AST.Template{
          name: slot,
          children: to_ast(children, compile_meta),
-         let: template_props(directives, meta),
+         directives: directives,
+         let: [],
          meta: meta
        }}
     else
@@ -226,33 +229,17 @@ defmodule Surface.Compiler do
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Text{value: 0}, compile_meta)
 
     with true <- not is_nil(name) and is_atom(name),
-         {:ok, props, _attrs} <- collect_directives([SlotProps], attributes, meta) do
-      props =
-        case props do
-          [expr] ->
-            expr
-
-          _ ->
-            %AST.Directive{
-              module: SlotProps,
-              name: :props,
-              value: %AST.AttributeExpr{
-                original: "",
-                value: [],
-                meta: meta
-              },
-              meta: meta
-            }
-        end
-
+         {:ok, directives, _attrs} <-
+           collect_directives(@slot_directive_handlers, attributes, meta) do
       Module.put_attribute(meta.caller.module, :used_slot, %{name: name, line: meta.line})
 
       {:ok,
        %AST.Slot{
          name: name,
          index: index,
+         directives: directives,
          default: to_ast(children, compile_meta),
-         props: props,
+         props: [],
          meta: meta
        }}
     else
@@ -319,16 +306,13 @@ defmodule Surface.Compiler do
          true <- function_exported?(mod, :component_type, 0),
          component_type <- mod.component_type(),
          meta <- Map.merge(meta, %{module: mod, node_alias: name}),
-         # Passing in and modifying attributes here because :let on the parent is used
-         # to indicate the props for the :default slot's template
+         # This is a little bit hacky. :let will only be extracted for the default
+         # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
+         # we pass in and modify the attributes so that non-slotable components are not
+         # processed by the :let directive
          {:ok, templates, attributes} <-
            collect_templates(mod, attributes, children, meta),
          :ok <- validate_templates(mod, templates, meta),
-         # This is a little bit hacky. :let will only be extracted for the default
-         # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
-         # We have to extract that here as it should not be considered an attribute
-         {:ok, template_directives, attributes} <-
-           maybe_collect_template_directives(mod, attributes, meta),
          {:ok, directives, attributes} <-
            collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta),
@@ -339,7 +323,7 @@ defmodule Surface.Compiler do
             module: mod,
             slot: mod.__slot_name__(),
             type: component_type,
-            let: template_props(template_directives, meta),
+            let: [],
             props: attributes,
             directives: directives,
             templates: templates,
@@ -438,47 +422,7 @@ defmodule Surface.Compiler do
     end)
   end
 
-  defp template_props([], meta) do
-    %AST.Directive{
-      module: Surface.Directive.Let,
-      name: :let,
-      value: %AST.AttributeExpr{
-        value: [],
-        original: "",
-        meta: meta
-      },
-      meta: meta
-    }
-  end
-
-  defp template_props(directives, meta) do
-    values =
-      for %AST.Directive{module: Surface.Directive.Let, value: %AST.AttributeExpr{value: value}} <-
-            directives do
-        value
-      end
-
-    %AST.Directive{
-      module: Surface.Directive.Let,
-      name: :let,
-      value: %AST.AttributeExpr{
-        value: values,
-        original: "",
-        meta: meta
-      },
-      meta: meta
-    }
-  end
-
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
-
-  defp maybe_collect_template_directives(mod, attributes, meta) do
-    if component_slotable?(mod) do
-      collect_directives(@template_directive_handlers, attributes, meta)
-    else
-      {:ok, [], attributes}
-    end
-  end
 
   defp process_attributes(_module, [], _meta), do: []
 
@@ -557,7 +501,7 @@ defmodule Surface.Compiler do
 
   defp collect_templates(mod, attributes, nodes, meta) do
     # Don't extract the template directives if this module is slotable
-    {:ok, default_props, attributes} =
+    {:ok, directives, attributes} =
       if component_slotable?(mod) do
         {:ok, [], attributes}
       else
@@ -584,12 +528,14 @@ defmodule Surface.Compiler do
     if Enum.all?(default_children, &Helpers.is_blank_or_empty/1) do
       {:ok, Map.put(templates, :default, already_wrapped), attributes}
     else
-      wrapped = %AST.Template{
-        name: :default,
-        children: default_children,
-        let: template_props(default_props, meta),
-        meta: meta
-      }
+      wrapped =
+        process_directives(%AST.Template{
+          name: :default,
+          children: default_children,
+          directives: directives,
+          let: [],
+          meta: meta
+        })
 
       {:ok, Map.put(templates, :default, [wrapped | already_wrapped]), attributes}
     end
@@ -669,20 +615,14 @@ defmodule Surface.Compiler do
     for slot_name <- Map.keys(templates),
         template <- Map.get(templates, slot_name) do
       slot = mod.__get_slot__(slot_name)
+      props = Keyword.keys(template.let)
 
-      {props, prop_meta} =
-        case template.let do
-          %AST.Directive{
-            value: %AST.AttributeExpr{
-              value: value,
-              meta: meta
-            }
-          } ->
-            {Keyword.keys(value), meta}
-
-          _ ->
-            {[], meta}
-        end
+      prop_meta =
+        Enum.find_value(template.directives, meta, fn directive ->
+          if directive.module == Surface.Directive.Let do
+            directive.meta
+          end
+        end)
 
       if slot == nil and not Enum.empty?(props) do
         message = """
