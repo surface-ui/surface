@@ -12,7 +12,7 @@ defmodule Surface.TypeHandler do
               value :: any(),
               meta :: Surface.AST.Meta.t()
             ) ::
-              {:ok, Surface.AST.Text.t() | Surface.AST.AttributeExpr.t()}
+              {:ok, Surface.AST.Literal.t() | Surface.AST.AttributeExpr.t()}
               | {:error, String.t()}
               | :error
 

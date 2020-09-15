@@ -139,7 +139,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_index =
       case index_ast do
         %AST.AttributeExpr{value: expr} -> expr
-        %AST.Text{value: value} -> value
+        %AST.Literal{value: value} -> value
       end
 
     # TODO: map names somehow?
@@ -466,7 +466,7 @@ defmodule Surface.Compiler.EExEngine do
     Surface.TypeHandler.update_prop_expr(type, value, meta)
   end
 
-  defp to_prop_expr(%AST.Text{value: value}, _) do
+  defp to_prop_expr(%AST.Literal{value: value}, _) do
     value
   end
 
@@ -501,7 +501,7 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_dynamic_nested_html([]), do: []
 
-  defp to_dynamic_nested_html([%AST.Text{value: text} | nodes]) do
+  defp to_dynamic_nested_html([%AST.Literal{value: text} | nodes]) do
     [text | to_dynamic_nested_html(nodes)]
   end
 
@@ -654,7 +654,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([]), do: []
 
   defp to_html_attributes([
-         %AST.Attribute{name: name, type: type, value: %AST.Text{value: value}}
+         %AST.Attribute{name: name, type: type, value: %AST.Literal{value: value}}
          | attributes
        ]) do
     runtime_value = Surface.TypeHandler.expr_to_value!(type, name, [value], [], nil, value)

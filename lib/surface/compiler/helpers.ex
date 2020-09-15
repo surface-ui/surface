@@ -157,7 +157,7 @@ defmodule Surface.Compiler.Helpers do
 
   def blank?(_), do: false
 
-  def is_blank_or_empty(%AST.Text{value: value}),
+  def is_blank_or_empty(%AST.Literal{value: value}),
     do: blank?(value)
 
   def is_blank_or_empty(%AST.Template{children: children}),

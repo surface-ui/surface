@@ -1,6 +1,6 @@
 defmodule Surface.AST do
   @type t ::
-          Surface.AST.Text.t()
+          Surface.AST.Literal.t()
           | Surface.AST.Interpolation.t()
           | Surface.AST.Expr.t()
           | Surface.AST.Tag.t()
@@ -108,7 +108,7 @@ defmodule Surface.AST.Directive do
           module: atom(),
           name: atom(),
           # the value here is defined by the individual directive
-          value: Surface.AST.AttributeExpr.t() | Surface.AST.Text.t() | nil,
+          value: Surface.AST.AttributeExpr.t() | Surface.AST.Literal.t() | nil,
           meta: Surface.AST.Meta.t()
         }
 end
@@ -170,7 +170,7 @@ defmodule Surface.AST.Attribute do
           type: atom(),
           type_opts: keyword(),
           name: atom(),
-          value: Surface.AST.Text.t() | Surface.AST.AttributeExpr.t(),
+          value: Surface.AST.Literal.t() | Surface.AST.AttributeExpr.t(),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -254,7 +254,7 @@ defmodule Surface.AST.Slot do
 end
 
 # TODO differentiate between raw HTML and plain text ?
-defmodule Surface.AST.Text do
+defmodule Surface.AST.Literal do
   @moduledoc """
   An AST node representing static text
 
@@ -377,7 +377,7 @@ defmodule Surface.AST.Component do
           directives: list(Surface.AST.Directive.t()),
           templates: %{
             :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
-            optional(atom()) => list(Surface.AST.Template.t())
+            optional(atom()) => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t())
           },
           meta: Surface.AST.Meta.t()
         }
