@@ -240,14 +240,15 @@ defmodule Surface.AST.Slot do
       * `:props` - either an atom or a quoted expression representing bindings for this slot
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :index, :props, :default, :meta]
+  defstruct [:name, :directives, :index, :props, :default, :meta]
 
   @type t :: %__MODULE__{
           name: binary(),
           index: any(),
+          directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t(),
           # quoted ?
-          props: Surface.AST.Directive.t(),
+          props: list(Keyword.t(any())),
           default: list(Surface.AST.t())
         }
 end
@@ -324,13 +325,14 @@ defmodule Surface.AST.Template do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:name, :children, :let, :meta]
+  defstruct [:name, :children, :directives, :let, :meta]
 
   @type t :: %__MODULE__{
           name: atom(),
           children: list(Surface.AST.t()),
+          directives: list(Surface.AST.Directive.t()),
           # quoted?
-          let: Surface.AST.Directive.t(),
+          let: list(Keyword.t(atom())),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -414,7 +416,7 @@ defmodule Surface.AST.SlotableComponent do
           debug: list(atom()),
           type: module(),
           slot: atom(),
-          let: Surface.AST.Directive.t(),
+          let: list(Keyword.t(atom())),
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),

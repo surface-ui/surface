@@ -123,7 +123,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Slot{
            name: name,
            index: index_ast,
-           props: %AST.Directive{value: %AST.AttributeExpr{value: props_expr}},
+           props: props_expr,
            default: default
          },
          buffer,
@@ -390,7 +390,7 @@ defmodule Surface.Compiler.EExEngine do
          [
            %AST.Template{
              name: name,
-             let: %AST.Directive{value: %AST.AttributeExpr{value: let}},
+             let: let,
              children: children
            }
            | tail
@@ -411,7 +411,7 @@ defmodule Surface.Compiler.EExEngine do
            %AST.SlotableComponent{
              slot: name,
              module: module,
-             let: %AST.Directive{value: %AST.AttributeExpr{value: let}},
+             let: let,
              props: props,
              templates: %{default: default}
            }
