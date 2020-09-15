@@ -339,10 +339,7 @@ defmodule Surface.Compiler.EExEngine do
 
     slot_meta =
       for {name, size, infos} <- slot_info do
-        prop_assign_mappings =
-          Enum.map(infos, fn {let, _, _} ->
-            Enum.map(let, fn {prop_name, binding_name} -> {prop_name, binding_name} end)
-          end)
+        prop_assign_mappings = Enum.map(infos, fn {let, _, _} -> let end)
 
         meta_value =
           quote generated: true do
