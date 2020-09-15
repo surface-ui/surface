@@ -71,7 +71,7 @@ defmodule Surface.Components.Markdown do
       # Need to reconstruct the relative line
       |> markdown_as_html!(meta.caller, meta.line, opts)
 
-    node = %Surface.AST.Text{value: html}
+    node = %Surface.AST.Literal{value: html}
 
     cond do
       unwrap ->
@@ -84,7 +84,7 @@ defmodule Surface.Components.Markdown do
           attributes: [
             %Surface.AST.Attribute{
               name: "class",
-              value: %Surface.AST.Text{value: class}
+              value: %Surface.AST.Literal{value: class}
             }
           ],
           children: [node],

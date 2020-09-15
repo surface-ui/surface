@@ -5,7 +5,7 @@ defmodule Surface.TypeHandler.CssClass do
 
   @impl true
   def literal_to_ast_node(_type, _name, "", _meta) do
-    {:ok, %Surface.AST.Text{value: ""}}
+    {:ok, %Surface.AST.Literal{value: ""}}
   end
 
   def literal_to_ast_node(type, name, value, meta) do

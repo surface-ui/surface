@@ -189,7 +189,7 @@ defmodule Surface.Compiler do
   defp process_directives(node), do: node
 
   defp convert_node_to_ast(:text, text, _),
-    do: {:ok, %AST.Text{value: text}}
+    do: {:ok, %AST.Literal{value: text}}
 
   defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
@@ -226,7 +226,9 @@ defmodule Surface.Compiler do
 
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
-    index = attribute_value_as_ast(attributes, "index", %Surface.AST.Text{value: 0}, compile_meta)
+
+    index =
+      attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
     with true <- not is_nil(name) and is_atom(name),
          {:ok, directives, _attrs} <-

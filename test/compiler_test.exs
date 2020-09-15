@@ -202,7 +202,7 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :class,
                  type: :css_class,
-                 value: %Surface.AST.Text{value: ""}
+                 value: %Surface.AST.Literal{value: ""}
                }
              ]
            } = node
@@ -221,7 +221,7 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: %Surface.AST.Text{value: ""}
+                 value: %Surface.AST.Literal{value: ""}
                }
              ]
            } = node
@@ -245,12 +245,12 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: %Surface.AST.Text{value: "label"}
+                 value: %Surface.AST.Literal{value: "label"}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: %Surface.AST.Text{value: true}
+                 value: %Surface.AST.Literal{value: true}
                },
                %Surface.AST.Attribute{
                  name: :click,
@@ -282,12 +282,12 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: %Surface.AST.Text{value: "label"}
+                 value: %Surface.AST.Literal{value: "label"}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: %Surface.AST.Text{value: true}
+                 value: %Surface.AST.Literal{value: true}
                },
                %Surface.AST.Attribute{
                  name: :click,
@@ -319,17 +319,17 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: %Surface.AST.Text{value: "label"}
+                 value: %Surface.AST.Literal{value: "label"}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: %Surface.AST.Text{value: true}
+                 value: %Surface.AST.Literal{value: true}
                },
                %Surface.AST.Attribute{
                  name: :click,
                  type: :string,
-                 value: %Surface.AST.Text{value: "event"}
+                 value: %Surface.AST.Literal{value: "event"}
                }
              ]
            } = node
@@ -360,17 +360,17 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :label,
                  type: :string,
-                 value: %Surface.AST.Text{value: ""}
+                 value: %Surface.AST.Literal{value: ""}
                },
                %Surface.AST.Attribute{
                  name: :disabled,
                  type: :boolean,
-                 value: %Surface.AST.Text{value: true}
+                 value: %Surface.AST.Literal{value: true}
                },
                %Surface.AST.Attribute{
                  name: :class,
                  type: :css_class,
-                 value: %Surface.AST.Text{value: ""}
+                 value: %Surface.AST.Literal{value: ""}
                }
              ]
            } = node
@@ -389,7 +389,7 @@ defmodule Surface.CompilerTest do
                %Surface.AST.Attribute{
                  name: :id,
                  type: :string,
-                 value: %Surface.AST.Text{value: "my_id"}
+                 value: %Surface.AST.Literal{value: "my_id"}
                },
                %Surface.AST.Attribute{
                  name: :session,

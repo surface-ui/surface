@@ -5,7 +5,7 @@ defmodule Surface.TypeHandler.Default do
 
   @impl true
   def literal_to_ast_node(_type, _name, value, _meta) do
-    {:ok, %Surface.AST.Text{value: value}}
+    {:ok, %Surface.AST.Literal{value: value}}
   end
 
   @impl true

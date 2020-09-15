@@ -19,14 +19,14 @@ defmodule Surface.Directive.Show do
     %AST.Directive{
       module: __MODULE__,
       name: :show,
-      value: %AST.Text{value: value},
+      value: %AST.Literal{value: value},
       meta: attr_meta
     }
   end
 
   def extract(_, _), do: []
 
-  def process(%AST.Directive{value: %AST.Text{value: value}}, node) do
+  def process(%AST.Directive{value: %AST.Literal{value: value}}, node) do
     if value do
       node
     else
@@ -75,7 +75,7 @@ defmodule Surface.Directive.Show do
         {%AST.Attribute{
            name: :style,
            type: :style,
-           value: %AST.Text{value: ""},
+           value: %AST.Literal{value: ""},
            meta: meta
          }, non_style}
     end
@@ -91,7 +91,7 @@ defmodule Surface.Directive.Show do
     }
   end
 
-  defp style_value_to_expr(%AST.Text{value: value}, attr_meta) do
+  defp style_value_to_expr(%AST.Literal{value: value}, attr_meta) do
     %AST.AttributeExpr{
       original: value,
       value:

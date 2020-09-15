@@ -16,7 +16,7 @@ defmodule Surface.Components.Raw do
   slot default
 
   def expand(_attributes, children, _meta) do
-    %Surface.AST.Text{
+    %Surface.AST.Literal{
       value: List.to_string(children)
     }
   end

@@ -5,7 +5,7 @@ defmodule Surface.TypeHandler.Boolean do
 
   @impl true
   def literal_to_ast_node(_name, _type, "", _meta) do
-    {:ok, %Surface.AST.Text{value: true}}
+    {:ok, %Surface.AST.Literal{value: true}}
   end
 
   def literal_to_ast_node(name, type, value, meta) do
