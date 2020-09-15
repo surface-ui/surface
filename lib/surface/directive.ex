@@ -66,7 +66,13 @@ defmodule Surface.Directive do
         ast =
           value
           |> to_ast!(name, opts[:type], attr_meta)
-          |> handle_modifiers(attr_meta, applied_modifiers, opts[:modifiers] || [], module, opts[:name])
+          |> handle_modifiers(
+            attr_meta,
+            applied_modifiers,
+            opts[:modifiers] || [],
+            module,
+            opts[:name]
+          )
 
         {ast, applied_modifiers, attr_meta}
 
@@ -96,7 +102,14 @@ defmodule Surface.Directive do
 
   defp handle_modifiers(value, _meta, [], _allowed, _module, _name), do: value
 
-  defp handle_modifiers(%{value: clause} = ast, meta, [modifier | modifiers], allowed, module, name) do
+  defp handle_modifiers(
+         %{value: clause} = ast,
+         meta,
+         [modifier | modifiers],
+         allowed,
+         module,
+         name
+       ) do
     if Enum.member?(allowed, modifier) do
       clause = module.handle_modifier(clause, modifier, meta)
       handle_modifiers(%{ast | value: clause}, meta, modifiers, allowed, module, name)
