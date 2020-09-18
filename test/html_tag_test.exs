@@ -152,14 +152,14 @@ defmodule HtmlTagTest do
     end
 
     test "css class with keyword list notation" do
-      assigns = %{value1: true, value2: false, value3: true}
+      assigns = %{value1: true, value2: false, value3: "red", value4: "rounded"}
 
       code = ~H"""
-      <div class={{ "default1", "default2", prop1: @value1, prop2: @value2, prop3: @value3 }}/>
+      <div class={{ "default1", "default2", prop1: @value1, prop2: @value2, "is-#{@value3}": @value3, "is-#{@value4}": @value4 }}/>
       """
 
       assert render_static(code) =~ """
-             <div class="default1 default2 prop1 prop3"></div>
+             <div class="default1 default2 prop1 is-red is-rounded"></div>
              """
     end
 

@@ -26,6 +26,12 @@ defmodule Surface.TypeHandler.CssClass do
     value =
       Enum.reduce(clauses ++ opts, [], fn item, classes ->
         case item do
+          list when is_list(list) ->
+            case expr_to_value(list, []) do
+              {:ok, new_classes} -> Enum.reverse(new_classes) ++ classes
+              error -> error
+            end
+
           {class, val} when val not in [nil, false] ->
             maybe_add_class(classes, class)
 

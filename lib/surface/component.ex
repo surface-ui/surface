@@ -37,7 +37,7 @@ defmodule Surface.Component do
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :slot]
+      use Surface.API, include: [:property, :slot, :data]
       import Phoenix.HTML
 
       @before_compile unquote(__MODULE__)
