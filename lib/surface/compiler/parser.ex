@@ -188,8 +188,17 @@ defmodule Surface.Compiler.Parser do
     {:error, "closing tag #{inspect(closing)} did not match opening tag #{inspect(opening)}"}
   end
 
-  defp match_tags(_rest, [[[tag_node | _] | _]], _context, _line, _offset) do
-    {[opening], {_opening_line, _}} = tag_node
+  defp match_tags(rest, [[[tag_node | _] | _]], _context, _line, _offset) do
+    opening =
+      case Regex.run(~r/^<(#?[a-zA-Z][a-zA-Z0-9_\-\.]+)/, rest) do
+        [_, tag] ->
+          tag
+
+        _ ->
+          {[tag], {_opening_line, _}} = tag_node
+          tag
+      end
+
     {:error, "expected closing tag for #{inspect(opening)}"}
   end
 

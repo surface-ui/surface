@@ -284,6 +284,39 @@ defmodule Surface.Compiler.ParserTest do
                {:error, "expected closing tag for \"foo\"", 1}
     end
 
+    test "missing closing tag" do
+      code = "<foo><bar></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"bar\"", 1}
+
+      code = "<foo><Bar></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"Bar\"", 1}
+
+      code = "<foo><Bar.Baz></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"Bar.Baz\"", 1}
+
+      code = "<foo><Bar1></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"Bar1\"", 1}
+
+      code = "<foo><Bar_1></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"Bar_1\"", 1}
+
+      code = "<foo><bar-baz></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"bar-baz\"", 1}
+
+      code = "<foo><#Bar></foo>"
+      assert parse(code) == {:error, "expected closing tag for \"#Bar\"", 1}
+
+      code = """
+      <foo>
+        text before
+        <div attr1="1" attr="2">
+        text after
+      </foo>
+      """
+
+      assert parse(code) == {:error, "expected closing tag for \"div\"", 3}
+    end
+
     test "tag mismatch" do
       assert parse("<foo>bar</baz>") ==
                {:error, "closing tag \"baz\" did not match opening tag \"foo\"", 1}
