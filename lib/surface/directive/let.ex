@@ -12,8 +12,8 @@ defmodule Surface.Directive.Let do
 
   def extract(_, _), do: []
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %{let: let} = node) do
-    %{node | let: [value | let]}
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, node) do
+    %{node | let: value}
   end
 
   defp directive_value(value, meta) do
