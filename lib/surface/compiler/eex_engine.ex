@@ -223,7 +223,8 @@ defmodule Surface.Compiler.EExEngine do
     {gets, _} = Code.eval_quoted(gets_ast)
     gets_pattern_ast = Surface.Components.Context.quoted_gets_pattern(gets)
 
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, gets_pattern_ast, buffer, state)
+    {do_block, slot_meta, slot_props} =
+      collect_slot_meta(component, templates, gets_pattern_ast, buffer, state)
 
     if do_block == [] do
       quote generated: true do
@@ -318,7 +319,8 @@ defmodule Surface.Compiler.EExEngine do
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let}), unquote(context_expr)} ->
+            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let}),
+             unquote(context_expr)} ->
               unquote(body)
           end
         end)
