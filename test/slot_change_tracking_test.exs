@@ -61,7 +61,7 @@ defmodule Surface.SlotChangeTrackingTest do
     end
 
     def handle_event("inc", _, socket) do
-      {:noreply, update(socket, :value, & &1 + 1)}
+      {:noreply, update(socket, :value, &(&1 + 1))}
     end
   end
 
@@ -76,7 +76,6 @@ defmodule Surface.SlotChangeTrackingTest do
       """
     end
   end
-
 
   test "changing a slot prop updates any view/component using it" do
     {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
