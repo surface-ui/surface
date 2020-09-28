@@ -208,7 +208,22 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
+    context_expr =
+      if state.depth > 0 and Enum.member?(state.context, :template) do
+        quote generated: true do
+          Map.merge(@__context__ || %{}, the_context)
+        end
+      else
+        quote do
+          @__context__ || %{}
+        end
+      end
+
+    {gets_ast, props_expr} = Keyword.pop(props_expr, :get, [])
+    {gets, _} = Code.eval_quoted(gets_ast)
+    gets_pattern_ast = Surface.Components.Context.quoted_gets_pattern(gets)
+
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, gets_pattern_ast, buffer, state)
 
     if do_block == [] do
       quote generated: true do
@@ -216,7 +231,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__context__ || %{},
+            unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),
@@ -232,7 +247,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__context__ || %{},
+            unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),
@@ -275,7 +290,7 @@ defmodule Surface.Compiler.EExEngine do
     Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
   end
 
-  defp collect_slot_meta(component, templates, buffer, state) do
+  defp collect_slot_meta(component, templates, gets_pattern_ast, buffer, state) do
     slot_info =
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
@@ -291,6 +306,11 @@ defmodule Surface.Compiler.EExEngine do
         {name, Enum.count(templates_for_slot), nested_templates}
       end)
 
+    context_expr =
+      quote generated: true do
+        unquote(gets_pattern_ast) = the_context
+      end
+
     do_block =
       slot_info
       |> Enum.map(fn {name, _size, infos} ->
@@ -298,7 +318,7 @@ defmodule Surface.Compiler.EExEngine do
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let}), _context} ->
+            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let}), unquote(context_expr)} ->
               unquote(body)
           end
         end)

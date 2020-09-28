@@ -36,8 +36,8 @@ defmodule ContextTest do
       <Context
         get={{ :field, scope: ContextTest.Outer }}
         get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
-        <span id="field">{{ @field }}</span>
-        <span id="other_field">{{ @other_field }}</span>
+        <span id="field">{{ field }}</span>
+        <span id="other_field">{{ other_field }}</span>
       </Context>
       """
     end
@@ -61,7 +61,7 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
-        <span>{{ @my_field }}</span>
+        <span>{{ my_field }}</span>
       </Context>
       """
     end
@@ -150,7 +150,7 @@ defmodule ContextTest do
     <OuterWithNamedSlots>
       <template slot="my_slot">
         <Context get={{ :field }}>
-          {{ @field }}
+          {{ field }}
         </Context>
       </template>
     </OuterWithNamedSlots>
