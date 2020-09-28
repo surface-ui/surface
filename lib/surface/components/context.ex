@@ -70,7 +70,7 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_assigns_kw(@__context__, @set, @get)}) }}
+    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_assigns(@__context__, @set, @get)}) }}
     """
   end
 
@@ -85,28 +85,21 @@ defmodule Surface.Components.Context do
     assigns.__context__[key]
   end
 
-  defp context_assigns_kw(context, sets, gets) do
-    updated_context =
-      Enum.reduce(sets, context, fn set, acc ->
-        {key, value} = normalize_set(set)
-        Map.put(acc, key, value)
+  @doc false
+  def quoted_gets_pattern(gets) do
+    gets_with_vars =
+      Enum.map(gets, fn get ->
+        {key, name} = normalize_get(get)
+        {key, {name, [], nil}}
       end)
 
-    context_kw(updated_context, sets) ++ context_gets_kw(updated_context, gets)
+    {:%{}, [generated: true], gets_with_vars}
   end
 
-  defp context_kw(context, sets) do
-    if sets == [] do
-      []
-    else
-      [__context__: context]
-    end
-  end
-
-  defp context_gets_kw(context, gets) do
-    Enum.map(gets, fn get ->
-      {key, name} = normalize_get(get)
-      {name, context[key]}
+  defp context_assigns(context, sets, _gets) do
+    Enum.reduce(sets, context, fn set, acc ->
+      {key, value} = normalize_set(set)
+      Map.put(acc, key, value)
     end)
   end
 
