@@ -142,7 +142,8 @@ defmodule Surface.Compiler.EExEngine do
       quote generated: true do
         if @inner_content do
           render_inner(
-            @inner_content, {
+            @inner_content,
+            {
               unquote(slot_name),
               unquote(slot_index),
               Map.new(unquote(props_expr)),
@@ -207,8 +208,7 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
-    {do_block, slot_meta, slot_props} =
-      collect_slot_meta(component, templates, buffer, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
     if do_block == [] do
       quote generated: true do
