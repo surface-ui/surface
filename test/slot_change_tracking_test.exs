@@ -30,9 +30,9 @@ defmodule Surface.SlotChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Outer id="outer" :let={{ :param }}>
+      <Outer id="outer" :let={{ param: param }}>
         Count: {{ @count }}
-        <CheckUpdated id="1" dest={{ @test_pid }} content={{ @param }} />
+        <CheckUpdated id="1" dest={{ @test_pid }} content={{ param }} />
         <CheckUpdated id="2" dest={{ @test_pid }} />
       </Outer>
       """
@@ -41,6 +41,56 @@ defmodule Surface.SlotChangeTrackingTest do
     def handle_event("update_count", _, socket) do
       {:noreply, update(socket, :count, &(&1 + 1))}
     end
+  end
+
+  defmodule Counter do
+    use Surface.LiveComponent
+
+    slot default, props: [:value]
+
+    data value, :integer, default: 0
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        Value in the Counter: {{ @value }}
+        <slot :props={{ value: @value }}/>
+        <button id="incButton" :on-phx-click="inc">+</button>
+      </div>
+      """
+    end
+
+    def handle_event("inc", _, socket) do
+      {:noreply, update(socket, :value, & &1 + 1)}
+    end
+  end
+
+  defmodule ViewWithCounter do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~H"""
+      <Counter id="counter" :let={{ value: value }}>
+        Value in the View: {{ value }}
+      </Counter>
+      """
+    end
+  end
+
+
+  test "changing a slot prop updates any view/component using it" do
+    {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
+
+    assert html =~ "Value in the Counter: 0"
+    assert html =~ "Value in the View: 0"
+
+    html =
+      view
+      |> element("#incButton", "+")
+      |> render_click()
+
+    assert html =~ "Value in the Counter: 1"
+    assert html =~ "Value in the View: 1"
   end
 
   test "change tracking is disabled if a child component uses a passed slot prop" do

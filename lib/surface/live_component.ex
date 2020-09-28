@@ -62,8 +62,8 @@ defmodule Surface.LiveComponent do
       use Surface.API, include: [:property, :slot, :data]
       import Phoenix.HTML
 
-      require Surface.ContentHandler
-      @before_compile Surface.ContentHandler
+      # require Surface.ContentHandler
+      # @before_compile Surface.ContentHandler
       alias Surface.Components.Context
 
       @doc """

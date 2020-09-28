@@ -144,25 +144,33 @@ defmodule Surface.Compiler.EExEngine do
 
     # TODO: map names somehow?
     slot_content_expr =
-      if slot_name == :__default__ do
-        quote generated: true do
-          if @inner_content do
-            @inner_content.(
-              unquote(props_expr) ++ [__slot__: {:__default__, unquote(slot_index)}]
-            )
-          end
-        end
-      else
-        slot_assign = at_ref(slot_name)
-
-        quote generated: true do
-          if unquote(slot_assign) do
-            Enum.at(unquote(slot_assign), unquote(slot_index)).inner_content.(
-              unquote(props_expr) ++ [__slot__: {unquote(slot_name), unquote(slot_index)}]
-            )
-          end
+      quote generated: true do
+        if @inner_content do
+          render_inner(
+            @inner_content, {unquote(slot_name), unquote(slot_index), Map.new(unquote(props_expr))}
+          )
         end
       end
+      # if slot_name == :__default__ do
+      #   quote generated: true do
+      #     if @inner_content do
+      #       render_inner(
+      #         @inner_content,
+      #         unquote(props_expr) ++ [__slot__: {:__default__, unquote(slot_index)}]
+      #       )
+      #     end
+      #   end
+      # else
+      #   slot_assign = at_ref(slot_name)
+
+      #   quote generated: true do
+      #     if unquote(slot_assign) do
+      #       Enum.at(unquote(slot_assign), unquote(slot_index)).inner_content.(
+      #         unquote(props_expr) ++ [__slot__: {unquote(slot_name), unquote(slot_index)}]
+      #       )
+      #     end
+      #   end
+      # end
 
     default_value =
       handle_nested_block(default, buffer, %{
@@ -219,10 +227,10 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
-    {case_expression, slot_meta, slot_props} =
+    {do_block, slot_meta, slot_props} =
       collect_slot_meta(component, templates, buffer, state)
 
-    if case_expression == [] do
+    if do_block == [] do
       quote generated: true do
         live_component(
           @socket,
@@ -252,7 +260,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(module),
             unquote(meta.node_alias)
           ),
-          do: unquote(case_expression)
+          unquote(do_block)
         )
       end
     end
@@ -303,32 +311,30 @@ defmodule Surface.Compiler.EExEngine do
         {name, Enum.count(templates_for_slot), nested_templates}
       end)
 
-    case_expression =
+    do_block =
       slot_info
       |> Enum.map(fn {name, _size, infos} ->
         infos
         |> Enum.with_index()
-        |> Enum.map(fn {{_let, _, body}, index} ->
+        |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index)} ->
+            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let})} ->
               unquote(body)
           end
         end)
       end)
       |> List.flatten()
       |> case do
-        [] ->
-          []
+        [] -> []
+        block -> [do: block]
+          # expr =
+          #   quote generated: true do
+          #     case @__slot__, do: unquote(block)
+          #   end
 
-        block ->
-          expr =
-            quote generated: true do
-              case @__slot__, do: unquote(block)
-            end
-
-          buffer = state.engine.handle_begin(buffer)
-          buffer = state.engine.handle_expr(buffer, "=", expr)
-          state.engine.handle_end(buffer)
+          # buffer = state.engine.handle_begin(buffer)
+          # buffer = state.engine.handle_expr(buffer, "=", expr)
+          # state.engine.handle_end(buffer)
       end
 
     slot_props =
@@ -338,21 +344,21 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     slot_meta =
-      for {name, size, infos} <- slot_info do
-        prop_assign_mappings = Enum.map(infos, fn {let, _, _} -> let end)
+      for {name, size, _infos} <- slot_info do
+        # prop_assign_mappings = Enum.map(infos, fn {let, _, _} -> let end)
 
         meta_value =
           quote generated: true do
             %{
-              size: unquote(size),
-              prop_assigns: unquote(prop_assign_mappings)
+              size: unquote(size)
+              #, prop_assigns: unquote(prop_assign_mappings)
             }
           end
 
         {name, meta_value}
       end
 
-    {case_expression, slot_meta, slot_props}
+    {do_block, slot_meta, slot_props}
   end
 
   defp handle_nested_block(block, buffer, state) when is_list(block) do
@@ -441,7 +447,7 @@ defmodule Surface.Compiler.EExEngine do
     end)
     |> Enum.map(fn %{generator: gen, name: name} ->
       case find_attribute_value(props, gen, nil) do
-        %AST.AttributeExpr{value: {{binding, _, _}, _}} ->
+        %AST.AttributeExpr{value: {binding, _}} ->
           {name, binding}
 
         _ ->
@@ -690,10 +696,6 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]
-  end
-
-  defp at_ref(name) do
-    {:@, [generated: true], [{name, [generated: true], nil}]}
   end
 
   defp maybe_print_expression(expr, node) do
