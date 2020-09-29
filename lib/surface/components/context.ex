@@ -86,6 +86,10 @@ defmodule Surface.Components.Context do
   end
 
   @doc false
+  def quoted_gets_pattern([]) do
+    nil
+  end
+
   def quoted_gets_pattern(gets) do
     gets_with_vars =
       Enum.map(gets, fn get ->

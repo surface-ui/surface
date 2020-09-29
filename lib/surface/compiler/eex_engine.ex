@@ -319,8 +319,14 @@ defmodule Surface.Compiler.EExEngine do
       end)
 
     context_expr =
-      quote generated: true do
-        unquote(gets_pattern_ast) = the_context
+      if gets_pattern_ast do
+        quote generated: true do
+          unquote(gets_pattern_ast) = the_context
+        end
+      else
+        quote generated: true do
+          the_context
+        end
       end
 
     do_block =
@@ -330,13 +336,18 @@ defmodule Surface.Compiler.EExEngine do
         |> Enum.with_index()
         |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index), unquote({:%{}, [generated: true], let}),
-             unquote(context_expr)} ->
+            {
+              unquote(name),
+              unquote(index),
+              unquote({:%{}, [generated: true], let}),
+              unquote(context_expr)
+            } ->
               unquote(body)
           end
         end)
       end)
       |> List.flatten()
+      |> Kernel.++(fallback_inner_content(context_expr))
       |> case do
         [] -> []
         block -> [do: block]
@@ -359,6 +370,28 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     {do_block, slot_meta, slot_props}
+  end
+
+  defp fallback_inner_content(context_expr) do
+    quote generated: true do
+      arg ->
+        _ = var!(assigns)
+
+        # TODO: List all full patterns, not only the context's
+        message = """
+        cannot match slot with arg:
+
+          #{inspect(arg)}
+
+        Context pattern:
+
+          #{unquote(Macro.escape(context_expr)) |> Macro.to_string()}
+
+        """
+
+        IO.warn(message)
+        ""
+    end
   end
 
   defp handle_nested_block(block, buffer, state) when is_list(block) do
