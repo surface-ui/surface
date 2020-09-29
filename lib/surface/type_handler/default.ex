@@ -30,6 +30,10 @@ defmodule Surface.TypeHandler.Default do
     {:ok, value}
   end
 
+  def expr_to_value([], opts) do
+    {:ok, opts}
+  end
+
   def expr_to_value(clauses, opts) do
     {:error, clauses ++ opts}
   end
