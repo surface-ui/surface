@@ -137,6 +137,17 @@ defmodule Surface.Compiler.EExEngine do
         %AST.Literal{value: value} -> value
       end
 
+    context_expr =
+      if state.depth > 0 and Enum.member?(state.context, :template) do
+        quote generated: true do
+          Map.merge(@__context__, the_context)
+        end
+      else
+        quote do
+          @__context__
+        end
+      end
+
     # TODO: map names somehow?
     slot_content_expr =
       quote generated: true do
@@ -147,7 +158,7 @@ defmodule Surface.Compiler.EExEngine do
               unquote(slot_name),
               unquote(slot_index),
               Map.new(unquote(props_expr)),
-              @__context__
+              unquote(context_expr)
             }
           )
         end
