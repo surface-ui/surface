@@ -23,7 +23,7 @@ defmodule Surface.Components.Form.MultipleSelect do
   property class, :css_class
 
   @doc "The options in the select"
-  property options, :keyword, default: []
+  property options, :any, default: []
 
   @doc "Options list"
   property opts, :keyword, default: []
