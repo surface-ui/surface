@@ -33,11 +33,11 @@ defmodule Surface.Components.Form.SelectTest do
 
   test "passing other options" do
     code = """
-    <Select form="user" field="role" opts={{ prompt: "Pick a role" }} />
+    <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ prompt: "Pick a role" }} />
     """
 
     assert render_live(code) =~ """
-           <select id="user_role" name="user[role]"><option value="">Pick a role</option></select>
+           <select id="user_role" name="user[role]"><option value="">Pick a role</option><option value="admin">Admin</option><option value="user">User</option></select>
            """
   end
 end
