@@ -28,11 +28,6 @@ defmodule Surface.Components.Form.Select do
   @doc "Options list"
   property opts, :keyword, default: []
 
-  @doc """
-  The content for the label
-  """
-  slot default
-
   def render(assigns) do
     form = get_form(assigns)
     field = get_field(assigns)
