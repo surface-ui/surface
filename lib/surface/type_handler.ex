@@ -294,6 +294,8 @@ defmodule Surface.TypeHandler do
   end
 
   defp handler(:boolean), do: __MODULE__.Boolean
+  defp handler(:atom), do: __MODULE__.Atom
+  defp handler(:form), do: __MODULE__.Form
   defp handler(:map), do: __MODULE__.Map
   defp handler(:keyword), do: __MODULE__.Keyword
   defp handler(:css_class), do: __MODULE__.CssClass

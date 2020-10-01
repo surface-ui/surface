@@ -12,12 +12,13 @@ defmodule Surface.Components.Form.Label do
 
   import Phoenix.HTML.Form, only: [label: 4]
   import Surface.Components.Form.Utils
+  alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
   property form, :form
 
   @doc "The field name"
-  property field, :string
+  property field, :atom
 
   @doc "The CSS class for the underlying tag"
   property class, :css_class
@@ -26,18 +27,21 @@ defmodule Surface.Components.Form.Label do
   property opts, :keyword, default: []
 
   @doc """
-  The content for the label
+  The text for the label
   """
   slot default
 
   def render(assigns) do
-    form = get_form(assigns)
-    field = get_field(assigns)
     props = get_non_nil_props(assigns, class: get_config(:default_class))
-    children = ~H"<slot>{{ Phoenix.Naming.humanize(field) }}</slot>"
 
     ~H"""
-    {{ label(form, field, props ++ @opts, do: children) }}
+    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
+      {{ label(form, field, props ++ @opts, do: children(assigns, field)) }}
+    </InputContext>
     """
+  end
+
+  def children(assigns, field) do
+    ~H"<slot>{{ Phoenix.Naming.humanize(field) }}</slot>"
   end
 end

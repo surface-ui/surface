@@ -54,7 +54,7 @@ defmodule Surface.ContextChangeTrackingTest do
           <ContextGetter test_pid={{ @test_pid }}>
             <CheckUpdated id="3" dest={{ @test_pid }}/>
           </ContextGetter>
-          <CheckUpdated id="4" dest={{ @test_pid }} />
+          <CheckUpdated id="4" dest={{ @test_pid }}/>
         </ContextSetter>
       </div>
       """

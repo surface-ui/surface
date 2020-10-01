@@ -22,13 +22,13 @@ defmodule Surface.Components.Form.TimeInput do
   import Surface.Components.Form.Utils
 
   def render(assigns) do
-    form = get_form(assigns)
-    field = get_field(assigns)
     props = get_non_nil_props(assigns, [:value, class: @default_class])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{ time_input(form, field, props ++ @opts ++ event_opts) }}
+    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
+      {{ time_input(form, field, props ++ @opts ++ event_opts) }}
+    </InputContext>
     """
   end
 end

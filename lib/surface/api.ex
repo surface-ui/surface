@@ -46,6 +46,8 @@ defmodule Surface.API do
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
+      Module.put_attribute(__MODULE__, :use_context?, false)
+
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
         unquote(__MODULE__).init_func(func, __MODULE__)
@@ -59,7 +61,8 @@ defmodule Surface.API do
     [
       quoted_property_funcs(env),
       quoted_slot_funcs(env),
-      quoted_data_funcs(env)
+      quoted_data_funcs(env),
+      quoted_context_funcs(env)
     ]
   end
 
@@ -208,6 +211,17 @@ defmodule Surface.API do
       @doc false
       def __required_slots_names__() do
         unquote(Macro.escape(required_slots_names))
+      end
+    end
+  end
+
+  defp quoted_context_funcs(env) do
+    use_context? = Module.get_attribute(env.module, :use_context?)
+
+    quote do
+      @doc false
+      def __use_context__?() do
+        unquote(use_context?)
       end
     end
   end
