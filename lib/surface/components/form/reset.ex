@@ -49,12 +49,7 @@ defmodule Surface.Components.Form.Reset do
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{
-      reset(
-        assigns[:value],
-        props ++ @opts ++ event_opts
-      )
-    }}
+    {{ reset(assigns[:value], props ++ @opts ++ event_opts)}}
     """
   end
 end

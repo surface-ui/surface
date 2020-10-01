@@ -256,15 +256,15 @@ end
 # TODO differentiate between raw HTML and plain text ?
 defmodule Surface.AST.Literal do
   @moduledoc """
-  An AST node representing static text
+  An AST node representing a literal value
 
   ## Properties
-      * `:value` - the text
+      * `:value` - the value
   """
   defstruct [:value]
 
   @type t :: %__MODULE__{
-          value: binary | boolean
+          value: binary | boolean | integer | atom
         }
 end
 

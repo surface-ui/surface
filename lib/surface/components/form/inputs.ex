@@ -9,7 +9,6 @@ defmodule Surface.Components.Form.Inputs do
   use Surface.Component
 
   import Phoenix.HTML.Form
-  import Surface.Components.Form.Utils
 
   @doc """
   The parent form.
@@ -35,10 +34,12 @@ defmodule Surface.Components.Form.Inputs do
 
   def render(assigns) do
     ~H"""
-    <Context
-      :for={{ f <- inputs_for(get_form(assigns), @for, @opts) }}
-      set={{ :form, f, scope: Surface.Components.Form }}>
-      <slot :props={{ form: f }}/>
+    <Context get={{ :form, scope: Surface.Components.Form }}>
+      <Context
+        :for={{ f <- inputs_for(@form || form, @for, @opts) }}
+        set={{ :form, f, scope: Surface.Components.Form }}>
+        <slot :props={{ form: f }}/>
+      </Context>
     </Context>
     """
   end
