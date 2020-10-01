@@ -41,8 +41,6 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       @before_compile unquote(__MODULE__)
-      # require Surface.ContentHandler
-      # @before_compile Surface.ContentHandler
 
       alias Surface.Components.Context
 

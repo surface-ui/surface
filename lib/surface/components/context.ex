@@ -68,9 +68,14 @@ defmodule Surface.Components.Context do
   @doc "The content of the `<Context>`"
   slot default, required: true
 
+  def transform(node) do
+    Module.put_attribute(node.meta.caller.module, :use_context?, true)
+    node
+  end
+
   def render(assigns) do
     ~H"""
-    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_assigns(@__context__, @set, @get)}) }}
+    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_map(@__context__, @set, @get)}) }}
     """
   end
 
@@ -85,22 +90,7 @@ defmodule Surface.Components.Context do
     assigns.__context__[key]
   end
 
-  @doc false
-  def quoted_gets_pattern([]) do
-    nil
-  end
-
-  def quoted_gets_pattern(gets) do
-    gets_with_vars =
-      Enum.map(gets, fn get ->
-        {key, name} = normalize_get(get)
-        {key, {name, [], nil}}
-      end)
-
-    {:%{}, [generated: true], gets_with_vars}
-  end
-
-  defp context_assigns(context, sets, _gets) do
+  defp context_map(context, sets, _gets) do
     Enum.reduce(sets, context, fn set, acc ->
       {key, value} = normalize_set(set)
       Map.put(acc, key, value)
@@ -117,7 +107,7 @@ defmodule Surface.Components.Context do
     end
   end
 
-  defp normalize_get({key, opts}) do
+  def normalize_get({key, opts}) do
     full_key =
       case Keyword.get(opts, :scope) do
         nil ->

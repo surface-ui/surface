@@ -138,7 +138,7 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     context_expr =
-      if state.depth > 0 and Enum.member?(state.context, :template) do
+      if is_root?(state) do
         quote generated: true do
           Map.merge(@__context__, the_context)
         end
@@ -219,23 +219,33 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
+    if module.__use_context__? do
+      Module.put_attribute(meta.caller.module, :use_context?, true)
+    end
+
     context_expr =
-      if state.depth > 0 and Enum.member?(state.context, :template) do
-        quote generated: true do
-          Map.merge(@__context__ || %{}, the_context)
-        end
-      else
-        quote do
-          @__context__ || %{}
-        end
+      cond do
+        module.__slots__() == [] and not module.__use_context__? ->
+          quote generated: true do
+            %{}
+          end
+
+        is_root?(state) ->
+          quote generated: true do
+            Map.merge(@__context__ || %{}, the_context)
+          end
+
+        true ->
+          quote generated: true do
+            @__context__ || %{}
+          end
       end
 
-    {gets_ast, props_expr} = Keyword.pop(props_expr, :get, [])
-    {gets, _} = Code.eval_quoted(gets_ast)
-    gets_pattern_ast = Surface.Components.Context.quoted_gets_pattern(gets)
+    {gets, props_expr} = Keyword.pop(props_expr, :get, [])
+    quoted_context_vars = quote_context_vars(gets, meta)
 
     {do_block, slot_meta, slot_props} =
-      collect_slot_meta(component, templates, gets_pattern_ast, buffer, state)
+      collect_slot_meta(component, templates, quoted_context_vars, buffer, state)
 
     if do_block == [] do
       quote generated: true do
@@ -302,7 +312,7 @@ defmodule Surface.Compiler.EExEngine do
     Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
   end
 
-  defp collect_slot_meta(component, templates, gets_pattern_ast, buffer, state) do
+  defp collect_slot_meta(component, templates, context_vars_ast, buffer, state) do
     slot_info =
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
@@ -318,36 +328,26 @@ defmodule Surface.Compiler.EExEngine do
         {name, Enum.count(templates_for_slot), nested_templates}
       end)
 
-    context_expr =
-      if gets_pattern_ast do
-        quote generated: true do
-          unquote(gets_pattern_ast) = the_context
-        end
-      else
-        quote generated: true do
-          the_context
-        end
-      end
-
     do_block =
       slot_info
       |> Enum.map(fn {name, _size, infos} ->
         infos
         |> Enum.with_index()
-        |> Enum.map(fn {{let, _, body}, index} ->
+        |> Enum.map(fn {{let, _, {:__block__, meta, content}}, index} ->
+          body = {:__block__, meta, context_vars_ast ++ content}
+
           quote generated: true do
             {
               unquote(name),
               unquote(index),
               unquote({:%{}, [generated: true], let}),
-              unquote(context_expr)
+              the_context
             } ->
               unquote(body)
           end
         end)
       end)
       |> List.flatten()
-      |> Kernel.++(fallback_inner_content(context_expr))
       |> case do
         [] -> []
         block -> [do: block]
@@ -370,28 +370,6 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     {do_block, slot_meta, slot_props}
-  end
-
-  defp fallback_inner_content(context_expr) do
-    quote generated: true do
-      arg ->
-        _ = var!(assigns)
-
-        # TODO: List all full patterns, not only the context's
-        message = """
-        cannot match slot with arg:
-
-          #{inspect(arg)}
-
-        Context pattern:
-
-          #{unquote(Macro.escape(context_expr)) |> Macro.to_string()}
-
-        """
-
-        IO.warn(message)
-        ""
-    end
   end
 
   defp handle_nested_block(block, buffer, state) when is_list(block) do
@@ -758,5 +736,30 @@ defmodule Surface.Compiler.EExEngine do
         end,
       meta: %AST.Meta{}
     }
+  end
+
+  defp is_root?(state) do
+    state.depth > 0 and Enum.member?(state.context, :template)
+  end
+
+  defp quote_context_vars([], _meta) do
+    [
+      quote generated: true do
+        _ = the_context
+      end
+    ]
+  end
+
+  defp quote_context_vars(gets_ast, meta) do
+    # TODO: Make sure eval error line is correct
+    {gets, _} = Code.eval_quoted(gets_ast, [], meta.caller)
+
+    Enum.map(gets, fn get ->
+      {key, name} = Surface.Components.Context.normalize_get(get)
+
+      quote generated: true do
+        unquote(Macro.var(name, nil)) = Map.get(the_context, unquote(key))
+      end
+    end)
   end
 end
