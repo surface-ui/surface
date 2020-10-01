@@ -138,7 +138,7 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     context_expr =
-      if is_root?(state) do
+      if is_child_component?(state) do
         quote generated: true do
           Map.merge(@__context__, the_context)
         end
@@ -230,7 +230,7 @@ defmodule Surface.Compiler.EExEngine do
             %{}
           end
 
-        is_root?(state) ->
+        is_child_component?(state) ->
           quote generated: true do
             Map.merge(@__context__ || %{}, the_context)
           end
@@ -738,7 +738,7 @@ defmodule Surface.Compiler.EExEngine do
     }
   end
 
-  defp is_root?(state) do
+  defp is_child_component?(state) do
     state.depth > 0 and Enum.member?(state.context, :template)
   end
 
