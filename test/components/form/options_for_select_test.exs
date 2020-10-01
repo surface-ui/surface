@@ -5,13 +5,22 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
 
   import ComponentTestHelper
 
-  test "select" do
+  test "empty options" do
+    code = """
+    <OptionsForSelect />
+    """
+
+    assert render_live(code) == "\n"
+  end
+
+  test "setting the options" do
     code = """
     <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} />
     """
 
     assert render_live(code) =~ """
-           <option value="admin">Admin</option><option value="user">User</option>
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>
            """
   end
 
@@ -21,7 +30,8 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
     """
 
     assert render_live(code) =~ """
-           <option value="admin" selected="selected">Admin</option><option value="user">User</option>
+           <option value="admin" selected="selected">Admin</option>\
+           <option value="user">User</option>
            """
   end
 
@@ -31,7 +41,8 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
     """
 
     assert render_live(code) =~ """
-           <option value="admin" selected="selected">Admin</option><option value="user" selected="selected">User</option>
+           <option value="admin" selected="selected">Admin</option>\
+           <option value="user" selected="selected">User</option>
            """
   end
 end

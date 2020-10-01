@@ -5,13 +5,26 @@ defmodule Surface.Components.Form.SelectTest do
 
   import ComponentTestHelper
 
-  test "select" do
+  test "empty select" do
+    code = """
+    <Select form="user" field="role" />
+    """
+
+    assert render_live(code) =~ """
+           <select id="user_role" name="user[role]"></select>
+           """
+  end
+
+  test "setting the options" do
     code = """
     <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} />
     """
 
     assert render_live(code) =~ """
-           <select id="user_role" name="user[role]"><option value="admin">Admin</option><option value="user">User</option></select>
+           <select id="user_role" name="user[role]">\
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>\
+           </select>
            """
   end
 
@@ -37,7 +50,11 @@ defmodule Surface.Components.Form.SelectTest do
     """
 
     assert render_live(code) =~ """
-           <select id="user_role" name="user[role]"><option value="">Pick a role</option><option value="admin">Admin</option><option value="user">User</option></select>
+           <select id="user_role" name="user[role]">\
+           <option value="">Pick a role</option>\
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>\
+           </select>
            """
   end
 end

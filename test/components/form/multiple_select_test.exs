@@ -5,13 +5,26 @@ defmodule Surface.Components.Form.MultipleSelectTest do
 
   import ComponentTestHelper
 
-  test "select" do
+  test "emtpy multiple select" do
+    code = """
+    <MultipleSelect form="user" field="roles" />
+    """
+
+    assert render_live(code) =~ """
+           <select id="user_roles" multiple="" name="user[roles][]"></select>
+           """
+  end
+
+  test "setting the options" do
     code = """
     <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} />
     """
 
     assert render_live(code) =~ """
-           <select id="user_roles" multiple="" name="user[roles][]"><option value="admin">Admin</option><option value="user">User</option></select>
+           <select id="user_roles" multiple="" name="user[roles][]">\
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>\
+           </select>
            """
   end
 
@@ -37,7 +50,10 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     """
 
     assert render_live(code) =~ """
-           <select id="user_roles" multiple="" name="user[roles][]"><option value="admin" selected="selected">Admin</option><option value="user">User</option></select>
+           <select id="user_roles" multiple="" name="user[roles][]">\
+           <option value="admin" selected="selected">Admin</option>\
+           <option value="user">User</option>\
+           </select>
            """
   end
 end
