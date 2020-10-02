@@ -514,6 +514,24 @@ defmodule Surface.SlotTest do
       render_live(code)
     end)
   end
+
+  test "raise compile error when passing invalid bindings to :let " do
+    code = """
+    <OuterWithDefaultSlotAndProps
+      :let={{ info: [my_info] }}>
+      Info: {{ my_info }}
+    </OuterWithDefaultSlotAndProps>
+    """
+
+    message = """
+    code:2: invalid value for directive :let. Expected a keyword list of bindings, \
+    e.g. {{ item: user, info: info }}, got: {{ info: [my_info] }}.\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code)
+    end)
+  end
 end
 
 defmodule Surface.SlotSyncTest do

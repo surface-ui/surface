@@ -158,4 +158,100 @@ defmodule ContextTest do
 
     assert render_live(code) =~ "field from OuterWithNamedSlots"
   end
+
+  describe "validate property :get" do
+    test "raise compile error when passing invalid bindings" do
+      code = """
+      <Context
+        get={{ ContextTest.Outer, field: [field] }}>
+        {{ field }}
+      </Context>
+      """
+
+      message = """
+      code:2: invalid value for property "get". expected a scope \
+      module (optional) along with a keyword list of bindings, \
+      e.g. {{ Form, form: form }} or {{ field: my_field }}, \
+      got: {{ ContextTest.Outer, field: [field] }}.\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing no bindings" do
+      code = """
+      <Context
+        get={{ ContextTest.Outer }}>
+        {{ field }}
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing invalid scope" do
+      code = """
+      <Context
+        get={{ 123, field: field }}>
+        {{ field }}
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
+        render_live(code)
+      end)
+    end
+  end
+
+  describe "validate property :put" do
+    test "raise compile error when passing invalid values" do
+      code = """
+      <Context
+        put={{ ContextTest.Outer, 123 }}>
+        <slot/>
+      </Context>
+      """
+
+      message = """
+      code:2: invalid value for property "put". expected a scope \
+      module (optional) along with a keyword list of values, \
+      e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}, \
+      got: {{ ContextTest.Outer, 123 }}.\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing no values" do
+      code = """
+      <Context
+        put={{ ContextTest.Outer }}>
+        <slot/>
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing invalid scope" do
+      code = """
+      <Context
+        put={{ 123, field: field }}>
+        <slot/>
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
+        render_live(code)
+      end)
+    end
+  end
 end
