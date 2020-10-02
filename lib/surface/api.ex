@@ -321,7 +321,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:property, _type, _opts) do
-    [:required, :default, :values, :accumulate]
+    [:required, :default, :values, :accumulate, :to_assign]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
@@ -368,6 +368,10 @@ defmodule Surface.API do
 
   defp validate_opt(:property, _type, :accumulate, value) when not is_boolean(value) do
     {:error, "invalid value for option :accumulate. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(:property, _type, :to_assign, value) when not is_boolean(value) do
+    {:error, "invalid value for option :to_assign. Expected a boolean, got: #{inspect(value)}"}
   end
 
   defp validate_opt(_func, _type, _key, _value) do

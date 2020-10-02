@@ -52,8 +52,8 @@ defmodule Surface.Components.Form.Input do
     def render(assigns) do
       ~H"""
       <Context
-        get={{ :form, scope: Surface.Components.Form }}
-        get={{ :field, scope: Surface.Components.Form.Field }}>
+        get={{ Surface.Components.Form, form: form }}
+        get={{ Surface.Components.Form.Field, field: field }}>
         <slot :props={{ form: @assigns.form || form, field: @assigns.field || field }}/>
       </Context>
       """

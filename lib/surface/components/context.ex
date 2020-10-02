@@ -57,13 +57,13 @@ defmodule Surface.Components.Context do
 
   ```
   <Context
-    get={{ :form, scope: Form }}
-    get={{ :field, scope: Field, as: :my_field }}>
-    <MyTextInput form={{ @form }} field={{ @my_field }} />
+    get={{ Form, form: form }}
+    get={{ Field, field: my_field }}>
+    <MyTextInput form={{ form }} field={{ my_field }} />
   </Context>
   ```
   """
-  property get, :context_get, accumulate: true, default: []
+  property get, :context_get, accumulate: true, to_assign: false, default: []
 
   @doc "The content of the `<Context>`"
   slot default, required: true
@@ -75,22 +75,11 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_map(@__context__, @set, @get)}) }}
+    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_map(@__context__, @set)}) }}
     """
   end
 
-  @doc """
-  Retrieve a value from the context.
-
-  The `opts` argument can contain any option accepted by the `get` property,
-  except `:as`, which is ignored.
-  """
-  def get(assigns, key, opts) do
-    {key, _as} = normalize_get({key, opts})
-    assigns.__context__[key]
-  end
-
-  defp context_map(context, sets, _gets) do
+  defp context_map(context, sets) do
     Enum.reduce(sets, context, fn set, acc ->
       {key, value} = normalize_set(set)
       Map.put(acc, key, value)
@@ -105,18 +94,5 @@ defmodule Surface.Components.Context do
       scope ->
         {{scope, key}, value}
     end
-  end
-
-  def normalize_get({key, opts}) do
-    full_key =
-      case Keyword.get(opts, :scope) do
-        nil ->
-          key
-
-        scope ->
-          {scope, key}
-      end
-
-    {full_key, Keyword.get(opts, :as, key)}
   end
 end
