@@ -83,21 +83,53 @@ defmodule Surface.Components.Context do
 
   def transform(node) do
     Module.put_attribute(node.meta.caller.module, :use_context?, true)
-    node
+
+    let =
+      node.props
+      |> Enum.filter(fn %{name: name} -> name == :get end)
+      |> Enum.map(fn %{value: %{value: value}} -> value end)
+      |> Enum.flat_map(fn {scope, values} ->
+        if scope == nil do
+          values
+        else
+          Enum.map(values, fn {key, value} -> {{scope, key}, value} end)
+        end
+      end)
+
+    update_let_for_template(node, :default, let)
   end
 
   def render(assigns) do
     ~H"""
-    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_map(@__context__, @put)}) }}
+    {{
+      case context_map(@__context__, @put, @get) do
+        {ctx, props} -> render_inner(@inner_content, {:__default__, 0, props, ctx})
+      end
+    }}
     """
   end
 
-  defp context_map(context, puts) do
-    for {scope, values} <- puts, {key, value} <- values, reduce: context do
-      acc ->
-        {full_key, value} = normalize_set(scope, key, value)
-        Map.put(acc, full_key, value)
-    end
+  defp context_map(context, puts, gets) do
+    ctx =
+      for {scope, values} <- puts, {key, value} <- values, reduce: context do
+        acc ->
+          {full_key, value} = normalize_set(scope, key, value)
+          Map.put(acc, full_key, value)
+      end
+
+    props =
+      for {scope, values} <- gets, {key, _value} <- values, into: %{} do
+        key =
+          if scope == nil do
+            key
+          else
+            {scope, key}
+          end
+
+        {key, Map.get(ctx, key, nil)}
+      end
+
+    {ctx, props}
   end
 
   defp normalize_set(nil, key, value) do
@@ -106,5 +138,16 @@ defmodule Surface.Components.Context do
 
   defp normalize_set(scope, key, value) do
     {{scope, key}, value}
+  end
+
+  defp update_let_for_template(node, template_name, let) do
+    updated =
+      node.templates
+      |> Map.get(template_name, [])
+      |> Enum.map(fn template -> %{template | let: let} end)
+
+    templates = Map.put(node.templates, template_name, updated)
+
+    Map.put(node, :templates, templates)
   end
 end
