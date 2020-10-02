@@ -37,7 +37,7 @@ defmodule Surface.Components.Form.Inputs do
     <Context get={{ Surface.Components.Form, form: form }}>
       <Context
         :for={{ f <- inputs_for(@form || form, @for, @opts) }}
-        set={{ :form, f, scope: Surface.Components.Form }}>
+        set={{ Surface.Components.Form, form: f }}>
         <slot :props={{ form: f }}/>
       </Context>
     </Context>
