@@ -80,19 +80,18 @@ defmodule Surface.Components.Context do
   end
 
   defp context_map(context, sets) do
-    Enum.reduce(sets, context, fn set, acc ->
-      {key, value} = normalize_set(set)
-      Map.put(acc, key, value)
-    end)
+    for {scope, values} <- sets, {key, value} <- values, reduce: context do
+      acc ->
+        {full_key, value} = normalize_set(scope, key, value)
+        Map.put(acc, full_key, value)
+    end
   end
 
-  defp normalize_set({key, value, opts}) do
-    case Keyword.get(opts, :scope) do
-      nil ->
-        {key, value}
+  defp normalize_set(nil, key, value) do
+    {key, value}
+  end
 
-      scope ->
-        {{scope, key}, value}
-    end
+  defp normalize_set(scope, key, value) do
+    {{scope, key}, value}
   end
 end
