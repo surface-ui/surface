@@ -35,6 +35,8 @@ defmodule Surface.TypeHandler.ContextGet do
   end
 
   defp is_scope?(scope) do
-    match?({:__aliases__, _, _}, scope) or match?({:__MODULE__, [_ | _], nil}, scope)
+    is_atom(scope) or
+      match?({:__aliases__, _, _}, scope) or
+      match?({:__MODULE__, [_ | _], nil}, scope)
   end
 end
