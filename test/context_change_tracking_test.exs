@@ -11,7 +11,7 @@ defmodule Surface.ContextChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ field: "field value" }}>
+      <Context put={{ field: "field value" }}>
         <div><slot/></div>
       </Context>
       """

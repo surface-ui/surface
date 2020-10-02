@@ -11,7 +11,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ __MODULE__, field: "field from Outer" }}>
+      <Context put={{ __MODULE__, field: "field from Outer" }}>
         <div><slot/></div>
       </Context>
       """
@@ -48,7 +48,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ __MODULE__, field: "field from InnerWrapper" }}>
+      <Context put={{ __MODULE__, field: "field from InnerWrapper" }}>
         <Inner />
       </Context>
       """
@@ -74,7 +74,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ field: "field from OuterWithNamedSlots" }}>
+      <Context put={{ field: "field from OuterWithNamedSlots" }}>
         <span :for={{ {_slot, index} <- Enum.with_index(@my_slot) }}>
           <slot name="my_slot" index={{ index }}/>
         </span>

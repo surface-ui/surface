@@ -6,54 +6,67 @@ defmodule Surface.Components.Context do
   use Surface.Component
 
   @doc """
-  Set a value to the context.
+  Puts a value into the context.
 
   ## Usage
 
   ```
-  <Context set={{ key, value, options }}>
+  <Context put={{ scope, values }}>
     ...
   </Context>
   ```
 
-  Where `key` is the key which will be used to store the `value`.
+  Where:
 
-  Available options:
+    * `scope` - Optional. Is an atom representing the scope where the values will
+      be stored. If no scope is provided, the value is stored at the root of the
+      context map.
 
-    * `scope` - The scope where the value will be stored. If no scope is
-    provided, the value is stored in root of the context map.
+    * `values`- A keyword list containing the key-value pairs that will be stored
+      in the context.
 
-  ## Example
+  ## Examples
+
+  With scope:
 
   ```
-  <Context set={{ :form, form, scope: __MODULE__ }}>
+  <Context put={{ __MODULE__, form: @form }}>
     ...
   </Context>
   ```
+
+  Without scope:
+
+  ```
+  <Context put={{ key1: @value1, key2: "some other value" }}>
+    ...
+  </Context>
+  ```
+
   """
-  property set, :context_set, accumulate: true, default: []
+  property put, :context_put, accumulate: true, default: []
 
   @doc """
-  Retrieves a value from the context.
+  Retrieves a set of values from the context binding them to local variables.
 
   ## Usage
 
   ```
-  <Context get={{ key, options }}>
+  <Context get={{ scope, bindings }}>
     ...
   </Context>
   ```
 
-  Where `key` is the key that was be used to store the `value`.
+  Where:
 
-  Available options:
+    * `scope` - Optional. Is an atom representing the scope where the values will
+      be stored. If no scope is provided, the value is stored at the root of the
+      context map.
 
-    * `scope` - The scope where the value was previously stored. If no scope is
-    provided, the value is retrieved from the root of the context map.
+    * `bindings`- A keyword list of bindings that will be retrieved from the context
+      as local variables.
 
-    * `as` - The name of the assign that will hold the retrieved value.
-
-  ## Example
+  ## Examples
 
   ```
   <Context
@@ -75,12 +88,12 @@ defmodule Surface.Components.Context do
 
   def render(assigns) do
     ~H"""
-    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_map(@__context__, @set)}) }}
+    {{ render_inner(@inner_content, {:__default__, 0, %{}, context_map(@__context__, @put)}) }}
     """
   end
 
-  defp context_map(context, sets) do
-    for {scope, values} <- sets, {key, value} <- values, reduce: context do
+  defp context_map(context, puts) do
+    for {scope, values} <- puts, {key, value} <- values, reduce: context do
       acc ->
         {full_key, value} = normalize_set(scope, key, value)
         Map.put(acc, full_key, value)

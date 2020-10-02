@@ -22,7 +22,7 @@ defmodule Surface.API do
     :changeset,
     :form,
     :keyword,
-    :context_set,
+    :context_put,
     :context_get
   ]
 
