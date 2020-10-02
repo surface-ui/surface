@@ -8,7 +8,7 @@ defmodule Surface.Components.Form.HiddenInputs do
   use Surface.Component
 
   import Phoenix.HTML.Form
-  import Surface.Components.Form.Utils
+  alias Surface.Components.Form.Input.InputContext
 
   @doc """
   The form.
@@ -18,10 +18,10 @@ defmodule Surface.Components.Form.HiddenInputs do
   property for, :form
 
   def render(assigns) do
-    form = get_form(assigns)
-
     ~H"""
-    {{ hidden_inputs_for(form) }}
+    <InputContext assigns={{ assigns }} :let={{ form: form }}>
+      {{ hidden_inputs_for(form) }}
+    </InputContext>
     """
   end
 end
