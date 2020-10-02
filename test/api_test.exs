@@ -122,7 +122,7 @@ defmodule Surface.APITest do
       code = "property label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :accumulate\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :accumulate, :to_assign\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

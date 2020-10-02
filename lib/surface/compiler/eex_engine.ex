@@ -215,7 +215,11 @@ defmodule Surface.Compiler.EExEngine do
          state
        )
        when ast_type in [AST.Component, AST.SlotableComponent] do
+    {props, non_assign_props} =
+      Enum.split_with(props, fn p -> Keyword.get(p.type_opts, :to_assign, true) end)
+
     props_expr = collect_component_props(module, props)
+    non_assign_props_expr = collect_component_props(module, non_assign_props)
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
@@ -241,7 +245,7 @@ defmodule Surface.Compiler.EExEngine do
           end
       end
 
-    {gets, props_expr} = Keyword.pop(props_expr, :get, [])
+    gets = Keyword.get(non_assign_props_expr, :get, [])
     quoted_context_vars = quote_context_vars(gets, meta)
 
     {do_block, slot_meta, slot_props} =
@@ -750,16 +754,14 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp quote_context_vars(gets_ast, meta) do
-    # TODO: Make sure eval error line is correct
-    {gets, _} = Code.eval_quoted(gets_ast, [], meta.caller)
+  defp quote_context_vars(gets, _meta) do
+    for {scope, bindings} <- gets, {key, expr} <- bindings do
+      full_key = if scope, do: {scope, key}, else: key
+      {_, [line: line], _} = expr
 
-    Enum.map(gets, fn get ->
-      {key, name} = Surface.Components.Context.normalize_get(get)
-
-      quote generated: true do
-        unquote(Macro.var(name, nil)) = Map.get(the_context, unquote(key))
+      quote generated: true, line: line do
+        unquote(expr) = Map.get(the_context, unquote(full_key))
       end
-    end)
+    end
   end
 end
