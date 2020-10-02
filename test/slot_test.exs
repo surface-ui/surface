@@ -405,14 +405,15 @@ defmodule Surface.SlotTest do
 
     code = """
     <Grid items={{ user <- @items }}>
-      <Column title="ID" :let={{ item: my_user, non_existing: value }}>
+      <Column title="ID"
+        :let={{ item: my_user, non_existing: value }}>
         <b>Id: {{ my_user.id }}</b>
       </Column>
     </Grid>
     """
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
+    code:3: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
 
     Available props: [:info, :item].
 
