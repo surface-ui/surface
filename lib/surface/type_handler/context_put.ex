@@ -3,10 +3,7 @@ defmodule Surface.TypeHandler.ContextPut do
 
   use Surface.TypeHandler
 
-  @error_message """
-  expected a scope module (optional) along with a keyword list of values, \
-  e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}\
-  """
+  alias Surface.TypeHandler.TypesHelper
 
   @impl true
   def literal_to_ast_node(_type, _name, _value, _meta) do
@@ -14,27 +11,18 @@ defmodule Surface.TypeHandler.ContextPut do
   end
 
   @impl true
-  def expr_to_quoted(_type, _name, [scope], [_ | _] = values, _meta, _original) do
-    if is_scope?(scope) do
+  def expr_to_quoted(_type, _name, clauses, values, _meta, _original) do
+    with {:ok, scope} <- TypesHelper.extract_scope(clauses),
+         [_ | _] <- values do
       {:ok, {scope, values}}
     else
-      {:error, @error_message}
+      _ ->
+        message = """
+        expected a scope module (optional) along with a keyword list of values, \
+        e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}\
+        """
+
+        {:error, message}
     end
-  end
-
-  @impl true
-  def expr_to_quoted(_type, _name, [], values, _meta, _original) do
-    {:ok, {nil, values}}
-  end
-
-  @impl true
-  def expr_to_quoted(_type, _name, _clauses, _opts, _meta, _original) do
-    {:error, @error_message}
-  end
-
-  defp is_scope?(scope) do
-    is_atom(scope) or
-      match?({:__aliases__, _, _}, scope) or
-      match?({:__MODULE__, [_ | _], nil}, scope)
   end
 end
