@@ -37,7 +37,7 @@ defmodule Surface.Components.Form do
   def render(assigns) do
     ~H"""
     {{ form = form_for(@for, @action, get_opts(assigns)) }}
-      <Context set={{ :form, form, scope: __MODULE__ }}>
+      <Context set={{ __MODULE__, form: form }}>
         <slot/>
       </Context>
     <#Raw></form></#Raw>
