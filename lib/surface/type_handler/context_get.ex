@@ -34,6 +34,11 @@ defmodule Surface.TypeHandler.ContextGet do
     {:error, @error_message}
   end
 
+  @impl true
+  def update_prop_expr({scope, values}, _meta) do
+    {scope, Enum.map(values, fn {key, {name, _, _}} -> {key, name} end)}
+  end
+
   defp is_scope?(scope) do
     is_atom(scope) or
       match?({:__aliases__, _, _}, scope) or
