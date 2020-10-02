@@ -298,6 +298,7 @@ defmodule Surface.TypeHandler do
   defp handler(:form), do: __MODULE__.Form
   defp handler(:map), do: __MODULE__.Map
   defp handler(:keyword), do: __MODULE__.Keyword
+  defp handler(:explict_keyword), do: __MODULE__.ExplicitKeyword
   defp handler(:css_class), do: __MODULE__.CssClass
   defp handler(:style), do: __MODULE__.Style
   defp handler(:event), do: __MODULE__.Event

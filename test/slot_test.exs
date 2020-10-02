@@ -532,6 +532,40 @@ defmodule Surface.SlotTest do
       render_live(code)
     end)
   end
+
+  test "raise compile error when passing an undefined prop to :props" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    code = """
+    defmodule TestSlotPassingUndefinedProp_#{id} do
+      use Surface.Component
+
+      slot default, props: [:item]
+
+      def render(assigns) do
+        ~H"\""
+          <span>
+            <slot
+              :props={{ id: 1, name: "Joe" }}/>
+            </span>
+        "\""
+      end
+    end
+    """
+
+    message = """
+    code.exs:10: undefined props :id and :name for slot `default`.
+
+    Defined prop: :item.
+
+    Hint: You can define a new slot prop using the `props` option: \
+    `slot default, props: [..., :some_prop]`\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
+  end
 end
 
 defmodule Surface.SlotSyncTest do
