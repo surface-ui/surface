@@ -215,11 +215,7 @@ defmodule Surface.Compiler.EExEngine do
          state
        )
        when ast_type in [AST.Component, AST.SlotableComponent] do
-    {props, non_assign_props} =
-      Enum.split_with(props, fn p -> Keyword.get(p.type_opts, :to_assign, true) end)
-
     props_expr = collect_component_props(module, props)
-    non_assign_props_expr = collect_component_props(module, non_assign_props)
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
@@ -245,11 +241,7 @@ defmodule Surface.Compiler.EExEngine do
           end
       end
 
-    gets = Keyword.get(non_assign_props_expr, :get, [])
-    quoted_context_vars = quote_context_vars(gets, meta)
-
-    {do_block, slot_meta, slot_props} =
-      collect_slot_meta(component, templates, quoted_context_vars, buffer, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
     if do_block == [] do
       quote generated: true do
@@ -316,7 +308,7 @@ defmodule Surface.Compiler.EExEngine do
     Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
   end
 
-  defp collect_slot_meta(component, templates, context_vars_ast, buffer, state) do
+  defp collect_slot_meta(component, templates, buffer, state) do
     slot_info =
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
@@ -337,9 +329,7 @@ defmodule Surface.Compiler.EExEngine do
       |> Enum.map(fn {name, _size, infos} ->
         infos
         |> Enum.with_index()
-        |> Enum.map(fn {{let, _, {:__block__, meta, content}}, index} ->
-          body = {:__block__, meta, context_vars_ast ++ content}
-
+        |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
             {
               unquote(name),
@@ -744,24 +734,5 @@ defmodule Surface.Compiler.EExEngine do
 
   defp is_child_component?(state) do
     state.depth > 0 and Enum.member?(state.context, :template)
-  end
-
-  defp quote_context_vars([], _meta) do
-    [
-      quote generated: true do
-        _ = the_context
-      end
-    ]
-  end
-
-  defp quote_context_vars(gets, _meta) do
-    for {scope, bindings} <- gets, {key, expr} <- bindings do
-      full_key = if scope, do: {scope, key}, else: key
-      {_, [line: line], _} = expr
-
-      quote generated: true, line: line do
-        unquote(expr) = Map.get(the_context, unquote(full_key))
-      end
-    end
   end
 end
