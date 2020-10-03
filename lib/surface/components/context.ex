@@ -76,7 +76,7 @@ defmodule Surface.Components.Context do
   </Context>
   ```
   """
-  property get, :context_get, accumulate: true, to_assign: false, default: []
+  property get, :context_get, accumulate: true, default: []
 
   @doc "The content of the `<Context>`"
   slot default, required: true
