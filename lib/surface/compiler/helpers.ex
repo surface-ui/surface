@@ -4,101 +4,17 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.IOHelper
 
   def interpolation_to_quoted!(text, meta) do
-    with {:ok, expr} <- Code.string_to_quoted(text, file: meta.file, line: meta.line),
-         :ok <- validate_interpolation(expr, meta) do
-      expr
-    else
+    case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
+      {:ok, expr} ->
+        expr
+
       {:error, {line, error, token}} ->
         IOHelper.syntax_error(error <> token, meta.file, line)
 
       {:error, message} ->
         IOHelper.compile_error(message, meta.file, meta.line)
-
-      _ ->
-        IOHelper.syntax_error(
-          "invalid interpolation '#{text}'",
-          meta.file,
-          meta.line
-        )
     end
   end
-
-  defp validate_interpolation({:@, _, [{:inner_content, _, args}]}, _meta) when is_list(args) do
-    {:error,
-     """
-     the `inner_content` anonymous function should be called using \
-     the dot-notation. Use `@inner_content.([])` instead of `@inner_content([])`\
-     """}
-  end
-
-  defp validate_interpolation(
-         {{:., _, [{{:., _, [_, :inner_content]}, _, []}]}, _, _},
-         _meta
-       ) do
-    :ok
-  end
-
-  defp validate_interpolation({{:., _, dotted_args} = expr, metadata, args} = expression, meta) do
-    if List.last(dotted_args) == :inner_content and !Keyword.get(metadata, :no_parens, false) do
-      bad_str = Macro.to_string(expression)
-
-      args = if Enum.empty?(args), do: [args], else: args
-
-      # This constructs the syntax tree for dot-notation access to the inner_content function
-      replacement_str =
-        Macro.to_string(
-          {{:., [line: meta.line, file: meta.file],
-            [{expr, Keyword.put(metadata, :no_parens, true), []}]},
-           [line: meta.line, file: meta.file], args}
-        )
-        # to fix the lack of no_parens metadata on elixir < 1.10
-        |> String.replace("inner_content().(", "inner_content.(")
-
-      {:error,
-       """
-       the `inner_content` anonymous function should be called using \
-       the dot-notation. Use `#{replacement_str}` instead of `#{bad_str}`\
-       """}
-    else
-      [expr | args]
-      |> Enum.map(fn arg -> validate_interpolation(arg, meta) end)
-      |> Enum.find(:ok, &match?({:error, _}, &1))
-    end
-  end
-
-  defp validate_interpolation({func, _, args}, meta) when is_atom(func) and is_list(args) do
-    args
-    |> Enum.map(fn arg -> validate_interpolation(arg, meta) end)
-    |> Enum.find(:ok, &match?({:error, _}, &1))
-  end
-
-  defp validate_interpolation({func, _, args}, _meta) when is_atom(func) and is_atom(args),
-    do: :ok
-
-  defp validate_interpolation({func, _, args}, meta) when is_tuple(func) and is_list(args) do
-    [func | args]
-    |> Enum.map(fn arg -> validate_interpolation(arg, meta) end)
-    |> Enum.find(:ok, &match?({:error, _}, &1))
-  end
-
-  defp validate_interpolation({func, _, args}, meta) when is_tuple(func) and is_atom(args) do
-    validate_interpolation(func, meta)
-  end
-
-  defp validate_interpolation(expr, meta) when is_tuple(expr) do
-    expr
-    |> Tuple.to_list()
-    |> Enum.map(fn arg -> validate_interpolation(arg, meta) end)
-    |> Enum.find(:ok, &match?({:error, _}, &1))
-  end
-
-  defp validate_interpolation(expr, meta) when is_list(expr) do
-    expr
-    |> Enum.map(fn arg -> validate_interpolation(arg, meta) end)
-    |> Enum.find(:ok, &match?({:error, _}, &1))
-  end
-
-  defp validate_interpolation(_expr, _meta), do: :ok
 
   def to_meta(%{line: line} = tree_meta, %CompileMeta{
         line_offset: offset,
