@@ -676,8 +676,7 @@ defmodule Surface.Compiler do
             `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
             """
 
-            line = prop_meta.line + prop_meta.line_offset - 1
-            IOHelper.compile_error(message, prop_meta.file, line)
+            IOHelper.compile_error(message, prop_meta.file, prop_meta.line)
           end
 
         _ ->

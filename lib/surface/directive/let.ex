@@ -5,8 +5,8 @@ defmodule Surface.Directive.Let do
     %AST.Directive{
       module: __MODULE__,
       name: :let,
-      value: directive_value(value, Map.merge(meta, expr_meta)),
-      meta: Map.merge(meta, attr_meta)
+      value: directive_value(value, Helpers.to_meta(expr_meta, meta)),
+      meta: Helpers.to_meta(attr_meta, meta)
     }
   end
 
