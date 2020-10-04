@@ -2,10 +2,10 @@ defmodule Surface.CheckUpdated do
   use Surface.LiveComponent
 
   @doc "The process to send the :updated message"
-  property dest, :any, required: true
+  prop dest, :any, required: true
 
   @doc "Something to inspect"
-  property content, :any, default: %{}
+  prop content, :any, default: %{}
 
   def update(assigns, socket) do
     if connected?(socket) do

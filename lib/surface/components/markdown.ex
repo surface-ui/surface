@@ -40,10 +40,10 @@ defmodule Surface.Components.Markdown do
   alias Surface.IOHelper
 
   @doc "The CSS class for the wrapping `<div>`"
-  property class, :string
+  prop class, :string
 
   @doc "Removes the wrapping `<div>`, if `true`"
-  property unwrap, :boolean, default: false
+  prop unwrap, :boolean, default: false
 
   @doc """
   Keyword list with options to be passed down to `Earmark.as_html/2`.
@@ -52,7 +52,7 @@ defmodule Surface.Components.Markdown do
   [Earmark.as_html/2](https://hexdocs.pm/earmark/Earmark.html#as_html/2)
   documentation.
   """
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc "The markdown text to be translated to HTML"
   slot default

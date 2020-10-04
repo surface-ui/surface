@@ -1,8 +1,8 @@
 # Used by "mix format"
 locals_without_parens = [
   # Surface.Component
-  property: 3,
-  property: 2,
+  prop: 3,
+  prop: 2,
   data: 3,
   data: 2,
   slot: 1,

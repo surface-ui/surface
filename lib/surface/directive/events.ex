@@ -1,23 +1,27 @@
 defmodule Surface.Directive.Events do
   use Surface.Directive
 
-  @phx_events [
-    "phx-click",
-    "phx-capture-click",
-    "phx-blur",
-    "phx-focus",
-    "phx-change",
-    "phx-submit",
-    "phx-keydown",
-    "phx-keyup",
-    "phx-window-keydown",
-    "phx-window-keyup"
+  @events [
+    "click",
+    "capture-click",
+    "blur",
+    "focus",
+    "change",
+    "submit",
+    "keydown",
+    "keyup",
+    "window-focus",
+    "window-blur",
+    "window-keydown",
+    "window-keyup"
   ]
+
+  @phx_events Enum.map(@events, &"phx-#{&1}")
 
   def phx_events(), do: @phx_events
 
   def extract({":on-" <> event_name, value, attr_meta}, meta)
-      when event_name in @phx_events do
+      when event_name in @events do
     name = String.to_atom(event_name)
 
     %AST.Directive{
@@ -44,7 +48,8 @@ defmodule Surface.Directive.Events do
     value =
       quote generated: true do
         [
-          {unquote(event_name), {:string, unquote(__MODULE__).event_name(unquote(value))}},
+          {unquote("phx-#{event_name}"),
+           {:string, unquote(__MODULE__).event_name(unquote(value))}},
           "phx-target": {:string, unquote(__MODULE__).event_target(unquote(value), unquote(cid))}
         ]
       end

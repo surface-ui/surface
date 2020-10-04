@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.RadioButton do
   import Surface.Components.Form.Utils
 
   @doc "Indicates whether or not the radio button is the selected item in the group"
-  property checked, :boolean
+  prop checked, :boolean
 
   def render(assigns) do
     props = get_non_nil_props(assigns, [:checked, class: get_config(:default_class)])

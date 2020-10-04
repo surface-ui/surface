@@ -20,11 +20,11 @@ defmodule Surface.EventsTest do
   defmodule Button do
     use Surface.LiveComponent
 
-    property click, :event, default: "click"
+    prop click, :event, default: "click"
 
     def render(assigns) do
       ~H"""
-      <button :on-phx-click={{ @click }}>Click me!</button>
+      <button :on-click={{ @click }}>Click me!</button>
       """
     end
 
@@ -36,7 +36,7 @@ defmodule Surface.EventsTest do
   defmodule Panel do
     use Surface.LiveComponent
 
-    property buttonClick, :event, default: "click"
+    prop buttonClick, :event, default: "click"
 
     def render(assigns) do
       ~H"""
@@ -54,7 +54,7 @@ defmodule Surface.EventsTest do
   defmodule ButtonWithInvalidEvent do
     use Surface.LiveComponent
 
-    property click, :event
+    prop click, :event
 
     def render(assigns) do
       ~H"""
@@ -177,7 +177,7 @@ defmodule Surface.EventsTest do
     message = """
     invalid value for "phx-click". LiveView bindings only accept values \
     of type :string. If you want to pass an :event, please use directive \
-    :on-phx-click instead. Expected a :string, got: %{name: "ok", target: :live_view}\
+    :on-click instead. Expected a :string, got: %{name: "ok", target: :live_view}\
     """
 
     assert_raise(RuntimeError, message, fn ->

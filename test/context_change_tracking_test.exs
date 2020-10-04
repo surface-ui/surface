@@ -23,7 +23,7 @@ defmodule Surface.ContextChangeTrackingTest do
 
     alias Surface.CheckUpdated
 
-    property test_pid, :any, required: true
+    prop test_pid, :any, required: true
 
     def render(assigns) do
       ~H"""

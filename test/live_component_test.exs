@@ -10,7 +10,7 @@ defmodule LiveComponentTest do
   defmodule StatelessComponent do
     use Surface.Component
 
-    property label, :string
+    prop label, :string
 
     def render(assigns) do
       ~H"""
@@ -30,7 +30,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div :on-phx-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
+      <div :on-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
       """
     end
 
@@ -88,11 +88,11 @@ defmodule LiveComponentTest do
   defmodule LiveComponentWithEvent do
     use Surface.LiveComponent
 
-    property event, :event
+    prop event, :event
 
     def render(assigns) do
       ~H"""
-      <button :on-phx-click={{ @event }} />
+      <button :on-click={{ @event }} />
       """
     end
   end

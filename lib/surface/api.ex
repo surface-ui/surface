@@ -30,7 +30,7 @@ defmodule Surface.API do
 
   defmacro __using__(include: include) do
     arities = %{
-      property: [2, 3],
+      prop: [2, 3],
       slot: [1, 2],
       data: [2, 3]
     }
@@ -59,7 +59,7 @@ defmodule Surface.API do
     generate_docs(env)
 
     [
-      quoted_property_funcs(env),
+      quoted_prop_funcs(env),
       quoted_slot_funcs(env),
       quoted_data_funcs(env),
       quoted_context_funcs(env)
@@ -84,8 +84,8 @@ defmodule Surface.API do
   end
 
   @doc "Defines a property for the component"
-  defmacro property(name_ast, type_ast, opts_ast \\ []) do
-    build_assign_ast(:property, name_ast, type_ast, opts_ast, __CALLER__)
+  defmacro prop(name_ast, type_ast, opts_ast \\ []) do
+    build_assign_ast(:prop, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
   @doc "Defines a slot for the component"
@@ -153,9 +153,9 @@ defmodule Surface.API do
     end
   end
 
-  defp quoted_property_funcs(env) do
+  defp quoted_prop_funcs(env) do
     props =
-      (Module.get_attribute(env.module, :property) || [])
+      (Module.get_attribute(env.module, :prop) || [])
       |> Enum.sort_by(&{&1.name != :id, !&1.opts[:required], &1.line})
 
     props_names = Enum.map(props, fn prop -> prop.name end)
@@ -324,7 +324,7 @@ defmodule Surface.API do
     end
   end
 
-  defp get_valid_opts(:property, _type, _opts) do
+  defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :accumulate]
   end
 
@@ -370,7 +370,7 @@ defmodule Surface.API do
      "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:property, _type, :accumulate, value) when not is_boolean(value) do
+  defp validate_opt(:prop, _type, :accumulate, value) when not is_boolean(value) do
     {:error, "invalid value for option :accumulate. Expected a boolean, got: #{inspect(value)}"}
   end
 
@@ -417,7 +417,7 @@ defmodule Surface.API do
 
   defp generate_props_docs(module) do
     docs =
-      for prop <- Module.get_attribute(module, :property) do
+      for prop <- Module.get_attribute(module, :prop) do
         doc = if prop.doc, do: " - #{prop.doc}.", else: ""
         opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
         "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"

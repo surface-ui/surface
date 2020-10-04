@@ -7,7 +7,7 @@ defmodule Surface.Component do
       defmodule Button do
         use Surface.Component
 
-        property click, :event
+        prop click, :event
 
         def render(assigns) do
           ~H"\""
@@ -37,7 +37,7 @@ defmodule Surface.Component do
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :slot, :data]
+      use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
       @before_compile unquote(__MODULE__)

@@ -17,9 +17,9 @@ defmodule Surface.DirectivesTest do
   defmodule DivWithProps do
     use Surface.Component
 
-    property(class, :string)
-    property(hidden, :boolean)
-    property(content, :string)
+    prop class, :string
+    prop hidden, :boolean
+    prop content, :string
 
     def render(assigns) do
       ~H"""
@@ -441,12 +441,12 @@ defmodule Surface.DirectivesTest do
     end
   end
 
-  describe ":on-phx-*" do
+  describe ":on-*" do
     test "as an event map" do
       assigns = %{click: %{name: "ok", target: "#comp"}}
 
       code = ~H"""
-      <button :on-phx-click={{ @click }}>OK</button>
+      <button :on-click={{ @click }}>OK</button>
       """
 
       assert render_static(code) =~ """
@@ -458,7 +458,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{click: "ok"}
 
       code = ~H"""
-      <button :on-phx-click={{ @click }}>OK</button>
+      <button :on-click={{ @click }}>OK</button>
       """
 
       assert render_static(code) =~ """
@@ -470,7 +470,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{}
 
       code = ~H"""
-      <button :on-phx-click="ok">OK</button>
+      <button :on-click="ok">OK</button>
       """
 
       assert render_static(code) =~ """
@@ -482,7 +482,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{}
 
       code = ~H"""
-      <button :on-phx-click={{ "ok", target: "#comp" }}>OK</button>
+      <button :on-click={{ "ok", target: "#comp" }}>OK</button>
       """
 
       assert render_static(code) =~ """
@@ -494,11 +494,11 @@ defmodule Surface.DirectivesTest do
       assigns = %{}
 
       code = ~H"""
-      <button :on-phx-invalid="ok">OK</button>
+      <button :on-invalid="ok">OK</button>
       """
 
       assert render_static(code) =~ """
-             <button :on-phx-invalid="ok">OK</button>
+             <button :on-invalid="ok">OK</button>
              """
     end
   end

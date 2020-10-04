@@ -3,10 +3,10 @@ defmodule Surface.PropertiesTest.Components do
     use Surface.Component
 
     @doc "The label"
-    property label, :string, required: true, default: ""
+    prop label, :string, required: true, default: ""
 
     @doc "The class"
-    property class, :css_class
+    prop class, :css_class
 
     def render(assigns) do
       ~H"""
@@ -23,10 +23,10 @@ defmodule Surface.PropertiesTest.Components do
     """
 
     @doc "The label"
-    property label, :string, required: true, default: ""
+    prop label, :string, required: true, default: ""
 
     @doc "The class"
-    property class, :css_class
+    prop class, :css_class
 
     def render(assigns) do
       ~H"""
@@ -41,10 +41,10 @@ defmodule Surface.PropertiesTest.Components do
     @moduledoc false
 
     @doc "The label"
-    property label, :string, required: true, default: ""
+    prop label, :string, required: true, default: ""
 
     @doc "The class"
-    property class, :css_class
+    prop class, :css_class
 
     def render(assigns) do
       ~H"""

@@ -10,10 +10,10 @@ defmodule Surface.Components.Form.Field do
   use Surface.Component
 
   @doc "The field name"
-  property name, :atom, required: true
+  prop name, :atom, required: true
 
   @doc "The CSS class for the generated `<div>` element"
-  property class, :css_class
+  prop class, :css_class
 
   @doc """
   The content for the field

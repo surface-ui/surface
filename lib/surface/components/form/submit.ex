@@ -10,28 +10,28 @@ defmodule Surface.Components.Form.Submit do
   import Phoenix.HTML.Form, only: [submit: 2]
 
   @doc "The label to be used in the button"
-  property label, :string
+  prop label, :string
 
   @doc "Class or classes to apply to the button"
-  property class, :css_class
+  prop class, :css_class
 
   @doc "Keyword list with options to be passed down to `submit/3`"
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc "Triggered when the component loses focus"
-  property blur, :event
+  prop blur, :event
 
   @doc "Triggered when the component receives focus"
-  property focus, :event
+  prop focus, :event
 
   @doc "Triggered when the component receives click"
-  property capture_click, :event
+  prop capture_click, :event
 
   @doc "Triggered when a button on the keyboard is pressed"
-  property keydown, :event
+  prop keydown, :event
 
   @doc "Triggered when a button on the keyboard is released"
-  property keyup, :event
+  prop keyup, :event
 
   @doc "Slot used for having children other than plain text in the button"
   slot default

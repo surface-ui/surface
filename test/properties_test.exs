@@ -7,7 +7,7 @@ defmodule Surface.PropertiesTest do
   defmodule StringProp do
     use Surface.Component
 
-    property label, :string
+    prop label, :string
 
     def render(assigns) do
       ~H"""
@@ -19,7 +19,7 @@ defmodule Surface.PropertiesTest do
   defmodule MapProp do
     use Surface.Component
 
-    property prop, :map
+    prop prop, :map
 
     def render(assigns) do
       ~H"""
@@ -32,7 +32,7 @@ defmodule Surface.PropertiesTest do
   defmodule ListProp do
     use Surface.Component
 
-    property prop, :list
+    prop prop, :list
 
     def render(assigns) do
       ~H"""
@@ -45,7 +45,7 @@ defmodule Surface.PropertiesTest do
   defmodule KeywordProp do
     use Surface.Component
 
-    property prop, :keyword
+    prop prop, :keyword
 
     def render(assigns) do
       ~H"""
@@ -58,7 +58,7 @@ defmodule Surface.PropertiesTest do
   defmodule CSSClassProp do
     use Surface.Component
 
-    property prop, :css_class
+    prop prop, :css_class
 
     def render(assigns) do
       ~H"""
@@ -70,7 +70,7 @@ defmodule Surface.PropertiesTest do
   defmodule CSSClassPropInspect do
     use Surface.Component
 
-    property prop, :css_class
+    prop prop, :css_class
 
     def render(assigns) do
       ~H"""
@@ -82,7 +82,7 @@ defmodule Surface.PropertiesTest do
   defmodule AccumulateProp do
     use Surface.Component
 
-    property prop, :string, accumulate: true, default: ["default"]
+    prop prop, :string, accumulate: true, default: ["default"]
 
     def render(assigns) do
       ~H"""

@@ -7,7 +7,7 @@ defmodule Surface.LiveComponent do
       defmodule Dialog do
         use Surface.LiveComponent
 
-        property title, :string, required: true
+        prop title, :string, required: true
 
         def mount(socket) do
           {:ok, assign(socket, show: false)}
@@ -59,7 +59,7 @@ defmodule Surface.LiveComponent do
 
       @before_compile unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :slot, :data]
+      use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
       alias Surface.Components.Context
@@ -67,7 +67,7 @@ defmodule Surface.LiveComponent do
       @doc """
       The id of the live component (required by LiveView for stateful components).
       """
-      property id, :string, required: true
+      prop id, :string, required: true
     end
   end
 

@@ -22,13 +22,13 @@ defmodule Surface.Components.Form.RangeInput do
   import Surface.Components.Form.Utils
 
   @doc "Minimum value for the input"
-  property min, :string
+  prop min, :string
 
   @doc "Maximum value for the input"
-  property max, :string
+  prop max, :string
 
   @doc "Sets or returns the value of the step attribute of the slider control"
-  property step, :string
+  prop step, :string
 
   def render(assigns) do
     props =

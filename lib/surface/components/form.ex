@@ -17,19 +17,19 @@ defmodule Surface.Components.Form do
   alias Surface.Components.Raw
 
   @doc "Atom or changeset to inform the form data"
-  property for, :any, required: true
+  prop for, :any, required: true
 
   @doc "URL to where the form is submitted"
-  property action, :string, default: "#"
+  prop action, :string, default: "#"
 
   @doc "Keyword list with options to be passed down to `form_for/3`"
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc "Triggered when the form is changed"
-  property change, :event
+  prop change, :event
 
   @doc "Triggered when the form is submitted"
-  property submit, :event
+  prop submit, :event
 
   @doc "The content of the `<form>`"
   slot default

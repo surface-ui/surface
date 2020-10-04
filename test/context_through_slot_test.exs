@@ -7,7 +7,7 @@ defmodule Surface.ContextThroughSlotTest do
   defmodule Parent.ContextProvider do
     use Surface.Component
 
-    property foo, :string
+    prop foo, :string
     slot default
 
     def render(assigns) do

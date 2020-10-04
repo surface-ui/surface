@@ -80,8 +80,8 @@ defmodule Surface do
       defmodule Button do
         use Surface.Component
 
-        property click, :event
-        property kind, :string, default: "is-info"
+        prop click, :event
+        prop kind, :string, default: "is-info"
 
         def render(assigns) do
           ~H"\""
