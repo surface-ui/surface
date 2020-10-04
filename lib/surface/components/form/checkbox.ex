@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.Checkbox do
   ## Examples
 
   ```
-  <RadioButton form="user" field="color" opts={{ autofocus: "autofocus" }}>
+  <Checkbox form="user" field="color" opts={{ autofocus: "autofocus" }}>
   ```
   """
 
@@ -21,13 +21,13 @@ defmodule Surface.Components.Form.Checkbox do
   import Surface.Components.Form.Utils
 
   def render(assigns) do
-    form = get_form(assigns)
-    field = get_field(assigns)
     props = get_non_nil_props(assigns, [:checked, class: get_config(:default_class)])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
-    {{ checkbox(form, field, props ++ @opts ++ event_opts) }}
+    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
+      {{ checkbox(form, field, props ++ @opts ++ event_opts) }}
+    </InputContext>
     """
   end
 end
