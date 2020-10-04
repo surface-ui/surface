@@ -9,10 +9,12 @@ defmodule Surface.TypeHandler.PhxEvent do
   end
 
   def value_to_html(name, value) do
+    "phx-" <> event = to_string(name)
+
     message = """
     invalid value for "#{name}". LiveView bindings only accept values \
     of type :string. If you want to pass an :event, please use directive \
-    :on-#{name} instead. Expected a :string, got: #{inspect(value)}\
+    :on-#{event} instead. Expected a :string, got: #{inspect(value)}\
     """
 
     {:error, message}

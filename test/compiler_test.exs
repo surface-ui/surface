@@ -341,7 +341,7 @@ defmodule Surface.CompilerTest do
       label=""
       disabled=""
       class=""
-      :on-phx-click=""
+      :on-click=""
     ></div>
     """
 
@@ -351,7 +351,7 @@ defmodule Surface.CompilerTest do
              element: "div",
              attributes: [
                %Surface.AST.DynamicAttribute{
-                 name: :"phx-click",
+                 name: :click,
                  expr: %Surface.AST.AttributeExpr{
                    original: "",
                    value: _

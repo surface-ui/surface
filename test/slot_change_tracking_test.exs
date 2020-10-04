@@ -55,7 +55,7 @@ defmodule Surface.SlotChangeTrackingTest do
       <div>
         Value in the Counter: {{ @value }}
         <slot :props={{ value: @value }}/>
-        <button id="incButton" :on-phx-click="inc">+</button>
+        <button id="incButton" :on-click="inc">+</button>
       </div>
       """
     end

@@ -30,7 +30,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div :on-phx-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
+      <div :on-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
       """
     end
 
@@ -92,7 +92,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <button :on-phx-click={{ @event }} />
+      <button :on-click={{ @event }} />
       """
     end
   end
