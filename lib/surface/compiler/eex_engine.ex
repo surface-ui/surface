@@ -131,36 +131,36 @@ defmodule Surface.Compiler.EExEngine do
        ) do
     slot_name = if name == :default, do: :__default__, else: name
 
-    props_expr =
-      quote generated: true do
-        Keyword.merge(unquote(props_expr), __context__: @__context__)
-      end
-
     slot_index =
       case index_ast do
         %AST.AttributeExpr{value: expr} -> expr
         %AST.Literal{value: value} -> value
       end
 
-    # TODO: map names somehow?
-    slot_content_expr =
-      if slot_name == :__default__ do
+    context_expr =
+      if is_child_component?(state) do
         quote generated: true do
-          if @inner_content do
-            @inner_content.(
-              unquote(props_expr) ++ [__slot__: {:__default__, unquote(slot_index)}]
-            )
-          end
+          Map.merge(@__context__, the_context)
         end
       else
-        slot_assign = at_ref(slot_name)
+        quote do
+          @__context__
+        end
+      end
 
-        quote generated: true do
-          if unquote(slot_assign) do
-            Enum.at(unquote(slot_assign), unquote(slot_index)).inner_content.(
-              unquote(props_expr) ++ [__slot__: {unquote(slot_name), unquote(slot_index)}]
-            )
-          end
+    # TODO: map names somehow?
+    slot_content_expr =
+      quote generated: true do
+        if @inner_content do
+          render_inner(
+            @inner_content,
+            {
+              unquote(slot_name),
+              unquote(slot_index),
+              Map.new(unquote(props_expr)),
+              unquote(context_expr)
+            }
+          )
         end
       end
 
@@ -219,16 +219,37 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
-    {case_expression, slot_meta, slot_props} =
-      collect_slot_meta(component, templates, buffer, state)
+    if module.__use_context__? do
+      Module.put_attribute(meta.caller.module, :use_context?, true)
+    end
 
-    if case_expression == [] do
+    context_expr =
+      cond do
+        module.__slots__() == [] and not module.__use_context__? ->
+          quote generated: true do
+            %{}
+          end
+
+        is_child_component?(state) ->
+          quote generated: true do
+            Map.merge(@__context__ || %{}, the_context)
+          end
+
+        true ->
+          quote generated: true do
+            @__context__ || %{}
+          end
+      end
+
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
+
+    if do_block == [] do
       quote generated: true do
         live_component(
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__context__ || %{},
+            unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),
@@ -244,7 +265,7 @@ defmodule Surface.Compiler.EExEngine do
           @socket,
           unquote(module),
           Surface.build_assigns(
-            @__context__ || %{},
+            unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(slot_props),
@@ -252,7 +273,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(module),
             unquote(meta.node_alias)
           ),
-          do: unquote(case_expression)
+          unquote(do_block)
         )
       end
     end
@@ -303,32 +324,27 @@ defmodule Surface.Compiler.EExEngine do
         {name, Enum.count(templates_for_slot), nested_templates}
       end)
 
-    case_expression =
+    do_block =
       slot_info
       |> Enum.map(fn {name, _size, infos} ->
         infos
         |> Enum.with_index()
-        |> Enum.map(fn {{_let, _, body}, index} ->
+        |> Enum.map(fn {{let, _, body}, index} ->
           quote generated: true do
-            {unquote(name), unquote(index)} ->
+            {
+              unquote(name),
+              unquote(index),
+              unquote({:%{}, [generated: true], let}),
+              the_context
+            } ->
               unquote(body)
           end
         end)
       end)
       |> List.flatten()
       |> case do
-        [] ->
-          []
-
-        block ->
-          expr =
-            quote generated: true do
-              case @__slot__, do: unquote(block)
-            end
-
-          buffer = state.engine.handle_begin(buffer)
-          buffer = state.engine.handle_expr(buffer, "=", expr)
-          state.engine.handle_end(buffer)
+        [] -> []
+        block -> [do: block]
       end
 
     slot_props =
@@ -338,21 +354,16 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     slot_meta =
-      for {name, size, infos} <- slot_info do
-        prop_assign_mappings = Enum.map(infos, fn {let, _, _} -> let end)
-
+      for {name, size, _infos} <- slot_info do
         meta_value =
           quote generated: true do
-            %{
-              size: unquote(size),
-              prop_assigns: unquote(prop_assign_mappings)
-            }
+            %{size: unquote(size)}
           end
 
         {name, meta_value}
       end
 
-    {case_expression, slot_meta, slot_props}
+    {do_block, slot_meta, slot_props}
   end
 
   defp handle_nested_block(block, buffer, state) when is_list(block) do
@@ -441,7 +452,7 @@ defmodule Surface.Compiler.EExEngine do
     end)
     |> Enum.map(fn %{generator: gen, name: name} ->
       case find_attribute_value(props, gen, nil) do
-        %AST.AttributeExpr{value: {{binding, _, _}, _}} ->
+        %AST.AttributeExpr{value: {binding, _}} ->
           {name, binding}
 
         _ ->
@@ -692,10 +703,6 @@ defmodule Surface.Compiler.EExEngine do
     [%{expr | value: value} | to_html_attributes(attributes)]
   end
 
-  defp at_ref(name) do
-    {:@, [generated: true], [{name, [generated: true], nil}]}
-  end
-
   defp maybe_print_expression(expr, node) do
     maybe_print_expression(
       expr,
@@ -723,5 +730,9 @@ defmodule Surface.Compiler.EExEngine do
         end,
       meta: %AST.Meta{}
     }
+  end
+
+  defp is_child_component?(state) do
+    state.depth > 0 and Enum.member?(state.context, :template)
   end
 end

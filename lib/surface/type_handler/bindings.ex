@@ -2,6 +2,7 @@ defmodule Surface.TypeHandler.Bindings do
   @moduledoc false
 
   use Surface.TypeHandler
+  alias Surface.TypeHandler.TypesHelper
 
   @impl true
   def literal_to_ast_node(_type, _name, _value, _meta) do
@@ -9,19 +10,11 @@ defmodule Surface.TypeHandler.Bindings do
   end
 
   @impl true
-  def expr_to_quoted(_type, _name, [key], [as: as], _meta, _original)
-      when is_atom(key) and is_atom(as) do
-    {:ok, {key, as}}
-  end
-
-  @impl true
-  def expr_to_quoted(_type, _name, [key], [], _meta, _original) when is_atom(key) do
-    {:ok, {key, key}}
-  end
-
-  @impl true
-  def expr_to_quoted(_type, _name, _clauses, _opts, _meta, _original) do
-    {:error,
-     "Expected a mapping from a slot prop to an assign, e.g. {{ :item }} or {{ :item, as: :user }}"}
+  def expr_to_quoted(_type, _name, clauses, bindings, _meta, _original) do
+    if clauses == [] and TypesHelper.is_bindings?(bindings) do
+      {:ok, bindings}
+    else
+      {:error, "Expected a keyword list of bindings, e.g. {{ item: user, info: info }}"}
+    end
   end
 end

@@ -5,7 +5,7 @@ defmodule Surface.Directive.Debug do
     %AST.Directive{
       module: __MODULE__,
       name: :debug,
-      value: directive_value(value, Map.merge(meta, expr_meta)),
+      value: directive_value(value, Helpers.to_meta(expr_meta, meta)),
       meta: Helpers.to_meta(attr_meta, meta)
     }
   end

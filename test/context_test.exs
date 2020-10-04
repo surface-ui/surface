@@ -11,7 +11,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from Outer", scope: __MODULE__ }}>
+      <Context put={{ __MODULE__, field: "field from Outer" }}>
         <div><slot/></div>
       </Context>
       """
@@ -34,10 +34,10 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context
-        get={{ :field, scope: ContextTest.Outer }}
-        get={{ :field, scope: ContextTest.InnerWrapper, as: :other_field }}>
-        <span id="field">{{ @field }}</span>
-        <span id="other_field">{{ @other_field }}</span>
+        get={{ ContextTest.Outer, field: field }}
+        get={{ ContextTest.InnerWrapper, field: other_field }}>
+        <span id="field">{{ field }}</span>
+        <span id="other_field">{{ other_field }}</span>
       </Context>
       """
     end
@@ -48,7 +48,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from InnerWrapper", scope: __MODULE__ }}>
+      <Context put={{ __MODULE__, field: "field from InnerWrapper" }}>
         <Inner />
       </Context>
       """
@@ -60,8 +60,8 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context get={{ :field, scope: ContextTest.Outer, as: :my_field }}>
-        <span>{{ @my_field }}</span>
+      <Context get={{ ContextTest.Outer, field: my_field }}>
+        <span>{{ my_field }}</span>
       </Context>
       """
     end
@@ -74,7 +74,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context set={{ :field, "field from OuterWithNamedSlots" }}>
+      <Context put={{ field: "field from OuterWithNamedSlots" }}>
         <span :for={{ {_slot, index} <- Enum.with_index(@my_slot) }}>
           <slot name="my_slot" index={{ index }}/>
         </span>
@@ -149,13 +149,109 @@ defmodule ContextTest do
     code = """
     <OuterWithNamedSlots>
       <template slot="my_slot">
-        <Context get={{ :field }}>
-          {{ @field }}
+        <Context get={{ field: field }}>
+          {{ field }}
         </Context>
       </template>
     </OuterWithNamedSlots>
     """
 
     assert render_live(code) =~ "field from OuterWithNamedSlots"
+  end
+
+  describe "validate property :get" do
+    test "raise compile error when passing invalid bindings" do
+      code = """
+      <Context
+        get={{ ContextTest.Outer, field: [field] }}>
+        {{ field }}
+      </Context>
+      """
+
+      message = """
+      code:2: invalid value for property "get". expected a scope \
+      module (optional) along with a keyword list of bindings, \
+      e.g. {{ Form, form: form }} or {{ field: my_field }}, \
+      got: {{ ContextTest.Outer, field: [field] }}.\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing no bindings" do
+      code = """
+      <Context
+        get={{ ContextTest.Outer }}>
+        {{ field }}
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing invalid scope" do
+      code = """
+      <Context
+        get={{ 123, field: field }}>
+        {{ field }}
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
+        render_live(code)
+      end)
+    end
+  end
+
+  describe "validate property :put" do
+    test "raise compile error when passing invalid values" do
+      code = """
+      <Context
+        put={{ ContextTest.Outer, 123 }}>
+        <slot/>
+      </Context>
+      """
+
+      message = """
+      code:2: invalid value for property "put". expected a scope \
+      module (optional) along with a keyword list of values, \
+      e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}, \
+      got: {{ ContextTest.Outer, 123 }}.\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing no values" do
+      code = """
+      <Context
+        put={{ ContextTest.Outer }}>
+        <slot/>
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
+        render_live(code)
+      end)
+    end
+
+    test "raise compile error when passing invalid scope" do
+      code = """
+      <Context
+        put={{ 123, field: field }}>
+        <slot/>
+      </Context>
+      """
+
+      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
+        render_live(code)
+      end)
+    end
   end
 end

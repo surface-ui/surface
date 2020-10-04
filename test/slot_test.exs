@@ -203,8 +203,8 @@ defmodule Surface.SlotTest do
   test "assign named slots with props" do
     code = """
     <OuterWithNamedSlotAndProps>
-      <template slot="body" :let={{ :info, as: :my_info }}>
-        Info: {{ @my_info }}
+      <template slot="body" :let={{ info: my_info }}>
+        Info: {{ my_info }}
       </template>
     </OuterWithNamedSlotAndProps>
     """
@@ -220,8 +220,8 @@ defmodule Surface.SlotTest do
 
   test "assign default slot with props" do
     code = """
-    <OuterWithDefaultSlotAndProps :let={{ :info, as: :my_info }}>
-      Info: {{ @my_info }}
+    <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
+      Info: {{ my_info }}
     </OuterWithDefaultSlotAndProps>
     """
 
@@ -319,7 +319,7 @@ defmodule Surface.SlotTest do
     code = """
     <Grid items={{ user <- @items }}>
       <ColumnWithDefaultTitle>
-        <b>Id: {{ @user.id }}</b>
+        <b>Id: {{ user.id }}</b>
       </ColumnWithDefaultTitle>
     </Grid>
     """
@@ -345,10 +345,10 @@ defmodule Surface.SlotTest do
     code = """
     <Grid items={{ user <- @items }}>
       <Column title="ID">
-        <b>Id: {{ @user.id }}</b>
+        <b>Id: {{ user.id }}</b>
       </Column>
       <Column title="NAME">
-        Name: {{ @user.name }}
+        Name: {{ user.name }}
       </Column>
     </Grid>
     """
@@ -375,12 +375,12 @@ defmodule Surface.SlotTest do
 
     code = """
     <Grid items={{ user <- @items }}>
-      <Column title="ID" :let={{ :item, as: :my_user }}>
-        <b>Id: {{ @my_user.id }}</b>
+      <Column title="ID" :let={{ item: my_user }}>
+        <b>Id: {{ my_user.id }}</b>
       </Column>
-      <Column title="NAME" :let={{ :info, as: :my_info }}>
-        Name: {{ @user.name }}
-        Info: {{ @my_info }}
+      <Column title="NAME" :let={{ info: my_info }}>
+        Name: {{ user.name }}
+        Info: {{ my_info }}
       </Column>
     </Grid>
     """
@@ -405,14 +405,15 @@ defmodule Surface.SlotTest do
 
     code = """
     <Grid items={{ user <- @items }}>
-      <Column title="ID" :let={{ :item, as: :my_user }} :let={{ :non_existing, as: :value }}>
-        <b>Id: {{ @my_user.id }}</b>
+      <Column title="ID"
+        :let={{ item: my_user, non_existing: value }}>
+        <b>Id: {{ my_user.id }}</b>
       </Column>
     </Grid>
     """
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
+    code:3: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
 
     Available props: [:info, :item].
 
@@ -432,15 +433,14 @@ defmodule Surface.SlotTest do
     <OuterWithNamedSlotAndProps>
       <template slot="body"
         :let={{ "a_string" }}>
-        Info: {{ @my_info }}
       </template>
     </OuterWithNamedSlotAndProps>
     """
 
     message = """
     code:3: invalid value for directive :let. \
-    Expected a mapping from a slot prop to an assign, \
-    e.g. {{ :item }} or {{ :item, as: :user }}, got: {{ "a_string" }}.\
+    Expected a keyword list of bindings, \
+    e.g. {{ item: user, info: info }}, got: {{ "a_string" }}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -450,8 +450,8 @@ defmodule Surface.SlotTest do
 
   test "raise compile error when using :let and there's no default slot defined" do
     code = """
-    <OuterWithoutDefaultSlot :let={{ :info, as: :my_info }}>
-      Info: {{ @my_info }}
+    <OuterWithoutDefaultSlot :let={{ info: my_info }}>
+      Info: {{ my_info }}
     </OuterWithoutDefaultSlot>
     """
 
@@ -471,8 +471,8 @@ defmodule Surface.SlotTest do
 
   test "raise compile error when using :let with undefined props for default slot" do
     code = """
-    <OuterWithDefaultSlotAndProps :let={{ :info, as: :my_info }} :let={{ :non_existing, as: :value }}>
-      Info: {{ @my_info }}
+    <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: value }}>
+      Info: {{ my_info }}
     </OuterWithDefaultSlotAndProps>
     """
 
@@ -491,30 +491,11 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when using :let with invalid binding" do
-    code = """
-    <OuterWithDefaultSlotAndProps
-      :let={{ info: 1 }}>
-      Info: {{ @my_info }}
-    </OuterWithDefaultSlotAndProps>
-    """
-
-    message = """
-    code:2: invalid value for directive :let. \
-    Expected a mapping from a slot prop to an assign, \
-    e.g. {{ :item }} or {{ :item, as: :user }}, got: {{ info: 1 }}.\
-    """
-
-    assert_raise(CompileError, message, fn ->
-      render_live(code)
-    end)
-  end
-
   test "raise compile error when using :let with undefined slot props" do
     code = """
     <OuterWithNamedSlotAndProps>
-      <template slot="body" :let={{ :non_existing, as: :my_info }}>
-        Info: {{ @my_info }}
+      <template slot="body" :let={{ non_existing: my_info }}>
+        Info: {{ my_info }}
       </template>
     </OuterWithNamedSlotAndProps>
     """
@@ -531,6 +512,58 @@ defmodule Surface.SlotTest do
 
     assert_raise(CompileError, message, fn ->
       render_live(code)
+    end)
+  end
+
+  test "raise compile error when passing invalid bindings to :let " do
+    code = """
+    <OuterWithDefaultSlotAndProps
+      :let={{ info: [my_info] }}>
+      Info: {{ my_info }}
+    </OuterWithDefaultSlotAndProps>
+    """
+
+    message = """
+    code:2: invalid value for directive :let. Expected a keyword list of bindings, \
+    e.g. {{ item: user, info: info }}, got: {{ info: [my_info] }}.\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      render_live(code)
+    end)
+  end
+
+  test "raise compile error when passing an undefined prop to :props" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    code = """
+    defmodule TestSlotPassingUndefinedProp_#{id} do
+      use Surface.Component
+
+      slot default, props: [:item]
+
+      def render(assigns) do
+        ~H"\""
+          <span>
+            <slot
+              :props={{ id: 1, name: "Joe" }}/>
+            </span>
+        "\""
+      end
+    end
+    """
+
+    message = """
+    code.exs:10: undefined props :id and :name for slot `default`.
+
+    Defined prop: :item.
+
+    Hint: You can define a new slot prop using the `props` option: \
+    `slot default, props: [..., :some_prop]`\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
 end

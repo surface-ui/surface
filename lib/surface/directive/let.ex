@@ -5,15 +5,15 @@ defmodule Surface.Directive.Let do
     %AST.Directive{
       module: __MODULE__,
       name: :let,
-      value: directive_value(value, Map.merge(meta, expr_meta)),
-      meta: Map.merge(meta, attr_meta)
+      value: directive_value(value, Helpers.to_meta(expr_meta, meta)),
+      meta: Helpers.to_meta(attr_meta, meta)
     }
   end
 
   def extract(_, _), do: []
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %{let: let} = node) do
-    %{node | let: [value | let]}
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, node) do
+    %{node | let: value}
   end
 
   defp directive_value(value, meta) do

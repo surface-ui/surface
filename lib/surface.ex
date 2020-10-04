@@ -180,6 +180,20 @@ defmodule Surface do
   end
 
   @doc false
+  def css_class(value) when is_list(value) do
+    with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, []),
+         {:ok, string} <- Surface.TypeHandler.CssClass.value_to_html("class", value) do
+      string
+    else
+      _ ->
+        Surface.IOHelper.runtime_error(
+          "invalid value. " <>
+            "Expected a :css_class, got: #{inspect(value)}"
+        )
+    end
+  end
+
+  @doc false
   def event_to_opts(%{name: name, target: :live_view}, event_name) do
     [{event_name, name}]
   end

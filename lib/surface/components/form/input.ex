@@ -5,14 +5,13 @@ defmodule Surface.Components.Form.Input do
     quote do
       use Surface.Component
 
-      alias Surface.Components.Form
-      alias Surface.Components.Form.Field
+      alias Surface.Components.Form.Input.InputContext
 
       @doc "An identifier for the form"
       property form, :form
 
       @doc "An identifier for the input"
-      property field, :string
+      property field, :atom
 
       @doc "Value to pre-populated the input"
       property value, :string
@@ -39,6 +38,25 @@ defmodule Surface.Components.Form.Input do
       property keyup, :event
 
       @default_class get_config(:default_class) || get_config(unquote(__MODULE__), :default_class)
+    end
+  end
+
+  defmodule InputContext do
+    use Surface.Component
+
+    @doc "The assigns of the host component"
+    property assigns, :map
+
+    slot default, props: [:form, :field]
+
+    def render(assigns) do
+      ~H"""
+      <Context
+        get={{ Surface.Components.Form, form: form }}
+        get={{ Surface.Components.Form.Field, field: field }}>
+        <slot :props={{ form: @assigns[:form] || form, field: @assigns[:field] || field }}/>
+      </Context>
+      """
     end
   end
 end

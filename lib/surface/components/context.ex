@@ -6,60 +6,73 @@ defmodule Surface.Components.Context do
   use Surface.Component
 
   @doc """
-  Set a value to the context.
+  Puts a value into the context.
 
   ## Usage
 
   ```
-  <Context set={{ key, value, options }}>
+  <Context put={{ scope, values }}>
     ...
   </Context>
   ```
 
-  Where `key` is the key which will be used to store the `value`.
+  Where:
 
-  Available options:
+    * `scope` - Optional. Is an atom representing the scope where the values will
+      be stored. If no scope is provided, the value is stored at the root of the
+      context map.
 
-    * `scope` - The scope where the value will be stored. If no scope is
-    provided, the value is stored in root of the context map.
+    * `values`- A keyword list containing the key-value pairs that will be stored
+      in the context.
 
-  ## Example
+  ## Examples
+
+  With scope:
 
   ```
-  <Context set={{ :form, form, scope: __MODULE__ }}>
+  <Context put={{ __MODULE__, form: @form }}>
     ...
   </Context>
   ```
+
+  Without scope:
+
+  ```
+  <Context put={{ key1: @value1, key2: "some other value" }}>
+    ...
+  </Context>
+  ```
+
   """
-  property set, :context_set, accumulate: true, default: []
+  property put, :context_put, accumulate: true, default: []
 
   @doc """
-  Retrieves a value from the context.
+  Retrieves a set of values from the context binding them to local variables.
 
   ## Usage
 
   ```
-  <Context get={{ key, options }}>
+  <Context get={{ scope, bindings }}>
     ...
   </Context>
   ```
 
-  Where `key` is the key that was be used to store the `value`.
+  Where:
 
-  Available options:
+    * `scope` - Optional. Is an atom representing the scope where the values will
+      be stored. If no scope is provided, the value is stored at the root of the
+      context map.
 
-    * `scope` - The scope where the value was previously stored. If no scope is
-    provided, the value is retrieved from the root of the context map.
+    * `bindings`- A keyword list of bindings that will be retrieved from the context
+      as local variables.
 
-    * `as` - The name of the assign that will hold the retrieved value.
-
-  ## Example
+  ## Examples
 
   ```
   <Context
-    get={{ :form, scope: Form }}
-    get={{ :field, scope: Field, as: :my_field }}>
-    <MyTextInput form={{ @form }} field={{ @my_field }} />
+    get={{ Form, form: form }}
+    get={{ Field, field: my_field }}>
+    <MyTextInput form={{ form }} field={{ my_field }} />
   </Context>
   ```
   """
@@ -68,72 +81,73 @@ defmodule Surface.Components.Context do
   @doc "The content of the `<Context>`"
   slot default, required: true
 
+  def transform(node) do
+    Module.put_attribute(node.meta.caller.module, :use_context?, true)
+
+    let =
+      node.props
+      |> Enum.filter(fn %{name: name} -> name == :get end)
+      |> Enum.map(fn %{value: %{value: value}} -> value end)
+      |> Enum.flat_map(fn {scope, values} ->
+        if scope == nil do
+          values
+        else
+          Enum.map(values, fn {key, value} -> {{scope, key}, value} end)
+        end
+      end)
+
+    update_let_for_template(node, :default, let)
+  end
+
   def render(assigns) do
     ~H"""
-    {{ @__original_inner_content__.(slot_kw() ++ context_assigns_kw(@__context__, @set, @get)) }}
+    {{
+      case context_map(@__context__, @put, @get) do
+        {ctx, props} -> render_inner(@inner_content, {:__default__, 0, props, ctx})
+      end
+    }}
     """
   end
 
-  @doc """
-  Retrieve a value from the context.
-
-  The `opts` argument can contain any option accepted by the `get` property,
-  except `:as`, which is ignored.
-  """
-  def get(assigns, key, opts) do
-    {key, _as} = normalize_get({key, opts})
-    assigns.__context__[key]
-  end
-
-  defp slot_kw() do
-    [__slot__: {:__default__, 0}]
-  end
-
-  defp context_assigns_kw(context, sets, gets) do
-    updated_context =
-      Enum.reduce(sets, context, fn set, acc ->
-        {key, value} = normalize_set(set)
-        Map.put(acc, key, value)
-      end)
-
-    context_kw(updated_context, sets) ++ context_gets_kw(updated_context, gets)
-  end
-
-  defp context_kw(context, sets) do
-    if sets == [] do
-      []
-    else
-      [__context__: context]
-    end
-  end
-
-  defp context_gets_kw(context, gets) do
-    Enum.map(gets, fn get ->
-      {key, name} = normalize_get(get)
-      {name, context[key]}
-    end)
-  end
-
-  defp normalize_set({key, value, opts}) do
-    case Keyword.get(opts, :scope) do
-      nil ->
-        {key, value}
-
-      scope ->
-        {{scope, key}, value}
-    end
-  end
-
-  defp normalize_get({key, opts}) do
-    full_key =
-      case Keyword.get(opts, :scope) do
-        nil ->
-          key
-
-        scope ->
-          {scope, key}
+  defp context_map(context, puts, gets) do
+    ctx =
+      for {scope, values} <- puts, {key, value} <- values, reduce: context do
+        acc ->
+          {full_key, value} = normalize_set(scope, key, value)
+          Map.put(acc, full_key, value)
       end
 
-    {full_key, Keyword.get(opts, :as, key)}
+    props =
+      for {scope, values} <- gets, {key, _value} <- values, into: %{} do
+        key =
+          if scope == nil do
+            key
+          else
+            {scope, key}
+          end
+
+        {key, Map.get(ctx, key, nil)}
+      end
+
+    {ctx, props}
+  end
+
+  defp normalize_set(nil, key, value) do
+    {key, value}
+  end
+
+  defp normalize_set(scope, key, value) do
+    {{scope, key}, value}
+  end
+
+  defp update_let_for_template(node, template_name, let) do
+    updated =
+      node.templates
+      |> Map.get(template_name, [])
+      |> Enum.map(fn template -> %{template | let: let} end)
+
+    templates = Map.put(node.templates, template_name, updated)
+
+    Map.put(node, :templates, templates)
   end
 end

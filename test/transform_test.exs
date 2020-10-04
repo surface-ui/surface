@@ -14,6 +14,7 @@ defmodule Surface.TransformTest do
   defmodule DivToSpan do
     use Surface.Component
 
+    @impl true
     def render(assigns) do
       ~H"""
       <div><slot /></div>
@@ -30,6 +31,7 @@ defmodule Surface.TransformTest do
   defmodule LiveDivToSpan do
     use Surface.LiveComponent
 
+    @impl true
     def render(assigns) do
       ~H"""
       <div><slot /></div>
@@ -86,6 +88,7 @@ defmodule Surface.TransformTest do
 
     property prop, :list
 
+    @impl true
     def render(assigns) do
       ~H"""
       <span></span>

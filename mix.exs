@@ -7,7 +7,7 @@ defmodule Surface.MixProject do
     [
       app: :surface,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.8",
       description: "A component based library for Phoenix LiveView",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers(),
@@ -32,7 +32,10 @@ defmodule Surface.MixProject do
     [
       {:nimble_parsec, "~> 0.5.0"},
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.14.4"},
+      # {:phoenix_live_view, "~> 0.14.4"},
+      {:phoenix_live_view,
+       git: "https://github.com/phoenixframework/phoenix_live_view.git",
+       tag: "0f592a4b249858590a6b96c4e26e48fd7a46833b"},
       {:earmark, "~> 1.3"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},

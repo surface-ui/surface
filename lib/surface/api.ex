@@ -22,7 +22,7 @@ defmodule Surface.API do
     :changeset,
     :form,
     :keyword,
-    :context_set,
+    :context_put,
     :context_get
   ]
 
@@ -46,6 +46,8 @@ defmodule Surface.API do
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
+      Module.put_attribute(__MODULE__, :use_context?, false)
+
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
         unquote(__MODULE__).init_func(func, __MODULE__)
@@ -59,7 +61,8 @@ defmodule Surface.API do
     [
       quoted_property_funcs(env),
       quoted_slot_funcs(env),
-      quoted_data_funcs(env)
+      quoted_data_funcs(env),
+      quoted_context_funcs(env)
     ]
   end
 
@@ -129,6 +132,16 @@ defmodule Surface.API do
     Module.put_attribute(caller.module, assign.func, assign)
   end
 
+  @doc false
+  def get_slots(module) do
+    used_slots =
+      for %{name: name, line: line} <- Module.get_attribute(module, :used_slot) || [] do
+        %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
+      end
+
+    (Module.get_attribute(module, :slot) || []) ++ used_slots
+  end
+
   defp quoted_data_funcs(env) do
     data = Module.get_attribute(env.module, :data) || []
 
@@ -167,13 +180,7 @@ defmodule Surface.API do
   end
 
   defp quoted_slot_funcs(env) do
-    used_slots =
-      for %{name: name, line: line} <- Module.get_attribute(env.module, :used_slot) || [] do
-        %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
-      end
-
-    slots = (Module.get_attribute(env.module, :slot) || []) ++ used_slots
-    slots = Enum.uniq_by(slots, & &1.name)
+    slots = env.module |> get_slots() |> Enum.uniq_by(& &1.name)
     slots_names = Enum.map(slots, fn slot -> slot.name end)
     slots_by_name = for p <- slots, into: %{}, do: {p.name, p}
 
@@ -208,6 +215,17 @@ defmodule Surface.API do
       @doc false
       def __required_slots_names__() do
         unquote(Macro.escape(required_slots_names))
+      end
+    end
+  end
+
+  defp quoted_context_funcs(env) do
+    use_context? = Module.get_attribute(env.module, :use_context?)
+
+    quote do
+      @doc false
+      def __use_context__?() do
+        unquote(use_context?)
       end
     end
   end

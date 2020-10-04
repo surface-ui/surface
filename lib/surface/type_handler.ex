@@ -294,8 +294,11 @@ defmodule Surface.TypeHandler do
   end
 
   defp handler(:boolean), do: __MODULE__.Boolean
+  defp handler(:atom), do: __MODULE__.Atom
+  defp handler(:form), do: __MODULE__.Form
   defp handler(:map), do: __MODULE__.Map
   defp handler(:keyword), do: __MODULE__.Keyword
+  defp handler(:explict_keyword), do: __MODULE__.ExplicitKeyword
   defp handler(:css_class), do: __MODULE__.CssClass
   defp handler(:style), do: __MODULE__.Style
   defp handler(:event), do: __MODULE__.Event
@@ -304,7 +307,7 @@ defmodule Surface.TypeHandler do
   defp handler(:bindings), do: __MODULE__.Bindings
   defp handler(:list), do: __MODULE__.List
   defp handler(:static_list), do: __MODULE__.StaticList
-  defp handler(:context_set), do: __MODULE__.ContextSet
+  defp handler(:context_put), do: __MODULE__.ContextPut
   defp handler(:context_get), do: __MODULE__.ContextGet
   defp handler(_), do: __MODULE__.Default
 end
