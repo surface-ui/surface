@@ -2,24 +2,24 @@ defmodule Surface.APITest do
   use ExUnit.Case, async: true
 
   test "raise error at the right line" do
-    code = "property label, :unknown_type"
+    code = "prop label, :unknown_type"
     message = ~r/code:4/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate type" do
-    code = "property label, {:a, :b}"
-    message = ~r/invalid type {:a, :b} for property label.\nExpected one of \[:any/
+    code = "prop label, {:a, :b}"
+    message = ~r/invalid type {:a, :b} for prop label.\nExpected one of \[:any/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate options" do
-    code = "property label, :string, {:a, :b}"
+    code = "prop label, :string, {:a, :b}"
 
     message =
-      ~r/invalid options for property label. Expected a keyword list of options, got: {:a, :b}/
+      ~r/invalid options for prop label. Expected a keyword list of options, got: {:a, :b}/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -37,14 +37,14 @@ defmodule Surface.APITest do
   end
 
   test "validate :required" do
-    code = "property label, :string, required: 1"
+    code = "prop label, :string, required: 1"
     message = ~r/invalid value for option :required. Expected a boolean, got: 1/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :values" do
-    code = "property label, :string, values: 1"
+    code = "prop label, :string, values: 1"
     message = ~r/invalid value for option :values. Expected a list of values, got: 1/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
@@ -52,28 +52,28 @@ defmodule Surface.APITest do
 
   test "validate duplicate assigns" do
     code = """
-    property label, :string
-    property label, :string
+    prop label, :string
+    prop label, :string
     """
 
     message = ~r"""
     cannot use name "label". \
-    There's already a property assign with the same name at line 4\
+    There's already a prop assign with the same name at line 4\
     """
 
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
-    property label, :string
+    prop label, :string
     data label, :string
     """
 
-    message = ~r/cannot use name "label". There's already a property/
+    message = ~r/cannot use name "label". There's already a prop/
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
     data label, :string
-    property label, :string
+    prop label, :string
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
@@ -82,7 +82,7 @@ defmodule Surface.APITest do
 
   test "accept invalid quoted expressions like literal maps as default value" do
     code = """
-    property map, :map, default: %{a: 1, b: 2}
+    prop map, :map, default: %{a: 1, b: 2}
     """
 
     assert {:ok, module} = eval(code)
@@ -103,8 +103,8 @@ defmodule Surface.APITest do
 
   describe "property" do
     test "validate name" do
-      code = "property {a, b}, :string"
-      message = ~r/invalid property name. Expected a variable name, got: {a, b}/
+      code = "prop {a, b}, :string"
+      message = ~r/invalid prop name. Expected a variable name, got: {a, b}/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -113,13 +113,13 @@ defmodule Surface.APITest do
 
     test "common type options" do
       code =
-        "property count, :integer, required: false, default: [], values: [0, 1, 2], accumulate: true"
+        "prop count, :integer, required: false, default: [], values: [0, 1, 2], accumulate: true"
 
       assert {:ok, _} = eval(code)
     end
 
     test "validate unknown type options" do
-      code = "property label, :string, a: 1"
+      code = "prop label, :string, a: 1"
 
       message =
         ~r/unknown option :a. Available options: \[:required, :default, :values, :accumulate\]/
@@ -170,8 +170,8 @@ defmodule Surface.APITest do
       defmodule #{module} do
         use Surface.Component
 
-        property label, :string
-        property items, :list
+        prop label, :string
+        prop items, :list
 
         slot default, props: [item: ^unknown]
 
@@ -200,7 +200,7 @@ defmodule Surface.APITest do
       defmodule #{module} do
         use Surface.Component
 
-        property label, :string
+        prop label, :string
 
         slot default, props: [item: ^label]
 

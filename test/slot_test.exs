@@ -20,7 +20,7 @@ defmodule Surface.SlotTest do
   defmodule InnerData do
     use Surface.Component, slot: "inner"
 
-    property label, :string
+    prop label, :string
   end
 
   defmodule OuterWithMultipleSlotableEntries do
@@ -120,7 +120,7 @@ defmodule Surface.SlotTest do
   defmodule Column do
     use Surface.Component, slot: "cols"
 
-    property title, :string, required: true
+    prop title, :string, required: true
 
     def render(assigns), do: ~H()
   end
@@ -128,7 +128,7 @@ defmodule Surface.SlotTest do
   defmodule ColumnWithDefaultTitle do
     use Surface.Component, slot: "cols"
 
-    property title, :string, default: "default title"
+    prop title, :string, default: "default title"
 
     def render(assigns), do: ~H()
   end
@@ -136,7 +136,7 @@ defmodule Surface.SlotTest do
   defmodule Grid do
     use Surface.Component
 
-    property items, :list, required: true
+    prop items, :list, required: true
 
     slot cols, props: [:info, item: ^items]
 

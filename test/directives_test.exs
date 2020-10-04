@@ -17,9 +17,9 @@ defmodule Surface.DirectivesTest do
   defmodule DivWithProps do
     use Surface.Component
 
-    property(class, :string)
-    property(hidden, :boolean)
-    property(content, :string)
+    prop class, :string
+    prop hidden, :boolean
+    prop content, :string
 
     def render(assigns) do
       ~H"""

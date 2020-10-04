@@ -34,21 +34,21 @@ defmodule Surface.LiveView do
     quote do
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :data]
+      use Surface.API, include: [:prop, :data]
       import Phoenix.HTML
 
       @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
 
       @doc "The id of the live view"
-      property id, :string, required: true
+      prop id, :string, required: true
 
       @doc """
       The request info necessary for the view, such as params, cookie session info, etc.
       The session is signed and stored on the client, then provided back to the server
       when the client connects, or reconnects to the stateful view.
       """
-      property session, :map
+      prop session, :map
 
       use Phoenix.LiveView, unquote(opts)
     end

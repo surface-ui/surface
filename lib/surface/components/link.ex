@@ -30,22 +30,22 @@ defmodule Surface.Components.Link do
   import Phoenix.HTML.Link, only: [link: 2]
 
   @doc "Place to link to"
-  property to, :string, required: true
+  prop to, :string, required: true
 
   @doc "Class or classes to apply to the link"
-  property class, :css_class
+  prop class, :css_class
 
   @doc "Keyword with options to be passed down to `link/2`"
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc """
   The label for the generated `<a>` alement, if no content (default slot) is
   provided.
   """
-  property label, :string
+  prop label, :string
 
   @doc "Triggered on click"
-  property click, :event
+  prop click, :event
 
   @doc """
   The content of the generated `<a>` element. If no content is provided,

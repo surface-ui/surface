@@ -15,19 +15,19 @@ defmodule Surface.Components.Form.Select do
   alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
-  property form, :form
+  prop form, :form
 
   @doc "The field name"
-  property field, :string
+  prop field, :string
 
   @doc "The CSS class for the underlying tag"
-  property class, :css_class
+  prop class, :css_class
 
   @doc "The options in the select"
-  property options, :any, default: []
+  prop options, :any, default: []
 
   @doc "Options list"
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   def render(assigns) do
     props = get_non_nil_props(assigns, class: get_config(:default_class))

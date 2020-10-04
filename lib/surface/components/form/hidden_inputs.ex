@@ -15,7 +15,7 @@ defmodule Surface.Components.Form.HiddenInputs do
 
   It should either be a `Phoenix.HTML.Form` emitted by `form_for`, `inputs_for` or an atom.
   """
-  property for, :form
+  prop for, :form
 
   def render(assigns) do
     ~H"""

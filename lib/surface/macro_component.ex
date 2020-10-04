@@ -20,7 +20,7 @@ defmodule Surface.MacroComponent do
     quote do
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:property, :slot]
+      use Surface.API, include: [:prop, :slot]
       @behaviour unquote(__MODULE__)
     end
   end

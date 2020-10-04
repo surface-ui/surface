@@ -15,19 +15,19 @@ defmodule Surface.Components.Form.Inputs do
 
   It should either be a `Phoenix.HTML.Form` emitted by `form_for` or an atom.
   """
-  property form, :form
+  prop form, :form
 
   @doc """
   The name of the field related to the child inputs.
   """
-  property for, :atom
+  prop for, :atom
 
   @doc """
   Extra options for `inputs_for/3`.
 
   See `Phoenix.HTML.Form.html.inputs_for/4` for the available options.
   """
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc "The code containing the input controls"
   slot default, props: [:form]

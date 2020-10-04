@@ -86,7 +86,7 @@ defmodule Surface.TransformTest do
   defmodule ListProp do
     use Surface.Component
 
-    property prop, :list
+    prop prop, :list
 
     @impl true
     def render(assigns) do

@@ -21,10 +21,10 @@ defmodule Surface.Components.Form.TextArea do
   import Surface.Components.Form.Utils
 
   @doc "Specifies the visible number of lines in a text area"
-  property rows, :string
+  prop rows, :string
 
   @doc "Specifies the visible width of a text area"
-  property cols, :string
+  prop cols, :string
 
   def render(assigns) do
     props = get_non_nil_props(assigns, [:value, :rows, :cols, class: @default_class])

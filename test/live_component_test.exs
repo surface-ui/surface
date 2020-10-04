@@ -10,7 +10,7 @@ defmodule LiveComponentTest do
   defmodule StatelessComponent do
     use Surface.Component
 
-    property label, :string
+    prop label, :string
 
     def render(assigns) do
       ~H"""
@@ -88,7 +88,7 @@ defmodule LiveComponentTest do
   defmodule LiveComponentWithEvent do
     use Surface.LiveComponent
 
-    property event, :event
+    prop event, :event
 
     def render(assigns) do
       ~H"""

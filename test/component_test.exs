@@ -11,8 +11,8 @@ defmodule Surface.ComponentTest do
   defmodule Stateless do
     use Surface.Component
 
-    property label, :string, default: ""
-    property class, :css_class
+    prop label, :string, default: ""
+    prop class, :css_class
 
     def render(assigns) do
       ~H"""
@@ -99,7 +99,7 @@ defmodule Surface.ComponentTest do
     defmodule #{module} do
       use Surface.Component, slot: {1, 2}
 
-      property label, :string
+      prop label, :string
     end
     """
 

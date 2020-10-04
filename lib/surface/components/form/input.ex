@@ -8,34 +8,34 @@ defmodule Surface.Components.Form.Input do
       alias Surface.Components.Form.Input.InputContext
 
       @doc "An identifier for the form"
-      property form, :form
+      prop form, :form
 
       @doc "An identifier for the input"
-      property field, :atom
+      prop field, :atom
 
       @doc "Value to pre-populated the input"
-      property value, :string
+      prop value, :string
 
       @doc "Class or classes to apply to the input"
-      property class, :css_class
+      prop class, :css_class
 
       @doc "Options list"
-      property opts, :keyword, default: []
+      prop opts, :keyword, default: []
 
       @doc "Triggered when the component loses focus"
-      property blur, :event
+      prop blur, :event
 
       @doc "Triggered when the component receives focus"
-      property focus, :event
+      prop focus, :event
 
       @doc "Triggered when the component receives click"
-      property capture_click, :event
+      prop capture_click, :event
 
       @doc "Triggered when a button on the keyboard is pressed"
-      property keydown, :event
+      prop keydown, :event
 
       @doc "Triggered when a button on the keyboard is released"
-      property keyup, :event
+      prop keyup, :event
 
       @default_class get_config(:default_class) || get_config(unquote(__MODULE__), :default_class)
     end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.Input do
     use Surface.Component
 
     @doc "The assigns of the host component"
-    property assigns, :map
+    prop assigns, :map
 
     slot default, props: [:form, :field]
 

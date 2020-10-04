@@ -30,10 +30,10 @@ defmodule Surface.CompilerTest do
   defmodule Button do
     use Surface.Component
 
-    property label, :string, default: ""
-    property click, :event
-    property class, :css_class
-    property disabled, :boolean
+    prop label, :string, default: ""
+    prop click, :event
+    prop class, :css_class
+    prop disabled, :boolean
 
     def render(assigns) do
       ~H"""
@@ -45,7 +45,7 @@ defmodule Surface.CompilerTest do
   defmodule Column do
     use Surface.Component, slot: "cols"
 
-    property title, :string, required: true
+    prop title, :string, required: true
   end
 
   defmodule ColumnWithoutTitle do
@@ -55,7 +55,7 @@ defmodule Surface.CompilerTest do
   defmodule Grid do
     use Surface.Component
 
-    property items, :list
+    prop items, :list
 
     slot cols, props: [item: ^items]
 
@@ -68,7 +68,7 @@ defmodule Surface.CompilerTest do
   defmodule GridLive do
     use Surface.LiveComponent
 
-    property items, :list
+    prop items, :list
 
     slot cols
 

@@ -20,7 +20,7 @@ defmodule Surface.EventsTest do
   defmodule Button do
     use Surface.LiveComponent
 
-    property click, :event, default: "click"
+    prop click, :event, default: "click"
 
     def render(assigns) do
       ~H"""
@@ -36,7 +36,7 @@ defmodule Surface.EventsTest do
   defmodule Panel do
     use Surface.LiveComponent
 
-    property buttonClick, :event, default: "click"
+    prop buttonClick, :event, default: "click"
 
     def render(assigns) do
       ~H"""
@@ -54,7 +54,7 @@ defmodule Surface.EventsTest do
   defmodule ButtonWithInvalidEvent do
     use Surface.LiveComponent
 
-    property click, :event
+    prop click, :event
 
     def render(assigns) do
       ~H"""

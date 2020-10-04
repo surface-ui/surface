@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.TelephoneInput do
   import Surface.Components.Form.Utils
 
   @doc "A regular expression to validate the entered value"
-  property pattern, :string
+  prop pattern, :string
 
   def render(assigns) do
     props = get_non_nil_props(assigns, [:value, :pattern, class: @default_class])

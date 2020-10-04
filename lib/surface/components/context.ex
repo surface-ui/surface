@@ -44,7 +44,7 @@ defmodule Surface.Components.Context do
   ```
 
   """
-  property put, :context_put, accumulate: true, default: []
+  prop put, :context_put, accumulate: true, default: []
 
   @doc """
   Retrieves a set of values from the context binding them to local variables.
@@ -76,7 +76,7 @@ defmodule Surface.Components.Context do
   </Context>
   ```
   """
-  property get, :context_get, accumulate: true, default: []
+  prop get, :context_get, accumulate: true, default: []
 
   @doc "The content of the `<Context>`"
   slot default, required: true

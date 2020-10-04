@@ -12,10 +12,10 @@ defmodule Surface.Components.Form.OptionsForSelect do
   import Phoenix.HTML.Form, only: [options_for_select: 2]
 
   @doc "The options in the select"
-  property options, :any, default: []
+  prop options, :any, default: []
 
   @doc "The selected values"
-  property selected, :any, default: nil
+  prop selected, :any, default: nil
 
   def render(assigns) do
     ~H"""

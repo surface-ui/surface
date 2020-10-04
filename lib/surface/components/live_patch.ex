@@ -15,23 +15,23 @@ defmodule Surface.Components.LivePatch do
   use Surface.Component
 
   @doc "The required path to link to"
-  property to, :string, required: true
+  prop to, :string, required: true
 
   @doc "The flag to replace the current history or push a new state"
-  property replace, :boolean, default: false
+  prop replace, :boolean, default: false
 
   @doc "The CSS class for the generated `<a>` element"
-  property class, :css_class, default: ""
+  prop class, :css_class, default: ""
 
   @doc """
   The label for the generated `<a>` alement, if no content (default slot) is provided.
   """
-  property label, :string
+  prop label, :string
 
   @doc """
   Additional attributes to add onto the generated element
   """
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc """
   The content of the generated `<a>` element. If no content is provided,

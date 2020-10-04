@@ -15,16 +15,16 @@ defmodule Surface.Components.Form.Label do
   alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
-  property form, :form
+  prop form, :form
 
   @doc "The field name"
-  property field, :atom
+  prop field, :atom
 
   @doc "The CSS class for the underlying tag"
-  property class, :css_class
+  prop class, :css_class
 
   @doc "Options list"
-  property opts, :keyword, default: []
+  prop opts, :keyword, default: []
 
   @doc """
   The text for the label
