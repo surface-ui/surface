@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.CheckboxTest do
 
   test "with form context" do
     code = """
-    <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
+    <Form for={{ :user }} opts={{ csrf_token: "test" }}>
       <Checkbox field={{ :admin }} />
     </Form>
     """
@@ -26,8 +26,8 @@ defmodule Surface.Components.Form.CheckboxTest do
     assert render_live(code) =~ """
            <form action="#" method="post">\
            <input name="_csrf_token" type="hidden" value="test"/>\
-           <input name="parent[admin]" type="hidden" value="false"/>\
-           <input id="parent_admin" name="parent[admin]" type="checkbox" value="true"/>\
+           <input name="user[admin]" type="hidden" value="false"/>\
+           <input id="user_admin" name="user[admin]" type="checkbox" value="true"/>\
            </form>
            """
   end
