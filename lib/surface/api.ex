@@ -22,6 +22,7 @@ defmodule Surface.API do
     :changeset,
     :form,
     :keyword,
+    # Private
     :context_put,
     :context_get
   ]
@@ -69,7 +70,6 @@ defmodule Surface.API do
   def __after_compile__(env, _) do
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
-      validate_required_slots!(env)
     end
   end
 
@@ -466,17 +466,6 @@ defmodule Surface.API do
     end
 
     :ok
-  end
-
-  defp validate_required_slots!(env) do
-    for {{mod, _parent_node_id, parent_node_alias, line}, assigned_slots} <-
-          env.module.__assigned_slots_by_parent__(),
-        mod != nil,
-        name <- mod.__required_slots_names__(),
-        !MapSet.member?(assigned_slots, name) do
-      message = "missing required slot \"#{name}\" for component <#{parent_node_alias}>"
-      IOHelper.warn(message, env, fn _ -> line end)
-    end
   end
 
   defp pop_doc(module) do
