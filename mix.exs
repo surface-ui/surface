@@ -1,7 +1,7 @@
 defmodule Surface.MixProject do
   use Mix.Project
 
-  @version "0.1.0-alpha.2"
+  @version "0.1.0-rc.0"
 
   def project do
     [
@@ -32,7 +32,6 @@ defmodule Surface.MixProject do
     [
       {:nimble_parsec, "~> 0.5.0"},
       {:jason, "~> 1.0"},
-      # {:phoenix_live_view, "~> 0.14.4"},
       {:phoenix_live_view,
        git: "https://github.com/phoenixframework/phoenix_live_view.git",
        tag: "0f592a4b249858590a6b96c4e26e48fd7a46833b"},

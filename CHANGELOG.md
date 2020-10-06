@@ -1,19 +1,22 @@
 # Changelog
 
-## v0.1.0-dev
+## v0.1.0-rc.0 (2020-10-06)
 
-  * Update LiveView to v0.15-dev
-  * Make `<slot>` mandatory instead of `inner_content`
-  * Add support for co-located template files using `.sface` suffix
-  * Add `Surface.init/1` to initialize internal assigns when not using `Surface.LiveView`
-  * Add `:props` directive to pass dynamic props to a component
-  * Add `:attrs` directive to pass dynamic attributes to a tag
+  * Update LiveView to v0.15-dev (0f592a4).
+  * Make `<slot>` mandatory instead of `inner_content`.
+  * Add attribute `index` to `<slot>` to allow rendering individual named slot items.
+  * Rename macro `property` to `prop`.
+  * Rename directives `:on-phx-[event]` to `:on-[event]`.
+  * Add support for co-located template files using `.sface` suffix.
+  * Add `Surface.init/1` to initialize internal assigns when not using `Surface.LiveView`.
+  * Add `:props` directive to pass dynamic props to a component.
+  * Add `:attrs` directive to pass dynamic attributes to a tag.
   * Add new modifiers `index` and `with_index` for `:for`.
-  * Update html tag generation to remove the tag if it's value computes to nil
+  * Update html tag generation to remove the tag if it's value computes to `nil`.
   * Add support for a `transform/1` callback to allow components to manipulate its
     own node at compile-time.
   * New form controls: `<Inputs>`, `<Checkbox>`, `<Select>`, `<MultipleSelect>`,
-    `<HiddenInputs>` and `<OptionsForSelect>`.
+    `<HiddenInputs>`, `<FileInput>` and `<OptionsForSelect>`.
 
 ## v0.1.0-alpha.2 (2020-06-09)
 

@@ -1,7 +1,6 @@
 # Surface
 
 [![Build Status](https://github.com/msaraiva/surface/workflows/CI/badge.svg)](https://github.com/msaraiva/surface/actions?query=workflow%3A%22CI%22)
-[![Hex.pm version](https://img.shields.io/hexpm/v/surface.svg?style=flat)](https://hex.pm/packages/surface)
 
 Surface is a **server-side rendering** component library that allows developers to
 build **rich interactive user-interfaces**, writing minimal custom Javascript.
@@ -22,8 +21,8 @@ A VS Code extension that adds support for syntax highlighting is available at
 
 ## How does it work?
 
-At compile time, Surface translates components defined in an extended HTML-like syntax
-into regular Phoenix templates. It also translates standard HTML nodes allowing us to
+Surface's custom compiler translates components defined in an extended HTML-like syntax
+into Elixir's Abstract Syntax Tree (AST). It also translates standard HTML nodes, allowing to
 extend their behaviour adding new features like syntactic sugar on attributes definition,
 directives, static validation and more.
 
@@ -47,24 +46,32 @@ In order to have your code translated, you need to use the `~H` sigil when defin
   * **Integration with editor/tools** for warnings/errors, syntax highlighting, jump-to-definition,
     auto-completion (soon!) and more.
 
-> **Note:** Some of the features are still experimental and subject to change.
-
 ## Installation
 
-Requirements:
+Phoenix v1.5 comes with built-in support for LiveView apps. You can create a new application with:
 
-  * Install Phoenix (https://hexdocs.pm/phoenix/installation.html).
-  * Install Phoenix LiveView (https://hexdocs.pm/phoenix_live_view/installation.html)
-  * Although LiveView supports Elixir 1.7, which is [compatible](https://hexdocs.pm/elixir/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) with Erlang/OTP 19–22, [LiveView requires Erlang/OTP 21+](https://github.com/phoenixframework/phoenix_live_view/blob/7fbdcef6e46135fa111ea3fda29d5e91f9aa7b0e/lib/phoenix_live_view/application.ex#L11) and, thus, so does Surface.
+```
+mix phx.new my_app --live
+```
 
 Then add `surface` to the list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.1.0-alpha.2"}
+    {:surface, git: "https://github.com/msaraiva/surface.git", tag: "0.1.0-rc.0"}
   ]
 end
+```
+
+If you're using `mix format`, make sure you add `surface` to the `import_deps`
+configuration in your `.formatter.exs` file:
+
+```elixir
+[
+  import_deps: [:ecto, :phoenix, :surface],
+  ...
+]
 ```
 
 For further information regarding installation, including how to quickly get started
