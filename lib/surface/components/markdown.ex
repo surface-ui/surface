@@ -61,6 +61,7 @@ defmodule Surface.Components.Markdown do
     props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
     class = props[:class] || get_config(:default_class)
     unwrap = props[:unwrap] || false
+
     config_opts =
       case get_config(:default_opts) do
         nil -> []
