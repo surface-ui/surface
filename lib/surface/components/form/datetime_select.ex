@@ -22,7 +22,6 @@ defmodule Surface.Components.Form.DateTimeSelect do
   use Surface.Component
 
   import Phoenix.HTML.Form, only: [datetime_select: 3]
-  import Surface.Components.Form.Utils
   alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
@@ -31,14 +30,18 @@ defmodule Surface.Components.Form.DateTimeSelect do
   @doc "The field name"
   prop field, :string
 
-  @doc "Value to pre-populated the select"
+  @doc "Value to pre-populate the select"
   prop value, :any
 
   @doc "Options list"
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:value])
+    props =
+      case assigns[:value] do
+        nil -> []
+        value -> [value: value]
+      end
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>

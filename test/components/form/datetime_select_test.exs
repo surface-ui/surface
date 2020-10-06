@@ -38,32 +38,32 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
 
   test "setting the value as map" do
     code = """
-    <DateTimeSelect form="user" field="born_at" value={{ %{year: 2020, month: 10, day: 9, hour: 2, minute: 11, second: 13} }} />
+    <DateTimeSelect form="user" field="born_at" value={{ %{year: 2020, month: 10, day: 9, hour: 2, minute: 11, second: 13} }} opts={{ second: [] }} />
     """
 
     content = render_live(code)
 
-    assert content =~ ~s(<option value="2020" selected>2020</option>)
-    assert content =~ ~s(<option value="10" selected>October</option>)
-    assert content =~ ~s(<option value="9" selected>09</option>)
-    assert content =~ ~s(<option value="2" selected>02</option>)
-    assert content =~ ~s(<option value="11" selected>11</option>)
-    assert content =~ ~s(<option value="13" selected>13</option>)
+    assert content =~ ~s(<option value="2020" selected="selected">2020</option>)
+    assert content =~ ~s(<option value="10" selected="selected">October</option>)
+    assert content =~ ~s(<option value="9" selected="selected">09</option>)
+    assert content =~ ~s(<option value="2" selected="selected">02</option>)
+    assert content =~ ~s(<option value="11" selected="selected">11</option>)
+    assert content =~ ~s(<option value="13" selected="selected">13</option>)
   end
 
   test "setting the value as tuple" do
     code = """
-    <DateTimeSelect form="user" field="born_at" value={{ { {2020, 10, 9}, {2, 11, 13} } }} />
+    <DateTimeSelect form="user" field="born_at" value={{ { {2020, 10, 9}, {2, 11, 13} } }} opts={{ second: [] }} />
     """
 
     content = render_live(code)
 
-    assert content =~ ~s(<option value="2020" selected>2020</option>)
-    assert content =~ ~s(<option value="10" selected>October</option>)
-    assert content =~ ~s(<option value="9" selected>09</option>)
-    assert content =~ ~s(<option value="2" selected>02</option>)
-    assert content =~ ~s(<option value="11" selected>11</option>)
-    assert content =~ ~s(<option value="13" selected>13</option>)
+    assert content =~ ~s(<option value="2020" selected="selected">2020</option>)
+    assert content =~ ~s(<option value="10" selected="selected">October</option>)
+    assert content =~ ~s(<option value="9" selected="selected">09</option>)
+    assert content =~ ~s(<option value="2" selected="selected">02</option>)
+    assert content =~ ~s(<option value="11" selected="selected">11</option>)
+    assert content =~ ~s(<option value="13" selected="selected">13</option>)
   end
 
   test "passing other options" do
