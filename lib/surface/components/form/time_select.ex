@@ -4,8 +4,8 @@ defmodule Surface.Components.Form.TimeSelect do
 
   Provides a wrapper for Phoenix.HTML.Form's `time_select/3` function.
 
-  All options passed via `opts` will be sent to `time_select/3`, `value` and
-  `class` can be set directly and will override anything in `opts`.
+  All options passed via `opts` will be sent to `time_select/3`, `value` can be
+  set directly and will override anything in `opts`.
 
 
   ## Examples
