@@ -14,7 +14,7 @@ defmodule Surface.Components.Form.DateTimeSelect do
   <DateTimeSelect form="user" field="born_at" />
 
   <Form for={{ :user }}>
-    <FileInput field={{ :born_at }} />
+    <DateTimeSelect field={{ :born_at }} />
   </Form>
   ```
   """
