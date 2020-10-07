@@ -6,6 +6,7 @@
   * Make `<slot>` mandatory instead of `inner_content`.
   * Add attribute `index` to `<slot>` to allow rendering individual named slot items.
   * Rename macro `property` to `prop`.
+  * Remove macro `context` and add a `<Context>` component to be used instead.
   * Rename directives `:on-phx-[event]` to `:on-[event]`.
   * Add support for co-located template files using `.sface` suffix.
   * Add `Surface.init/1` to initialize internal assigns when not using `Surface.LiveView`.
