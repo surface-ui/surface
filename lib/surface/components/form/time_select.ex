@@ -22,6 +22,7 @@ defmodule Surface.Components.Form.TimeSelect do
   use Surface.Component
 
   import Phoenix.HTML.Form, only: [time_select: 3]
+  import Surface.Components.Form.Utils
   alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
@@ -37,11 +38,7 @@ defmodule Surface.Components.Form.TimeSelect do
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    props =
-      case assigns[:value] do
-        nil -> []
-        value -> [value: value]
-      end
+    props = get_non_nil_props(assigns, [:value])
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
