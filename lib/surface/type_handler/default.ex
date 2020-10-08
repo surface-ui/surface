@@ -54,6 +54,11 @@ defmodule Surface.TypeHandler.Default do
   end
 
   @impl true
+  def value_to_opts(_name, value) do
+    {:ok, value}
+  end
+
+  @impl true
   def update_prop_expr(value, _meta) do
     value
   end
