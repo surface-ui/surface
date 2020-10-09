@@ -52,6 +52,11 @@ defmodule Surface.TypeHandler.CssClass do
     {:ok, Enum.join(value, " ")}
   end
 
+  @impl true
+  def value_to_opts(_name, value) do
+    {:ok, Enum.join(value, " ")}
+  end
+
   defp maybe_add_class(classes, class) do
     new_classes =
       class

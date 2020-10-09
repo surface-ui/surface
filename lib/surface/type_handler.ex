@@ -31,6 +31,9 @@ defmodule Surface.TypeHandler do
   @callback value_to_html(name :: atom(), value :: any()) ::
               {:ok, String.t() | nil | boolean()} | {:error, String.t()}
 
+  @callback value_to_opts(name :: atom(), value :: any()) ::
+              {:ok, any()} | {:error, String.t()}
+
   @callback update_prop_expr(expr :: Macro.t(), meta :: Surface.AST.Meta.t()) :: Macro.t()
 
   @optional_callbacks [
@@ -38,6 +41,7 @@ defmodule Surface.TypeHandler do
     expr_to_quoted: 6,
     expr_to_value: 2,
     value_to_html: 2,
+    value_to_opts: 2,
     update_prop_expr: 2
   ]
 
@@ -84,12 +88,14 @@ defmodule Surface.TypeHandler do
 
       defdelegate expr_to_value(clauses, opts), to: @default_handler
       defdelegate value_to_html(name, value), to: @default_handler
+      defdelegate value_to_opts(name, value), to: @default_handler
       defdelegate update_prop_expr(expr, meta), to: @default_handler
 
       defoverridable literal_to_ast_node: 4,
                      expr_to_quoted: 6,
                      expr_to_value: 2,
                      value_to_html: 2,
+                     value_to_opts: 2,
                      update_prop_expr: 2
     end
   end
@@ -168,12 +174,12 @@ defmodule Surface.TypeHandler do
   end
 
   def attr_to_opts!(type, name, value) do
-    case handler(type).value_to_html(name, value) do
+    case handler(type).value_to_opts(name, value) do
       {:ok, val} when val in ["", nil, false] ->
         []
 
       {:ok, val} ->
-        [{name, to_string(val)}]
+        [{name, val}]
 
       {:error, message} ->
         IOHelper.runtime_error(message)
