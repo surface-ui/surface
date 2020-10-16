@@ -135,7 +135,8 @@ defmodule Surface.API do
   def get_assigns(module) do
     if Module.open?(module) do
       module
-      |> Module.get_attribute(:assigns, %{})
+      |> Module.get_attribute(:assigns)
+      |> Kernel.||(%{})
       |> Map.keys()
     else
       data = if function_exported?(module, :__data__, 0), do: module.data(), else: []
