@@ -84,7 +84,9 @@ defmodule Surface.Compiler do
   string is also the first line of the file, then this should be 1. If this is being called within a macro (say to process a heredoc
   passed to ~H), this should be __CALLER__.line + 1.
   """
-  @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary(), Keyword.t()) :: [Surface.AST.t()]
+  @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary(), Keyword.t()) :: [
+          Surface.AST.t()
+        ]
   def compile(string, line_offset, caller, file \\ "nofile", opts \\ []) do
     compile_meta = %CompileMeta{
       line_offset: line_offset,
