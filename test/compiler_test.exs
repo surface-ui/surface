@@ -418,40 +418,6 @@ defmodule Surface.CompilerTest do
            } = node
   end
 
-  test "calling @inner_content.([]) succeeds" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-
-    view_code = """
-    defmodule TestLiveComponent_#{id} do
-      use Surface.Component
-
-      def render(assigns) do
-        ~H"<div> {{ @inner_content.([]) }} </div>"
-      end
-    end
-    """
-
-    assert {{:module, _, _, _}, _} =
-             Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
-  end
-
-  test "calling .inner_content.([]) succeeds" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-
-    view_code = """
-    defmodule TestLiveComponent_#{id} do
-      use Surface.Component
-
-      def render(assigns) do
-        ~H"<div :for={{col <- @cols}}> {{ col.inner_content.([]) }} </div>"
-      end
-    end
-    """
-
-    assert {{:module, _, _, _}, _} =
-             Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
-  end
-
   describe "macro components" do
     test "expanded at top level" do
       code = """

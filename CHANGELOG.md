@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.0-dev
+
+  * Update liveview to latest v0.15-dev (597c5dd)
+    * render_live -> render_block
+    * @inner_content -> @inner_block
+
 ## v0.1.0-rc.0 (2020-10-06)
 
   * Update LiveView to v0.15-dev (0f592a4).

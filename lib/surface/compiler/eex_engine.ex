@@ -151,9 +151,9 @@ defmodule Surface.Compiler.EExEngine do
     # TODO: map names somehow?
     slot_content_expr =
       quote generated: true do
-        if @inner_content do
-          render_inner(
-            @inner_content,
+        if @inner_block do
+          render_block(
+            @inner_block,
             {
               unquote(slot_name),
               unquote(slot_index),
