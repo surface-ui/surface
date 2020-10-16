@@ -38,8 +38,9 @@ defmodule Surface.Compiler.Helpers do
 
       #{assign_message}
 
-      Hint: You can define a new prop using the `prop` macro: \
-      `prop #{assign}, :any`\
+      Hint: You can define assigns using any of the available macros (`prop`, `data` and `slot`).
+
+      For instance: `prop #{assign}, :any`
       """
 
       assign_line = assign_meta[:line] || caller.line
