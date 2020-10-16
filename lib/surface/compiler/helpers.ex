@@ -26,7 +26,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def validate_assign_usage(expr, caller) do
+  def validate_no_undefined_assigns(expr, caller) do
     used_assigns = used_assigns(expr)
     defined_assigns = Surface.API.get_assigns(caller.module)
 
