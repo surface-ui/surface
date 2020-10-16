@@ -13,7 +13,7 @@ defmodule Surface.Compiler.HelpersTest do
         |> Helpers.used_assigns()
         |> Keyword.keys()
 
-      assert [:something, :something_else, :list] = assigns
+      assert [:list, :something_else, :something] = assigns
     end
 
     test "returns empty list when no assigns referenced via @assign_name" do

@@ -50,16 +50,14 @@ defmodule Surface.Compiler.Helpers do
   end
 
   @spec used_assigns(Macro.t()) :: list(atom())
-  def used_assigns(atom) when is_atom(atom), do: []
-  def used_assigns(number) when is_number(number), do: []
-  def used_assigns(binary) when is_binary(binary), do: []
-  def used_assigns({first, second}), do: used_assigns(first) ++ used_assigns(second)
-  def used_assigns(list) when is_list(list), do: Enum.flat_map(list, &used_assigns/1)
+  def used_assigns(expr) do
+    {_expr, assigns} = Macro.prewalk(expr, [], fn
+      {:@, _meta, [{assign, meta, _}]} = expr, assigns -> {expr, [{assign, meta} | assigns]}
+        expr, assigns -> {expr, assigns}
+    end)
 
-  def used_assigns({:@, _at_meta, [{assign, meta, args}]}),
-    do: [{assign, meta} | used_assigns(args)]
-
-  def used_assigns({first, _meta, second}), do: used_assigns(first) ++ used_assigns(second)
+    assigns
+  end
 
   def to_meta(%{line: line} = tree_meta, %CompileMeta{
         line_offset: offset,
