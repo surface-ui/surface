@@ -3,7 +3,15 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.Compiler.CompileMeta
   alias Surface.IOHelper
 
-  @builtin_assigns [:flash, :live_action, :live_module, :socket, :inner_block, :__context__, :__surface__]
+  @builtin_assigns [
+    :flash,
+    :live_action,
+    :live_module,
+    :socket,
+    :inner_block,
+    :__context__,
+    :__surface__
+  ]
 
   def interpolation_to_quoted!(text, meta) do
     case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
@@ -51,10 +59,11 @@ defmodule Surface.Compiler.Helpers do
 
   @spec used_assigns(Macro.t()) :: list(atom())
   def used_assigns(expr) do
-    {_expr, assigns} = Macro.prewalk(expr, [], fn
-      {:@, _meta, [{assign, meta, _}]} = expr, assigns -> {expr, [{assign, meta} | assigns]}
+    {_expr, assigns} =
+      Macro.prewalk(expr, [], fn
+        {:@, _meta, [{assign, meta, _}]} = expr, assigns -> {expr, [{assign, meta} | assigns]}
         expr, assigns -> {expr, assigns}
-    end)
+      end)
 
     assigns
   end
