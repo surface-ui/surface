@@ -27,17 +27,18 @@ defmodule Surface.Compiler.Helpers do
   end
 
   def perform_assigns_checks(expr, meta) do
+    used_assigns = used_assigns(expr)
+
     if meta.checks[:no_unused_assigns] do
-      validate_no_unused_assigns(expr, meta.caller)
+      validate_no_unused_assigns(used_assigns, meta.caller)
     end
 
     if meta.checks[:no_undefined_assigns] do
-      validate_no_undefined_assigns(expr, meta.caller)
+      validate_no_undefined_assigns(used_assigns, meta.caller)
     end
   end
 
-  def validate_no_undefined_assigns(expr, caller) do
-    used_assigns = used_assigns(expr)
+  def validate_no_undefined_assigns(used_assigns, caller) do
     defined_assigns = Keyword.keys(Surface.API.get_assigns(caller.module))
 
     undefined_assigns = Keyword.drop(used_assigns, @builtin_assigns ++ defined_assigns)
@@ -67,16 +68,13 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def validate_no_unused_assigns(expr, caller) do
-    used_assigns = used_assigns(expr)
+  def validate_no_unused_assigns(used_assigns, caller) do
     defined_assigns = Surface.API.get_assigns(caller.module)
 
     unused_assigns = Keyword.drop(defined_assigns, [:id, :session] ++ Keyword.keys(used_assigns))
 
     for {assign, line} <- unused_assigns do
-      message = """
-      unused assign `@#{to_string(assign)}`.
-      """
+      message = "unused assign `@#{to_string(assign)}`."
 
       IOHelper.warn(message, caller, fn _ -> line end)
     end
