@@ -139,9 +139,9 @@ defmodule Surface.API do
       |> Kernel.||(%{})
       |> Map.keys()
     else
-      data = if function_exported?(module, :__data__, 0), do: module.data(), else: []
-      props = if function_exported?(module, :__props__, 0), do: module.props(), else: []
-      slots = if function_exported?(module, :__slots__, 0), do: module.slots(), else: []
+      data = if function_exported?(module, :__data__, 0), do: module.__data__(), else: []
+      props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
+      slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
 
       Enum.map(data ++ props ++ slots, fn %{name: name} -> name end)
     end
