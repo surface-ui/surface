@@ -3,6 +3,8 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.Compiler.CompileMeta
   alias Surface.IOHelper
 
+  @surface_assigns [:__context__, :inner_content, :__surface__]
+
   def interpolation_to_quoted!(text, meta) do
     case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
       {:ok, expr} ->
@@ -16,10 +18,53 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
+  def validate_assign_usage(expr, caller) do
+    used_assigns = used_assigns(expr)
+    defined_assigns = Surface.API.get_assigns(caller.module)
+
+    undefined_assigns = Keyword.drop(used_assigns, @surface_assigns ++ defined_assigns)
+
+    available_assigns =
+      Enum.map_join(defined_assigns, ", ", fn name -> "@" <> to_string(name) end)
+
+    assign_message =
+      if Enum.empty?(defined_assigns),
+        do: "No assigns are defined in #{inspect(caller.module)}.",
+        else: "Available assigns in #{inspect(caller.module)}: #{available_assigns}."
+
+    for {assign, assign_meta} <- undefined_assigns do
+      message = """
+      undefined assign `@#{to_string(assign)}`.
+
+      #{assign_message}
+
+      Hint: You can define a new prop using the `prop` macro: \
+      `prop #{assign}, :any`\
+      """
+
+      assign_line = assign_meta[:line] || caller.line
+
+      IOHelper.warn(message, caller, fn _ -> assign_line end)
+    end
+  end
+
+  @spec used_assigns(Macro.t()) :: list(atom())
+  def used_assigns(atom) when is_atom(atom), do: []
+  def used_assigns(number) when is_number(number), do: []
+  def used_assigns(binary) when is_binary(binary), do: []
+  def used_assigns({first, second}), do: used_assigns(first) ++ used_assigns(second)
+  def used_assigns(list) when is_list(list), do: Enum.flat_map(list, &used_assigns/1)
+
+  def used_assigns({:@, _at_meta, [{assign, meta, args}]}),
+    do: [{assign, meta} | used_assigns(args)]
+
+  def used_assigns({first, _meta, second}), do: used_assigns(first) ++ used_assigns(second)
+
   def to_meta(%{line: line} = tree_meta, %CompileMeta{
         line_offset: offset,
         file: file,
-        caller: caller
+        caller: caller,
+        checks: checks
       }) do
     AST.Meta
     |> Kernel.struct(tree_meta)
@@ -29,6 +74,7 @@ defmodule Surface.Compiler.Helpers do
     |> Map.put(:line_offset, offset)
     |> Map.put(:file, file)
     |> Map.put(:caller, caller)
+    |> Map.put(:checks, checks)
   end
 
   def to_meta(%{line: line} = tree_meta, %AST.Meta{line_offset: offset} = parent_meta) do

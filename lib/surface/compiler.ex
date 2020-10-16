@@ -67,12 +67,13 @@ defmodule Surface.Compiler do
   end
 
   defmodule CompileMeta do
-    defstruct [:line_offset, :file, :caller]
+    defstruct [:line_offset, :file, :caller, :checks]
 
     @type t :: %__MODULE__{
             line_offset: non_neg_integer(),
             file: binary(),
-            caller: Macro.Env.t()
+            caller: Macro.Env.t(),
+            checks: Keyword.t(boolean())
           }
   end
 
@@ -83,12 +84,13 @@ defmodule Surface.Compiler do
   string is also the first line of the file, then this should be 1. If this is being called within a macro (say to process a heredoc
   passed to ~H), this should be __CALLER__.line + 1.
   """
-  @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary()) :: [Surface.AST.t()]
-  def compile(string, line_offset, caller, file \\ "nofile") do
+  @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary(), Keyword.t()) :: [Surface.AST.t()]
+  def compile(string, line_offset, caller, file \\ "nofile", opts \\ []) do
     compile_meta = %CompileMeta{
       line_offset: line_offset,
       file: file,
-      caller: caller
+      caller: caller,
+      checks: opts[:checks] || []
     }
 
     string
@@ -194,10 +196,16 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
+    expr = Helpers.interpolation_to_quoted!(text, meta)
+
+    if compile_meta.checks[:no_undefined_assigns] do
+      Helpers.validate_assign_usage(expr, compile_meta.caller)
+    end
+
     {:ok,
      %AST.Interpolation{
        original: text,
-       value: Helpers.interpolation_to_quoted!(text, meta),
+       value: expr,
        meta: meta
      }}
   end

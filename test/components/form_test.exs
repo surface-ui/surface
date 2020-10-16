@@ -9,6 +9,8 @@ defmodule Surface.Components.FormTest do
   defmodule ViewWithForm do
     use Surface.LiveView
 
+    data changeset, :any
+
     def render(assigns) do
       ~H"""
       <Form for={{ @changeset }} action="#" opts={{ csrf_token: "test", as: :user }}>

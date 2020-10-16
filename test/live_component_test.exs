@@ -23,6 +23,7 @@ defmodule LiveComponentTest do
     use Surface.LiveComponent
 
     data label, :string, default: "Initial stateful"
+    data assigned_in_update, :any
 
     def update(_assigns, socket) do
       {:ok, assign(socket, assigned_in_update: "Assinged in update/2")}

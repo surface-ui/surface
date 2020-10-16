@@ -626,6 +626,30 @@ defmodule Surface.CompilerSyncTest do
     assert line == 4
   end
 
+  test "warning on undefined assign in property" do
+    code = """
+    <div prop={{ @assign }} />
+    """
+
+    {:warn, line, message} = compile_component(code)
+
+    assert message =~ ~S(undefined assign `@assign`.)
+    assert line == 1
+  end
+
+  test "warning on undefined assign in interpolation" do
+    code = """
+    <div>
+      {{ @assign }}
+    </div>
+    """
+
+    {:warn, line, message} = compile_component(code)
+
+    assert message =~ ~S(undefined assign `@assign`.)
+    assert line == 2
+  end
+
   test "warning on missing required property" do
     code = """
     <Column />
@@ -710,6 +734,40 @@ defmodule Surface.CompilerSyncTest do
 
     assert output =~ "stateful live components must have a HTML root element"
     assert extract_line(output) == 6
+  end
+
+  defp compile_component(code) do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    component_code = """
+    defmodule CompilerTestComponent_#{id} do; \
+      use Surface.Component; \
+      def render(assigns) do; \
+        ~H"#{code}" \
+      end; \
+    end\
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        # Setting line to 0 here because we aren't using heredoc for the above code and so the lines would
+        # be off
+        {{:module, module, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | line: 0})
+        send(self(), {:result, module})
+      end)
+
+    result =
+      receive do
+        {:result, result} -> result
+      end
+
+    case output do
+      "" ->
+        {:ok, result}
+
+      message ->
+        {:warn, extract_line(output), message}
+    end
   end
 
   defp run_compile(code, env) do

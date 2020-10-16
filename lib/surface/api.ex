@@ -132,6 +132,20 @@ defmodule Surface.API do
     Module.put_attribute(caller.module, assign.func, assign)
   end
 
+  def get_assigns(module) do
+    if Module.open?(module) do
+      module
+      |> Module.get_attribute(:assigns, %{})
+      |> Map.keys()
+    else
+      data = if function_exported?(module, :__data__, 0), do: module.data(), else: []
+      props = if function_exported?(module, :__props__, 0), do: module.props(), else: []
+      slots = if function_exported?(module, :__slots__, 0), do: module.slots(), else: []
+
+      Enum.map(data ++ props ++ slots, fn %{name: name} -> name end)
+    end
+  end
+
   @doc false
   def get_slots(module) do
     used_slots =
