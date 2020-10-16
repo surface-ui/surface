@@ -137,13 +137,13 @@ defmodule Surface.API do
       module
       |> Module.get_attribute(:assigns)
       |> Kernel.||(%{})
-      |> Map.keys()
+      |> Enum.map(fn {name, %{line: line}} -> {name, line} end)
     else
       data = if function_exported?(module, :__data__, 0), do: module.__data__(), else: []
       props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
       slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
 
-      Enum.map(data ++ props ++ slots, fn %{name: name} -> name end)
+      Enum.map(data ++ props ++ slots, fn %{name: name, line: line} -> {name, line} end)
     end
   end
 

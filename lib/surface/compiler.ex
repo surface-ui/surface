@@ -200,9 +200,7 @@ defmodule Surface.Compiler do
 
     expr = Helpers.interpolation_to_quoted!(text, meta)
 
-    if compile_meta.checks[:no_undefined_assigns] do
-      Helpers.validate_no_undefined_assigns(expr, compile_meta.caller)
-    end
+    Helpers.perform_assigns_checks(expr, compile_meta)
 
     {:ok,
      %AST.Interpolation{

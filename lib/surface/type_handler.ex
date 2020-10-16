@@ -119,9 +119,7 @@ defmodule Surface.TypeHandler do
     original = original || value
 
     with {:ok, ast} <- normalize_expr(value, line: meta.line, file: meta.file),
-         _ <-
-           !meta.checks[:no_undefined_assigns] ||
-             Surface.Compiler.Helpers.validate_no_undefined_assigns(ast, meta.caller),
+         _ <- Surface.Compiler.Helpers.perform_assigns_checks(ast, meta),
          {clauses, opts} <- split_clauses_and_options(ast),
          true <- clauses != [] or opts != [],
          handler <- handler(type),
