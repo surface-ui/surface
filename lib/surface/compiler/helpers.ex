@@ -3,7 +3,7 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.Compiler.CompileMeta
   alias Surface.IOHelper
 
-  @surface_assigns [:__context__, :inner_content, :__surface__]
+  @builtin_assigns [:flash, :live_action, :live_module, :socket, :inner_block, :__context__, :__surface__]
 
   def interpolation_to_quoted!(text, meta) do
     case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
@@ -22,7 +22,7 @@ defmodule Surface.Compiler.Helpers do
     used_assigns = used_assigns(expr)
     defined_assigns = Surface.API.get_assigns(caller.module)
 
-    undefined_assigns = Keyword.drop(used_assigns, @surface_assigns ++ defined_assigns)
+    undefined_assigns = Keyword.drop(used_assigns, @builtin_assigns ++ defined_assigns)
 
     available_assigns =
       Enum.map_join(defined_assigns, ", ", fn name -> "@" <> to_string(name) end)
