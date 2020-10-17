@@ -12,6 +12,7 @@ defmodule LiveComponentChangeTrackingTest do
     use Surface.LiveView
 
     data count, :integer, default: 0
+    data test_pid, :integer
 
     def mount(_params, %{"test_pid" => test_pid}, socket) do
       {:ok, assign(socket, test_pid: test_pid)}
@@ -34,6 +35,7 @@ defmodule LiveComponentChangeTrackingTest do
 
     data count, :integer, default: 0
     data passing_count, :integer, default: 0
+    data test_pid, :integer
 
     def mount(_params, %{"test_pid" => test_pid}, socket) do
       {:ok, assign(socket, test_pid: test_pid)}

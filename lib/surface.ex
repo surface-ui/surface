@@ -105,8 +105,14 @@ defmodule Surface do
     # not for ~H* variants. See https://github.com/msaraiva/surface/issues/15#issuecomment-667305899
     line_offset = __CALLER__.line + 1
 
+    caller_is_surface_component =
+      Module.open?(__CALLER__.module) &&
+        Module.get_attribute(__CALLER__.module, :component_type) != nil
+
     string
-    |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file)
+    |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file,
+      checks: [no_undefined_assigns: caller_is_surface_component]
+    )
     |> Surface.Compiler.to_live_struct(
       debug: Enum.member?(opts, ?d),
       file: __CALLER__.file,

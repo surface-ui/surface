@@ -65,6 +65,7 @@ defmodule ComponentTestHelper do
     view_code = """
     defmodule TestLiveView_#{id} do; \
       use Surface.LiveView; \
+      #{for {name, _} <- assigns, into: "", do: "prop " <> to_string(name) <> ", :any; "} \
       def render(assigns) do; \
         assigns = Map.merge(assigns, #{inspect(assigns)}); \
         ~H(#{code}); \

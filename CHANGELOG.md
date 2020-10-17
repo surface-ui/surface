@@ -5,6 +5,7 @@
   * Update liveview to latest v0.15-dev (597c5dd)
     * render_live -> render_block
     * @inner_content -> @inner_block
+  * Add undefined assign check for `Surface.{LiveComponent,Component,LiveView}`
 
 ## v0.1.0-rc.0 (2020-10-06)
 
