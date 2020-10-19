@@ -142,16 +142,11 @@ defmodule Surface.Compiler.Helpers do
 
   def is_blank_or_empty(_node), do: false
 
-  def actual_module(mod_str, env) do
+  # We don't expect this to fail as `mod_str` should have been
+  # already validated at the parser level
+  def actual_component_module!(mod_str, env) do
     {:ok, ast} = Code.string_to_quoted(mod_str)
-
-    case Macro.expand(ast, env) do
-      mod when is_atom(mod) ->
-        {:ok, mod}
-
-      _ ->
-        {:error, "#{mod_str} is not a valid module name"}
-    end
+    Macro.expand(ast, env)
   end
 
   def check_module_loaded(module, mod_str) do
@@ -172,10 +167,10 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def module_name(name, caller) do
-    with {:ok, mod} <- actual_module(name, caller),
-         {:ok, mod} <- check_module_loaded(mod, name) do
-      check_module_is_component(mod, name)
+  def validate_component_module(mod, node_alias) do
+    with {:ok, _mod} <- check_module_loaded(mod, node_alias),
+         {:ok, _mod} <- check_module_is_component(mod, node_alias) do
+      :ok
     end
   end
 end

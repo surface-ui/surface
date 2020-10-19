@@ -640,10 +640,12 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: mod}} | nodes])
+  defp to_dynamic_nested_html([
+         %AST.Error{message: message, meta: %AST.Meta{module: mod, line: line}} | nodes
+       ])
        when not is_nil(mod),
        do: [
-         require_expr(mod),
+         require_expr(mod, line),
          ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
          message,
          ~S(</span>) | to_dynamic_nested_html(nodes)
@@ -722,10 +724,10 @@ defmodule Surface.Compiler.EExEngine do
     expr
   end
 
-  defp require_expr(module) do
+  defp require_expr(module, line \\ nil) do
     %AST.Expr{
       value:
-        quote generated: true do
+        quote generated: true, line: line do
           require unquote(module)
         end,
       meta: %AST.Meta{}
