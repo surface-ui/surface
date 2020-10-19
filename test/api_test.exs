@@ -479,10 +479,14 @@ defmodule Surface.APISyncTest do
       end
       """
 
+      error_message = "code.exs:7: module NonExisting is not loaded and could not be found"
+
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          assert_raise(CompileError, error_message, fn ->
+            {{:module, _, _, _}, _} =
+              Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          end)
         end)
 
       assert output =~ ~r"""

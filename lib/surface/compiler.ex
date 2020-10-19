@@ -311,11 +311,12 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:component, {name, attributes, children, node_meta}, compile_meta) do
     # TODO: validate live views vs live components ?
     meta = Helpers.to_meta(node_meta, compile_meta)
+    mod = Helpers.actual_component_module!(name, meta.caller)
+    meta = Map.merge(meta, %{module: mod, node_alias: name})
 
-    with {:ok, mod} <- Helpers.module_name(name, meta.caller),
+    with :ok <- Helpers.validate_component_module(mod, name),
          true <- function_exported?(mod, :component_type, 0),
          component_type <- mod.component_type(),
-         meta <- Map.merge(meta, %{module: mod, node_alias: name}),
          # This is a little bit hacky. :let will only be extracted for the default
          # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
          # we pass in and modify the attributes so that non-slotable components are not
@@ -366,8 +367,10 @@ defmodule Surface.Compiler do
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
+    mod = Helpers.actual_component_module!(name, meta.caller)
+    meta = Map.merge(meta, %{module: mod, node_alias: name})
 
-    with {:ok, mod} <- Helpers.module_name(name, meta.caller),
+    with :ok <- Helpers.validate_component_module(mod, name),
          meta <- Map.merge(meta, %{module: mod, node_alias: name}),
          true <- function_exported?(mod, :expand, 3),
          {:ok, directives, attributes} <-
