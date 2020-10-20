@@ -18,8 +18,8 @@ defmodule Surface.Compiler.Helpers do
       {:ok, expr} ->
         expr
 
-      {:error, {line, error, token}} ->
-        IOHelper.syntax_error(error <> token, meta.file, line)
+      {:error, {position, error, token}} ->
+        IOHelper.syntax_error(error <> token, meta.file, position_to_line(position))
 
       {:error, message} ->
         IOHelper.compile_error(message, meta.file, meta.line)
@@ -172,5 +172,13 @@ defmodule Surface.Compiler.Helpers do
          {:ok, _mod} <- check_module_is_component(mod, node_alias) do
       :ok
     end
+  end
+
+  def position_to_line(position) when is_list(position) do
+    Keyword.fetch!(position, :line)
+  end
+
+  def position_to_line(line) do
+    line
   end
 end
