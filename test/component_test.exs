@@ -192,5 +192,29 @@ defmodule Surface.ComponentTest do
              </div>
              """
     end
+
+    test "render error message if module is not a component" do
+      import ExUnit.CaptureIO
+
+      code = """
+      <div>
+        <Enum/>
+      </div>
+      """
+
+      output =
+        capture_io(:standard_error, fn ->
+          assert render_live(code) =~ """
+                 <div><span style="color: red; border: 2px solid red; padding: 3px"> \
+                 Error: cannot render &lt;Enum&gt; (module Enum is not a component)\
+                 </span></div>
+                 """
+        end)
+
+      assert output =~ ~r"""
+             cannot render <Enum> \(module Enum is not a component\)
+               code:2:\
+             """
+    end
   end
 end

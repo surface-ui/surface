@@ -647,14 +647,14 @@ defmodule Surface.Compiler.EExEngine do
        do: [
          require_expr(mod, line),
          ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
-         message,
+         escape_message(message),
          ~S(</span>) | to_dynamic_nested_html(nodes)
        ]
 
   defp to_dynamic_nested_html([%AST.Error{message: message} | nodes]),
     do: [
       ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
-      message,
+      escape_message(message),
       ~S(</span>) | to_dynamic_nested_html(nodes)
     ]
 
@@ -736,5 +736,10 @@ defmodule Surface.Compiler.EExEngine do
 
   defp is_child_component?(state) do
     state.depth > 0 and Enum.member?(state.context, :template)
+  end
+
+  defp escape_message(message) do
+    {:safe, message_iodata} = Phoenix.HTML.html_escape(message)
+    IO.iodata_to_binary(message_iodata)
   end
 end
