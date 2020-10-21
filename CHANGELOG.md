@@ -1,11 +1,9 @@
 # Changelog
 
-## v0.1.0-dev
+## v0.1.0-rc.1 (2020-10-21)
 
-  * Add support to Elixir >= v1.11
+  * Fix support for Elixir >= v1.11
   * Update liveview to latest v0.15-dev (597c5dd)
-    * render_live -> render_block
-    * @inner_content -> @inner_block
   * Add undefined assign check for `Surface.{LiveComponent,Component,LiveView}`
   * New form controls wrappers: `<DateTimeSelect>` and `<TimeSelect>`.
   * Force recompilation of the parent component after fixing errors on any of its children.

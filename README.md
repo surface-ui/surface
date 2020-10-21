@@ -59,7 +59,7 @@ Then add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, git: "https://github.com/msaraiva/surface.git", tag: "v0.1.0-rc.0"}
+    {:surface, git: "https://github.com/msaraiva/surface.git", tag: "v0.1.0-rc.1"}
   ]
 end
 ```
