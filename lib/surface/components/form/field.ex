@@ -12,9 +12,6 @@ defmodule Surface.Components.Form.Field do
   @doc "The field name"
   prop name, :atom, required: true
 
-  @doc "The CSS class for the generated `<div>` element"
-  prop class, :css_class
-
   @doc """
   The content for the field
   """
@@ -22,15 +19,9 @@ defmodule Surface.Components.Form.Field do
 
   def render(assigns) do
     ~H"""
-    <div class={{ class_value(@class) }}>
-      <Context put={{ __MODULE__, field: @name }}>
-        <slot/>
-      </Context>
-    </div>
+    <Context put={{ __MODULE__, field: @name }}>
+      <slot/>
+    </Context>
     """
-  end
-
-  defp class_value(class) do
-    class || get_config(:default_class) || ""
   end
 end
