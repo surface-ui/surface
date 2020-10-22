@@ -193,6 +193,16 @@ defmodule Surface.Compiler.ParserTest do
                {:ok, [{:interpolation, "baz", %{line: 1}}]}
     end
 
+    test "with double curlies embedded" do
+      assert parse("{{ {{1, 3}, {4, 5}} }}") ==
+               {:ok, [{:interpolation, " {{1, 3}, {4, 5}} ", %{line: 1}}]}
+    end
+
+    test "with deeply nested curlies" do
+      assert parse("{{ {{{{{{{{{{}}}}}}}}}} }}") ==
+               {:ok, [{:interpolation, " {{{{{{{{{{}}}}}}}}}} ", %{line: 1}}]}
+    end
+
     test "without root node but with text" do
       assert parse("foo {{baz}} bar") ==
                {:ok, ["foo ", {:interpolation, "baz", %{line: 1}}, " bar"]}
@@ -224,6 +234,36 @@ defmodule Surface.Compiler.ParserTest do
                   {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"],
                    %{line: 1, space: ""}}
                 ]}
+    end
+
+    test "double closing curly brace inside charlist" do
+      assert parse("{{ 'a}}b' }}") ==
+               {:ok, [{:interpolation, " 'a}}b' ", %{line: 1}}]}
+    end
+
+    test "double closing curly brace inside binary" do
+      assert parse("{{ \"a}}b\" }}") ==
+               {:ok, [{:interpolation, " \"a}}b\" ", %{line: 1}}]}
+    end
+
+    test "single-opening curly bracket inside single quotes" do
+      assert parse("{{ 'a{b' }}") ==
+               {:ok, [{:interpolation, " 'a{b' ", %{line: 1}}]}
+    end
+
+    test "single-opening curly bracket inside double quotes" do
+      assert parse("{{ \"a{b\" }}") ==
+               {:ok, [{:interpolation, " \"a{b\" ", %{line: 1}}]}
+    end
+
+    test "containing a charlist with escaped single quote" do
+      assert parse("{{ 'a\\'b' }}") ==
+               {:ok, [{:interpolation, " 'a\\'b' ", %{line: 1}}]}
+    end
+
+    test "containing a binary with escaped double quote" do
+      assert parse("{{ \"a\\\"b\" }}") ==
+               {:ok, [{:interpolation, " \"a\\\"b\" ", %{line: 1}}]}
     end
   end
 
@@ -334,6 +374,11 @@ defmodule Surface.Compiler.ParserTest do
 
     test "non-closing interpolation" do
       assert parse("<foo>{{bar</foo>") ==
+               {:error, "expected closing for interpolation", 1}
+    end
+
+    test "non-matched curlies inside interpolation" do
+      assert parse("<foo>{{bar { }}</foo>") ==
                {:error, "expected closing for interpolation", 1}
     end
   end

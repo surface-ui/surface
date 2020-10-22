@@ -136,11 +136,51 @@ defmodule Surface.Compiler.Parser do
   end
 
   ## Regular node
+  defparsecp(
+    :tuple,
+    string("{")
+    |> choice([
+      parsec(:tuple),
+      repeat(utf8_char(not: ?}))
+    ])
+    |> string("}")
+  )
+
+  defparsecp(
+    :binary,
+    string("\"")
+    |> repeat(
+      choice([
+        string("\\\""),
+        utf8_char(not: ?")
+      ])
+    )
+    |> string("\"")
+  )
+
+  defparsecp(
+    :charlist,
+    string("\'")
+    |> repeat(
+      choice([
+        string("\\'"),
+        utf8_char(not: ?')
+      ])
+    )
+    |> string("\'")
+  )
 
   interpolation =
     ignore(string("{{"))
     |> line()
-    |> repeat(lookahead_not(string("}}")) |> utf8_char([]))
+    |> repeat(
+      choice([
+        parsec(:tuple),
+        parsec(:binary),
+        parsec(:charlist),
+        lookahead_not(string("}}")) |> utf8_char([])
+      ])
+    )
     |> optional(string("}}"))
     |> post_traverse(:interpolation)
 
