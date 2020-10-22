@@ -615,5 +615,19 @@ defmodule Surface.Compiler.ParserTest do
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
+
+    test "interpolation with nested curlies" do
+      code = """
+      <foo prop={{ {{}} }}/>
+      """
+
+      attr_value = {:attribute_expr, " {{}} ", %{line: 1}}
+
+      attributes = [
+        {"prop", attr_value, %{line: 1, spaces: [" ", "", ""]}}
+      ]
+
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
+    end
   end
 end
