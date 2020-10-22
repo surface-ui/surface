@@ -205,12 +205,12 @@ defmodule Surface.Compiler.ParserTest do
 
     test "matched curlies for a map expression" do
       assert parse("{{ %{a: %{b: 1}} }}") ==
-        {:ok, [{:interpolation, " %{a: %{b: 1}} ", %{line: 1}}]}
+               {:ok, [{:interpolation, " %{a: %{b: 1}} ", %{line: 1}}]}
     end
 
     test "tuple without spaces between enclosing curlies" do
       assert parse("{{{:a, :b}}}") ==
-        {:ok, [{:interpolation, "{:a, :b}", %{line: 1}}]}
+               {:ok, [{:interpolation, "{:a, :b}", %{line: 1}}]}
     end
 
     test "without root node but with text" do
