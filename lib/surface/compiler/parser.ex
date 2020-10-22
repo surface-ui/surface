@@ -137,16 +137,6 @@ defmodule Surface.Compiler.Parser do
 
   ## Regular node
   defparsecp(
-    :tuple,
-    string("{")
-    |> choice([
-      parsec(:tuple),
-      repeat(utf8_char(not: ?}))
-    ])
-    |> string("}")
-  )
-
-  defparsecp(
     :binary,
     string("\"")
     |> repeat(
@@ -168,6 +158,18 @@ defmodule Surface.Compiler.Parser do
       ])
     )
     |> string("\'")
+  )
+
+  defparsecp(
+    :tuple,
+    string("{")
+    |> choice([
+      parsec(:tuple),
+      parsec(:binary),
+      parsec(:charlist),
+      repeat(utf8_char(not: ?}))
+    ])
+    |> string("}")
   )
 
   interpolation =

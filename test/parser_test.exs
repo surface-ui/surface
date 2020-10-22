@@ -236,9 +236,19 @@ defmodule Surface.Compiler.ParserTest do
                 ]}
     end
 
-    test "double closing curly brace inside charlist" do
+    test "charlist with closing curly in tuple" do
       assert parse("{{ 'a}}b' }}") ==
                {:ok, [{:interpolation, " 'a}}b' ", %{line: 1}}]}
+    end
+
+    test "binary with closing curly in tuple" do
+      assert parse("{{ {{'a}}b'}} }}") ==
+               {:ok, [{:interpolation, " {{'a}}b'}} ", %{line: 1}}]}
+    end
+
+    test "double closing curly brace inside charlist" do
+      assert parse("{{ {{\"a}}b\"}} }}") ==
+               {:ok, [{:interpolation, " {{\"a}}b\"}} ", %{line: 1}}]}
     end
 
     test "double closing curly brace inside binary" do
