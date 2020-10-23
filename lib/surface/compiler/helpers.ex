@@ -149,27 +149,33 @@ defmodule Surface.Compiler.Helpers do
     Macro.expand(ast, env)
   end
 
-  def check_module_loaded(module, mod_str) do
+  def check_module_loaded(module, node_alias) do
     case Code.ensure_compiled(module) do
       {:module, mod} ->
         {:ok, mod}
 
       {:error, _reason} ->
-        {:error, "module #{mod_str} could not be loaded"}
+        message = "module #{inspect(module)} could not be loaded"
+
+        if !String.contains?(node_alias, ".") and inspect(module) == node_alias do
+          {:error, message, hint_for_unloaded_module(node_alias)}
+        else
+          {:error, message}
+        end
     end
   end
 
-  def check_module_is_component(module, mod_str) do
+  def check_module_is_component(module) do
     if function_exported?(module, :component_type, 0) do
       {:ok, module}
     else
-      {:error, "module #{mod_str} is not a component"}
+      {:error, "module #{inspect(module)} is not a component"}
     end
   end
 
   def validate_component_module(mod, node_alias) do
     with {:ok, _mod} <- check_module_loaded(mod, node_alias),
-         {:ok, _mod} <- check_module_is_component(mod, node_alias) do
+         {:ok, _mod} <- check_module_is_component(mod) do
       :ok
     end
   end
@@ -180,5 +186,19 @@ defmodule Surface.Compiler.Helpers do
 
   def position_to_line(line) do
     line
+  end
+
+  defp hint_for_unloaded_module(node_alias) do
+    """
+    Hint: Make sure module `#{node_alias}` can be successfully compiled.
+
+    If the module is namespaced, you can use its full name. For instance:
+
+      <MyProject.Components.#{node_alias}>
+
+    or add a proper alias so you can use just `<#{node_alias}>`:
+
+      alias MyProject.Components.#{node_alias}
+    """
   end
 end

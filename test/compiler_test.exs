@@ -584,7 +584,9 @@ defmodule Surface.CompilerSyncTest do
 
   alias Surface.CompilerTest.{Button, Column}, warn: false
 
-  test "warning when component cannot be loaded" do
+  test "warning when a aliased component cannot be loaded" do
+    alias Components.But, warn: false
+
     code = """
     <div>
       <But />
@@ -593,20 +595,48 @@ defmodule Surface.CompilerSyncTest do
 
     {:warn, line, message} = run_compile(code, __ENV__)
 
-    assert message =~ "cannot render <But> (module But could not be loaded)"
+    assert message =~ ~r/cannot render <But> \(module Components.But could not be loaded\)\s*/
     assert line == 2
   end
 
-  test "warning when module is not a component" do
+  test "warning with hint when a unaliased component cannot be loaded" do
     code = """
     <div>
-      <Enum />
+      <But />
     </div>
     """
 
     {:warn, line, message} = run_compile(code, __ENV__)
 
-    assert message =~ "cannot render <Enum> (module Enum is not a component)"
+    assert message =~ """
+           cannot render <But> (module But could not be loaded)
+
+           Hint: Make sure module `But` can be successfully compiled.
+
+           If the module is namespaced, you can use its full name. For instance:
+
+             <MyProject.Components.But>
+
+           or add a proper alias so you can use just `<But>`:
+
+             alias MyProject.Components.But
+           """
+
+    assert line == 2
+  end
+
+  test "warning when module is not a component" do
+    alias List.Chars, warn: false
+
+    code = """
+    <div>
+      <Chars />
+    </div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ "cannot render <Chars> (module List.Chars is not a component)"
     assert line == 2
   end
 
