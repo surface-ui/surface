@@ -489,10 +489,8 @@ defmodule Surface.APISyncTest do
           end)
         end)
 
-      assert output =~ ~r"""
-             cannot render <NonExisting> \(module NonExisting could not be loaded\)
-               code.exs:7:\
-             """
+      assert output =~ ~r"cannot render <NonExisting> \(module NonExisting could not be loaded\)"
+      assert output =~ ~r"  code.exs:7:"
     end
   end
 end

@@ -169,6 +169,11 @@ defmodule Surface.Compiler do
         {:error, {message, line}, meta} ->
           IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
           %AST.Error{message: message, meta: meta}
+
+        {:error, {message, details, line}, meta} ->
+          details = if details, do: "\n\n" <> details, else: ""
+          IOHelper.warn(message <> details, compile_meta.caller, fn _ -> line end)
+          %AST.Error{message: message, meta: meta}
       end
     end
   end
@@ -353,6 +358,9 @@ defmodule Surface.Compiler do
 
       {:ok, maybe_call_transform(result)}
     else
+      {:error, message, details} ->
+        {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
+
       {:error, message} ->
         {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
 
@@ -390,6 +398,9 @@ defmodule Surface.Compiler do
         {:error,
          {"cannot render <#{name}> (MacroComponents must export an expand/3 function)",
           meta.line}, meta}
+
+      {:error, message, details} ->
+        {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
 
       {:error, message} ->
         {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
