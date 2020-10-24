@@ -190,11 +190,14 @@ defmodule Surface.DirectivesTest do
     test "modifiers on components" do
       assigns = %{items: [1, 2]}
 
-      code = """
-      <Div :for.with_index={{ {iii, index} <- @items }}>
-        Item: {{ iii }}, Index: {{ index }}
-      </Div>
-      """
+      code =
+        quote do
+          ~H"""
+          <Div :for.with_index={{ {iii, index} <- @items }}>
+            Item: {{ iii }}, Index: {{ index }}
+          </Div>
+          """
+        end
 
       assert render_live(code, assigns) =~ """
              <div>
