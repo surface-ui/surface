@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   import ComponentTestHelper
 
   test "empty textarea" do
-    code = """
-    <TextArea form="user" field="summary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]">\n</textarea>
@@ -16,9 +19,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "setting the value" do
-    code = """
-    <TextArea form="user" field="summary" value="some content" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" value="some content" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]">\nsome content</textarea>
@@ -26,25 +32,34 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "setting the class" do
-    code = """
-    <TextArea form="user" field="summary" class="input" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" class="input" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <TextArea form="user" field="summary" class="input primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" class="input primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do
-    code = """
-    <TextArea form="user" field="summary" opts={{ id: "myid", autofocus: "autofocus" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" opts={{ id: "myid", autofocus: "autofocus" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea autofocus="autofocus" id="myid" name="user[summary]">\n</textarea>
@@ -52,9 +67,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "blur event with parent live view as target" do
-    code = """
-    <TextArea form="user" field="summary" blur="my_blur" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" blur="my_blur" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]" phx-blur="my_blur">\n</textarea>
@@ -62,9 +80,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "focus event with parent live view as target" do
-    code = """
-    <TextArea form="user" field="summary" focus="my_focus" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" focus="my_focus" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]" phx-focus="my_focus">\n</textarea>
@@ -72,9 +93,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "capture click event with parent live view as target" do
-    code = """
-    <TextArea form="user" field="summary" capture_click="my_click" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" capture_click="my_click" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]" phx-capture-click="my_click">\n</textarea>
@@ -82,9 +106,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "keydown event with parent live view as target" do
-    code = """
-    <TextArea form="user" field="summary" keydown="my_keydown" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" keydown="my_keydown" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]" phx-keydown="my_keydown">\n</textarea>
@@ -92,9 +119,12 @@ defmodule Surface.Components.Form.TextAreaTest do
   end
 
   test "keyup event with parent live view as target" do
-    code = """
-    <TextArea form="user" field="summary" keyup="my_keyup" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" keyup="my_keyup" />
+        """
+      end
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]" phx-keyup="my_keyup">\n</textarea>
@@ -110,9 +140,12 @@ defmodule Surface.Components.Form.TextAreaConfigTest do
 
   test ":default_class config" do
     using_config TextArea, default_class: "default_class" do
-      code = """
-      <TextArea/>
-      """
+      code =
+        quote do
+          ~H"""
+          <TextArea/>
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

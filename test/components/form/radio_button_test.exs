@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
   import ComponentTestHelper
 
   test "radio" do
-    code = """
-    <RadioButton form="user" field="role" value="admin"/>
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin"/>
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" type="radio" value="admin"/>
@@ -16,25 +19,34 @@ defmodule Surface.Components.Form.RadioButtonTest do
   end
 
   test "setting the class" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" class="radio" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" class="radio" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="radio"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" class="radio primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" class="radio primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="radio primary"/
   end
 
   test "passing other options" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" opts={{ id: "myid", autofocus: "autofocus" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" opts={{ id: "myid", autofocus: "autofocus" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <input autofocus="autofocus" id="myid" name="user[role]" type="radio" value="admin"/>
@@ -42,9 +54,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
   end
 
   test "blur event with parent live view as target" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" blur="my_blur" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" blur="my_blur" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" phx-blur="my_blur" type="radio" value="admin"/>
@@ -52,9 +67,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
   end
 
   test "focus event with parent live view as target" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" focus="my_focus" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" focus="my_focus" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" phx-focus="my_focus" type="radio" value="admin"/>
@@ -62,9 +80,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
   end
 
   test "capture click event with parent live view as target" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" capture_click="my_click" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" capture_click="my_click" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" phx-capture-click="my_click" type="radio" value="admin"/>
@@ -72,9 +93,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
   end
 
   test "keydown event with parent live view as target" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" keydown="my_keydown" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" keydown="my_keydown" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" phx-keydown="my_keydown" type="radio" value="admin"/>
@@ -82,9 +106,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
   end
 
   test "keyup event with parent live view as target" do
-    code = """
-    <RadioButton form="user" field="role" value="admin" keyup="my_keyup" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" value="admin" keyup="my_keyup" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" phx-keyup="my_keyup" type="radio" value="admin"/>
@@ -100,9 +127,12 @@ defmodule Surface.Components.Form.RadioButtonConfigTest do
 
   test ":default_class config" do
     using_config RadioButton, default_class: "default_class" do
-      code = """
-      <RadioButton/>
-      """
+      code =
+        quote do
+          ~H"""
+          <RadioButton/>
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

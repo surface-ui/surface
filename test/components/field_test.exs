@@ -6,11 +6,14 @@ defmodule Surface.Components.FieldTest do
   import ComponentTestHelper
 
   test "creates a wrapping <div> for the field's content" do
-    code = """
-    <Field name="name">
-      Hi
-    </Field>
-    """
+    code =
+      quote do
+        ~H"""
+        <Field name="name">
+          Hi
+        </Field>
+        """
+      end
 
     assert render_live(code) =~ """
            <div>
@@ -20,11 +23,14 @@ defmodule Surface.Components.FieldTest do
   end
 
   test "property class" do
-    code = """
-    <Field name="name" class={{ :field }}>
-      Hi
-    </Field>
-    """
+    code =
+      quote do
+        ~H"""
+        <Field name="name" class={{ :field }}>
+          Hi
+        </Field>
+        """
+      end
 
     assert render_live(code) =~ """
            <div class="field">
@@ -34,11 +40,14 @@ defmodule Surface.Components.FieldTest do
   end
 
   test "sets the provided field into the context" do
-    code = """
-    <Field name="my_field">
-      <TextInput form="my_form"/>
-    </Field>
-    """
+    code =
+      quote do
+        ~H"""
+        <Field name="my_field">
+          <TextInput form="my_form"/>
+        </Field>
+        """
+      end
 
     assert render_live(code) =~ ~S(name="my_form[my_field]")
   end
@@ -52,9 +61,12 @@ defmodule Surface.Components.Form.FieldConfigTest do
 
   test ":default_class config" do
     using_config Field, default_class: "default_class" do
-      code = """
-      <Field name="name">Hi</Field>
-      """
+      code =
+        quote do
+          ~H"""
+          <Field name="name">Hi</Field>
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

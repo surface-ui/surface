@@ -25,10 +25,13 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form as an atom" do
-    code = """
-    <Form for={{:user}} action="#" opts={{ csrf_token: "test" }}>
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{:user}} action="#" opts={{ csrf_token: "test" }}>
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/></form>
@@ -36,11 +39,14 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form with a text input using context" do
-    code = """
-    <Form for={{:user}} action="#" opts={{ csrf_token: "test" }}>
-      <TextInput field="name" />
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{:user}} action="#" opts={{ csrf_token: "test" }}>
+          <TextInput field="name" />
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post">\
@@ -69,10 +75,13 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form with events" do
-    code = """
-    <Form for={{:user}} action="#" change="change" submit="sumit">
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{:user}} action="#" change="change" submit="sumit">
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post" phx-change="change" phx-submit="sumit">\

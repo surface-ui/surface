@@ -23,51 +23,69 @@ defmodule Surface.Components.LivePatchTest do
 
   describe "Without LiveView" do
     test "creates a link with label" do
-      code = """
-      <LivePatch label="user" to="/users/1" />
-      """
+      code =
+        quote do
+          ~H"""
+          <LivePatch label="user" to="/users/1" />
+          """
+        end
 
       assert render_live(code) =~ actual_content("user", to: "/users/1")
     end
 
     test "creates a link without label" do
-      code = """
-      <LivePatch to="/users/1" />
-      """
+      code =
+        quote do
+          ~H"""
+          <LivePatch to="/users/1" />
+          """
+        end
 
       assert render_live(code) =~ actual_content(to: "/users/1")
     end
 
     test "creates a link with default slot" do
-      code = """
-      <LivePatch to="/users/1"><span>user</span></LivePatch>
-      """
+      code =
+        quote do
+          ~H"""
+          <LivePatch to="/users/1"><span>user</span></LivePatch>
+          """
+        end
 
       assert render_live(code) =~ actual_content({:safe, "<span>user</span>"}, to: "/users/1")
     end
 
     test "setting the class" do
-      code = """
-      <LivePatch label="user" to="/users/1" class="link" />
-      """
+      code =
+        quote do
+          ~H"""
+          <LivePatch label="user" to="/users/1" class="link" />
+          """
+        end
 
       assert render_live(code) =~
                actual_content("user", to: "/users/1", class: "link")
     end
 
     test "setting multiple classes" do
-      code = """
-      <LivePatch label="user" to="/users/1" class="link primary" />
-      """
+      code =
+        quote do
+          ~H"""
+          <LivePatch label="user" to="/users/1" class="link primary" />
+          """
+        end
 
       assert render_live(code) =~
                actual_content("user", to: "/users/1", class: "link primary")
     end
 
     test "passing other options" do
-      code = """
-      <LivePatch label="user" to="/users/1" class="link" opts={{ method: :delete, "data-confirm": "Really?", "csrf-token": "token" }} />
-      """
+      code =
+        quote do
+          ~H"""
+          <LivePatch label="user" to="/users/1" class="link" opts={{ method: :delete, "data-confirm": "Really?", "csrf-token": "token" }} />
+          """
+        end
 
       rendered = render_live(code)
 

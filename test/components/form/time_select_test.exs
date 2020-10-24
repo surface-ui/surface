@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.TimeSelectTest do
   alias Surface.Components.Form.TimeSelect, warn: false
 
   test "datetime select" do
-    code = """
-    <TimeSelect form="alarm" field="time" />
-    """
+    code =
+      quote do
+        ~H"""
+        <TimeSelect form="alarm" field="time" />
+        """
+      end
 
     content = render_live(code)
 
@@ -17,11 +20,14 @@ defmodule Surface.Components.Form.TimeSelectTest do
   end
 
   test "with form context" do
-    code = """
-    <Form for={{ :alarm }}>
-      <TimeSelect field={{ :time }} />
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :alarm }}>
+          <TimeSelect field={{ :time }} />
+        </Form>
+        """
+      end
 
     content = render_live(code)
 
@@ -31,9 +37,12 @@ defmodule Surface.Components.Form.TimeSelectTest do
   end
 
   test "setting the value as map" do
-    code = """
-    <TimeSelect form="alarm" field="time" value={{ %{hour: 2, minute: 11, second: 13} }} opts={{ second: [] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <TimeSelect form="alarm" field="time" value={{ %{hour: 2, minute: 11, second: 13} }} opts={{ second: [] }} />
+        """
+      end
 
     content = render_live(code)
 
@@ -43,9 +52,12 @@ defmodule Surface.Components.Form.TimeSelectTest do
   end
 
   test "setting the value as tuple" do
-    code = """
-    <TimeSelect form="alarm" field="time" value={{ {2, 11, 13} }} opts={{ second: [] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <TimeSelect form="alarm" field="time" value={{ {2, 11, 13} }} opts={{ second: [] }} />
+        """
+      end
 
     content = render_live(code)
 
@@ -55,9 +67,12 @@ defmodule Surface.Components.Form.TimeSelectTest do
   end
 
   test "passing other options" do
-    code = """
-    <TimeSelect form="alarm" field="time" opts={{ second: [] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <TimeSelect form="alarm" field="time" opts={{ second: [] }} />
+        """
+      end
 
     content = render_live(code)
 

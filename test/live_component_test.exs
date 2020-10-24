@@ -99,11 +99,14 @@ defmodule LiveComponentTest do
   end
 
   test "render content without slot props" do
-    code = """
-    <InfoProviderWithoutSlotProps>
-      <span>Hi there!</span>
-    </InfoProviderWithoutSlotProps>
-    """
+    code =
+      quote do
+        ~H"""
+        <InfoProviderWithoutSlotProps>
+          <span>Hi there!</span>
+        </InfoProviderWithoutSlotProps>
+        """
+      end
 
     assert render_live(code) =~ """
            <div><span>Hi there!</span></div>
@@ -111,11 +114,14 @@ defmodule LiveComponentTest do
   end
 
   test "render content with slot props" do
-    code = """
-    <InfoProvider :let={{ info: my_info }}>
-      <span>{{ my_info }}</span>
-    </InfoProvider>
-    """
+    code =
+      quote do
+        ~H"""
+        <InfoProvider :let={{ info: my_info }}>
+          <span>{{ my_info }}</span>
+        </InfoProvider>
+        """
+      end
 
     assert render_live(code) =~ """
            <div><span>Hi there!</span></div>
@@ -123,9 +129,12 @@ defmodule LiveComponentTest do
   end
 
   test "render stateful component with event" do
-    code = """
-    <LiveComponentWithEvent event="click-event" id="button" />
-    """
+    code =
+      quote do
+        ~H"""
+        <LiveComponentWithEvent event="click-event" id="button" />
+        """
+      end
 
     assert render_live(code) =~ """
            <button data-phx-component=\"1\" phx-click=\"click-event\"></button>

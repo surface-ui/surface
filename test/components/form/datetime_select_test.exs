@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   alias Surface.Components.Form.DateTimeSelect, warn: false
 
   test "datetime select" do
-    code = """
-    <DateTimeSelect form="user" field="born_at" />
-    """
+    code =
+      quote do
+        ~H"""
+        <DateTimeSelect form="user" field="born_at" />
+        """
+      end
 
     content = render_live(code)
 
@@ -20,11 +23,14 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   end
 
   test "with form context" do
-    code = """
-    <Form for={{ :user }}>
-      <DateTimeSelect field={{ :born_at }} />
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :user }}>
+          <DateTimeSelect field={{ :born_at }} />
+        </Form>
+        """
+      end
 
     content = render_live(code)
 
@@ -37,9 +43,12 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   end
 
   test "setting the value as map" do
-    code = """
-    <DateTimeSelect form="user" field="born_at" value={{ %{year: 2020, month: 10, day: 9, hour: 2, minute: 11, second: 13} }} opts={{ second: [] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <DateTimeSelect form="user" field="born_at" value={{ %{year: 2020, month: 10, day: 9, hour: 2, minute: 11, second: 13} }} opts={{ second: [] }} />
+        """
+      end
 
     content = render_live(code)
 
@@ -52,9 +61,12 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   end
 
   test "setting the value as tuple" do
-    code = """
-    <DateTimeSelect form="user" field="born_at" value={{ { {2020, 10, 9}, {2, 11, 13} } }} opts={{ second: [] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <DateTimeSelect form="user" field="born_at" value={{ { {2020, 10, 9}, {2, 11, 13} } }} opts={{ second: [] }} />
+        """
+      end
 
     content = render_live(code)
 
@@ -67,9 +79,12 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   end
 
   test "passing other options" do
-    code = """
-    <DateTimeSelect form="user" field="born_at" opts={{ second: [] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <DateTimeSelect form="user" field="born_at" opts={{ second: [] }} />
+        """
+      end
 
     content = render_live(code)
 
