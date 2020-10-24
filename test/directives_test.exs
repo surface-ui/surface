@@ -30,6 +30,32 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithSlotUsingIf do
+    use Surface.Component
+
+    prop show, :boolean
+    slot default
+
+    def render(assigns) do
+      ~H"""
+      <div><slot :if={{ @show }}/></div>
+      """
+    end
+  end
+
+  defmodule DivWithSlotUsingFor do
+    use Surface.Component
+
+    prop repeat, :integer
+    slot default
+
+    def render(assigns) do
+      ~H"""
+      <div><slot :for={{ _i <- 1..@repeat }}/></div>
+      """
+    end
+  end
+
   describe ":props for a component" do
     test "passing keyword list of props" do
       assigns = %{}
@@ -287,6 +313,18 @@ defmodule Surface.DirectivesTest do
              """
     end
 
+    test "in slots" do
+      code = """
+      <DivWithSlotUsingFor repeat=3>
+        <span>surface</span>
+      </DivWithSlotUsingFor>
+      """
+
+      assert render_live(code) == """
+             <div><span>surface</span><span>surface</span><span>surface</span></div>
+             """
+    end
+
     test "with larger generator expression" do
       assigns = %{items1: [1, 2], items2: [3, 4]}
 
@@ -436,6 +474,18 @@ defmodule Surface.DirectivesTest do
 
       assert render_static(code) == """
              <col class="show">
+             """
+    end
+
+    test "in slots" do
+      code = """
+      <DivWithSlotUsingIf show=true>1</DivWithSlotUsingIf>
+      <DivWithSlotUsingIf show=false>2</DivWithSlotUsingIf>
+      <DivWithSlotUsingIf show=true>3</DivWithSlotUsingIf>
+      """
+
+      assert render_live(code) == """
+             <div>1</div><div></div><div>3</div>
              """
     end
   end
