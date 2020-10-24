@@ -314,11 +314,14 @@ defmodule Surface.DirectivesTest do
     end
 
     test "in slots" do
-      code = """
-      <DivWithSlotUsingFor repeat=3>
-        <span>surface</span>
-      </DivWithSlotUsingFor>
-      """
+      code =
+        quote do
+          ~H"""
+          <DivWithSlotUsingFor repeat=3>
+            <span>surface</span>
+          </DivWithSlotUsingFor>
+          """
+        end
 
       assert render_live(code) == """
              <div><span>surface</span><span>surface</span><span>surface</span></div>
@@ -478,11 +481,14 @@ defmodule Surface.DirectivesTest do
     end
 
     test "in slots" do
-      code = """
-      <DivWithSlotUsingIf show=true>1</DivWithSlotUsingIf>
-      <DivWithSlotUsingIf show=false>2</DivWithSlotUsingIf>
-      <DivWithSlotUsingIf show=true>3</DivWithSlotUsingIf>
-      """
+      code =
+        quote do
+          ~H"""
+          <DivWithSlotUsingIf show=true>1</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show=false>2</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show=true>3</DivWithSlotUsingIf>
+          """
+        end
 
       assert render_live(code) == """
              <div>1</div><div></div><div>3</div>
