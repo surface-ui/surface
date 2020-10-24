@@ -14,6 +14,20 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithIndex do
+    use Surface.Component
+
+    prop items, :list
+
+    def render(assigns) do
+      ~H"""
+      <Div :for.with_index={{ {iii, index} <- @items }}>
+        Item: {{ iii }}, Index: {{ index }}
+      </Div>
+      """
+    end
+  end
+
   defmodule DivWithProps do
     use Surface.Component
 
@@ -183,6 +197,20 @@ defmodule Surface.DirectivesTest do
                i: 0, j: 0
              </div><div>
                i: 1, j: 1
+             </div>
+             """
+    end
+
+    test "modifiers on components" do
+      code = """
+      <DivWithIndex items={{ [1, 2] }}/>
+      """
+
+      assert render_live(code) =~ """
+             <div>
+               Item: 1, Index: 0
+             </div><div>
+               Item: 2, Index: 1
              </div>
              """
     end
