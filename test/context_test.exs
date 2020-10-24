@@ -84,11 +84,14 @@ defmodule ContextTest do
   end
 
   test "pass context to child component" do
-    code = """
-    <Outer>
-      <Inner/>
-    </Outer>
-    """
+    code =
+      quote do
+        ~H"""
+        <Outer>
+          <Inner/>
+        </Outer>
+        """
+      end
 
     assert render_live(code) =~ """
            <span id="field">field from Outer</span>\
@@ -96,11 +99,14 @@ defmodule ContextTest do
   end
 
   test "pass context to child component using :as option" do
-    code = """
-    <Outer>
-      <InnerWithOptionAs/>
-    </Outer>
-    """
+    code =
+      quote do
+        ~H"""
+        <Outer>
+          <InnerWithOptionAs/>
+        </Outer>
+        """
+      end
 
     assert render_live(code) =~ """
            <div><span>field from Outer</span></div>
@@ -108,11 +114,14 @@ defmodule ContextTest do
   end
 
   test "pass context down the tree of components" do
-    code = """
-    <Outer>
-      <InnerWrapper />
-    </Outer>
-    """
+    code =
+      quote do
+        ~H"""
+        <Outer>
+          <InnerWrapper />
+        </Outer>
+        """
+      end
 
     assert render_live(code) =~ """
            <span id="field">field from Outer</span>\
@@ -120,11 +129,14 @@ defmodule ContextTest do
   end
 
   test "context assingns are scoped by their parent components" do
-    code = """
-    <Outer>
-      <InnerWrapper/>
-    </Outer>
-    """
+    code =
+      quote do
+        ~H"""
+        <Outer>
+          <InnerWrapper/>
+        </Outer>
+        """
+      end
 
     assert render_live(code) =~ """
            <span id="field">field from Outer</span>\
@@ -133,12 +145,15 @@ defmodule ContextTest do
   end
 
   test "reset context after the component" do
-    code = """
-    <Outer>
-      <Inner/>
-    </Outer>
-    <RenderContext/>
-    """
+    code =
+      quote do
+        ~H"""
+        <Outer>
+          <Inner/>
+        </Outer>
+        <RenderContext/>
+        """
+      end
 
     assert render_live(code) =~ """
            Context: %{}
@@ -146,27 +161,33 @@ defmodule ContextTest do
   end
 
   test "pass context to named slots" do
-    code = """
-    <OuterWithNamedSlots>
-      <template slot="my_slot">
-        <Context get={{ field: field }}>
-          {{ field }}
-        </Context>
-      </template>
-    </OuterWithNamedSlots>
-    """
+    code =
+      quote do
+        ~H"""
+        <OuterWithNamedSlots>
+          <template slot="my_slot">
+            <Context get={{ field: field }}>
+              {{ field }}
+            </Context>
+          </template>
+        </OuterWithNamedSlots>
+        """
+      end
 
     assert render_live(code) =~ "field from OuterWithNamedSlots"
   end
 
   describe "validate property :get" do
     test "raise compile error when passing invalid bindings" do
-      code = """
-      <Context
-        get={{ ContextTest.Outer, field: [field] }}>
-        {{ field }}
-      </Context>
-      """
+      code =
+        quote do
+          ~H"""
+          <Context
+            get={{ ContextTest.Outer, field: [field] }}>
+            {{ field }}
+          </Context>
+          """
+        end
 
       message = """
       code:2: invalid value for property "get". expected a scope \
@@ -181,12 +202,15 @@ defmodule ContextTest do
     end
 
     test "raise compile error when passing no bindings" do
-      code = """
-      <Context
-        get={{ ContextTest.Outer }}>
-        {{ field }}
-      </Context>
-      """
+      code =
+        quote do
+          ~H"""
+          <Context
+            get={{ ContextTest.Outer }}>
+            {{ field }}
+          </Context>
+          """
+        end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
         render_live(code)
@@ -194,12 +218,15 @@ defmodule ContextTest do
     end
 
     test "raise compile error when passing invalid scope" do
-      code = """
-      <Context
-        get={{ 123, field: field }}>
-        {{ field }}
-      </Context>
-      """
+      code =
+        quote do
+          ~H"""
+          <Context
+            get={{ 123, field: field }}>
+            {{ field }}
+          </Context>
+          """
+        end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
         render_live(code)
@@ -209,12 +236,15 @@ defmodule ContextTest do
 
   describe "validate property :put" do
     test "raise compile error when passing invalid values" do
-      code = """
-      <Context
-        put={{ ContextTest.Outer, 123 }}>
-        <slot/>
-      </Context>
-      """
+      code =
+        quote do
+          ~H"""
+          <Context
+            put={{ ContextTest.Outer, 123 }}>
+            <slot/>
+          </Context>
+          """
+        end
 
       message = """
       code:2: invalid value for property "put". expected a scope \
@@ -229,12 +259,15 @@ defmodule ContextTest do
     end
 
     test "raise compile error when passing no values" do
-      code = """
-      <Context
-        put={{ ContextTest.Outer }}>
-        <slot/>
-      </Context>
-      """
+      code =
+        quote do
+          ~H"""
+          <Context
+            put={{ ContextTest.Outer }}>
+            <slot/>
+          </Context>
+          """
+        end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
         render_live(code)
@@ -242,12 +275,15 @@ defmodule ContextTest do
     end
 
     test "raise compile error when passing invalid scope" do
-      code = """
-      <Context
-        put={{ 123, field: field }}>
-        <slot/>
-      </Context>
-      """
+      code =
+        quote do
+          ~H"""
+          <Context
+            put={{ 123, field: field }}>
+            <slot/>
+          </Context>
+          """
+        end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
         render_live(code)

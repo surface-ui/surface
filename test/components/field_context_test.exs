@@ -6,11 +6,14 @@ defmodule Surface.Components.FieldContextTest do
   import ComponentTestHelper
 
   test "sets the provided field into the context" do
-    code = """
-    <FieldContext name="my_field">
-      <TextInput form="my_form"/>
-    </FieldContext>
-    """
+    code =
+      quote do
+        ~H"""
+        <FieldContext name="my_field">
+          <TextInput form="my_form"/>
+        </FieldContext>
+        """
+      end
 
     assert render_live(code) =~ ~S(name="my_form[my_field]")
   end

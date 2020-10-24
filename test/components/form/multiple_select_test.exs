@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   import ComponentTestHelper
 
   test "emtpy multiple select" do
-    code = """
-    <MultipleSelect form="user" field="roles" />
-    """
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" />
+        """
+      end
 
     assert render_live(code) =~ """
            <select id="user_roles" multiple="" name="user[roles][]"></select>
@@ -16,9 +19,12 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   end
 
   test "setting the options" do
-    code = """
-    <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <select id="user_roles" multiple="" name="user[roles][]">\
@@ -29,25 +35,34 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   end
 
   test "setting the class" do
-    code = """
-    <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
-    """
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="select"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="select primary"/
   end
 
   test "passing other options" do
-    code = """
-    <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} opts={{ selected: ["admin"] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} opts={{ selected: ["admin"] }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <select id="user_roles" multiple="" name="user[roles][]">\
@@ -66,9 +81,12 @@ defmodule Surface.Components.Form.MultipleSelectConfigTest do
 
   test ":default_class config" do
     using_config MultipleSelect, default_class: "default_class" do
-      code = """
-      <MultipleSelect />
-      """
+      code =
+        quote do
+          ~H"""
+          <MultipleSelect />
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

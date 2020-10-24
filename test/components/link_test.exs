@@ -23,9 +23,12 @@ defmodule Surface.Components.LinkTest do
 
   describe "Without LiveView" do
     test "creates a link with label" do
-      code = """
-      <Link label="user" to="/users/1" />
-      """
+      code =
+        quote do
+          ~H"""
+          <Link label="user" to="/users/1" />
+          """
+        end
 
       assert render_live(code) =~ """
              <a href="/users/1">user</a>
@@ -33,9 +36,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "creates a link without label" do
-      code = """
-      <Link to="/users/1" />
-      """
+      code =
+        quote do
+          ~H"""
+          <Link to="/users/1" />
+          """
+        end
 
       assert render_live(code) =~ """
              <a href="/users/1"></a>
@@ -43,9 +49,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "creates a link with default slot" do
-      code = """
-      <Link to="/users/1"><span>user</span></Link>
-      """
+      code =
+        quote do
+          ~H"""
+          <Link to="/users/1"><span>user</span></Link>
+          """
+        end
 
       assert render_live(code) =~ """
              <a href="/users/1"><span>user</span></a>
@@ -53,9 +62,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "setting the class" do
-      code = """
-      <Link label="user" to="/users/1" class="link" />
-      """
+      code =
+        quote do
+          ~H"""
+          <Link label="user" to="/users/1" class="link" />
+          """
+        end
 
       assert render_live(code) =~ """
              <a class="link" href="/users/1">user</a>
@@ -63,9 +75,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "setting multiple classes" do
-      code = """
-      <Link label="user" to="/users/1" class="link primary" />
-      """
+      code =
+        quote do
+          ~H"""
+          <Link label="user" to="/users/1" class="link primary" />
+          """
+        end
 
       assert render_live(code) =~ """
              <a class="link primary" href="/users/1">user</a>
@@ -73,9 +88,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "passing other options" do
-      code = """
-      <Link label="user" to="/users/1" class="link" opts={{ method: :delete, data: [confirm: "Really?"], csrf_token: "token" }} />
-      """
+      code =
+        quote do
+          ~H"""
+          <Link label="user" to="/users/1" class="link" opts={{ method: :delete, data: [confirm: "Really?"], csrf_token: "token" }} />
+          """
+        end
 
       assert render_live(code) =~ """
              <a class="link" data-confirm="Really?" data-csrf="token" data-method="delete" data-to="/users/1" href="/users/1" rel="nofollow">user</a>
@@ -83,9 +101,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "click event with parent live view as target" do
-      code = """
-      <Link to="/users/1" click="my_click" />
-      """
+      code =
+        quote do
+          ~H"""
+          <Link to="/users/1" click="my_click" />
+          """
+        end
 
       assert render_live(code) =~ """
              <a href="/users/1" phx-click="my_click"></a>
@@ -93,9 +114,12 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "click event with @myself as target" do
-      code = """
-      <ComponentWithLink id="comp"/>
-      """
+      code =
+        quote do
+          ~H"""
+          <ComponentWithLink id="comp"/>
+          """
+        end
 
       assert render_live(code) =~ """
              <div data-phx-component="1"><a href="/users/1" phx-click="my_click" phx-target="1"></a></div>

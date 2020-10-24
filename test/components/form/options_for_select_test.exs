@@ -6,17 +6,23 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   import ComponentTestHelper
 
   test "empty options" do
-    code = """
-    <OptionsForSelect />
-    """
+    code =
+      quote do
+        ~H"""
+        <OptionsForSelect />
+        """
+      end
 
     assert render_live(code) == "\n"
   end
 
   test "setting the options" do
-    code = """
-    <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <option value="admin">Admin</option>\
@@ -25,9 +31,12 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   end
 
   test "passing selected value" do
-    code = """
-    <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ "admin" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ "admin" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <option value="admin" selected="selected">Admin</option>\
@@ -36,9 +45,12 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   end
 
   test "passing multiple selected values" do
-    code = """
-    <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ ["admin", "user"] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ ["admin", "user"] }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <option value="admin" selected="selected">Admin</option>\

@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   alias Surface.Components.Form.RangeInput, warn: false
 
   test "empty input" do
-    code = """
-    <RangeInput form="volume" field="percent"/>
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="volume" field="percent"/>
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="volume_percent" name="volume[percent]" type="range"/>
@@ -16,9 +19,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "setting min, max and step" do
-    code = """
-    <RangeInput form="volume" field="percent" min="0" max="100" step="50"/>
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="volume" field="percent" min="0" max="100" step="50"/>
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="volume_percent" max="100" min="0" name="volume[percent]" step="50" type="range"/>
@@ -26,9 +32,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "setting the value" do
-    code = """
-    <RangeInput form="volume" field="percent" min="0" max="100" value="25"/>
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="volume" field="percent" min="0" max="100" value="25"/>
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="volume_percent" max="100" min="0" name="volume[percent]" type="range" value="25"/>
@@ -36,25 +45,34 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "setting the class" do
-    code = """
-    <RangeInput form="volume" field="percent" min="0" max="100" class="input" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="volume" field="percent" min="0" max="100" class="input" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <RangeInput form="volume" field="percent" min="0" max="100" class="input primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="volume" field="percent" min="0" max="100" class="input primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do
-    code = """
-    <RangeInput form="volume" field="percent" min="0" max="100" opts={{ id: "myid" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="volume" field="percent" min="0" max="100" opts={{ id: "myid" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="myid" max="100" min="0" name="volume[percent]" type="range"/>
@@ -62,9 +80,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "blur event with parent live view as target" do
-    code = """
-    <RangeInput form="user" field="color" value="25" blur="my_blur" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="user" field="color" value="25" blur="my_blur" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-blur="my_blur" type="range" value="25"/>
@@ -72,9 +93,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "focus event with parent live view as target" do
-    code = """
-    <RangeInput form="user" field="color" value="25" focus="my_focus" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="user" field="color" value="25" focus="my_focus" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-focus="my_focus" type="range" value="25"/>
@@ -82,9 +106,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "capture click event with parent live view as target" do
-    code = """
-    <RangeInput form="user" field="color" value="25" capture_click="my_click" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="user" field="color" value="25" capture_click="my_click" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-capture-click="my_click" type="range" value="25"/>
@@ -92,9 +119,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "keydown event with parent live view as target" do
-    code = """
-    <RangeInput form="user" field="color" value="25" keydown="my_keydown" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="user" field="color" value="25" keydown="my_keydown" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keydown="my_keydown" type="range" value="25"/>
@@ -102,9 +132,12 @@ defmodule Surface.Components.Form.RangeInputTest do
   end
 
   test "keyup event with parent live view as target" do
-    code = """
-    <RangeInput form="user" field="color" value="25" keyup="my_keyup" />
-    """
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="user" field="color" value="25" keyup="my_keyup" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="range" value="25"/>
@@ -120,9 +153,12 @@ defmodule Surface.Components.Form.RangeInputConfigTest do
 
   test ":default_class config" do
     using_config RangeInput, default_class: "default_class" do
-      code = """
-      <RangeInput/>
-      """
+      code =
+        quote do
+          ~H"""
+          <RangeInput/>
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

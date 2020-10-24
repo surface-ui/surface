@@ -7,9 +7,12 @@ defmodule Surface.Components.Form.CheckboxTest do
   import ComponentTestHelper
 
   test "checkbox" do
-    code = """
-    <Checkbox form="user" field="admin" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" type="checkbox" value="true"/>
@@ -17,11 +20,14 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "with form context" do
-    code = """
-    <Form for={{ :user }} opts={{ csrf_token: "test" }}>
-      <Checkbox field={{ :admin }} />
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :user }} opts={{ csrf_token: "test" }}>
+          <Checkbox field={{ :admin }} />
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post">\
@@ -33,25 +39,34 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "setting the class" do
-    code = """
-    <Checkbox form="user" field="admin" class="checkbox" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" class="checkbox" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="checkbox"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <Checkbox form="user" field="admin" class="checkbox primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" class="checkbox primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="checkbox primary"/
   end
 
   test "passing other options" do
-    code = """
-    <Checkbox form="user" field="admin" opts={{ checked_value: "admin" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" opts={{ checked_value: "admin" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" type="checkbox" value="admin"/>
@@ -59,9 +74,12 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "blur event with parent live view as target" do
-    code = """
-    <Checkbox form="user" field="admin" blur="my_blur" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" blur="my_blur" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" phx-blur="my_blur" type="checkbox" value="true"/>
@@ -69,9 +87,12 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "focus event with parent live view as target" do
-    code = """
-    <Checkbox form="user" field="admin" focus="my_focus" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" focus="my_focus" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" phx-focus="my_focus" type="checkbox" value="true"/>
@@ -79,9 +100,12 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "capture click event with parent live view as target" do
-    code = """
-    <Checkbox form="user" field="admin" capture_click="my_click" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" capture_click="my_click" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" phx-capture-click="my_click" type="checkbox" value="true"/>
@@ -89,9 +113,12 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "keydown event with parent live view as target" do
-    code = """
-    <Checkbox form="user" field="admin" keydown="my_keydown" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" keydown="my_keydown" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" phx-keydown="my_keydown" type="checkbox" value="true"/>
@@ -99,9 +126,12 @@ defmodule Surface.Components.Form.CheckboxTest do
   end
 
   test "keyup event with parent live view as target" do
-    code = """
-    <Checkbox form="user" field="admin" keyup="my_keyup" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" keyup="my_keyup" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" phx-keyup="my_keyup" type="checkbox" value="true"/>
@@ -117,9 +147,12 @@ defmodule Surface.Components.Form.CheckboxConfigTest do
 
   test ":default_class config" do
     using_config Checkbox, default_class: "default_class" do
-      code = """
-      <Checkbox />
-      """
+      code =
+        quote do
+          ~H"""
+          <Checkbox />
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

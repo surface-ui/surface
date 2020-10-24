@@ -5,9 +5,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   alias Surface.Components.Form.PasswordInput, warn: false
 
   test "empty input" do
-    code = """
-    <PasswordInput form="user" field="password" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="password" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_password" name="user[password]" type="password"/>
@@ -15,9 +18,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "setting the value" do
-    code = """
-    <PasswordInput form="user" field="password" value="secret" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="password" value="secret" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_password" name="user[password]" type="password" value="secret"/>
@@ -25,25 +31,34 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "setting the class" do
-    code = """
-    <PasswordInput form="user" field="password" class="input" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="password" class="input" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <PasswordInput form="user" field="password" class="input primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="password" class="input primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do
-    code = """
-    <PasswordInput form="user" field="password" opts={{ id: "myid", autofocus: "autofocus" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="password" opts={{ id: "myid", autofocus: "autofocus" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <input autofocus="autofocus" id="myid" name="user[password]" type="password"/>
@@ -51,9 +66,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "blur event with parent live view as target" do
-    code = """
-    <PasswordInput form="user" field="color" value="secret" blur="my_blur" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="color" value="secret" blur="my_blur" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-blur="my_blur" type="password" value="secret"/>
@@ -61,9 +79,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "focus event with parent live view as target" do
-    code = """
-    <PasswordInput form="user" field="color" value="secret" focus="my_focus" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="color" value="secret" focus="my_focus" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-focus="my_focus" type="password" value="secret"/>
@@ -71,9 +92,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "capture click event with parent live view as target" do
-    code = """
-    <PasswordInput form="user" field="color" value="secret" capture_click="my_click" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="color" value="secret" capture_click="my_click" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-capture-click="my_click" type="password" value="secret"/>
@@ -81,9 +105,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "keydown event with parent live view as target" do
-    code = """
-    <PasswordInput form="user" field="color" value="secret" keydown="my_keydown" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="color" value="secret" keydown="my_keydown" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keydown="my_keydown" type="password" value="secret"/>
@@ -91,9 +118,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
   end
 
   test "keyup event with parent live view as target" do
-    code = """
-    <PasswordInput form="user" field="color" value="secret" keyup="my_keyup" />
-    """
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="color" value="secret" keyup="my_keyup" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="password" value="secret"/>
@@ -109,9 +139,12 @@ defmodule Surface.Components.Form.PasswordInputConfigTest do
 
   test ":default_class config" do
     using_config PasswordInput, default_class: "default_class" do
-      code = """
-      <PasswordInput/>
-      """
+      code =
+        quote do
+          ~H"""
+          <PasswordInput/>
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

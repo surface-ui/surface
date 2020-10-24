@@ -46,12 +46,6 @@ defmodule ComponentTestHelper do
     end
   end
 
-  defmacro render_live(code, assigns \\ quote(do: %{})) do
-    quote do
-      render_live(unquote(code), unquote(assigns), unquote(Macro.escape(__CALLER__)))
-    end
-  end
-
   def render_live(module, assigns, _env) when is_atom(module) do
     conn = Phoenix.ConnTest.build_conn()
     {:ok, _view, html} = Phoenix.LiveViewTest.live_isolated(conn, module, session: assigns)
@@ -59,21 +53,38 @@ defmodule ComponentTestHelper do
     clean_html(html)
   end
 
-  def render_live(code, assigns, env) do
-    id = :erlang.unique_integer([:positive]) |> to_string()
+  defmacro render_live(code, assigns \\ quote(do: %{})) do
+    quote do
+      render_live(unquote(code), unquote(assigns), unquote(Macro.escape(__CALLER__)))
+    end
+  end
 
-    view_code = """
-    defmodule TestLiveView_#{id} do; \
-      use Surface.LiveView; \
-      #{for {name, _} <- assigns, into: "", do: "prop " <> to_string(name) <> ", :any; "} \
-      def render(assigns) do; \
-        assigns = Map.merge(assigns, #{inspect(assigns)}); \
-        ~H(#{code}); \
-      end; \
-    end\
-    """
+  def render_live(render_code, props, env) do
+    {func, _} = env.function
+    module = Module.concat([env.module, "(#{func}) at line #{env.line}"])
 
-    {{:module, module, _, _}, _} = Code.eval_string(view_code, [], %{env | file: "code", line: 0})
+    props_ast =
+      for {name, _} <- props do
+        quote do
+          prop unquote(Macro.var(name, nil)), :any
+        end
+      end
+
+    ast =
+      quote do
+        defmodule unquote(module) do
+          use Surface.LiveView
+
+          unquote_splicing(props_ast)
+
+          def render(var!(assigns)) do
+            var!(assigns) = Map.merge(var!(assigns), unquote(Macro.escape(props)))
+            unquote(render_code)
+          end
+        end
+      end
+
+    {{:module, module, _, _}, _} = Code.eval_quoted(ast, [], %{env | file: "code", line: 0})
     conn = Phoenix.ConnTest.build_conn()
     {:ok, _view, html} = Phoenix.LiveViewTest.live_isolated(conn, module)
 

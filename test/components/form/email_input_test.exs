@@ -5,9 +5,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   alias Surface.Components.Form.EmailInput, warn: false
 
   test "empty input" do
-    code = """
-    <EmailInput form="user" field="email" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="email" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_email" name="user[email]" type="email"/>
@@ -15,9 +18,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "setting the value" do
-    code = """
-    <EmailInput form="user" field="email" value="admin@gmail.com" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="email" value="admin@gmail.com" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_email" name="user[email]" type="email" value="admin@gmail.com"/>
@@ -25,25 +31,34 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "setting the class" do
-    code = """
-    <EmailInput form="user" field="email" value="admin@gmail.com" class="input" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="email" value="admin@gmail.com" class="input" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <EmailInput form="user" field="email" value="admin@gmail.com" class="input primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="email" value="admin@gmail.com" class="input primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="input primary"/
   end
 
   test "passing other options" do
-    code = """
-    <EmailInput form="user" field="email" opts={{ id: "myid", autofocus: "autofocus" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="email" opts={{ id: "myid", autofocus: "autofocus" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <input autofocus="autofocus" id="myid" name="user[email]" type="email"/>
@@ -51,9 +66,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "blur event with parent live view as target" do
-    code = """
-    <EmailInput form="user" field="color" value="admin@gmail.com" blur="my_blur" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="color" value="admin@gmail.com" blur="my_blur" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-blur="my_blur" type="email" value="admin@gmail.com"/>
@@ -61,9 +79,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "focus event with parent live view as target" do
-    code = """
-    <EmailInput form="user" field="color" value="admin@gmail.com" focus="my_focus" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="color" value="admin@gmail.com" focus="my_focus" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-focus="my_focus" type="email" value="admin@gmail.com"/>
@@ -71,9 +92,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "capture click event with parent live view as target" do
-    code = """
-    <EmailInput form="user" field="color" value="admin@gmail.com" capture_click="my_click" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="color" value="admin@gmail.com" capture_click="my_click" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-capture-click="my_click" type="email" value="admin@gmail.com"/>
@@ -81,9 +105,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "keydown event with parent live view as target" do
-    code = """
-    <EmailInput form="user" field="color" value="admin@gmail.com" keydown="my_keydown" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="color" value="admin@gmail.com" keydown="my_keydown" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keydown="my_keydown" type="email" value="admin@gmail.com"/>
@@ -91,9 +118,12 @@ defmodule Surface.Components.Form.EmailInputTest do
   end
 
   test "keyup event with parent live view as target" do
-    code = """
-    <EmailInput form="user" field="color" value="admin@gmail.com" keyup="my_keyup" />
-    """
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="color" value="admin@gmail.com" keyup="my_keyup" />
+        """
+      end
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="email" value="admin@gmail.com"/>
@@ -109,9 +139,12 @@ defmodule Surface.Components.Form.EmailInputConfigTest do
 
   test ":default_class config" do
     using_config EmailInput, default_class: "default_class" do
-      code = """
-      <EmailInput/>
-      """
+      code =
+        quote do
+          ~H"""
+          <EmailInput/>
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

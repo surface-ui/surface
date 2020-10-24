@@ -6,9 +6,12 @@ defmodule Surface.Components.Form.SelectTest do
   import ComponentTestHelper
 
   test "empty select" do
-    code = """
-    <Select form="user" field="role" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" />
+        """
+      end
 
     assert render_live(code) =~ """
            <select id="user_role" name="user[role]"></select>
@@ -16,9 +19,12 @@ defmodule Surface.Components.Form.SelectTest do
   end
 
   test "setting the options" do
-    code = """
-    <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <select id="user_role" name="user[role]">\
@@ -29,25 +35,34 @@ defmodule Surface.Components.Form.SelectTest do
   end
 
   test "setting the class" do
-    code = """
-    <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="select"/
   end
 
   test "setting multiple classes" do
-    code = """
-    <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
-    """
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
+        """
+      end
 
     assert render_live(code) =~ ~r/class="select primary"/
   end
 
   test "passing other options" do
-    code = """
-    <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ prompt: "Pick a role" }} />
-    """
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ prompt: "Pick a role" }} />
+        """
+      end
 
     assert render_live(code) =~ """
            <select id="user_role" name="user[role]">\
@@ -67,9 +82,12 @@ defmodule Surface.Components.Form.SelectConfigTest do
 
   test ":default_class config" do
     using_config Select, default_class: "default_class" do
-      code = """
-      <Select />
-      """
+      code =
+        quote do
+          ~H"""
+          <Select />
+          """
+        end
 
       assert render_live(code) =~ ~r/class="default_class"/
     end

@@ -8,14 +8,17 @@ defmodule Surface.Components.Form.InputsTest do
   import ComponentTestHelper
 
   test "using generated form received as slot props" do
-    code = """
-    <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-      <Inputs for={{ :children }} :let={{ form: f }}>
-        <TextInput form={{ f }} field="name" />
-        <TextInput form={{ f }} field="email" />
-      </Inputs>
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
+          <Inputs for={{ :children }} :let={{ form: f }}>
+            <TextInput form={{ f }} field="name" />
+            <TextInput form={{ f }} field="email" />
+          </Inputs>
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
@@ -26,14 +29,17 @@ defmodule Surface.Components.Form.InputsTest do
   end
 
   test "using generated form stored in the Form context" do
-    code = """
-    <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-      <Inputs for={{ :children }}>
-        <TextInput field="name" />
-        <TextInput field="email" />
-      </Inputs>
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
+          <Inputs for={{ :children }}>
+            <TextInput field="name" />
+            <TextInput field="email" />
+          </Inputs>
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
@@ -44,14 +50,17 @@ defmodule Surface.Components.Form.InputsTest do
   end
 
   test "passing extra opts" do
-    code = """
-    <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-      <Inputs for={{ :children }} opts={{ as: "custom_name"}}>
-        <TextInput field="name" />
-        <TextInput field="email" />
-      </Inputs>
-    </Form>
-    """
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
+          <Inputs for={{ :children }} opts={{ as: "custom_name"}}>
+            <TextInput field="name" />
+            <TextInput field="email" />
+          </Inputs>
+        </Form>
+        """
+      end
 
     assert render_live(code) =~ """
            <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
