@@ -213,6 +213,27 @@ defmodule Surface.DirectivesTest do
              """
     end
 
+    test "modifiers on components" do
+      assigns = %{items: [1, 2]}
+
+      code =
+        quote do
+          ~H"""
+          <Div :for.with_index={{ {iii, index} <- @items }}>
+            Item: {{ iii }}, Index: {{ index }}
+          </Div>
+          """
+        end
+
+      assert render_live(code, assigns) =~ """
+             <div>
+               Item: 1, Index: 0
+             </div><div>
+               Item: 2, Index: 1
+             </div>
+             """
+    end
+
     test "raise compile error for unknown modifiers" do
       assigns = %{items: [%{id: 1, name: "First"}]}
 

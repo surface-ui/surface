@@ -601,7 +601,7 @@ defmodule Surface.Compiler do
     {name, modifiers} =
       case String.split(attr_name, ".") do
         [name] ->
-          {name, []}
+          {name, Map.get(meta, :modifiers, [])}
 
         [name | modifiers] ->
           {name, modifiers}
