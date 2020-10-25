@@ -39,7 +39,11 @@ defmodule Surface.Compiler do
 
   @template_directive_handlers [Surface.Directive.Let]
 
-  @slot_directive_handlers [Surface.Directive.SlotProps]
+  @slot_directive_handlers [
+    Surface.Directive.If,
+    Surface.Directive.For,
+    Surface.Directive.SlotProps
+  ]
 
   @void_elements [
     "area",
