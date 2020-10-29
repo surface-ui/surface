@@ -32,13 +32,13 @@ defmodule Surface.Components.Form do
   prop submit, :event
 
   @doc "The content of the `<form>`"
-  slot default
+  slot default, props: [:form]
 
   def render(assigns) do
     ~H"""
     {{ form = form_for(@for, @action, get_opts(assigns)) }}
       <Context put={{ __MODULE__, form: form }}>
-        <slot/>
+        <slot :props={{ form: form }} />
       </Context>
     <#Raw></form></#Raw>
     """
