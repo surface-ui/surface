@@ -13,8 +13,9 @@ defmodule Surface.Components.FormTest do
 
     def render(assigns) do
       ~H"""
-      <Form for={{ @changeset }} action="#" opts={{ csrf_token: "test", as: :user }}>
+      <Form for={{ @changeset }} action="#" opts={{ csrf_token: "test", as: :user }} :let={{ form: f }}>
         <TextInput field="name" />
+        {{ Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end) }}
       </Form>
       """
     end
@@ -86,5 +87,18 @@ defmodule Surface.Components.FormTest do
     assert render_live(code) =~ """
            <form action="#" method="post" phx-change="change" phx-submit="sumit">\
            """
+  end
+
+  test "form exposes the generated form instance" do
+    assigns = %{
+      "changeset" =>
+        Ecto.Changeset.cast(
+          {%{}, %{name: :string}},
+          %{name: 123},
+          [:name]
+        )
+    }
+
+    assert render_live(ViewWithForm, assigns) =~ ~r/Name is invalid/
   end
 end
