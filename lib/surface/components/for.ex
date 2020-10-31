@@ -21,14 +21,21 @@ defmodule Surface.Components.For do
   def render(_), do: ""
 
   def transform(node) do
-    generator = Enum.find_value(node.props, %AST.AttributeExpr{value: [], original: "", meta: node.meta}, fn prop ->
-      if prop.name == :each do
-        prop.value
-      end
-    end)
+    generator =
+      Enum.find_value(
+        node.props,
+        %AST.AttributeExpr{value: [], original: "", meta: node.meta},
+        fn prop ->
+          if prop.name == :each do
+            prop.value
+          end
+        end
+      )
 
     children =
-      if Enum.empty?(node.templates.default), do: [], else: List.first(node.templates.default).children
+      if Enum.empty?(node.templates.default),
+        do: [],
+        else: List.first(node.templates.default).children
 
     %AST.For{
       generator: generator,

@@ -18,9 +18,9 @@ defmodule Surface.Components.IfTest do
         end
 
       assert render_live(code) =~ """
-            <span>The inner content</span>\
-            <span>with multiple tags</span>
-            """
+             <span>The inner content</span>\
+             <span>with multiple tags</span>
+             """
     end
   end
 end
