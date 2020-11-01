@@ -23,6 +23,7 @@ defmodule Surface.API do
     :form,
     :keyword,
     # Private
+    :generator,
     :context_put,
     :context_get
   ]
