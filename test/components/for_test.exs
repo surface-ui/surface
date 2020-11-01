@@ -5,22 +5,20 @@ defmodule Surface.Components.ForTest do
 
   import ComponentTestHelper
 
-  describe "Without LiveView" do
-    test "iterates over the provided list" do
-      code =
-        quote do
-          ~H"""
-          <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
-          <span>{{ fruit }}</span>
-          </For>
-          """
-        end
+  test "iterates over the provided list" do
+    code =
+      quote do
+        ~H"""
+        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
+        <span>{{ fruit }}</span>
+        </For>
+        """
+      end
 
-      assert render_live(code) =~ """
-             <span>apples</span>\
-             <span>bananas</span>\
-             <span>oranges</span>
-             """
-    end
+    assert render_live(code) =~ """
+           <span>apples</span>\
+           <span>bananas</span>\
+           <span>oranges</span>
+           """
   end
 end

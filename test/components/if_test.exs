@@ -5,22 +5,20 @@ defmodule Surface.Components.IfTest do
 
   import ComponentTestHelper
 
-  describe "Without LiveView" do
-    test "renders inner if condition is truthy" do
-      code =
-        quote do
-          ~H"""
-          <If condition={{ true }}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          </If>
-          """
-        end
+  test "renders inner if condition is truthy" do
+    code =
+      quote do
+        ~H"""
+        <If condition={{ true }}>
+        <span>The inner content</span>
+        <span>with multiple tags</span>
+        </If>
+        """
+      end
 
-      assert render_live(code) =~ """
-             <span>The inner content</span>\
-             <span>with multiple tags</span>
-             """
-    end
+    assert render_live(code) =~ """
+           <span>The inner content</span>\
+           <span>with multiple tags</span>
+           """
   end
 end
