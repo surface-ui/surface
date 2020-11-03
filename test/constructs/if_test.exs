@@ -1,8 +1,6 @@
 defmodule Surface.Components.IfTest do
   use ExUnit.Case, async: true
 
-  alias Surface.Components.If, warn: false
-
   import ComponentTestHelper
 
   defmodule ListProp do

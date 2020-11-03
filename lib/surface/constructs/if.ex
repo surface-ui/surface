@@ -1,12 +1,12 @@
-defmodule Surface.Components.For do
+defmodule Surface.Constructs.If do
   @moduledoc """
-  Provides an alternative to the `:for` directive for wrapping multiple elements in a for loop.
+  Provides an alternative to the `:if` directive for wrapping multiple elements in an if expression.
 
   ## Examples
   ```
-  <For each={{ item <- @items }} />
-    <a href={{ item.to }}>{{item.label}}</a>
+  <If condition={{ @display_link }} />
     <Icon name="cheveron_left" />
+    <a href={{ @item.to }}>{{ @item.label }}</a>
   </For>
   ```
   """
@@ -14,19 +14,19 @@ defmodule Surface.Components.For do
 
   alias Surface.AST
 
-  @doc "The generator for the for expression"
-  prop each, :generator, required: true
+  @doc "The condition for the if expression"
+  prop condition, :boolean, required: true
   slot default, required: true
 
   def render(_), do: ""
 
   def transform(node) do
-    generator =
+    condition =
       Enum.find_value(
         node.props,
-        %AST.AttributeExpr{value: [], original: "", meta: node.meta},
+        %AST.AttributeExpr{value: false, original: "", meta: node.meta},
         fn prop ->
-          if prop.name == :each do
+          if prop.name == :condition do
             prop.value
           end
         end
@@ -37,8 +37,8 @@ defmodule Surface.Components.For do
         do: [],
         else: List.first(node.templates.default).children
 
-    %AST.For{
-      generator: generator,
+    %AST.If{
+      condition: condition,
       children: children,
       meta: node.meta
     }
