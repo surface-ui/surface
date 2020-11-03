@@ -42,6 +42,7 @@ defmodule Surface.Component do
 
       @before_compile unquote(__MODULE__)
 
+      alias Surface.Constructs.{For, If}
       alias Surface.Components.Context
 
       if unquote(slot_name) != nil do

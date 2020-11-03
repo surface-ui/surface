@@ -1,7 +1,5 @@
-defmodule Surface.Components.IfTest do
+defmodule Surface.Constructs.ForTest do
   use ExUnit.Case, async: true
-
-  alias Surface.Components.If, warn: false
 
   import ComponentTestHelper
 
@@ -18,20 +16,20 @@ defmodule Surface.Components.IfTest do
     end
   end
 
-  test "renders inner if condition is truthy" do
+  test "iterates over the provided list" do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
-        <span>The inner content</span>
-        <span>with multiple tags</span>
-        </If>
+        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
+        <span>{{ fruit }}</span>
+        </For>
         """
       end
 
     assert render_live(code) =~ """
-           <span>The inner content</span>\
-           <span>with multiple tags</span>
+           <span>apples</span>\
+           <span>bananas</span>\
+           <span>oranges</span>
            """
   end
 
@@ -39,9 +37,9 @@ defmodule Surface.Components.IfTest do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
+        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
           <span>The inner content
-        </If>
+        </For>
         """
       end
 
@@ -56,9 +54,9 @@ defmodule Surface.Components.IfTest do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
+        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
           <ListProp prop="some string">The inner content</ListProp>
-        </If>
+        </For>
         """
       end
 
