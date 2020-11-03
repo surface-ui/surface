@@ -285,6 +285,14 @@ defmodule Surface.Compiler.ParserTest do
       assert parse("{{ \"a\\\"b\" }}") ==
                {:ok, [{:interpolation, " \"a\\\"b\" ", %{line: 1}}]}
     end
+
+    test "nested multi-element tuples" do
+      assert parse("""
+             {{ {a, {b, c}} <- [{"a", {"b", "c"}}]}}
+             """) ==
+               {:ok,
+                [{:interpolation, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]", %{line: 1}}, "\n"]}
+    end
   end
 
   describe "with macros" do
@@ -632,28 +640,18 @@ defmodule Surface.Compiler.ParserTest do
 
     test "attribute expression with nested tuples" do
       code = """
-      <ul>
-        <li :for={{ {a, {b, c}} <- [{"a", {"b", "c"}}]}}>
-          {{ c }}
-        </li>
-      </ul>
+      <li :for={{ {a, {b, c}} <- [{"a", {"b", "c"}}]}} />
       """
 
       assert parse(code) ==
                {:ok,
                 [
-                  {"ul", [],
+                  {"li",
                    [
-                     "\n  ",
-                     {"li",
-                      [
-                        {":for",
-                         {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
-                          %{line: 2}}, %{line: 2, spaces: [" ", "", ""]}}
-                      ], ["\n    ", {:interpolation, " c ", %{line: 3}}, "\n  "],
-                      %{line: 2, space: ""}},
-                     "\n"
-                   ], %{line: 1, space: ""}},
+                     {":for",
+                      {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]", %{line: 1}},
+                      %{line: 1, spaces: [" ", "", ""]}}
+                   ], [], %{line: 1, space: " "}},
                   "\n"
                 ]}
     end
