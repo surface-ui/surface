@@ -1,4 +1,4 @@
-defmodule Surface.Components.ForTest do
+defmodule Surface.Constructs.ForTest do
   use ExUnit.Case, async: true
 
   import ComponentTestHelper
