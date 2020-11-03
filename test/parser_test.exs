@@ -643,17 +643,14 @@ defmodule Surface.Compiler.ParserTest do
       <li :for={{ {a, {b, c}} <- [{"a", {"b", "c"}}]}} />
       """
 
+      attr_value = {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]", %{line: 1}}
+
+      attributes = [
+        {":for", attr_value, %{line: 1, spaces: [" ", "", ""]}}
+      ]
+
       assert parse(code) ==
-               {:ok,
-                [
-                  {"li",
-                   [
-                     {":for",
-                      {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]", %{line: 1}},
-                      %{line: 1, spaces: [" ", "", ""]}}
-                   ], [], %{line: 1, space: " "}},
-                  "\n"
-                ]}
+               {:ok, [{"li", attributes, [], %{line: 1, space: " "}}, "\n"]}
     end
   end
 end
