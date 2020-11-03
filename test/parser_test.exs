@@ -629,5 +629,33 @@ defmodule Surface.Compiler.ParserTest do
 
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1, space: ""}}, "\n"]}
     end
+
+    test "attribute expression with nested tuples" do
+      code = """
+      <ul>
+        <li :for={{ {a, {b, c}} <- [{"a", {"b", "c"}}]}}>
+          {{ c }}
+        </li>
+      </ul>
+      """
+
+      assert parse(code) ==
+               {:ok,
+                [
+                  {"ul", [],
+                   [
+                     "\n  ",
+                     {"li",
+                      [
+                        {":for",
+                         {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
+                          %{line: 2}}, %{line: 2, spaces: [" ", "", ""]}}
+                      ], ["\n    ", {:interpolation, " c ", %{line: 3}}, "\n  "],
+                      %{line: 2, space: ""}},
+                     "\n"
+                   ], %{line: 1, space: ""}},
+                  "\n"
+                ]}
+    end
   end
 end

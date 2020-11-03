@@ -53,12 +53,14 @@ defmodule Surface.Compiler.Parser do
   defparsecp(
     :tuple,
     string("{")
-    |> choice([
-      parsec(:tuple),
-      parsec(:binary),
-      parsec(:charlist),
-      repeat(utf8_char(not: ?}))
-    ])
+    |> repeat(
+      choice([
+        parsec(:tuple),
+        parsec(:binary),
+        parsec(:charlist),
+        utf8_char(not: ?})
+      ])
+    )
     |> string("}")
   )
 
