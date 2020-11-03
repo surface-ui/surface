@@ -6,7 +6,6 @@ defmodule Surface.Compiler.Helpers do
   @builtin_assigns [
     :flash,
     :live_action,
-    :live_module,
     :socket,
     :inner_block,
     :__context__,

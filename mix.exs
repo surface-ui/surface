@@ -34,7 +34,7 @@ defmodule Surface.MixProject do
       {:jason, "~> 1.0"},
       {:phoenix_live_view,
        git: "https://github.com/phoenixframework/phoenix_live_view.git",
-       tag: "597c5ddf8af2ca39216a3fe5a44c066774de3abd"},
+       tag: "f986171cae03747366c3cd1c4f4fea047e1d7196"},
       {:earmark, "~> 1.3"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
