@@ -63,9 +63,10 @@ defmodule Surface.LiveView do
 
   defp quoted_mount(env) do
     defaults =
-      for %{name: name, opts: opts} <- Module.get_attribute(env.module, :data) do
-        {name, Keyword.get(opts, :default)}
-      end
+      env.module
+      |> Module.get_attribute(:data)
+      |> Enum.filter(fn %{opts: opts} -> Keyword.has_key?(opts, :default) end)
+      |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :default)} end)
       |> Macro.escape()
 
     if Module.defines?(env.module, {:mount, 3}) do
