@@ -98,6 +98,18 @@ defmodule LiveComponentTest do
     end
   end
 
+  defmodule LiveComponentDataWithoutDefault do
+    use Surface.LiveComponent
+
+    data count, :integer
+
+    def render(assigns) do
+      ~H"""
+      <div>{{ Map.has_key?(assigns, :count) }}</div>
+      """
+    end
+  end
+
   test "render content without slot props" do
     code =
       quote do
@@ -139,6 +151,17 @@ defmodule LiveComponentTest do
     assert render_live(code) =~ """
            <button data-phx-component=\"1\" phx-click=\"click-event\"></button>
            """
+  end
+
+  test "do not set assign for `data` without default value" do
+    code =
+      quote do
+        ~H"""
+        <LiveComponentDataWithoutDefault id="counter"/>
+        """
+      end
+
+    assert render_live(code) =~ "false"
   end
 
   test "render stateless component" do

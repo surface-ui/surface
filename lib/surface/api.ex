@@ -133,6 +133,7 @@ defmodule Surface.API do
     Module.put_attribute(caller.module, assign.func, assign)
   end
 
+  @doc false
   def get_assigns(module) do
     if Module.open?(module) do
       module
@@ -156,6 +157,14 @@ defmodule Surface.API do
       end
 
     (Module.get_attribute(module, :slot) || []) ++ used_slots
+  end
+
+  @doc false
+  def get_defaults(module) do
+    for %{name: name, opts: opts} <- Module.get_attribute(module, :data),
+        Keyword.has_key?(opts, :default) do
+      {name, opts[:default]}
+    end
   end
 
   defp quoted_data_funcs(env) do

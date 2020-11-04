@@ -98,11 +98,7 @@ defmodule Surface.LiveComponent do
   end
 
   defp quoted_mount(env) do
-    defaults =
-      for %{name: name, opts: opts} <- Module.get_attribute(env.module, :data) do
-        {name, Keyword.get(opts, :default)}
-      end
-      |> Macro.escape()
+    defaults = env.module |> Surface.API.get_defaults() |> Macro.escape()
 
     if Module.defines?(env.module, {:mount, 1}) do
       quote do
