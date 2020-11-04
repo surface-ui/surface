@@ -98,6 +98,42 @@ defmodule LiveComponentTest do
     end
   end
 
+  defmodule ViewWithData do
+    use Surface.LiveView
+
+    data with_default, :string, default: "default value"
+    data with_default_nil, :any, default: nil
+    data without_default, :any
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <span id="with-default">{{ @with_default }}</span>
+        <span id="with-default-nil">{{ if @with_default_nil == nil do "nil" end }}</span>
+        <span id="without-default">{{ if Map.has_key?(assigns, :without_default) do "initialized" else "not initialized" end }}</span>
+      </div>
+      """
+    end
+  end
+
+  defmodule LiveComponentWithData do
+    use Surface.LiveComponent
+
+    data with_default, :string, default: "default value"
+    data with_default_nil, :any, default: nil
+    data without_default, :any
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <span id="with-default">{{ @with_default }}</span>
+        <span id="with-default-nil">{{ if @with_default_nil == nil do "nil" end }}</span>
+        <span id="without-default">{{ if Map.has_key?(assigns, :without_default) do "initialized" else "not initialized" end }}</span>
+      </div>
+      """
+    end
+  end
+
   test "render content without slot props" do
     code =
       quote do
@@ -164,5 +200,27 @@ defmodule LiveComponentTest do
   test "handle events in LiveComponent (handled by the component itself)" do
     {:ok, view, _html} = live_isolated(build_conn(), View)
     assert render_click(element(view, "#theDiv")) =~ "Updated stateful"
+  end
+
+  test "initialize data assigns with default value in LiveView" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithData)
+    assert html =~ "<span id=\"with-default\">default value</span>"
+    assert html =~ "<span id=\"with-default-nil\">nil</span>"
+    assert html =~ "<span id=\"without-default\">not initialized</span>"
+  end
+
+  test "initialize data assigns with default value in LiveComponent" do
+    code =
+      quote do
+        ~H"""
+        <LiveComponentWithData id="data-test" />
+        """
+      end
+
+    content = render_live(code)
+
+    assert content =~ "<span id=\"with-default\">default value</span>"
+    assert content =~ "<span id=\"with-default-nil\">nil</span>"
+    assert content =~ "<span id=\"without-default\">not initialized</span>"
   end
 end
