@@ -134,7 +134,7 @@ defmodule Surface.PropertiesTest do
         end)
 
       assert output =~ ~r/variable "func" does not exist/
-      assert output =~ ~r"  code.exs:7:"
+      assert output =~ ~r"  code.exs:7"
     end
   end
 
