@@ -474,6 +474,7 @@ defmodule Surface.Compiler do
     {originals, quoted_values} =
       Enum.reduce(values, {[], []}, fn
         {:attribute_expr, value, expr_meta}, {originals, quoted_values} ->
+          expr_meta = Helpers.to_meta(expr_meta, attr_meta)
           {["{{#{value}}}" | originals], [quote_embedded_expr(value, expr_meta) | quoted_values]}
 
         value, {originals, quoted_values} ->
