@@ -15,18 +15,20 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
   setup do
     Application.put_env(:surface, :gettext_module, __MODULE__.MyGettext)
+
+    changeset =
+      {%{}, %{name: :string}}
+      |> Ecto.Changeset.cast(%{name: "myname"}, [:name])
+      |> Ecto.Changeset.add_error(:name, "is already taken")
+      |> Ecto.Changeset.add_error(:name, "another test error")
+      # Simulate that form submission already occurred so that error message will display
+      |> Map.put(:action, :insert)
+
+    %{changeset: changeset}
   end
 
-  test "empty input" do
-    assigns = %{
-      changeset:
-        {%{}, %{name: :string}}
-        |> Ecto.Changeset.cast(%{name: "myname"}, [:name])
-        |> Ecto.Changeset.add_error(:name, "is already taken")
-        |> Ecto.Changeset.add_error(:name, "another test error")
-        # Simulate that form submission already occurred so that error message will display
-        |> Map.put(:action, :insert)
-    }
+  test "multiple error messages", %{changeset: changeset} do
+    assigns = %{changeset: changeset}
 
     code =
       quote do
@@ -45,5 +47,27 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     assert render_live(code, assigns) =~
              "<span phx-feedback-for=\"user_name\">another test error</span>"
+  end
+
+  test "prop phx_feedback_for", %{changeset: changeset} do
+    assigns = %{changeset: changeset}
+
+    code =
+      quote do
+        ~H"""
+        <Form for={{@changeset}} opts={{ as: :user }} action="#" change="change" submit="sumit">
+          <Field name="name">
+            <TextInput opts={{ id: "test-id" }} />
+            <ErrorTag phx_feedback_for="test-id" />
+          </Field>
+        </Form>
+        """
+      end
+
+    assert render_live(code, assigns) =~
+             "<span phx-feedback-for=\"test-id\">is already taken</span>"
+
+    assert render_live(code, assigns) =~
+             "<input id=\"test-id\""
   end
 end
