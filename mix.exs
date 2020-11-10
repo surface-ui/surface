@@ -37,6 +37,7 @@ defmodule Surface.MixProject do
        tag: "f986171cae03747366c3cd1c4f4fea047e1d7196"},
       {:earmark, "~> 1.3"},
       {:floki, "~> 0.25.0", only: :test},
+      {:gettext, "~> 0.11", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
       {:ecto, "~> 3.4.2", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
