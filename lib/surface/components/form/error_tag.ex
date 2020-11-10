@@ -1,9 +1,9 @@
 defmodule Surface.Components.Form.ErrorTag do
   @moduledoc """
-  An error tag inspired by `error_tag/3` that ships with `mix phx.new` in
+  A component inspired by `error_tag/3` that ships with `mix phx.new` in
   `MyAppWeb.ErrorHelpers`.
 
-  Renders error messages if there are any about the given field.
+  Renders error messages if any exist regarding the given field.
 
   ## Error Translation
 
@@ -17,11 +17,12 @@ defmodule Surface.Components.Form.ErrorTag do
 
   ```elixir
   config :surface, :components, [
-    {Surface.Components.Form.ErrorTag, translate_error: {MyAppWeb.ErrorHelpers, :translate_error}}
+    {Surface.Components.Form.ErrorTag, translator: {MyAppWeb.ErrorHelpers, :translate_error}}
   ]
   ```
 
-  There is also a
+  There is also a `translator` prop which can be used on a case-by-case basis.
+  It overrides the configuration.
 
   ## Examples
 
