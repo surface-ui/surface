@@ -71,6 +71,25 @@ defmodule Surface.Components.Form.ErrorTagTest do
              "<input id=\"test-id\""
   end
 
+  test "prop class", %{changeset: changeset} do
+    assigns = %{changeset: changeset}
+
+    code =
+      quote do
+        ~H"""
+        <Form for={{@changeset}} opts={{ as: :user }}>
+          <Field name="name">
+            <TextInput />
+            <ErrorTag class="test-class" />
+          </Field>
+        </Form>
+        """
+      end
+
+    assert render_live(code, assigns) =~
+             "<span class=\"test-class\" phx-feedback-for=\"user_name\">is already taken</span>"
+  end
+
   test "no changeset shows no errors but does not crash" do
     code =
       quote do
