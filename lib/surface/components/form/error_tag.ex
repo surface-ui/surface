@@ -12,8 +12,20 @@ defmodule Surface.Components.Form.ErrorTag do
   ```
   """
 
-  use Surface.Components.Form.Input
-  use Phoenix.HTML
+  use Surface.Component
+
+  import Phoenix.HTML.Form, only: [input_id: 2]
+
+  alias Surface.Components.Form.Input.InputContext
+
+  @doc "An identifier for the form"
+  prop form, :form
+
+  @doc "An identifier for the associated field"
+  prop field, :atom
+
+  @doc "Class or classes to apply to each error tag <span>"
+  prop class, :css_class
 
   @doc """
   If you changed the default ID on the input, provide it here.
