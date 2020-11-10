@@ -28,6 +28,21 @@ defmodule Surface.Components.Form.ErrorTag do
   prop class, :css_class
 
   @doc """
+  A function that takes one argument `{msg, opts}` and returns
+  the translated error message as a string. If not provided, falls
+  back to Phoenix's default implementation.
+
+  This can also be set via config, for example:
+
+  ```elixir
+  config :surface, :components, [
+    {Surface.Components.Form.ErrorTag, translator: {MyApp.Gettext, :translate_error}}
+  ]
+  ```
+  """
+  prop translator, :fun
+
+  @doc """
   If you changed the default ID on the input, provide it here.
   (Useful when there are multiple forms on the same page, each
   with an input of the same name. LiveView will exhibit buggy behavior
@@ -36,57 +51,37 @@ defmodule Surface.Components.Form.ErrorTag do
   prop phx_feedback_for, :string
 
   def render(assigns) do
-    # In the context of <Form form={{ :some_atom }}>, `form` will be `nil` here,
-    # causing it to crash. So just render nothing instead.
-    # (There wouldn't have been errors to show anyways since there's no Changeset.)
+    translate_error = assigns.translator || translator_from_config() || (&translate_error/1)
+
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
       <span
         :for={{ error <- Keyword.get_values(form.errors, field) }}
         class={{ @class }}
         phx-feedback-for={{ @phx_feedback_for || input_id(form, field) }}
-      >{{ translate_error(error) }}</span>
+      >{{ translate_error.(error) }}</span>
     </InputContext>
     """
   end
 
   @doc """
-  Borrowed from `mix phx.new` generated translate_error/1.
+  Translates an error message.
 
-  Translates an error message using gettext.
+  This is the fallback (Phoenix's default implementation) if a translator
+  is not provided via config or the `translate` prop.
   """
   def translate_error({msg, opts}) do
-    gettext_module = Application.get_env(:surface, :gettext_module)
-
-    unless gettext_module do
-      raise """
-      Please define a gettext module in config in order to use <ErrorTag>:
-
-      config :surface, gettext_module: MyAppWeb.Gettext
-      """
-    end
-
-    # When using gettext, we typically pass the strings we want
-    # to translate as a static argument:
-    #
-    #     # Translate "is invalid" in the "errors" domain
-    #     dgettext("errors", "is invalid")
-    #
-    #     # Translate the number of files with plural rules
-    #     dngettext("errors", "1 file", "%{count} files", count)
-    #
     # Because the error messages we show in our forms and APIs
     # are defined inside Ecto, we need to translate them dynamically.
-    # This requires us to call the Gettext module passing our gettext
-    # backend as first argument.
-    #
-    # Note we use the "errors" domain, which means translations
-    # should be written to the errors.po file. The :count option is
-    # set by Ecto and indicates we should also apply plural rules.
-    if count = opts[:count] do
-      Gettext.dngettext(gettext_module, "errors", msg, msg, count, opts)
-    else
-      Gettext.dgettext(gettext_module, "errors", msg, opts)
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", to_string(value))
+    end)
+  end
+
+  defp translator_from_config do
+    if translator = get_config(:translator) do
+      {module, function} = translator
+      &apply(module, function, [&1])
     end
   end
 end
