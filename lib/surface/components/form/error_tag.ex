@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.ErrorTag do
 
   ## Examples
 
-  ```
+  ```surface
   <ErrorTag field="password" />
   ```
   """
