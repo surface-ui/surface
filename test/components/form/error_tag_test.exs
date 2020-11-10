@@ -90,7 +90,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
              "<span class=\"test-class\" phx-feedback-for=\"user_name\">is already taken</span>"
   end
 
-  test "no changeset shows no errors but does not crash" do
+  test "no changeset shows no errors" do
     code =
       quote do
         ~H"""

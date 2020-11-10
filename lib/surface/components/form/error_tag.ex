@@ -42,7 +42,6 @@ defmodule Surface.Components.Form.ErrorTag do
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
       <span
-        :if={{ not is_nil(form) }}
         :for={{ error <- Keyword.get_values(form.errors, field) }}
         class={{ @class }}
         phx-feedback-for={{ @phx_feedback_for || input_id(form, field) }}
