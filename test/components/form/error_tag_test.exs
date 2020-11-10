@@ -33,7 +33,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
     code =
       quote do
         ~H"""
-        <Form for={{@changeset}} opts={{ as: :user }} action="#" change="change" submit="sumit">
+        <Form for={{@changeset}} opts={{ as: :user }}>
           <Field name="name">
             <TextInput />
             <ErrorTag />
@@ -55,7 +55,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
     code =
       quote do
         ~H"""
-        <Form for={{@changeset}} opts={{ as: :user }} action="#" change="change" submit="sumit">
+        <Form for={{@changeset}} opts={{ as: :user }}>
           <Field name="name">
             <TextInput opts={{ id: "test-id" }} />
             <ErrorTag phx_feedback_for="test-id" />
@@ -69,5 +69,22 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     assert render_live(code, assigns) =~
              "<input id=\"test-id\""
+  end
+
+  test "no changeset shows no errors but does not crash" do
+    code =
+      quote do
+        ~H"""
+        <Form for={{ :user }}>
+          <Field name="name">
+            <TextInput />
+            <ErrorTag />
+          </Field>
+        </Form>
+        """
+      end
+
+    # The error tags are displayed as spans, so this demonstrates that none were rendered
+    refute render_live(code) =~ "<span"
   end
 end
