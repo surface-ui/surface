@@ -49,6 +49,26 @@ defmodule Surface.Components.Form.ErrorTagTest do
              "<span phx-feedback-for=\"user_name\">another test error</span>"
   end
 
+  test "no errors are shown if changeset.action is empty", %{changeset: changeset} do
+    changeset_without_action = Map.put(changeset, :action, nil)
+
+    assigns = %{changeset: changeset_without_action}
+
+    code =
+      quote do
+        ~H"""
+        <Form for={{@changeset}} opts={{ as: :user }}>
+          <Field name="name">
+            <ErrorTag />
+          </Field>
+        </Form>
+        """
+      end
+
+    refute render_live(code, assigns) =~ "is already taken"
+    refute render_live(code, assigns) =~ "another test error"
+  end
+
   test "prop phx_feedback_for", %{changeset: changeset} do
     assigns = %{changeset: changeset}
 
