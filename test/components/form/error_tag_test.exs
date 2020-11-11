@@ -117,7 +117,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
 
   test "translator from config", %{changeset: changeset} do
     using_config ErrorTag,
-      translator: {Surface.Components.Form.ErrorTagSyncTest, :config_translate_error} do
+      default_translator: {Surface.Components.Form.ErrorTagSyncTest, :config_translate_error} do
       assigns = %{changeset: changeset}
 
       code =
@@ -138,7 +138,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
 
   test "prop translator overrides config and fallback", %{changeset: changeset} do
     using_config ErrorTag,
-      translator: {Surface.Components.Form.ErrorTagSyncTest, :config_translate_error} do
+      default_translator: {Surface.Components.Form.ErrorTagSyncTest, :config_translate_error} do
       assigns = %{changeset: changeset}
 
       code =
