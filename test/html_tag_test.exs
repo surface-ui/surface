@@ -243,7 +243,7 @@ defmodule HtmlTagTest do
            """
   end
 
-  describe "style attibute" do
+  describe "style attribute" do
     test "as string" do
       assigns = %{}
 
@@ -253,6 +253,18 @@ defmodule HtmlTagTest do
 
       assert render_static(code) =~ """
              <div style="height: 10px"></div>
+             """
+    end
+
+    test "as string containing `:` in the value" do
+      assigns = %{}
+
+      code = ~H"""
+      <div style="background-image: url(https://example.com/breaks.jpg)"/>
+      """
+
+      assert render_static(code) =~ """
+             <div style="background-image: url(https://example.com/breaks.jpg)"></div>
              """
     end
 

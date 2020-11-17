@@ -7,7 +7,7 @@ defmodule Surface.TypeHandler.Style do
   def expr_to_value([value], []) when is_binary(value) do
     styles =
       for style <- String.split(value, ~r/;/, trim: true) do
-        [k, v] = String.split(style, ":", trim: true)
+        [k, v] = String.split(style, ":", trim: true, parts: 2)
         {String.trim(k) |> String.to_atom(), String.trim(v)}
       end
 
