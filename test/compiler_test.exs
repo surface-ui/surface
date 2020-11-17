@@ -691,6 +691,14 @@ defmodule Surface.CompilerSyncTest do
     assert line == 1
   end
 
+  test "disable warning on missing required property when :props is passed" do
+    code = """
+    <Column :props={{ title: "My Title" }}/>
+    """
+
+    assert {:ok, _result} = run_compile(code, __ENV__)
+  end
+
   test "warning on stateful components with more than one root element" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 

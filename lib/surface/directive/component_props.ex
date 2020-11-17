@@ -17,8 +17,9 @@ defmodule Surface.Directive.ComponentProps do
 
   def process(
         %AST.Directive{value: %AST.AttributeExpr{} = expr, meta: meta},
-        %AST.Component{} = node
-      ) do
+        %mod{} = node
+      )
+      when mod in [AST.Component, AST.SlotableComponent] do
     %{
       node
       | dynamic_props: %AST.DynamicAttribute{
