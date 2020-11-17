@@ -116,9 +116,9 @@ defmodule Surface.Components.Form.ErrorTag do
   end
 
   defp translator_from_config do
-    if translator = get_config(:default_translator) do
-      {module, function} = translator
-      &apply(module, function, [&1])
+    case get_config(:default_translator) do
+      {module, function} -> &apply(module, function, [&1])
+      nil -> nil
     end
   end
 end
