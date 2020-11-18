@@ -4,10 +4,10 @@ defmodule Surface.Constructs.If do
 
   ## Examples
   ```
-  <If condition={{ @display_link }} />
+  <If condition={{ @display_link }}>
     <Icon name="cheveron_left" />
     <a href={{ @item.to }}>{{ @item.label }}</a>
-  </For>
+  </If>
   ```
   """
   use Surface.Component
