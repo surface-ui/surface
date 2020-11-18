@@ -336,7 +336,7 @@ defmodule Surface.Compiler do
          {:ok, directives, attributes} <-
            collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta),
-         :ok <- validate_properties(mod, attributes, meta) do
+         :ok <- validate_properties(mod, attributes, directives, meta) do
       result =
         if component_slotable?(mod) do
           %AST.SlotableComponent{
@@ -388,7 +388,7 @@ defmodule Surface.Compiler do
          {:ok, directives, attributes} <-
            collect_directives(@meta_component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta),
-         :ok <- validate_properties(mod, attributes, meta) do
+         :ok <- validate_properties(mod, attributes, directives, meta) do
       expanded = mod.expand(attributes, children, meta)
 
       {:ok,
@@ -615,8 +615,10 @@ defmodule Surface.Compiler do
     attr
   end
 
-  defp validate_properties(module, props, meta) do
-    if function_exported?(module, :__props__, 0) do
+  defp validate_properties(module, props, directives, meta) do
+    has_directive_props? = Enum.any?(directives, &match?(%AST.Directive{name: :props}, &1))
+
+    if not has_directive_props? and function_exported?(module, :__props__, 0) do
       existing_props = Enum.map(props, fn %{name: name} -> name end)
 
       required_props =
