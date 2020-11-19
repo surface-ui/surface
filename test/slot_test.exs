@@ -677,6 +677,8 @@ defmodule Surface.SlotSyncTest do
       quote do
         ~H"""
         <OuterWithNamedSlot>
+          <div>
+          </div>
           <template slot="foot">
             My footer
           </template>
@@ -695,7 +697,7 @@ defmodule Surface.SlotSyncTest do
              Did you mean "footer"\?
 
              Available slots: "footer", "header" and "default"
-             code:2:\
+             code:4:\
            """
   end
 end
