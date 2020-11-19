@@ -180,6 +180,46 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
     end
   end
 
+  test "default_class from config", %{changeset: changeset} do
+    using_config ErrorTag, default_class: "class-from-config" do
+      assigns = %{changeset: changeset}
+
+      code =
+        quote do
+          ~H"""
+          <Form for={{@changeset}} opts={{ as: :user }}>
+            <Field name="name">
+              <ErrorTag />
+            </Field>
+          </Form>
+          """
+        end
+
+      assert render_live(code, assigns) =~
+               "<span class=\"class-from-config\" phx-feedback-for=\"user_name\">is already taken</span>"
+    end
+  end
+
+  test "prop class overrides config", %{changeset: changeset} do
+    using_config ErrorTag, default_class: "class-from-config" do
+      assigns = %{changeset: changeset}
+
+      code =
+        quote do
+          ~H"""
+          <Form for={{@changeset}} opts={{ as: :user }}>
+            <Field name="name">
+              <ErrorTag class="class-from-prop" />
+            </Field>
+          </Form>
+          """
+        end
+
+      assert render_live(code, assigns) =~
+               "<span class=\"class-from-prop\" phx-feedback-for=\"user_name\">is already taken</span>"
+    end
+  end
+
   def config_translate_error({_msg, _opts}) do
     "translated by config translator"
   end

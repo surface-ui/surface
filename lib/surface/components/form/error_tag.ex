@@ -61,7 +61,19 @@ defmodule Surface.Components.Form.ErrorTag do
   @doc "An identifier for the associated field"
   prop field, :atom
 
-  @doc "Class or classes to apply to each error tag <span>"
+  @doc """
+  Classes to apply to each error tag <span>.
+
+  This can also be set via config, for example:
+
+  ```elixir
+  config :surface, :components, [
+    {Surface.Components.Form.ErrorTag, default_class: "invalid-feedback"}
+  ]
+  ```
+
+  However, the prop overrides the config value if provided.
+  """
   prop class, :css_class
 
   @doc """
@@ -89,12 +101,13 @@ defmodule Surface.Components.Form.ErrorTag do
 
   def render(assigns) do
     translate_error = assigns.translator || translator_from_config() || (&translate_error/1)
+    class = assigns.class || get_config(:default_class)
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
       <span
         :for={{ error <- Keyword.get_values(form.errors, field) }}
-        class={{ @class }}
+        class={{ class }}
         phx-feedback-for={{ @phx_feedback_for || input_id(form, field) }}
       >{{ translate_error.(error) }}</span>
     </InputContext>
