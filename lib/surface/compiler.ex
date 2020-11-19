@@ -657,9 +657,11 @@ defmodule Surface.Compiler do
       IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
     end
 
-    for slot_name <- names,
-        mod.__get_slot__(slot_name) == nil do
-      missing_slot(mod, slot_name, meta)
+    for {slot_name, template_instances} <- templates,
+        slot_name != :default,
+        mod.__get_slot__(slot_name) == nil,
+        template <- template_instances do
+      missing_slot(mod, slot_name, template.meta, meta)
     end
 
     for slot_name <- Map.keys(templates),
@@ -716,7 +718,7 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp missing_slot(mod, slot_name, meta) do
+  defp missing_slot(mod, slot_name, template_meta, parent_meta) do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
     similar_slot_message =
@@ -738,11 +740,11 @@ defmodule Surface.Compiler do
       end
 
     message = """
-    no slot "#{slot_name}" defined in parent component <#{meta.node_alias}>\
+    no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
     #{similar_slot_message}\
     #{existing_slots_message}\
     """
 
-    IOHelper.warn(message, meta.caller, fn _ -> meta.line + 1 end)
+    IOHelper.warn(message, template_meta.caller, fn _ -> template_meta.line end)
   end
 end
