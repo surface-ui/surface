@@ -117,6 +117,34 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule OuterWithOptionalNamedSlot do
+    use Surface.Component
+
+    slot default
+    slot header
+    slot footer
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <header :if={{ slot_assigned?(:header) }}>
+          <slot name="header"/>
+        </header>
+        <main :if={{ slot_assigned?(:default) }}>
+          <slot>
+            Default fallback
+          </slot>
+        </main>
+        <footer>
+        <slot name="footer">
+          Footer fallback
+        </slot>
+        </footer>
+      </div>
+      """
+    end
+  end
+
   defmodule Column do
     use Surface.Component, slot: "cols"
 
@@ -614,6 +642,73 @@ defmodule Surface.SlotTest do
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
+
+  test "does not render slot if slot_assigned? returns false" do
+    assigns = %{}
+
+    code =
+      quote do
+        ~H"""
+        <OuterWithOptionalNamedSlot />
+        """
+      end
+
+    assert_html(
+      render_live(code, assigns) =~ """
+      <div>
+        <footer>
+          Footer fallback
+        </footer>
+      </div>
+      """
+    )
+
+    code =
+      quote do
+        ~H"""
+        <OuterWithOptionalNamedSlot>
+          <template slot="header">
+            My Header
+          </template>
+        </OuterWithOptionalNamedSlot>
+        """
+      end
+
+    assert_html(
+      render_live(code, assigns) =~ """
+      <div>
+        <header>
+          My Header
+        </header>
+        <footer>
+          Footer fallback
+        </footer>
+      </div>
+      """
+    )
+
+    code =
+      quote do
+        ~H"""
+        <OuterWithOptionalNamedSlot>
+          My Content
+        </OuterWithOptionalNamedSlot>
+        """
+      end
+
+    assert_html(
+      render_live(code, assigns) =~ """
+      <div>
+        <main>
+          My Content
+        </main>
+        <footer>
+          Footer fallback
+        </footer>
+      </div>
+      """
+    )
+  end
 end
 
 defmodule Surface.SlotSyncTest do
@@ -698,6 +793,47 @@ defmodule Surface.SlotSyncTest do
 
              Available slots: "footer", "header" and "default"
              code:4:\
+           """
+  end
+
+  test "warn on component that uses slot_assigned?/1 with a non existing slot" do
+    component_code = """
+    defmodule TestComponentWithWrongOptionalSlotName do
+      use Surface.Component
+
+      slot header
+      slot default
+      slot footer
+
+      def render(assigns) do
+        ~H"\""
+          <div>
+            <header :if={{ slot_assigned?(:heade) }}>
+              <slot name="header"/>
+            </header>
+            <slot />
+            <footer>
+              <slot name="footer" />
+            </footer>
+          </div>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           no slot "heade" defined in the component 'Elixir.Surface.SlotSyncTest.TestComponentWithWrongOptionalSlotName'
+
+             Did you mean "header"\?
+
+             Available slots: "default", "footer" and "header"
+             code.exs:11:\
            """
   end
 end
