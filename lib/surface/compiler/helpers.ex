@@ -8,6 +8,7 @@ defmodule Surface.Compiler.Helpers do
     :live_action,
     :socket,
     :inner_block,
+    :uploads,
     :__context__,
     :__surface__
   ]
