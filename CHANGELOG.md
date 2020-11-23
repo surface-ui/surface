@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.0 (2020-11-23)
+
+  * Update liveview to v0.15
+  * Add new `Surface.Components.Form.ErrorTag` to render error messages in forms (#199).
+  * Disable validation for required props if `:props` is passed (#204)
+
 ## v0.1.0-rc.2 (2020-11-04)
 
   * Update liveview to latest v0.15-dev (f986171)

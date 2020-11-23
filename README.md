@@ -59,18 +59,12 @@ Then add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, git: "https://github.com/msaraiva/surface.git", tag: "v0.1.0-rc.2"}
+    {:surface, "~> 0.1.0"}
   ]
 end
 ```
 
-> **Note:** Surface is not compatible with LiveView < 0.15 which is still under development.
-In order to guarantee that LiveView will be installed with a compatible version, remove
-the `:phoniex_live_view` entry from your deps and let it be installed as a dependency of `:surface`.
-If you still have trouble during installation, please take a look at https://github.com/msaraiva/surface/issues/186
-for possible solutions.
-
-If you're using `mix format`, make sure you add `surface` to the `import_deps`
+If you're using `mix format`, make sure you add `:surface` to the `import_deps`
 configuration in your `.formatter.exs` file:
 
 ```elixir
