@@ -96,6 +96,9 @@ defmodule Surface do
   """
 
   alias Phoenix.LiveView
+  alias Surface.API
+  alias Surface.IOHelper
+  alias Surface.Compiler.Helpers
 
   @doc """
   Translates Surface code into Phoenix templates.
@@ -233,5 +236,71 @@ defmodule Surface do
 
   defp get_components_config() do
     Application.get_env(:surface, :components, [])
+  end
+
+  @doc """
+  Tests if a slot has been filled in.
+
+  Useful to avoid rendering unecessary html tags that are used to wrap an optional slot
+  in combination with `:if` directive.
+
+  ## Examples
+
+    ```
+    <div :if={{ slot_assigned?(:header) }}>
+      <slot name="header"/>
+    </div>
+    ```
+  """
+  defmacro slot_assigned?(slot) do
+    defined_slots =
+      API.get_slots(__CALLER__.module)
+      |> Enum.map(& &1.name)
+      |> Enum.uniq()
+
+    if slot not in defined_slots do
+      undefined_slot(defined_slots, slot, __CALLER__)
+    end
+
+    quote do
+      unquote(__MODULE__).slot_assigned?(var!(assigns), unquote(slot))
+    end
+  end
+
+  @doc false
+  def slot_assigned?(assigns, :default), do: slot_assigned?(assigns, :__default__)
+  def slot_assigned?(%{__surface__: %{provided_templates: slots}}, slot), do: slot in slots
+  def slot_assigned?(_, _), do: false
+
+  defp undefined_slot(defined_slots, slot_name, caller) do
+    similar_slot_message =
+      case Helpers.did_you_mean(slot_name, defined_slots) do
+        {similar, score} when score > 0.8 ->
+          "\n\n  Did you mean #{inspect(to_string(similar))}?"
+
+        _ ->
+          ""
+      end
+
+    existing_slots_message =
+      if defined_slots == [] do
+        ""
+      else
+        slots =
+          defined_slots
+          |> Enum.map(&to_string/1)
+          |> Enum.sort()
+
+        available = Helpers.list_to_string("slot:", "slots:", slots)
+        "\n\n  Available #{available}"
+      end
+
+    message = """
+    no slot "#{slot_name}" defined in the component '#{caller.module}'\
+    #{similar_slot_message}\
+    #{existing_slots_message}\
+    """
+
+    IOHelper.warn(message, caller, & &1)
   end
 end
