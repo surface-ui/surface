@@ -35,7 +35,7 @@ defmodule Surface.Components.Form.Checkbox do
         :checked_value,
         :hidden_input,
         :unchecked_value,
-        :checked,
+        :value,
         class: get_config(:default_class)
       ])
 

@@ -73,6 +73,26 @@ defmodule Surface.Components.Form.CheckboxTest do
            """
   end
 
+  test "setting the value" do
+    code =
+      quote do
+        ~H"""
+        <Checkbox value={{ true }}/>
+        """
+      end
+
+    assert render_live(code) =~ ~r/checked/
+
+    code =
+      quote do
+        ~H"""
+        <Checkbox value={{ false }}/>
+        """
+      end
+
+    refute render_live(code) =~ ~r/checked/
+  end
+
   test "blur event with parent live view as target" do
     code =
       quote do
