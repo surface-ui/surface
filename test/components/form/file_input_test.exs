@@ -22,7 +22,7 @@ defmodule Surface.Components.Form.FileInputTest do
     code =
       quote do
         ~H"""
-        <Form for={{ :user }} opts={{ csrf_token: "test", multipart: true }}>
+        <Form for={{ :user }} csrf_token="test" multipart={{true}} >
           <FileInput field={{ :picture }} />
         </Form>
         """

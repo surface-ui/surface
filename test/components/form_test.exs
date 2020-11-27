@@ -13,7 +13,7 @@ defmodule Surface.Components.FormTest do
 
     def render(assigns) do
       ~H"""
-      <Form for={{ @changeset }} action="#" opts={{ csrf_token: "test", as: :user }} :let={{ form: f }}>
+      <Form for={{ @changeset }} action="#" csrf_token="test" as={{ :user }} :let={{ form: f }}>
         <TextInput field="name" />
         {{ Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end) }}
       </Form>
@@ -29,7 +29,7 @@ defmodule Surface.Components.FormTest do
     code =
       quote do
         ~H"""
-        <Form for={{:user}} action="#" opts={{ csrf_token: "test" }}>
+        <Form for={{:user}} action="#" csrf_token="test">
         </Form>
         """
       end
@@ -43,7 +43,25 @@ defmodule Surface.Components.FormTest do
     code =
       quote do
         ~H"""
-        <Form for={{:user}} action="#" opts={{ csrf_token: "test" }}>
+        <Form for={{:user}} action="#" csrf_token="test">
+          <TextInput field="name" />
+        </Form>
+        """
+      end
+
+    assert render_live(code) =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test"/>\
+           <input id="user_name" name="user[name]" type="text"/>\
+           </form>
+           """
+  end
+
+  test "form with form_for/4 opts as props" do
+    code =
+      quote do
+        ~H"""
+        <Form for={{:user}} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
         """

@@ -60,7 +60,7 @@ defmodule Surface.Components.Form.SelectTest do
     code =
       quote do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ prompt: "Pick a role" }} />
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} prompt="Pick a role"/>
         """
       end
 

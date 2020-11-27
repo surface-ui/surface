@@ -23,7 +23,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     code =
       quote do
         ~H"""
-        <Form for={{ :user }} opts={{ csrf_token: "test" }}>
+        <Form for={{ :user }} csrf_token="test">
           <Checkbox field={{ :admin }} />
         </Form>
         """
@@ -64,7 +64,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     code =
       quote do
         ~H"""
-        <Checkbox form="user" field="admin" opts={{ checked_value: "admin" }} />
+        <Checkbox form="user" field="admin" checked_value="admin"/>
         """
       end
 
