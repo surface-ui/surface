@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.1 (2020-11-28)
+
+  * Add explicit props for the main opts of Checkbox, Select, MultipleSelect, FileInput and Form (#215).
+  * Add new `slot_assigned?/1` macro to check if a slot has been filled in (#211).
+  * Fix attribute value encoding
+
 ## v0.1.0 (2020-11-23)
 
   * Update liveview to v0.15
