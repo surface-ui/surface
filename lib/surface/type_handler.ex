@@ -167,7 +167,7 @@ defmodule Surface.TypeHandler do
         [~S( ), to_string(name)]
 
       {:ok, val} ->
-        [" ", to_string(name), "=", ~S("), to_string(val), ~S(")]
+        [" ", to_string(name), "=", ~S("), Phoenix.HTML.Safe.to_iodata(val), ~S(")]
 
       {:error, message} ->
         IOHelper.runtime_error(message)

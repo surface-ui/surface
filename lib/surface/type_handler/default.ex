@@ -39,6 +39,10 @@ defmodule Surface.TypeHandler.Default do
   end
 
   @impl true
+  def value_to_html(_name, {:safe, _} = value) do
+    {:ok, value}
+  end
+
   def value_to_html(name, value) do
     if String.Chars.impl_for(value) do
       {:ok, value}

@@ -4,6 +4,8 @@ defmodule HtmlTagTest do
   import Surface
   import ComponentTestHelper
 
+  @encoded_json "[{\"x\":10,\"y\":20}]"
+
   test "raise runtime error for invalid attributes values" do
     assert_raise(RuntimeError, ~r/invalid value for attribute "title"/, fn ->
       assigns = %{}
@@ -14,6 +16,90 @@ defmodule HtmlTagTest do
 
       render_static(code)
     end)
+  end
+
+  describe "escape HTML when interpolating" do
+    test "inside the body" do
+      assigns = %{value: @encoded_json}
+
+      code = ~H"""
+      <div>
+      {{ @value }}
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div>
+             [{&quot;x&quot;:10,&quot;y&quot;:20}]
+             </div>
+             """
+    end
+
+    test "as attribute values" do
+      assigns = %{value: @encoded_json}
+
+      code = ~H"""
+      <div data-value={{ @value }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div data-value="[{&quot;x&quot;:10,&quot;y&quot;:20}]"></div>
+             """
+    end
+
+    test "inside string attributes" do
+      assigns = %{value: @encoded_json}
+
+      code = ~H"""
+      <div data-value="Value: {{ @value }}"/>
+      """
+
+      assert render_static(code) =~ """
+             <div data-value="Value: [{&quot;x&quot;:10,&quot;y&quot;:20}]"></div>
+             """
+    end
+  end
+
+  describe "don't escape HTML when interpolating safe values" do
+    test "inside the body" do
+      assigns = %{value: @encoded_json}
+
+      code = ~H"""
+      <div>
+      {{ {:safe, @value} }}
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div>
+             [{"x":10,"y":20}]
+             </div>
+             """
+    end
+
+    test "as attribute values" do
+      assigns = %{value: @encoded_json}
+
+      code = ~H"""
+      <div data-value={{ {:safe, @value} }}/>
+      """
+
+      assert render_static(code) =~ """
+             <div data-value="[{"x":10,"y":20}]"></div>
+             """
+    end
+
+    test "raise error if inside string attributes" do
+      assert_raise(Protocol.UndefinedError, ~r/protocol String.Chars not implemented/, fn ->
+        assigns = %{value: @encoded_json}
+
+        code = ~H"""
+        <div data-value="Value: {{ {:safe, @value} }}"/>
+        """
+
+        render_static(code)
+      end)
+    end
   end
 
   describe "basic attibutes" do
