@@ -26,11 +26,14 @@ defmodule Surface.Components.Form.MultipleSelect do
   @doc "The options in the select"
   prop options, :any, default: []
 
+  @doc "The default selected option"
+  prop selected, :any
+
   @doc "Options list"
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, class: get_config(:default_class))
+    props = get_non_nil_props(assigns, [:selected, class: get_config(:default_class)])
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>

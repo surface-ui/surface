@@ -26,15 +26,18 @@ defmodule Surface.Components.Form.Select do
   @doc "The options in the select"
   prop options, :any, default: []
 
-  @doc "Options list"
-  prop opts, :keyword, default: []
+  @doc "An option to include at the top of the options with the given prompt text"
+  prop prompt, :string
+
+  @doc "The default value to use when none was sent as parameter"
+  prop selected, :any
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, class: get_config(:default_class))
+    props = get_non_nil_props(assigns, [:prompt, :selected, class: get_config(:default_class)])
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ select(form, field, @options, props ++ @opts) }}
+      {{ select(form, field, @options, props) }}
     </InputContext>
     """
   end

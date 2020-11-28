@@ -60,7 +60,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     code =
       quote do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} opts={{ selected: ["admin"] }} />
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} selected="admin"/>
         """
       end
 

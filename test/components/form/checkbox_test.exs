@@ -23,7 +23,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     code =
       quote do
         ~H"""
-        <Form for={{ :user }} opts={{ csrf_token: "test" }}>
+        <Form for={{ :user }} csrf_token="test">
           <Checkbox field={{ :admin }} />
         </Form>
         """
@@ -64,13 +64,33 @@ defmodule Surface.Components.Form.CheckboxTest do
     code =
       quote do
         ~H"""
-        <Checkbox form="user" field="admin" opts={{ checked_value: "admin" }} />
+        <Checkbox form="user" field="admin" checked_value="admin"/>
         """
       end
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" type="checkbox" value="admin"/>
            """
+  end
+
+  test "setting the value" do
+    code =
+      quote do
+        ~H"""
+        <Checkbox value={{ true }}/>
+        """
+      end
+
+    assert render_live(code) =~ ~r/checked/
+
+    code =
+      quote do
+        ~H"""
+        <Checkbox value={{ false }}/>
+        """
+      end
+
+    refute render_live(code) =~ ~r/checked/
   end
 
   test "blur event with parent live view as target" do
