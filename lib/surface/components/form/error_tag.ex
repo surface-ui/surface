@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.ErrorTag do
 
   ```elixir
   config :surface, :components, [
-    {Surface.Components.Form.ErrorTag, translator: {MyAppWeb.ErrorHelpers, :translate_error}}
+    {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
   ]
   ```
 
@@ -85,7 +85,7 @@ defmodule Surface.Components.Form.ErrorTag do
 
   ```elixir
   config :surface, :components, [
-    {Surface.Components.Form.ErrorTag, translator: {MyApp.Gettext, :translate_error}}
+    {Surface.Components.Form.ErrorTag, default_translator: {MyApp.Gettext, :translate_error}}
   ]
   ```
   """
