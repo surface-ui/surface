@@ -470,7 +470,7 @@ defmodule Surface.DirectivesTest do
             Show
           </Div>
           <Div :if={{ @dont_show }}>
-            Dont's show
+            Don't show
           </Div>
           """
         end
@@ -490,7 +490,7 @@ defmodule Surface.DirectivesTest do
         Show
       </div>
       <div :if={{ @dont_show }}>
-        Dont's show
+        Don't show
       </div>
       """
 
@@ -541,7 +541,7 @@ defmodule Surface.DirectivesTest do
             Show
           </Div>
           <Div :unless={{ @dont_show }}>
-            Dont's show
+            Don't show
           </Div>
           """
         end
@@ -561,7 +561,7 @@ defmodule Surface.DirectivesTest do
         Show
       </div>
       <div :unless={{ @dont_show }}>
-        Dont's show
+        Don't show
       </div>
       """
 
