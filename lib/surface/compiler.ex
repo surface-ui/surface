@@ -19,6 +19,7 @@ defmodule Surface.Compiler do
     Surface.Directive.Events,
     Surface.Directive.Show,
     Surface.Directive.If,
+    Surface.Directive.Unless,
     Surface.Directive.For,
     Surface.Directive.Debug
   ]
@@ -27,12 +28,14 @@ defmodule Surface.Compiler do
     Surface.Directive.Let,
     Surface.Directive.ComponentProps,
     Surface.Directive.If,
+    Surface.Directive.Unless,
     Surface.Directive.For,
     Surface.Directive.Debug
   ]
 
   @meta_component_directive_handlers [
     Surface.Directive.If,
+    Surface.Directive.Unless,
     Surface.Directive.For,
     Surface.Directive.Debug
   ]
@@ -41,6 +44,7 @@ defmodule Surface.Compiler do
 
   @slot_directive_handlers [
     Surface.Directive.If,
+    Surface.Directive.Unless,
     Surface.Directive.For,
     Surface.Directive.SlotProps
   ]

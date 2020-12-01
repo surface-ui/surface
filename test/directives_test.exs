@@ -43,6 +43,19 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithSlotUsingUnless do
+    use Surface.Component
+
+    prop hide, :boolean
+    slot default
+
+    def render(assigns) do
+      ~H"""
+      <div><slot :unless={{ @hide }}/></div>
+      """
+    end
+  end
+
   defmodule DivWithSlotUsingFor do
     use Surface.Component
 
@@ -508,6 +521,77 @@ defmodule Surface.DirectivesTest do
           <DivWithSlotUsingIf show=true>1</DivWithSlotUsingIf>
           <DivWithSlotUsingIf show=false>2</DivWithSlotUsingIf>
           <DivWithSlotUsingIf show=true>3</DivWithSlotUsingIf>
+          """
+        end
+
+      assert render_live(code) == """
+             <div>1</div><div></div><div>3</div>
+             """
+    end
+  end
+
+  describe ":unless" do
+    test "in components" do
+      assigns = %{show: false, dont_show: true}
+
+      code =
+        quote do
+          ~H"""
+          <Div :unless={{ @show }}>
+            Show
+          </Div>
+          <Div :unless={{ @dont_show }}>
+            Dont's show
+          </Div>
+          """
+        end
+
+      assert render_live(code, assigns) == """
+             <div>
+               Show
+             </div>
+             """
+    end
+
+    test "in html tags" do
+      assigns = %{show: false, dont_show: true}
+
+      code = ~H"""
+      <div :unless={{ @show }}>
+        Show
+      </div>
+      <div :unless={{ @dont_show }}>
+        Dont's show
+      </div>
+      """
+
+      assert render_static(code) =~ """
+             <div>
+               Show
+             </div>
+             """
+    end
+
+    test "in void html elements" do
+      assigns = %{show: false, dont_show: true}
+
+      code = ~H"""
+      <col class="show" :unless={{ @show }}>
+      <col class="dont_show" :unless={{ @dont_show }}>
+      """
+
+      assert render_static(code) == """
+             <col class="show">
+             """
+    end
+
+    test "in slots" do
+      code =
+        quote do
+          ~H"""
+          <DivWithSlotUsingUnless hide=false>1</DivWithSlotUsingUnless>
+          <DivWithSlotUsingUnless hide=true>2</DivWithSlotUsingUnless>
+          <DivWithSlotUsingUnless hide=false>3</DivWithSlotUsingUnless>
           """
         end
 

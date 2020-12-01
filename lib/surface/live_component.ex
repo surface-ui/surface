@@ -62,7 +62,7 @@ defmodule Surface.LiveComponent do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.{For, If}
+      alias Surface.Constructs.{For, If, Unless}
       alias Surface.Components.Context
 
       @doc """

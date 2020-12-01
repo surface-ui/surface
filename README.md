@@ -30,7 +30,7 @@ In order to have your code translated, you need to use the `~H` sigil when defin
 
 ## Features
 
-  * **An HTML-centric** templating language with built-in directives (`:for`, `:if`, ...) and
+  * **An HTML-centric** templating language with built-in directives (`:for`, `:if`, `:unless`, ...) and
     syntactic sugar for attributes (inspired by Vue.js).
 
   * **Components as modules** - they can be stateless, stateful, renderless or compile-time.

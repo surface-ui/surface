@@ -120,6 +120,23 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_expression(
+         %AST.Unless{condition: %AST.AttributeExpr{value: condition}, children: children} =
+           conditional,
+         buffer,
+         state
+       ) do
+    buffer =
+      handle_nested_block(children, buffer, %{
+        state
+        | depth: state.depth + 1,
+          context: [:unless | state.context]
+      })
+
+    {:unless, [generated: true], [condition, [do: buffer]]}
+    |> maybe_print_expression(conditional)
+  end
+
+  defp to_expression(
          %AST.Slot{
            name: name,
            index: index_ast,
@@ -539,6 +556,10 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_dynamic_nested_html([%AST.If{children: children} = conditional | nodes]) do
+    [%{conditional | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.Unless{children: children} = conditional | nodes]) do
     [%{conditional | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
   end
 

@@ -4,7 +4,7 @@ defmodule Surface.LiveView do
 
   Since this module is just a wrapper around `Phoenix.LiveView`, you
   cannot define custom properties for it. Only `:id` and `:session`
-  are available. However, built-in directives like `:for` and `:if`
+  are available. However, built-in directives like `:for`, `:if` and `:unless`
   can be used normally.
 
   ## Example
@@ -37,7 +37,7 @@ defmodule Surface.LiveView do
       use Surface.API, include: [:prop, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.{For, If}
+      alias Surface.Constructs.{For, If, Unless}
       alias Surface.Components.Context
 
       @before_compile Surface.Renderer
