@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.SelectTest do
     assert render_live(code) =~ ~r/class="select primary"/
   end
 
-  test "passing other options" do
+  test "setting the prompt" do
     code =
       quote do
         ~H"""
@@ -67,6 +67,38 @@ defmodule Surface.Components.Form.SelectTest do
     assert render_live(code) =~ """
            <select id="user_role" name="user[role]">\
            <option value="">Pick a role</option>\
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>\
+           </select>
+           """
+  end
+
+  test "setting the default selected element" do
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} selected="user"/>
+        """
+      end
+
+    assert render_live(code) =~ """
+           <select id="user_role" name="user[role]">\
+           <option value="admin">Admin</option>\
+           <option value="user" selected="selected">User</option>\
+           </select>
+           """
+  end
+
+  test "passing other options" do
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ disabled: true }}/>
+        """
+      end
+
+    assert render_live(code) =~ """
+           <select id="user_role" name="user[role]" disabled="disabled">\
            <option value="admin">Admin</option>\
            <option value="user">User</option>\
            </select>
