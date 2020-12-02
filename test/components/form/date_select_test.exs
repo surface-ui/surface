@@ -172,4 +172,28 @@ defmodule Surface.Components.Form.DateSelectTest do
     assert content =~
              ~s(<select class="day-class" id="user_born_at_day" name="user[born_at][day]">)
   end
+
+  test "passing extra options" do
+    code =
+      quote do
+        ~H"""
+        <DateSelect
+          form="user"
+          field="born_at"
+          opts={{ id: "born_at", name: "born_at"}}
+        />
+        """
+      end
+
+    content = render_live(code)
+
+    assert content =~
+             ~s(<select id="born_at_year" name="born_at[year]">)
+
+    assert content =~
+             ~s(<select id="born_at_month" name="born_at[month]">)
+
+    assert content =~
+             ~s(<select id="born_at_day" name="born_at[day]">)
+  end
 end

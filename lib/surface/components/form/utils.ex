@@ -33,4 +33,15 @@ defmodule Surface.Components.Form.Utils do
   def prop_value(assigns, prop) do
     {prop, assigns[prop]}
   end
+
+  @doc false
+  def parse_css_class_for(props, field) do
+    parse_css_class_for(props, field, props[field][:class])
+  end
+
+  defp parse_css_class_for(props, field, class) when is_list(class) do
+    put_in(props, [field, :class], Surface.css_class(class))
+  end
+
+  defp parse_css_class_for(props, _field, _class), do: props
 end
