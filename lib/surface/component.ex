@@ -45,6 +45,15 @@ defmodule Surface.Component do
       alias Surface.Constructs.{For, If}
       alias Surface.Components.Context
 
+      @doc "Built-in assign"
+      data socket, :any
+
+      @doc "Built-in assign"
+      data flash, :map
+
+      @doc "Built-in assign"
+      data inner_block, :fun
+
       if unquote(slot_name) != nil do
         def render(var!(assigns)) do
           ~H()

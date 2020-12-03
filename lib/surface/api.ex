@@ -118,11 +118,20 @@ defmodule Surface.API do
     existing_assign = assigns[name]
 
     if existing_assign do
-      message = """
-      cannot use name \"#{assign.name}\". There's already \
-      a #{existing_assign.func} assign with the same name \
-      at line #{existing_assign.line}.\
-      """
+      component_type = Module.get_attribute(caller.module, :component_type)
+      builtin_assign? = name in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
+
+      details =
+        if builtin_assign? do
+          "There's already a built-in #{existing_assign.func} assign with the same name"
+        else
+          """
+          There's already a #{existing_assign.func} assign with the same name \
+          at line #{existing_assign.line}\
+          """
+        end
+
+      message = ~s(cannot use name "#{assign.name}". #{details}.)
 
       IOHelper.compile_error(message, caller.file, assign.line)
     else
