@@ -41,7 +41,7 @@ defmodule Surface.Components.Form do
   @doc "Keyword list of errors for the form."
   prop errors, :keyword
 
-  @doc "Keyword list with options to be passed down to `Phoenix.HTML.Tag.tag/2``"
+  @doc "Keyword list with options to be passed down to `Phoenix.HTML.Tag.tag/2`"
   prop opts, :keyword, default: []
 
   @doc "Triggered when the form is changed"
