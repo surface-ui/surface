@@ -43,6 +43,19 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  defmodule DivWithSlotUsingIfAndProps do
+    use Surface.Component
+
+    prop show, :boolean
+    slot default, props: [:data]
+
+    def render(assigns) do
+      ~H"""
+      <div><slot :if={{ @show }} :props={{ data: "data" }}/></div>
+      """
+    end
+  end
+
   defmodule DivWithSlotUsingFor do
     use Surface.Component
 
@@ -513,6 +526,21 @@ defmodule Surface.DirectivesTest do
 
       assert render_live(code) == """
              <div>1</div><div></div><div>3</div>
+             """
+    end
+
+    test "in slots with props" do
+      code =
+        quote do
+          ~H"""
+          <DivWithSlotUsingIfAndProps show=true :let={{ data: d }}>1 - {{ d }}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show=false :let={{ data: d }}>2 - {{ d }}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show=true :let={{ data: d }}>3 - {{ d }}</DivWithSlotUsingIfAndProps>
+          """
+        end
+
+      assert render_live(code) == """
+             <div>1 - data</div><div></div><div>3 - data</div>
              """
     end
   end
