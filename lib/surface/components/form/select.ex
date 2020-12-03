@@ -32,12 +32,15 @@ defmodule Surface.Components.Form.Select do
   @doc "The default value to use when none was sent as parameter"
   prop selected, :any
 
+  @doc "Options list"
+  prop opts, :keyword, default: []
+
   def render(assigns) do
     props = get_non_nil_props(assigns, [:prompt, :selected, class: get_config(:default_class)])
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ select(form, field, @options, props) }}
+      {{ select(form, field, @options, props ++ @opts) }}
     </InputContext>
     """
   end
