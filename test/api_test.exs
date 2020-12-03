@@ -80,6 +80,69 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate duplicate built-in assigns for Component" do
+    code = """
+    data socket, :any
+    """
+
+    message = ~r"""
+    cannot use name "socket". \
+    There's already a built-in data assign with the same name.\
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code, "Component") end)
+
+    # Ignore built-in assigns from other component types
+    code = """
+    data myself, :any  # LiveComponent
+    data uploads, :any # LiveView
+    """
+
+    {:ok, _module} = eval(code, "Component")
+  end
+
+  test "validate duplicate built-in assigns for LiveComponent" do
+    code = """
+    data myself, :any
+    """
+
+    message = ~r"""
+    cannot use name "myself". \
+    There's already a built-in data assign with the same name.\
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code, "LiveComponent") end)
+
+    # Ignore built-in assigns from other component types
+    code = """
+    data inner_block, :any  # Component
+    data uploads, :string   # LiveView
+    """
+
+    {:ok, _module} = eval(code, "LiveComponent")
+  end
+
+  test "validate duplicate built-in assigns for LiveView" do
+    code = """
+    data uploads, :any
+    """
+
+    message = ~r"""
+    cannot use name "uploads". \
+    There's already a built-in data assign with the same name.\
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+
+    # Ignore built-in assigns from other component types
+    code = """
+    data inner_block, :any  # Component
+    data myself, :any       # LiveComponent
+    """
+
+    {:ok, _module} = eval(code, "LiveView")
+  end
+
   test "accept invalid quoted expressions like literal maps as default value" do
     code = """
     prop map, :map, default: %{a: 1, b: 2}
@@ -269,13 +332,13 @@ defmodule Surface.APITest do
     assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledocFalse) == nil
   end
 
-  defp eval(code) do
+  defp eval(code, component_type \\ "LiveComponent") do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module_name = "TestLiveComponent_#{id}"
 
     comp_code = """
     defmodule #{module_name} do
-      use Surface.LiveComponent
+      use Surface.#{component_type}
 
       #{code}
 

@@ -3,15 +3,28 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.Compiler.CompileMeta
   alias Surface.IOHelper
 
-  @builtin_assigns [
-    :flash,
-    :live_action,
+  @builtin_common_assigns [
     :socket,
-    :inner_block,
-    :uploads,
+    :flash,
     :__context__,
     :__surface__
   ]
+
+  @builtin_component_assigns [:inner_block] ++ @builtin_common_assigns
+
+  @builtin_live_component_assigns [:id, :myself] ++ @builtin_component_assigns
+
+  @builtin_live_view_assigns [:id, :session, :live_action, :uploads] ++ @builtin_common_assigns
+
+  @builtin_assigns_by_type %{
+    Surface.Component => @builtin_component_assigns,
+    Surface.LiveComponent => @builtin_live_component_assigns,
+    Surface.LiveView => @builtin_live_view_assigns
+  }
+
+  def builtin_assigns_by_type(type) do
+    @builtin_assigns_by_type[type]
+  end
 
   def interpolation_to_quoted!(text, meta) do
     case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
@@ -36,8 +49,10 @@ defmodule Surface.Compiler.Helpers do
 
   def validate_no_undefined_assigns(used_assigns, caller) do
     defined_assigns = Keyword.keys(Surface.API.get_assigns(caller.module))
+    component_type = Module.get_attribute(caller.module, :component_type)
 
-    undefined_assigns = Keyword.drop(used_assigns, @builtin_assigns ++ defined_assigns)
+    builtin_assigns = builtin_assigns_by_type(component_type)
+    undefined_assigns = Keyword.drop(used_assigns, builtin_assigns ++ defined_assigns)
 
     available_assigns =
       Enum.map_join(defined_assigns, ", ", fn name -> "@" <> to_string(name) end)
