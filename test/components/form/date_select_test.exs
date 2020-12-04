@@ -173,14 +173,15 @@ defmodule Surface.Components.Form.DateSelectTest do
              ~s(<select class="day-class" id="user_born_at_day" name="user[born_at][day]">)
   end
 
-  test "passing extra options" do
+  test "passing id and name through props" do
     code =
       quote do
         ~H"""
         <DateSelect
           form="user"
           field="born_at"
-          opts={{ id: "born_at", name: "born_at"}}
+          id="born_at"
+          name="born_at"
         />
         """
       end

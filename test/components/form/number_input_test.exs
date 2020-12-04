@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.NumberInputTest do
     code =
       quote do
         ~H"""
-        <NumberInput form="user" field="age" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <NumberInput form="user" field="age" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[age]" type="number"/>
+           <input autofocus="autofocus" id="user_age" name="user[age]" type="number"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.NumberInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="number" value="33"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <NumberInput form="user" field="age" id="old" name="old" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="old" name="old" type="number"/>
            """
   end
 end

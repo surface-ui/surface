@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.SearchInputTest do
     code =
       quote do
         ~H"""
-        <SearchInput form="song" field="title" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <SearchInput form="song" field="title" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="song[title]" type="search"/>
+           <input autofocus="autofocus" id="song_title" name="song[title]" type="search"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.SearchInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="search" value="mytitle"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <SearchInput form="user" field="title" id="mytitle" name="mytitle" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="mytitle" name="mytitle" type="search"/>
            """
   end
 end

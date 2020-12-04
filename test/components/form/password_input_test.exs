@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.PasswordInputTest do
     code =
       quote do
         ~H"""
-        <PasswordInput form="user" field="password" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <PasswordInput form="user" field="password" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[password]" type="password"/>
+           <input autofocus="autofocus" id="user_password" name="user[password]" type="password"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.PasswordInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="password" value="secret"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <PasswordInput form="user" field="password" id="secret" name="secret" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="secret" name="secret" type="password"/>
            """
   end
 end

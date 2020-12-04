@@ -104,6 +104,22 @@ defmodule Surface.Components.Form.SelectTest do
            </select>
            """
   end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <Select form="user" field="role" id="role" name="role" options={{ ["Admin": "admin", "User": "user"] }}/>
+        """
+      end
+
+    assert render_live(code) =~ """
+           <select id="role" name="role">\
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>\
+           </select>
+           """
+  end
 end
 
 defmodule Surface.Components.Form.SelectConfigTest do

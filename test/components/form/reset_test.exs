@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.ResetTest do
     code =
       quote do
         ~H"""
-        <Reset opts={{ id: "myid", autofocus: "autofocus" }} />
+        <Reset opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" type="reset" value="Reset"/>
+           <input autofocus="autofocus" type="reset" value="Reset"/>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.ResetTest do
 
     assert render_live(code) =~ """
            <input phx-keyup="my_keyup" type="reset" value="ResetTheForm"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <Reset id="countdown" name="countdown" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="countdown" name="countdown" type="reset" value="Reset"/>
            """
   end
 end

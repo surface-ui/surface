@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.HiddenInputTest do
     code =
       quote do
         ~H"""
-        <HiddenInput form="user" field="token" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <HiddenInput form="user" field="token" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[token]" type="hidden"/>
+           <input autofocus="autofocus" id="user_token" name="user[token]" type="hidden"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.HiddenInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="hidden" value="token"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <HiddenInput form="user" field="pass" id="token" name="token" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="token" name="token" type="hidden"/>
            """
   end
 end

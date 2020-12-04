@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     assert render_live(code) =~ ~r/class="select primary"/
   end
 
-  test "passing other options" do
+  test "passing selected" do
     code =
       quote do
         ~H"""
@@ -67,6 +67,38 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     assert render_live(code) =~ """
            <select id="user_roles" multiple="" name="user[roles][]">\
            <option value="admin" selected="selected">Admin</option>\
+           <option value="user">User</option>\
+           </select>
+           """
+  end
+
+  test "passing other options" do
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} opts={{ disabled: "disabled" }}/>
+        """
+      end
+
+    assert render_live(code) =~ """
+           <select disabled="disabled" id="user_roles" multiple="" name="user[roles][]">\
+           <option value="admin">Admin</option>\
+           <option value="user">User</option>\
+           </select>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} id="roles" name="roles[]"/>
+        """
+      end
+
+    assert render_live(code) =~ """
+           <select id="roles" multiple="" name="roles[]">\
+           <option value="admin">Admin</option>\
            <option value="user">User</option>\
            </select>
            """

@@ -60,7 +60,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     assert render_live(code) =~ ~r/class="checkbox primary"/
   end
 
-  test "passing other options" do
+  test "passing checked value" do
     code =
       quote do
         ~H"""
@@ -155,6 +155,32 @@ defmodule Surface.Components.Form.CheckboxTest do
 
     assert render_live(code) =~ """
            <input id="user_admin" name="user[admin]" phx-keyup="my_keyup" type="checkbox" value="true"/>
+           """
+  end
+
+  test "passing other options" do
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" opts={{ disabled: "disabled" }} />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input disabled="disabled" id="user_admin" name="user[admin]" type="checkbox" value="true"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <Checkbox form="user" field="admin" id="is_admin" name="is_admin" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="is_admin" name="is_admin" type="checkbox" value="true"/>
            """
   end
 end

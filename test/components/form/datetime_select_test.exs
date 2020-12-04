@@ -216,7 +216,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
              ~s(<select class="second-class" id="user_born_at_second" name="user[born_at][second]">)
   end
 
-  test "passing extra options" do
+  test "passing id and name through props" do
     code =
       quote do
         ~H"""
@@ -224,7 +224,8 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
           form="user"
           field="born_at"
           second={{ [] }}
-          opts={{ id: "born_at", name: "born_at"}}
+          id="born_at"
+          name="born_at"
         />
         """
       end

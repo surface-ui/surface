@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.TextAreaTest do
     code =
       quote do
         ~H"""
-        <TextArea form="user" field="summary" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <TextArea form="user" field="summary" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <textarea autofocus="autofocus" id="myid" name="user[summary]">\n</textarea>
+           <textarea autofocus="autofocus" id="user_summary" name="user[summary]">\n</textarea>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.TextAreaTest do
 
     assert render_live(code) =~ """
            <textarea id="user_summary" name="user[summary]" phx-keyup="my_keyup">\n</textarea>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <TextArea form="user" field="summary" id="blog_summary" name="blog_summary" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <textarea id="blog_summary" name="blog_summary">\n</textarea>
            """
   end
 end

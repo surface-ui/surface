@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.TimeInputTest do
     code =
       quote do
         ~H"""
-        <TimeInput form="user" field="time" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <TimeInput form="user" field="time" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[time]" type="time"/>
+           <input autofocus="autofocus" id="user_time" name="user[time]" type="time"/>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.TimeInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="time" value="23:59:59"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <TimeInput form="user" field="time" id="start_at" name="start_at" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="start_at" name="start_at" type="time"/>
            """
   end
 end

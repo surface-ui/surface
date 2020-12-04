@@ -29,6 +29,12 @@ defmodule Surface.Components.Form.DateSelect do
   @doc "The form identifier"
   prop form, :form
 
+  @doc "The id prefix for underlying select fields"
+  prop id, :string
+
+  @doc "The name prefix for underlying select fields"
+  prop name, :string
+
   @doc "The field name"
   prop field, :string
 
