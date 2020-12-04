@@ -36,6 +36,7 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
+          experimental-otp: true
       - run: mix format --check-formatted
         if: matrix.check_formatted
       - name: Install Dependencies
