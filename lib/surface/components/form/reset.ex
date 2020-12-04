@@ -20,10 +20,10 @@ defmodule Surface.Components.Form.Reset do
   import Phoenix.HTML.Form, only: [reset: 2]
   import Surface.Components.Form.Utils
 
-  @doc "The id of a corresponding input field"
+  @doc "The id of the corresponding input field"
   prop id, :string
 
-  @doc "The id of a corresponding input field"
+  @doc "The name of the corresponding input field"
   prop name, :string
 
   @doc "Value to pre-populated the input"

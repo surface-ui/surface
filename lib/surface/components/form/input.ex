@@ -13,10 +13,10 @@ defmodule Surface.Components.Form.Input do
       @doc "An identifier for the input"
       prop field, :atom
 
-      @doc "The id of a corresponding input field"
+      @doc "The id of the corresponding input field"
       prop id, :string
 
-      @doc "The id of a corresponding input field"
+      @doc "The name of the corresponding input field"
       prop name, :string
 
       @doc "Value to pre-populated the input"
