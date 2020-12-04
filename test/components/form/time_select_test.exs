@@ -194,7 +194,8 @@ defmodule Surface.Components.Form.TimeSelectTest do
           form="user"
           field="born_at"
           second={{ [] }}
-          opts={{ id: "born_at", name: "born_at"}}
+          id="born_at"
+          name="born_at"
         />
         """
       end

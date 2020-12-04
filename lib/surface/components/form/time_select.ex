@@ -31,6 +31,12 @@ defmodule Surface.Components.Form.TimeSelect do
   @doc "The field name"
   prop field, :string
 
+  @doc "The id prefix for underlying select fields"
+  prop id, :string
+
+  @doc "The name prefix for underlying select fields"
+  prop name, :string
+
   @doc "Value to pre-populate the select"
   prop value, :any
 
