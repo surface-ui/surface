@@ -49,7 +49,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" name="user[role]" type="radio" value="admin"/>
+           <input autofocus="autofocus" id="user_role_admin" name="user[role]" type="radio" value="admin"/>
            """
   end
 
