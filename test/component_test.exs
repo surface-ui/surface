@@ -91,6 +91,62 @@ defmodule Surface.ComponentTest do
     end
   end
 
+  defmodule StatelessWithId do
+    use Surface.Component
+
+    prop id, :string
+
+    def render(assigns) do
+      ~H"""
+      <div>{{ @id }}</div>
+      """
+    end
+  end
+
+  defmodule StatelessWithIdAndUpdate do
+    use Surface.Component
+
+    prop id, :string
+    data id_copy, :string
+
+    @impl true
+    def update(assigns, socket) do
+      socket =
+        socket
+        |> assign(assigns)
+        |> assign(:id_copy, assigns.id)
+
+      {:ok, socket}
+    end
+
+    @impl true
+    def render(assigns) do
+      ~H"""
+      <div>{{ @id }} - {{ @id_copy }}</div>
+      """
+    end
+  end
+
+  defmodule ViewWithStatelessWithId do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~H"""
+      <StatelessWithId id="my_id" />
+      """
+    end
+  end
+
+  defmodule ViewWithStatelessWithIdAndUpdate do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~H"""
+      <StatelessWithIdAndUpdate id="my_id" />
+      """
+    end
+  end
+
   test "raise compile error if option :slot is not a string" do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module = "TestSlotWithoutSlotName_#{id}"
@@ -119,6 +175,28 @@ defmodule Surface.ComponentTest do
         <div class="myclass">
           <span>My label</span>
         </div>
+        """
+      )
+    end
+
+    test "stateless component with id should not become stateful" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithStatelessWithId)
+
+      # Stateful components are rendered as <div data-phx-component="...">
+      assert_html(
+        html =~ """
+        <div>my_id</div>
+        """
+      )
+    end
+
+    test "stateless component with id and implementing update/2 should not become stateful" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithStatelessWithIdAndUpdate)
+
+      # Stateful components are rendered as <div data-phx-component="...">
+      assert_html(
+        html =~ """
+        <div>my_id - my_id</div>
         """
       )
     end
