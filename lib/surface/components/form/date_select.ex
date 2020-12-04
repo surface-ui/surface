@@ -29,6 +29,12 @@ defmodule Surface.Components.Form.DateSelect do
   @doc "The form identifier"
   prop form, :form
 
+  @doc "The id of a corresponding input field"
+  prop id, :string
+
+  @doc "The id of a corresponding input field"
+  prop name, :string
+
   @doc "The field name"
   prop field, :string
 
