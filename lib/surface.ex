@@ -173,7 +173,12 @@ defmodule Surface do
         {name, Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias || module)}
       end)
 
-    props = Keyword.merge(Keyword.merge(default_props(module), dynamic_props), static_props)
+    props =
+      module
+      |> default_props()
+      |> Keyword.merge(dynamic_props)
+      |> Keyword.merge(static_props)
+      |> rename_id_if_stateless(module.component_type())
 
     Map.new(
       props ++
@@ -302,5 +307,16 @@ defmodule Surface do
     """
 
     IOHelper.warn(message, caller, & &1)
+  end
+
+  defp rename_id_if_stateless(props, Surface.Component) do
+    case Keyword.pop(props, :id) do
+      {nil, rest} -> rest
+      {id, rest} -> Keyword.put(rest, :__id__, id)
+    end
+  end
+
+  defp rename_id_if_stateless(props, _type) do
+    props
   end
 end

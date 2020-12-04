@@ -23,6 +23,7 @@ defmodule Surface.Component do
   """
 
   alias Surface.IOHelper
+  alias Surface.BaseComponent
 
   defmacro __using__(opts \\ []) do
     slot_name = Keyword.get(opts, :slot)
@@ -76,6 +77,31 @@ defmodule Surface.Component do
   end
 
   defmacro __before_compile__(env) do
+    [quoted_mount(env), quoted_update(env)]
+  end
+
+  defp quoted_update(env) do
+    if Module.defines?(env.module, {:update, 2}) do
+      quote do
+        defoverridable update: 2
+
+        def update(assigns, socket) do
+          assigns = unquote(__MODULE__).restore_id(assigns)
+          {:ok, socket} = super(assigns, socket)
+          {:ok, BaseComponent.restore_private_assigns(socket, assigns)}
+        end
+      end
+    else
+      quote do
+        def update(assigns, socket) do
+          assigns = unquote(__MODULE__).restore_id(assigns)
+          {:ok, assign(socket, assigns)}
+        end
+      end
+    end
+  end
+
+  defp quoted_mount(env) do
     if Module.defines?(env.module, {:mount, 1}) do
       quote do
         defoverridable mount: 1
@@ -90,6 +116,14 @@ defmodule Surface.Component do
           {:ok, Surface.init(socket)}
         end
       end
+    end
+  end
+
+  @doc false
+  def restore_id(assigns) do
+    case Map.pop(assigns, :__id__) do
+      {nil, rest} -> rest
+      {id, rest} -> Map.put(rest, :id, id)
     end
   end
 end

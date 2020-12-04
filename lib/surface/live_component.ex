@@ -50,6 +50,8 @@ defmodule Surface.LiveComponent do
       end
   """
 
+  alias Surface.BaseComponent
+
   defmacro __using__(_) do
     quote do
       @before_compile Surface.Renderer
@@ -90,17 +92,9 @@ defmodule Surface.LiveComponent do
       quote do
         defoverridable update: 2
 
-        def update(%{__surface__: surface, __context__: context} = assigns, socket) do
-          super(
-            assigns,
-            socket
-            |> Phoenix.LiveView.assign(:__surface__, surface)
-            |> Phoenix.LiveView.assign(:__context__, context)
-          )
-        end
-
         def update(assigns, socket) do
-          super(assigns, socket)
+          {:ok, socket} = super(assigns, socket)
+          {:ok, BaseComponent.restore_private_assigns(socket, assigns)}
         end
       end
     end
