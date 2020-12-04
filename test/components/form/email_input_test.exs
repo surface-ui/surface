@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.EmailInputTest do
     code =
       quote do
         ~H"""
-        <EmailInput form="user" field="email" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <EmailInput form="user" field="email" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[email]" type="email"/>
+           <input autofocus="autofocus" id="user_email" name="user[email]" type="email"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.EmailInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="email" value="admin@gmail.com"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <EmailInput form="user" field="email" id="myemail" name="myemail" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="myemail" name="myemail" type="email"/>
            """
   end
 end

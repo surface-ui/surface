@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.ColorInputTest do
     code =
       quote do
         ~H"""
-        <ColorInput form="user" field="color" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <ColorInput form="user" field="color" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[color]" type="color"/>
+           <input autofocus="autofocus" id="user_color" name="user[color]" type="color"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.ColorInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="color" value="mycolor"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <ColorInput form="user" field="color" id="color" name="color" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="color" name="color" type="color"/>
            """
   end
 end

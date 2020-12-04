@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.DateTimeLocalInputTest do
     code =
       quote do
         ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <DateTimeLocalInput form="order" field="completed_at" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="order[completed_at]" type="datetime-local"/>
+           <input autofocus="autofocus" id="order_completed_at" name="order[completed_at]" type="datetime-local"/>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.DateTimeLocalInputTest do
 
     assert render_live(code) =~ """
            <input id="order_completed_at" name="order[completed_at]" phx-keyup="my_keyup" type="datetime-local" value="2020-05-05T19:30"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <DateTimeLocalInput form="user" field="birth" id="birthday" name="birthday" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="birthday" name="birthday" type="datetime-local"/>
            """
   end
 end

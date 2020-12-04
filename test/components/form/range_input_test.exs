@@ -70,12 +70,12 @@ defmodule Surface.Components.Form.RangeInputTest do
     code =
       quote do
         ~H"""
-        <RangeInput form="volume" field="percent" min="0" max="100" opts={{ id: "myid" }} />
+        <RangeInput form="volume" field="percent" min="0" max="100" opts={{ disabled: "disabled" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input id="myid" max="100" min="0" name="volume[percent]" type="range"/>
+           <input disabled="disabled" id="volume_percent" max="100" min="0" name="volume[percent]" type="range"/>
            """
   end
 
@@ -141,6 +141,19 @@ defmodule Surface.Components.Form.RangeInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="range" value="25"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <RangeInput form="user" field="percent" id="rate" name="rate" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="rate" name="rate" type="range"/>
            """
   end
 end

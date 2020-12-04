@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.TelephoneInputTest do
     code =
       quote do
         ~H"""
-        <TelephoneInput form="user" field="phone" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <TelephoneInput form="user" field="phone" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[phone]" type="tel"/>
+           <input autofocus="autofocus" id="user_phone" name="user[phone]" type="tel"/>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.TelephoneInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="tel" value="phone_no"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <TelephoneInput form="user" field="phone" id="telephone" name="telephone" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="telephone" name="telephone" type="tel"/>
            """
   end
 end

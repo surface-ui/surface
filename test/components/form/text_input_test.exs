@@ -56,12 +56,12 @@ defmodule Surface.Components.Form.TextInputTest do
     code =
       quote do
         ~H"""
-        <TextInput form="user" field="name" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <TextInput form="user" field="name" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[name]" type="text"/>
+           <input autofocus="autofocus" id="user_name" name="user[name]" type="text"/>
            """
   end
 
@@ -127,6 +127,19 @@ defmodule Surface.Components.Form.TextInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="text" value="Max"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <TextInput form="user" field="name" id="username" name="username" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="username" name="username" type="text"/>
            """
   end
 end

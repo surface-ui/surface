@@ -3,6 +3,9 @@ defmodule Surface.Components.Form.Utils do
   import Surface, only: [event_to_opts: 2, prop_to_opts: 2]
 
   defmacro get_non_nil_props(assigns, props) do
+    # `id` and `name` props are common in all the form components
+    props = [:id, :name] ++ props
+
     quote do
       Enum.reduce(unquote(props), [], fn prop, acc ->
         {key, value} = unquote(__MODULE__).prop_value(unquote(assigns), prop)

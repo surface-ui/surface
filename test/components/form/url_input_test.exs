@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.UrlInputTest do
     code =
       quote do
         ~H"""
-        <UrlInput form="user" field="website" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <UrlInput form="user" field="website" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[website]" type="url"/>
+           <input autofocus="autofocus" id="user_website" name="user[website]" type="url"/>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.UrlInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="url" value="https://github.com/msaraiva/surface"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <UrlInput form="user" field="uri" id="website" name="website" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="website" name="website" type="url"/>
            """
   end
 end

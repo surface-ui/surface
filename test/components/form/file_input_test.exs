@@ -75,12 +75,12 @@ defmodule Surface.Components.Form.FileInputTest do
     code =
       quote do
         ~H"""
-        <FileInput form="user" field="picture" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <FileInput form="user" field="picture" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[picture]" type="file"/>
+           <input autofocus="autofocus" id="user_picture" name="user[picture]" type="file"/>
            """
   end
 
@@ -146,6 +146,19 @@ defmodule Surface.Components.Form.FileInputTest do
 
     assert render_live(code) =~ """
            <input id="user_picture" name="user[picture]" phx-keyup="my_keyup" type="file"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <FileInput form="user" field="picture" id="image" name="image" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="image" name="image" type="file"/>
            """
   end
 end

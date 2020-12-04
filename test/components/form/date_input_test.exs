@@ -57,12 +57,12 @@ defmodule Surface.Components.Form.DateInputTest do
     code =
       quote do
         ~H"""
-        <DateInput form="user" field="birthday" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <DateInput form="user" field="birthday" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[birthday]" type="date"/>
+           <input autofocus="autofocus" id="user_birthday" name="user[birthday]" type="date"/>
            """
   end
 
@@ -128,6 +128,19 @@ defmodule Surface.Components.Form.DateInputTest do
 
     assert render_live(code) =~ """
            <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="date" value="mybirthday"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <DateInput form="user" field="birth" id="birthday" name="birthday" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="birthday" name="birthday" type="date"/>
            """
   end
 end
