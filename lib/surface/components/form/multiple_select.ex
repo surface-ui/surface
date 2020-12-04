@@ -20,6 +20,12 @@ defmodule Surface.Components.Form.MultipleSelect do
   @doc "The field name"
   prop field, :string
 
+  @doc "The id of the corresponding select field"
+  prop id, :string
+
+  @doc "The name of the corresponding select field"
+  prop name, :string
+
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
 
