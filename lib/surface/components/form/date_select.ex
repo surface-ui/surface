@@ -4,9 +4,9 @@ defmodule Surface.Components.Form.DateSelect do
 
   Provides a wrapper for Phoenix.HTML.Form's `date_select/3` function.
 
-  All options passed via `opts` will be sent to `date_select/3`, `value`
+  All options passed via `opts` will be sent to `date_select/3`,
+  `value`, `default`, `year`, `month`, `day` and `builder`
   can be set directly and will override anything in `opts`.
-
 
   ## Examples
 
@@ -75,21 +75,8 @@ defmodule Surface.Components.Form.DateSelect do
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ date_select(form, field, props) }}
+      {{ date_select(form, field, props ++ @opts) }}
     </InputContext>
     """
   end
-
-  defp parse_css_class_for(props, field) do
-    class = props[field][:class]
-
-    if class do
-      put_in(props, [field, :class], do_parse_class(class))
-    else
-      props
-    end
-  end
-
-  defp do_parse_class(class) when is_list(class), do: Surface.css_class(class)
-  defp do_parse_class(class), do: class
 end
