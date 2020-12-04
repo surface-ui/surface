@@ -44,12 +44,12 @@ defmodule Surface.Components.Form.RadioButtonTest do
     code =
       quote do
         ~H"""
-        <RadioButton form="user" field="role" value="admin" opts={{ id: "myid", autofocus: "autofocus" }} />
+        <RadioButton form="user" field="role" value="admin" opts={{ autofocus: "autofocus" }} />
         """
       end
 
     assert render_live(code) =~ """
-           <input autofocus="autofocus" id="myid" name="user[role]" type="radio" value="admin"/>
+           <input autofocus="autofocus" name="user[role]" type="radio" value="admin"/>
            """
   end
 
@@ -115,6 +115,19 @@ defmodule Surface.Components.Form.RadioButtonTest do
 
     assert render_live(code) =~ """
            <input id="user_role_admin" name="user[role]" phx-keyup="my_keyup" type="radio" value="admin"/>
+           """
+  end
+
+  test "setting id and name through props" do
+    code =
+      quote do
+        ~H"""
+        <RadioButton form="user" field="role" id="role" name="role" />
+        """
+      end
+
+    assert render_live(code) =~ """
+           <input id="role" name="role" type="radio" value="" checked="checked"/>
            """
   end
 end
