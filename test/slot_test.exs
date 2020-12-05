@@ -145,6 +145,23 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule OuterWithRenamedSlot do
+    use Surface.Component
+
+    slot header, as: :default_header
+
+    prop header, :string
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header" />
+        {{ @header }}
+      </div>
+      """
+    end
+  end
+
   defmodule Column do
     use Surface.Component, slot: "cols"
 
@@ -421,6 +438,28 @@ defmodule Surface.SlotTest do
           <td>Name: Second</td>
         </tr>
       </table>
+      """
+    )
+  end
+
+  test "rename slot with :as do not overide other assigns with same name" do
+    code =
+      quote do
+        ~H"""
+        <OuterWithRenamedSlot header="My Header Prop">
+          <template slot="header">
+            My Header Slot
+          </template>
+        </OuterWithRenamedSlot>
+        """
+      end
+
+    assert_html(
+      render_live(code) =~ """
+      <div>
+        My Header Slot
+        My Header Prop
+      </div>
       """
     )
   end
