@@ -121,7 +121,7 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(
          %AST.Slot{
-           name: name,
+           name: slot_name,
            index: index_ast,
            props: props_expr,
            default: default
@@ -129,8 +129,6 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    slot_name = if name == :default, do: :__default__, else: name
-
     slot_index =
       case index_ast do
         %AST.AttributeExpr{value: expr} -> expr
@@ -312,11 +310,6 @@ defmodule Surface.Compiler.EExEngine do
     slot_info =
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
-        name =
-          if name == :default,
-            do: :__default__,
-            else: name
-
         state = %{state | context: [:template | state.context]}
 
         nested_templates = handle_templates(component, templates_for_slot, buffer, state)

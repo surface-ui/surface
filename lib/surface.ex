@@ -288,7 +288,6 @@ defmodule Surface do
   end
 
   @doc false
-  def slot_assigned?(assigns, :default), do: slot_assigned?(assigns, :__default__)
   def slot_assigned?(%{__surface__: %{provided_templates: slots}}, slot), do: slot in slots
   def slot_assigned?(_, _), do: false
 

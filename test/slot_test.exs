@@ -162,6 +162,23 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule OuterWithDefaultPropAndSlot do
+    use Surface.Component
+
+    slot default, as: :default_slot
+
+    prop default, :string
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot />
+        {{ @default }}
+      </div>
+      """
+    end
+  end
+
   defmodule Column do
     use Surface.Component, slot: "cols"
 
@@ -459,6 +476,46 @@ defmodule Surface.SlotTest do
       <div>
         My Header Slot
         My Header Prop
+      </div>
+      """
+    )
+  end
+
+  test "default prop name with a default slot" do
+    code =
+      quote do
+        ~H"""
+        <OuterWithDefaultPropAndSlot default="Default Prop">
+          Default Slot
+        </OuterWithDefaultPropAndSlot>
+        """
+      end
+
+    assert_html(
+      render_live(code) =~ """
+      <div>
+        Default Slot
+        Default Prop
+      </div>
+      """
+    )
+
+    code =
+      quote do
+        ~H"""
+        <OuterWithDefaultPropAndSlot default="Default Prop">
+          <template name="default">
+            Default Slot
+          </template>
+        </OuterWithDefaultPropAndSlot>
+        """
+      end
+
+    assert_html(
+      render_live(code) =~ """
+      <div>
+        Default Slot
+        Default Prop
       </div>
       """
     )
