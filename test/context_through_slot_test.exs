@@ -1,8 +1,5 @@
 defmodule Surface.ContextThroughSlotTest do
-  use ExUnit.Case, async: true
-
-  import Surface
-  import ComponentTestHelper
+  use Surface.ConnCase, async: true
 
   defmodule Parent.ContextProvider do
     use Surface.Component
@@ -60,7 +57,8 @@ defmodule Surface.ContextThroughSlotTest do
     end
   end
 
-  test "child should take context from parent when rendered in slot" do
-    assert render_live(ExampleWeb.ContextLive) =~ "<div><div>bar</div></div>"
+  test "child should take context from parent when rendered in slot", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, ExampleWeb.ContextLive)
+    assert html =~ "<div><div>bar</div></div>"
   end
 end

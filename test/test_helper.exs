@@ -46,13 +46,6 @@ defmodule ComponentTestHelper do
     end
   end
 
-  def render_live(module, assigns, _env) when is_atom(module) do
-    conn = Phoenix.ConnTest.build_conn()
-    {:ok, _view, html} = Phoenix.LiveViewTest.live_isolated(conn, module, session: assigns)
-
-    clean_html(html)
-  end
-
   defmacro render_live(code, assigns \\ quote(do: %{})) do
     quote do
       render_live(unquote(code), unquote(assigns), unquote(Macro.escape(__CALLER__)))
@@ -118,26 +111,13 @@ defmodule ComponentTestHelper do
       value = unquote(config)
       new_config = Keyword.update(old_config, component, value, fn _ -> value end)
       Application.put_env(:surface, :components, new_config)
-      recompile(component)
 
       try do
         unquote(block)
       after
         Application.put_env(:surface, :components, old_config)
-        recompile(component)
       end
     end
-  end
-
-  def recompile(module) do
-    ExUnit.CaptureIO.capture_io(:standard_error, fn ->
-      module.module_info(:compile)
-      |> Keyword.fetch!(:source)
-      |> to_string()
-      |> Code.compile_file()
-    end)
-
-    :ok
   end
 
   defp clean_html(html) do

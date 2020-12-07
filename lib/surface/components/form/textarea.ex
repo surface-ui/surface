@@ -27,7 +27,7 @@ defmodule Surface.Components.Form.TextArea do
   prop cols, :string
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:value, :rows, :cols, class: @default_class])
+    props = get_non_nil_props(assigns, [:value, :rows, :cols, class: get_default_class()])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""

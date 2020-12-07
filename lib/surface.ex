@@ -124,22 +124,23 @@ defmodule Surface do
   end
 
   @doc "Retrieve a component's config based on the `key`"
-  defmacro get_config(component, key) do
+  def get_config(component, key) do
     config = get_components_config()
-
-    quote bind_quoted: [config: config, component: component, key: key] do
-      config[component][key]
-    end
+    config[component][key]
   end
 
   @doc "Retrieve the component's config based on the `key`"
   defmacro get_config(key) do
     component = __CALLER__.module
-    config = get_components_config()
 
     quote do
-      unquote(config[component][key])
+      get_config(unquote(component), unquote(key))
     end
+  end
+
+  @doc "Retrieve all component's config"
+  def get_components_config() do
+    Application.get_env(:surface, :components, [])
   end
 
   @doc "Initialize surface state in the socket"
@@ -237,10 +238,6 @@ defmodule Surface do
     meta = %{caller: caller, line: caller.line, node_alias: module}
     {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, prop_name, meta)
     Surface.TypeHandler.attr_to_opts!(type, prop_name, prop_value)
-  end
-
-  defp get_components_config() do
-    Application.get_env(:surface, :components, [])
   end
 
   @doc """

@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.EmailInput do
   import Surface.Components.Form.Utils
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:value, class: @default_class])
+    props = get_non_nil_props(assigns, [:value, class: get_default_class()])
     event_opts = get_events_to_opts(assigns)
 
     ~H"""
