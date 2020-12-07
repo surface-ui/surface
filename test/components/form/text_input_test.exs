@@ -146,7 +146,7 @@ end
 defmodule Surface.Components.Form.TextInputConfigTest do
   use Surface.ConnCase
 
-  alias Surface.Components.Form.TextInput, warn: false
+  alias Surface.Components.Form.TextInput
 
   test ":default_class config" do
     using_config TextInput, default_class: "default_class" do
