@@ -11,8 +11,7 @@ defmodule Surface.ConnCase do
 
   using do
     quote do
-      # Import conveniences for testing with connections
-      import Phoenix.ConnTest
+      # Import conveniences for testing
       use Surface.LiveViewTest
 
       # The default endpoint for testing

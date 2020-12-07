@@ -21,6 +21,7 @@ defmodule Surface.LiveViewTest do
 
   defmacro __using__(_opts) do
     quote do
+      import Phoenix.ConnTest
       import Phoenix.LiveViewTest
       import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4]
       import Surface, only: [sigil_H: 2]
@@ -35,7 +36,7 @@ defmodule Surface.LiveViewTest do
   that don't require a parent live view during the tests.
 
   For tests depending on the existence of a parent live view, e.g. testing events on live
-  components and its side-effects, you need to use either `render_live/2` or
+  components and its side-effects, you need to use either `Phoenix.LiveViewTest.live/2` or
   `Phoenix.LiveViewTest.live_isolated/3`.
 
   ## Example
