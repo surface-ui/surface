@@ -460,8 +460,8 @@ defmodule Surface.SlotTest do
   end
 
   test "rename slot with :as do not overide other assigns with same name" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithRenamedSlot header="My Header Prop">
           <template slot="header">
@@ -472,7 +472,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         My Header Slot
         My Header Prop
@@ -482,8 +482,8 @@ defmodule Surface.SlotTest do
   end
 
   test "default prop name with a default slot" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
           Default Slot
@@ -492,7 +492,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         Default Slot
         Default Prop
@@ -500,8 +500,8 @@ defmodule Surface.SlotTest do
       """
     )
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
           <template name="default">
@@ -512,7 +512,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         Default Slot
         Default Prop
