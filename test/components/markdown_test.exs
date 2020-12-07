@@ -94,14 +94,13 @@ defmodule Surface.Components.MarkdownTest do
 end
 
 defmodule Surface.Components.MarkdownSyncTest do
-  use ExUnit.Case
+  use Surface.ConnCase
 
   import ExUnit.CaptureIO
-  import ComponentTestHelper
   alias Surface.Components.Markdown
 
   describe "config" do
-    test ":default_class config" do
+    test ":default_class config", %{conn: conn} do
       using_config Markdown, default_class: "content" do
         code =
           quote do
@@ -112,14 +111,17 @@ defmodule Surface.Components.MarkdownSyncTest do
             """
           end
 
-        assert render_live(code) =~ """
+        view = compile_surface(code)
+        {:ok, _view, html} = live_isolated(conn, view)
+
+        assert html =~ """
                <div class="content"><h1>
-               Head 1</h1></div>
+               Head 1</h1></div>\
                """
       end
     end
 
-    test "override the :default_class config" do
+    test "override the :default_class config", %{conn: conn} do
       using_config Markdown, default_class: "content" do
         code =
           quote do
@@ -130,14 +132,17 @@ defmodule Surface.Components.MarkdownSyncTest do
             """
           end
 
-        assert render_live(code) =~ """
+        view = compile_surface(code)
+        {:ok, _view, html} = live_isolated(conn, view)
+
+        assert html =~ """
                <div class="markdown"><h1>
-               Head 1</h1></div>
+               Head 1</h1></div>\
                """
       end
     end
 
-    test ":default_opts config" do
+    test ":default_opts config", %{conn: conn} do
       using_config Markdown, default_opts: [code_class_prefix: "language-"] do
         code =
           quote do
@@ -150,13 +155,18 @@ defmodule Surface.Components.MarkdownSyncTest do
             """
           end
 
-        assert render_live(code) =~ """
-               <div><pre><code class="elixir language-elixir">var = 1</code></pre></div>
+        view = compile_surface(code)
+        {:ok, _view, html} = live_isolated(conn, view)
+
+        assert html =~ """
+               <div><pre><code class="elixir language-elixir">var = 1</code></pre></div>\
                """
       end
     end
 
-    test "property opts gets merged with global config :opts (overriding existing keys)" do
+    test "property opts gets merged with global config :opts (overriding existing keys)", %{
+      conn: conn
+    } do
       using_config Markdown, default_opts: [code_class_prefix: "language-", smartypants: false] do
         code =
           quote do
@@ -167,9 +177,12 @@ defmodule Surface.Components.MarkdownSyncTest do
             """
           end
 
-        assert render_live(code) =~ """
+        view = compile_surface(code)
+        {:ok, _view, html} = live_isolated(conn, view)
+
+        assert html =~ """
                <div><p>
-               &quot;Elixir&quot;</p></div>
+               &quot;Elixir&quot;</p></div>\
                """
 
         code =
@@ -185,10 +198,13 @@ defmodule Surface.Components.MarkdownSyncTest do
             """
           end
 
-        assert render_live(code) =~
+        view = compile_surface(code)
+        {:ok, _view, html} = live_isolated(conn, view)
+
+        assert html =~
                  """
                  <div><p>
-                 “Elixir”</p><pre><code class="elixir language-elixir">code</code></pre></div>
+                 “Elixir”</p><pre><code class="elixir language-elixir">code</code></pre></div>\
                  """
       end
     end
@@ -196,8 +212,6 @@ defmodule Surface.Components.MarkdownSyncTest do
 
   describe "error/warnings" do
     test "do not accept runtime expressions" do
-      assigns = %{class: "markdown"}
-
       code =
         quote do
           ~H"""
@@ -220,14 +234,12 @@ defmodule Surface.Components.MarkdownSyncTest do
 
       assert_raise(CompileError, message, fn ->
         capture_io(:standard_error, fn ->
-          render_live(code, assigns)
+          compile_surface(code, %{class: "markdown"})
         end)
       end)
     end
 
     test "show parsing errors/warnings at the right line" do
-      assigns = %{class: "markdown"}
-
       code =
         quote do
           ~H"""
@@ -241,7 +253,7 @@ defmodule Surface.Components.MarkdownSyncTest do
 
       output =
         capture_io(:standard_error, fn ->
-          render_live(code, assigns)
+          compile_surface(code, %{class: "markdown"})
         end)
 
       assert output =~ ~r"""

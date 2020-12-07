@@ -117,6 +117,52 @@ defmodule Surface.LiveViewTest do
     end
   end
 
+  @doc """
+  Wraps a test code so it runs using a custom configuration for a given component.
+
+  Tests using this macro should run synchronously. A warning is shown if the test
+  case is configured as `async: true`.
+
+  ## Example
+
+    using_config TextInput, default_class: "default_class" do
+      html =
+        render_surface do
+          ~H"\""
+          <TextInput/>
+          "\""
+        end
+
+      assert html =~ ~r/class="default_class"/
+    end
+
+  """
+  defmacro using_config(component, config, do: block) do
+    if Module.get_attribute(__CALLER__.module, :ex_unit_async) do
+      message = """
+      Using `using_config` with `async: true` might lead to race conditions.
+
+      Please set `async: false` on the test module.
+      """
+
+      Surface.IOHelper.warn(message, __CALLER__, & &1)
+    end
+
+    quote do
+      component = unquote(component)
+      old_config = Application.get_env(:surface, :components, [])
+      value = unquote(config)
+      new_config = Keyword.update(old_config, component, value, fn _ -> value end)
+      Application.put_env(:surface, :components, new_config)
+
+      try do
+        unquote(block)
+      after
+        Application.put_env(:surface, :components, old_config)
+      end
+    end
+  end
+
   @doc false
   def generate_live_view_ast(render_code, props, env) do
     {func, _} = env.function

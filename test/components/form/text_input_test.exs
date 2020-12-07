@@ -144,21 +144,20 @@ defmodule Surface.Components.Form.TextInputTest do
 end
 
 defmodule Surface.Components.Form.TextInputConfigTest do
-  use ExUnit.Case
+  use Surface.ConnCase
 
-  import ComponentTestHelper
   alias Surface.Components.Form.TextInput, warn: false
 
   test ":default_class config" do
     using_config TextInput, default_class: "default_class" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <TextInput/>
           """
         end
 
-      assert render_live(code) =~ ~r/class="default_class"/
+      assert html =~ ~r/class="default_class"/
     end
   end
 end

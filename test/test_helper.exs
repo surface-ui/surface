@@ -111,26 +111,13 @@ defmodule ComponentTestHelper do
       value = unquote(config)
       new_config = Keyword.update(old_config, component, value, fn _ -> value end)
       Application.put_env(:surface, :components, new_config)
-      recompile(component)
 
       try do
         unquote(block)
       after
         Application.put_env(:surface, :components, old_config)
-        recompile(component)
       end
     end
-  end
-
-  def recompile(module) do
-    ExUnit.CaptureIO.capture_io(:standard_error, fn ->
-      module.module_info(:compile)
-      |> Keyword.fetch!(:source)
-      |> to_string()
-      |> Code.compile_file()
-    end)
-
-    :ok
   end
 
   defp clean_html(html) do
