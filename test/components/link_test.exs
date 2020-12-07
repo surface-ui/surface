@@ -20,7 +20,12 @@ defmodule Surface.Components.LinkTest do
   end
 
   test "creates a link with label" do
-    html = render_surface_component(Link, label: "user", to: "/users/1")
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" />
+        """
+      end
 
     assert html =~ """
            <a href="/users/1">user</a>
@@ -28,7 +33,12 @@ defmodule Surface.Components.LinkTest do
   end
 
   test "creates a link without label" do
-    html = render_surface_component(Link, to: "/users/1")
+    html =
+      render_surface do
+        ~H"""
+        <Link to="/users/1" />
+        """
+      end
 
     assert html =~ """
            <a href="/users/1"></a>
@@ -37,20 +47,24 @@ defmodule Surface.Components.LinkTest do
 
   test "creates a link with default slot" do
     html =
-      render_surface_component(Link, to: "/users/1") do
+      render_surface do
         ~H"""
-        <span>user</span>
+        <Link to="/users/1"><span>user</span></Link>
         """
       end
 
     assert html =~ """
-           <a href="/users/1"><span>user</span>
-           </a>
+           <a href="/users/1"><span>user</span></a>
            """
   end
 
   test "setting the class" do
-    html = render_surface_component(Link, label: "user", to: "/users/1", class: ["link"])
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" class="link" />
+        """
+      end
 
     assert html =~ """
            <a class="link" href="/users/1">user</a>
@@ -59,7 +73,11 @@ defmodule Surface.Components.LinkTest do
 
   test "setting multiple classes" do
     html =
-      render_surface_component(Link, label: "user", to: "/users/1", class: ["link", "primary"])
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" class="link primary" />
+        """
+      end
 
     assert html =~ """
            <a class="link primary" href="/users/1">user</a>
@@ -68,24 +86,35 @@ defmodule Surface.Components.LinkTest do
 
   test "passing other options" do
     html =
-      render_surface_component(Link,
-        label: "user",
-        to: "/users/1",
-        class: ["link"],
-        opts: [method: :delete, data: [confirm: "Really?"], csrf_token: "token"]
-      )
+      render_surface do
+        ~H"""
+        <Link
+          label="user"
+          to="/users/1"
+          class="link"
+          opts={{ method: :delete, data: [confirm: "Really?"], csrf_token: "token" }}
+        />
+        """
+      end
 
     assert html =~ """
-           <a class="link" data-confirm="Really?" data-csrf="token" data-method="delete" data-to="/users/1" href="/users/1" rel="nofollow">user</a>
+           <a class="link" \
+           data-confirm="Really?" \
+           data-csrf="token" \
+           data-method="delete" \
+           data-to="/users/1" \
+           href="/users/1" \
+           rel="nofollow">user</a>
            """
   end
 
   test "click event with parent live view as target" do
     html =
-      render_surface_component(Link,
-        to: "/users/1",
-        click: %{name: "my_click", target: :live_view}
-      )
+      render_surface do
+        ~H"""
+        <Link to="/users/1" click="my_click" />
+        """
+      end
 
     assert html =~ """
            <a href="/users/1" phx-click="my_click"></a>
@@ -93,7 +122,12 @@ defmodule Surface.Components.LinkTest do
   end
 
   test "click event with @myself as target" do
-    html = render_surface_component(ComponentWithLink, id: "comp")
+    html =
+      render_surface do
+        ~H"""
+        <ComponentWithLink id="comp"/>
+        """
+      end
 
     assert html =~ ~r"""
            <div>

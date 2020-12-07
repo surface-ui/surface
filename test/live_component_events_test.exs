@@ -1,8 +1,6 @@
 defmodule Surface.EventsTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  import Phoenix.ConnTest
-  import Phoenix.LiveViewTest
   import ComponentTestHelper
 
   @endpoint Endpoint
@@ -94,8 +92,8 @@ defmodule Surface.EventsTest do
   end
 
   test "handle event in parent component" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Panel id="panel_id"/>
@@ -103,14 +101,14 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <button data-phx-component="2" phx-click="click" phx-target="1"\
+    assert html =~ """
+           <button phx-click="click" phx-target="1"\
            """
   end
 
   test "handle event locally" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id"/>
@@ -118,14 +116,14 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <button data-phx-component="1" phx-click="click" phx-target="1"\
+    assert html =~ """
+           <button phx-click="click" phx-target="1"\
            """
   end
 
   test "override target" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ %{name: "ok", target: "#comp"} }}/>
@@ -133,7 +131,7 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            phx-click="ok" phx-target="#comp"\
            """
   end
@@ -144,8 +142,8 @@ defmodule Surface.EventsTest do
     """
 
     # Event name as string
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ "ok", target: "#comp" }}/>
@@ -153,11 +151,11 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ expected
+    assert html =~ expected
 
     # Event name as atom
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ :ok, target: "#comp" }}/>
@@ -165,20 +163,18 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ expected
+    assert html =~ expected
   end
 
   test "passing event as nil does not render phx-*" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ nil }}/>
         </div>
         """
       end
-
-    html = render_live(code)
 
     assert html =~ "<button"
     refute html =~ "phx-click"

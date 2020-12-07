@@ -1,5 +1,5 @@
 defmodule ContextTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
   import Surface
   import ComponentTestHelper
@@ -84,8 +84,8 @@ defmodule ContextTest do
   end
 
   test "pass context to child component" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Outer>
           <Inner/>
@@ -93,14 +93,14 @@ defmodule ContextTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <span id="field">field from Outer</span>\
            """
   end
 
   test "pass context to child component using :as option" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Outer>
           <InnerWithOptionAs/>
@@ -108,14 +108,16 @@ defmodule ContextTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <div><span>field from Outer</span></div>
+    assert html =~ """
+           <div>
+             <span>field from Outer</span>
+           </div>
            """
   end
 
   test "pass context down the tree of components" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Outer>
           <InnerWrapper />
@@ -123,14 +125,14 @@ defmodule ContextTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <span id="field">field from Outer</span>\
            """
   end
 
   test "context assingns are scoped by their parent components" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Outer>
           <InnerWrapper/>
@@ -138,15 +140,15 @@ defmodule ContextTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <span id="field">field from Outer</span>\
-           <span id="other_field">field from InnerWrapper</span>\
+    assert html =~ """
+           <span id="field">field from Outer</span>
+             <span id="other_field">field from InnerWrapper</span>
            """
   end
 
   test "reset context after the component" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Outer>
           <Inner/>
@@ -155,14 +157,14 @@ defmodule ContextTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            Context: %{}
            """
   end
 
   test "pass context to named slots" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithNamedSlots>
           <template slot="my_slot">
@@ -174,7 +176,7 @@ defmodule ContextTest do
         """
       end
 
-    assert render_live(code) =~ "field from OuterWithNamedSlots"
+    assert html =~ "field from OuterWithNamedSlots"
   end
 
   describe "validate property :get" do

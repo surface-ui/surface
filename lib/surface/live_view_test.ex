@@ -3,87 +3,120 @@ defmodule Surface.LiveViewTest do
   Conveniences for testing Surface components.
   """
 
-  alias Surface.TypeHandler
+  alias Phoenix.LiveView.{Diff, Socket}
+
+  defmodule BlockWrapper do
+    @moduledoc false
+
+    use Surface.Component
+
+    slot default, required: true
+
+    def render(assigns) do
+      ~H"""
+      <slot/>
+      """
+    end
+  end
 
   @doc """
-  Helper function to test stateless components or regular rendering of a live component.
+  Helper function to test the regular rendering of components.
 
-  The values passed in `assigns` must be in the runtime format. For instance, a property
-  of type `:css_class` must be passed as list (e.g. `["btn", "active"]`). A property of
-  type `:event` must be passed as `%{name: event_name, target: :live_view}`. This function
-  accepts a block that will be used to fill in the default slot.
+  For tests depending on the existence of a parent live view, e.g. testing events on live
+  components and its side-effects, you need to use either `render_live/2` or
+  `Phoenix.LiveViewTest.live_isolated/3`.
 
   ## Example
 
       html =
-        render_surface_component(Link, to: "/users/1") do
+        render_surface do
           ~H"\""
-          <span>user</span>
+          <Link label="user" to="/users/1" />
           "\""
         end
 
       assert html =~ "\""
-            <a href="/users/1"><span>user</span></a>
+            <a href="/users/1">user</a>
             "\""
 
-  ## Limitations
-
-  Currently, this function cannot be used to test:
-
-    * Slot props
-    * Named slots
-    * Contexts
-    * Events on live components
-
-  If your test depends on any of the features above, you need to use either
-  `render_live/2` or `Phoenix.LiveViewTest.live_isolated/3`.
-
   """
-  defmacro render_surface_component(component, assigns, opts \\ []) do
-    block = Keyword.get(opts, :do)
-
-    init_inner_block =
-      if block do
-        quote do
-          var!(assigns) = %{}
-          inner_block = unquote(block)
-        end
-      else
-        quote do
-          inner_block = nil
-        end
+  defmacro render_surface(do: do_block) do
+    render_component_call =
+      quote do
+        Surface.LiveViewTest.render_component_with_block(
+          Surface.LiveViewTest.BlockWrapper,
+          %{__context__: %{}, __surface__: %{provided_templates: [:__default__]}},
+          do: unquote(do_block)
+        )
       end
 
-    quote do
-      unquote(init_inner_block)
+    if Macro.Env.has_var?(__CALLER__, {:assigns, nil}) do
+      quote do
+        var!(assigns) = Map.merge(var!(assigns), %{__context__: %{}})
+        unquote(render_component_call) |> Surface.LiveViewTest.clean_html()
+      end
+    else
+      quote do
+        var!(assigns) = %{__context__: %{}}
+        unquote(render_component_call) |> Surface.LiveViewTest.clean_html()
+      end
+    end
+  end
 
-      render_component(
-        unquote(component),
-        unquote(__MODULE__).init_surface(unquote(component), inner_block, unquote(assigns)),
-        unquote(opts)
-      )
-      |> unquote(__MODULE__).clean_html()
+  # Custom version of phoenix's `render_component` that supports
+  # passing a inner_block. This should be used until a compatible
+  # version of phoenix_live_view is released.
+
+  @doc false
+  defmacro render_component_with_block(component, assigns, opts \\ [], do_block \\ []) do
+    {do_block, opts} =
+      case {do_block, opts} do
+        {[do: do_block], _} -> {do_block, opts}
+        {_, [do: do_block]} -> {do_block, []}
+        {_, _} -> {nil, opts}
+      end
+
+    endpoint =
+      Module.get_attribute(__CALLER__.module, :endpoint) ||
+        raise ArgumentError,
+              "the module attribute @endpoint is not set for #{inspect(__MODULE__)}"
+
+    socket =
+      quote do
+        %Socket{endpoint: unquote(endpoint), router: unquote(opts)[:router]}
+      end
+
+    if do_block do
+      quote do
+        socket = unquote(socket)
+        var!(assigns) = Map.put(var!(assigns), :socket, socket)
+
+        inner_block = fn _, _args ->
+          unquote(do_block)
+        end
+
+        assigns = unquote(assigns) |> Map.new() |> Map.put(:inner_block, inner_block)
+        Surface.LiveViewTest.__render_component_with_block__(socket, unquote(component), assigns)
+      end
+    else
+      quote do
+        assigns = Map.new(unquote(assigns))
+
+        Surface.LiveViewTest.__render_component_with_block__(
+          unquote(socket),
+          unquote(component),
+          assigns
+        )
+      end
     end
   end
 
   @doc false
-  def init_surface(component, inner_block, assigns \\ []) do
-    props =
-      component
-      |> Surface.default_props()
-      |> Keyword.merge(assigns)
-      |> to_runtime_values(component)
-      |> Surface.rename_id_if_stateless(component.component_type())
-      |> Map.new()
-
-    if inner_block do
-      props
-      |> Map.put(:inner_block, fn _, _ -> inner_block end)
-      |> Map.put(:__surface__, %{provided_templates: [:__default__]})
-    else
-      props
-      |> Map.put(:__surface__, %{provided_templates: []})
-    end
+  def __render_component_with_block__(socket, component, assigns) do
+    mount_assigns = if assigns[:id], do: %{myself: %Phoenix.LiveComponent.CID{cid: -1}}, else: %{}
+    rendered = Diff.component_to_rendered(socket, component, assigns, mount_assigns)
+    {_, diff, _} = Diff.render(socket, rendered, Diff.new_components())
+    diff |> Diff.to_iodata() |> IO.iodata_to_binary()
   end
 
   @doc false
@@ -91,11 +124,5 @@ defmodule Surface.LiveViewTest do
     html
     |> String.replace(~r/\n+/, "\n")
     |> String.replace(~r/\n\s+\n/, "\n")
-  end
-
-  defp to_runtime_values(assigns, component) do
-    Enum.map(assigns, fn {name, value} ->
-      {name, TypeHandler.runtime_prop_value!(component, name, value, component)}
-    end)
   end
 end

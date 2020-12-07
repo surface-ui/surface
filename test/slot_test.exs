@@ -1,5 +1,5 @@
 defmodule Surface.SlotTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
   import ComponentTestHelper
 
@@ -189,8 +189,8 @@ defmodule Surface.SlotTest do
   end
 
   test "render slot without slot props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithMultipleSlotableEntries>
           Content 1
@@ -210,11 +210,11 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         <div>
           label 1:<b>content 1</b>
-          <div data-phx-component="1">Stateful</div>
+          <div>Stateful</div>
         </div>
         <div>
           label 2:<b>content 2</b>
@@ -224,7 +224,7 @@ defmodule Surface.SlotTest do
           Content 2
             Content 2.1
           Content 3
-          <div data-phx-component="2">Stateful</div>
+          <div>Stateful</div>
         </div>
       </div>
       """
@@ -232,8 +232,8 @@ defmodule Surface.SlotTest do
   end
 
   test "assign named slots with props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithNamedSlotAndProps>
           <template slot="body" :let={{ info: my_info }}>
@@ -244,7 +244,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         Info: Info from slot
       </div>
@@ -253,8 +253,8 @@ defmodule Surface.SlotTest do
   end
 
   test "assign default slot with props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
           Info: {{ my_info }}
@@ -263,7 +263,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         Info: Info from slot
       </div>
@@ -272,8 +272,8 @@ defmodule Surface.SlotTest do
   end
 
   test "assign default slot ignoring all props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithDefaultSlotAndProps>
           Info
@@ -282,7 +282,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         Info
       </div>
@@ -291,8 +291,8 @@ defmodule Surface.SlotTest do
   end
 
   test "assign named slots without props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithNamedSlot>
           <template slot="header">
@@ -307,7 +307,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         My header
         My body
@@ -318,8 +318,8 @@ defmodule Surface.SlotTest do
   end
 
   test "assign undeclared slots without props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithoutDeclaringSlots>
           <template slot="header">
@@ -334,7 +334,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         My header
         My body
@@ -345,15 +345,15 @@ defmodule Surface.SlotTest do
   end
 
   test "fallback content" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithNamedSlot/>
         """
       end
 
     assert_html(
-      render_live(code) =~ """
+      html =~ """
       <div>
         Default fallback
         Footer fallback
@@ -365,8 +365,8 @@ defmodule Surface.SlotTest do
   test "slotable component with default value for prop" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Grid items={{ user <- @items }}>
           <ColumnWithDefaultTitle>
@@ -377,7 +377,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code, assigns) =~ """
+      html =~ """
       <table>
         <tr>
           <th>default title</th>
@@ -394,8 +394,8 @@ defmodule Surface.SlotTest do
   test "render slot with slot props containing parent bindings" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Grid items={{ user <- @items }}>
           <Column title="ID">
@@ -409,7 +409,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code, assigns) =~ """
+      html =~ """
       <table>
         <tr>
           <th>ID</th><th>NAME</th>
@@ -428,8 +428,8 @@ defmodule Surface.SlotTest do
   test "render slot renaming slot props" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Grid items={{ user <- @items }}>
           <Column title="ID" :let={{ item: my_user }}>
@@ -444,7 +444,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code, assigns) =~ """
+      html =~ """
       <table>
         <tr>
           <th>ID</th><th>NAME</th>
@@ -646,15 +646,15 @@ defmodule Surface.SlotTest do
   test "does not render slot if slot_assigned? returns false" do
     assigns = %{}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithOptionalNamedSlot />
         """
       end
 
     assert_html(
-      render_live(code, assigns) =~ """
+      html =~ """
       <div>
         <footer>
           Footer fallback
@@ -663,8 +663,8 @@ defmodule Surface.SlotTest do
       """
     )
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithOptionalNamedSlot>
           <template slot="header">
@@ -675,7 +675,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code, assigns) =~ """
+      html =~ """
       <div>
         <header>
           My Header
@@ -687,8 +687,8 @@ defmodule Surface.SlotTest do
       """
     )
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OuterWithOptionalNamedSlot>
           My Content
@@ -697,7 +697,7 @@ defmodule Surface.SlotTest do
       end
 
     assert_html(
-      render_live(code, assigns) =~ """
+      html =~ """
       <div>
         <main>
           My Content

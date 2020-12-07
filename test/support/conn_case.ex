@@ -15,6 +15,7 @@ defmodule Surface.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
+      import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4]
       import Surface, only: [sigil_H: 2]
       import Surface.LiveViewTest
       import Surface.ConnCase
