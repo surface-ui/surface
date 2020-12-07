@@ -19,8 +19,20 @@ defmodule Surface.LiveViewTest do
     end
   end
 
+  defmacro __using__(_opts) do
+    quote do
+      import Phoenix.LiveViewTest
+      import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4]
+      import Surface, only: [sigil_H: 2]
+      import Surface.LiveViewTest
+    end
+  end
+
   @doc """
-  Helper function to test the regular rendering of components.
+  Render Surface code.
+
+  Use this macro when testing regular rendering of stateless components or live components
+  that don't require a parent live view during the tests.
 
   For tests depending on the existence of a parent live view, e.g. testing events on live
   components and its side-effects, you need to use either `render_live/2` or
@@ -63,9 +75,77 @@ defmodule Surface.LiveViewTest do
     end
   end
 
+  @doc """
+  Compiles Surface code into a new LiveView module.
+
+  This macro should be used sparingly as it always generates and compiles a new module
+  on-the-fly, which can potentially slow down your test suite.
+
+  Its main use is when testing compile-time errors/warnings.
+
+  ## Example
+
+      code =
+        quote do
+          ~H"\""
+          <KeywordProp prop="some string"/>
+          "\""
+        end
+
+      message =
+        ~S(code:1: invalid value for property "prop". Expected a :keyword, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
+      end)
+
+  """
+  defmacro compile_surface(code, assigns \\ quote(do: %{})) do
+    env = Map.take(__CALLER__, [:function, :module, :line])
+
+    quote do
+      ast =
+        unquote(__MODULE__).generate_live_view_ast(
+          unquote(code),
+          unquote(assigns),
+          unquote(Macro.escape(env))
+        )
+
+      {{:module, module, _, _}, _} = Code.eval_quoted(ast, [], %{__ENV__ | file: "code", line: 0})
+
+      module
+    end
+  end
+
+  @doc false
+  def generate_live_view_ast(render_code, props, env) do
+    {func, _} = env.function
+    module = Module.concat([env.module, "(#{func}) at line #{env.line}"])
+
+    props_ast =
+      for {name, _} <- props do
+        quote do
+          prop unquote(Macro.var(name, nil)), :any
+        end
+      end
+
+    quote do
+      defmodule unquote(module) do
+        use Surface.LiveView
+
+        unquote_splicing(props_ast)
+
+        def render(var!(assigns)) do
+          var!(assigns) = Map.merge(var!(assigns), unquote(Macro.escape(props)))
+          unquote(render_code)
+        end
+      end
+    end
+  end
+
   # Custom version of phoenix's `render_component` that supports
   # passing a inner_block. This should be used until a compatible
-  # version of phoenix_live_view is released.
+  # version of `phoenix_live_view` is released.
 
   @doc false
   defmacro render_component_with_block(component, assigns, opts \\ [], do_block \\ []) do

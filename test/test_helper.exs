@@ -46,13 +46,6 @@ defmodule ComponentTestHelper do
     end
   end
 
-  def render_live(module, assigns, _env) when is_atom(module) do
-    conn = Phoenix.ConnTest.build_conn()
-    {:ok, _view, html} = Phoenix.LiveViewTest.live_isolated(conn, module, session: assigns)
-
-    clean_html(html)
-  end
-
   defmacro render_live(code, assigns \\ quote(do: %{})) do
     quote do
       render_live(unquote(code), unquote(assigns), unquote(Macro.escape(__CALLER__)))

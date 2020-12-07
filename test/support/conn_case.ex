@@ -12,13 +12,8 @@ defmodule Surface.ConnCase do
   using do
     quote do
       # Import conveniences for testing with connections
-      import Plug.Conn
       import Phoenix.ConnTest
-      import Phoenix.LiveViewTest
-      import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4]
-      import Surface, only: [sigil_H: 2]
-      import Surface.LiveViewTest
-      import Surface.ConnCase
+      use Surface.LiveViewTest
 
       # The default endpoint for testing
       @endpoint Endpoint

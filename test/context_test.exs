@@ -1,9 +1,6 @@
 defmodule ContextTest do
   use Surface.ConnCase, async: true
 
-  import Surface
-  import ComponentTestHelper
-
   alias Surface.Components.Context
 
   defmodule Outer do
@@ -199,7 +196,7 @@ defmodule ContextTest do
       """
 
       assert_raise(CompileError, message, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
@@ -215,7 +212,7 @@ defmodule ContextTest do
         end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
@@ -231,7 +228,7 @@ defmodule ContextTest do
         end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
   end
@@ -256,7 +253,7 @@ defmodule ContextTest do
       """
 
       assert_raise(CompileError, message, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
@@ -272,7 +269,7 @@ defmodule ContextTest do
         end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
@@ -288,7 +285,7 @@ defmodule ContextTest do
         end
 
       assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
   end

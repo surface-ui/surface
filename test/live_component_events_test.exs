@@ -1,10 +1,6 @@
 defmodule Surface.EventsTest do
   use Surface.ConnCase, async: true
 
-  import ComponentTestHelper
-
-  @endpoint Endpoint
-
   defmodule LiveDiv do
     use Surface.LiveComponent
 
@@ -84,11 +80,9 @@ defmodule Surface.EventsTest do
   test "handle event in the parent liveview" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
 
-    assert_html(
-      html =~ """
-      <button data-phx-component="2" phx-click="click">Click me!</button>
-      """
-    )
+    assert html =~ """
+           <button data-phx-component="2" phx-click="click">Click me!</button>\
+           """
   end
 
   test "handle event in parent component" do
@@ -182,15 +176,6 @@ defmodule Surface.EventsTest do
   end
 
   test "raise error when passing an :event into a phx-* binding" do
-    code =
-      quote do
-        ~H"""
-        <div>
-          <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
-        </div>
-        """
-      end
-
     message = """
     invalid value for "phx-click". LiveView bindings only accept values \
     of type :string. If you want to pass an :event, please use directive \
@@ -198,7 +183,11 @@ defmodule Surface.EventsTest do
     """
 
     assert_raise(RuntimeError, message, fn ->
-      render_live(code)
+      render_surface do
+        ~H"""
+        <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
+        """
+      end
     end)
   end
 end

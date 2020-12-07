@@ -1,5 +1,5 @@
 defmodule Surface.Components.FormTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
   alias Surface.Components.Form, warn: false
   alias Surface.Components.Form.TextInput, warn: false
@@ -75,7 +75,7 @@ defmodule Surface.Components.FormTest do
            """
   end
 
-  test "form as a changeset" do
+  test "form as a changeset", %{conn: conn} do
     assigns = %{
       "changeset" =>
         Ecto.Changeset.cast(
@@ -85,11 +85,13 @@ defmodule Surface.Components.FormTest do
         )
     }
 
-    assert render_live(ViewWithForm, assigns) =~ """
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+
+    assert html =~ """
            <form action="#" method="post">\
            <input name="_csrf_token" type="hidden" value="test"/>\
            <input id="user_name" name="user[name]" type="text" value="myname"/>\
-           </form>
+           </form>\
            """
   end
 
@@ -107,7 +109,7 @@ defmodule Surface.Components.FormTest do
            """
   end
 
-  test "form exposes the generated form instance" do
+  test "form exposes the generated form instance", %{conn: conn} do
     assigns = %{
       "changeset" =>
         Ecto.Changeset.cast(
@@ -117,6 +119,8 @@ defmodule Surface.Components.FormTest do
         )
     }
 
-    assert render_live(ViewWithForm, assigns) =~ ~r/Name is invalid/
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+
+    assert html =~ ~r/Name is invalid/
   end
 end

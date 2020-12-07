@@ -1,8 +1,6 @@
 defmodule Surface.PropertiesTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  import Surface
-  import ComponentTestHelper
   import ExUnit.CaptureIO
 
   defmodule StringProp do
@@ -95,14 +93,16 @@ defmodule Surface.PropertiesTest do
 
   describe "string" do
     test "passing a string with interpolation" do
-      code =
-        quote do
+      assigns = %{a: 1, b: "two"}
+
+      html =
+        render_surface do
           ~H"""
           <StringProp label="begin {{ @a }} {{ @b }} end"/>
           """
         end
 
-      assert render_live(code, %{a: 1, b: "two"}) =~ "begin 1 two end"
+      assert html =~ "begin 1 two end"
     end
 
     test "raise error on the right line for string with interpolation" do
@@ -140,14 +140,14 @@ defmodule Surface.PropertiesTest do
 
   describe "keyword" do
     test "passing a keyword list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <KeywordProp prop={{ [option1: 1, option2: 2] }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              Keyword?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -155,14 +155,14 @@ defmodule Surface.PropertiesTest do
     end
 
     test "passing a keyword list without brackets" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <KeywordProp prop={{ option1: 1, option2: 2 }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              Keyword?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -172,14 +172,14 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list as an expression" do
       assigns = %{submit: [option1: 1, option2: 2]}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <KeywordProp prop={{ @submit }}/>
           """
         end
 
-      assert render_live(code, assigns) =~ """
+      assert html =~ """
              Keyword?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -198,20 +198,11 @@ defmodule Surface.PropertiesTest do
         ~S(code:1: invalid value for property "prop". Expected a :keyword, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
     test "validate invalid values at runtime" do
-      assigns = %{var: 1}
-
-      code =
-        quote do
-          ~H"""
-          <KeywordProp prop={{ @var }}/>
-          """
-        end
-
       message = """
       invalid value for property "prop". Expected a :keyword, got: 1.
 
@@ -219,21 +210,27 @@ defmodule Surface.PropertiesTest do
       """
 
       assert_raise(RuntimeError, message, fn ->
-        render_live(code, assigns)
+        assigns = %{var: 1}
+
+        render_surface do
+          ~H"""
+          <KeywordProp prop={{ @var }}/>
+          """
+        end
       end)
     end
   end
 
   describe "map" do
     test "passing a map" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <MapProp prop={{ %{option1: 1, option2: 2} }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              Map?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -241,14 +238,14 @@ defmodule Surface.PropertiesTest do
     end
 
     test "passing a keyword list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <MapProp prop={{ [option1: 1, option2: 2] }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              Map?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -256,14 +253,14 @@ defmodule Surface.PropertiesTest do
     end
 
     test "passing a keyword list without brackets" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <MapProp prop={{ option1: 1, option2: 2 }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              Map?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -273,14 +270,14 @@ defmodule Surface.PropertiesTest do
     test "passing a map as an expression" do
       assigns = %{submit: %{option1: 1, option2: 2}}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <MapProp prop={{ @submit }}/>
           """
         end
 
-      assert render_live(code, assigns) =~ """
+      assert html =~ """
              Map?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -290,14 +287,14 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list as an expression" do
       assigns = %{submit: [option1: 1, option2: 2]}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <MapProp prop={{ @submit }}/>
           """
         end
 
-      assert render_live(code, assigns) =~ """
+      assert html =~ """
              Map?: true
              <span>key: option1, value: 1</span>\
              <span>key: option2, value: 2</span>
@@ -316,20 +313,11 @@ defmodule Surface.PropertiesTest do
         ~S(code:1: invalid value for property "prop". Expected a :map, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
     test "validate invalid values at runtime" do
-      assigns = %{var: 1}
-
-      code =
-        quote do
-          ~H"""
-          <MapProp prop={{ @var }}/>
-          """
-        end
-
       message = """
       invalid value for property "prop". Expected a :map, got: 1.
 
@@ -337,21 +325,27 @@ defmodule Surface.PropertiesTest do
       """
 
       assert_raise(RuntimeError, message, fn ->
-        render_live(code, assigns)
+        assigns = %{var: 1}
+
+        render_surface do
+          ~H"""
+          <MapProp prop={{ @var }}/>
+          """
+        end
       end)
     end
   end
 
   describe "list" do
     test "passing a list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <ListProp prop={{ [1, 2] }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              List?: true
              <span>value: 1</span>\
              <span>value: 2</span>
@@ -361,14 +355,14 @@ defmodule Surface.PropertiesTest do
     test "passing a list as an expression" do
       assigns = %{submit: [1, 2]}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <ListProp prop={{ @submit }}/>
           """
         end
 
-      assert render_live(code, assigns) =~ """
+      assert html =~ """
              List?: true
              <span>value: 1</span>\
              <span>value: 2</span>
@@ -378,14 +372,14 @@ defmodule Surface.PropertiesTest do
     test "passing a list with a single value as an expression" do
       assigns = %{submit: [1]}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <ListProp prop={{ @submit }}/>
           """
         end
 
-      assert render_live(code, assigns) =~ """
+      assert html =~ """
              List?: true
              <span>value: 1</span>
              """
@@ -402,48 +396,45 @@ defmodule Surface.PropertiesTest do
       message = ~S(code:1: invalid value for property "prop". Expected a :list, got: {{ 1, 2 }}.)
 
       assert_raise(CompileError, message, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
     test "passing a list with a single value without brackets is invalid" do
-      code =
-        quote do
+      message = "invalid value for property \"prop\". Expected a :list, got: 1"
+
+      assert_raise(RuntimeError, message, fn ->
+        render_surface do
           ~H"""
           <ListProp prop={{ 1 }}/>
           """
         end
-
-      message = "invalid value for property \"prop\". Expected a :list, got: 1"
-
-      assert_raise(RuntimeError, message, fn ->
-        render_live(code)
       end)
     end
 
     test "passing a keyword list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <ListProp prop={{ [a: 1, b: 2] }}/>
           """
         end
 
-      assert render_live(code, %{}) =~ """
+      assert html =~ """
              List?: true
              <span>value: {:a, 1}</span><span>value: {:b, 2}</span>
              """
     end
 
     test "passing a keyword list without brackets" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <ListProp prop={{ a: 1, b: 2 }}/>
           """
         end
 
-      assert render_live(code, %{}) =~ """
+      assert html =~ """
              List?: true
              <span>value: {:a, 1}</span><span>value: {:b, 2}</span>
              """
@@ -461,99 +452,96 @@ defmodule Surface.PropertiesTest do
         ~S(code:1: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
     end
 
     test "validate invalid values at runtime" do
-      code =
-        quote do
+      message = "invalid value for property \"prop\". Expected a :list, got: %{test: 1}"
+
+      assert_raise(RuntimeError, message, fn ->
+        render_surface do
           ~H"""
           <ListProp prop={{ %{test: 1} }}/>
           """
         end
-
-      message = "invalid value for property \"prop\". Expected a :list, got: %{test: 1}"
-
-      assert_raise(RuntimeError, message, fn ->
-        render_live(code)
       end)
     end
   end
 
   describe "css_class" do
     test "passing a string" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <CSSClassProp prop="class1 class2"/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              <span class="class1 class2"></span>
              """
     end
 
     test "passing a keywod list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <CSSClassProp prop={{ [class1: true, class2: false, class3: "truthy"] }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              <span class="class1 class3"></span>
              """
     end
 
     test "passing a keywod list without brackets" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <CSSClassProp prop={{ class1: true, class2: false, class3: "truthy" }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              <span class="class1 class3"></span>
              """
     end
 
     test "trim class items" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <CSSClassProp prop={{ "", " class1 " , "", " ", "  ", " class2 class3 ", "" }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              <span class="class1 class2 class3"></span>
              """
     end
 
     test "values are always converted to a list of strings" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <CSSClassPropInspect prop="class1 class2   class3"/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              <div>class1</div><div>class2</div><div>class3</div>
              """
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <CSSClassPropInspect prop={{ ["class1"] ++ ["class2 class3", :class4, class5: true] }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              <div>class1</div><div>class2</div><div>class3</div><div>class4</div><div>class5</div>
              """
     end
@@ -561,14 +549,14 @@ defmodule Surface.PropertiesTest do
 
   describe "accumulate" do
     test "if true, groups all props with the same name in a single list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <AccumulateProp prop="str_1" prop={{ "str_2" }}/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              List?: true
              <span>value: str_1</span>\
              <span>value: str_2</span>
@@ -576,28 +564,28 @@ defmodule Surface.PropertiesTest do
     end
 
     test "if true and there's a single prop, it stills creates a list" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <AccumulateProp prop="str_1"/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              List?: true
              <span>value: str_1</span>
              """
     end
 
     test "without any props, takes the default value" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <AccumulateProp/>
           """
         end
 
-      assert render_live(code) =~ """
+      assert html =~ """
              List?: true
              <span>value: default</span>
              """

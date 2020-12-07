@@ -194,18 +194,6 @@ defmodule Surface do
   end
 
   @doc false
-  def rename_id_if_stateless(props, Surface.Component) do
-    case Keyword.pop(props, :id) do
-      {nil, rest} -> rest
-      {id, rest} -> Keyword.put(rest, :__id__, id)
-    end
-  end
-
-  def rename_id_if_stateless(props, _type) do
-    props
-  end
-
-  @doc false
   def css_class(value) when is_list(value) do
     with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, []),
          {:ok, string} <- Surface.TypeHandler.CssClass.value_to_html("class", value) do
@@ -319,5 +307,16 @@ defmodule Surface do
     """
 
     IOHelper.warn(message, caller, & &1)
+  end
+
+  defp rename_id_if_stateless(props, Surface.Component) do
+    case Keyword.pop(props, :id) do
+      {nil, rest} -> rest
+      {id, rest} -> Keyword.put(rest, :__id__, id)
+    end
+  end
+
+  defp rename_id_if_stateless(props, _type) do
+    props
   end
 end

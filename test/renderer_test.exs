@@ -1,11 +1,9 @@
 defmodule Surface.RendererTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
   alias Surface.RendererTest.Components.ComponentWithExternalTemplate
   alias Surface.RendererTest.Components.LiveComponentWithExternalTemplate
   alias Surface.RendererTest.Components.LiveViewWithExternalTemplate
-
-  import ComponentTestHelper
 
   defmodule View do
     use Surface.LiveView
@@ -19,15 +17,18 @@ defmodule Surface.RendererTest do
     end
   end
 
-  test "Component rendering external template" do
-    assert render_live(View) =~ "the rendered content of the component"
+  test "Component rendering external template", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, View)
+    assert html =~ "the rendered content of the component"
   end
 
-  test "LiveComponent rendering external template" do
-    assert render_live(View) =~ "the rendered content of the live component"
+  test "LiveComponent rendering external template", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, View)
+    assert html =~ "the rendered content of the live component"
   end
 
-  test "LiveView rendering external template" do
-    assert render_live(View) =~ "the rendered content of the live view"
+  test "LiveView rendering external template", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, View)
+    assert html =~ "the rendered content of the live view"
   end
 end
