@@ -103,11 +103,12 @@ defmodule Surface.AST.Directive do
       * `:value` - the code/configuration for this directive. typically a quoted expression
       * `:meta` - compilation meta data
   """
-  defstruct [:module, :name, :value, :meta]
+  defstruct [:module, :name, :value, :modifiers, :meta]
 
   @type t :: %__MODULE__{
           module: atom(),
           name: atom(),
+          modifiers: list(atom()),
           # the value here is defined by the individual directive
           value: Surface.AST.AttributeExpr.t() | Surface.AST.Literal.t() | nil,
           meta: Surface.AST.Meta.t()

@@ -10,37 +10,22 @@ defmodule Surface.Constructs.If do
   </If>
   ```
   """
-  use Surface.Component
+  use Surface.Construct,
+    name: :if,
+    type: :boolean,
+    directive: true,
+    component: [
+      prop: [
+        name: condition,
+        default: false
+      ]
+    ]
 
   alias Surface.AST
 
-  @doc "The condition for the if expression"
-  prop condition, :boolean, required: true
-  slot default, required: true
+  def process(directive, node) do
+    %AST.Directive{value: %AST.AttributeExpr{} = expr, meta: meta} = directive
 
-  def render(_), do: ""
-
-  def transform(node) do
-    condition =
-      Enum.find_value(
-        node.props,
-        %AST.AttributeExpr{value: false, original: "", meta: node.meta},
-        fn prop ->
-          if prop.name == :condition do
-            prop.value
-          end
-        end
-      )
-
-    children =
-      if Enum.empty?(node.templates.default),
-        do: [],
-        else: List.first(node.templates.default).children
-
-    %AST.If{
-      condition: condition,
-      children: children,
-      meta: node.meta
-    }
+    %AST.If{condition: expr, children: [node], meta: meta}
   end
 end

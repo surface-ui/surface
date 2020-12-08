@@ -37,7 +37,8 @@ defmodule Surface.LiveView do
       use Surface.API, include: [:prop, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.{For, If}
+      alias Surface.Constructs.For
+      alias Surface.Constructs.If.Component, as: If
       alias Surface.Components.Context
 
       @before_compile Surface.Renderer

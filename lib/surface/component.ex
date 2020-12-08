@@ -43,7 +43,8 @@ defmodule Surface.Component do
 
       @before_compile unquote(__MODULE__)
 
-      alias Surface.Constructs.{For, If}
+      alias Surface.Constructs.For
+      alias Surface.Constructs.If.Component, as: If
       alias Surface.Components.Context
 
       @doc "Built-in assign"
