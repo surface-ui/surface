@@ -1,9 +1,7 @@
 defmodule Surface.Components.LivePatchTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.LivePatch, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.LivePatch
 
   defmodule ComponentWithLink do
     use Surface.LiveComponent
@@ -23,71 +21,72 @@ defmodule Surface.Components.LivePatchTest do
 
   describe "Without LiveView" do
     test "creates a link with label" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <LivePatch label="user" to="/users/1" />
           """
         end
 
-      assert render_live(code) =~ actual_content("user", to: "/users/1")
+      assert html =~ actual_content("user", to: "/users/1")
     end
 
     test "creates a link without label" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <LivePatch to="/users/1" />
           """
         end
 
-      assert render_live(code) =~ actual_content(to: "/users/1")
+      assert html =~ actual_content(to: "/users/1")
     end
 
     test "creates a link with default slot" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <LivePatch to="/users/1"><span>user</span></LivePatch>
           """
         end
 
-      assert render_live(code) =~ actual_content({:safe, "<span>user</span>"}, to: "/users/1")
+      assert html =~ actual_content({:safe, "<span>user</span>"}, to: "/users/1")
     end
 
     test "setting the class" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <LivePatch label="user" to="/users/1" class="link" />
           """
         end
 
-      assert render_live(code) =~
-               actual_content("user", to: "/users/1", class: "link")
+      assert html =~ actual_content("user", to: "/users/1", class: "link")
     end
 
     test "setting multiple classes" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <LivePatch label="user" to="/users/1" class="link primary" />
           """
         end
 
-      assert render_live(code) =~
-               actual_content("user", to: "/users/1", class: "link primary")
+      assert html =~ actual_content("user", to: "/users/1", class: "link primary")
     end
 
     test "passing other options" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
-          <LivePatch label="user" to="/users/1" class="link" opts={{ method: :delete, "data-confirm": "Really?", "csrf-token": "token" }} />
+          <LivePatch
+            label="user"
+            to="/users/1"
+            class="link"
+            opts={{ method: :delete, "data-confirm": "Really?", "csrf-token": "token" }}
+          />
           """
         end
-
-      rendered = render_live(code)
 
       actual =
         actual_content("user",
@@ -98,7 +97,7 @@ defmodule Surface.Components.LivePatchTest do
           csrf_token: "token"
         )
 
-      assert attr_map(rendered) == attr_map(actual)
+      assert attr_map(html) == attr_map(actual)
     end
   end
 
