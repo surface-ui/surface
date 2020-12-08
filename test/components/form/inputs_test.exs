@@ -1,15 +1,13 @@
 defmodule Surface.Components.Form.InputsTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form, warn: false
-  alias Surface.Components.Form.Inputs, warn: false
-  alias Surface.Components.Form.TextInput, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Inputs
+  alias Surface.Components.Form.TextInput
 
   test "using generated form received as slot props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
           <Inputs for={{ :children }} :let={{ form: f }}>
@@ -20,17 +18,18 @@ defmodule Surface.Components.Form.InputsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="parent_children_name" name="parent[children][name]" type="text"/>\
-           <input id="parent_children_email" name="parent[children][email]" type="text"/>\
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="parent_children_name" name="parent[children][name]" type="text">
+             <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
            """
   end
 
   test "using generated form stored in the Form context" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
           <Inputs for={{ :children }}>
@@ -41,17 +40,18 @@ defmodule Surface.Components.Form.InputsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="parent_children_name" name="parent[children][name]" type="text"/>\
-           <input id="parent_children_email" name="parent[children][email]" type="text"/>\
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="parent_children_name" name="parent[children][name]" type="text">
+             <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
            """
   end
 
   test "passing extra opts" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
           <Inputs for={{ :children }} opts={{ as: "custom_name"}}>
@@ -62,10 +62,11 @@ defmodule Surface.Components.Form.InputsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="parent_children_name" name="custom_name[name]" type="text"/>\
-           <input id="parent_children_email" name="custom_name[email]" type="text"/>\
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="parent_children_name" name="custom_name[name]" type="text">
+             <input id="parent_children_email" name="custom_name[email]" type="text">
            </form>
            """
   end
