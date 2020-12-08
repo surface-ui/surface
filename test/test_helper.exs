@@ -23,13 +23,6 @@ defmodule ComponentTestHelper do
 
   @endpoint Endpoint
 
-  def render_static(code) do
-    code
-    |> Phoenix.HTML.Safe.to_iodata()
-    |> IO.iodata_to_binary()
-    |> String.replace(~r/\n+/, "\n")
-  end
-
   def normalize_html(html) do
     html
     |> String.split("\n")

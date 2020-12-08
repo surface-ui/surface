@@ -1,22 +1,21 @@
 defmodule Surface.Components.MarkdownTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  import Surface
-  import ComponentTestHelper
   alias Surface.Components.Markdown
 
   test "translate markdown into HTML" do
-    assigns = %{}
+    html =
+      render_surface do
+        ~H"""
+        <#Markdown>
+          # Head 1
+          Bold: **bold**
+          Code: `code`
+        </#Markdown>
+        """
+      end
 
-    code = ~H"""
-    <#Markdown>
-      # Head 1
-      Bold: **bold**
-      Code: `code`
-    </#Markdown>
-    """
-
-    assert render_static(code) =~ """
+    assert html =~ """
            <div>\
            <h1>
            Head 1</h1>
@@ -28,15 +27,16 @@ defmodule Surface.Components.MarkdownTest do
   end
 
   test "setting the class" do
-    assigns = %{}
+    html =
+      render_surface do
+        ~H"""
+        <#Markdown class="markdown">
+          # Head 1
+        </#Markdown>
+        """
+      end
 
-    code = ~H"""
-    <#Markdown class="markdown">
-      # Head 1
-    </#Markdown>
-    """
-
-    assert render_static(code) =~ """
+    assert html =~ """
            <div class="markdown">\
            <h1>
            Head 1</h1>
@@ -45,15 +45,16 @@ defmodule Surface.Components.MarkdownTest do
   end
 
   test "setting multiple classes" do
-    assigns = %{}
+    html =
+      render_surface do
+        ~H"""
+        <#Markdown class="markdown small">
+          # Head 1
+        </#Markdown>
+        """
+      end
 
-    code = ~H"""
-    <#Markdown class="markdown small">
-      # Head 1
-    </#Markdown>
-    """
-
-    assert render_static(code) =~ """
+    assert html =~ """
            <div class="markdown small">\
            <h1>
            Head 1</h1>
@@ -62,32 +63,34 @@ defmodule Surface.Components.MarkdownTest do
   end
 
   test "setting unwrap removes the wrapping <div>" do
-    assigns = %{}
+    html =
+      render_surface do
+        ~H"""
+        <#Markdown unwrap>
+          # Head 1
+        </#Markdown>
+        """
+      end
 
-    code = ~H"""
-    <#Markdown unwrap>
-      # Head 1
-    </#Markdown>
-    """
-
-    assert render_static(code) == """
+    assert html == """
            <h1>
            Head 1</h1>
            """
   end
 
   test "setting opts forward options to Earmark" do
-    assigns = %{}
+    html =
+      render_surface do
+        ~H"""
+        <#Markdown opts={{ code_class_prefix: "language-" }}>
+          ```elixir
+          code
+          ```
+        </#Markdown>
+        """
+      end
 
-    code = ~H"""
-    <#Markdown opts={{ code_class_prefix: "language-" }}>
-      ```elixir
-      code
-      ```
-    </#Markdown>
-    """
-
-    assert render_static(code) =~ """
+    assert html =~ """
            <pre><code class="elixir language-elixir">code</code></pre>
            """
   end

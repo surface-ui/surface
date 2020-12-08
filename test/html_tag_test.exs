@@ -1,20 +1,15 @@
 defmodule HtmlTagTest do
-  use ExUnit.Case, async: true
-
-  import Surface
-  import ComponentTestHelper
+  use Surface.ConnCase, async: true
 
   @encoded_json "[{\"x\":10,\"y\":20}]"
 
   test "raise runtime error for invalid attributes values" do
     assert_raise(RuntimeError, ~r/invalid value for attribute "title"/, fn ->
-      assigns = %{}
-
-      code = ~H"""
-      <div title={{ {1, 2} }}/>
-      """
-
-      render_static(code)
+      render_surface do
+        ~H"""
+        <div title={{ {1, 2} }}/>
+        """
+      end
     end)
   end
 
@@ -22,13 +17,16 @@ defmodule HtmlTagTest do
     test "inside the body" do
       assigns = %{value: @encoded_json}
 
-      code = ~H"""
-      <div>
-      {{ @value }}
-      </div>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div>
+          {{ @value }}
+          </div>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div>
              [{&quot;x&quot;:10,&quot;y&quot;:20}]
              </div>
@@ -38,11 +36,14 @@ defmodule HtmlTagTest do
     test "as attribute values" do
       assigns = %{value: @encoded_json}
 
-      code = ~H"""
-      <div data-value={{ @value }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div data-value={{ @value }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div data-value="[{&quot;x&quot;:10,&quot;y&quot;:20}]"></div>
              """
     end
@@ -50,11 +51,14 @@ defmodule HtmlTagTest do
     test "inside string attributes" do
       assigns = %{value: @encoded_json}
 
-      code = ~H"""
-      <div data-value="Value: {{ @value }}"/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div data-value="Value: {{ @value }}"/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div data-value="Value: [{&quot;x&quot;:10,&quot;y&quot;:20}]"></div>
              """
     end
@@ -64,13 +68,16 @@ defmodule HtmlTagTest do
     test "inside the body" do
       assigns = %{value: @encoded_json}
 
-      code = ~H"""
-      <div>
-      {{ {:safe, @value} }}
-      </div>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div>
+          {{ {:safe, @value} }}
+          </div>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div>
              [{"x":10,"y":20}]
              </div>
@@ -80,11 +87,14 @@ defmodule HtmlTagTest do
     test "as attribute values" do
       assigns = %{value: @encoded_json}
 
-      code = ~H"""
-      <div data-value={{ {:safe, @value} }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div data-value={{ {:safe, @value} }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div data-value="[{"x":10,"y":20}]"></div>
              """
     end
@@ -93,36 +103,38 @@ defmodule HtmlTagTest do
       assert_raise(Protocol.UndefinedError, ~r/protocol String.Chars not implemented/, fn ->
         assigns = %{value: @encoded_json}
 
-        code = ~H"""
-        <div data-value="Value: {{ {:safe, @value} }}"/>
-        """
-
-        render_static(code)
+        render_surface do
+          ~H"""
+          <div data-value="Value: {{ {:safe, @value} }}"/>
+          """
+        end
       end)
     end
   end
 
   describe "basic attibutes" do
     test "as string" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div title="My title"/>
+          """
+        end
 
-      code = ~H"""
-      <div title="My title"/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div title="My title"></div>
              """
     end
 
     test "without a value" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div data-option-is-present />
+          """
+        end
 
-      code = ~H"""
-      <div data-option-is-present />
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div data-option-is-present></div>
              """
     end
@@ -130,11 +142,14 @@ defmodule HtmlTagTest do
     test "as expression" do
       assigns = %{title: "My title"}
 
-      code = ~H"""
-      <div title={{ @title }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div title={{ @title }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div title="My title"></div>
              """
     end
@@ -142,47 +157,53 @@ defmodule HtmlTagTest do
     test "as string with interpolation" do
       assigns = %{title: "title"}
 
-      code = ~H"""
-      <div title="My {{ @title }}"/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div title="My {{ @title }}"/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div title="My title"></div>
              """
     end
 
     test "with `@` and `.`" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div @click.away="open = false"/>
+          """
+        end
 
-      code = ~H"""
-      <div @click.away="open = false"/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div @click.away="open = false"></div>
              """
     end
 
     test "with utf-8 attribute value" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div title="héllo"/>
+          """
+        end
 
-      code = ~H"""
-      <div title="héllo"/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div title="héllo"></div>
              """
     end
 
     test "with utf-8 expression attribute value" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div title={{ "héllo" }}/>
+          """
+        end
 
-      code = ~H"""
-      <div title={{ "héllo" }}/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div title="héllo"></div>
              """
     end
@@ -190,23 +211,27 @@ defmodule HtmlTagTest do
     test "with nil parameter" do
       assigns = %{nilvalue: nil}
 
-      code = ~H"""
-      <div nilvalue={{ @nilvalue }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div nilvalue={{ @nilvalue }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div></div>
              """
     end
 
     test "with nil value" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div nilvalue={{ nil }}/>
+          """
+        end
 
-      code = ~H"""
-      <div nilvalue={{ nil }}/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div></div>
              """
     end
@@ -214,11 +239,14 @@ defmodule HtmlTagTest do
     test "with phx-event nil parameter" do
       assigns = %{nilvalue: nil}
 
-      code = ~H"""
-      <div phx-click={{ @nilvalue }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div phx-click={{ @nilvalue }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div></div>
              """
     end
@@ -228,11 +256,14 @@ defmodule HtmlTagTest do
     test "as string" do
       assigns = %{value1: true, value2: false, value3: true}
 
-      code = ~H"""
-      <div class="myclass"/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div class="myclass"/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div class="myclass"></div>
              """
     end
@@ -240,11 +271,14 @@ defmodule HtmlTagTest do
     test "css class with keyword list notation" do
       assigns = %{value1: true, value2: false, value3: "red", value4: "rounded"}
 
-      code = ~H"""
-      <div class={{ "default1", "default2", prop1: @value1, prop2: @value2, "is-#{@value3}": @value3, "is-#{@value4}": @value4 }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div class={{ "default1", "default2", prop1: @value1, prop2: @value2, "is-#{@value3}": @value3, "is-#{@value4}": @value4 }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div class="default1 default2 prop1 is-red is-rounded"></div>
              """
     end
@@ -252,11 +286,14 @@ defmodule HtmlTagTest do
     test "css class with periods in names" do
       assigns = %{value1: true, value2: false, value3: true}
 
-      code = ~H"""
-      <div class={{ "default.1", "default.2", "prop.1": @value1, prop2: @value2, prop3: @value3 }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div class={{ "default.1", "default.2", "prop.1": @value1, prop2: @value2, prop3: @value3 }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div class="default.1 default.2 prop.1 prop3"></div>
              """
     end
@@ -264,23 +301,27 @@ defmodule HtmlTagTest do
     test "css class with underscores in names" do
       assigns = %{value1: true, value2: false, value3: true}
 
-      code = ~H"""
-      <div class={{ "default__1", "default__2", prop__1: @value1, prop2: @value2, prop3: @value3 }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div class={{ "default__1", "default__2", prop__1: @value1, prop2: @value2, prop3: @value3 }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div class="default__1 default__2 prop__1 prop3"></div>
              """
     end
 
     test "css class defined with an atom" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div class={{:default}}/>
+          """
+        end
 
-      code = ~H"""
-      <div class={{:default}}/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div class="default"></div>
              """
     end
@@ -288,11 +329,14 @@ defmodule HtmlTagTest do
     test "css class with uppercase letter" do
       assigns = %{value1: true}
 
-      code = ~H"""
-      <div class={{ "Default", Prop1: @value1 }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div class={{ "Default", Prop1: @value1 }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div class="Default Prop1"></div>
              """
     end
@@ -300,11 +344,14 @@ defmodule HtmlTagTest do
     test "don't render attribute if value is nil" do
       assigns = %{value1: nil}
 
-      code = ~H"""
-      <div class={{ @value1 }}/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div class={{ @value1 }}/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div></div>
              """
     end
@@ -313,55 +360,61 @@ defmodule HtmlTagTest do
   test "boolean attributes" do
     assigns = %{checked: true, focus: false}
 
-    code = ~H"""
-    <input
-      disabled={{ false }}
-      checked={{ @checked }}
-      autofocus={{ @focus == true }}
-      readonly="false"
-      default={{ true }}
-      required={{ nil }}
-    />
-    """
+    html =
+      render_surface do
+        ~H"""
+        <input
+          disabled={{ false }}
+          checked={{ @checked }}
+          autofocus={{ @focus == true }}
+          readonly="false"
+          default={{ true }}
+          required={{ nil }}
+        />
+        """
+      end
 
-    assert render_static(code) =~ """
+    assert html =~ """
            <input checked readonly default>
            """
   end
 
   describe "style attribute" do
     test "as string" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div style="height: 10px;"/>
+          """
+        end
 
-      code = ~H"""
-      <div style="height: 10px;"/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div style="height: 10px"></div>
              """
     end
 
     test "as string containing `:` in the value" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div style="background-image: url(https://example.com/breaks.jpg)"/>
+          """
+        end
 
-      code = ~H"""
-      <div style="background-image: url(https://example.com/breaks.jpg)"/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div style="background-image: url(https://example.com/breaks.jpg)"></div>
              """
     end
 
     test "as expression" do
-      assigns = %{}
+      html =
+        render_surface do
+          ~H"""
+          <div style={{ "height: 10px;" }}/>
+          """
+        end
 
-      code = ~H"""
-      <div style={{ "height: 10px;" }}/>
-      """
-
-      assert render_static(code) =~ """
+      assert html =~ """
              <div style="height: 10px"></div>
              """
     end
@@ -369,24 +422,25 @@ defmodule HtmlTagTest do
     test "as string with interpolation" do
       assigns = %{height: 10}
 
-      code = ~H"""
-      <div style="height: {{ @height }}px;"/>
-      """
+      html =
+        render_surface do
+          ~H"""
+          <div style="height: {{ @height }}px;"/>
+          """
+        end
 
-      assert render_static(code) =~ """
+      assert html =~ """
              <div style="height: 10px"></div>
              """
     end
 
     test "raise runtime error for invalid style value" do
       assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
-        assigns = %{}
-
-        code = ~H"""
-        <div style={{ {1, 2} }}/>
-        """
-
-        render_static(code)
+        render_surface do
+          ~H"""
+          <div style={{ {1, 2} }}/>
+          """
+        end
       end)
     end
   end
