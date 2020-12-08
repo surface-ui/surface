@@ -126,16 +126,16 @@ defmodule Surface.LiveViewTest do
 
   ## Example
 
-    using_config TextInput, default_class: "default_class" do
-      html =
-        render_surface do
-          ~H"\""
-          <TextInput/>
-          "\""
-        end
+      using_config TextInput, default_class: "default_class" do
+        html =
+          render_surface do
+            ~H"\""
+            <TextInput/>
+            "\""
+          end
 
-      assert html =~ ~r/class="default_class"/
-    end
+        assert html =~ ~r/class="default_class"/
+      end
 
   """
   defmacro using_config(component, config, do: block) do
