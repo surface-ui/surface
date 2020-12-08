@@ -459,7 +459,7 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "rename slot with :as do not overide other assigns with same name" do
+  test "rename slot with :as do not override other assigns with same name" do
     html =
       render_surface do
         ~H"""
