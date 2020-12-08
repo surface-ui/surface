@@ -145,6 +145,40 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule OuterWithRenamedSlot do
+    use Surface.Component
+
+    slot header, as: :default_header
+
+    prop header, :string
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="header" />
+        {{ @header }}
+      </div>
+      """
+    end
+  end
+
+  defmodule OuterWithDefaultPropAndSlot do
+    use Surface.Component
+
+    slot default, as: :default_slot
+
+    prop default, :string
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot />
+        {{ @default }}
+      </div>
+      """
+    end
+  end
+
   defmodule Column do
     use Surface.Component, slot: "cols"
 
@@ -421,6 +455,68 @@ defmodule Surface.SlotTest do
           <td>Name: Second</td>
         </tr>
       </table>
+      """
+    )
+  end
+
+  test "rename slot with :as do not override other assigns with same name" do
+    html =
+      render_surface do
+        ~H"""
+        <OuterWithRenamedSlot header="My Header Prop">
+          <template slot="header">
+            My Header Slot
+          </template>
+        </OuterWithRenamedSlot>
+        """
+      end
+
+    assert_html(
+      html =~ """
+      <div>
+        My Header Slot
+        My Header Prop
+      </div>
+      """
+    )
+  end
+
+  test "default prop name with a default slot" do
+    html =
+      render_surface do
+        ~H"""
+        <OuterWithDefaultPropAndSlot default="Default Prop">
+          Default Slot
+        </OuterWithDefaultPropAndSlot>
+        """
+      end
+
+    assert_html(
+      html =~ """
+      <div>
+        Default Slot
+        Default Prop
+      </div>
+      """
+    )
+
+    html =
+      render_surface do
+        ~H"""
+        <OuterWithDefaultPropAndSlot default="Default Prop">
+          <template name="default">
+            Default Slot
+          </template>
+        </OuterWithDefaultPropAndSlot>
+        """
+      end
+
+    assert_html(
+      html =~ """
+      <div>
+        Default Slot
+        Default Prop
+      </div>
       """
     )
   end

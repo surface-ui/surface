@@ -50,6 +50,13 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :as in slot" do
+    code = "slot label, as: \"default_label\""
+    message = ~r/invalid value for option :as in slot. Expected an atom, got: \"default_label\"/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
@@ -72,12 +79,100 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
+    prop label, :string
+    slot label
+    """
+
+    message = ~r/cannot use name "label". There's already a prop/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    data label, :string
+    data label, :string
+    """
+
+    message = ~r/cannot use name "label". There's already a data assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
     data label, :string
     prop label, :string
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
     assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    data label, :string
+    slot label
+    """
+
+    message = ~r/cannot use name "label". There's already a data assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label
+    slot label
+    """
+
+    message = ~r"""
+    cannot use name "label". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label
+    data label, :string
+    """
+
+    message = ~r"""
+    cannot use name "label". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label
+    prop label, :string
+    """
+
+    message = ~r"""
+    cannot use name "label". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label, as: :default_label
+    prop label, :string
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    prop label, :string
+    slot label, as: :default_label
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    data label, :string
+    slot label, as: :default_label
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    slot label, as: :default_label
+    data label, :string
+    """
+
+    assert {:ok, _} = eval(code)
   end
 
   test "validate duplicate built-in assigns for Component" do
@@ -218,7 +313,7 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :props\]/
+      message = ~r/unknown option :a. Available options: \[:required, :props, :as\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

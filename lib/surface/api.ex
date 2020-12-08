@@ -121,16 +121,7 @@ defmodule Surface.API do
       component_type = Module.get_attribute(caller.module, :component_type)
       builtin_assign? = name in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
 
-      details =
-        if builtin_assign? do
-          "There's already a built-in #{existing_assign.func} assign with the same name"
-        else
-          """
-          There's already a #{existing_assign.func} assign with the same name \
-          at line #{existing_assign.line}\
-          """
-        end
-
+      details = existing_assign_details_message(builtin_assign?, existing_assign)
       message = ~s(cannot use name "#{assign.name}". #{details}.)
 
       IOHelper.compile_error(message, caller.file, assign.line)
@@ -140,6 +131,22 @@ defmodule Surface.API do
     end
 
     Module.put_attribute(caller.module, assign.func, assign)
+  end
+
+  defp existing_assign_details_message(true = _builtin?, %{func: func}) do
+    "There's already a built-in #{func} assign with the same name"
+  end
+
+  defp existing_assign_details_message(false = _builtin?, %{func: func, line: line})
+       when func == :slot do
+    """
+    There's already a #{func} assign with the same name at line #{line}.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+  end
+
+  defp existing_assign_details_message(false = _builtin?, %{func: func, line: line}) do
+    "There's already a #{func} assign with the same name at line #{line}"
   end
 
   @doc false
@@ -367,7 +374,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :props]
+    [:required, :props, :as]
   end
 
   defp get_required_opts(_func, _type, _opts) do
@@ -406,6 +413,10 @@ defmodule Surface.API do
 
   defp validate_opt(:prop, _type, :accumulate, value) when not is_boolean(value) do
     {:error, "invalid value for option :accumulate. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(:slot, _type, :as, value) when not is_atom(value) do
+    {:error, "invalid value for option :as in slot. Expected an atom, got: #{inspect(value)}"}
   end
 
   defp validate_opt(_func, _type, _key, _value) do

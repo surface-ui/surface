@@ -58,7 +58,7 @@ defmodule Surface.LiveViewTest do
       quote do
         Surface.LiveViewTest.render_component_with_block(
           Surface.LiveViewTest.BlockWrapper,
-          %{__context__: %{}, __surface__: %{provided_templates: [:__default__]}},
+          %{__context__: %{}, __surface__: %{provided_templates: [:default]}},
           do: unquote(do_block)
         )
       end
