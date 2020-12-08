@@ -1,15 +1,13 @@
 defmodule Surface.Components.Form.HiddenInputsTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form, warn: false
-  alias Surface.Components.Form.Inputs, warn: false
-  alias Surface.Components.Form.HiddenInputs, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Inputs
+  alias Surface.Components.Form.HiddenInputs
 
   test "using generated form received as slot props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
           <Inputs for={{ :children }} :let={{ form: f }}>
@@ -19,16 +17,16 @@ defmodule Surface.Components.Form.HiddenInputsTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
+           <input name="_csrf_token" type="hidden" value="test">
            </form>
            """
   end
 
   test "using generated form stored in the Form context" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
           <Inputs for={{ :children }}>
@@ -38,9 +36,9 @@ defmodule Surface.Components.Form.HiddenInputsTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
+           <input name="_csrf_token" type="hidden" value="test">
            </form>
            """
   end
