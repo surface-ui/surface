@@ -311,17 +311,6 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "validate slot as option" do
-      code = "slot cols, as: [:info, {:a, :b}]"
-
-      message =
-        ~r/invalid value for option :as in slot. Expected an atom, got: \[:info, {:a, :b}\]/
-
-      assert_raise(CompileError, message, fn ->
-        eval(code)
-      end)
-    end
-
     test "validate unknown options" do
       code = "slot cols, a: 1"
       message = ~r/unknown option :a. Available options: \[:required, :props, :as\]/
