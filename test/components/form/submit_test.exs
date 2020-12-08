@@ -1,61 +1,59 @@
 defmodule Surface.Components.Form.SubmitTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  import ComponentTestHelper
-
-  alias Surface.Components.Form.Submit, warn: false
+  alias Surface.Components.Form.Submit
 
   test "label only" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Submit label="Submit" />
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <button type="submit">Submit</button>
            """
   end
 
   test "with class" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Submit label="Submit" class="button" />
         """
       end
 
-    assert render_live(code) =~ ~r/class="button"/
+    assert html =~ ~r/class="button"/
   end
 
   test "with multiple classes" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Submit label="Submit" class="button primary" />
         """
       end
 
-    assert render_live(code) =~ ~r/class="button primary"/
+    assert html =~ ~r/class="button primary"/
   end
 
   test "with options" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Submit label="Submit" class="btn" opts={{ id: "submit-btn" }} />
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <button class="btn" id="submit-btn" type="submit">Submit</button>
            """
   end
 
   test "with children" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Submit class="btn">
           <span>Submit</span>
@@ -63,8 +61,10 @@ defmodule Surface.Components.Form.SubmitTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <button class="btn" type="submit"><span>Submit</span></button>
+    assert html =~ """
+           <button class="btn" type="submit">
+             <span>Submit</span>
+           </button>
            """
   end
 end
