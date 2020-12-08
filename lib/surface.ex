@@ -181,14 +181,13 @@ defmodule Surface do
       |> Keyword.merge(static_props)
       |> rename_id_if_stateless(module.component_type())
 
-    renamed_slot_props =
+    slot_assigns =
       module
-      |> mapping_to_rename_slots_with_as_option()
-      |> rename_slots_props(slot_props)
+      |> map_slots_to_assigns(slot_props)
 
     Map.new(
       props ++
-        renamed_slot_props ++
+        slot_assigns ++
         [
           __surface__: %{
             slots: Map.new(slots),
@@ -199,13 +198,12 @@ defmodule Surface do
     )
   end
 
-  defp mapping_to_rename_slots_with_as_option(module) do
-    module.__slots__()
-    |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
-    |> Enum.filter(fn value -> not match?({_, nil}, value) end)
-  end
+  defp map_slots_to_assigns(module, slot_props) do
+    mapping =
+      module.__slots__()
+      |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
+      |> Enum.filter(fn value -> not match?({_, nil}, value) end)
 
-  defp rename_slots_props(mapping, slot_props) do
     slot_props
     |> Enum.map(fn {name, info} -> {Keyword.get(mapping, name, name), info} end)
   end
