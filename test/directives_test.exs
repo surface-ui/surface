@@ -118,7 +118,7 @@ defmodule Surface.DirectivesTest do
   describe ":attrs in html tags" do
     test "passing a keyword list" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div class="myclass" :attrs={{ id: "myid" }}>
             Some Text
@@ -135,7 +135,7 @@ defmodule Surface.DirectivesTest do
 
     test "passing a map" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div class="myclass" :attrs={{ %{id: "myid"} }}>
             Some Text
@@ -154,7 +154,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{div_props: [id: "myid", "aria-label": "A div"]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div class="myclass" :attrs={{ @div_props }}>
             Some Text
@@ -171,7 +171,7 @@ defmodule Surface.DirectivesTest do
 
     test "with boolean properties" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div class="myclass" :attrs={{ disabled: true }}>
             Some Text
@@ -188,7 +188,7 @@ defmodule Surface.DirectivesTest do
 
     test "static properties override dyanmic properties" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div class="myclass" id="static-id" :attrs={{ id: "dynamic-id" }}>
             Some Text
@@ -209,7 +209,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{items: [:a, :b]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :for.index.with_index={{ {i, j} <- @items }}>
             i: {{ i }}, j: {{ j }}
@@ -320,7 +320,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{items: [1, 2]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :for={{ i <- @items }}>
             Item: {{i}}
@@ -339,7 +339,7 @@ defmodule Surface.DirectivesTest do
 
     test "in void html elements" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <br :for={{ _ <- [1,2] }}>
           """
@@ -373,7 +373,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{items1: [1, 2], items2: [3, 4]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :for={{ i1 <- @items1, i2 <- @items2, i1 < 4 }}>
             Item1: {{i1}}
@@ -406,7 +406,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{items: [1, 2]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :for.with_index={{ {item, index} <- @items }}>
             Item: {{ item }}, Index: {{ index }}
@@ -427,7 +427,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{items: [1, 2]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :for.index={{ index <- @items }}>
             Index: {{ index }}
@@ -448,7 +448,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{items: [1, 2]}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :for.index={{ @items }}>
             Index: {{ index }}
@@ -493,7 +493,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{show: true, dont_show: false}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <div :if={{ @show }}>
             Show
@@ -515,7 +515,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{show: true, dont_show: false}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <col class="show" :if={{ @show }}>
           <col class="dont_show" :if={{ @dont_show }}>
@@ -567,7 +567,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{show: true}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <col style="padding: 1px;" :show={{ @show }}>
           <col :show=true>
@@ -584,7 +584,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{show: false}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <col style="padding: 1px;" :show={{ @show }}>
           """
@@ -599,7 +599,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{show: false}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <col :show={{ @show }}>
           """
@@ -616,7 +616,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{click: %{name: "ok", target: "#comp"}}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <button :on-click={{ @click }}>OK</button>
           """
@@ -631,7 +631,7 @@ defmodule Surface.DirectivesTest do
       assigns = %{click: "ok"}
 
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <button :on-click={{ @click }}>OK</button>
           """
@@ -644,7 +644,7 @@ defmodule Surface.DirectivesTest do
 
     test "as a literal string" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <button :on-click="ok">OK</button>
           """
@@ -657,7 +657,7 @@ defmodule Surface.DirectivesTest do
 
     test "as event name + target option" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <button :on-click={{ "ok", target: "#comp" }}>OK</button>
           """
@@ -670,7 +670,7 @@ defmodule Surface.DirectivesTest do
 
     test "do not translate invalid events" do
       html =
-        render_surface_markup do
+        render_surface do
           ~H"""
           <button :on-invalid="ok">OK</button>
           """

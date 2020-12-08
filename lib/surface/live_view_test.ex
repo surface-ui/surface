@@ -30,55 +30,6 @@ defmodule Surface.LiveViewTest do
   end
 
   @doc """
-  Render Surface code containing only HTML markup + interpolation.
-
-  This function is the preferred way to test Surface code that doesn't include components
-  as it's much faster than `render_surface/1`.
-
-  Any directive or syntactic sugar for attributes will be evaluated. If the code contains
-  any component, please use `render_surface/1` instead.
-
-  ## Example
-
-      html =
-        render_surface_markup do
-          ~H"\""
-          <button :on-click="ok">OK</button>
-          "\""
-        end
-
-      assert html =~ "\""
-             <button phx-click="ok">OK</button>
-             "\""
-
-  """
-  defmacro render_surface_markup(do: do_block) do
-    render_call =
-      quote do
-        unquote(__MODULE__).__render_surface_markup__(unquote(do_block))
-      end
-
-    if Macro.Env.has_var?(__CALLER__, {:assigns, nil}) do
-      quote do
-        unquote(render_call)
-      end
-    else
-      quote do
-        var!(assigns) = %{}
-        unquote(render_call)
-      end
-    end
-  end
-
-  @doc false
-  def __render_surface_markup__(code) do
-    code
-    |> Phoenix.HTML.Safe.to_iodata()
-    |> IO.iodata_to_binary()
-    |> String.replace(~r/\n+/, "\n")
-  end
-
-  @doc """
   Render Surface code.
 
   Use this macro when testing regular rendering of stateless components or live components
