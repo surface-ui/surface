@@ -1,5 +1,5 @@
 defmodule Surface.ComponentTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
   import Phoenix.ConnTest
 
   import Phoenix.LiveViewTest
@@ -228,21 +228,23 @@ defmodule Surface.ComponentTest do
 
   describe "Without LiveView" do
     test "render stateless component" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Stateless label="My label" class="myclass"/>
           """
         end
 
-      assert render_live(code) =~ """
-             <div class="myclass"><span>My label</span></div>
-             """
+      assert_html(
+        html =~ """
+        <div class="myclass"><span>My label</span></div>
+        """
+      )
     end
 
     test "render nested component's content" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Outer>
             <Inner/>
@@ -250,14 +252,16 @@ defmodule Surface.ComponentTest do
           """
         end
 
-      assert render_live(code) =~ """
-             <div><span>Inner</span></div>
-             """
+      assert_html(
+        html =~ """
+        <div><span>Inner</span></div>
+        """
+      )
     end
 
     test "render content with slot props" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <OuterWithSlotProps :let={{ info: my_info }}>
             {{ my_info }}
@@ -265,11 +269,13 @@ defmodule Surface.ComponentTest do
           """
         end
 
-      assert render_live(code) =~ """
-             <div>
-               My info
-             </div>
-             """
+      assert_html(
+        html =~ """
+        <div>
+          My info
+        </div>
+        """
+      )
     end
 
     test "render stateless component without named slots with render_component/2" do

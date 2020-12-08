@@ -1,5 +1,5 @@
 defmodule Surface.Constructs.ForTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
   import ComponentTestHelper
 
@@ -17,8 +17,10 @@ defmodule Surface.Constructs.ForTest do
   end
 
   test "iterates over the provided list" do
-    code =
-      quote do
+    alias Surface.Constructs.For
+
+    html =
+      render_surface do
         ~H"""
         <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
         <span>{{ fruit }}</span>
@@ -26,11 +28,13 @@ defmodule Surface.Constructs.ForTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <span>apples</span>\
-           <span>bananas</span>\
-           <span>oranges</span>
-           """
+    assert_html(
+      html =~ """
+      <span>apples</span>\
+      <span>bananas</span>\
+      <span>oranges</span>
+      """
+    )
   end
 
   test "parser error message contains the correct line" do

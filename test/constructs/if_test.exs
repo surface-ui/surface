@@ -1,5 +1,5 @@
 defmodule Surface.Constructs.IfTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
   import ComponentTestHelper
 
@@ -17,8 +17,10 @@ defmodule Surface.Constructs.IfTest do
   end
 
   test "renders inner if condition is truthy" do
-    code =
-      quote do
+    alias Surface.Constructs.If
+
+    html =
+      render_surface do
         ~H"""
         <If condition={{ true }}>
         <span>The inner content</span>
@@ -27,10 +29,12 @@ defmodule Surface.Constructs.IfTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <span>The inner content</span>\
-           <span>with multiple tags</span>
-           """
+    assert_html(
+      html =~ """
+      <span>The inner content</span>\
+      <span>with multiple tags</span>
+      """
+    )
   end
 
   test "parser error message contains the correct line" do
