@@ -14,15 +14,12 @@ defmodule Surface.Components.Form.ErrorTagTest.Common do
 end
 
 defmodule Surface.Components.Form.ErrorTagTest do
-  use ExUnit.Case, async: true
-
-  import Surface
-  import ComponentTestHelper
+  use Surface.ConnCase, async: true
 
   alias Surface.Components.Form.ErrorTagTest.Common
-  alias Surface.Components.Form, warn: false
-  alias Surface.Components.Form.Field, warn: false
-  alias Surface.Components.Form.ErrorTag, warn: false
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Field
+  alias Surface.Components.Form.ErrorTag
 
   setup do
     %{changeset: Common.changeset()}
@@ -31,8 +28,8 @@ defmodule Surface.Components.Form.ErrorTagTest do
   test "multiple error messages", %{changeset: changeset} do
     assigns = %{changeset: changeset}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{@changeset}} opts={{ as: :user }}>
           <Field name="name">
@@ -42,10 +39,10 @@ defmodule Surface.Components.Form.ErrorTagTest do
         """
       end
 
-    assert render_live(code, assigns) =~
+    assert html =~
              "<span phx-feedback-for=\"user_name\">is already taken</span>"
 
-    assert render_live(code, assigns) =~
+    assert html =~
              "<span phx-feedback-for=\"user_name\">another test error</span>"
   end
 
@@ -54,8 +51,8 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     assigns = %{changeset: changeset_without_action}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{@changeset}} opts={{ as: :user }}>
           <Field name="name">
@@ -65,15 +62,15 @@ defmodule Surface.Components.Form.ErrorTagTest do
         """
       end
 
-    refute render_live(code, assigns) =~ "is already taken"
-    refute render_live(code, assigns) =~ "another test error"
+    refute html =~ "is already taken"
+    refute html =~ "another test error"
   end
 
   test "prop phx_feedback_for", %{changeset: changeset} do
     assigns = %{changeset: changeset}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{@changeset}} opts={{ as: :user }}>
           <Field name="name">
@@ -83,15 +80,15 @@ defmodule Surface.Components.Form.ErrorTagTest do
         """
       end
 
-    assert render_live(code, assigns) =~
+    assert html =~
              "<span phx-feedback-for=\"test-id\">is already taken</span>"
   end
 
   test "prop class", %{changeset: changeset} do
     assigns = %{changeset: changeset}
 
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{@changeset}} opts={{ as: :user }}>
           <Field name="name">
@@ -101,13 +98,13 @@ defmodule Surface.Components.Form.ErrorTagTest do
         """
       end
 
-    assert render_live(code, assigns) =~
+    assert html =~
              "<span class=\"test-class\" phx-feedback-for=\"user_name\">is already taken</span>"
   end
 
   test "no changeset shows no errors" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{ :user }}>
           <Field name="name">
@@ -118,18 +115,17 @@ defmodule Surface.Components.Form.ErrorTagTest do
       end
 
     # The error tags are displayed as spans, so this demonstrates that none were rendered
-    refute render_live(code) =~ "<span"
+    refute html =~ "<span"
   end
 end
 
 defmodule Surface.Components.Form.ErrorTagSyncTest do
-  use ExUnit.Case
+  use Surface.ConnCase
 
-  import ComponentTestHelper
   alias Surface.Components.Form.ErrorTagTest.Common
-  alias Surface.Components.Form, warn: false
-  alias Surface.Components.Form.Field, warn: false
-  alias Surface.Components.Form.ErrorTag, warn: false
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Field
+  alias Surface.Components.Form.ErrorTag
 
   setup do
     %{changeset: Common.changeset()}
@@ -140,8 +136,8 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
       default_translator: {Surface.Components.Form.ErrorTagSyncTest, :config_translate_error} do
       assigns = %{changeset: changeset}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Form for={{@changeset}} opts={{ as: :user }}>
             <Field name="name">
@@ -151,7 +147,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
           """
         end
 
-      assert render_live(code, assigns) =~
+      assert html =~
                "<span phx-feedback-for=\"user_name\">translated by config translator</span>"
     end
   end
@@ -161,8 +157,8 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
       default_translator: {Surface.Components.Form.ErrorTagSyncTest, :config_translate_error} do
       assigns = %{changeset: changeset}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Form for={{@changeset}} opts={{ as: :user }}>
             <Field name="name">
@@ -172,10 +168,10 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
           """
         end
 
-      assert render_live(code, assigns) =~
+      assert html =~
                "<span phx-feedback-for=\"user_name\">translated by prop translator</span>"
 
-      refute render_live(code, assigns) =~
+      refute html =~
                "<span phx-feedback-for=\"user_name\">translated by config translator</span>"
     end
   end
@@ -184,8 +180,8 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
     using_config ErrorTag, default_class: "class-from-config" do
       assigns = %{changeset: changeset}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Form for={{@changeset}} opts={{ as: :user }}>
             <Field name="name">
@@ -195,7 +191,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
           """
         end
 
-      assert render_live(code, assigns) =~
+      assert html =~
                "<span class=\"class-from-config\" phx-feedback-for=\"user_name\">is already taken</span>"
     end
   end
@@ -204,8 +200,8 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
     using_config ErrorTag, default_class: "class-from-config" do
       assigns = %{changeset: changeset}
 
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Form for={{@changeset}} opts={{ as: :user }}>
             <Field name="name">
@@ -215,7 +211,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
           """
         end
 
-      assert render_live(code, assigns) =~
+      assert html =~
                "<span class=\"class-from-prop\" phx-feedback-for=\"user_name\">is already taken</span>"
     end
   end
