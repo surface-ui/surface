@@ -18,6 +18,8 @@ defmodule Surface.CompilerTest do
   defmodule Div do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <div><slot /></div>

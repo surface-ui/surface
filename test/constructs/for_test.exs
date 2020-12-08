@@ -55,7 +55,7 @@ defmodule Surface.Constructs.ForTest do
       quote do
         ~H"""
         <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
-          <ListProp prop="some string">The inner content</ListProp>
+          <ListProp prop="some string" />
         </For>
         """
       end

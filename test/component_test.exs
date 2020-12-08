@@ -20,6 +20,8 @@ defmodule Surface.ComponentTest do
   defmodule Outer do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <div><slot/></div>

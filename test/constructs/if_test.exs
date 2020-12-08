@@ -55,7 +55,7 @@ defmodule Surface.Constructs.IfTest do
       quote do
         ~H"""
         <If condition={{ true }}>
-          <ListProp prop="some string">The inner content</ListProp>
+          <ListProp prop="some string" />
         </If>
         """
       end

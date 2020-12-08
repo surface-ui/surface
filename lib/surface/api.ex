@@ -52,7 +52,6 @@ defmodule Surface.API do
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
-        unquote(__MODULE__).init_func(func, __MODULE__)
       end
     end
   end
@@ -72,16 +71,6 @@ defmodule Surface.API do
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
     end
-  end
-
-  @doc false
-  def init_func(:slot, module) do
-    Module.register_attribute(module, :used_slot, accumulate: true)
-    :ok
-  end
-
-  def init_func(_func, _caller) do
-    :ok
   end
 
   @doc "Defines a property for the component"
@@ -167,12 +156,7 @@ defmodule Surface.API do
 
   @doc false
   def get_slots(module) do
-    used_slots =
-      for %{name: name, line: line} <- Module.get_attribute(module, :used_slot) || [] do
-        %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
-      end
-
-    (Module.get_attribute(module, :slot) || []) ++ used_slots
+    Module.get_attribute(module, :slot) || []
   end
 
   @doc false

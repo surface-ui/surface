@@ -241,6 +241,11 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
+    defined_slot_names =
+      meta.caller.module
+      |> Surface.API.get_slots()
+      |> Enum.map(& &1.name)
+
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
 
@@ -250,17 +255,31 @@ defmodule Surface.Compiler do
     with true <- not is_nil(name) and is_atom(name),
          {:ok, directives, _attrs} <-
            collect_directives(@slot_directive_handlers, attributes, meta) do
-      Module.put_attribute(meta.caller.module, :used_slot, %{name: name, line: meta.line})
+      # TODO: REFACTOR
+      if name in defined_slot_names do
+        {:ok,
+         %AST.Slot{
+           name: name,
+           index: index,
+           directives: directives,
+           default: to_ast(children, compile_meta),
+           props: [],
+           meta: meta
+         }}
+      else
+        IOHelper.compile_error(
+          """
+          no slot `#{name}` defined in the component `#{meta.caller.module}`
 
-      {:ok,
-       %AST.Slot{
-         name: name,
-         index: index,
-         directives: directives,
-         default: to_ast(children, compile_meta),
-         props: [],
-         meta: meta
-       }}
+          Available slots: #{defined_slot_names |> Enum.join(", ")}.
+
+          Hint: You can define a new slot using the `slot` macro: \
+          `slot #{name}`\
+          """,
+          meta.file,
+          meta.line
+        )
+      end
     else
       _ -> {:error, {"failed to parse slot", meta.line}, meta}
     end
@@ -658,8 +677,8 @@ defmodule Surface.Compiler do
     end
 
     for {slot_name, template_instances} <- templates,
-        slot_name != :default,
         mod.__get_slot__(slot_name) == nil,
+        not component_slotable?(mod),
         template <- template_instances do
       missing_slot(mod, slot_name, template.meta, meta)
     end
@@ -742,9 +761,9 @@ defmodule Surface.Compiler do
     message = """
     no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
     #{similar_slot_message}\
-    #{existing_slots_message}\
+    #{existing_slots_message}
     """
 
-    IOHelper.warn(message, template_meta.caller, fn _ -> template_meta.line end)
+    IOHelper.compile_error(message, template_meta.file, template_meta.line)
   end
 end
