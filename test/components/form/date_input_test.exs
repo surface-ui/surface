@@ -1,7 +1,7 @@
 defmodule Surface.Components.Form.DateInputTest do
   use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form.DateInput, warn: false
+  alias Surface.Components.Form.DateInput
 
   test "empty input" do
     html =
