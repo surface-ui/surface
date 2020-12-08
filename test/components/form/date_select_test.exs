@@ -1,6 +1,5 @@
 defmodule Surface.Components.Form.DateSelectTest do
   use Surface.ConnCase, async: true
-  import Phoenix.HTML, only: [html_escape: 1]
 
   alias Surface.Components.Form
   alias Surface.Components.Form.DateSelect
@@ -113,14 +112,14 @@ defmodule Surface.Components.Form.DateSelectTest do
           form="user"
           field="born_at"
           builder={{ fn b ->
-            html_escape([
+            [
               "Year: ",
               b.(:year, class: "year"),
               "Month: ",
               b.(:month, class: "month"),
               "Day: ",
               b.(:day, class: "day"),
-            ])
+            ]
           end }}
         />
         """
