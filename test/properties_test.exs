@@ -1,8 +1,6 @@
 defmodule Surface.PropertiesTest do
   use Surface.ConnCase, async: true
 
-  import ExUnit.CaptureIO
-
   defmodule StringProp do
     use Surface.Component
 
@@ -103,38 +101,6 @@ defmodule Surface.PropertiesTest do
         end
 
       assert html =~ "begin 1 two end"
-    end
-
-    test "raise error on the right line for string with interpolation" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "Surface.PropertiesTest_#{id}"
-
-      code = """
-      defmodule #{module} do
-        use Elixir.Surface.Component
-
-        def render(assigns) do
-          ~H"\""
-          <StringProp
-            label="Undefined func {{ func }}"
-          />
-          "\""
-        end
-      end
-      """
-
-      error_message = "code.exs:7: undefined function func/0"
-
-      output =
-        capture_io(:standard_error, fn ->
-          assert_raise(CompileError, error_message, fn ->
-            {{:module, _, _, _}, _} =
-              Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-          end)
-        end)
-
-      assert output =~ ~r/variable "func" does not exist/
-      assert output =~ ~r"  code.exs:7"
     end
   end
 
@@ -590,5 +556,44 @@ defmodule Surface.PropertiesTest do
              <span>value: default</span>
              """
     end
+  end
+end
+
+defmodule Surface.PropertiesSyncTest do
+  use Surface.ConnCase
+
+  import ExUnit.CaptureIO
+  alias Surface.PropertiesTest.StringProp, warn: false
+
+  test "raise error on the right line for string with interpolation" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "Surface.PropertiesTest_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Elixir.Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+        <StringProp
+          label="Undefined func {{ func }}"
+        />
+        "\""
+      end
+    end
+    """
+
+    error_message = "code.exs:7: undefined function func/0"
+
+    output =
+      capture_io(:standard_error, fn ->
+        assert_raise(CompileError, error_message, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        end)
+      end)
+
+    assert output =~ ~r/variable "func" does not exist/
+    assert output =~ ~r"  code.exs:7"
   end
 end
