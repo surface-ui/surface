@@ -784,9 +784,7 @@ defmodule Surface.SlotSyncTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      capture_io(:standard_error, fn ->
-        compile_surface(code)
-      end)
+      compile_surface(code)
     end)
   end
 
@@ -835,9 +833,7 @@ defmodule Surface.SlotSyncTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      capture_io(:standard_error, fn ->
-        compile_surface(code)
-      end)
+      compile_surface(code)
     end)
   end
 
