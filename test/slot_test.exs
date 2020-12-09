@@ -802,7 +802,7 @@ defmodule Surface.SlotSyncTest do
     message = """
     code:2: no slot "inner" defined in parent component <Grid>
 
-      Available slot: "cols"
+    Available slot: "cols"
     """
 
     assert_raise(CompileError, message, fn ->
@@ -827,9 +827,9 @@ defmodule Surface.SlotSyncTest do
     message = """
     code:4: no slot "foot" defined in parent component <OuterWithNamedSlot>
 
-      Did you mean "footer"?
+    Did you mean "footer"?
 
-      Available slots: "footer", "header" and "default"
+    Available slots: "footer", "header" and "default"
     """
 
     assert_raise(CompileError, message, fn ->
@@ -860,10 +860,38 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:12: no slot `footer` defined in the component `Elixir.Surface.SlotSyncTest.TestComponentWithoutDeclaringSlots`
 
-    Available slots: default, header.
+    Available slots: "default" and "header"
 
     Hint: You can define a new slot using the `slot` macro: \
     `slot footer`\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
+  end
+
+  test "raises compile error on component that uses short syntax <slot /> without declaring default slot" do
+    component_code = """
+    defmodule TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot do
+      use Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+          <div>
+            <slot />
+          </div>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:7: no slot `default` defined in the component `Elixir.Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
+
+    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
     """
 
     assert_raise(CompileError, message, fn ->

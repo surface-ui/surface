@@ -267,18 +267,9 @@ defmodule Surface.Compiler do
            meta: meta
          }}
       else
-        IOHelper.compile_error(
-          """
-          no slot `#{name}` defined in the component `#{meta.caller.module}`
+        short_slot_syntax? = false == attribute_value(attributes, "name", false)
 
-          Available slots: #{defined_slot_names |> Enum.join(", ")}.
-
-          Hint: You can define a new slot using the `slot` macro: \
-          `slot #{name}`\
-          """,
-          meta.file,
-          meta.line
-        )
+        missing_slot(meta.caller.module, name, meta, defined_slot_names, short_slot_syntax?)
       end
     else
       _ -> {:error, {"failed to parse slot", meta.line}, meta}
@@ -677,7 +668,7 @@ defmodule Surface.Compiler do
         mod.__get_slot__(slot_name) == nil,
         not component_slotable?(mod),
         template <- template_instances do
-      missing_slot(mod, slot_name, template.meta, meta)
+      missing_parent_slot(mod, slot_name, template.meta, meta)
     end
 
     for slot_name <- Map.keys(templates),
@@ -721,26 +712,37 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp missing_slot(mod, slot_name, template_meta, parent_meta) do
+  defp missing_slot(module, slot_name, meta, _defined_slot_names, true) do
+    message = """
+    no slot `#{slot_name}` defined in the component `#{module}`\
+    \n\nPlease declare the default slot using `slot default` in order to use the `<slot />` notation.
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
+  defp missing_slot(module, slot_name, meta, defined_slot_names, false) do
+    similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
+
+    existing_slots_message = existing_slots_message(defined_slot_names)
+
+    message = """
+    no slot `#{slot_name}` defined in the component `#{module}`\
+    #{similar_slot_message}\
+    #{existing_slots_message}\
+    \n\nHint: You can define a new slot using the `slot` macro: \
+    `slot #{slot_name}`\
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
+  defp missing_parent_slot(mod, slot_name, template_meta, parent_meta) do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
-    similar_slot_message =
-      case Helpers.did_you_mean(slot_name, parent_slots) do
-        {similar, score} when score > 0.8 ->
-          "\n\n  Did you mean #{inspect(to_string(similar))}?"
+    similar_slot_message = similar_slot_message(slot_name, parent_slots)
 
-        _ ->
-          ""
-      end
-
-    existing_slots_message =
-      if parent_slots == [] do
-        ""
-      else
-        slots = Enum.map(parent_slots, &to_string/1)
-        available = Helpers.list_to_string("slot:", "slots:", slots)
-        "\n\n  Available #{available}"
-      end
+    existing_slots_message = existing_slots_message(parent_slots)
 
     message = """
     no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
@@ -749,5 +751,25 @@ defmodule Surface.Compiler do
     """
 
     IOHelper.compile_error(message, template_meta.file, template_meta.line)
+  end
+
+  defp similar_slot_message(slot_name, list_of_slot_names, opts \\ []) do
+    threshold = opts[:threshold] || 0.8
+
+    case Helpers.did_you_mean(slot_name, list_of_slot_names) do
+      {similar, score} when score > threshold ->
+        "\n\nDid you mean #{inspect(to_string(similar))}?"
+
+      _ ->
+        ""
+    end
+  end
+
+  defp existing_slots_message([]), do: ""
+
+  defp existing_slots_message(existing_slots) do
+    slots = Enum.map(existing_slots, &to_string/1)
+    available = Helpers.list_to_string("slot:", "slots:", slots)
+    "\n\nAvailable #{available}"
   end
 end
