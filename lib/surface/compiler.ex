@@ -748,9 +748,11 @@ defmodule Surface.Compiler do
       if component_slotable?(template_meta.module) do
         """
         The slotable component <#{template_meta.module}> as the `:slot` option set to \
-        `#{slot_name}`.\n
-        That slot name is not declared in parent component <#{parent_meta.node_alias}>.\n
-        Please declare the slot in the parent component or rename the value in the `:slot` option.
+        `#{slot_name}`.
+
+        That slot name is not declared in parent component <#{parent_meta.node_alias}>.
+
+        Please declare the slot in the parent component or rename the value in the `:slot` option.\
         """
       else
         """
