@@ -692,19 +692,6 @@ defmodule Surface.Compiler do
           end
         end)
 
-      if slot == nil and not Enum.empty?(props) do
-        message = """
-        there's no `#{slot_name}` slot defined in `#{inspect(mod)}`.
-
-        Directive :let can only be used on explicitly defined slots.
-
-        Hint: You can define a `#{slot_name}` slot and its props using: \
-        `slot #{slot_name}, props: #{inspect(props)}\
-        """
-
-        IOHelper.compile_error(message, meta.file, meta.line)
-      end
-
       case slot do
         %{opts: opts} ->
           non_generator_args = Enum.map(opts[:props] || [], &Map.get(&1, :name))
