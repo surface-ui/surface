@@ -1,10 +1,8 @@
 defmodule Surface.Components.FormTest do
   use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form, warn: false
-  alias Surface.Components.Form.TextInput, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.Form
+  alias Surface.Components.Form.TextInput
 
   defmodule ViewWithForm do
     use Surface.LiveView
@@ -26,22 +24,24 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form as an atom" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" csrf_token="test">
         </Form>
         """
       end
 
-    assert render_live(code) =~ """
-           <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/></form>
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+           </form>
            """
   end
 
   test "form with a text input using context" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" csrf_token="test">
           <TextInput field="name" />
@@ -49,17 +49,17 @@ defmodule Surface.Components.FormTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="user_name" name="user[name]" type="text"/>\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="user_name" name="user[name]" type="text">
            </form>
            """
   end
 
   test "form with form_for/4 opts as props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" csrf_token="test">
           <TextInput field="name" />
@@ -67,10 +67,10 @@ defmodule Surface.Components.FormTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="user_name" name="user[name]" type="text"/>\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="user_name" name="user[name]" type="text">
            </form>
            """
   end
@@ -96,15 +96,15 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form with events" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" change="change" submit="sumit">
         </Form>
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post" phx-change="change" phx-submit="sumit">\
            """
   end

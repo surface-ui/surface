@@ -1,8 +1,6 @@
 defmodule Surface.Constructs.ForTest do
   use Surface.ConnCase, async: true
 
-  import ComponentTestHelper
-
   defmodule ListProp do
     use Surface.Component
 
@@ -28,13 +26,11 @@ defmodule Surface.Constructs.ForTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <span>apples</span>\
-      <span>bananas</span>\
-      <span>oranges</span>
-      """
-    )
+    assert html =~ """
+           <span>apples</span>
+           <span>bananas</span>
+           <span>oranges</span>
+           """
   end
 
   test "parser error message contains the correct line" do
@@ -50,7 +46,7 @@ defmodule Surface.Constructs.ForTest do
     message = ~S(code:2: expected closing tag for "span")
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -67,7 +63,7 @@ defmodule Surface.Constructs.ForTest do
     message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 end

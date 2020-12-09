@@ -1,8 +1,6 @@
 defmodule Surface.CompilerTest do
   use ExUnit.Case
 
-  import ComponentTestHelper
-
   defmodule Macro do
     use Surface.MacroComponent
 
@@ -580,7 +578,6 @@ defmodule Surface.CompilerSyncTest do
   use ExUnit.Case
 
   import ExUnit.CaptureIO
-  import ComponentTestHelper
 
   alias Surface.CompilerTest.{Button, Column}, warn: false
 
@@ -828,6 +825,16 @@ defmodule Surface.CompilerSyncTest do
 
       message ->
         {:warn, extract_line(output), message}
+    end
+  end
+
+  defp extract_line(message) do
+    case Regex.run(~r/.exs:(\d+)/, message) do
+      [_, line] ->
+        String.to_integer(line)
+
+      _ ->
+        :not_found
     end
   end
 end

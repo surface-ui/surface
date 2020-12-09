@@ -2,12 +2,6 @@ defmodule Surface.ComponentTest do
   use Surface.ConnCase, async: true
   import Phoenix.ConnTest
 
-  import Phoenix.LiveViewTest
-  import Surface
-  import ComponentTestHelper
-
-  @endpoint Endpoint
-
   defmodule Stateless do
     use Surface.Component
 
@@ -170,59 +164,45 @@ defmodule Surface.ComponentTest do
     test "render stateless component" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithStateless)
 
-      assert_html(
-        html =~ """
-        <div class="myclass">
-          <span>My label</span>
-        </div>
-        """
-      )
+      assert html =~ """
+             <div class="myclass"><span>My label</span></div>\
+             """
     end
 
     test "stateless component with id should not become stateful" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithStatelessWithId)
 
       # Stateful components are rendered as <div data-phx-component="...">
-      assert_html(
-        html =~ """
-        <div>my_id</div>
-        """
-      )
+      assert html =~ """
+             <div>my_id</div>\
+             """
     end
 
     test "stateless component with id and implementing update/2 should not become stateful" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithStatelessWithIdAndUpdate)
 
       # Stateful components are rendered as <div data-phx-component="...">
-      assert_html(
-        html =~ """
-        <div>my_id - my_id</div>
-        """
-      )
+      assert html =~ """
+             <div>my_id - my_id</div>\
+             """
     end
 
     test "render nested component's content" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithNested)
 
-      assert_html(
-        html =~ """
-        <div>
-          <span>Inner</span>
-        </div>
-        """
-      )
+      assert html =~ """
+             <div><span>Inner</span></div>\
+             """
     end
 
     test "render content with slot props" do
       {:ok, _view, html} = live_isolated(build_conn(), ViewWithSlotProps)
 
-      assert_html(
-        html =~ """
-        <div>
-          My info
-        </div>
-        """
-      )
+      assert html =~ """
+             <div>
+               My info
+             </div>\
+             """
     end
   end
 
@@ -235,11 +215,11 @@ defmodule Surface.ComponentTest do
           """
         end
 
-      assert_html(
-        html =~ """
-        <div class="myclass"><span>My label</span></div>
-        """
-      )
+      assert html =~ """
+             <div class="myclass">
+               <span>My label</span>
+             </div>
+             """
     end
 
     test "render nested component's content" do
@@ -252,11 +232,11 @@ defmodule Surface.ComponentTest do
           """
         end
 
-      assert_html(
-        html =~ """
-        <div><span>Inner</span></div>
-        """
-      )
+      assert html =~ """
+             <div>
+               <span>Inner</span>
+             </div>
+             """
     end
 
     test "render content with slot props" do
@@ -269,24 +249,29 @@ defmodule Surface.ComponentTest do
           """
         end
 
-      assert_html(
-        html =~ """
-        <div>
-          My info
-        </div>
-        """
-      )
+      assert html =~ """
+             <div>
+               My info
+             </div>
+             """
     end
 
     test "render stateless component without named slots with render_component/2" do
-      assert render_component(Stateless, %{label: "My label", class: "myclass"}) =~ """
+      html =
+        render_surface do
+          ~H"""
+          <Stateless label="My label" class="myclass"/>
+          """
+        end
+
+      assert html =~ """
              <div class="myclass">
                <span>My label</span>
              </div>
              """
     end
 
-    test "render error message if module is not a component" do
+    test "render error message if module is not a component", %{conn: conn} do
       import ExUnit.CaptureIO
 
       code =
@@ -300,10 +285,13 @@ defmodule Surface.ComponentTest do
 
       output =
         capture_io(:standard_error, fn ->
-          assert render_live(code) =~ """
+          module = compile_surface(code)
+          {:ok, _view, html} = live_isolated(conn, module)
+
+          assert html =~ """
                  <div><span style="color: red; border: 2px solid red; padding: 3px"> \
                  Error: cannot render &lt;Enum&gt; (module Enum is not a component)\
-                 </span></div>
+                 </span></div>\
                  """
         end)
 

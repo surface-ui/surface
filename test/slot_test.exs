@@ -1,8 +1,6 @@
 defmodule Surface.SlotTest do
   use Surface.ConnCase, async: true
 
-  import ComponentTestHelper
-
   defmodule StatefulComponent do
     use Surface.LiveComponent
 
@@ -243,26 +241,27 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        <div>
-          label 1:<b>content 1</b>
-          <div>Stateful</div>
-        </div>
-        <div>
-          label 2:<b>content 2</b>
-        </div>
-        <div>
-          Content 1
-          Content 2
-            Content 2.1
-          Content 3
-          <div>Stateful</div>
-        </div>
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             <div>
+               label 1: \
+
+               <b>content 1</b>
+               <div>Stateful</div>
+             </div><div>
+               label 2: \
+
+               <b>content 2</b>
+             </div>
+             <div>
+             Content 1
+             Content 2
+               Content 2.1
+             Content 3
+             <div>Stateful</div>
+             </div>
+           </div>
+           """
   end
 
   test "assign named slots with props" do
@@ -277,13 +276,11 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        Info: Info from slot
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+               Info: Info from slot
+           </div>
+           """
   end
 
   test "assign default slot with props" do
@@ -296,13 +293,11 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        Info: Info from slot
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             Info: Info from slot
+           </div>
+           """
   end
 
   test "assign default slot ignoring all props" do
@@ -315,13 +310,11 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        Info
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             Info
+           </div>
+           """
   end
 
   test "assign named slots without props" do
@@ -340,15 +333,13 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        My header
-        My body
-        My footer
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+               My header
+             My body
+               My footer
+           </div>
+           """
   end
 
   test "assign undeclared slots without props" do
@@ -367,15 +358,13 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        My header
-        My body
-        My footer
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+               My header
+             My body
+               My footer
+           </div>
+           """
   end
 
   test "fallback content" do
@@ -386,14 +375,12 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        Default fallback
-        Footer fallback
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+               Default fallback
+               Footer fallback
+           </div>
+           """
   end
 
   test "slotable component with default value for prop" do
@@ -410,19 +397,24 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <table>
-        <tr>
-          <th>default title</th>
-        </tr><tr>
-          <td><b>Id: 1</b></td>
-        </tr><tr>
-          <td><b>Id: 2</b></td>
-        </tr>
-      </table>
-      """
-    )
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 default title
+               </th>
+             </tr>
+             <tr>
+               <td>
+               <b>Id: 1</b>
+               </td>
+             </tr><tr>
+               <td>
+               <b>Id: 2</b>
+               </td>
+             </tr>
+           </table>
+           """
   end
 
   test "render slot with slot props containing parent bindings" do
@@ -442,21 +434,30 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <table>
-        <tr>
-          <th>ID</th><th>NAME</th>
-        </tr><tr>
-          <td><b>Id: 1</b></td>
-          <td>Name: First</td>
-        </tr><tr>
-          <td><b>Id: 2</b></td>
-          <td>Name: Second</td>
-        </tr>
-      </table>
-      """
-    )
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 ID
+               </th><th>
+                 NAME
+               </th>
+             </tr>
+             <tr>
+               <td>
+               <b>Id: 1</b>
+               </td><td>
+               Name: First
+               </td>
+             </tr><tr>
+               <td>
+               <b>Id: 2</b>
+               </td><td>
+               Name: Second
+               </td>
+             </tr>
+           </table>
+           """
   end
 
   test "rename slot with :as do not override other assigns with same name" do
@@ -471,14 +472,12 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        My Header Slot
-        My Header Prop
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+               My Header Slot
+             My Header Prop
+           </div>
+           """
   end
 
   test "default prop name with a default slot" do
@@ -491,14 +490,12 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        Default Slot
-        Default Prop
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             Default Slot
+             Default Prop
+           </div>
+           """
 
     html =
       render_surface do
@@ -511,14 +508,12 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        Default Slot
-        Default Prop
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+               Default Slot
+             Default Prop
+           </div>
+           """
   end
 
   test "render slot renaming slot props" do
@@ -539,19 +534,25 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <table>
-        <tr>
-          <th>ID</th><th>NAME</th>
-        </tr><tr>
-          <td><b>Id: 1</b></td>
-          <td>Name: First
-          Info: Some info from Grid</td>
-        </tr>
-      </table>
-      """
-    )
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 ID
+               </th><th>
+                 NAME
+               </th>
+             </tr>
+             <tr>
+               <td>
+               <b>Id: 1</b>
+               </td><td>
+               Name: First
+               Info: Some info from Grid
+               </td>
+             </tr>
+           </table>
+           """
   end
 
   test "raise compile error for undefined slot props" do
@@ -579,7 +580,7 @@ defmodule Surface.SlotTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      render_live(code, assigns)
+      compile_surface(code, assigns)
     end)
   end
 
@@ -604,7 +605,7 @@ defmodule Surface.SlotTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      render_live(code, assigns)
+      compile_surface(code, assigns)
     end)
   end
 
@@ -628,7 +629,7 @@ defmodule Surface.SlotTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -653,7 +654,7 @@ defmodule Surface.SlotTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -680,7 +681,7 @@ defmodule Surface.SlotTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -701,7 +702,7 @@ defmodule Surface.SlotTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -749,15 +750,13 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        <footer>
-          Footer fallback
-        </footer>
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             <footer>
+               Footer fallback
+             </footer>
+           </div>
+           """
 
     html =
       render_surface do
@@ -770,18 +769,16 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        <header>
-          My Header
-        </header>
-        <footer>
-          Footer fallback
-        </footer>
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             <header>
+               My Header
+             </header>
+             <footer>
+               Footer fallback
+             </footer>
+           </div>
+           """
 
     html =
       render_surface do
@@ -792,25 +789,22 @@ defmodule Surface.SlotTest do
         """
       end
 
-    assert_html(
-      html =~ """
-      <div>
-        <main>
-          My Content
-        </main>
-        <footer>
-          Footer fallback
-        </footer>
-      </div>
-      """
-    )
+    assert html =~ """
+           <div>
+             <main>
+             My Content
+             </main>
+             <footer>
+               Footer fallback
+             </footer>
+           </div>
+           """
   end
 end
 
 defmodule Surface.SlotSyncTest do
-  use ExUnit.Case
+  use Surface.ConnCase
 
-  import ComponentTestHelper
   import ExUnit.CaptureIO
 
   alias Surface.SlotTest.OuterWithNamedSlot, warn: false
@@ -830,7 +824,7 @@ defmodule Surface.SlotSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
 
     assert output =~ ~r"""
@@ -852,7 +846,7 @@ defmodule Surface.SlotSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
 
     assert output =~ ~r"""
@@ -879,7 +873,7 @@ defmodule Surface.SlotSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        render_live(code)
+        compile_surface(code)
       end)
 
     assert output =~ ~r"""
