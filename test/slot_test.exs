@@ -862,8 +862,9 @@ defmodule Surface.SlotSyncTest do
 
     Available slots: "default" and "header"
 
-    Hint: You can define a new slot using the `slot` macro: \
-    `slot footer`\
+    Hint: You can define slots using the `slot` macro. \
+
+    For instance: `slot footer`\
     """
 
     assert_raise(CompileError, message, fn ->

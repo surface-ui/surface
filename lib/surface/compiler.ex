@@ -730,8 +730,8 @@ defmodule Surface.Compiler do
     no slot `#{slot_name}` defined in the component `#{module}`\
     #{similar_slot_message}\
     #{existing_slots_message}\
-    \n\nHint: You can define a new slot using the `slot` macro: \
-    `slot #{slot_name}`\
+    \n\nHint: You can define slots using the `slot` macro. \
+    \nFor instance: `slot #{slot_name}`\
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
