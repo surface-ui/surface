@@ -252,27 +252,22 @@ defmodule Surface.Compiler do
     index =
       attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
-    with true <- not is_nil(name) and is_atom(name),
-         {:ok, directives, _attrs} <-
-           collect_directives(@slot_directive_handlers, attributes, meta) do
-      # TODO: REFACTOR
-      if name in defined_slot_names do
-        {:ok,
-         %AST.Slot{
-           name: name,
-           index: index,
-           directives: directives,
-           default: to_ast(children, compile_meta),
-           props: [],
-           meta: meta
-         }}
-      else
-        short_slot_syntax? = false == attribute_value(attributes, "name", false)
-
-        missing_slot(meta.caller.module, name, meta, defined_slot_names, short_slot_syntax?)
-      end
+    with {:ok, directives, _attrs} <-
+           collect_directives(@slot_directive_handlers, attributes, meta),
+         true <- name in defined_slot_names do
+      {:ok,
+       %AST.Slot{
+         name: name,
+         index: index,
+         directives: directives,
+         default: to_ast(children, compile_meta),
+         props: [],
+         meta: meta
+       }}
     else
-      _ -> {:error, {"failed to parse slot", meta.line}, meta}
+      _ ->
+        short_slot_syntax? = not has_attribute?(attributes, "name")
+        missing_slot(meta.caller.module, name, meta, defined_slot_names, short_slot_syntax?)
     end
   end
 
@@ -437,6 +432,15 @@ defmodule Surface.Compiler do
       if name == attr_name do
         String.to_atom(value)
       end
+    end)
+  end
+
+  defp has_attribute?([], _), do: false
+
+  defp has_attribute?(attributes, attr_name) do
+    Enum.find_value(attributes, false, fn
+      {^attr_name, _, _} -> true
+      _ -> nil
     end)
   end
 
