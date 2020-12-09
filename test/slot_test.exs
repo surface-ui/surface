@@ -780,9 +780,11 @@ defmodule Surface.SlotSyncTest do
       end
 
     message = """
-    code:2: The slotable component <Elixir.Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.\n
-    That slot name is not declared in parent component <StatefulComponent>.\n
-    Please declare the slot in the parent component or rename the value in the `:slot` option.\n
+    code:2: The slotable component <Elixir.Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
+
+    That slot name is not declared in parent component <StatefulComponent>.
+
+    Please declare the slot in the parent component or rename the value in the `:slot` option.
     """
 
     assert_raise(CompileError, message, fn ->
