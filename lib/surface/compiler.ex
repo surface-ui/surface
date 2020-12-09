@@ -744,8 +744,22 @@ defmodule Surface.Compiler do
 
     existing_slots_message = existing_slots_message(parent_slots)
 
+    header_message =
+      if component_slotable?(template_meta.module) do
+        """
+        The slotable component <#{template_meta.module}> as the `:slot` option set to \
+        `#{slot_name}`.\n
+        That slot name is not declared in parent component <#{parent_meta.node_alias}>.\n
+        Please declare the slot in the parent component or rename the value in the `:slot` option.
+        """
+      else
+        """
+        no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
+        """
+      end
+
     message = """
-    no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
+    #{header_message}\
     #{similar_slot_message}\
     #{existing_slots_message}
     """
