@@ -1,8 +1,5 @@
 defmodule Surface.Directive.ComponentProps do
-  use Surface.Directive,
-    pattern: "props",
-    type: :map,
-    modifiers: []
+  use Surface.Directive
 
   def extract({":props", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)

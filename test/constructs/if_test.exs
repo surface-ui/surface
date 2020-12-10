@@ -15,7 +15,7 @@ defmodule Surface.Constructs.IfTest do
   end
 
   test "renders inner if condition is truthy" do
-    alias Surface.Constructs.If
+    alias Surface.Constructs.If.Component, as: If
 
     html =
       render_surface do

@@ -48,11 +48,12 @@ defmodule Surface.Directive do
   def parse_attribute_value({:attribute_expr, value, parsed_expr_meta}, name, type, attr_meta) do
     expr_meta = Helpers.to_meta(parsed_expr_meta, attr_meta)
 
-    expr = %AST.AttributeExpr{
-      original: value,
-      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
-      meta: expr_meta
-    }
+    expr =
+      %AST.AttributeExpr{
+        original: value,
+        value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
+        meta: expr_meta
+      }
 
     {expr, expr_meta}
   end
@@ -112,8 +113,7 @@ defmodule Surface.Directive do
   defp maybe_define_extract(%{
          pattern: pattern,
          type: type,
-         modifiers: allowed_modifiers,
-         name: name
+         modifiers: allowed_modifiers
        }) do
     quote do
       def extract(
@@ -125,17 +125,19 @@ defmodule Surface.Directive do
         if match?(unquote(pattern), name) do
           attr_meta = Helpers.to_meta(parsed_attr_meta, compile_meta)
 
+          directive_name = String.to_atom(name)
+
           value =
             attr_value
-            |> unquote(__MODULE__).parse_attribute_value(unquote(name), unquote(type), attr_meta)
+            |> unquote(__MODULE__).parse_attribute_value(directive_name, unquote(type), attr_meta)
             |> unquote(__MODULE__).apply_modifiers(
               modifiers,
               unquote(allowed_modifiers),
               unquote(type),
-              unquote(name)
+              directive_name
             )
             |> unquote(__MODULE__).update_value(__MODULE__)
-            |> unquote(__MODULE__).create_directive(__MODULE__, unquote(name))
+            |> unquote(__MODULE__).create_directive(__MODULE__, directive_name)
         else
           []
         end
