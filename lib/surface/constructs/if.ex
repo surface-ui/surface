@@ -24,7 +24,7 @@ defmodule Surface.Constructs.If do
   alias Surface.AST
 
   def process(directive, node) do
-    %AST.Directive{value: %AST.AttributeExpr{} = expr, meta: meta} = directive
+    %AST.Directive{value: expr, meta: meta} = directive
 
     %AST.If{condition: expr, children: [node], meta: meta}
   end
