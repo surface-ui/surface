@@ -49,7 +49,7 @@ defmodule Surface.AST.Expr do
 
   @type t :: %__MODULE__{
           # quoted expression
-          value: any(),
+          value: Macro.t(),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -128,7 +128,7 @@ defmodule Surface.AST.For do
   defstruct [:generator, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
-          generator: any(),
+          generator: Surface.AST.AttributeExpr.t(),
           debug: list(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
@@ -148,7 +148,7 @@ defmodule Surface.AST.If do
   defstruct [:condition, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
-          condition: any(),
+          condition: Surface.AST.AttributeExpr.t(),
           debug: list(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
@@ -206,7 +206,7 @@ defmodule Surface.AST.AttributeExpr do
 
   @type t :: %__MODULE__{
           # quoted
-          value: any(),
+          value: Macro.t(),
           original: binary(),
           meta: Surface.AST.Meta.t()
         }
@@ -226,7 +226,7 @@ defmodule Surface.AST.Interpolation do
   @type t :: %__MODULE__{
           original: binary(),
           # quoted
-          value: any(),
+          value: Macro.t(),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -246,7 +246,7 @@ defmodule Surface.AST.Slot do
 
   @type t :: %__MODULE__{
           name: binary(),
-          index: any(),
+          index: number(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t(),
           # quoted ?

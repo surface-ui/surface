@@ -17,8 +17,6 @@ defmodule Surface.Construct do
 
     quote do
       alias Surface.AST
-      alias Surface.Compiler.Helpers
-      alias Surface.IOHelper
 
       @behaviour unquote(__MODULE__)
 
@@ -52,6 +50,7 @@ defmodule Surface.Construct do
         prop unquote(prop), unquote(type), required: true
         slot default, required: true
 
+        @dialyzer {:nowarn_function, render: 1}
         def render(_), do: ""
 
         def transform(node) do

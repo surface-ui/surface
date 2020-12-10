@@ -69,7 +69,7 @@ defmodule Surface.Directive do
           applied_modifiers :: list(binary()),
           allowed_modifiers :: list(binary()),
           type :: atom(),
-          name :: binary()
+          name :: atom()
         ) ::
           {AST.Literal.t() | AST.AttributeExpr.t(), AST.Meta.t()}
   def apply_modifiers(
