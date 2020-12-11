@@ -267,7 +267,14 @@ defmodule Surface.Compiler do
     else
       _ ->
         short_slot_syntax? = not has_attribute?(attributes, "name")
-        missing_slot(meta.caller.module, name, meta, defined_slot_names, short_slot_syntax?)
+
+        raise_missing_slot_error!(
+          meta.caller.module,
+          name,
+          meta,
+          defined_slot_names,
+          short_slot_syntax?
+        )
     end
   end
 
@@ -672,7 +679,7 @@ defmodule Surface.Compiler do
         mod.__get_slot__(slot_name) == nil,
         not component_slotable?(mod),
         template <- template_instances do
-      missing_parent_slot(mod, slot_name, template.meta, meta)
+      raise_missing_parent_slot_error!(mod, slot_name, template.meta, meta)
     end
 
     for slot_name <- Map.keys(templates),
@@ -716,7 +723,13 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp missing_slot(module, slot_name, meta, _defined_slot_names, true) do
+  defp raise_missing_slot_error!(
+         module,
+         slot_name,
+         meta,
+         _defined_slot_names,
+         true = _short_syntax?
+       ) do
     message = """
     no slot `#{slot_name}` defined in the component `#{module}`\
     \n\nPlease declare the default slot using `slot default` in order to use the `<slot />` notation.
@@ -725,7 +738,13 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, meta.file, meta.line)
   end
 
-  defp missing_slot(module, slot_name, meta, defined_slot_names, false) do
+  defp raise_missing_slot_error!(
+         module,
+         slot_name,
+         meta,
+         defined_slot_names,
+         false = _short_syntax?
+       ) do
     similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
 
     existing_slots_message = existing_slots_message(defined_slot_names)
@@ -741,7 +760,7 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, meta.file, meta.line)
   end
 
-  defp missing_parent_slot(mod, slot_name, template_meta, parent_meta) do
+  defp raise_missing_parent_slot_error!(mod, slot_name, template_meta, parent_meta) do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
     similar_slot_message = similar_slot_message(slot_name, parent_slots)
