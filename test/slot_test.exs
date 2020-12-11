@@ -845,7 +845,7 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
-  test "raises compile error on component that uses slots without declaring its" do
+  test "raises compile error on component that uses undeclared slots" do
     component_code = """
     defmodule TestComponentWithoutDeclaringSlots do
       use Surface.Component
