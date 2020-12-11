@@ -28,12 +28,16 @@ defmodule Surface.Construct do
             type: unquote(type),
             modifiers: unquote(modifiers)
 
-          defdelegate process, to: __MODULE__
+          def process(directive, node) do
+            unquote(__CALLER__.module).process(directive, node)
+          end
         end
       end
 
       if unquote(create_component) do
-        unquote(define_component_module(__CALLER__.module, name, type, prop[:name], prop[:default]))
+        unquote(
+          define_component_module(__CALLER__.module, name, type, prop[:name], prop[:default])
+        )
       end
     end
   end

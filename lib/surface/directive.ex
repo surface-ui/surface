@@ -17,6 +17,8 @@ defmodule Surface.Directive do
   @optional_callbacks process: 2, apply_modifier: 3
 
   defmacro __using__(opts \\ []) do
+    opts = Enum.into(opts, %{modifiers: []})
+
     quote do
       alias Surface.AST
       alias Surface.Compiler.Helpers
@@ -48,12 +50,11 @@ defmodule Surface.Directive do
   def parse_attribute_value({:attribute_expr, value, parsed_expr_meta}, name, type, attr_meta) do
     expr_meta = Helpers.to_meta(parsed_expr_meta, attr_meta)
 
-    expr =
-      %AST.AttributeExpr{
-        original: value,
-        value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
-        meta: expr_meta
-      }
+    expr = %AST.AttributeExpr{
+      original: value,
+      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
+      meta: expr_meta
+    }
 
     {expr, expr_meta}
   end
