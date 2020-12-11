@@ -727,8 +727,9 @@ defmodule Surface.Compiler do
          true = _short_syntax?
        ) do
     message = """
-    no slot `#{slot_name}` defined in the component `#{inspect(module)}`\
-    \n\nPlease declare the default slot using `slot default` in order to use the `<slot />` notation.
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`
+
+    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
