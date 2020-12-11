@@ -26,8 +26,8 @@ defmodule Surface.Components.Form do
   @doc "The server side parameter in which all parameters will be gathered."
   prop as, :atom
 
-  @doc "Method to be used when submitting the form, default \"post\"."
-  prop method, :string, default: "post"
+  @doc "Method to be used when submitting the form."
+  prop method, :string
 
   @doc "When true, sets enctype to \"multipart/form-data\". Required when uploading files."
   prop multipart, :boolean, default: false
