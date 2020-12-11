@@ -653,7 +653,7 @@ defmodule Surface.Compiler do
   end
 
   defp validate_templates(mod, templates, meta) do
-    names = templates |> Map.keys()
+    names = Map.keys(templates)
 
     if !function_exported?(mod, :__slots__, 0) and not Enum.empty?(names) do
       message = """
