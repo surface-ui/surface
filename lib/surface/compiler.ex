@@ -241,17 +241,20 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
+    defined_slot_names =
+      meta.caller.module
+      |> Surface.API.get_slots()
+      |> Enum.map(& &1.name)
+
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
 
     index =
       attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
-    with true <- not is_nil(name) and is_atom(name),
-         {:ok, directives, _attrs} <-
-           collect_directives(@slot_directive_handlers, attributes, meta) do
-      Module.put_attribute(meta.caller.module, :used_slot, %{name: name, line: meta.line})
-
+    with {:ok, directives, _attrs} <-
+           collect_directives(@slot_directive_handlers, attributes, meta),
+         true <- name in defined_slot_names do
       {:ok,
        %AST.Slot{
          name: name,
@@ -262,7 +265,16 @@ defmodule Surface.Compiler do
          meta: meta
        }}
     else
-      _ -> {:error, {"failed to parse slot", meta.line}, meta}
+      _ ->
+        short_slot_syntax? = not has_attribute?(attributes, "name")
+
+        raise_missing_slot_error!(
+          meta.caller.module,
+          name,
+          meta,
+          defined_slot_names,
+          short_slot_syntax?
+        )
     end
   end
 
@@ -429,6 +441,11 @@ defmodule Surface.Compiler do
       end
     end)
   end
+
+  defp has_attribute?([], _), do: false
+
+  defp has_attribute?(attributes, attr_name),
+    do: Enum.any?(attributes, &match?({^attr_name, _, _}, &1))
 
   defp attribute_value_as_ast(attributes, attr_name, default, meta) do
     Enum.find_value(attributes, default, fn
@@ -636,10 +653,7 @@ defmodule Surface.Compiler do
   end
 
   defp validate_templates(mod, templates, meta) do
-    names =
-      templates
-      |> Map.keys()
-      |> Enum.reject(fn name -> name == :default end)
+    names = Map.keys(templates)
 
     if !function_exported?(mod, :__slots__, 0) and not Enum.empty?(names) do
       message = """
@@ -658,10 +672,10 @@ defmodule Surface.Compiler do
     end
 
     for {slot_name, template_instances} <- templates,
-        slot_name != :default,
         mod.__get_slot__(slot_name) == nil,
+        not component_slotable?(mod),
         template <- template_instances do
-      missing_slot(mod, slot_name, template.meta, meta)
+      raise_missing_parent_slot_error!(mod, slot_name, template.meta, meta)
     end
 
     for slot_name <- Map.keys(templates),
@@ -675,19 +689,6 @@ defmodule Surface.Compiler do
             directive.meta
           end
         end)
-
-      if slot == nil and not Enum.empty?(props) do
-        message = """
-        there's no `#{slot_name}` slot defined in `#{inspect(mod)}`.
-
-        Directive :let can only be used on explicitly defined slots.
-
-        Hint: You can define a `#{slot_name}` slot and its props using: \
-        `slot #{slot_name}, props: #{inspect(props)}\
-        """
-
-        IOHelper.compile_error(message, meta.file, meta.line)
-      end
 
       case slot do
         %{opts: opts} ->
@@ -718,33 +719,95 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp missing_slot(mod, slot_name, template_meta, parent_meta) do
+  defp raise_missing_slot_error!(
+         module,
+         slot_name,
+         meta,
+         _defined_slot_names,
+         true = _short_syntax?
+       ) do
+    message = """
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`
+
+    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
+  defp raise_missing_slot_error!(
+         module,
+         slot_name,
+         meta,
+         defined_slot_names,
+         false = _short_syntax?
+       ) do
+    similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
+
+    existing_slots_message = existing_slots_message(defined_slot_names)
+
+    message = """
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`\
+    #{similar_slot_message}\
+    #{existing_slots_message}\
+
+    Hint: You can define slots using the `slot` macro.\
+
+    For instance: `slot #{slot_name}`\
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
+  defp raise_missing_parent_slot_error!(mod, slot_name, template_meta, parent_meta) do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
-    similar_slot_message =
-      case Helpers.did_you_mean(slot_name, parent_slots) do
-        {similar, score} when score > 0.8 ->
-          "\n\n  Did you mean #{inspect(to_string(similar))}?"
+    similar_slot_message = similar_slot_message(slot_name, parent_slots)
 
-        _ ->
-          ""
-      end
+    existing_slots_message = existing_slots_message(parent_slots)
 
-    existing_slots_message =
-      if parent_slots == [] do
-        ""
+    header_message =
+      if component_slotable?(template_meta.module) do
+        """
+        The slotable component <#{inspect(template_meta.module)}> as the `:slot` option set to \
+        `#{slot_name}`.
+
+        That slot name is not declared in parent component <#{parent_meta.node_alias}>.
+
+        Please declare the slot in the parent component or rename the value in the `:slot` option.\
+        """
       else
-        slots = Enum.map(parent_slots, &to_string/1)
-        available = Helpers.list_to_string("slot:", "slots:", slots)
-        "\n\n  Available #{available}"
+        """
+        no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
+        """
       end
 
     message = """
-    no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
+    #{header_message}\
     #{similar_slot_message}\
-    #{existing_slots_message}\
+    #{existing_slots_message}
     """
 
-    IOHelper.warn(message, template_meta.caller, fn _ -> template_meta.line end)
+    IOHelper.compile_error(message, template_meta.file, template_meta.line)
+  end
+
+  defp similar_slot_message(slot_name, list_of_slot_names, opts \\ []) do
+    threshold = opts[:threshold] || 0.8
+
+    case Helpers.did_you_mean(slot_name, list_of_slot_names) do
+      {similar, score} when score > threshold ->
+        "\n\nDid you mean #{inspect(to_string(similar))}?"
+
+      _ ->
+        ""
+    end
+  end
+
+  defp existing_slots_message([]), do: ""
+
+  defp existing_slots_message(existing_slots) do
+    slots = Enum.map(existing_slots, &to_string/1)
+    available = Helpers.list_to_string("slot:", "slots:", slots)
+    "\n\nAvailable #{available}"
   end
 end

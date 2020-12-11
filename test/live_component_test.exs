@@ -71,6 +71,8 @@ defmodule LiveComponentTest do
   defmodule InfoProviderWithoutSlotProps do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <div>

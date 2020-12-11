@@ -6,6 +6,8 @@ defmodule ContextTest do
   defmodule Outer do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <Context put={{ __MODULE__, field: "field from Outer" }}>
@@ -240,7 +242,7 @@ defmodule ContextTest do
           ~H"""
           <Context
             put={{ ContextTest.Outer, 123 }}>
-            <slot/>
+            Inner Content
           </Context>
           """
         end
@@ -263,7 +265,7 @@ defmodule ContextTest do
           ~H"""
           <Context
             put={{ ContextTest.Outer }}>
-            <slot/>
+            Inner content
           </Context>
           """
         end
@@ -279,7 +281,7 @@ defmodule ContextTest do
           ~H"""
           <Context
             put={{ 123, field: field }}>
-            <slot/>
+            Inner content
           </Context>
           """
         end

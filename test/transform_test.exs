@@ -4,6 +4,8 @@ defmodule Surface.TransformTest do
   defmodule Span do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <span><slot /></span>
@@ -13,6 +15,8 @@ defmodule Surface.TransformTest do
 
   defmodule DivToSpan do
     use Surface.Component
+
+    slot default
 
     @impl true
     def render(assigns) do
@@ -30,6 +34,8 @@ defmodule Surface.TransformTest do
 
   defmodule LiveDivToSpan do
     use Surface.LiveComponent
+
+    slot default
 
     @impl true
     def render(assigns) do
@@ -51,7 +57,7 @@ defmodule Surface.TransformTest do
     @impl true
     def render(assigns) do
       ~H"""
-      <div><slot /></div>
+      <div></div>
       """
     end
 
@@ -132,7 +138,7 @@ defmodule Surface.TransformTest do
 
   test "transform is run on compile when defined for Surface.LiveView" do
     code = """
-    <LiveDivViewToSpan id="view">Some content</LiveDivViewToSpan>
+    <LiveDivViewToSpan id="view" />
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)

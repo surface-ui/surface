@@ -63,20 +63,6 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule OuterWithoutDeclaringSlots do
-    use Surface.Component
-
-    def render(assigns) do
-      ~H"""
-      <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
-      </div>
-      """
-    end
-  end
-
   defmodule OuterWithNamedSlotAndProps do
     use Surface.Component
 
@@ -342,31 +328,6 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign undeclared slots without props" do
-    html =
-      render_surface do
-        ~H"""
-        <OuterWithoutDeclaringSlots>
-          <template slot="header">
-            My header
-          </template>
-          My body
-          <template slot="footer">
-            My footer
-          </template>
-        </OuterWithoutDeclaringSlots>
-        """
-      end
-
-    assert html =~ """
-           <div>
-               My header
-             My body
-               My footer
-           </div>
-           """
-  end
-
   test "fallback content" do
     html =
       render_surface do
@@ -620,12 +581,7 @@ defmodule Surface.SlotTest do
       end
 
     message = """
-    code:1: there's no `default` slot defined in `Surface.SlotTest.OuterWithoutDefaultSlot`.
-
-    Directive :let can only be used on explicitly defined slots.
-
-    Hint: You can define a `default` slot and its props using: \
-    `slot default, props: [:info]\
+    code:1: no slot "default" defined in parent component <OuterWithoutDefaultSlot>
     """
 
     assert_raise(CompileError, message, fn ->
@@ -807,12 +763,13 @@ defmodule Surface.SlotSyncTest do
 
   import ExUnit.CaptureIO
 
+  alias Surface.SlotTest.OuterWithoutDefaultSlot, warn: false
   alias Surface.SlotTest.OuterWithNamedSlot, warn: false
   alias Surface.SlotTest.InnerData, warn: false
   alias Surface.SlotTest.{Grid, Column}, warn: false
   alias Surface.SlotTest.StatefulComponent, warn: false
 
-  test "warn if parent component does not define any slots" do
+  test "raises compile error if parent component does not define any slots" do
     code =
       quote do
         ~H"""
@@ -822,18 +779,20 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code)
-      end)
+    message = """
+    code:2: The slotable component <Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
 
-    assert output =~ ~r"""
-           no slot "inner" defined in parent component <StatefulComponent>
-             code:2:\
-           """
+    That slot name is not declared in parent component <StatefulComponent>.
+
+    Please declare the slot in the parent component or rename the value in the `:slot` option.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
+    end)
   end
 
-  test "warn if parent component does not define the slot" do
+  test "raise compile error if parent component does not define the slot" do
     code =
       quote do
         ~H"""
@@ -844,20 +803,22 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code)
-      end)
+    message = """
+    code:2: The slotable component <Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
 
-    assert output =~ ~r"""
-           no slot "inner" defined in parent component <Grid>
+    That slot name is not declared in parent component <Grid>.
 
-             Available slot: "cols"
-             code:2:\
-           """
+    Please declare the slot in the parent component or rename the value in the `:slot` option.
+
+    Available slot: "cols"
+    """
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
+    end)
   end
 
-  test "warn and suggest similar slot if parent component does not define the slot" do
+  test "raise compile error and suggest similiar slot if parent component does not define the slot" do
     code =
       quote do
         ~H"""
@@ -871,19 +832,82 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    output =
+    message = """
+    code:4: no slot "foot" defined in parent component <OuterWithNamedSlot>
+
+    Did you mean "footer"?
+
+    Available slots: "footer", "header" and "default"
+    """
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
+    end)
+  end
+
+  test "raises compile error on component that uses undeclared slots" do
+    component_code = """
+    defmodule TestComponentWithoutDeclaringSlots do
+      use Surface.Component
+
+      slot header
+      slot default
+
+      def render(assigns) do
+        ~H"\""
+          <div>
+            <slot name="header"/>
+            <slot />
+            <slot name="footer" />
+          </div>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:12: no slot `footer` defined in the component `Surface.SlotSyncTest.TestComponentWithoutDeclaringSlots`
+
+    Available slots: "default" and "header"\
+
+    Hint: You can define slots using the `slot` macro.\
+
+    For instance: `slot footer`\
+    """
+
+    assert_raise(CompileError, message, fn ->
       capture_io(:standard_error, fn ->
-        compile_surface(code)
+        Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
       end)
+    end)
+  end
 
-    assert output =~ ~r"""
-           no slot "foot" defined in parent component <OuterWithNamedSlot>
+  test "raises compile error on component that uses short syntax <slot /> without declaring default slot" do
+    component_code = """
+    defmodule TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot do
+      use Surface.Component
 
-             Did you mean "footer"\?
+      def render(assigns) do
+        ~H"\""
+          <div>
+            <slot />
+          </div>
+        "\""
+      end
+    end
+    """
 
-             Available slots: "footer", "header" and "default"
-             code:4:\
-           """
+    message = ~r"""
+    code:7: no slot `default` defined in the component `Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
+
+    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
   end
 
   test "warn on component that uses slot_assigned?/1 with a non existing slot" do
@@ -925,5 +949,24 @@ defmodule Surface.SlotSyncTest do
              Available slots: "default", "footer" and "header"
              code.exs:11:\
            """
+  end
+
+  test "raise compile error when using :let and there's no default slot defined" do
+    code =
+      quote do
+        ~H"""
+        <OuterWithoutDefaultSlot :let={{ info: my_info }}>
+          Info: {{ my_info }}
+        </OuterWithoutDefaultSlot>
+        """
+      end
+
+    message = """
+    code:1: no slot "default" defined in parent component <OuterWithoutDefaultSlot>
+    """
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
+    end)
   end
 end
