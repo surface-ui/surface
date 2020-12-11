@@ -123,4 +123,33 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ ~r/Name is invalid/
   end
+
+  test "form generates method input for prop" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{ :user }} action="#" method="put" csrf_token="test">
+        </Form>
+        """
+      end
+
+    assert html =~ ~s(<input name="_method" type="hidden" value="put">)
+  end
+
+  test "form generates method input for changeset", %{conn: conn} do
+    assigns = %{
+      "changeset" =>
+        Ecto.Changeset.cast(
+          {%{}, %{name: :string}},
+          %{name: "myname"},
+          [:name]
+        )
+        |> Map.put(:data, %{__meta__: %{state: :loaded}})
+    }
+
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+
+    # assert html =~ ~s(<input name="_method" type="hidden" value="put" />)
+    assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
+  end
 end
