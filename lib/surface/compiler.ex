@@ -731,7 +731,7 @@ defmodule Surface.Compiler do
          true = _short_syntax?
        ) do
     message = """
-    no slot `#{slot_name}` defined in the component `#{module}`\
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`\
     \n\nPlease declare the default slot using `slot default` in order to use the `<slot />` notation.
     """
 
@@ -750,11 +750,13 @@ defmodule Surface.Compiler do
     existing_slots_message = existing_slots_message(defined_slot_names)
 
     message = """
-    no slot `#{slot_name}` defined in the component `#{module}`\
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`\
     #{similar_slot_message}\
     #{existing_slots_message}\
-    \n\nHint: You can define slots using the `slot` macro. \
-    \nFor instance: `slot #{slot_name}`\
+
+    Hint: You can define slots using the `slot` macro.\
+
+    For instance: `slot #{slot_name}`\
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
@@ -770,7 +772,7 @@ defmodule Surface.Compiler do
     header_message =
       if component_slotable?(template_meta.module) do
         """
-        The slotable component <#{template_meta.module}> as the `:slot` option set to \
+        The slotable component <#{inspect(template_meta.module)}> as the `:slot` option set to \
         `#{slot_name}`.
 
         That slot name is not declared in parent component <#{parent_meta.node_alias}>.

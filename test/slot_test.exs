@@ -780,7 +780,7 @@ defmodule Surface.SlotSyncTest do
       end
 
     message = """
-    code:2: The slotable component <Elixir.Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
+    code:2: The slotable component <Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
 
     That slot name is not declared in parent component <StatefulComponent>.
 
@@ -804,7 +804,7 @@ defmodule Surface.SlotSyncTest do
       end
 
     message = """
-    code:2: The slotable component <Elixir.Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
+    code:2: The slotable component <Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
 
     That slot name is not declared in parent component <Grid>.
 
@@ -866,11 +866,11 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:12: no slot `footer` defined in the component `Elixir.Surface.SlotSyncTest.TestComponentWithoutDeclaringSlots`
+    code:12: no slot `footer` defined in the component `Surface.SlotSyncTest.TestComponentWithoutDeclaringSlots`
 
-    Available slots: "default" and "header"
+    Available slots: "default" and "header"\
 
-    Hint: You can define slots using the `slot` macro. \
+    Hint: You can define slots using the `slot` macro.\
 
     For instance: `slot footer`\
     """
@@ -898,7 +898,7 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:7: no slot `default` defined in the component `Elixir.Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
+    code:7: no slot `default` defined in the component `Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
 
     Please declare the default slot using `slot default` in order to use the `<slot />` notation.
     """
