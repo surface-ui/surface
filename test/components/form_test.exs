@@ -149,7 +149,6 @@ defmodule Surface.Components.FormTest do
 
     {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
 
-    # assert html =~ ~s(<input name="_method" type="hidden" value="put" />)
     assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
   end
 end
