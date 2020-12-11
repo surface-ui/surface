@@ -444,12 +444,8 @@ defmodule Surface.Compiler do
 
   defp has_attribute?([], _), do: false
 
-  defp has_attribute?(attributes, attr_name) do
-    Enum.find_value(attributes, false, fn
-      {^attr_name, _, _} -> true
-      _ -> nil
-    end)
-  end
+  defp has_attribute?(attributes, attr_name),
+    do: Enum.any?(attributes, &match?({^attr_name, _, _}, &1))
 
   defp attribute_value_as_ast(attributes, attr_name, default, meta) do
     Enum.find_value(attributes, default, fn
