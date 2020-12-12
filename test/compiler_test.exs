@@ -110,6 +110,23 @@ defmodule Surface.CompilerTest do
            } = node
   end
 
+  test "component with expression using special characters in interpolation" do
+    code = """
+    <h2>{{ "héllo" }}</h2>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             children: [
+               %Surface.AST.Interpolation{
+                 original: " \"héllo\" ",
+                 value: "héllo"
+               }
+             ]
+           } = node
+  end
+
   test "component with expressions inside a string" do
     code = """
     <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />

@@ -247,7 +247,7 @@ defmodule Surface.Compiler.Parser do
 
   defp interpolation(_rest, ["}}" | nodes], context, _line, _offset) do
     [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
-    {[{:interpolation, rest |> IO.iodata_to_binary(), %{line: opening_line}}], context}
+    {[{:interpolation, IO.chardata_to_string(rest), %{line: opening_line}}], context}
   end
 
   defp interpolation(_rest, _, _context, _line, _offset),
