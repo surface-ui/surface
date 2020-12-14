@@ -27,37 +27,50 @@ defmodule Surface.Directive.Show do
   def extract(_, _), do: []
 
   def process(%AST.Directive{value: %AST.Literal{value: value}}, node) do
-    if value do
-      node
-    else
-      add_value_to_attribute(node, :style, value)
-    end
+    add_value_to_attribute(node, :style, %AST.AttributeExpr{
+      value:
+        quote generated: true do
+          unquote(value)
+        end,
+      original: to_string(value),
+      meta: true
+    })
   end
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, node) do
-    add_value_to_attribute(node, :style, value)
+  def process(%AST.Directive{value: %AST.AttributeExpr{} = show}, node) do
+    add_value_to_attribute(node, :style, show)
   end
 
-  def maybe_update_display(style, show) do
-    if show do
-      Keyword.delete(style, :display)
-    else
-      Keyword.put(style, :display, "none")
-    end
-  end
-
-  defp add_value_to_attribute(%{attributes: attributes, meta: meta} = node, name, show_value) do
+  defp add_value_to_attribute(
+         %{attributes: attributes, meta: meta} = node,
+         name,
+         %AST.AttributeExpr{value: value, meta: show_meta} = show
+       ) do
     {%{value: style_value, meta: style_meta} = style, non_style} =
       extract_or_create_attribute(attributes || [], name, meta)
 
-    updated_style_value =
-      style_value
-      |> style_value_to_expr(style_meta)
-      |> wrap_style_value(show_value)
+    updated_style_value = style_value_to_expr(style_value, style_meta)
 
     updated_style_attribute = %{style | value: updated_style_value}
 
-    attributes = [updated_style_attribute | non_style]
+    attributes = [
+      updated_style_attribute,
+      %Surface.AST.Attribute{
+        type: :boolean,
+        type_opts: [],
+        name: :hidden,
+        value: %AST.AttributeExpr{
+          show
+          | value:
+              quote generated: true do
+                not unquote(value)
+              end
+        },
+        meta: show_meta
+      }
+      | non_style
+    ]
+
     %{node | attributes: attributes}
   end
 
@@ -102,14 +115,5 @@ defmodule Surface.Directive.Show do
 
   defp style_value_to_expr(attr_value, _attr_meta) do
     attr_value
-  end
-
-  defp wrap_style_value(%AST.AttributeExpr{value: value} = expr, show_value) do
-    updated_value =
-      quote generated: true do
-        unquote(__MODULE__).maybe_update_display(unquote(value), unquote(show_value))
-      end
-
-    %AST.AttributeExpr{expr | value: updated_value}
   end
 end
