@@ -63,8 +63,8 @@ defmodule Surface.Components.Form.DateSelect do
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    props =
-      get_non_nil_props(assigns, [
+    helper_opts =
+      props_to_opts(assigns, [
         :value,
         :default,
         :year,
@@ -73,15 +73,15 @@ defmodule Surface.Components.Form.DateSelect do
         :builder
       ])
 
-    props =
-      props
+    helper_opts =
+      helper_opts
       |> parse_css_class_for(:year)
       |> parse_css_class_for(:month)
       |> parse_css_class_for(:day)
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ date_select(form, field, props ++ @opts) }}
+      {{ date_select(form, field, helper_opts ++ @opts) }}
     </InputContext>
     """
   end

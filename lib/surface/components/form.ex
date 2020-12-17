@@ -14,7 +14,7 @@ defmodule Surface.Components.Form do
   use Surface.Component
 
   import Phoenix.HTML.Form
-  import Surface.Components.Form.Utils, only: [get_non_nil_props: 2]
+  import Surface.Components.Form.Utils, only: [props_to_opts: 2]
   alias Surface.Components.Raw
 
   @doc "Atom or changeset to inform the form data"
@@ -64,7 +64,7 @@ defmodule Surface.Components.Form do
   end
 
   defp get_opts(assigns) do
-    form_opts = get_non_nil_props(assigns, [:as, :method, :multipart, :csrf_token, :errors])
+    form_opts = props_to_opts(assigns, [:as, :method, :multipart, :csrf_token, :errors])
 
     form_opts ++
       assigns.opts ++

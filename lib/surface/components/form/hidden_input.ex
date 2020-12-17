@@ -21,12 +21,13 @@ defmodule Surface.Components.Form.HiddenInput do
   import Surface.Components.Form.Utils
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:value, :class])
-    event_opts = get_events_to_opts(assigns)
+    helper_opts = props_to_opts(assigns)
+    attr_opts = props_to_attr_opts(assigns, [:value, :class])
+    event_opts = events_to_opts(assigns)
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ hidden_input(form, field, props ++ @opts ++ event_opts) }}
+      {{ hidden_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts) }}
     </InputContext>
     """
   end

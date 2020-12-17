@@ -91,6 +91,26 @@ defmodule Surface.Components.Form.CheckboxTest do
     refute html =~ ~r/checked/
   end
 
+  test "setting the hidden_input" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox hidden_input={{ true }}/>
+        """
+      end
+
+    assert html =~ ~r/hidden/
+
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox hidden_input={{ false }}/>
+        """
+      end
+
+    refute html =~ ~r/hidden/
+  end
+
   test "blur event with parent live view as target" do
     html =
       render_surface do

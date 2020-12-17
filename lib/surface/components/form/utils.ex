@@ -2,10 +2,18 @@ defmodule Surface.Components.Form.Utils do
   @moduledoc false
   import Surface, only: [event_to_opts: 2, prop_to_opts: 2]
 
-  defmacro get_non_nil_props(assigns, props) do
+  def props_to_opts(assigns, props \\ []) do
     # `id` and `name` props are common in all the form components
     props = [:id, :name] ++ props
 
+    for prop <- props,
+        {key, value} = prop_value(assigns, prop),
+        value != nil do
+      {key, value}
+    end
+  end
+
+  defmacro props_to_attr_opts(assigns, props) do
     quote do
       Enum.reduce(unquote(props), [], fn prop, acc ->
         {key, value} = unquote(__MODULE__).prop_value(unquote(assigns), prop)
@@ -14,7 +22,7 @@ defmodule Surface.Components.Form.Utils do
     end
   end
 
-  def get_events_to_opts(assigns) do
+  def events_to_opts(assigns) do
     [
       event_to_opts(assigns.blur, :phx_blur),
       event_to_opts(assigns.focus, :phx_focus),

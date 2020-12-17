@@ -62,8 +62,8 @@ defmodule Surface.Components.Form.TimeSelect do
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    props =
-      get_non_nil_props(assigns, [
+    helper_opts =
+      props_to_opts(assigns, [
         :value,
         :default,
         :hour,
@@ -72,15 +72,15 @@ defmodule Surface.Components.Form.TimeSelect do
         :builder
       ])
 
-    props =
-      props
+    helper_opts =
+      helper_opts
       |> parse_css_class_for(:hour)
       |> parse_css_class_for(:minute)
       |> parse_css_class_for(:second)
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ time_select(form, field, props ++ @opts) }}
+      {{ time_select(form, field, helper_opts ++ @opts) }}
     </InputContext>
     """
   end

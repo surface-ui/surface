@@ -32,11 +32,12 @@ defmodule Surface.Components.Form.Label do
   slot default
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, class: get_config(:default_class))
+    helper_opts = props_to_opts(assigns)
+    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ label(form, field, props ++ @opts, do: children(assigns, field)) }}
+      {{ label(form, field, helper_opts ++ attr_opts ++ @opts, do: children(assigns, field)) }}
     </InputContext>
     """
   end
