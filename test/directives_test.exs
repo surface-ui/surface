@@ -571,33 +571,18 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <col style="padding: 1px;" :show={{ @show }}>
+          <col :show={{ @show }}>
           <col :show=true>
           """
         end
 
       assert html == """
-             <col style="padding: 1px">
+             <col>
              <col>
              """
     end
 
-    test "when false and style already exists, add `display: none`" do
-      assigns = %{show: false}
-
-      html =
-        render_surface do
-          ~H"""
-          <col style="padding: 1px;" :show={{ @show }}>
-          """
-        end
-
-      assert html == """
-             <col style="display: none; padding: 1px">
-             """
-    end
-
-    test "when false and style does not exists, create style and add `display: none`" do
+    test "when false, add hidden attribute" do
       assigns = %{show: false}
 
       html =
@@ -608,7 +593,20 @@ defmodule Surface.DirectivesTest do
         end
 
       assert html == """
-             <col style="display: none">
+             <col hidden>
+             """
+    end
+
+    test "when false literal, add hidden attribute" do
+      html =
+        render_surface do
+          ~H"""
+          <col :show=false>
+          """
+        end
+
+      assert html == """
+             <col hidden>
              """
     end
   end
