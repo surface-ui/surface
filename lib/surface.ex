@@ -103,10 +103,8 @@ defmodule Surface do
   @doc """
   Translates Surface code into Phoenix templates.
   """
-  defmacro sigil_H({:<<>>, _, [string]}, opts) do
-    # This will create accurate line numbers for heredoc usages of the sigil, but
-    # not for ~H* variants. See https://github.com/msaraiva/surface/issues/15#issuecomment-667305899
-    line_offset = __CALLER__.line + 1
+  defmacro sigil_H({:<<>>, meta, [string]}, opts) do
+    line_offset = __CALLER__.line + compute_line_offset(meta)
 
     caller_is_surface_component =
       Module.open?(__CALLER__.module) &&
@@ -121,6 +119,18 @@ defmodule Surface do
       file: __CALLER__.file,
       line: __CALLER__.line
     )
+  end
+
+  defp compute_line_offset(meta) do
+    # Since `v1.11` this will create accurate line numbers for heredoc usages
+    # of the `~H` sigil. For version below `v1.11` single-line ~H will return
+    # an incorrect line number because there was no way to retrieve the information
+    # about the delimiter. See https://github.com/msaraiva/surface/issues/240
+    cond do
+      Keyword.has_key?(meta, :indentation) -> 1
+      not Version.match?(System.version(), "~> 1.11") -> 1
+      true -> 0
+    end
   end
 
   @doc "Retrieve a component's config based on the `key`"
