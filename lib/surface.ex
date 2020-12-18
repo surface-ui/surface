@@ -246,18 +246,18 @@ defmodule Surface do
   end
 
   @doc false
-  defmacro prop_to_opts(prop_value, prop_name) do
+  defmacro prop_to_attr_opts(prop_value, prop_name) do
     quote do
-      prop_to_opts(unquote(prop_value), unquote(prop_name), __ENV__)
+      prop_to_attr_opts(unquote(prop_value), unquote(prop_name), __ENV__)
     end
   end
 
   @doc false
-  def prop_to_opts(nil, _prop_name, _caller) do
+  def prop_to_attr_opts(nil, _prop_name, _caller) do
     []
   end
 
-  def prop_to_opts(prop_value, prop_name, caller) do
+  def prop_to_attr_opts(prop_value, prop_name, caller) do
     module = caller.module
     meta = %{caller: caller, line: caller.line, node_alias: module}
     {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, prop_name, meta)

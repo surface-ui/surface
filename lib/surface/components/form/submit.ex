@@ -40,7 +40,7 @@ defmodule Surface.Components.Form.Submit do
     children = ~H"<slot>{{ @label }}</slot>"
 
     ~H"""
-    {{ submit prop_to_opts(@class, :class) ++ @opts, do: children }}
+    {{ submit prop_to_attr_opts(@class, :class) ++ @opts, do: children }}
     """
   end
 end

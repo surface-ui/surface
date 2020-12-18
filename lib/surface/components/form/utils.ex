@@ -1,6 +1,6 @@
 defmodule Surface.Components.Form.Utils do
   @moduledoc false
-  import Surface, only: [event_to_opts: 2, prop_to_opts: 2]
+  import Surface, only: [event_to_opts: 2, prop_to_attr_opts: 2]
 
   def props_to_opts(assigns, props \\ []) do
     # `id` and `name` props are common in all the form components
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.Utils do
     quote do
       Enum.reduce(unquote(props), [], fn prop, acc ->
         {key, value} = unquote(__MODULE__).prop_value(unquote(assigns), prop)
-        prop_to_opts(value, key) ++ acc
+        prop_to_attr_opts(value, key) ++ acc
       end)
     end
   end
