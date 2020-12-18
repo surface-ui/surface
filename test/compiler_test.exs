@@ -803,7 +803,7 @@ defmodule Surface.CompilerSyncTest do
     """
 
     # See Surface.compute_line_offset/1 for more information
-    line_offset = if not Version.match?(System.version(), "~> 1.11"), do: 0, else: 1
+    line_offset = if Version.match?(System.version(), "~> 1.11"), do: 1, else: 0
 
     output =
       capture_io(:standard_error, fn ->

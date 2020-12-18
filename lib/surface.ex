@@ -122,13 +122,13 @@ defmodule Surface do
   end
 
   defp compute_line_offset(meta) do
-    # Since `v1.10` this will create accurate line numbers for heredoc usages
-    # of the `~H` sigil. For version below `v1.10` single-line ~H will return
+    # Since `v1.11` this will create accurate line numbers for heredoc usages
+    # of the `~H` sigil. For version below `v1.11` single-line ~H will return
     # an incorrect line number because there was no way to retrieve the information
     # about the delimiter. See https://github.com/msaraiva/surface/issues/240
     cond do
       Keyword.has_key?(meta, :indentation) -> 1
-      not Version.match?(System.version(), "~> 1.10") -> 1
+      not Version.match?(System.version(), "~> 1.11") -> 1
       true -> 0
     end
   end
