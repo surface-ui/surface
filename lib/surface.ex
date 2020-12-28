@@ -32,7 +32,7 @@ defmodule Surface do
         use Phoenix.LiveView
         import Surface
 
-        def mount(socket) do
+        def mount(_params, _session, socket) do
           socket = Surface.init(socket)
           ...
           {:ok, socket}
