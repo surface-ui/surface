@@ -25,6 +25,7 @@ defmodule Surface.MixProject do
     ]
   end
 
+  defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -54,5 +55,9 @@ defmodule Surface.MixProject do
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/msaraiva/surface"}
     }
+  end
+
+  defp catalogues do
+    ["priv/catalogue"]
   end
 end
