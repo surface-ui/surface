@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.2.0 (2021-01-27)
+
+  * Introduce new testing API using `render_surface/1`
+  * Add experimental support to create examples and playgrounds for catalogues
+  * Raises compile error if slots are not declared
+  * Raises compile error on duplicate built-in assign
+  * Allow defining the assign name for slot through the :as option (#230)
+  * Implement the `:show` directive via hidden attribute (#244)
+  * Add new `<DateSelectComponent>` component
+  * Remove default value from `Form` method prop
+  * Reintroduce opts prop for the `<Select>` component
+  * Fix markdown syntax warning in `<Form>` docs
+  * Fix error when using :if + :props in slots (#224)
+  * Fix line offset when using single-line `~H` variants (#246)
+  * Fix UnicodeConversionError when using string literals inside interpolation
+
 ## v0.1.1 (2020-11-28)
 
   * Add explicit props for the main opts of Checkbox, Select, MultipleSelect, FileInput and Form (#215).
