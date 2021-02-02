@@ -7,11 +7,16 @@ defmodule Surface.Catalogue.Example do
   Besides the buit-in options provided by the LiveView itself, an Example also
   provides the following options:
 
-    * `subject` - Required. The target component of this Example.
+    * `subject` - Required. The target component of the Example.
+
+    * `height` - Required. The height of the Example.
 
     * `catalogue` - Optional. A module that implements the `Surface.Catalogue`
       providing additional information to the catalogue tool. Usually required
       if you want to share your components as a library.
+
+    * `body` - Optional. Sets/overrides the attributes of the the Example's body tag.
+      Useful to set a different background or padding.
 
     * `title` - Optional. The title of the example.
 
@@ -25,8 +30,7 @@ defmodule Surface.Catalogue.Example do
   """
 
   defmacro __using__(opts) do
-    {opts, config} = Keyword.split(opts, [:namespace, :container, :layout])
-    subject = Surface.Catalogue.fetch_subject!(config, __MODULE__, __CALLER__)
+    subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
     quote do
       use Surface.LiveView, unquote(opts)
@@ -34,7 +38,7 @@ defmodule Surface.Catalogue.Example do
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
 
-      @config unquote(config)
+      @config unquote(opts)
       @before_compile unquote(__MODULE__)
 
       import Surface, except: [sigil_H: 2]
@@ -56,6 +60,7 @@ defmodule Surface.Catalogue.Example do
 
     quote do
       @moduledoc catalogue: [
+                   type: :example,
                    subject: unquote(subject),
                    config: unquote(config),
                    code: unquote(code)

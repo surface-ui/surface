@@ -17,6 +17,12 @@ defmodule Surface.Catalogue do
     * `head_js` - JS related content to be added to the `<head>...</head>` section
       of each example or playground.
 
+    * `example` - A keyword list of options to be applied for all examples
+      in in the catalogue.
+
+    * `playground` - A keyword list of options to be applied for all playgrounds
+      in in the catalogue.
+
   """
   @callback config :: keyword()
 
@@ -77,9 +83,11 @@ defmodule Surface.Catalogue do
     user_config = Map.get(meta, :config, [])
     catalogue = Keyword.get(user_config, :catalogue)
     catalogue_config = get_catalogue_config(catalogue)
+    {type_config, catalogue_config} = Keyword.split(catalogue_config, [:example, :playground])
 
     @default_config
     |> Keyword.merge(catalogue_config)
+    |> Keyword.merge(type_config[meta.type] || [])
     |> Keyword.merge(user_config)
   end
 

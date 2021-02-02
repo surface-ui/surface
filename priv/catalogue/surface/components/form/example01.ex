@@ -2,6 +2,7 @@ defmodule Surface.Components.Form.Example01 do
   use Surface.Catalogue.Example,
     catalogue: Surface.Components.Catalogue,
     subject: Surface.Components.Form,
+    height: "350px",
     direction: "vertical"
 
   alias Surface.Components.Form.{TextInput, Label, Field}

@@ -1,7 +1,8 @@
 defmodule Surface.Components.Form.TextArea.Playground do
   use Surface.Catalogue.Playground,
     catalogue: Surface.Components.Catalogue,
-    subject: Surface.Components.Form.TextArea
+    subject: Surface.Components.Form.TextArea,
+    height: "170px"
 
   data props, :map,
     default: %{

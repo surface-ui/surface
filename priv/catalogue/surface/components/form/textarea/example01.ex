@@ -1,7 +1,8 @@
 defmodule Surface.Components.Form.TextArea.Example01 do
   use Surface.Catalogue.Example,
     catalogue: Surface.Components.Catalogue,
-    subject: Surface.Components.Form.TextArea
+    subject: Surface.Components.Form.TextArea,
+    height: "170px"
 
   def render(assigns) do
     ~H"""

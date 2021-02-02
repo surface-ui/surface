@@ -7,11 +7,16 @@ defmodule Surface.Catalogue.Playground do
   Besides the buit-in options provided by the LiveView itself, a Playground also
   provides the following options:
 
-    * `subject` - Required. The target component of this Playground.
+    * `subject` - Required. The target component of the Playground.
+
+    * `height` - Required. The initial height of the Playground.
 
     * `catalogue` - Optional. A module that implements the `Surface.Catalogue`
       providing additional information to the catalogue tool. Usually required
       if you want to share your components as a library.
+
+    * `body` - Optional. Sets/overrides the attributes of the Playground's body tag.
+      Useful to set a different background or padding.
 
   """
 
@@ -20,8 +25,7 @@ defmodule Surface.Catalogue.Playground do
   @pubsub Surface.Catalogue.PubSub
 
   defmacro __using__(opts) do
-    {opts, config} = Keyword.split(opts, [:namespace, :container, :layout])
-    subject = Surface.Catalogue.fetch_subject!(config, __MODULE__, __CALLER__)
+    subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
     quote do
       use Surface.LiveView, unquote(opts)
@@ -29,7 +33,7 @@ defmodule Surface.Catalogue.Playground do
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
 
-      @config unquote(config)
+      @config unquote(opts)
       @before_compile unquote(__MODULE__)
 
       @impl true
@@ -82,6 +86,7 @@ defmodule Surface.Catalogue.Playground do
     module_doc =
       quote do
         @moduledoc catalogue: [
+                     type: :playground,
                      subject: unquote(subject),
                      config: unquote(config)
                    ]
