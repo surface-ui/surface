@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1 (2021-02-01)
+
+  * Allow different catalogue options for examples and playgrounds
+
 ## v0.2.0 (2021-01-27)
 
   * Introduce new testing API using `render_surface/1`
