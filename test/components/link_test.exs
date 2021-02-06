@@ -98,13 +98,14 @@ defmodule Surface.Components.LinkTest do
       end
 
     assert html =~ """
-           <a class="link" \
+           <a \
            data-confirm="Really?" \
            data-csrf="token" \
            data-method="delete" \
            data-to="/users/1" \
-           href="/users/1" \
-           rel="nofollow">user</a>
+           rel="nofollow" \
+           class="link" \
+           href="/users/1">user</a>
            """
   end
 
@@ -117,7 +118,7 @@ defmodule Surface.Components.LinkTest do
       end
 
     assert html =~ """
-           <a href="/users/1" phx-click="my_click"></a>
+           <a phx-click="my_click" href="/users/1"></a>
            """
   end
 
@@ -131,7 +132,7 @@ defmodule Surface.Components.LinkTest do
 
     assert html =~ ~r"""
            <div>
-             <a href="/users/1" phx-click="my_click" phx-target=".+"></a>
+             <a phx-click="my_click" phx-target=".+" href="/users/1"></a>
            </div>
            """
   end
