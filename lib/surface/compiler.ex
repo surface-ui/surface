@@ -133,7 +133,10 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_stateful_component(ast, %CompileMeta{line_offset: offset, caller: caller}) do
+  defp validate_stateful_component(ast, %CompileMeta{
+         line_offset: offset,
+         caller: %{function: {:render, _}} = caller
+       }) do
     num_tags =
       ast
       |> Enum.filter(fn
@@ -163,6 +166,8 @@ defmodule Surface.Compiler do
         :noop
     end
   end
+
+  defp validate_stateful_component(_ast, %CompileMeta{}), do: nil
 
   defp to_ast(nodes, compile_meta) do
     for node <- nodes do

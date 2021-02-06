@@ -740,6 +740,70 @@ defmodule Surface.CompilerSyncTest do
     assert extract_line(output) == 6
   end
 
+  test "does not warn if H_sigil is used outside a render function of a component" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+        <div>
+          {{ sum(assigns) }}
+        </div>
+        "\""
+      end
+
+      def sum(assigns) do
+        ~H"\""
+        {{ @a + @b }}
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output == ""
+  end
+
+  test "does not warn if H_sigil is used outside a render function of a live component" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H"\""
+        <div>
+          {{ sum(assigns) }}
+        </div>
+        "\""
+      end
+
+      def sum(assigns) do
+        ~H"\""
+        {{ @a + @b }}
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output == ""
+  end
+
   test "warning on stateful components with text root element" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
