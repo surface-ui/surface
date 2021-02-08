@@ -4,7 +4,7 @@ defmodule Surface.Components.LabelTest do
   alias Surface.Components.Form
   alias Surface.Components.Form.{Field, Label}
 
-  test "generates a <label> passing any opts to the underlying label/3" do
+  test "generates a <label> passing any opts to the underlying html element" do
     html =
       render_surface do
         ~H"""
@@ -12,7 +12,7 @@ defmodule Surface.Components.LabelTest do
         """
       end
 
-    assert html =~ ~r[<label (.+) id="my_id">(.+)</label>]
+    assert html =~ ~r[<label id="my_id">(.+)</label>]s
   end
 
   test "property class" do
@@ -45,7 +45,7 @@ defmodule Surface.Components.LabelTest do
         """
       end
 
-    assert html =~ ~S(<label for="user_name">Name</label>)
+    assert html =~ ~r[<label for="user_name">(.+)</label>]s
   end
 
   test "use context's form and field by default" do
@@ -60,7 +60,7 @@ defmodule Surface.Components.LabelTest do
         """
       end
 
-    assert html =~ ~S(<label for="user_name">Name</label>)
+    assert html =~ ~r[<label for="user_name">(.+)</label>]s
   end
 end
 
