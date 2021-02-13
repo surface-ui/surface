@@ -265,13 +265,14 @@ defmodule Surface.SlotTest do
   end
 
   test "render slot when tag is capitalized" do
-    html = render_surface do
-      ~H"""
-        <WithCapitalizedSlot>
-          Content
-        </WithCapitalizedSlot>
-      """
-    end
+    html =
+      render_surface do
+        ~H"""
+          <WithCapitalizedSlot>
+            Content
+          </WithCapitalizedSlot>
+        """
+      end
 
     assert html =~ """
            <div>
