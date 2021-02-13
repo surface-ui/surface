@@ -188,9 +188,11 @@ defmodule Surface.Compiler do
   end
 
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
-  defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({"template", _, _, _}), do: :template
+  defp node_type({"Template", _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
+  defp node_type({"Slot", _, _, _}), do: :slot
+  defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
