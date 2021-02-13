@@ -206,6 +206,20 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule WithCapitalizedSlot do
+    use Surface.Component
+
+    slot default
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <Slot />
+      </div>
+      """
+    end
+  end
+
   test "render slot without slot props" do
     html =
       render_surface do
@@ -246,6 +260,22 @@ defmodule Surface.SlotTest do
              Content 3
              <div>Stateful</div>
              </div>
+           </div>
+           """
+  end
+
+  test "render slot when tag is capitalized" do
+    html = render_surface do
+      ~H"""
+        <WithCapitalizedSlot>
+          Content
+        </WithCapitalizedSlot>
+      """
+    end
+
+    assert html =~ """
+           <div>
+               Content
            </div>
            """
   end
@@ -315,6 +345,31 @@ defmodule Surface.SlotTest do
           <template slot="footer">
             My footer
           </template>
+        </OuterWithNamedSlot>
+        """
+      end
+
+    assert html =~ """
+           <div>
+               My header
+             My body
+               My footer
+           </div>
+           """
+  end
+
+  test "assign named slots without props and capitalized template tag" do
+    html =
+      render_surface do
+        ~H"""
+        <OuterWithNamedSlot>
+          <Template slot="header">
+            My header
+          </Template>
+          My body
+          <Template slot="footer">
+            My footer
+          </Template>
         </OuterWithNamedSlot>
         """
       end
