@@ -20,7 +20,8 @@ defmodule Surface.Compiler do
     Surface.Directive.Show,
     Surface.Directive.If,
     Surface.Directive.For,
-    Surface.Directive.Debug
+    Surface.Directive.Debug,
+    Surface.Directive.Hook
   ]
 
   @component_directive_handlers [
