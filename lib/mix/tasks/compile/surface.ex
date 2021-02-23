@@ -6,7 +6,8 @@ defmodule Mix.Tasks.Compile.Surface do
   use Mix.Task
   @recursive true
 
-  @default_hooks_output_dir "assets/js/hooks"
+  @default_hooks_output_dir "assets/js/_hooks"
+  @hooks_extension ".hooks.js"
 
   @doc false
   def run(_args) do
@@ -26,6 +27,8 @@ defmodule Mix.Tasks.Compile.Surface do
     {js_files, _css_files} = get_colocated_assets()
 
     File.mkdir_p!(js_output_dir)
+
+    delete_unused_hooks_files!(js_output_dir, js_files)
 
     index_file_time =
       case File.stat(index_file) do
@@ -56,9 +59,9 @@ defmodule Mix.Tasks.Compile.Surface do
         reduce: {[], []} do
       {js_files, css_files} ->
         base_file = mod.module_info() |> get_in([:compile, :source]) |> Path.rootname()
-        js_file = "#{base_file}.js"
+        js_file = "#{base_file}#{@hooks_extension}"
         base_name = inspect(mod)
-        dest_js_file = "#{base_name}.js"
+        dest_js_file = "#{base_name}#{@hooks_extension}"
         css_file = "#{base_file}.css"
         dest_css_file = "#{base_name}.css"
 
@@ -86,10 +89,10 @@ defmodule Mix.Tasks.Compile.Surface do
     {hooks, imports} =
       for {{_file, dest_file}, index} <- files, reduce: {[], []} do
         {hooks, imports} ->
-          namespace = Path.basename(dest_file, ".js")
+          namespace = Path.basename(dest_file, @hooks_extension)
           var = "c#{index}"
           hook = ~s[ns(#{var}, "#{namespace}")]
-          imp = ~s[import * as #{var} from "./#{namespace}"]
+          imp = ~s[import * as #{var} from "./#{namespace}.hooks"]
           {[hook | hooks], [imp | imports]}
       end
 
@@ -115,5 +118,18 @@ defmodule Mix.Tasks.Compile.Surface do
 
     export default hooks
     """
+  end
+
+  defp delete_unused_hooks_files!(js_output_dir, js_files) do
+    used_files =
+      Enum.map(js_files, fn {_, dest_file} -> Path.join(js_output_dir, dest_file) end)
+
+    all_files =
+      js_output_dir
+      |> Path.join("*#{@hooks_extension}")
+      |> Path.wildcard()
+
+    unsused_files = all_files -- used_files
+    Enum.each(unsused_files, &File.rm!/1)
   end
 end
