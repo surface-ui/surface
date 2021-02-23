@@ -1,12 +1,23 @@
 defmodule Surface.Catalogue.PlaygroundTest do
-  use ExUnit.Case
+  use Surface.ConnCase, async: true
+  import Phoenix.ConnTest
 
   alias Surface.Catalogue.FakePlayground
+
+  setup_all do
+    Supervisor.start_link(
+      [{Phoenix.PubSub, name: Surface.Catalogue.PubSub}],
+      strategy: :one_for_one,
+      name: Surface.Catalogue.Supervisor
+    )
+
+    :ok
+  end
 
   test "saves subject as metadata" do
     meta = Surface.Catalogue.get_metadata(FakePlayground)
 
-    assert meta.subject == Surface.Components.Form
+    assert meta.subject == Surface.Components.FakeButton
   end
 
   test "saves user config" do
@@ -33,5 +44,13 @@ defmodule Surface.Catalogue.PlaygroundTest do
     assert_raise CompileError, message, fn ->
       Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end
+  end
+
+  test "merge default values with custom props" do
+    {:ok, _view, html} = live_isolated(build_conn(), FakePlayground)
+
+    assert html =~ "color: white"
+    assert html =~ "label: My label"
+    assert html =~ "type: button"
   end
 end

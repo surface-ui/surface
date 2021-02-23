@@ -135,11 +135,16 @@ defmodule Surface.Catalogue.Playground do
         |> Enum.split_with(fn prop -> prop.type == :event end)
 
       events_props_values = generate_events_props(events)
-      props_values_with_events = Map.merge(socket.assigns.props, events_props_values)
 
-      notify_init(window_id, subject, props, events, props_values_with_events)
+      props_values =
+        props
+        |> get_props_default_values()
+        |> Map.merge(socket.assigns.props)
+        |> Map.merge(events_props_values)
 
-      {:ok, assign(socket, :props, props_values_with_events)}
+      notify_init(window_id, subject, props, events, props_values)
+
+      {:ok, assign(socket, :props, props_values)}
     else
       {:ok, socket}
     end
@@ -173,6 +178,14 @@ defmodule Surface.Catalogue.Playground do
   defp generate_events_props(events) do
     for %{name: name} <- events, into: %{} do
       {name, %{name: name, target: :live_view}}
+    end
+  end
+
+  defp get_props_default_values(props) do
+    for %{name: name, opts: opts} <- props,
+        Keyword.has_key?(opts, :default),
+        into: %{} do
+      {name, opts[:default]}
     end
   end
 end
