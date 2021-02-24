@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0 (2021-02-24)
+
+  * Autoload JS hooks via new surface compiler (#271)
+  * Allow `<Link>` and `<Label>` to receive child components in slots (#264)
+  * Don't validate undefined assigns outside render (#263)
+  * Load subject's default props values before sending them to playgrounds
+
 ## v0.2.1 (2021-02-01)
 
   * Allow different catalogue options for examples and playgrounds
