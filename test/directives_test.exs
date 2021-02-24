@@ -681,6 +681,34 @@ defmodule Surface.DirectivesTest do
              """
     end
   end
+
+  describe ":hook" do
+    test "generate phx-hook with __MODULE__ as default namespace" do
+      html =
+        render_surface do
+          ~H"""
+          <div :hook="Button"></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button"></div>
+             """
+    end
+
+    test "generate phx-hook with custom namespace" do
+      html =
+        render_surface do
+          ~H"""
+          <div :hook={{ "Button", from: Some.Fake.Comp }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Some.Fake.Comp#Button"></div>
+             """
+    end
+  end
 end
 
 defmodule Surface.DirectivesSyncTest do

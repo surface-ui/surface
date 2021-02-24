@@ -47,7 +47,6 @@ defmodule Mix.Tasks.Compile.Surface do
       end
 
     if update_index? do
-      IO.puts("[Surface] Updating components hooks...")
       File.write!(index_file, index_content(js_files))
     end
   end
@@ -121,8 +120,7 @@ defmodule Mix.Tasks.Compile.Surface do
   end
 
   defp delete_unused_hooks_files!(js_output_dir, js_files) do
-    used_files =
-      Enum.map(js_files, fn {_, dest_file} -> Path.join(js_output_dir, dest_file) end)
+    used_files = Enum.map(js_files, fn {_, dest_file} -> Path.join(js_output_dir, dest_file) end)
 
     all_files =
       js_output_dir
