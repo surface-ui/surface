@@ -1,0 +1,2 @@
+let FakeLink = {}
+export { FakeLink }
