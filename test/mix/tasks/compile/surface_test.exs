@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   test "delete unused hooks files from output dir" do
     refute File.exists?(@hooks_abs_output_dir)
 
-    File.mkdir!(@hooks_abs_output_dir)
+    File.mkdir_p!(@hooks_abs_output_dir)
 
     unused_file = Path.join(@hooks_abs_output_dir, "Unused.hooks.js")
     File.touch!(unused_file)
