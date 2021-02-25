@@ -45,6 +45,26 @@ defmodule Surface.Components.LinkTest do
            """
   end
 
+  test "creates a link with scheme" do
+    html = render_surface(do: ~H[<Link to="/javascript:alert(<1>)" />])
+    assert html =~ ~s[<a href="/javascript:alert(&lt;1&gt;)"></a>]
+
+    html = render_surface(do: ~H[<Link to={{ {:safe, "/javascript:alert(<1>)"} }} />])
+    assert html =~ ~s[<a href="/javascript:alert(<1>)"></a>]
+
+    html = render_surface(do: ~H[<Link to={{ {:javascript, "alert(<1>)"} }} />])
+    assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)"></a>]
+
+    html = render_surface(do: ~H[<Link to={{ {:javascript, 'alert(<1>)'} }} />])
+    assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)"></a>]
+
+    html = render_surface(do: ~H[<Link to={{ {:javascript, {:safe, "alert(<1>)"}} }} />])
+    assert html =~ ~s[<a href="javascript:alert(<1>)"></a>]
+
+    html = render_surface(do: ~H[<Link to={{ {:javascript, {:safe, 'alert(<1>)'}} }} />])
+    assert html =~ ~s[<a href="javascript:alert(<1>)"></a>]
+  end
+
   test "creates a link with default slot" do
     html =
       render_surface do
