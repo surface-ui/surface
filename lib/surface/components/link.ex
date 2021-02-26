@@ -29,7 +29,7 @@ defmodule Surface.Components.Link do
   use Surface.Component
 
   @doc "The page to link to"
-  prop to, :string, required: true
+  prop to, :any, required: true
 
   @doc "The method to use with the link"
   prop method, :atom, default: :get
@@ -56,11 +56,32 @@ defmodule Surface.Components.Link do
   """
   slot default
 
+  # https://github.com/phoenixframework/phoenix_html/blob/2d09867665295ac124b8b4913f14b6b80b0cb952/lib/phoenix_html/link.ex#L115
+  @valid_uri_schemes [
+    "http:",
+    "https:",
+    "ftp:",
+    "ftps:",
+    "mailto:",
+    "news:",
+    "irc:",
+    "gopher:",
+    "nntp:",
+    "feed:",
+    "telnet:",
+    "mms:",
+    "rtsp:",
+    "svn:",
+    "tel:",
+    "fax:",
+    "xmpp:"
+  ]
+
   def render(assigns) do
     ~H"""
     <a
       class={{ @class }}
-      href={{ @to }}
+      href={{ valid_destination!(@to, "<Link />") }}
       :attrs={{ @opts ++ event_to_opts(@click, :phx_click) |> opts_to_attrs(assigns) }}
     ><slot>{{ @label }}</slot></a>
     """
@@ -90,6 +111,38 @@ defmodule Surface.Components.Link do
   defp data_to_attrs(data) when is_list(data) do
     for {key, value} <- data do
       {:"data-#{key}", value}
+    end
+  end
+
+  # https://github.com/phoenixframework/phoenix_html/blob/2d09867665295ac124b8b4913f14b6b80b0cb952/lib/phoenix_html/link.ex#L256
+  defp valid_destination!(%URI{} = uri, context) do
+    valid_destination!(URI.to_string(uri), context)
+  end
+
+  defp valid_destination!({:safe, to}, context) do
+    {:safe, valid_string_destination!(IO.iodata_to_binary(to), context)}
+  end
+
+  defp valid_destination!({other, to}, _context) when is_atom(other) do
+    [Atom.to_string(other), ?:, to]
+  end
+
+  defp valid_destination!(to, context) do
+    valid_string_destination!(IO.iodata_to_binary(to), context)
+  end
+
+  for scheme <- @valid_uri_schemes do
+    defp valid_string_destination!(unquote(scheme) <> _ = string, _context), do: string
+  end
+
+  defp valid_string_destination!(to, context) do
+    if not match?("/" <> _, to) and String.contains?(to, ":") do
+      raise ArgumentError, """
+      unsupported scheme given to #{context}. In case you want to link to an
+      unknown or unsafe scheme, such as javascript, use a tuple: {:javascript, rest}
+      """
+    else
+      to
     end
   end
 end
