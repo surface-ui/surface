@@ -35,6 +35,10 @@ defmodule Surface.TypeHandler.Hook do
   end
 
   @impl true
+  def expr_to_value([value], _) when value in [nil, false] do
+    {:ok, value}
+  end
+
   def expr_to_value(clauses, opts) do
     case {clauses, opts} do
       {[hook], [from: mod]} when is_binary(hook) and is_atom(mod) ->

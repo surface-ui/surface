@@ -32,6 +32,10 @@ defmodule Surface.Directive.Hook do
   end
 
   @doc false
+  def hook_name(value) when value in [nil, false] do
+    value
+  end
+
   def hook_name({hook, mod}) do
     "#{inspect(mod)}\##{hook}"
   end

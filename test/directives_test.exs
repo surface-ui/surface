@@ -708,6 +708,52 @@ defmodule Surface.DirectivesTest do
              <div phx-hook="Some.Fake.Comp#Button"></div>
              """
     end
+
+    test "don't generate anything if the value is nil or false" do
+      html =
+        render_surface do
+          ~H"""
+          <div :hook={{ nil }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook={{ nil, from: Some.Fake.Comp }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook={{ false }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook={{ false, from: Some.Fake.Comp }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div></div>
+             """
+    end
   end
 end
 
