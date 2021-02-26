@@ -11,20 +11,19 @@ defmodule Mix.Tasks.Compile.Surface do
 
   @doc false
   def run(_args) do
-    case generate_files() do
+    case get_colocated_assets() |> generate_files() do
       "" -> {:noop, []}
       _ -> {:ok, []}
     end
   end
 
-  defp generate_files() do
+  @doc false
+  def generate_files({js_files, _css_files}) do
     opts = Application.get_env(:surface, :compiler, [])
 
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
     index_file = Path.join([js_output_dir, "index.js"])
-
-    {js_files, _css_files} = get_colocated_assets()
 
     File.mkdir_p!(js_output_dir)
 
@@ -39,14 +38,14 @@ defmodule Mix.Tasks.Compile.Surface do
     update_index? =
       for {src_file, dest_file} <- js_files,
           {:ok, %File.Stat{mtime: time}} <- [File.stat(src_file)],
-          !index_file_time or !File.exists?(dest_file) or time > index_file_time,
+          !File.exists?(dest_file) or time > index_file_time,
           reduce: false do
         _ ->
           File.cp!(src_file, Path.join(js_output_dir, dest_file))
           true
       end
 
-    if update_index? do
+    if !index_file_time or update_index? do
       File.write!(index_file, index_content(js_files))
     end
   end
