@@ -4,13 +4,8 @@ defmodule Surface.Catalogue.PlaygroundTest do
 
   alias Surface.Catalogue.FakePlayground
 
-  setup_all do
-    Supervisor.start_link(
-      [{Phoenix.PubSub, name: Surface.Catalogue.PubSub}],
-      strategy: :one_for_one,
-      name: Surface.Catalogue.Supervisor
-    )
-
+  setup do
+    start_supervised!({Phoenix.PubSub, name: Surface.Catalogue.PubSub})
     :ok
   end
 
