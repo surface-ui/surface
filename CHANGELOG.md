@@ -1,9 +1,15 @@
 # Changelog
 
+## v0.3.1 (WIP)
+
+  * Fix `index.js` generation when no hooks are available
+  * Support `<Link>` with scheme (#273)
+
 ## v0.3.0 (2021-02-24)
 
   * Autoload JS hooks via new surface compiler (#271)
-  * Allow `<Link>` and `<Label>` to receive child components in slots (#264)
+  * New `<Link>` and `<Label>` implementation without depending on `content_tag` to allow receiving
+    child components in slots (#264)
   * Don't validate undefined assigns outside render (#263)
   * Load subject's default props values before sending them to playgrounds
 
