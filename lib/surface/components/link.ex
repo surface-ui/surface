@@ -56,7 +56,6 @@ defmodule Surface.Components.Link do
   """
   slot default
 
-  # https://github.com/phoenixframework/phoenix_html/blob/2d09867665295ac124b8b4913f14b6b80b0cb952/lib/phoenix_html/link.ex#L115
   @valid_uri_schemes [
     "http:",
     "https:",
@@ -78,13 +77,27 @@ defmodule Surface.Components.Link do
   ]
 
   def render(assigns) do
+    opts = props_to_opts(assigns)
+
     ~H"""
     <a
       class={{ @class }}
       href={{ valid_destination!(@to, "<Link />") }}
-      :attrs={{ @opts ++ event_to_opts(@click, :phx_click) |> opts_to_attrs(assigns) }}
+      :attrs={{ @opts ++ opts ++ event_to_opts(@click, :phx_click) |> opts_to_attrs(assigns) }}
     ><slot>{{ @label }}</slot></a>
     """
+  end
+
+  defp props_to_opts(assigns) do
+    props = [:method]
+
+    for prop <- props, {key, value} = prop_value(assigns, prop), value != nil do
+      {key, value}
+    end
+  end
+
+  defp prop_value(assigns, prop) do
+    {prop, assigns[prop]}
   end
 
   defp opts_to_attrs(opts, assigns) do
@@ -93,7 +106,7 @@ defmodule Surface.Components.Link do
         :csrf_token -> {:"data-csrf", value}
         :phx_click -> {:"phx-click", value}
         :phx_target -> {:"phx-target", value}
-        :method -> method_to_attrs(value, assigns.to)
+        :method -> method_to_attrs(value, assigns.to, opts)
         :data -> data_to_attrs(value)
         _ -> {key, value}
       end
@@ -101,11 +114,24 @@ defmodule Surface.Components.Link do
     |> List.flatten()
   end
 
-  defp method_to_attrs(method, to) do
+  defp method_to_attrs(method, to, opts) do
     case method do
       :get -> []
-      _ -> ["data-method": method, "data-to": to, rel: "nofollow"]
+      _ -> ["data-method": method, "data-to": to, rel: "nofollow"] ++ csrf_data(to, opts)
     end
+  end
+
+  defp csrf_data(to, opts) do
+    case Keyword.get(opts, :csrf_token, true) do
+      csrf when is_binary(csrf) -> ["data-csrf": csrf]
+      true -> ["data-csrf": csrf_token(to)]
+      false -> []
+    end
+  end
+
+  defp csrf_token(to) do
+    {mod, fun, args} = Application.fetch_env!(:surface, :csrf_token_reader)
+    apply(mod, fun, [to | args])
   end
 
   defp data_to_attrs(data) when is_list(data) do
@@ -114,7 +140,6 @@ defmodule Surface.Components.Link do
     end
   end
 
-  # https://github.com/phoenixframework/phoenix_html/blob/2d09867665295ac124b8b4913f14b6b80b0cb952/lib/phoenix_html/link.ex#L256
   defp valid_destination!(%URI{} = uri, context) do
     valid_destination!(URI.to_string(uri), context)
   end
