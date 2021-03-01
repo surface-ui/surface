@@ -137,15 +137,18 @@ defmodule Surface.Compiler.Parser do
       string("base"),
       string("br"),
       string("col"),
+      string("command"),
+      string("embed"),
       string("hr"),
       string("img"),
       string("input"),
+      string("keygen"),
       string("link"),
       string("meta"),
       string("param"),
-      string("command"),
-      string("keygen"),
-      string("source")
+      string("source"),
+      string("track"),
+      string("wbr")
     ])
 
   void_element_node =

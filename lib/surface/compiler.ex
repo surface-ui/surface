@@ -51,15 +51,18 @@ defmodule Surface.Compiler do
     "base",
     "br",
     "col",
+    "command",
+    "embed",
     "hr",
     "img",
     "input",
+    "keygen",
     "link",
     "meta",
     "param",
-    "command",
-    "keygen",
-    "source"
+    "source",
+    "track",
+    "wbr"
   ]
 
   defmodule ParseError do
