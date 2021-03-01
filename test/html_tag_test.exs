@@ -169,6 +169,19 @@ defmodule HtmlTagTest do
              """
     end
 
+    test "with `@`, `:`, `_` as first char" do
+      html =
+        render_surface do
+          ~H"""
+          <div click?="open = true" @click="open = true" :click="open = true" />
+          """
+        end
+
+      assert html =~ """
+             <div click?="open = true" @click="open = true" :click="open = true"></div>
+             """
+    end
+
     test "with `@` and `.`" do
       html =
         render_surface do
