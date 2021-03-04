@@ -106,7 +106,12 @@ defmodule Surface.Compiler.Parser do
     |> wrap()
     |> post_traverse(:attribute_value)
 
-  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:, ?@], min: 1)
+  # Follow the rules of XML Names and Tokens plus "@" as a first char
+  # https://www.w3.org/TR/2008/REC-xml-20081126/#NT-Name
+  attr_start_char = ascii_string([?a..?z, ?A..?Z, ?_, ?:, ?@], 1)
+  attr_name_char = ascii_string([?a..?z, ?A..?Z, ?0..?9, ?_, ?:, ?-, ?., ??], min: 0)
+  attr_name = attr_start_char |> concat(attr_name_char) |> reduce({Enum, :join, [""]})
+
   whitespace = ascii_string([?\s, ?\n], min: 0)
 
   attribute =
