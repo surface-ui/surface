@@ -51,8 +51,9 @@ defmodule Mix.Tasks.Compile.Surface do
   end
 
   defp get_colocated_assets() do
-    for mod <- Mix.Phoenix.modules(),
-        Code.ensure_loaded?(mod),
+    for [app] <- loaded_applications(),
+        mod <- app_modules(app),
+        module_loaded?(mod),
         function_exported?(mod, :component_type, 0),
         reduce: {[], []} do
       {js_files, css_files} ->
@@ -128,5 +129,30 @@ defmodule Mix.Tasks.Compile.Surface do
 
     unsused_files = all_files -- used_files
     Enum.each(unsused_files, &File.rm!/1)
+  end
+
+  defp app_modules(app) do
+    app
+    |> Application.app_dir()
+    |> Path.join("ebin/Elixir.*.beam")
+    |> Path.wildcard()
+    |> Enum.map(&beam_to_module/1)
+  end
+
+  defp beam_to_module(path) do
+    path |> Path.basename(".beam") |> String.to_atom()
+  end
+
+  defp loaded_applications do
+    # If we invoke :application.loaded_applications/0,
+    # it can error if we don't call safe_fixtable before.
+    # Since in both cases we are reaching over the
+    # application controller internals, we choose to match
+    # for performance.
+    :ets.match(:ac_tab, {{:loaded, :"$1"}, :_})
+  end
+
+  defp module_loaded?(module) do
+    match?({:module, _mod}, Code.ensure_compiled(module))
   end
 end
