@@ -17,7 +17,34 @@ A VS Code extension that adds support for syntax highlighting is available at
 
 ### Example
 
-![Example](images/example.png?raw=true)
+```elixir
+# Defining the component
+
+defmodule Hello do
+  use Surface.Component
+
+  @doc "Someone to say hello to"
+  prop name, :string, required: true
+
+  def render(assigns) do
+    ~H"""
+    Hello, {{ @name }}!
+    """
+  end
+end
+
+# Using the component
+
+defmodule Example do
+  use Surface.Component
+
+  def render(assigns) do
+    ~H"""
+    <Hello name="John Doe"/>
+    """
+  end
+end
+```
 
 ## How does it work?
 

@@ -1,8 +1,9 @@
 # Changelog
 
-## v0.3.1 (WIP)
+## v0.3.1 (2021-03-05)
 
   * Fix `index.js` generation when no hooks are available
+  * Fix loading hooks from dependencies
   * Support `<Link>` with scheme (#273)
 
 ## v0.3.0 (2021-02-24)
