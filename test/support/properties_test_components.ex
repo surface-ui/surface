@@ -3,7 +3,7 @@ defmodule Surface.PropertiesTest.Components do
     use Surface.Component
 
     @doc "The label"
-    prop label, :string, required: true, default: ""
+    prop label, :string, required: true
 
     @doc "The class"
     prop class, :css_class
@@ -23,7 +23,7 @@ defmodule Surface.PropertiesTest.Components do
     """
 
     @doc "The label"
-    prop label, :string, required: true, default: ""
+    prop label, :string, required: true
 
     @doc "The class"
     prop class, :css_class
@@ -41,7 +41,7 @@ defmodule Surface.PropertiesTest.Components do
     @moduledoc false
 
     @doc "The label"
-    prop label, :string, required: true, default: ""
+    prop label, :string, required: true
 
     @doc "The class"
     prop class, :css_class

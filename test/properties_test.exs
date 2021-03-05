@@ -596,4 +596,32 @@ defmodule Surface.PropertiesSyncTest do
     assert output =~ ~r/variable "func" does not exist/
     assert output =~ ~r"  code.exs:7"
   end
+
+  test "warn if prop is required and has default value" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithRequiredAndDefaultProp_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      prop label, :string, default: "My Label", required: true
+
+      def render(assigns) do
+        ~H""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.
+             code.exs:4:\
+           """
+  end
 end
