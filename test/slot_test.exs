@@ -178,6 +178,24 @@ defmodule Surface.SlotTest do
   defmodule ColumnWithRender do
     use Surface.Component, slot: "cols"
 
+    prop title, :string, required: true
+
+    slot default
+
+    def render(assigns) do
+      ~H"""
+      <span class="fancy-column">
+        <slot>
+          {{ @title }}
+        </slot>
+      </span>
+      """
+    end
+  end
+
+  defmodule ColumnWithRenderAndDefaultTitle do
+    use Surface.Component, slot: "cols"
+
     prop title, :string, default: "default title"
 
     slot default
@@ -188,6 +206,22 @@ defmodule Surface.SlotTest do
         <slot>
           {{ @title }}
         </slot>
+      </span>
+      """
+    end
+  end
+
+  defmodule ColumnWithRenderAndSlotProps do
+    use Surface.Component, slot: "cols"
+
+    prop title, :string, required: true
+
+    slot default, props: [:info]
+
+    def render(assigns) do
+      ~H"""
+      <span class="fancy-column">
+        <slot props={{ info: "this is a test" }} />
       </span>
       """
     end
@@ -399,7 +433,7 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <Grid items={{ user <- @items }}>
-          <ColumnWithRender>
+          <ColumnWithRender title="column title">
             <b>Id: {{ user.id }}</b>
           </ColumnWithRender>
         </Grid>
@@ -410,7 +444,7 @@ defmodule Surface.SlotTest do
            <table>
              <tr>
                <th>
-                 default title
+                 column title
                </th>
              </tr>
              <tr>
@@ -430,6 +464,44 @@ defmodule Surface.SlotTest do
            """
   end
 
+  test "slotable component with slot props" do
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+
+    html =
+      render_surface do
+        ~H"""
+        <Grid items={{ user <- @items }}>
+          <ColumnWithRenderAndSlotProps title="column title" :let={{ info: info }}>
+            <b>{{ info }}: {{ user.id }}</b>
+          </ColumnWithRenderAndSlotProps>
+        </Grid>
+        """
+      end
+
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 column title
+               </th>
+             </tr>
+             <tr>
+               <td>
+                 <span class="fancy-column">
+               <b>this is a test: 1</b>
+           </span>
+               </td>
+             </tr><tr>
+               <td>
+                 <span class="fancy-column">
+               <b>this is a test: 2</b>
+           </span>
+               </td>
+             </tr>
+           </table>
+           """
+  end
+
   test "slotable component with render defined with no content" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
@@ -437,7 +509,7 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <Grid items={{ _user <- @items }}>
-          <ColumnWithRender />
+          <ColumnWithRenderAndDefaultTitle />
         </Grid>
         """
       end
