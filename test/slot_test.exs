@@ -167,16 +167,30 @@ defmodule Surface.SlotTest do
     use Surface.Component, slot: "cols"
 
     prop title, :string, required: true
-
-    def render(assigns), do: ~H()
   end
 
   defmodule ColumnWithDefaultTitle do
     use Surface.Component, slot: "cols"
 
     prop title, :string, default: "default title"
+  end
 
-    def render(assigns), do: ~H()
+  defmodule ColumnWithRender do
+    use Surface.Component, slot: "cols"
+
+    prop title, :string, default: "default title"
+
+    slot default
+
+    def render(assigns) do
+      ~H"""
+      <span class="fancy-column">
+        <slot>
+          {{ @title }}
+        </slot>
+      </span>
+      """
+    end
   end
 
   defmodule Grid do
@@ -372,6 +386,80 @@ defmodule Surface.SlotTest do
              </tr><tr>
                <td>
                <b>Id: 2</b>
+               </td>
+             </tr>
+           </table>
+           """
+  end
+
+  test "slotable component with render defined" do
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+
+    html =
+      render_surface do
+        ~H"""
+        <Grid items={{ user <- @items }}>
+          <ColumnWithRender>
+            <b>Id: {{ user.id }}</b>
+          </ColumnWithRender>
+        </Grid>
+        """
+      end
+
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 default title
+               </th>
+             </tr>
+             <tr>
+               <td>
+                 <span class="fancy-column">
+               <b>Id: 1</b>
+           </span>
+               </td>
+             </tr><tr>
+               <td>
+                 <span class="fancy-column">
+               <b>Id: 2</b>
+           </span>
+               </td>
+             </tr>
+           </table>
+           """
+  end
+
+  test "slotable component with render defined with no content" do
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+
+    html =
+      render_surface do
+        ~H"""
+        <Grid items={{ _user <- @items }}>
+          <ColumnWithRender />
+        </Grid>
+        """
+      end
+
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 default title
+               </th>
+             </tr>
+             <tr>
+               <td>
+                 <span class="fancy-column">
+               default title
+           </span>
+               </td>
+             </tr><tr>
+               <td>
+                 <span class="fancy-column">
+               default title
+           </span>
                </td>
              </tr>
            </table>

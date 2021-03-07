@@ -3,12 +3,13 @@ defmodule Surface.Renderer do
 
   defmacro __before_compile__(env) do
     render? = Module.defines?(env.module, {:render, 1})
+    slotable? = Module.defines?(env.module, {:__slot_name__, 0})
     root = Path.dirname(env.file)
     filename = template_filename(env)
     template = Path.join(root, filename)
 
-    case {render?, File.exists?(template)} do
-      {true, true} ->
+    case {render?, slotable?, File.exists?(template)} do
+      {true, _, true} ->
         IO.warn(
           "ignoring template #{inspect(template)} because the component " <>
             "#{inspect(env.module)} defines a render/1 function",
@@ -17,10 +18,10 @@ defmodule Surface.Renderer do
 
         :ok
 
-      {true, false} ->
+      {true, _, false} ->
         :ok
 
-      {false, true} ->
+      {false, _, true} ->
         ast =
           template
           |> File.read!()
@@ -34,6 +35,9 @@ defmodule Surface.Renderer do
             unquote(ast)
           end
         end
+
+      {_, true, _} ->
+        :ok
 
       _ ->
         message = ~s'''
