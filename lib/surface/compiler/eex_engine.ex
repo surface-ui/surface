@@ -408,7 +408,6 @@ defmodule Surface.Compiler.EExEngine do
               dynamic_props: nil,
               directives: [],
               templates: %{
-                # This is getting the require block auto-added :-(
                 default: default
               },
               meta: slotable.meta,
