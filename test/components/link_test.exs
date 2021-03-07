@@ -199,5 +199,37 @@ defmodule Surface.Components.LinkTest do
       html = render_surface(do: ~H[<Link to={{ {:javascript, {:safe, 'alert(<1>)'}} }} />])
       assert html =~ ~s[<a href="javascript:alert(<1>)"></a>]
     end
+
+    test "link with invalid args" do
+      # msg = "expected non-nil value for :to in link/2"
+
+      # assert_raise ArgumentError, msg, fn ->
+      #   link("foo", bar: "baz")
+      # end
+
+      # msg = "link/2 requires a keyword list as second argument"
+
+      # assert_raise ArgumentError, msg, fn ->
+      #   link("foo", "/login")
+      # end
+
+      # msg = "link/2 requires a text as first argument or contents in the :do block"
+
+      # assert_raise ArgumentError, msg, fn ->
+      #   link(to: "/hello-world")
+      # end
+
+      assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
+        render_surface(do: ~H[<Link to="javascript:alert(<1>)" />])
+      end
+
+      assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
+        render_surface(do: ~H[<Link to={{ {:safe, "javascript:alert(<1>)"} }} />])
+      end
+
+      assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
+        render_surface(do: ~H[<Link to={{ {:safe, 'javascript:alert(<1>)'} }} />])
+      end
+    end
   end
 end
