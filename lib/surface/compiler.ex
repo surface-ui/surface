@@ -591,8 +591,8 @@ defmodule Surface.Compiler do
 
   defp collect_templates(mod, attributes, nodes, meta) do
     # Don't extract the template directives if this module is slotable
+    # TODO: and renderless ?
     {:ok, directives, attributes} =
-      # TODO: and renderless ?
       if component_slotable?(mod) do
         {:ok, [], attributes}
       else
