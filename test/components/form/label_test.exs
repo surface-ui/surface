@@ -104,13 +104,44 @@ defmodule Surface.Components.Form.LabelTest do
 
       assert html =~ ~r[<label for="test_key">(.*)Search(.*)</label>]s
 
-      # assert safe_form(&label(&1, :key, "Search")) == ~s(<label for="search_key">Search</label>)
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :search }}>
+            <Field name="key">
+              <Label text="Search" />
+            </Field>
+          </Form>
+          """
+        end
 
-      # assert safe_form(&label(&1, :key, "Search", for: "test_key")) ==
-      #          ~s(<label for="test_key">Search</label>)
+      assert html =~ ~r[<label for="search_key">(.+)Search(.*)</label>]s
 
-      # assert safe_form(&label(&1, :key, "Search", for: "test_key", class: "foo")) ==
-      #          ~s(<label class="foo" for="test_key">Search</label>)
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :search }}>
+            <Field name="key">
+              <Label text="Search" opts={{ for: "test_key" }} />
+            </Field>
+          </Form>
+          """
+        end
+
+      assert html =~ ~r[<label for="test_key">(.+)Search(.*)</label>]s
+
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :search }}>
+            <Field name="key">
+              <Label text="Search" class="foo" opts={{ for: "test_key" }} />
+            </Field>
+          </Form>
+          """
+        end
+
+      assert html =~ ~r[<label class="foo" for="test_key">(.+)Search(.*)</label>]s
     end
 
     test "with field and inline safe content" do
@@ -123,12 +154,33 @@ defmodule Surface.Components.Form.LabelTest do
       assert html =~ ~r[<label for="search_key">(.*)<em>Search</em>(.*)</label>]s
     end
 
-    # test "with field and block content" do
-    #   assert safe_form(&label(&1, :key, do: "Hello")) == ~s(<label for="search_key">Hello</label>)
+    test "with field and block content" do
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :search }}>
+            <Field name="key">
+              <Label>Hello</Label>
+            </Field>
+          </Form>
+          """
+        end
 
-    #   assert safe_form(&label(&1, :key, [class: "test-label"], do: "Hello")) ==
-    #            ~s(<label class="test-label" for="search_key">Hello</label>)
-    # end
+      assert html =~ ~r[<label for="search_key">(.+)Hello(.*)</label>]s
+
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :search }}>
+            <Field name="key">
+              <Label class="test-label">Hello</Label>
+            </Field>
+          </Form>
+          """
+        end
+
+      assert html =~ ~r[<label class="test-label" for="search_key">(.+)Hello(.*)</label>]s
+    end
   end
 end
 
