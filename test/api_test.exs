@@ -407,7 +407,7 @@ defmodule Surface.APITest do
     assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
            ### Properties
 
-           * **label** *:string, required: true, default: ""* - The label.
+           * **label** *:string, required: true* - The label.
            * **class** *:css_class* - The class.
            """
   end
@@ -418,7 +418,7 @@ defmodule Surface.APITest do
 
            ### Properties
 
-           * **label** *:string, required: true, default: ""* - The label.
+           * **label** *:string, required: true* - The label.
            * **class** *:css_class* - The class.
            """
   end

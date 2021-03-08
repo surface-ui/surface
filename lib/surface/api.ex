@@ -260,6 +260,7 @@ defmodule Surface.API do
          :ok <- validate_opts_keys(func, name, type, opts),
          :ok <- validate_opts(func, type, opts),
          :ok <- validate_required_opts(func, type, opts) do
+      maybe_warn_mutually_exclusive_opts(func, type, opts, caller)
       :ok
     else
       {:error, message} ->
@@ -338,6 +339,18 @@ defmodule Surface.API do
       end
     end)
   end
+
+  defp maybe_warn_mutually_exclusive_opts(:prop, _, opts, caller) do
+    if Keyword.get(opts, :required, false) and Keyword.has_key?(opts, :default) do
+      IOHelper.warn(
+        "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
+        caller,
+        fn _ -> caller.line end
+      )
+    end
+  end
+
+  defp maybe_warn_mutually_exclusive_opts(_, _, _, _), do: nil
 
   defp validate_required_opts(func, type, opts) do
     case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
