@@ -9,7 +9,7 @@ defmodule Surface.Components.LinkTest do
     def render(assigns) do
       ~H"""
       <div>
-        <Link to="/users/1" click="my_click"/>
+        <Link label="user" to="/users/1" click="my_click" />
       </div>
       """
     end
@@ -103,12 +103,12 @@ defmodule Surface.Components.LinkTest do
     html =
       render_surface do
         ~H"""
-        <Link to="/users/1" click="my_click" />
+        <Link label="user" to="/users/1" click="my_click" />
         """
       end
 
     assert html =~ """
-           <a phx-click="my_click" href="/users/1"></a>
+           <a phx-click="my_click" href="/users/1">user</a>
            """
   end
 
@@ -122,7 +122,7 @@ defmodule Surface.Components.LinkTest do
 
     assert html =~ ~r"""
            <div>
-             <a phx-click="my_click" phx-target=".+" href="/users/1"></a>
+             <a phx-click="my_click" phx-target=".+" href="/users/1">user</a>
            </div>
            """
   end
@@ -180,32 +180,55 @@ defmodule Surface.Components.LinkTest do
                ~s[<a data-method="put" data-to="/world" rel="nofollow" href="/world">hello</a>]
     end
 
+    test "link with :do contents" do
+      html =
+        render_surface do
+          ~H"""
+          <Link to="/hello">
+            {{ Phoenix.HTML.Tag.content_tag(:p, "world") }}
+          </Link>
+          """
+        end
+
+      assert html == """
+             <a href="/hello">
+               <p>world</p>
+             </a>
+             """
+    end
+
     test "link with scheme" do
-      html = render_surface(do: ~H[<Link to="/javascript:alert(<1>)" />])
-      assert html =~ ~s[<a href="/javascript:alert(&lt;1&gt;)"></a>]
+      html = render_surface(do: ~H[<Link label="foo" to="/javascript:alert(<1>)" />])
+      assert html =~ ~s[<a href="/javascript:alert(&lt;1&gt;)">foo</a>]
 
-      html = render_surface(do: ~H[<Link to={{ {:safe, "/javascript:alert(<1>)"} }} />])
-      assert html =~ ~s[<a href="/javascript:alert(<1>)"></a>]
+      html =
+        render_surface(do: ~H[<Link label="foo" to={{ {:safe, "/javascript:alert(<1>)"} }} />])
 
-      html = render_surface(do: ~H[<Link to={{ {:javascript, "alert(<1>)"} }} />])
-      assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)"></a>]
+      assert html =~ ~s[<a href="/javascript:alert(<1>)">foo</a>]
 
-      html = render_surface(do: ~H[<Link to={{ {:javascript, 'alert(<1>)'} }} />])
-      assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)"></a>]
+      html = render_surface(do: ~H[<Link label="foo" to={{ {:javascript, "alert(<1>)"} }} />])
+      assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)">foo</a>]
 
-      html = render_surface(do: ~H[<Link to={{ {:javascript, {:safe, "alert(<1>)"}} }} />])
-      assert html =~ ~s[<a href="javascript:alert(<1>)"></a>]
+      html = render_surface(do: ~H[<Link label="foo" to={{ {:javascript, 'alert(<1>)'} }} />])
+      assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)">foo</a>]
 
-      html = render_surface(do: ~H[<Link to={{ {:javascript, {:safe, 'alert(<1>)'}} }} />])
-      assert html =~ ~s[<a href="javascript:alert(<1>)"></a>]
+      html =
+        render_surface(do: ~H[<Link label="foo" to={{ {:javascript, {:safe, "alert(<1>)"}} }} />])
+
+      assert html =~ ~s[<a href="javascript:alert(<1>)">foo</a>]
+
+      html =
+        render_surface(do: ~H[<Link label="foo" to={{ {:javascript, {:safe, 'alert(<1>)'}} }} />])
+
+      assert html =~ ~s[<a href="javascript:alert(<1>)">foo</a>]
     end
 
     test "link with invalid args" do
-      # msg = "expected non-nil value for :to in link/2"
+      msg = "expected non-nil value for :to in <Link />"
 
-      # assert_raise ArgumentError, msg, fn ->
-      #   link("foo", bar: "baz")
-      # end
+      assert_raise ArgumentError, msg, fn ->
+        render_surface(do: ~H[<Link label="foo" opts={{ bar: "baz" }} />])
+      end
 
       # msg = "link/2 requires a keyword list as second argument"
 
@@ -213,22 +236,22 @@ defmodule Surface.Components.LinkTest do
       #   link("foo", "/login")
       # end
 
-      # msg = "link/2 requires a text as first argument or contents in the :do block"
+      msg = "<Link /> requires a label prop or contents in the default slot"
 
-      # assert_raise ArgumentError, msg, fn ->
-      #   link(to: "/hello-world")
-      # end
-
-      assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
-        render_surface(do: ~H[<Link to="javascript:alert(<1>)" />])
+      assert_raise ArgumentError, msg, fn ->
+        render_surface(do: ~H[<Link to="/hello-world" />])
       end
 
       assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
-        render_surface(do: ~H[<Link to={{ {:safe, "javascript:alert(<1>)"} }} />])
+        render_surface(do: ~H[<Link label="foo" to="javascript:alert(<1>)" />])
       end
 
       assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
-        render_surface(do: ~H[<Link to={{ {:safe, 'javascript:alert(<1>)'} }} />])
+        render_surface(do: ~H[<Link label="foo" to={{ {:safe, "javascript:alert(<1>)"} }} />])
+      end
+
+      assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
+        render_surface(do: ~H[<Link label="foo" to={{ {:safe, 'javascript:alert(<1>)'} }} />])
       end
     end
   end
