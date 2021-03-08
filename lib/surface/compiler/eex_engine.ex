@@ -407,9 +407,7 @@ defmodule Surface.Compiler.EExEngine do
               props: props,
               dynamic_props: nil,
               directives: [],
-              templates: %{
-                default: default
-              },
+              templates: slotable.templates,
               meta: slotable.meta,
               debug: slotable.debug
             }
