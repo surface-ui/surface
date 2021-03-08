@@ -2,11 +2,14 @@ defmodule Surface.Components.Form.Label do
   @moduledoc """
   Defines a label.
 
-  Provides similar capabilities to Phoenix's built-in `label/3`
+  Provides similar capabilities to Phoenix's built-in `label/2`
   function.
 
   Option `class` can be set directly and will override anything in `opts`.
-  All other options are forwarded to the underlying <a> tag.
+
+  All given options are forwarded to the underlying tag. A default value is
+  provided for for attribute but can be overriden if you pass a value to the
+  for option. Text content would be inferred from field if not specified.
   """
 
   use Surface.Component
@@ -23,6 +26,11 @@ defmodule Surface.Components.Form.Label do
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
 
+  @doc """
+  The text for the generated `<label>` element, if no content (default slot) is provided.
+  """
+  prop text, :any
+
   @doc "Options list"
   prop opts, :keyword, default: []
 
@@ -37,8 +45,8 @@ defmodule Surface.Components.Form.Label do
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      <label :attrs={{ helper_opts ++ attr_opts ++ @opts ++ input_id(form, field) }}>
-        <slot>{{ Phoenix.Naming.humanize(field) }}</slot>
+      <label :attrs={{ helper_opts ++ attr_opts ++ input_id(form, field) ++ @opts }}>
+        <slot>{{ @text || Phoenix.Naming.humanize(field) }}</slot>
       </label>
     </InputContext>
     """
