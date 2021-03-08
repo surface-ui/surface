@@ -64,37 +64,45 @@ defmodule Surface.Components.Form.LabelTest do
   end
 
   describe "is compatible with phoenix label/2" do
-    # test "with block" do
-    #   assert safe_to_string(
-    #            label do
-    #              "Block"
-    #            end
-    #          ) == ~s(<label>Block</label>)
+    test "with block" do
+      html = render_surface(do: ~H[<Label>Block</Label>])
+      assert html =~ ~r[<label>(.*)Block(.*)</label>]s
 
-    #   assert safe_to_string(
-    #            label class: "foo" do
-    #              "Block"
-    #            end
-    #          ) == ~s(<label class="foo">Block</label>)
-    # end
+      html = render_surface(do: ~H[<Label class="foo">Block</Label>])
+      assert html =~ ~r[<label class="foo">(.*)Block(.*)</label>]s
+    end
 
     test "with field but no content" do
       html = render_surface(do: ~H[<Label form={{ :search }} field={{ :key }} />])
       assert html =~ ~r[<label for="search_key">(.*)Key(.*)</label>]s
 
-      # assert safe_to_string(label(:search, :key, for: "test_key")) ==
-      #          ~s(<label for="test_key">Key</label>)
+      html =
+        render_surface(
+          do: ~H[<Label form={{ :search }} field={{ :key }} opts={{ for: "test_key" }} />]
+        )
 
-      # assert safe_to_string(label(:search, :key, for: "test_key", class: "foo")) ==
-      #          ~s(<label class="foo" for="test_key">Key</label>)
+      assert html =~ ~r[<label for="test_key">(.*)Key(.*)</label>]s
+
+      html =
+        render_surface(
+          do:
+            ~H[<Label form={{ :search }} field={{ :key }} class="foo" opts={{ for: "test_key" }} />]
+        )
+
+      assert html =~ ~r[<label class="foo" for="test_key">(.*)Key(.*)</label>]s
     end
 
     test "with field and inline content" do
-      html = render_surface(do: ~H[<Label form={{ :search }} field={{ :key }}>Search</Label>])
+      html = render_surface(do: ~H[<Label text="Search" form={{ :search }} field={{ :key }} />])
       assert html =~ ~r[<label for="search_key">(.*)Search(.*)</label>]s
 
-      # assert safe_to_string(label(:search, :key, "Search", for: "test_key")) ==
-      #          ~s(<label for="test_key">Search</label>)
+      html =
+        render_surface(
+          do:
+            ~H[<Label text="Search" form={{ :search }} field={{ :key }} opts={{ for: "test_key" }} />]
+        )
+
+      assert html =~ ~r[<label for="test_key">(.*)Search(.*)</label>]s
 
       # assert safe_form(&label(&1, :key, "Search")) == ~s(<label for="search_key">Search</label>)
 
@@ -106,17 +114,11 @@ defmodule Surface.Components.Form.LabelTest do
     end
 
     test "with field and inline safe content" do
-      # assert safe_to_string(label(:search, :key, {:safe, "<em>Search</em>"})) ==
-      #          ~s(<label for="search_key"><em>Search</em></label>)
-
       html =
-        render_surface do
-          ~H"""
-          <Label form={{ :search }} field={{ :key }}>
-            {{ {:safe, "<em>Search</em>"} }}
-          </Label>
-          """
-        end
+        render_surface(
+          do:
+            ~H[<Label text={{ {:safe, "<em>Search</em>"} }} form={{ :search }} field={{ :key }} />]
+        )
 
       assert html =~ ~r[<label for="search_key">(.*)<em>Search</em>(.*)</label>]s
     end
