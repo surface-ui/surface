@@ -32,19 +32,6 @@ defmodule Surface.Components.LinkTest do
            """
   end
 
-  test "creates a link without label" do
-    html =
-      render_surface do
-        ~H"""
-        <Link to="/users/1" />
-        """
-      end
-
-    assert html =~ """
-           <a href="/users/1"></a>
-           """
-  end
-
   test "creates a link with default slot" do
     html =
       render_surface do
@@ -224,18 +211,6 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "link with invalid args" do
-      msg = "expected non-nil value for :to in <Link />"
-
-      assert_raise ArgumentError, msg, fn ->
-        render_surface(do: ~H[<Link label="foo" opts={{ bar: "baz" }} />])
-      end
-
-      # msg = "link/2 requires a keyword list as second argument"
-
-      # assert_raise ArgumentError, msg, fn ->
-      #   link("foo", "/login")
-      # end
-
       msg = "<Link /> requires a label prop or contents in the default slot"
 
       assert_raise ArgumentError, msg, fn ->

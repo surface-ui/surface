@@ -77,10 +77,6 @@ defmodule Surface.Components.Link do
   ]
 
   def update(assigns, socket) do
-    unless assigns[:to] || Keyword.get(assigns.opts, :to) do
-      raise ArgumentError, "expected non-nil value for :to in <Link />"
-    end
-
     unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
       raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
     end
