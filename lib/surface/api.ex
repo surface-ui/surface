@@ -22,6 +22,12 @@ defmodule Surface.API do
     :changeset,
     :form,
     :keyword,
+    :struct,
+    :tuple,
+    :pid,
+    :port,
+    :reference,
+    :bitstring,
     # Private
     :generator,
     :context_put,
