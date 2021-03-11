@@ -38,7 +38,7 @@ defmodule Surface.Components.Link do
   prop class, :css_class
 
   @doc """
-  The label for the generated `<a>` alement, if no content (default slot) is provided.
+  The label for the generated `<a>` element, if no content (default slot) is provided.
   """
   prop label, :string
 
@@ -75,6 +75,14 @@ defmodule Surface.Components.Link do
     "fax:",
     "xmpp:"
   ]
+
+  def update(assigns, socket) do
+    unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
+      raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
+    end
+
+    {:ok, assign(socket, assigns)}
+  end
 
   def render(assigns) do
     opts = props_to_opts(assigns)
