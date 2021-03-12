@@ -5,7 +5,7 @@ defmodule Surface do
   Built on top of the new `Phoenix.LiveComponent` API, Surface provides
   a more declarative way to express and use components in Phoenix.
 
-  Full documentation and live examples can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
+  Full documentation and live examples can be found at [surface-ui.org](https://surface-ui.org)
 
   This module defines the `~H` sigil that should be used to translate Surface
   code into Phoenix templates.
