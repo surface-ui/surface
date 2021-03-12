@@ -144,10 +144,22 @@ defmodule Surface.Compiler do
     num_tags =
       ast
       |> Enum.filter(fn
-        %AST.Tag{} -> true
-        %AST.VoidTag{} -> true
-        %AST.Component{} -> true
-        _ -> false
+        %AST.Tag{} ->
+          true
+
+        %AST.VoidTag{} ->
+          true
+
+        %AST.Component{type: Surface.LiveComponent, meta: meta} ->
+          warn_live_component_as_root_node_of_another_live_component(meta, caller, offset)
+
+          true
+
+        %AST.Component{} ->
+          true
+
+        _ ->
+          false
       end)
       |> Enum.count()
 
@@ -172,6 +184,28 @@ defmodule Surface.Compiler do
   end
 
   defp validate_stateful_component(_ast, %CompileMeta{}), do: nil
+
+  defp warn_live_component_as_root_node_of_another_live_component(meta, caller, offset) do
+    IOHelper.warn(
+      """
+      cannot have a LiveComponent as root node of another LiveComponent.
+
+      Hint: You can wrap the root `#{meta.node_alias}` node in another element. Example:
+
+        def render(assigns) do
+          ~H"\""
+          <div>
+            <#{meta.node_alias} ... >
+              ...
+            </#{meta.node_alias}>
+          </div>
+          "\""
+        end
+      """,
+      caller,
+      fn _ -> offset end
+    )
+  end
 
   defp to_ast(nodes, compile_meta) do
     for node <- nodes do

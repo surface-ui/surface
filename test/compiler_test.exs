@@ -829,6 +829,57 @@ defmodule Surface.CompilerSyncTest do
     assert extract_line(output) == 6
   end
 
+  test "warning on stateful components with other stateful component as root element" do
+    id_1 = :erlang.unique_integer([:positive]) |> to_string()
+    id_2 = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id_1} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H"\""
+        <div>Foo</div>
+        "\""
+      end
+    end
+    defmodule TestLiveComponent_#{id_2} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H"\""
+          <TestLiveComponent_#{id_1} id="#{id_1}" />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           cannot have a LiveComponent as root node of another LiveComponent.
+
+           Hint: You can wrap the root `TestLiveComponent_#{id_1}` node in another element. Example:
+
+             def render(assigns) do
+               ~H"\""
+               <div>
+                 <TestLiveComponent_#{id_1} ... >
+                   ...
+                 </TestLiveComponent_#{id_1}>
+               </div>
+               "\""
+             end
+
+             code.exs:15: Surface.CompilerSyncTest.TestLiveComponent_#{id_2}.render/1
+
+           """
+  end
+
   test "warning on stateful components with interpolation root element" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
