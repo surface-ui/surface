@@ -130,7 +130,7 @@ defmodule Surface.Components.LinkTest do
     end
 
     test "link with %URI{}" do
-      url = "http://surface-demo.msaraiva.io/"
+      url = "https://surface-ui.org/"
 
       assert render_surface(do: ~H[<Link label="elixir" to={{ url }} />]) ==
                render_surface(do: ~H[<Link label="elixir" to={{ URI.parse(url) }} />])
