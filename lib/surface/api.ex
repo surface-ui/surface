@@ -41,8 +41,6 @@ defmodule Surface.API do
     :context_get
   ]
 
-  @private_opts [:action, :to]
-
   defmacro __using__(include: include) do
     arities = %{
       prop: [2, 3],
@@ -173,15 +171,24 @@ defmodule Surface.API do
   end
 
   @doc false
+  def get_props(module) do
+    Module.get_attribute(module, :prop) || []
+  end
+
+  @doc false
+  def get_data(module) do
+    Module.get_attribute(module, :data) || []
+  end
+
+  @doc false
   def get_defaults(module) do
-    for %{name: name, opts: opts} <- Module.get_attribute(module, :data),
-        Keyword.has_key?(opts, :default) do
+    for %{name: name, opts: opts} <- get_data(module), Keyword.has_key?(opts, :default) do
       {name, opts[:default]}
     end
   end
 
   defp quoted_data_funcs(env) do
-    data = Module.get_attribute(env.module, :data) || []
+    data = get_data(env.module)
 
     quote do
       @doc false
@@ -193,11 +200,13 @@ defmodule Surface.API do
 
   defp quoted_prop_funcs(env) do
     props =
-      (Module.get_attribute(env.module, :prop) || [])
-      |> Enum.sort_by(&{&1.name != :id, !&1.opts[:required], &1.line})
+      env.module
+      |> get_props()
+      |> sort_props()
 
-    props_names = Enum.map(props, fn prop -> prop.name end)
+    props_names = for p <- props, do: p.name
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
+    required_props_names = for %{name: name, opts: opts} <- props, opts[:required], do: name
 
     quote do
       @doc false
@@ -214,7 +223,17 @@ defmodule Surface.API do
       def __get_prop__(name) do
         Map.get(unquote(Macro.escape(props_by_name)), name)
       end
+
+      @doc false
+      def __required_props_names__() do
+        unquote(Macro.escape(required_props_names))
+      end
     end
+  end
+
+  @doc false
+  def sort_props(props) when is_list(props) do
+    Enum.sort_by(props, &{&1.name != :id, !&1.opts[:required], &1.line})
   end
 
   defp quoted_slot_funcs(env) do
@@ -271,8 +290,7 @@ defmodule Surface.API do
   def validate!(func, name, type, opts, caller) do
     with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
-         :ok <- validate_opts(func, type, opts),
-         :ok <- validate_required_opts(func, type, opts) do
+         :ok <- validate_opts(func, type, opts) do
       maybe_warn_mutually_exclusive_opts(func, type, opts, caller)
       :ok
     else
@@ -313,13 +331,13 @@ defmodule Surface.API do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
-         [] <- keys -- (valid_opts ++ @private_opts) do
+         [] <- keys -- valid_opts do
       :ok
     else
       false ->
         {:error,
          "invalid options for #{func} #{name}. " <>
-           "Expected a keyword list of options, got: #{inspect(remove_private_opts(opts))}"}
+           "Expected a keyword list of options, got: #{inspect(opts)}"}
 
       unknown_options ->
         valid_opts = get_valid_opts(func, type, opts)
@@ -365,16 +383,6 @@ defmodule Surface.API do
 
   defp maybe_warn_mutually_exclusive_opts(_, _, _, _), do: nil
 
-  defp validate_required_opts(func, type, opts) do
-    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
-      [] ->
-        :ok
-
-      missing_opts ->
-        {:error, "the following options are required: #{inspect(missing_opts)}"}
-    end
-  end
-
   defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :accumulate]
   end
@@ -385,10 +393,6 @@ defmodule Surface.API do
 
   defp get_valid_opts(:slot, _type, _opts) do
     [:required, :props, :as]
-  end
-
-  defp get_required_opts(_func, _type, _opts) do
-    []
   end
 
   defp validate_opt_ast!(:slot, :props, args_ast, caller) do
@@ -472,7 +476,7 @@ defmodule Surface.API do
 
   defp generate_props_docs(module) do
     docs =
-      for prop <- Module.get_attribute(module, :prop) do
+      for prop <- get_props(module) do
         doc = if prop.doc, do: " - #{prop.doc}.", else: ""
         opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
         "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"
@@ -498,7 +502,7 @@ defmodule Surface.API do
 
           message = """
           cannot bind slot prop `#{name}` to property `#{generator}`. \
-          Expected a existing property after `^`, \
+          Expected an existing property after `^`, \
           got: an undefined property `#{generator}`.
 
           Hint: Available properties are #{inspect(existing_properties_names)}\
@@ -544,14 +548,6 @@ defmodule Surface.API do
             line: caller.line
           ] do
       Surface.API.put_assign!(__ENV__, func, name, type, opts, opts_ast, line)
-    end
-  end
-
-  defp remove_private_opts(opts) do
-    if is_list(opts) do
-      Enum.reject(opts, fn o -> Enum.any?(@private_opts, fn p -> match?({^p, _}, o) end) end)
-    else
-      opts
     end
   end
 end

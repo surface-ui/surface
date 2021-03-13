@@ -680,15 +680,12 @@ defmodule Surface.Compiler do
     has_directive_props? = Enum.any?(directives, &match?(%AST.Directive{name: :props}, &1))
 
     if not has_directive_props? and function_exported?(module, :__props__, 0) do
-      existing_props = Enum.map(props, fn %{name: name} -> name end)
+      existing_props_names = Enum.map(props, & &1.name)
+      required_props_names = module.__required_props_names__()
+      missing_props_names = required_props_names -- existing_props_names
 
-      required_props =
-        for p <- module.__props__(), Keyword.get(p.opts, :required, false), do: p.name
-
-      missing_props = required_props -- existing_props
-
-      for prop <- missing_props do
-        message = "Missing required property \"#{prop}\" for component <#{meta.node_alias}>"
+      for prop_name <- missing_props_names do
+        message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
         IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
       end
     end

@@ -19,8 +19,8 @@ defmodule Surface.BaseComponent do
 
   @optional_callbacks transform: 1
 
-  defmacro __using__(opts \\ []) do
-    type = Keyword.get(opts, :type)
+  defmacro __using__(opts) do
+    type = Keyword.fetch!(opts, :type)
 
     quote do
       import Surface
