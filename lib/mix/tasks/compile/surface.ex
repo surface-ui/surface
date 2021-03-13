@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Compile.Surface do
 
     File.mkdir_p!(js_output_dir)
 
-    delete_unused_hooks_files!(js_output_dir, js_files)
+    unused_hooks_files = delete_unused_hooks_files!(js_output_dir, js_files)
 
     index_file_time =
       case File.stat(index_file) do
@@ -36,22 +36,23 @@ defmodule Mix.Tasks.Compile.Surface do
       end
 
     update_index? =
-      for {src_file, dest_file} <- js_files,
+      for {src_file, dest_file_name} <- js_files,
+          dest_file = Path.join(js_output_dir, dest_file_name),
           {:ok, %File.Stat{mtime: time}} <- [File.stat(src_file)],
           !File.exists?(dest_file) or time > index_file_time,
           reduce: false do
         _ ->
-          File.cp!(src_file, Path.join(js_output_dir, dest_file))
+          File.cp!(src_file, dest_file)
           true
       end
 
-    if !index_file_time or update_index? do
+    if !index_file_time or update_index? or unused_hooks_files != [] do
       File.write!(index_file, index_content(js_files))
     end
   end
 
   defp get_colocated_assets() do
-    for [app] <- loaded_applications(),
+    for [app] <- applications(),
         mod <- app_modules(app),
         module_loaded?(mod),
         function_exported?(mod, :component_type, 0),
@@ -129,6 +130,7 @@ defmodule Mix.Tasks.Compile.Surface do
 
     unsused_files = all_files -- used_files
     Enum.each(unsused_files, &File.rm!/1)
+    unsused_files
   end
 
   defp app_modules(app) do
@@ -143,13 +145,20 @@ defmodule Mix.Tasks.Compile.Surface do
     path |> Path.basename(".beam") |> String.to_atom()
   end
 
-  defp loaded_applications do
+  defp applications do
     # If we invoke :application.loaded_applications/0,
     # it can error if we don't call safe_fixtable before.
     # Since in both cases we are reaching over the
     # application controller internals, we choose to match
     # for performance.
-    :ets.match(:ac_tab, {{:loaded, :"$1"}, :_})
+    apps = :ets.match(:ac_tab, {{:loaded, :"$1"}, :_})
+
+    # Make sure we have the project's app (it might not be there when first compiled)
+    apps = [[Mix.Project.config()[:app]] | apps]
+
+    apps
+    |> MapSet.new()
+    |> MapSet.to_list()
   end
 
   defp module_loaded?(module) do

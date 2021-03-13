@@ -86,6 +86,61 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
            """
   end
 
+  test "update dest hook file and index.js if there are changes in hooks" do
+    refute File.exists?(@hooks_abs_output_dir)
+
+    index_file = Path.join(@hooks_abs_output_dir, "index.js")
+    src_hooks_file = Path.join(@test_components_dir, "fake_button.hooks.js")
+
+    dest_hooks_file =
+      Path.join(@hooks_abs_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.js")
+
+    %File.Stat{mtime: src_hooks_file_time} = File.stat!(src_hooks_file)
+
+    run([])
+
+    new_time = add_secs(src_hooks_file_time, -1)
+    File.touch!(index_file, new_time)
+    File.touch!(dest_hooks_file, new_time)
+    %File.Stat{mtime: index_file_time} = File.stat!(index_file)
+    %File.Stat{mtime: dest_hooks_file_time} = File.stat!(dest_hooks_file)
+
+    assert index_file_time < src_hooks_file_time
+    assert dest_hooks_file_time < src_hooks_file_time
+
+    run([])
+
+    %File.Stat{mtime: index_file_time} = File.stat!(index_file)
+    %File.Stat{mtime: dest_hooks_file_time} = File.stat!(dest_hooks_file)
+
+    assert index_file_time > src_hooks_file_time
+    assert dest_hooks_file_time > src_hooks_file_time
+  end
+
+  test "don't update dest hook file and index.js if there's no change in hooks" do
+    refute File.exists?(@hooks_abs_output_dir)
+
+    index_file = Path.join(@hooks_abs_output_dir, "index.js")
+
+    dest_hooks_file =
+      Path.join(@hooks_abs_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.js")
+
+    run([])
+
+    %File.Stat{mtime: index_file_time} = File.stat!(index_file)
+    new_time = add_secs(index_file_time, 10)
+    File.touch!(index_file, new_time)
+    File.touch!(dest_hooks_file, new_time)
+
+    run([])
+
+    %File.Stat{mtime: index_file_time} = File.stat!(index_file)
+    %File.Stat{mtime: dest_hooks_file_time} = File.stat!(dest_hooks_file)
+
+    assert index_file_time == new_time
+    assert dest_hooks_file_time == new_time
+  end
+
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_abs_output_dir)
 
@@ -100,18 +155,31 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
            """
   end
 
-  test "delete unused hooks files from output dir" do
+  test "delete unused hooks files from output dir and update index.js" do
     refute File.exists?(@hooks_abs_output_dir)
 
-    File.mkdir_p!(@hooks_abs_output_dir)
+    run([])
 
     unused_file = Path.join(@hooks_abs_output_dir, "Unused.hooks.js")
     File.touch!(unused_file)
 
     assert File.exists?(unused_file)
 
+    index_file = Path.join(@hooks_abs_output_dir, "index.js")
+    %File.Stat{mtime: index_file_time} = File.stat!(index_file)
+    index_file_time_before_run = add_secs(index_file_time, 10)
+    File.touch!(index_file, index_file_time_before_run)
+
     run([])
 
+    %File.Stat{mtime: index_file_time} = File.stat!(index_file)
+
     refute File.exists?(unused_file)
+    assert index_file_time != index_file_time_before_run
+  end
+
+  defp add_secs(time, secs) do
+    gregorian_secs = :calendar.datetime_to_gregorian_seconds(time)
+    :calendar.gregorian_seconds_to_datetime(gregorian_secs + secs)
   end
 end
