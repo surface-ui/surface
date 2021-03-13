@@ -241,39 +241,21 @@ defmodule Surface.Compiler.EExEngine do
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
-    if do_block == [] do
-      quote generated: true do
-        live_component(
-          @socket,
+    quote generated: true do
+      live_component(
+        @socket,
+        unquote(module),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
           unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(meta.node_alias)
-          )
-        )
-      end
-    else
-      quote generated: true do
-        live_component(
-          @socket,
-          unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(meta.node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
     end
     |> maybe_print_expression(component)
   end

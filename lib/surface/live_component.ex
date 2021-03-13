@@ -1,6 +1,6 @@
 defmodule Surface.LiveComponent do
   @moduledoc """
-  A live (stateless or stateful) component. A wrapper around `Phoenix.LiveComponent`.
+  A live stateful component. A wrapper around `Phoenix.LiveComponent`.
 
   ## Example
 

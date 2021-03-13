@@ -339,7 +339,7 @@ defmodule Surface.APITest do
 
       message = """
       code.exs:7: cannot bind slot prop `item` to property `unknown`. \
-      Expected a existing property after `^`, got: an undefined property `unknown`.
+      Expected an existing property after `^`, got: an undefined property `unknown`.
 
       Hint: Available properties are [:label, :items]\
       """
@@ -401,6 +401,35 @@ defmodule Surface.APITest do
         eval(code)
       end)
     end
+  end
+
+  test "props are sorted semanticaly" do
+    props = [
+      %{
+        line: 3,
+        name: :header,
+        opts: [required: true]
+      },
+      %{
+        line: 2,
+        name: :id,
+        opts: [required: true]
+      },
+      %{
+        line: 1,
+        name: :footer,
+        opts: []
+      },
+      %{
+        line: 4,
+        name: :body,
+        opts: [required: true]
+      }
+    ]
+
+    sorted_props = Surface.API.sort_props(props)
+
+    assert [:id, :header, :body, :footer] = Enum.map(sorted_props, & &1.name)
   end
 
   test "generate documentation when no @moduledoc is defined" do
