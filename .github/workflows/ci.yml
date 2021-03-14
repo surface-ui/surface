@@ -37,6 +37,9 @@ jobs:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
           experimental-otp: true
+      - name: Install packages
+        run: |
+          sudo apt-get install -y -qq inotify-tools
       - run: mix format --check-formatted
         if: matrix.check_formatted
       - name: Install Dependencies
