@@ -935,14 +935,18 @@ defmodule Surface.CompilerSyncTest do
       end)
 
     assert output =~ """
-           setting a default value on a required slot has no effect.
+           setting a fallback content on a required slot has no effect.
 
-           Hint: Either set the default value
+           Hint: Either keep the fallback content and remove the `required: true`:
+
              slot default
-             <slot>...</slot>
+             ...
+             <slot>Fallback content</slot>
 
-           or set the slot as required,
+           or keep the slot as required and remove the fallback content:
+
              slot default, required: true`
+             ...
              <slot />
 
            but not both.
@@ -952,14 +956,18 @@ defmodule Surface.CompilerSyncTest do
            """
 
     assert output =~ """
-           setting a default value on a required slot has no effect.
+           setting a fallback content on a required slot has no effect.
 
-           Hint: Either set the default value
+           Hint: Either keep the fallback content and remove the `required: true`:
+
              slot header
-             <slot name="header">...</slot>
+             ...
+             <slot name="header">Fallback content</slot>
 
-           or set the slot as required,
+           or keep the slot as required and remove the fallback content:
+
              slot header, required: true`
+             ...
              <slot name="header" />
 
            but not both.
