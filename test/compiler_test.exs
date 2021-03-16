@@ -905,6 +905,78 @@ defmodule Surface.CompilerSyncTest do
     assert extract_line(output) == 6
   end
 
+  test "warning on component with required slot that has a default value" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestComponent_#{id} do
+      use Surface.Component
+
+      slot default, required: true
+      slot header, required: true
+      slot footer
+
+      def render(assigns) do
+        ~H"\""
+        <div>
+          <slot>Default Content</slot>
+          <slot name="header">Default Header</slot>
+          <slot name="footer">Default Footer</slot>
+        </div>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           setting the fallback content on a required slot has no effect.
+
+           Hint: Either keep the fallback content and remove the `required: true`:
+
+             slot default
+             ...
+             <slot>Fallback content</slot>
+
+           or keep the slot as required and remove the fallback content:
+
+             slot default, required: true`
+             ...
+             <slot />
+
+           but not both.
+
+             code.exs:11: Surface.CompilerSyncTest.TestComponent_#{id}.render/1
+
+           """
+
+    assert output =~ """
+           setting the fallback content on a required slot has no effect.
+
+           Hint: Either keep the fallback content and remove the `required: true`:
+
+             slot header
+             ...
+             <slot name="header">Fallback content</slot>
+
+           or keep the slot as required and remove the fallback content:
+
+             slot header, required: true`
+             ...
+             <slot name="header" />
+
+           but not both.
+
+             code.exs:12: Surface.CompilerSyncTest.TestComponent_#{id}.render/1
+
+           """
+  end
+
   defp compile_component(code) do
     id = :erlang.unique_integer([:positive]) |> to_string()
 

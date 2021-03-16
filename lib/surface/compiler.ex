@@ -284,20 +284,23 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    defined_slot_names =
+    defined_slots =
       meta.caller.module
       |> Surface.API.get_slots()
-      |> Enum.map(& &1.name)
 
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
+    short_slot_syntax? = not has_attribute?(attributes, "name")
 
     index =
       attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
     with {:ok, directives, _attrs} <-
            collect_directives(@slot_directive_handlers, attributes, meta),
-         true <- name in defined_slot_names do
+         slot <- Enum.find(defined_slots, fn slot -> slot.name == name end),
+         slot when not is_nil(slot) <- slot do
+      maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
+
       {:ok,
        %AST.Slot{
          name: name,
@@ -309,13 +312,11 @@ defmodule Surface.Compiler do
        }}
     else
       _ ->
-        short_slot_syntax? = not has_attribute?(attributes, "name")
-
         raise_missing_slot_error!(
           meta.caller.module,
           name,
           meta,
-          defined_slot_names,
+          defined_slots,
           short_slot_syntax?
         )
     end
@@ -766,7 +767,7 @@ defmodule Surface.Compiler do
          module,
          slot_name,
          meta,
-         _defined_slot_names,
+         _defined_slots,
          true = _short_syntax?
        ) do
     message = """
@@ -782,11 +783,11 @@ defmodule Surface.Compiler do
          module,
          slot_name,
          meta,
-         defined_slot_names,
+         defined_slots,
          false = _short_syntax?
        ) do
+    defined_slot_names = Enum.map(defined_slots, & &1.name)
     similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
-
     existing_slots_message = existing_slots_message(defined_slot_names)
 
     message = """
@@ -852,5 +853,33 @@ defmodule Surface.Compiler do
     slots = Enum.map(existing_slots, &to_string/1)
     available = Helpers.list_to_string("slot:", "slots:", slots)
     "\n\nAvailable #{available}"
+  end
+
+  defp maybe_warn_required_slot_with_default_value(_, [], _, _), do: nil
+
+  defp maybe_warn_required_slot_with_default_value(slot, _, short_syntax?, meta) do
+    if Keyword.get(slot.opts, :required, false) do
+      slot_name_tag = if short_syntax?, do: "", else: " name=\"#{slot.name}\""
+
+      message = """
+      setting the fallback content on a required slot has no effect.
+
+      Hint: Either keep the fallback content and remove the `required: true`:
+
+        slot #{slot.name}
+        ...
+        <slot#{slot_name_tag}>Fallback content</slot>
+
+      or keep the slot as required and remove the fallback content:
+
+        slot #{slot.name}, required: true`
+        ...
+        <slot#{slot_name_tag} />
+
+      but not both.
+      """
+
+      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+    end
   end
 end
