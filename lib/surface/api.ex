@@ -382,7 +382,7 @@ defmodule Surface.API do
   end
 
   defp maybe_warn_mutually_exclusive_opts(:slot, :default, _, opts, caller) do
-    if Module.has_attribute?(caller.module, :__slot_name__) and Keyword.has_key?(opts, :props) do
+    if Module.defines?(caller.module, {:__slot_name__, 0}) and Keyword.has_key?(opts, :props) do
       slot_name = Module.get_attribute(caller.module, :__slot_name__)
 
       prop_example =
