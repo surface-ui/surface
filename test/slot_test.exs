@@ -211,22 +211,6 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule ColumnWithRenderAndSlotProps do
-    use Surface.Component, slot: "cols"
-
-    prop title, :string, required: true
-
-    slot default, props: [:info]
-
-    def render(assigns) do
-      ~H"""
-      <span class="fancy-column">
-        <slot props={{ info: "this is a test" }} />
-      </span>
-      """
-    end
-  end
-
   defmodule Grid do
     use Surface.Component
 
@@ -457,44 +441,6 @@ defmodule Surface.SlotTest do
                <td>
                  <span class="fancy-column">
                <b>Id: 2</b>
-           </span>
-               </td>
-             </tr>
-           </table>
-           """
-  end
-
-  test "slotable component with slot props" do
-    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
-
-    html =
-      render_surface do
-        ~H"""
-        <Grid items={{ user <- @items }}>
-          <ColumnWithRenderAndSlotProps title="column title" :let={{ info: info }}>
-            <b>{{ info }}: {{ user.id }}</b>
-          </ColumnWithRenderAndSlotProps>
-        </Grid>
-        """
-      end
-
-    assert html =~ """
-           <table>
-             <tr>
-               <th>
-                 column title
-               </th>
-             </tr>
-             <tr>
-               <td>
-                 <span class="fancy-column">
-               <b>this is a test: 1</b>
-           </span>
-               </td>
-             </tr><tr>
-               <td>
-                 <span class="fancy-column">
-               <b>this is a test: 2</b>
            </span>
                </td>
              </tr>
@@ -1128,5 +1074,44 @@ defmodule Surface.SlotSyncTest do
     assert_raise(CompileError, message, fn ->
       compile_surface(code)
     end)
+  end
+
+  test "outputs compile warning when adding slot props to the default slot in a slotable component" do
+    component_code = """
+    defmodule ColumnWithRenderAndSlotProps do
+      use Surface.Component, slot: "cols"
+
+      prop title, :string, required: true
+
+      slot default, props: [:info]
+
+      def render(assigns) do
+        ~H"\""
+        <span class="fancy-column">
+          <slot props={{ info: "this is a test" }} />
+        </span>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           props for the default slot in a slotable component are not accessible - instead the props from the parent's cols slot will be exposed via `:let={{ ... }}`.
+
+           Hint: You can remove these props, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
+           ```
+           <template name="cols">
+             <Surface.SlotSyncTest.ColumnWithRenderAndSlotProps :let={{ info: info }}>
+               ...
+             </Surface.SlotSyncTest.ColumnWithRenderAndSlotProps>
+           </template>
+           ```
+           """
   end
 end

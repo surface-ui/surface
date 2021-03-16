@@ -291,7 +291,7 @@ defmodule Surface.API do
     with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
          :ok <- validate_opts(func, type, opts) do
-      maybe_warn_mutually_exclusive_opts(func, type, opts, caller)
+      maybe_warn_mutually_exclusive_opts(func, name, type, opts, caller)
       :ok
     else
       {:error, message} ->
@@ -371,7 +371,7 @@ defmodule Surface.API do
     end)
   end
 
-  defp maybe_warn_mutually_exclusive_opts(:prop, _, opts, caller) do
+  defp maybe_warn_mutually_exclusive_opts(:prop, _, _, opts, caller) do
     if Keyword.get(opts, :required, false) and Keyword.has_key?(opts, :default) do
       IOHelper.warn(
         "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
@@ -381,7 +381,38 @@ defmodule Surface.API do
     end
   end
 
-  defp maybe_warn_mutually_exclusive_opts(_, _, _, _), do: nil
+  defp maybe_warn_mutually_exclusive_opts(:slot, :default, _, opts, caller) do
+    if Module.has_attribute?(caller.module, :__slot_name__) and Keyword.has_key?(opts, :props) do
+      slot_name = Module.get_attribute(caller.module, :__slot_name__)
+
+      prop_example =
+        opts
+        |> Keyword.get(:props, [])
+        |> Enum.map(fn %{name: name} -> "#{name}: #{name}" end)
+        |> Enum.join(", ")
+
+      component_name = Macro.to_string(caller.module)
+
+      message = """
+      props for the default slot in a slotable component are not accessible - instead the props \
+      from the parent's #{slot_name} slot will be exposed via `:let={{ ... }}`.
+
+      Hint: You can remove these props, pull them up to the parent component, or make this component not slotable \
+      and use it inside an explicit template element:
+      ```
+      <template name="#{slot_name}">
+        <#{component_name} :let={{ #{prop_example} }}>
+          ...
+        </#{component_name}>
+      </template>
+      ```
+      """
+
+      IOHelper.warn(message, caller, fn _ -> caller.line end)
+    end
+  end
+
+  defp maybe_warn_mutually_exclusive_opts(_, _, _, _, _), do: nil
 
   defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :accumulate]

@@ -32,6 +32,8 @@ defmodule Surface.Component do
       validate_slot_name!(slot_name, __CALLER__)
     end
 
+    slot_name = slot_name && String.to_atom(slot_name)
+
     quote do
       @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
@@ -55,8 +57,10 @@ defmodule Surface.Component do
       data inner_block, :fun
 
       if unquote(slot_name) != nil do
+        Module.put_attribute(__MODULE__, :__slot_name__, unquote(slot_name))
+
         def __slot_name__ do
-          unquote(slot_name && String.to_atom(slot_name))
+          unquote(slot_name)
         end
       end
     end
