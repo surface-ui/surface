@@ -78,7 +78,7 @@ defmodule Surface.Component do
   end
 
   defp quoted_render(env) do
-    if !Module.defines?(env.module, {:__slot_name__, 0}) ||
+    if !Module.has_attribute?(env.module, :__slot_name__) ||
          Module.defines?(env.module, {:render, 1}) do
       quote do
         def __renderless__ do
