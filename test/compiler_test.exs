@@ -935,7 +935,7 @@ defmodule Surface.CompilerSyncTest do
       end)
 
     assert output =~ """
-           setting a fallback content on a required slot has no effect.
+           setting the fallback content on a required slot has no effect.
 
            Hint: Either keep the fallback content and remove the `required: true`:
 
@@ -956,7 +956,7 @@ defmodule Surface.CompilerSyncTest do
            """
 
     assert output =~ """
-           setting a fallback content on a required slot has no effect.
+           setting the fallback content on a required slot has no effect.
 
            Hint: Either keep the fallback content and remove the `required: true`:
 

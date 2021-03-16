@@ -862,7 +862,7 @@ defmodule Surface.Compiler do
       slot_name_tag = if short_syntax?, do: "", else: " name=\"#{slot.name}\""
 
       message = """
-      setting a fallback content on a required slot has no effect.
+      setting the fallback content on a required slot has no effect.
 
       Hint: Either keep the fallback content and remove the `required: true`:
 
