@@ -47,7 +47,7 @@ defmodule Surface.Component do
       alias Surface.Components.Context
 
       @doc "Built-in assign"
-      data socket, :any
+      data socket, :struct
 
       @doc "Built-in assign"
       data flash, :map

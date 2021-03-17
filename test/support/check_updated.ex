@@ -2,7 +2,7 @@ defmodule Surface.CheckUpdated do
   use Surface.LiveComponent
 
   @doc "The process to send the :updated message"
-  prop dest, :any, required: true
+  prop dest, :pid, required: true
 
   @doc "Something to inspect"
   prop content, :any, default: %{}
