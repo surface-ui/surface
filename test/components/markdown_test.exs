@@ -78,6 +78,29 @@ defmodule Surface.Components.MarkdownTest do
            """
   end
 
+  test "translates escaped three double-quotes" do
+    html =
+      render_surface do
+        ~H"""
+        <#Markdown>
+        ```elixir
+        def render(assigns) do
+          ~H"\""
+          Hello
+          "\""
+        end
+        ```
+        </#Markdown>
+        """
+      end
+
+    assert html =~ """
+             ~H&quot;&quot;&quot;
+             Hello
+             &quot;&quot;&quot;
+           """
+  end
+
   test "setting opts forward options to Earmark" do
     html =
       render_surface do

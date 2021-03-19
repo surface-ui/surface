@@ -74,6 +74,7 @@ defmodule Surface.Components.Markdown do
       children
       |> IO.iodata_to_binary()
       |> trim_leading_space()
+      |> String.replace(~S("\""), ~S("""), global: true)
       # Need to reconstruct the relative line
       |> markdown_as_html!(meta.caller, meta.line, opts)
 
