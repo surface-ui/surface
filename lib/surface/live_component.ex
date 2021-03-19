@@ -73,13 +73,13 @@ defmodule Surface.LiveComponent do
       prop id, :string, required: true
 
       @doc "Built-in assign"
-      data socket, :any
+      data socket, :struct
 
       @doc "Built-in assign"
       data flash, :map
 
       @doc "Built-in assign"
-      data myself, :any
+      data myself, :struct
     end
   end
 
