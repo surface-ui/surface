@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.2 (2021-03-19)
+
+  * Warn if prop is required and has default value (#282)
+  * Warn if slot is required and has a fallback content (#296)
+  * Warn on `LiveComponent` with another `LiveComponent` as root
+  * Support escaped three double-quotes in `Markdown` content
+  * Improve `Label` component compatibility with Phoenix `label/2` (#284)
+  * Update props according to new types (#297)
+  * Fix copying JS hooks multiple times (#294)
+
 ## v0.3.1 (2021-03-05)
 
   * Fix `index.js` generation when no hooks are available
