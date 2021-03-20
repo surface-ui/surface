@@ -73,7 +73,7 @@ defmodule Surface do
     * `Surface.LiveView` - A wrapper component around `Phoenix.LiveView`.
     * `Surface.MacroComponent` - A low-level component which is responsible for translating its own content at compile time.
 
-  ### Example
+  ## Example
 
       # A functional stateless component
 

@@ -434,17 +434,17 @@ defmodule Surface.APITest do
 
   test "generate documentation when no @moduledoc is defined" do
     assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
-           ### Properties
+           ## Properties
 
            * **label** *:string, required: true* - The label.
            * **class** *:css_class* - The class.
 
-           ### Slots
+           ## Slots
 
            * **default** - The default slot.
            * **header, required: true** - The required header slot.
 
-           ### Events
+           ## Events
 
            * **click, required: true** - The click event.
            * **cancel** - The cancel event.
@@ -455,17 +455,17 @@ defmodule Surface.APITest do
     assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledoc) == """
            My component with @moduledoc
 
-           ### Properties
+           ## Properties
 
            * **label** *:string, required: true* - The label.
            * **class** *:css_class* - The class.
 
-           ### Slots
+           ## Slots
 
            * **default** - The default slot.
            * **header, required: true** - The required header slot.
 
-           ### Events
+           ## Events
 
            * **click, required: true** - The click event.
            * **cancel** - The cancel event.

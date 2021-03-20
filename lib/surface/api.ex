@@ -497,7 +497,7 @@ defmodule Surface.API do
 
     if docs != "" do
       """
-      ### Properties
+      ## Properties
 
       #{docs}
       """
@@ -516,7 +516,7 @@ defmodule Surface.API do
 
     if docs != "" do
       """
-      ### Slots
+      ## Slots
 
       #{docs}
       """
@@ -535,7 +535,7 @@ defmodule Surface.API do
 
     if docs != "" do
       """
-      ### Events
+      ## Events
 
       #{docs}
       """
