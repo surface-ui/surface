@@ -460,23 +460,34 @@ defmodule Surface.API do
   end
 
   defp generate_docs(env) do
-    case Module.get_attribute(env.module, :moduledoc) do
-      {_line, false} ->
-        :ok
+    do_generate_docs(Module.get_attribute(env.module, :moduledoc), env)
+  end
 
-      nil ->
-        props_doc = generate_props_docs(env.module)
-        Module.put_attribute(env.module, :moduledoc, {env.line, props_doc})
+  defp do_generate_docs({_line, false}, _env), do: :ok
+  defp do_generate_docs(nil, env), do: do_generate_docs({env.line, nil}, env)
 
-      {line, doc} ->
-        props_doc = generate_props_docs(env.module)
-        Module.put_attribute(env.module, :moduledoc, {line, doc <> "\n" <> props_doc})
-    end
+  defp do_generate_docs({line, doc}, env) do
+    docs =
+      [
+        doc,
+        generate_props_docs(env.module),
+        generate_slots_docs(env.module),
+        generate_events_docs(env.module)
+      ]
+      |> Enum.filter(&(&1 != nil))
+      |> Enum.join("\n")
+
+    Module.put_attribute(
+      env.module,
+      :moduledoc,
+      {line, docs}
+    )
   end
 
   defp generate_props_docs(module) do
+    # Events are special properties we treat in a separate doc section
     docs =
-      for prop <- get_props(module) do
+      for prop <- get_props(module), prop.type != :event do
         doc = if prop.doc, do: " - #{prop.doc}.", else: ""
         opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
         "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"
@@ -484,11 +495,51 @@ defmodule Surface.API do
       |> Enum.reverse()
       |> Enum.join("\n")
 
-    """
-    ### Properties
+    if docs != "" do
+      """
+      ### Properties
 
-    #{docs}
-    """
+      #{docs}
+      """
+    end
+  end
+
+  defp generate_slots_docs(module) do
+    docs =
+      for slot <- get_slots(module) do
+        doc = if slot.doc, do: " - #{slot.doc}.", else: ""
+        opts = if slot.opts == [], do: "", else: ", #{format_opts(slot.opts_ast)}"
+        "* **#{slot.name}#{opts}**#{doc}"
+      end
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    if docs != "" do
+      """
+      ### Slots
+
+      #{docs}
+      """
+    end
+  end
+
+  defp generate_events_docs(module) do
+    docs =
+      for prop <- get_props(module), prop.type == :event do
+        doc = if prop.doc, do: " - #{prop.doc}.", else: ""
+        opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
+        "* **#{prop.name}#{opts}**#{doc}"
+      end
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    if docs != "" do
+      """
+      ### Events
+
+      #{docs}
+      """
+    end
   end
 
   defp validate_slot_props_bindings!(env) do
