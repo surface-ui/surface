@@ -207,7 +207,6 @@ defmodule Surface.Components.ButtonTest do
 
       assert_raise ArgumentError, msg, fn ->
         render_surface(do: ~H[<Button label="foo" to="javascript:alert(1)" method={{ :get }} />])
-        |> IO.inspect()
       end
     end
   end

@@ -82,7 +82,7 @@ defmodule Surface.Components.Button do
 
   def update(assigns, socket) do
     unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
-      raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
+      raise ArgumentError, "<Button /> requires a label prop or contents in the default slot"
     end
 
     {:ok, assign(socket, assigns)}
