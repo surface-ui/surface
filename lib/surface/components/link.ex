@@ -34,6 +34,9 @@ defmodule Surface.Components.Link do
   @doc "The method to use with the link"
   prop method, :atom, default: :get
 
+  @doc "Id to apply to the link"
+  prop id, :string
+
   @doc "Class or classes to apply to the link"
   prop class, :css_class
 
@@ -85,14 +88,12 @@ defmodule Surface.Components.Link do
   end
 
   def render(assigns) do
-    opts = props_to_opts(assigns)
+    opts = assigns.opts ++ props_to_opts(assigns) ++ event_to_opts(assigns.click, :phx_click)
+    attrs = opts_to_attrs(opts, assigns)
+    to = valid_destination!(assigns.to, "<Link />")
 
     ~H"""
-    <a
-      class={{ @class }}
-      href={{ valid_destination!(@to, "<Link />") }}
-      :attrs={{ @opts ++ opts ++ event_to_opts(@click, :phx_click) |> opts_to_attrs(assigns) }}
-    ><slot>{{ @label }}</slot></a>
+    <a id={{ @id }} class={{ @class }} href={{ to }} :attrs={{ attrs }}><slot>{{ @label }}</slot></a>
     """
   end
 
