@@ -2,8 +2,7 @@ defmodule Surface.Components.Link do
   @moduledoc """
   Generates a link to the given URL.
 
-  Provides similar capabilities to Phoenix's built-in `link/2`
-  function.
+  Provides similar capabilities to Phoenix's built-in `link/2` function.
 
   Options `label` and `class` can be set directly and will override anything in `opts`.
   All other options are forwarded to the underlying <a> tag.

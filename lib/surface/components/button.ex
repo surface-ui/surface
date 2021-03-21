@@ -1,9 +1,10 @@
 defmodule Surface.Components.Button do
   @moduledoc """
-  Generates a link to the given URL.
+  Generates a button that uses a regular HTML form to submit to the given URL.
 
-  Provides similar capabilities to Phoenix's built-in `button/2`
-  function.
+  Useful to ensure that links that change data are not triggered by search engines and other spidering software.
+
+  Provides similar capabilities to Phoenix's built-in `button/2` function.
 
   Options `label` and `class` can be set directly and will override anything in `opts`.
   All other options are forwarded to the underlying <button> tag.
