@@ -82,6 +82,69 @@ defmodule ContextTest do
     end
   end
 
+  defmodule SubTestComponent do
+    use Surface.Component
+
+     def render(assigns) do
+      ~H"""
+      <div>
+        <Context get={{ name: name }}>
+          Hello {{name}}!
+        </Context>
+      </div>
+      """
+    end
+  end
+
+  defmodule TestComponent do
+    use Surface.Component
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <Context put={{ name: "world" }} :let={{ __context__: ctx}}>
+          <Context get={{ name: name }}>
+            Hello {{name}}!
+          </Context>
+
+          {{render_hello(Map.put(assigns, :__context__, ctx))}}
+          <SubTestComponent />
+        </Context>
+      </div>
+      """
+    end
+
+    def render_hello(assigns) do
+      ~H"""
+      <div>
+        <Context get={{ name: name }}>
+          Hello {{name}}!
+        </Context>
+      </div>
+      """
+    end
+  end
+
+  test "context passed through a function" do
+    html = render_surface do
+      ~H"""
+      <TestComponent />
+      """
+    end
+
+    assert html =~ """
+    <div>
+          Hello world!
+        <div>
+        Hello world!
+    </div>
+        <div>
+        Hello world!
+    </div>
+    </div>
+    """
+  end
+
   test "pass context to child component" do
     html =
       render_surface do

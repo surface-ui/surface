@@ -79,7 +79,7 @@ defmodule Surface.Components.Context do
   prop get, :context_get, accumulate: true, default: []
 
   @doc "The content of the `<Context>`"
-  slot default, required: true
+  slot default, required: true, props: [:__context__]
 
   def transform(node) do
     Module.put_attribute(node.meta.caller.module, :use_context?, true)
@@ -129,7 +129,7 @@ defmodule Surface.Components.Context do
         {key, Map.get(ctx, key, nil)}
       end
 
-    {ctx, props}
+    {ctx, Map.put(props, :__context__, ctx)}
   end
 
   defp normalize_set(nil, key, value) do
@@ -144,7 +144,7 @@ defmodule Surface.Components.Context do
     updated =
       node.templates
       |> Map.get(template_name, [])
-      |> Enum.map(fn template -> %{template | let: let} end)
+      |> Enum.map(fn template -> %{template | let: Enum.concat(template.let || [], let)} end)
 
     templates = Map.put(node.templates, template_name, updated)
 
