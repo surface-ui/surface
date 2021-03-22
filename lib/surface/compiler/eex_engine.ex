@@ -399,7 +399,7 @@ defmodule Surface.Compiler.EExEngine do
 
     template =
       cond do
-        !module.__renderless__() ->
+        !module.__renderless__?() ->
           [
             %AST.Component{
               module: module,

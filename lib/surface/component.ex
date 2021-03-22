@@ -81,13 +81,13 @@ defmodule Surface.Component do
     if !Module.defines?(env.module, {:__slot_name__, 0}) ||
          Module.defines?(env.module, {:render, 1}) do
       quote do
-        def __renderless__ do
+        def __renderless__? do
           false
         end
       end
     else
       quote do
-        def __renderless__ do
+        def __renderless__? do
           true
         end
 
