@@ -290,8 +290,7 @@ defmodule Surface.API do
   def validate!(func, name, type, opts, caller) do
     with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
-         :ok <- validate_opts(func, type, opts) do
-      maybe_warn_mutually_exclusive_opts(func, name, type, opts, caller)
+         :ok <- validate_opts(func, name, type, opts, caller) do
       :ok
     else
       {:error, message} ->
@@ -359,9 +358,9 @@ defmodule Surface.API do
     opts
   end
 
-  defp validate_opts(func, type, opts) do
+  defp validate_opts(func, name, type, opts, caller) do
     Enum.reduce_while(opts, :ok, fn {key, value}, _acc ->
-      case validate_opt(func, type, key, value) do
+      case validate_opt(func, name, type, opts, key, value, caller) do
         :ok ->
           {:cont, :ok}
 
@@ -370,49 +369,6 @@ defmodule Surface.API do
       end
     end)
   end
-
-  defp maybe_warn_mutually_exclusive_opts(:prop, _, _, opts, caller) do
-    if Keyword.get(opts, :required, false) and Keyword.has_key?(opts, :default) do
-      IOHelper.warn(
-        "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
-        caller,
-        fn _ -> caller.line end
-      )
-    end
-  end
-
-  defp maybe_warn_mutually_exclusive_opts(:slot, :default, _, opts, caller) do
-    if Module.defines?(caller.module, {:__slot_name__, 0}) and Keyword.has_key?(opts, :props) do
-      slot_name = Module.get_attribute(caller.module, :__slot_name__)
-
-      prop_example =
-        opts
-        |> Keyword.get(:props, [])
-        |> Enum.map(fn %{name: name} -> "#{name}: #{name}" end)
-        |> Enum.join(", ")
-
-      component_name = Macro.to_string(caller.module)
-
-      message = """
-      props for the default slot in a slotable component are not accessible - instead the props \
-      from the parent's #{slot_name} slot will be exposed via `:let={{ ... }}`.
-
-      Hint: You can remove these props, pull them up to the parent component, or make this component not slotable \
-      and use it inside an explicit template element:
-      ```
-      <template name="#{slot_name}">
-        <#{component_name} :let={{ #{prop_example} }}>
-          ...
-        </#{component_name}>
-      </template>
-      ```
-      """
-
-      IOHelper.warn(message, caller, fn _ -> caller.line end)
-    end
-  end
-
-  defp maybe_warn_mutually_exclusive_opts(_, _, _, _, _), do: nil
 
   defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :accumulate]
@@ -447,24 +403,71 @@ defmodule Surface.API do
     value
   end
 
-  defp validate_opt(_func, _type, :required, value) when not is_boolean(value) do
+  defp validate_opt(_func, _name, _type, _opts, :required, value, _caller)
+       when not is_boolean(value) do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _type, :values, value) when not is_list(value) do
+  defp validate_opt(:prop, _name, _type, opts, :default, _value, caller) do
+    if Keyword.get(opts, :required, false) do
+      IOHelper.warn(
+        "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
+        caller,
+        fn _ -> caller.line end
+      )
+    end
+
+    :ok
+  end
+
+  defp validate_opt(_func, _name, _type, _opts, :values, value, _caller)
+       when not is_list(value) do
     {:error,
      "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:prop, _type, :accumulate, value) when not is_boolean(value) do
+  defp validate_opt(:prop, _name, _type, _opts, :accumulate, value, _caller)
+       when not is_boolean(value) do
     {:error, "invalid value for option :accumulate. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:slot, _type, :as, value) when not is_atom(value) do
+  defp validate_opt(:slot, _name, _type, _opts, :as, value, _caller) when not is_atom(value) do
     {:error, "invalid value for option :as in slot. Expected an atom, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _type, _key, _value) do
+  defp validate_opt(:slot, :default, _type, _opts, :props, value, caller) do
+    if Module.defines?(caller.module, {:__slot_name__, 0}) do
+      slot_name = Module.get_attribute(caller.module, :__slot_name__)
+
+      prop_example =
+        value
+        |> Enum.map(fn %{name: name} -> "#{name}: #{name}" end)
+        |> Enum.join(", ")
+
+      component_name = Macro.to_string(caller.module)
+
+      message = """
+      props for the default slot in a slotable component are not accessible - instead the props \
+      from the parent's #{slot_name} slot will be exposed via `:let={{ ... }}`.
+
+      Hint: You can remove these props, pull them up to the parent component, or make this component not slotable \
+      and use it inside an explicit template element:
+      ```
+      <template name="#{slot_name}">
+        <#{component_name} :let={{ #{prop_example} }}>
+          ...
+        </#{component_name}>
+      </template>
+      ```
+      """
+
+      IOHelper.warn(message, caller, fn _ -> caller.line end)
+    end
+
+    :ok
+  end
+
+  defp validate_opt(_func, _name, _type, _opts, _key, _value, _caller) do
     :ok
   end
 
