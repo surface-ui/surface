@@ -46,8 +46,20 @@ defmodule Surface.Components.Button do
   """
   prop label, :string
 
-  @doc "Triggered on click"
-  prop click, :event
+  @doc "Triggered when the component loses focus"
+  prop blur, :event
+
+  @doc "Triggered when the component receives focus"
+  prop focus, :event
+
+  @doc "Triggered when the component receives click"
+  prop capture_click, :event
+
+  @doc "Triggered when a button on the keyboard is pressed"
+  prop keydown, :event
+
+  @doc "Triggered when a button on the keyboard is released"
+  prop keyup, :event
 
   @doc """
   Additional attributes to add onto the generated element
@@ -89,7 +101,7 @@ defmodule Surface.Components.Button do
   end
 
   def render(assigns) do
-    opts = assigns.opts ++ props_to_opts(assigns) ++ event_to_opts(assigns.click, :phx_click)
+    opts = assigns.opts ++ props_to_opts(assigns) ++ events_to_opts(assigns)
     attrs = opts_to_attrs(opts, assigns)
 
     ~H"""
@@ -109,11 +121,26 @@ defmodule Surface.Components.Button do
     {prop, assigns[prop]}
   end
 
+  defp events_to_opts(assigns) do
+    [
+      event_to_opts(assigns.blur, :phx_blur),
+      event_to_opts(assigns.focus, :phx_focus),
+      event_to_opts(assigns.capture_click, :phx_capture_click),
+      event_to_opts(assigns.keydown, :phx_keydown),
+      event_to_opts(assigns.keyup, :phx_keyup)
+    ]
+    |> List.flatten()
+  end
+
   defp opts_to_attrs(opts, assigns) do
     for {key, value} <- opts do
       case key do
         :csrf_token -> {:"data-csrf", value}
-        :phx_click -> {:"phx-click", value}
+        :phx_blur -> {:"phx-blur", value}
+        :phx_focus -> {:"phx-focus", value}
+        :phx_capture_click -> {:"phx-capture-click", value}
+        :phx_keydown -> {:"phx-keydown", value}
+        :phx_keyup -> {:"phx-keyup", value}
         :phx_target -> {:"phx-target", value}
         :method -> method_to_attrs(value, assigns.to, opts)
         :to -> {:"data-to", valid_destination!(value, "<Button />")}
