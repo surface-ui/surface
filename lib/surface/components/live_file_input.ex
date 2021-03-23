@@ -28,8 +28,8 @@ defmodule Surface.Components.LiveFileInput do
   prop class, :css_class
 
   @doc """
-  Extra options for `live_file_input/3`.
-  See `Phoenix.LiveView.Helpers.live_file_input/3` for the available options.
+  Extra options for `live_file_input/2`.
+  See `Phoenix.LiveView.Helpers.live_file_input/2` for the available options.
   """
   prop opts, :keyword, default: []
 
