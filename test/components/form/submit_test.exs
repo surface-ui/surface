@@ -67,4 +67,69 @@ defmodule Surface.Components.Form.SubmitTest do
            </button>
            """
   end
+
+  test "blur event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" blur="my_blur" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-blur="my_blur" type="submit">Submit</button>
+           """
+  end
+
+  test "focus event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" focus="my_focus" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-focus="my_focus" type="submit">Submit</button>
+           """
+  end
+
+  test "capture click event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" capture_click="my_click" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-capture-click="my_click" type="submit">Submit</button>
+           """
+  end
+
+  test "keydown event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-keydown="my_keydown" type="submit">Submit</button>
+           """
+  end
+
+  test "keyup event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-keyup="my_keyup" type="submit">Submit</button>
+           """
+  end
 end
