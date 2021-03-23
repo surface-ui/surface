@@ -9,13 +9,14 @@ defmodule Surface.Components.LiveFileInputTest do
     data uploads, :map
 
     def mount(socket) do
-      socket = allow_upload(socket, :test, accept: ~w(.json), max_entries: 1)
+      # the second param passed to allow_upload becomes the value of the inputs html `name` attribute
+      socket = allow_upload(socket, :avatar, accept: ~w(.json), max_entries: 1)
       {:ok, socket}
     end
 
     def render(assigns) do
       ~H"""
-        <LiveFileInput upload={{@uploads.test}}/>
+        <LiveFileInput id="test_id" upload={{ @uploads.avatar }} class={{ "test_class", disabled_test: true }} opts={{"data-test": "test-data", name: "a name?"}} />
       """
     end
 
@@ -34,5 +35,9 @@ defmodule Surface.Components.LiveFileInputTest do
 
     assert html =~ "phx-hook=\"Phoenix.LiveFileUpload\""
     assert html =~ "accept=\".json\""
+    assert html =~ "class=\"test_class disabled_test\""
+    assert html =~ "data-test=\"test-data\""
+    assert html =~ "name=\"avatar\""
+    assert html =~ "id=\"test_id\""
   end
 end
