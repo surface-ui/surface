@@ -30,15 +30,15 @@ defmodule Surface.Components.Form.Inputs do
   prop opts, :keyword, default: []
 
   @doc "The code containing the input controls"
-  slot default, props: [:form]
+  slot default, props: [:form, :index]
 
   def render(assigns) do
     ~H"""
     <Context get={{ Surface.Components.Form, form: form }}>
       <Context
-        :for={{ f <- inputs_for(@form || form, @for, @opts) }}
+        :for={{ {f, index}  <- Enum.with_index(inputs_for(@form || form, @for, @opts)) }}
         put={{ Surface.Components.Form, form: f }}>
-        <slot :props={{ form: f }}/>
+        <slot :props={{ form: f, index: index }}/>
       </Context>
     </Context>
     """
