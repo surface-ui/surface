@@ -5,6 +5,29 @@ defmodule Surface.Components.Form.InputsTest do
   alias Surface.Components.Form.Inputs
   alias Surface.Components.Form.TextInput
 
+  defmodule Parent do
+    defmodule Child do
+      use Ecto.Schema
+
+      embedded_schema do
+        field(:name, :string)
+      end
+
+      def changeset(cs_or_map, data), do: Ecto.Changeset.cast(cs_or_map, data, [:name])
+    end
+
+    use Ecto.Schema
+
+    embedded_schema do
+      embeds_many(:children, Child)
+    end
+
+    def changeset(cs_or_map \\ %__MODULE__{}, data),
+      do:
+        Ecto.Changeset.cast(cs_or_map, data, [])
+        |> Ecto.Changeset.cast_embed(:children)
+  end
+
   test "using generated form received as slot props" do
     html =
       render_surface do
@@ -23,6 +46,29 @@ defmodule Surface.Components.Form.InputsTest do
            <input name="_csrf_token" type="hidden" value="test">
              <input id="parent_children_name" name="parent[children][name]" type="text">
              <input id="parent_children_email" name="parent[children][email]" type="text">
+           </form>
+           """
+  end
+
+  test "if the index is received as a slot prop" do
+    cs = Parent.changeset(%{children: [%{name: "first"}, %{name: "second"}]})
+
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{ cs }} as="cs" opts={{ csrf_token: "test" }}>
+          <Inputs for={{ :children }} :let={{ index: idx }}>
+            <div>index: <span>{{ idx }}</span></div>
+          </Inputs>
+        </Form>
+        """
+      end
+
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+               <div>index: <span>0</span></div>
+               <div>index: <span>1</span></div>
            </form>
            """
   end
