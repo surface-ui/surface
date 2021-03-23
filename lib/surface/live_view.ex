@@ -34,7 +34,7 @@ defmodule Surface.LiveView do
     quote do
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:prop, :data]
+      use Surface.API, include: [:prop, :data, :upload]
       import Phoenix.HTML
 
       alias Surface.Constructs.{For, If}
@@ -76,6 +76,11 @@ defmodule Surface.LiveView do
   defp quoted_mount(env) do
     defaults = env.module |> Surface.API.get_defaults() |> Macro.escape()
 
+    upload_data =
+      env.module
+      |> Surface.API.get_uploads()
+      |> Enum.map(fn %{name: name, opts_ast: opts} -> {name, opts} end)
+
     if Module.defines?(env.module, {:mount, 3}) do
       quote do
         defoverridable mount: 3
@@ -84,6 +89,7 @@ defmodule Surface.LiveView do
           socket =
             socket
             |> Surface.init()
+            |> Surface.allow_upload(unquote(upload_data))
             |> assign(unquote(defaults))
 
           super(params, session, socket)
@@ -95,6 +101,7 @@ defmodule Surface.LiveView do
           {:ok,
            socket
            |> Surface.init()
+           |> Surface.allow_upload(unquote(upload_data))
            |> assign(unquote(defaults))}
         end
       end

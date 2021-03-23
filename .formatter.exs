@@ -6,7 +6,9 @@ locals_without_parens = [
   data: 3,
   data: 2,
   slot: 1,
-  slot: 2
+  slot: 2,
+  upload: 1,
+  upload: 2
 ]
 
 [

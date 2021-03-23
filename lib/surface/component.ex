@@ -41,7 +41,7 @@ defmodule Surface.Component do
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:prop, :slot, :data]
+      use Surface.API, include: [:prop, :slot, :data, :upload]
       import Phoenix.HTML
 
       alias Surface.Constructs.{For, If}

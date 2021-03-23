@@ -34,6 +34,75 @@ defmodule LiveComponentTest do
     end
   end
 
+  defmodule StatefulUploadComponent do
+    use Surface.LiveComponent
+
+    data uploads, :struct
+    upload avatar, accept: :any, progress: &__MODULE__.handle_progress/3
+    upload icon, accept: :any, progress: &handle_progress/3
+    upload photo, accept: :any, progress: &priv_handle_progress/3
+    upload logo, accept: :any, external: &StatefulUploadComponent.handle_external/2
+    upload cover, accept: :any, external: &priv_handle_external/2
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <span>{{ @uploads.avatar.name }}</span>
+      </div>
+      """
+    end
+
+    def handle_progress(:upload, _entry, socket) do
+      {:noreply, socket}
+    end
+
+    def handle_external(_entry, socket) do
+      {:noreply, socket}
+    end
+
+    defp priv_handle_progress(:upload, _entry, socket) do
+      {:noreply, socket}
+    end
+
+    defp priv_handle_external(_entry, socket) do
+      {:noreply, socket}
+    end
+  end
+
+  defmodule LiveViewUploadComponent do
+    use Surface.LiveView
+
+    upload avatar, accept: :any, progress: &__MODULE__.handle_progress/3
+    upload icon, accept: :any, progress: &handle_progress/3
+    upload photo, accept: :any, progress: &priv_handle_progress/3
+    upload logo, accept: :any, external: &StatefulUploadComponent.handle_external/2
+    upload cover, accept: :any, external: &priv_handle_external/2
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <span>{{ @uploads.avatar.name }}</span>
+      </div>
+      """
+    end
+
+    def handle_progress(:upload, _entry, socket) do
+      {:noreply, socket}
+    end
+
+    def handle_external(_entry, socket) do
+      {:noreply, socket}
+    end
+
+    defp priv_handle_progress(:upload, _entry, socket) do
+      {:noreply, socket}
+    end
+
+    defp priv_handle_external(_entry, socket) do
+      {:noreply, socket}
+    end
+  end
+
   defmodule View do
     use Surface.LiveView
     alias LiveComponentTest.StatelessComponent
@@ -187,5 +256,26 @@ defmodule LiveComponentTest do
   test "handle events in LiveComponent (handled by the component itself)" do
     {:ok, view, _html} = live_isolated(build_conn(), View)
     assert render_click(element(view, "#theDiv")) =~ "Updated stateful"
+  end
+
+  test "render stateful upload component" do
+    html =
+      render_surface do
+        ~H"""
+        <StatefulUploadComponent id="upload_component" />
+        """
+      end
+
+    assert html =~ """
+           <div>
+             <span>avatar</span>
+           </div>
+           """
+  end
+
+  test "render live view upload component" do
+    {:ok, _view, html} = live_isolated(build_conn(), LiveViewUploadComponent)
+
+    assert html =~ "<span>avatar</span>"
   end
 end

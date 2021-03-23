@@ -160,6 +160,14 @@ defmodule Surface do
     |> LiveView.assign_new(:__context__, fn -> %{} end)
   end
 
+  def allow_upload(socket, []), do: socket
+
+  def allow_upload(socket, data) do
+    Enum.reduce(data, socket, fn {name, opts}, socket ->
+      Phoenix.LiveView.allow_upload(socket, name, opts)
+    end)
+  end
+
   @doc false
   def default_props(module) do
     Enum.map(module.__props__(), fn %{name: name, opts: opts} -> {name, opts[:default]} end)

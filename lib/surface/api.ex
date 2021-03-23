@@ -45,7 +45,8 @@ defmodule Surface.API do
     arities = %{
       prop: [2, 3],
       slot: [1, 2],
-      data: [2, 3]
+      data: [2, 3],
+      upload: [1, 2]
     }
 
     functions = for func <- include, arity <- arities[func], into: [], do: {func, arity}
@@ -74,6 +75,7 @@ defmodule Surface.API do
       quoted_prop_funcs(env),
       quoted_slot_funcs(env),
       quoted_data_funcs(env),
+      quoted_upload_funcs(env),
       quoted_context_funcs(env)
     ]
   end
@@ -97,6 +99,11 @@ defmodule Surface.API do
   @doc "Defines a data assign for the component"
   defmacro data(name_ast, type_ast, opts_ast \\ []) do
     build_assign_ast(:data, name_ast, type_ast, opts_ast, __CALLER__)
+  end
+
+  @doc "Defines an upload assign for the component"
+  defmacro upload(name_ast, opts_ast \\ []) do
+    build_assign_ast(:upload, name_ast, :any, opts_ast, __CALLER__)
   end
 
   @doc false
@@ -146,7 +153,9 @@ defmodule Surface.API do
   end
 
   defp existing_assign_details_message(false = _builtin?, %{func: func, line: line}) do
-    "There's already a #{func} assign with the same name at line #{line}"
+    article = if func == :upload, do: "an", else: "a"
+
+    "There's already #{article} #{func} assign with the same name at line #{line}"
   end
 
   @doc false
@@ -160,8 +169,9 @@ defmodule Surface.API do
       data = if function_exported?(module, :__data__, 0), do: module.__data__(), else: []
       props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
       slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
+      uploads = if function_exported?(module, :__uploads__, 0), do: module.__uploads__(), else: []
 
-      Enum.map(data ++ props ++ slots, fn %{name: name, line: line} -> {name, line} end)
+      Enum.map(data ++ props ++ slots ++ uploads, fn %{name: name, line: line} -> {name, line} end)
     end
   end
 
@@ -181,6 +191,11 @@ defmodule Surface.API do
   end
 
   @doc false
+  def get_uploads(module) do
+    Module.get_attribute(module, :upload) || []
+  end
+
+  @doc false
   def get_defaults(module) do
     for %{name: name, opts: opts} <- get_data(module), Keyword.has_key?(opts, :default) do
       {name, opts[:default]}
@@ -194,6 +209,17 @@ defmodule Surface.API do
       @doc false
       def __data__() do
         unquote(Macro.escape(data))
+      end
+    end
+  end
+
+  defp quoted_upload_funcs(env) do
+    uploads = get_uploads(env.module)
+
+    quote do
+      @doc false
+      def __uploads__() do
+        unquote(Macro.escape(uploads))
       end
     end
   end
@@ -330,7 +356,9 @@ defmodule Surface.API do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
-         [] <- keys -- valid_opts do
+         {:unknown_options, []} <- {:unknown_options, keys -- valid_opts},
+         required_opts <- get_required_opts(func, type, opts),
+         {:missing_required_opts, []} <- {:missing_required_opts, required_opts -- keys} do
       :ok
     else
       false ->
@@ -338,9 +366,13 @@ defmodule Surface.API do
          "invalid options for #{func} #{name}. " <>
            "Expected a keyword list of options, got: #{inspect(opts)}"}
 
-      unknown_options ->
+      {:unknown_options, unknown_options} ->
         valid_opts = get_valid_opts(func, type, opts)
         {:error, unknown_options_message(valid_opts, unknown_options)}
+
+      {:missing_required_opts, missing_required_opts} ->
+        required_opts = get_required_opts(func, type, opts)
+        {:error, missing_options_message(required_opts, missing_required_opts)}
     end
   end
 
@@ -374,12 +406,61 @@ defmodule Surface.API do
     [:required, :default, :values, :accumulate]
   end
 
+  defp get_valid_opts(:upload, _type, _opts) do
+    [
+      :accept,
+      :max_entries,
+      :max_file_size,
+      :chunk_size,
+      :chunk_timeout,
+      :external,
+      :progress,
+      :auto_upload
+    ]
+  end
+
   defp get_valid_opts(:data, _type, _opts) do
     [:default, :values]
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
     [:required, :props, :as]
+  end
+
+  defp get_required_opts(:upload, _type, _opts) do
+    [:accept]
+  end
+
+  defp get_required_opts(_, _, _), do: []
+
+  defp validate_opt_ast!(:upload, :progress, args_ast, caller) do
+    case args_ast do
+      {:&, _, [{:/, _, [_, 3]}]} ->
+        Macro.to_string(args_ast)
+
+      ast ->
+        message = """
+        invalid value for option :progress. Expected a function/3, \
+        got: #{Macro.to_string(ast)}
+        """
+
+        IOHelper.compile_error(message, caller.file, caller.line)
+    end
+  end
+
+  defp validate_opt_ast!(:upload, :external, args_ast, caller) do
+    case args_ast do
+      {:&, _, [{:/, _, [_, 2]}]} ->
+        Macro.to_string(args_ast)
+
+      ast ->
+        message = """
+        invalid value for option :external. Expected a function/2, \
+        got: #{Macro.to_string(ast)}
+        """
+
+        IOHelper.compile_error(message, caller.file, caller.line)
+    end
   end
 
   defp validate_opt_ast!(:slot, :props, args_ast, caller) do
@@ -467,6 +548,28 @@ defmodule Surface.API do
     :ok
   end
 
+  defp validate_opt(:upload, _name, _type, _opts, :accept, [_ | _], _caller), do: :ok
+  defp validate_opt(:upload, _name, _type, _opts, :accept, :any, _caller), do: :ok
+
+  defp validate_opt(:upload, _name, _type, _opts, :accept, value, _caller) do
+    {:error,
+     "invalid value for option :accept. Expected a non empty list or :any, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(:upload, _name, _type, _opts, :auto_upload, value, _caller)
+       when not is_boolean(value) do
+    {:error, "invalid value for option :auto_upload. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(:upload, _name, _type, _opts, option, value, _caller)
+       when option in [:max_entries, :max_file_size, :chunk_size, :chunk_timeout] and
+              (not is_integer(value) or value < 1) do
+    {:error,
+     "invalid value for option #{inspect(option)}. Expected a positive integer, got: #{
+       inspect(value)
+     }"}
+  end
+
   defp validate_opt(_func, _name, _type, _opts, _key, _value, _caller) do
     :ok
   end
@@ -484,6 +587,22 @@ defmodule Surface.API do
     """
     unknown option#{plural} #{inspect(unknown_items)}. \
     Available options: #{inspect(valid_opts)}\
+    """
+  end
+
+  defp missing_options_message(required_opts, missing_required_options) do
+    {plural, missing_items} =
+      case missing_required_options do
+        [option] ->
+          {"", option}
+
+        _ ->
+          {"s", missing_required_options}
+      end
+
+    """
+    missing required option#{plural} #{inspect(missing_items)}. \
+    Required options: #{inspect(required_opts)}\
     """
   end
 

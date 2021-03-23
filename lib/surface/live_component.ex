@@ -61,7 +61,7 @@ defmodule Surface.LiveComponent do
 
       @before_compile unquote(__MODULE__)
 
-      use Surface.API, include: [:prop, :slot, :data]
+      use Surface.API, include: [:prop, :slot, :data, :upload]
       import Phoenix.HTML
 
       alias Surface.Constructs.{For, If}
@@ -103,6 +103,11 @@ defmodule Surface.LiveComponent do
   defp quoted_mount(env) do
     defaults = env.module |> Surface.API.get_defaults() |> Macro.escape()
 
+    upload_data =
+      env.module
+      |> Surface.API.get_uploads()
+      |> Enum.map(fn %{name: name, opts_ast: opts} -> {name, opts} end)
+
     if Module.defines?(env.module, {:mount, 1}) do
       quote do
         defoverridable mount: 1
@@ -111,6 +116,7 @@ defmodule Surface.LiveComponent do
           super(
             socket
             |> Surface.init()
+            |> Surface.allow_upload(unquote(upload_data))
             |> assign(unquote(defaults))
           )
         end
@@ -121,6 +127,7 @@ defmodule Surface.LiveComponent do
           {:ok,
            socket
            |> Surface.init()
+           |> Surface.allow_upload(unquote(upload_data))
            |> assign(unquote(defaults))}
         end
       end

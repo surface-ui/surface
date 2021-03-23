@@ -87,6 +87,14 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
+    prop avatar, :string
+    upload avatar, accept: :any
+    """
+
+    message = ~r/cannot use name "avatar". There's already a prop/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
     data label, :string
     data label, :string
     """
@@ -108,6 +116,46 @@ defmodule Surface.APITest do
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    data avatar, :string
+    upload avatar, accept: :any
+    """
+
+    message = ~r/cannot use name "avatar". There's already a data assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    upload avatar, accept: :any
+    upload avatar, accept: :any
+    """
+
+    message = ~r/cannot use name "avatar". There's already an upload assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    upload avatar, accept: :any
+    prop avatar, :string
+    """
+
+    message = ~r/cannot use name "avatar". There's already an upload assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    upload avatar, accept: :any
+    data avatar, :string
+    """
+
+    message = ~r/cannot use name "avatar". There's already an upload assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    upload avatar, accept: :any
+    slot avatar
+    """
+
+    message = ~r/cannot use name "avatar". There's already an upload assign/
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
@@ -147,6 +195,18 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
+    slot avatar
+    upload avatar, accept: :any
+    """
+
+    message = ~r"""
+    cannot use name "avatar". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
     slot label, as: :default_label
     prop label, :string
     """
@@ -170,6 +230,13 @@ defmodule Surface.APITest do
     code = """
     slot label, as: :default_label
     data label, :string
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    slot avatar, as: :default_avatar
+    upload avatar, accept: :any
     """
 
     assert {:ok, _} = eval(code)
@@ -400,6 +467,83 @@ defmodule Surface.APITest do
       assert_raise(CompileError, message, fn ->
         eval(code)
       end)
+    end
+  end
+
+  describe "upload" do
+    test "validate required upload options" do
+      code = "upload avatar"
+      message = ~r/missing required option :accept/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+    end
+
+    test "validate unknown type options with upload type" do
+      code = "upload avatar, accept: :any, a: 1"
+
+      message =
+        ~r/unknown option :a. Available options: \[:accept, :max_entries, :max_file_size, :chunk_size, :chunk_timeout, :external, :progress, :auto_upload\]/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate upload type" do
+      code = "upload avatar, accept: \"any\" "
+
+      message =
+        ~r/invalid value for option :accept. Expected a non empty list or :any, got: "any"/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+
+      code = "upload avatar, accept: [] "
+      message = ~r/invalid value for option :accept. Expected a non empty list or :any, got: \[\]/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+
+      code = "upload avatar, accept: :any, auto_upload: \"a\" "
+      message = ~r/invalid value for option :auto_upload. Expected a boolean, got: "a"/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+
+      code = "upload avatar, accept: :any, external: \"a\" "
+      message = ~r/invalid value for option :external. Expected a function\/2, got: "a"/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+
+      code = "upload avatar, accept: :any, external: fn a -> a end "
+      message = ~r/invalid value for option :external. Expected a function\/2, got: fn a -> a end/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+
+      code = "upload avatar, accept: :any, progress: \"a\" "
+      message = ~r/invalid value for option :progress. Expected a function\/3, got: "a"/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+
+      code = "upload avatar, accept: :any, progress: fn a -> a end "
+      message = ~r/invalid value for option :progress. Expected a function\/3, got: fn a -> a end/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
+    end
+
+    test "validate positive integer for upload options" do
+      for option <- [:max_entries, :max_file_size, :chunk_size, :chunk_timeout] do
+        code = "upload avatar, accept: :any, #{option}: \"a\" "
+
+        message =
+          ~r/invalid value for option #{inspect(option)}. Expected a positive integer, got: "a"/
+
+        assert_raise(CompileError, message, fn -> eval(code) end)
+
+        code = "upload avatar, accept: :any, #{option}: -1 "
+
+        message =
+          ~r/invalid value for option #{inspect(option)}. Expected a positive integer, got: -1/
+
+        assert_raise(CompileError, message, fn -> eval(code) end)
+      end
     end
   end
 
