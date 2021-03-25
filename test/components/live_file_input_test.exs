@@ -1,5 +1,5 @@
 defmodule Surface.Components.LiveFileInputTest do
-  use Surface.ConnCase, async: true
+  use Surface.ConnCase
 
   alias Surface.Components.LiveFileInput
   # requires live_component to test live_upload
