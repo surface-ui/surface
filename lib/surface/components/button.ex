@@ -75,7 +75,7 @@ defmodule Surface.Components.Button do
   slot default
 
   def update(assigns, socket) do
-    validate_label!(assigns)
+    valid_label!(assigns)
     {:ok, assign(socket, assigns)}
   end
 
@@ -89,7 +89,7 @@ defmodule Surface.Components.Button do
     """
   end
 
-  defp validate_label!(assigns) do
+  defp valid_label!(assigns) do
     unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
       raise ArgumentError, "<Button /> requires a label prop or contents in the default slot"
     end
