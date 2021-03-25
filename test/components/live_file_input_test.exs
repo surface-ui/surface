@@ -39,23 +39,6 @@ defmodule Surface.Components.LiveFileInputTest do
     end
   end
 
-  defmodule LiveFileInputWithoutId do
-    use Surface.LiveComponent
-
-    data uploads, :map
-
-    def mount(socket) do
-      # the second param passed to allow_upload becomes the value of the inputs html `name` attribute
-      socket = allow_upload(socket, :avatar, accept: ~w(.json), max_entries: 1)
-      {:ok, socket}
-    end
-
-    def render(assigns) do
-      ~H"""
-        <LiveFileInput upload={{ @uploads.avatar }} />
-      """
-    end
-  end
 
   test "correctly renders live_file_input/2 with `class` and `opts`" do
     html =
@@ -79,7 +62,7 @@ defmodule Surface.Components.LiveFileInputTest do
       html =
         render_surface do
           ~H"""
-          <LiveFileInputWithoutProps />
+          <LiveFileInputWithoutProps id="test" />
           """
         end
 

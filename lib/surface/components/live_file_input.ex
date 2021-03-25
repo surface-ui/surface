@@ -21,9 +21,6 @@ defmodule Surface.Components.LiveFileInput do
   @doc "Upload specified via `allow_upload`"
   prop upload, :struct, required: true
 
-  @doc "The id of the corresponding input field"
-  prop id, :string
-
   @doc "The CSS class for the generated `<input>` element"
   prop class, :css_class
 
