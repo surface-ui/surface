@@ -28,7 +28,7 @@ defmodule Surface.Components.LiveFileInput do
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    attr_opts = props_to_attr_opts(assigns, [class: get_config(:default_class)])
+    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
     ~H"{{ live_file_input(@upload, attr_opts ++ @opts) }}"
   end

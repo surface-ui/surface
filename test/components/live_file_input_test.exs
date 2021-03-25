@@ -39,7 +39,6 @@ defmodule Surface.Components.LiveFileInputTest do
     end
   end
 
-
   test "correctly renders live_file_input/2 with `class` and `opts`" do
     html =
       render_surface do
@@ -69,5 +68,4 @@ defmodule Surface.Components.LiveFileInputTest do
       assert html =~ ~r/class="default_class"/
     end
   end
-
 end
