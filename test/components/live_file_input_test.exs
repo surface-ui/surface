@@ -72,7 +72,6 @@ defmodule Surface.Components.LiveFileInputTest do
     # expected passed through attrs
     assert html =~ "class=\"test_class disabled_test\""
     assert html =~ "data-test=\"test-data\""
-    assert html =~ "id=\"test_id\""
   end
 
   test "correctly renders live_file_input/2 with `:default_class` config" do
