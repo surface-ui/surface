@@ -75,17 +75,17 @@ defmodule Surface.Components.LiveFileInputTest do
     assert html =~ "id=\"test_id\""
   end
 
-  test "correctly renders live_file_input/2 without `class`" do
-    html =
-      render_surface do
-        ~H"""
-        <LiveFileInputWithoutProps id="test" />
-        """
-      end
+  test "correctly renders live_file_input/2 with `:default_class` config" do
+    using_config LiveFileInput, default_class: "default_class" do
+      html =
+        render_surface do
+          ~H"""
+          <LiveFileInputWithoutProps />
+          """
+        end
 
-    assert !(html =~ "class=\"\"")
-    assert html =~ "phx-hook=\"Phoenix.LiveFileUpload\""
-    assert html =~ "name=\"avatar\""
+      assert html =~ ~r/class="default_class"/
+    end
   end
 
 end
