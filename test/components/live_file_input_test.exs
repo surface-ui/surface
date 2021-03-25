@@ -34,7 +34,7 @@ defmodule Surface.Components.LiveFileInputTest do
 
     def render(assigns) do
       ~H"""
-        <LiveFileInput id="test_id" upload={{ @uploads.avatar }} />
+        <LiveFileInput upload={{ @uploads.avatar }} />
       """
     end
   end
