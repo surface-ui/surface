@@ -161,7 +161,7 @@ defmodule Surface.Components.LinkTest do
 
     assert html =~ ~r"""
            <div>
-             <a phx-capture-click="my_click" phx_target=".+" href="/users/1">user</a>
+             <a phx-capture-click="my_click" phx-target="1" href="/users/1">user</a>
            </div>
            """
   end

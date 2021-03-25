@@ -27,6 +27,8 @@ defmodule Surface.Components.Link do
 
   use Surface.Component
 
+  import Surface.Components.Utils
+
   @doc "The page to link to"
   prop to, :any, required: true
 
@@ -70,138 +72,34 @@ defmodule Surface.Components.Link do
   """
   slot default
 
-  @valid_uri_schemes [
-    "http:",
-    "https:",
-    "ftp:",
-    "ftps:",
-    "mailto:",
-    "news:",
-    "irc:",
-    "gopher:",
-    "nntp:",
-    "feed:",
-    "telnet:",
-    "mms:",
-    "rtsp:",
-    "svn:",
-    "tel:",
-    "fax:",
-    "xmpp:"
-  ]
-
   def update(assigns, socket) do
-    unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
-      raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
-    end
-
+    validate_label!(assigns)
     {:ok, assign(socket, assigns)}
   end
 
   def render(assigns) do
-    opts = assigns.opts ++ props_to_opts(assigns) ++ events_to_opts(assigns)
-    attrs = opts_to_attrs(opts, assigns)
     to = valid_destination!(assigns.to, "<Link />")
+    opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
+    attrs = opts_to_attrs(opts)
 
     ~H"""
     <a id={{ @id }} class={{ @class }} href={{ to }} :attrs={{ attrs }}><slot>{{ @label }}</slot></a>
     """
   end
 
-  defp props_to_opts(assigns) do
-    props = [:method]
-
-    for prop <- props, {key, value} = prop_value(assigns, prop), value != nil do
-      {key, value}
+  defp validate_label!(assigns) do
+    unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
+      raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
     end
   end
 
-  defp prop_value(assigns, prop) do
-    {prop, assigns[prop]}
-  end
-
-  defp events_to_opts(assigns) do
-    [
-      event_to_opts(assigns.blur, :phx_blur),
-      event_to_opts(assigns.focus, :phx_focus),
-      event_to_opts(assigns.capture_click, :phx_capture_click),
-      event_to_opts(assigns.keydown, :phx_keydown),
-      event_to_opts(assigns.keyup, :phx_keyup)
-    ]
-    |> List.flatten()
-  end
-
-  defp opts_to_attrs(opts, assigns) do
-    for {key, value} <- opts do
-      case key do
-        :csrf_token -> {:"data-csrf", value}
-        :phx_blur -> {:"phx-blur", value}
-        :phx_focus -> {:"phx-focus", value}
-        :phx_capture_click -> {:"phx-capture-click", value}
-        :phx_keydown -> {:"phx-keydown", value}
-        :phx_keyup -> {:"phx-keyup", value}
-        :method -> method_to_attrs(value, assigns.to, opts)
-        :data -> data_to_attrs(value)
-        _ -> {key, value}
-      end
-    end
-    |> List.flatten()
-  end
-
-  defp method_to_attrs(method, to, opts) do
-    case method do
-      :get -> []
-      _ -> ["data-method": method, "data-to": to, rel: "nofollow"] ++ csrf_data(to, opts)
-    end
-  end
-
-  defp csrf_data(to, opts) do
-    case Keyword.get(opts, :csrf_token, true) do
-      csrf when is_binary(csrf) -> ["data-csrf": csrf]
-      true -> ["data-csrf": csrf_token(to)]
-      false -> []
-    end
-  end
-
-  defp csrf_token(to) do
-    {mod, fun, args} = Application.fetch_env!(:surface, :csrf_token_reader)
-    apply(mod, fun, [to | args])
-  end
-
-  defp data_to_attrs(data) when is_list(data) do
-    for {key, value} <- data do
-      {:"data-#{key}", value}
-    end
-  end
-
-  defp valid_destination!(%URI{} = uri, context) do
-    valid_destination!(URI.to_string(uri), context)
-  end
-
-  defp valid_destination!({:safe, to}, context) do
-    {:safe, valid_string_destination!(IO.iodata_to_binary(to), context)}
-  end
-
-  defp valid_destination!({other, to}, _context) when is_atom(other) do
-    [Atom.to_string(other), ?:, to]
-  end
-
-  defp valid_destination!(to, context) do
-    valid_string_destination!(IO.iodata_to_binary(to), context)
-  end
-
-  for scheme <- @valid_uri_schemes do
-    defp valid_string_destination!(unquote(scheme) <> _ = string, _context), do: string
-  end
-
-  defp valid_string_destination!(to, context) do
-    if not match?("/" <> _, to) and String.contains?(to, ":") do
-      raise ArgumentError, """
-      unsupported scheme given to #{context}. In case you want to link to an
-      unknown or unsafe scheme, such as javascript, use a tuple: {:javascript, rest}
-      """
+  defp apply_method(to, method, opts) do
+    if method == :get do
+      skip_csrf(opts)
     else
-      to
+      {csrf_data, opts} = csrf_data(to, opts)
+      opts = Keyword.put_new(opts, :rel, "nofollow")
+      [data: [method: method, to: to] ++ csrf_data] ++ opts
     end
   end
 end
