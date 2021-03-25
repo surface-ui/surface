@@ -27,10 +27,7 @@ defmodule Surface.Components.LiveFileInput do
   @doc "The CSS class for the generated `<input>` element"
   prop class, :css_class
 
-  @doc """
-  Extra options for `live_file_input/2`.
-  See `Phoenix.LiveView.Helpers.live_file_input/2` for the available options.
-  """
+  @doc "Keyword list with options to be passed down to `live_file_input/2`"
   prop opts, :keyword, default: []
 
   def render(assigns) do
