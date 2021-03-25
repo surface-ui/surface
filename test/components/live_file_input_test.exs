@@ -88,15 +88,4 @@ defmodule Surface.Components.LiveFileInputTest do
     assert html =~ "name=\"avatar\""
   end
 
-  test "correctly renders live_file_input/2 without passing through `id`" do
-    html =
-      render_surface do
-        ~H"""
-        <LiveFileInputWithoutId id="test" />
-        """
-      end
-
-    assert html =~ "phx-hook=\"Phoenix.LiveFileUpload\""
-    assert html =~ "id=\"phx-"
-  end
 end
