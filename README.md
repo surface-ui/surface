@@ -1,6 +1,6 @@
 # Surface
 
-[![Build Status](https://github.com/msaraiva/surface/workflows/CI/badge.svg)](https://github.com/msaraiva/surface/actions?query=workflow%3A%22CI%22)
+[![Build Status](https://github.com/surface-ui/surface/workflows/CI/badge.svg)](https://github.com/surface-ui/surface/actions?query=workflow%3A%22CI%22)
 
 Surface is a **server-side rendering** component library that allows developers to
 build **rich interactive user-interfaces**, writing minimal custom Javascript.

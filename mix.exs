@@ -48,14 +48,14 @@ defmodule Surface.MixProject do
     [
       main: "Surface",
       source_ref: "v#{@version}",
-      source_url: "https://github.com/msaraiva/surface"
+      source_url: "https://github.com/surface-ui/surface"
     ]
   end
 
   defp package do
     %{
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/msaraiva/surface"}
+      links: %{"GitHub" => "https://github.com/surface-ui/surface"}
     }
   end
 
