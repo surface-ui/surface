@@ -101,7 +101,7 @@ defmodule Surface.API do
     build_assign_ast(:data, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
-  @doc "Defines an upload assign for the component"
+  @doc "Defines an upload available in the built in uploads assign for the component"
   defmacro upload(name_ast, opts_ast \\ []) do
     build_assign_ast(:upload, name_ast, :any, opts_ast, __CALLER__)
   end
@@ -120,6 +120,27 @@ defmodule Surface.API do
       line: line
     }
 
+    do_put_assign!(assign, caller)
+  end
+
+  defp do_put_assign!(%{func: :upload} = upload, caller) do
+    # Upload is special assigns in the sense that it is contained in the
+    # `uploads` built in assign. Compare to prop, data and slot,
+    # Surface does not create an assign and so the validation is different.
+    uploads = get_uploads(caller.module)
+    existing_upload = Enum.find(uploads, false, fn %{name: name} -> name == upload.name end)
+
+    if existing_upload do
+      details = existing_assign_details_message(false, existing_upload)
+      message = ~s(cannot use name "#{upload.name}". #{details}.)
+
+      IOHelper.compile_error(message, caller.file, upload.line)
+    end
+
+    Module.put_attribute(caller.module, :upload, upload)
+  end
+
+  defp do_put_assign!(assign, caller) do
     assigns = Module.get_attribute(caller.module, :assigns) || %{}
     name = Keyword.get(assign.opts, :as, assign.name)
     existing_assign = assigns[name]
@@ -132,11 +153,10 @@ defmodule Surface.API do
       message = ~s(cannot use name "#{assign.name}". #{details}.)
 
       IOHelper.compile_error(message, caller.file, assign.line)
-    else
-      assigns = Map.put(assigns, name, assign)
-      Module.put_attribute(caller.module, :assigns, assigns)
     end
 
+    assigns = Map.put(assigns, name, assign)
+    Module.put_attribute(caller.module, :assigns, assigns)
     Module.put_attribute(caller.module, assign.func, assign)
   end
 
@@ -169,9 +189,8 @@ defmodule Surface.API do
       data = if function_exported?(module, :__data__, 0), do: module.__data__(), else: []
       props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
       slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
-      uploads = if function_exported?(module, :__uploads__, 0), do: module.__uploads__(), else: []
 
-      Enum.map(data ++ props ++ slots ++ uploads, fn %{name: name, line: line} -> {name, line} end)
+      Enum.map(data ++ props ++ slots, fn %{name: name, line: line} -> {name, line} end)
     end
   end
 

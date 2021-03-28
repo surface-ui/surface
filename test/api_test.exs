@@ -87,14 +87,6 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
-    prop avatar, :string
-    upload avatar, accept: :any
-    """
-
-    message = ~r/cannot use name "avatar". There's already a prop/
-    assert_raise(CompileError, message, fn -> eval(code) end)
-
-    code = """
     data label, :string
     data label, :string
     """
@@ -119,40 +111,8 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
-    data avatar, :string
-    upload avatar, accept: :any
-    """
-
-    message = ~r/cannot use name "avatar". There's already a data assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
-
-    code = """
     upload avatar, accept: :any
     upload avatar, accept: :any
-    """
-
-    message = ~r/cannot use name "avatar". There's already an upload assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
-
-    code = """
-    upload avatar, accept: :any
-    prop avatar, :string
-    """
-
-    message = ~r/cannot use name "avatar". There's already an upload assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
-
-    code = """
-    upload avatar, accept: :any
-    data avatar, :string
-    """
-
-    message = ~r/cannot use name "avatar". There's already an upload assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
-
-    code = """
-    upload avatar, accept: :any
-    slot avatar
     """
 
     message = ~r/cannot use name "avatar". There's already an upload assign/
@@ -195,16 +155,46 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
+    prop avatar, :string
+    upload avatar, accept: :any
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    data avatar, :string
+    upload avatar, accept: :any
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    upload avatar, accept: :any
+    prop avatar, :string
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    upload avatar, accept: :any
+    data avatar, :string
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    upload avatar, accept: :any
+    slot avatar
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
     slot avatar
     upload avatar, accept: :any
     """
 
-    message = ~r"""
-    cannot use name "avatar". There's already a slot assign with the same name at line \d.
-    You could use the optional ':as' option in slot macro to name the related assigns.
-    """
-
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert {:ok, _} = eval(code)
 
     code = """
     slot label, as: :default_label
