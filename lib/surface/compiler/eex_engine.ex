@@ -388,25 +388,37 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp handle_templates(
-         component,
-         [
-           %AST.SlotableComponent{
-             slot: name,
-             module: module,
-             let: let,
-             props: props,
-             templates: %{default: default}
-           }
-           | tail
-         ],
-         buffer,
-         state
-       ) do
+  defp handle_templates(component, [slotable | tail], buffer, state) do
+    %AST.SlotableComponent{
+      slot: name,
+      module: module,
+      let: let,
+      props: props,
+      templates: %{default: default}
+    } = slotable
+
     template =
-      case default do
-        [] -> []
-        [%AST.Template{children: children}] -> children
+      cond do
+        !module.__renderless__?() ->
+          [
+            %AST.Component{
+              module: module,
+              type: slotable.type,
+              props: props,
+              dynamic_props: nil,
+              directives: [],
+              templates: slotable.templates,
+              meta: slotable.meta,
+              debug: slotable.debug
+            }
+          ]
+
+        Enum.empty?(default) ->
+          []
+
+        true ->
+          %AST.Template{children: children} = List.first(default)
+          children
       end
 
     props = collect_component_props(module, props)
@@ -562,56 +574,25 @@ defmodule Surface.Compiler.EExEngine do
          %type{module: mod, templates: templates_by_name} = component | nodes
        ])
        when type in [AST.Component, AST.SlotableComponent] do
-    templates_by_name =
-      templates_by_name
-      |> Enum.map(fn {name, templates} ->
-        templates =
-          Enum.map(templates, fn
-            %AST.Template{children: children} = template ->
-              %{template | children: to_token_sequence(children)}
+    {requires, templates_by_name} =
+      Enum.reduce(templates_by_name, {[], %{}}, fn {name, templates}, {requires_acc, by_name} ->
+        {requires, templates} =
+          Enum.reduce(templates, {requires_acc, []}, fn
+            %AST.Template{children: children} = template, {requires, templates} ->
+              {requires, [%{template | children: to_token_sequence(children)} | templates]}
 
-            %AST.SlotableComponent{meta: meta} = template ->
-              [require_expression, %{templates: %{default: default_templates}} = translated] =
-                to_dynamic_nested_html([template])
+            %AST.SlotableComponent{} = template, {requires, templates} ->
+              [cmp, nested, translated] = to_dynamic_nested_html([template])
 
-              default_templates =
-                case default_templates do
-                  [] ->
-                    # We still have to add the require expression
-                    # so that if this module is touched, we recompile
-                    [
-                      %AST.Template{
-                        name: :default,
-                        let: %AST.Directive{
-                          module: Surface.Directive.Let,
-                          name: :let,
-                          value: [
-                            %AST.AttributeExpr{
-                              original: "",
-                              value: [],
-                              meta: meta
-                            }
-                          ],
-                          meta: meta
-                        },
-                        children: [require_expression],
-                        meta: meta
-                      }
-                    ]
-
-                  [%AST.Template{children: children} = first_child | tail] ->
-                    [%{first_child | children: [require_expression | children]} | tail]
-                end
-
-              %{translated | templates: %{default: default_templates}}
+              {[cmp, nested | requires], [translated | templates]}
           end)
 
-        {name, templates}
+        {requires, Map.put(by_name, name, Enum.reverse(templates))}
       end)
-      |> Enum.into(%{})
 
     [
       require_expr(mod, component.meta.line),
+      requires,
       %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)
     ]
   end

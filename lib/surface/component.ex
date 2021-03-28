@@ -32,16 +32,17 @@ defmodule Surface.Component do
       validate_slot_name!(slot_name, __CALLER__)
     end
 
+    slot_name = slot_name && String.to_atom(slot_name)
+
     quote do
       @before_compile Surface.Renderer
+      @before_compile unquote(__MODULE__)
       use Phoenix.LiveComponent
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
-
-      @before_compile unquote(__MODULE__)
 
       alias Surface.Constructs.{For, If}
       alias Surface.Components.Context
@@ -56,15 +57,11 @@ defmodule Surface.Component do
       data inner_block, :fun
 
       if unquote(slot_name) != nil do
-        def render(var!(assigns)) do
-          ~H()
-        end
+        Module.put_attribute(__MODULE__, :__slot_name__, unquote(slot_name))
 
         def __slot_name__ do
-          unquote(slot_name && String.to_atom(slot_name))
+          unquote(slot_name)
         end
-
-        defoverridable render: 1
       end
     end
   end
@@ -77,7 +74,28 @@ defmodule Surface.Component do
   end
 
   defmacro __before_compile__(env) do
-    [quoted_mount(env), quoted_update(env)]
+    [quoted_mount(env), quoted_update(env), quoted_render(env)]
+  end
+
+  defp quoted_render(env) do
+    if !Module.defines?(env.module, {:__slot_name__, 0}) ||
+         Module.defines?(env.module, {:render, 1}) do
+      quote do
+        def __renderless__? do
+          false
+        end
+      end
+    else
+      quote do
+        def __renderless__? do
+          true
+        end
+
+        def render(var!(assigns)) do
+          ~H()
+        end
+      end
+    end
   end
 
   defp quoted_update(env) do
