@@ -664,4 +664,50 @@ defmodule Surface.PropertiesSyncTest do
              code.exs:8:\
            """
   end
+
+  test "warn if given default value doesn't exist in values list" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithDefaultValueThatDoesntExistInValues_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      prop type, :string, values: ["small", "medium", "large"], default: "x-large"
+      data data_type, :string, values: ["small", "medium", "large"], default: "x-large"
+      prop count, :integer, default: [], values: [0, 1, 2]
+      prop count_acc, :integer, default: [3], values: [0, 1, 2], accumulate: true
+
+      def render(assigns) do
+        ~H""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           given default value doesn't exist in the :values list
+             code.exs:4:\
+           """
+
+    assert output =~ ~r"""
+           given default value doesn't exist in the :values list
+             code.exs:5:\
+           """
+
+    assert output =~ ~r"""
+           given default value doesn't exist in the :values list
+             code.exs:6:\
+           """
+
+    assert output =~ ~r"""
+           given default value\(s\) doesn't exist in the :values list
+             code.exs:7:\
+           """
+  end
 end

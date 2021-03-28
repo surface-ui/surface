@@ -408,10 +408,45 @@ defmodule Surface.API do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:prop, _name, _type, opts, :default, _value, caller) do
+  defp validate_opt(func, _name, _type, opts, :default, _value, caller)
+       when func == :prop or func == :data do
+    values = Keyword.get(opts, :values, nil)
+    default = Keyword.get(opts, :default, nil)
+    accumulate = Keyword.get(opts, :accumulate, false)
+
+    if default && accumulate && !is_list(default) do
+      IOHelper.warn(
+        "invalid value for option :default. Expected a list of values, got: #{inspect(default)}",
+        caller,
+        fn _ -> caller.line end
+      )
+    end
+
+    if default && values && accumulate && is_list(default) do
+      invalid_default_values = Enum.filter(default, fn element -> element not in values end)
+
+      if length(invalid_default_values) > 0 do
+        IOHelper.warn(
+          "given default value(s) doesn't exist in the :values list",
+          caller,
+          fn _ -> caller.line end
+        )
+      end
+    end
+
+    if default && values && !accumulate && default not in values do
+      IOHelper.warn(
+        "given default value doesn't exist in the :values list",
+        caller,
+        fn _ -> caller.line end
+      )
+    end
+
     if Keyword.get(opts, :required, false) do
       IOHelper.warn(
-        "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
+        "setting a default value on a required #{func} has no effect. Either set the default value or set the #{
+          func
+        } as required, but not both.",
         caller,
         fn _ -> caller.line end
       )
