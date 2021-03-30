@@ -9,7 +9,7 @@ defmodule Surface.Components.LinkTest do
     def render(assigns) do
       ~H"""
       <div>
-        <Link label="user" to="/users/1" click="my_click" />
+        <Link label="user" to="/users/1" capture_click="my_click" />
       </div>
       """
     end
@@ -86,16 +86,68 @@ defmodule Surface.Components.LinkTest do
            """
   end
 
-  test "click event with parent live view as target" do
+  test "blur event with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <Link label="user" to="/users/1" click="my_click" />
+        <Link label="user" to="/users/1" blur="my_blur" />
         """
       end
 
     assert html =~ """
-           <a phx-click="my_click" href="/users/1">user</a>
+           <a phx-blur="my_blur" href="/users/1">user</a>
+           """
+  end
+
+  test "focus event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" focus="my_focus" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-focus="my_focus" href="/users/1">user</a>
+           """
+  end
+
+  test "capture click event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" capture_click="my_click" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-capture-click="my_click" href="/users/1">user</a>
+           """
+  end
+
+  test "keydown event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-keydown="my_keydown" href="/users/1">user</a>
+           """
+  end
+
+  test "keyup event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-keyup="my_keyup" href="/users/1">user</a>
            """
   end
 
@@ -109,7 +161,7 @@ defmodule Surface.Components.LinkTest do
 
     assert html =~ ~r"""
            <div>
-             <a phx-click="my_click" phx-target=".+" href="/users/1">user</a>
+             <a phx-capture-click="my_click" phx-target="1" href="/users/1">user</a>
            </div>
            """
   end
