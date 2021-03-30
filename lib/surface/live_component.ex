@@ -76,9 +76,6 @@ defmodule Surface.LiveComponent do
       data socket, :struct
 
       @doc "Built-in assign"
-      data flash, :map
-
-      @doc "Built-in assign"
       data myself, :struct
     end
   end

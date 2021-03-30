@@ -5,7 +5,6 @@ defmodule Surface.Compiler.Helpers do
 
   @builtin_common_assigns [
     :socket,
-    :flash,
     :__context__,
     :__surface__
   ]
@@ -14,7 +13,8 @@ defmodule Surface.Compiler.Helpers do
 
   @builtin_live_component_assigns [:id, :myself] ++ @builtin_component_assigns
 
-  @builtin_live_view_assigns [:id, :session, :live_action, :uploads] ++ @builtin_common_assigns
+  @builtin_live_view_assigns [:id, :session, :live_action, :uploads, :flash] ++
+                               @builtin_common_assigns
 
   @builtin_assigns_by_type %{
     Surface.Component => @builtin_component_assigns,
