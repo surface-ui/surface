@@ -542,7 +542,7 @@ defmodule Surface.Compiler do
         ```
         """,
         meta.caller,
-        fn _ -> meta.line end
+        fn _ -> attr_meta.line end
       )
     end
 

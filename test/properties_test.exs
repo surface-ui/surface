@@ -635,7 +635,10 @@ defmodule Surface.PropertiesSyncTest do
 
       def render(assigns) do
         ~H"\""
-        <StringProp label="first label" label="second label" />
+        <StringProp
+          label="first
+          label" label="second label"
+        />
         "\""
       end
     end
@@ -657,6 +660,7 @@ defmodule Surface.PropertiesSyncTest do
            ```
 
              code.exs:6:\
+             code.exs:8:\
            """
   end
 end
