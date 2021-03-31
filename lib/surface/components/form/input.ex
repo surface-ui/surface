@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.Input do
       prop form, :form
 
       @doc "An identifier for the input"
-      prop field, :atom
+      prop field, :any
 
       @doc "The id of the corresponding input field"
       prop id, :string
