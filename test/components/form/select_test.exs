@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.SelectTest do
            """
   end
 
+  test "select with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <Select form="user" field={{ :role }} />
+        """
+      end
+
+    assert html =~ """
+           <select id="user_role" name="user[role]"></select>
+           """
+  end
+
   test "setting the options" do
     html =
       render_surface do

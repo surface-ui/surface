@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.TelephoneInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <TelephoneInput form="user" field={{ :phone }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_phone" name="user[phone]" type="tel">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

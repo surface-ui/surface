@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.NumberInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <NumberInput form="user" field={{ :age }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_age" name="user[age]" type="number">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

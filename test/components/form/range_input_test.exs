@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.RangeInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <RangeInput form="volume" field={{ :percent }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="volume_percent" name="volume[percent]" type="range">
+           """
+  end
+
   test "setting min, max and step" do
     html =
       render_surface do

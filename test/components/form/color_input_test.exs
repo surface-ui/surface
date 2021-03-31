@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.ColorInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <ColorInput form="user" field={{ :color }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_color" name="user[color]" type="color">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

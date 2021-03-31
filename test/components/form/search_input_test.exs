@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.SearchInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <SearchInput form="song" field={{ :title }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="song_title" name="song[title]" type="search">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

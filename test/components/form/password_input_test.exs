@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.PasswordInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <PasswordInput form="user" field={{ :password }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_password" name="user[password]" type="password">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

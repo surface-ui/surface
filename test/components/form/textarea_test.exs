@@ -17,6 +17,20 @@ defmodule Surface.Components.Form.TextAreaTest do
            """
   end
 
+  test "textarea with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <TextArea form="user" field={{ :summary }} />
+        """
+      end
+
+    assert html =~ """
+           <textarea id="user_summary" name="user[summary]">
+           </textarea>
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do
