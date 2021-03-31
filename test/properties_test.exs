@@ -624,4 +624,39 @@ defmodule Surface.PropertiesSyncTest do
              code.exs:4:\
            """
   end
+
+  test "warn if props are specified multiple times, but accumulate is false" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithPropSpecifiedMultipleTimes_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+        <StringProp label="first label" label="second label" />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           The prop `label` has been set many times, but accumulate is false.
+
+           Hint: You can remove the multiple use of the label attribute, or set accumulate to `true`:
+
+           ```
+           prop label, :string, accumulate: true
+           ```
+
+             code.exs:6:\
+           """
+  end
 end
