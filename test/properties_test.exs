@@ -651,15 +651,16 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           The prop `label` has been set many times, but accumulate is false.
+           The prop `label` has been passed multiple times. Considering only the last value.
 
-           Hint: You can remove the multiple use of the label attribute, or set accumulate to `true`:
+           Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
            ```
-           prop label, :string, accumulate: true
+             prop label, :string, accumulate: true
            ```
 
-             code.exs:6:\
+           This way the values will be accumulated in a list.
+
              code.exs:8:\
            """
   end

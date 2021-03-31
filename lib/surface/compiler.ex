@@ -533,13 +533,15 @@ defmodule Surface.Compiler do
     if not accumulate? and Keyword.has_key?(acc, name) do
       IOHelper.warn(
         """
-        The prop `#{name}` has been set many times, but accumulate is false.
+        The prop `#{name}` has been passed multiple times. Considering only the last value.
 
-        Hint: You can remove the multiple use of the #{name} attribute, or set accumulate to `true`:
+        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
         ```
-        prop #{name}, :#{type}, accumulate: true
+          prop #{name}, :#{type}, accumulate: true
         ```
+
+        This way the values will be accumulated in a list.
         """,
         meta.caller,
         fn _ -> attr_meta.line end
