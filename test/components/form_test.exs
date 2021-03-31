@@ -20,7 +20,7 @@ defmodule Surface.Components.FormTest do
     def render(assigns) do
       ~H"""
       <Form for={{ @changeset }} action="#" csrf_token="test" as={{ :user }} :let={{ form: f }}>
-        <TextInput field="name" />
+        <TextInput field={{ :name }} />
         {{ Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end) }}
       </Form>
       """
