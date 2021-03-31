@@ -106,7 +106,7 @@ defmodule Surface.Components.Form.ErrorTag do
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
       <span
-        :for={{ error <- Keyword.get_values(form.errors, field) }}
+        :for={{ error <- Keyword.get_values(form.errors, String.to_existing_atom(field)) }}
         class={{ class }}
         phx-feedback-for={{ @phx_feedback_for || input_id(form, field) }}
       >{{ translate_error.(error) }}</span>
