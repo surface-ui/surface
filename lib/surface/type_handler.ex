@@ -81,14 +81,20 @@ defmodule Surface.TypeHandler do
       @behaviour unquote(__MODULE__)
       @default_handler unquote(__MODULE__).Default
 
+      @impl true
       defdelegate literal_to_ast_node(type, name, value, meta), to: @default_handler
 
+      @impl true
       defdelegate expr_to_quoted(type, name, clauses, opts, module, original),
         to: @default_handler
 
+      @impl true
       defdelegate expr_to_value(clauses, opts), to: @default_handler
+      @impl true
       defdelegate value_to_html(name, value), to: @default_handler
+      @impl true
       defdelegate value_to_opts(name, value), to: @default_handler
+      @impl true
       defdelegate update_prop_expr(expr, meta), to: @default_handler
 
       defoverridable literal_to_ast_node: 4,
