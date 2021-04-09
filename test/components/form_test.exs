@@ -156,4 +156,28 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
   end
+
+  test "setting the class" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class="form">
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form"/
+  end
+
+  test "setting multiple classes" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class="form form-user">
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form form-user"/
+  end
 end
