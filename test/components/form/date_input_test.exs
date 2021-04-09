@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.DateInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <DateInput form="user" field={{ :birthday }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_birthday" name="user[birthday]" type="date">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

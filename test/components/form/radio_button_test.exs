@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.RadioButtonTest do
            """
   end
 
+  test "radio with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <RadioButton form="user" field={{ :role }} value="admin"/>
+        """
+      end
+
+    assert html =~ """
+           <input id="user_role_admin" name="user[role]" type="radio" value="admin">
+           """
+  end
+
   test "setting the class" do
     html =
       render_surface do

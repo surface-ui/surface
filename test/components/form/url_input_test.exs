@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.UrlInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <UrlInput form="user" field={{ :website }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_website" name="user[website]" type="url">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.EmailInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <EmailInput form="user" field={{ :email }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_email" name="user[email]" type="email">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do

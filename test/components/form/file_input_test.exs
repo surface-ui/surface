@@ -17,6 +17,19 @@ defmodule Surface.Components.Form.FileInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <FileInput form="user" field={{ :picture }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_picture" name="user[picture]" type="file">
+           """
+  end
+
   test "with form context" do
     html =
       render_surface do

@@ -17,6 +17,19 @@ defmodule Surface.Components.Form.CheckboxTest do
            """
   end
 
+  test "checkbox with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox form="user" field={{ :admin }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" type="checkbox" value="true">
+           """
+  end
+
   test "with form context" do
     html =
       render_surface do

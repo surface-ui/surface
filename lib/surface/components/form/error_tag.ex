@@ -59,7 +59,7 @@ defmodule Surface.Components.Form.ErrorTag do
   prop form, :form
 
   @doc "An identifier for the associated field"
-  prop field, :atom
+  prop field, :any
 
   @doc """
   Classes to apply to each error tag <span>.

@@ -16,6 +16,19 @@ defmodule Surface.Components.Form.TimeInputTest do
            """
   end
 
+  test "input with atom field" do
+    html =
+      render_surface do
+        ~H"""
+        <TimeInput form="user" field={{ :time }} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_time" name="user[time]" type="time">
+           """
+  end
+
   test "setting the value" do
     html =
       render_surface do
