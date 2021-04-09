@@ -2,7 +2,8 @@
 
 ## v0.4.0 (WIP)
   
-  * Added support for string keys in form fields and removed autoconversion of strings to atoms (#319)
+  * Support defining form fields as strings. Consequently, fields defined as literal strings will 
+    no longer be auto-converted to `:atom` and will keep the original value (#319)
 
 ## v0.3.2 (2021-03-19)
 
