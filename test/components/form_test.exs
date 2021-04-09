@@ -180,4 +180,16 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ ~r/class="form form-user"/
   end
+
+  test "setting multiple classes as css_class" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class={{ "form", "form-user": true }}>
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form form-user"/
+  end
 end
