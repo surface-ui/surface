@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.0 (WIP)
+  
+  * Added support for string keys in form fields and removed autoconversion of strings to atoms (#319)
+
 ## v0.3.2 (2021-03-19)
 
   * Warn if prop is required and has default value (#282)
