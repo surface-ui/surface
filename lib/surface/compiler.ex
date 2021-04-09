@@ -515,10 +515,38 @@ defmodule Surface.Compiler do
 
   defp process_attributes(_module, [], _meta), do: []
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
+  defp process_attributes(mod, attrs, meta), do: process_attributes(mod, attrs, meta, [])
+
+  defp process_attributes(_module, [], _meta, acc) do
+    acc
+    |> Keyword.values()
+    |> Enum.reverse()
+  end
+
+  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
+
+    accumulate? = Keyword.get(type_opts, :accumulate, false)
+
+    if not accumulate? and Keyword.has_key?(acc, name) do
+      IOHelper.warn(
+        """
+        The prop `#{name}` has been passed multiple times. Considering only the last value.
+
+        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+        ```
+          prop #{name}, :#{type}, accumulate: true
+        ```
+
+        This way the values will be accumulated in a list.
+        """,
+        meta.caller,
+        fn _ -> attr_meta.line end
+      )
+    end
 
     node = %AST.Attribute{
       type: type,
@@ -528,7 +556,7 @@ defmodule Surface.Compiler do
       meta: attr_meta
     }
 
-    [node | process_attributes(mod, attrs, meta)]
+    process_attributes(mod, attrs, meta, [{name, node} | acc])
   end
 
   defp attr_value(name, type, values, attr_meta) when is_list(values) do

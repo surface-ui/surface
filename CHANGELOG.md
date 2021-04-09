@@ -2,9 +2,9 @@
 
 ## v0.4.0 (WIP)
   
+  * Call render when defined in slotable components (#283)
   * Support defining form fields as strings. Consequently, fields defined as literal strings will 
     no longer be auto-converted to `:atom` and will keep the original value (#319)
-
 ## v0.3.2 (2021-03-19)
 
   * Warn if prop is required and has default value (#282)

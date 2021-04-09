@@ -112,7 +112,7 @@ defmodule Surface.Compiler.Parser do
   attr_name_char = ascii_string([?a..?z, ?A..?Z, ?0..?9, ?_, ?:, ?-, ?., ??], min: 0)
   attr_name = attr_start_char |> concat(attr_name_char) |> reduce({Enum, :join, [""]})
 
-  whitespace = ascii_string([?\s, ?\n], min: 0)
+  whitespace = ascii_string(' \n\r\t\v\b\f\e\d\a', min: 0)
 
   attribute =
     whitespace
