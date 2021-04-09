@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.0 (WIP)
+
+  * Call render when defined in slotable components (#283)
+
 ## v0.3.2 (2021-03-19)
 
   * Warn if prop is required and has default value (#282)
