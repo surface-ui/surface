@@ -156,4 +156,59 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
   end
+
+  test "setting the class" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class="form">
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form"/
+  end
+
+  test "setting multiple classes" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class="form form-user">
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form form-user"/
+  end
+
+  test "setting multiple classes as css_class" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class={{ "form", "form-user": true }}>
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form form-user"/
+  end
+end
+
+defmodule Surface.Components.Form.FormTestConfigTest do
+  use Surface.ConnCase
+
+  alias Surface.Components.Form
+
+  test ":default_class config" do
+    using_config Form, default_class: "default_class" do
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :user }} action="#" />
+          """
+        end
+
+      assert html =~ ~r/class="default_class"/
+    end
+  end
 end
