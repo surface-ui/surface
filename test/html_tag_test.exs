@@ -113,7 +113,7 @@ defmodule HtmlTagTest do
   end
 
   describe "basic attibutes" do
-    test "as string" do
+    test "as literal string" do
       html =
         render_surface do
           ~H"""
@@ -123,6 +123,19 @@ defmodule HtmlTagTest do
 
       assert html =~ """
              <div title="My title"></div>
+             """
+    end
+
+    test "as literal string don't encode HTML entities" do
+      html =
+        render_surface do
+          ~H"""
+          <div title="1 < 2"/>
+          """
+        end
+
+      assert html =~ """
+             <div title="1 < 2"></div>
              """
     end
 

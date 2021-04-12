@@ -624,6 +624,14 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([]), do: []
 
   defp to_html_attributes([
+         %AST.Attribute{name: name, type: :string, value: %AST.Literal{value: value}}
+         | attributes
+       ])
+       when is_binary(value) do
+    [[" ", to_string(name), "=", ~S("), value, ~S(")], to_html_attributes(attributes)]
+  end
+
+  defp to_html_attributes([
          %AST.Attribute{name: name, type: type, value: %AST.Literal{value: value}}
          | attributes
        ]) do
