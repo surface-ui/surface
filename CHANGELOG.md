@@ -1,5 +1,56 @@
 # Changelog
 
+## v0.4.0 (WIP)
+
+  * Call render when defined in slotable components (#283)
+  * Support defining form fields as strings. Consequently, fields defined as literal strings will
+    no longer be auto-converted to `:atom` and will keep the original value (#319)
+  * Do not encode HTML entities when passing attribute values as string literals (#323)
+
+## v0.3.2 (2021-03-19)
+
+  * Warn if prop is required and has default value (#282)
+  * Warn if slot is required and has a fallback content (#296)
+  * Warn on `LiveComponent` with another `LiveComponent` as root
+  * Support escaped three double-quotes in `Markdown` content
+  * Improve `Label` component compatibility with Phoenix `label/2` (#284)
+  * Update props according to new types (#297)
+  * Fix copying JS hooks multiple times (#294)
+
+## v0.3.1 (2021-03-05)
+
+  * Fix `index.js` generation when no hooks are available
+  * Fix loading hooks from dependencies
+  * Support `<Link>` with scheme (#273)
+
+## v0.3.0 (2021-02-24)
+
+  * Autoload JS hooks via new surface compiler (#271)
+  * New `<Link>` and `<Label>` implementation without depending on `content_tag` to allow receiving
+    child components in slots (#264)
+  * Don't validate undefined assigns outside render (#263)
+  * Load subject's default props values before sending them to playgrounds
+
+## v0.2.1 (2021-02-01)
+
+  * Allow different catalogue options for examples and playgrounds
+
+## v0.2.0 (2021-01-27)
+
+  * Introduce new testing API using `render_surface/1`
+  * Add experimental support to create examples and playgrounds for catalogues
+  * Raises compile error if slots are not declared
+  * Raises compile error on duplicate built-in assign
+  * Allow defining the assign name for slot through the :as option (#230)
+  * Implement the `:show` directive via hidden attribute (#244)
+  * Add new `<DateSelectComponent>` component
+  * Remove default value from `Form` method prop
+  * Reintroduce opts prop for the `<Select>` component
+  * Fix markdown syntax warning in `<Form>` docs
+  * Fix error when using :if + :props in slots (#224)
+  * Fix line offset when using single-line `~H` variants (#246)
+  * Fix UnicodeConversionError when using string literals inside interpolation
+
 ## v0.1.1 (2020-11-28)
 
   * Add explicit props for the main opts of Checkbox, Select, MultipleSelect, FileInput and Form (#215).

@@ -14,7 +14,7 @@ defmodule Surface.Components.Form do
   use Surface.Component
 
   import Phoenix.HTML.Form
-  import Surface.Components.Form.Utils, only: [get_non_nil_props: 2]
+  import Surface.Components.Form.Utils, only: [props_to_opts: 2, props_to_attr_opts: 2]
   alias Surface.Components.Raw
 
   @doc "Atom or changeset to inform the form data"
@@ -26,8 +26,8 @@ defmodule Surface.Components.Form do
   @doc "The server side parameter in which all parameters will be gathered."
   prop as, :atom
 
-  @doc "Method to be used when submitting the form, default \"post\"."
-  prop method, :string, default: "post"
+  @doc "Method to be used when submitting the form."
+  prop method, :string
 
   @doc "When true, sets enctype to \"multipart/form-data\". Required when uploading files."
   prop multipart, :boolean, default: false
@@ -41,8 +41,11 @@ defmodule Surface.Components.Form do
   @doc "Keyword list of errors for the form."
   prop errors, :keyword
 
-  @doc "Keyword list with options to be passed down to `Phoenix.HTML.Tag.tag/2``"
+  @doc "Keyword list with options to be passed down to `Phoenix.HTML.Tag.tag/2`"
   prop opts, :keyword, default: []
+
+  @doc "Class or classes to apply to the form"
+  prop class, :css_class
 
   @doc "Triggered when the form is changed"
   prop change, :event
@@ -64,9 +67,11 @@ defmodule Surface.Components.Form do
   end
 
   defp get_opts(assigns) do
-    form_opts = get_non_nil_props(assigns, [:as, :method, :multipart, :csrf_token, :errors])
+    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
+    form_opts = props_to_opts(assigns, [:as, :method, :multipart, :csrf_token, :errors])
 
     form_opts ++
+      attr_opts ++
       assigns.opts ++
       event_to_opts(assigns.change, :phx_change) ++
       event_to_opts(assigns.submit, :phx_submit)

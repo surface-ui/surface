@@ -1,6 +1,6 @@
 # Surface
 
-[![Build Status](https://github.com/msaraiva/surface/workflows/CI/badge.svg)](https://github.com/msaraiva/surface/actions?query=workflow%3A%22CI%22)
+[![Build Status](https://github.com/surface-ui/surface/workflows/CI/badge.svg)](https://github.com/surface-ui/surface/actions?query=workflow%3A%22CI%22)
 
 Surface is a **server-side rendering** component library that allows developers to
 build **rich interactive user-interfaces**, writing minimal custom Javascript.
@@ -10,14 +10,41 @@ Built on top of [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/) and it
 leverages the amazing Phoenix Framework to provide a **fast** and **productive** solution to build
 modern web applications.
 
-Full documentation and live examples can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io).
+Full documentation and live examples can be found at [surface-ui.org](https://surface-ui.org).
 
 A VS Code extension that adds support for syntax highlighting is available at
 [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=msaraiva.surface).
 
 ### Example
 
-![Example](images/example.png?raw=true)
+```elixir
+# Defining the component
+
+defmodule Hello do
+  use Surface.Component
+
+  @doc "Someone to say hello to"
+  prop name, :string, required: true
+
+  def render(assigns) do
+    ~H"""
+    Hello, {{ @name }}!
+    """
+  end
+end
+
+# Using the component
+
+defmodule Example do
+  use Surface.Component
+
+  def render(assigns) do
+    ~H"""
+    <Hello name="John Doe"/>
+    """
+  end
+end
+```
 
 ## How does it work?
 
@@ -59,7 +86,7 @@ Then add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.1.1"}
+    {:surface, "~> 0.3.0"}
   ]
 end
 ```
@@ -75,7 +102,7 @@ configuration in your `.formatter.exs` file:
 ```
 
 For further information regarding installation, including how to quickly get started
-using a boilerplate, please visit the [Getting Started](http://surface-demo.msaraiva.io/getting_started)
+using a boilerplate, please visit the [Getting Started](https://surface-ui.org/getting_started)
 guide.
 
 ## Static checking

@@ -20,6 +20,12 @@ defmodule Surface.Components.Form.Reset do
   import Phoenix.HTML.Form, only: [reset: 2]
   import Surface.Components.Form.Utils
 
+  @doc "The id of the corresponding input field"
+  prop id, :string
+
+  @doc "The name of the corresponding input field"
+  prop name, :string
+
   @doc "Value to pre-populated the input"
   prop value, :string, default: "Reset"
 
@@ -45,11 +51,12 @@ defmodule Surface.Components.Form.Reset do
   prop keyup, :event
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:class])
-    event_opts = get_events_to_opts(assigns)
+    helper_opts = props_to_opts(assigns)
+    attr_opts = props_to_attr_opts(assigns, [:class])
+    event_opts = events_to_opts(assigns)
 
     ~H"""
-    {{ reset(assigns[:value], props ++ @opts ++ event_opts)}}
+    {{ reset(assigns[:value], helper_opts ++ attr_opts ++ @opts ++ event_opts)}}
     """
   end
 end

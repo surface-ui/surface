@@ -1,60 +1,58 @@
 defmodule Surface.Components.Form.OptionsForSelectTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form.OptionsForSelect, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.Form.OptionsForSelect
 
   test "empty options" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OptionsForSelect />
         """
       end
 
-    assert render_live(code) == "\n"
+    assert html == "\n"
   end
 
   test "setting the options" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} />
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <option value="admin">Admin</option>\
            <option value="user">User</option>
            """
   end
 
   test "passing selected value" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ "admin" }} />
         """
       end
 
-    assert render_live(code) =~ """
-           <option value="admin" selected="selected">Admin</option>\
+    assert html =~ """
+           <option value="admin" selected>Admin</option>\
            <option value="user">User</option>
            """
   end
 
   test "passing multiple selected values" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ ["admin", "user"] }} />
         """
       end
 
-    assert render_live(code) =~ """
-           <option value="admin" selected="selected">Admin</option>\
-           <option value="user" selected="selected">User</option>
+    assert html =~ """
+           <option value="admin" selected>Admin</option>\
+           <option value="user" selected>User</option>
            """
   end
 end

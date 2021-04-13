@@ -21,7 +21,8 @@ defmodule Surface.Compiler do
     Surface.Directive.If,
     Surface.Directive.Unless,
     Surface.Directive.For,
-    Surface.Directive.Debug
+    Surface.Directive.Debug,
+    Surface.Directive.Hook
   ]
 
   @component_directive_handlers [
@@ -43,10 +44,10 @@ defmodule Surface.Compiler do
   @template_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
+    Surface.Directive.SlotProps,
     Surface.Directive.If,
     Surface.Directive.Unless,
-    Surface.Directive.For,
-    Surface.Directive.SlotProps
+    Surface.Directive.For
   ]
 
   @void_elements [
@@ -54,15 +55,18 @@ defmodule Surface.Compiler do
     "base",
     "br",
     "col",
+    "command",
+    "embed",
     "hr",
     "img",
     "input",
+    "keygen",
     "link",
     "meta",
     "param",
-    "command",
-    "keygen",
-    "source"
+    "source",
+    "track",
+    "wbr"
   ]
 
   defmodule ParseError do
@@ -137,14 +141,29 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_stateful_component(ast, %CompileMeta{line_offset: offset, caller: caller}) do
+  defp validate_stateful_component(ast, %CompileMeta{
+         line_offset: offset,
+         caller: %{function: {:render, _}} = caller
+       }) do
     num_tags =
       ast
       |> Enum.filter(fn
-        %AST.Tag{} -> true
-        %AST.VoidTag{} -> true
-        %AST.Component{} -> true
-        _ -> false
+        %AST.Tag{} ->
+          true
+
+        %AST.VoidTag{} ->
+          true
+
+        %AST.Component{type: Surface.LiveComponent, meta: meta} ->
+          warn_live_component_as_root_node_of_another_live_component(meta, caller, offset)
+
+          true
+
+        %AST.Component{} ->
+          true
+
+        _ ->
+          false
       end)
       |> Enum.count()
 
@@ -166,6 +185,30 @@ defmodule Surface.Compiler do
       true ->
         :noop
     end
+  end
+
+  defp validate_stateful_component(_ast, %CompileMeta{}), do: nil
+
+  defp warn_live_component_as_root_node_of_another_live_component(meta, caller, offset) do
+    IOHelper.warn(
+      """
+      cannot have a LiveComponent as root node of another LiveComponent.
+
+      Hint: You can wrap the root `#{meta.node_alias}` node in another element. Example:
+
+        def render(assigns) do
+          ~H"\""
+          <div>
+            <#{meta.node_alias} ... >
+              ...
+            </#{meta.node_alias}>
+          </div>
+          "\""
+        end
+      """,
+      caller,
+      fn _ -> offset end
+    )
   end
 
   defp to_ast(nodes, compile_meta) do
@@ -245,16 +288,22 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
+    defined_slots =
+      meta.caller.module
+      |> Surface.API.get_slots()
+
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
+    short_slot_syntax? = not has_attribute?(attributes, "name")
 
     index =
       attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
-    with true <- not is_nil(name) and is_atom(name),
-         {:ok, directives, _attrs} <-
-           collect_directives(@slot_directive_handlers, attributes, meta) do
-      Module.put_attribute(meta.caller.module, :used_slot, %{name: name, line: meta.line})
+    with {:ok, directives, _attrs} <-
+           collect_directives(@slot_directive_handlers, attributes, meta),
+         slot <- Enum.find(defined_slots, fn slot -> slot.name == name end),
+         slot when not is_nil(slot) <- slot do
+      maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
 
       {:ok,
        %AST.Slot{
@@ -266,7 +315,14 @@ defmodule Surface.Compiler do
          meta: meta
        }}
     else
-      _ -> {:error, {"failed to parse slot", meta.line}, meta}
+      _ ->
+        raise_missing_slot_error!(
+          meta.caller.module,
+          name,
+          meta,
+          defined_slots,
+          short_slot_syntax?
+        )
     end
   end
 
@@ -434,6 +490,11 @@ defmodule Surface.Compiler do
     end)
   end
 
+  defp has_attribute?([], _), do: false
+
+  defp has_attribute?(attributes, attr_name),
+    do: Enum.any?(attributes, &match?({^attr_name, _, _}, &1))
+
   defp attribute_value_as_ast(attributes, attr_name, default, meta) do
     Enum.find_value(attributes, default, fn
       {^attr_name, {:attribute_expr, value, expr_meta}, _attr_meta} ->
@@ -458,10 +519,38 @@ defmodule Surface.Compiler do
 
   defp process_attributes(_module, [], _meta), do: []
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta) do
+  defp process_attributes(mod, attrs, meta), do: process_attributes(mod, attrs, meta, [])
+
+  defp process_attributes(_module, [], _meta, acc) do
+    acc
+    |> Keyword.values()
+    |> Enum.reverse()
+  end
+
+  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc) do
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
+
+    accumulate? = Keyword.get(type_opts, :accumulate, false)
+
+    if not accumulate? and Keyword.has_key?(acc, name) do
+      IOHelper.warn(
+        """
+        The prop `#{name}` has been passed multiple times. Considering only the last value.
+
+        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+        ```
+          prop #{name}, :#{type}, accumulate: true
+        ```
+
+        This way the values will be accumulated in a list.
+        """,
+        meta.caller,
+        fn _ -> attr_meta.line end
+      )
+    end
 
     node = %AST.Attribute{
       type: type,
@@ -471,7 +560,7 @@ defmodule Surface.Compiler do
       meta: attr_meta
     }
 
-    [node | process_attributes(mod, attrs, meta)]
+    process_attributes(mod, attrs, meta, [{name, node} | acc])
   end
 
   defp attr_value(name, type, values, attr_meta) when is_list(values) do
@@ -623,15 +712,12 @@ defmodule Surface.Compiler do
     has_directive_props? = Enum.any?(directives, &match?(%AST.Directive{name: :props}, &1))
 
     if not has_directive_props? and function_exported?(module, :__props__, 0) do
-      existing_props = Enum.map(props, fn %{name: name} -> name end)
+      existing_props_names = Enum.map(props, & &1.name)
+      required_props_names = module.__required_props_names__()
+      missing_props_names = required_props_names -- existing_props_names
 
-      required_props =
-        for p <- module.__props__(), Keyword.get(p.opts, :required, false), do: p.name
-
-      missing_props = required_props -- existing_props
-
-      for prop <- missing_props do
-        message = "Missing required property \"#{prop}\" for component <#{meta.node_alias}>"
+      for prop_name <- missing_props_names do
+        message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
         IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
       end
     end
@@ -640,10 +726,7 @@ defmodule Surface.Compiler do
   end
 
   defp validate_templates(mod, templates, meta) do
-    names =
-      templates
-      |> Map.keys()
-      |> Enum.reject(fn name -> name == :default end)
+    names = Map.keys(templates)
 
     if !function_exported?(mod, :__slots__, 0) and not Enum.empty?(names) do
       message = """
@@ -662,10 +745,10 @@ defmodule Surface.Compiler do
     end
 
     for {slot_name, template_instances} <- templates,
-        slot_name != :default,
         mod.__get_slot__(slot_name) == nil,
+        not component_slotable?(mod),
         template <- template_instances do
-      missing_slot(mod, slot_name, template.meta, meta)
+      raise_missing_parent_slot_error!(mod, slot_name, template.meta, meta)
     end
 
     for slot_name <- Map.keys(templates),
@@ -679,19 +762,6 @@ defmodule Surface.Compiler do
             directive.meta
           end
         end)
-
-      if slot == nil and not Enum.empty?(props) do
-        message = """
-        there's no `#{slot_name}` slot defined in `#{inspect(mod)}`.
-
-        Directive :let can only be used on explicitly defined slots.
-
-        Hint: You can define a `#{slot_name}` slot and its props using: \
-        `slot #{slot_name}, props: #{inspect(props)}\
-        """
-
-        IOHelper.compile_error(message, meta.file, meta.line)
-      end
 
       case slot do
         %{opts: opts} ->
@@ -722,33 +792,123 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp missing_slot(mod, slot_name, template_meta, parent_meta) do
+  defp raise_missing_slot_error!(
+         module,
+         slot_name,
+         meta,
+         _defined_slots,
+         true = _short_syntax?
+       ) do
+    message = """
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`
+
+    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
+  defp raise_missing_slot_error!(
+         module,
+         slot_name,
+         meta,
+         defined_slots,
+         false = _short_syntax?
+       ) do
+    defined_slot_names = Enum.map(defined_slots, & &1.name)
+    similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
+    existing_slots_message = existing_slots_message(defined_slot_names)
+
+    message = """
+    no slot `#{slot_name}` defined in the component `#{inspect(module)}`\
+    #{similar_slot_message}\
+    #{existing_slots_message}\
+
+    Hint: You can define slots using the `slot` macro.\
+
+    For instance: `slot #{slot_name}`\
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
+  defp raise_missing_parent_slot_error!(mod, slot_name, template_meta, parent_meta) do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
-    similar_slot_message =
-      case Helpers.did_you_mean(slot_name, parent_slots) do
-        {similar, score} when score > 0.8 ->
-          "\n\n  Did you mean #{inspect(to_string(similar))}?"
+    similar_slot_message = similar_slot_message(slot_name, parent_slots)
 
-        _ ->
-          ""
-      end
+    existing_slots_message = existing_slots_message(parent_slots)
 
-    existing_slots_message =
-      if parent_slots == [] do
-        ""
+    header_message =
+      if component_slotable?(template_meta.module) do
+        """
+        The slotable component <#{inspect(template_meta.module)}> as the `:slot` option set to \
+        `#{slot_name}`.
+
+        That slot name is not declared in parent component <#{parent_meta.node_alias}>.
+
+        Please declare the slot in the parent component or rename the value in the `:slot` option.\
+        """
       else
-        slots = Enum.map(parent_slots, &to_string/1)
-        available = Helpers.list_to_string("slot:", "slots:", slots)
-        "\n\n  Available #{available}"
+        """
+        no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
+        """
       end
 
     message = """
-    no slot "#{slot_name}" defined in parent component <#{parent_meta.node_alias}>\
+    #{header_message}\
     #{similar_slot_message}\
-    #{existing_slots_message}\
+    #{existing_slots_message}
     """
 
-    IOHelper.warn(message, template_meta.caller, fn _ -> template_meta.line end)
+    IOHelper.compile_error(message, template_meta.file, template_meta.line)
+  end
+
+  defp similar_slot_message(slot_name, list_of_slot_names, opts \\ []) do
+    threshold = opts[:threshold] || 0.8
+
+    case Helpers.did_you_mean(slot_name, list_of_slot_names) do
+      {similar, score} when score > threshold ->
+        "\n\nDid you mean #{inspect(to_string(similar))}?"
+
+      _ ->
+        ""
+    end
+  end
+
+  defp existing_slots_message([]), do: ""
+
+  defp existing_slots_message(existing_slots) do
+    slots = Enum.map(existing_slots, &to_string/1)
+    available = Helpers.list_to_string("slot:", "slots:", slots)
+    "\n\nAvailable #{available}"
+  end
+
+  defp maybe_warn_required_slot_with_default_value(_, [], _, _), do: nil
+
+  defp maybe_warn_required_slot_with_default_value(slot, _, short_syntax?, meta) do
+    if Keyword.get(slot.opts, :required, false) do
+      slot_name_tag = if short_syntax?, do: "", else: " name=\"#{slot.name}\""
+
+      message = """
+      setting the fallback content on a required slot has no effect.
+
+      Hint: Either keep the fallback content and remove the `required: true`:
+
+        slot #{slot.name}
+        ...
+        <slot#{slot_name_tag}>Fallback content</slot>
+
+      or keep the slot as required and remove the fallback content:
+
+        slot #{slot.name}, required: true`
+        ...
+        <slot#{slot_name_tag} />
+
+      but not both.
+      """
+
+      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+    end
   end
 end

@@ -1,13 +1,11 @@
 defmodule Surface.Components.FieldTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form.{Field, TextInput}, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.Form.{Field, TextInput}
 
   test "creates a wrapping <div> for the field's content" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Field name="name">
           Hi
@@ -15,7 +13,7 @@ defmodule Surface.Components.FieldTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <div>
              Hi
            </div>
@@ -23,8 +21,8 @@ defmodule Surface.Components.FieldTest do
   end
 
   test "property class" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Field name="name" class={{ :field }}>
           Hi
@@ -32,7 +30,7 @@ defmodule Surface.Components.FieldTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <div class="field">
              Hi
            </div>
@@ -40,8 +38,8 @@ defmodule Surface.Components.FieldTest do
   end
 
   test "sets the provided field into the context" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Field name="my_field">
           <TextInput form="my_form"/>
@@ -49,26 +47,25 @@ defmodule Surface.Components.FieldTest do
         """
       end
 
-    assert render_live(code) =~ ~S(name="my_form[my_field]")
+    assert html =~ ~S(name="my_form[my_field]")
   end
 end
 
 defmodule Surface.Components.Form.FieldConfigTest do
-  use ExUnit.Case
+  use Surface.ConnCase
 
-  alias Surface.Components.Form.Field, warn: false
-  import ComponentTestHelper
+  alias Surface.Components.Form.Field
 
   test ":default_class config" do
     using_config Field, default_class: "default_class" do
-      code =
-        quote do
+      html =
+        render_surface do
           ~H"""
           <Field name="name">Hi</Field>
           """
         end
 
-      assert render_live(code) =~ ~r/class="default_class"/
+      assert html =~ ~r/class="default_class"/
     end
   end
 end

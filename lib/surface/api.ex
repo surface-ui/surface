@@ -10,8 +10,10 @@ defmodule Surface.API do
     :event,
     :boolean,
     :string,
+    :time,
     :date,
     :datetime,
+    :naive_datetime,
     :number,
     :integer,
     :decimal,
@@ -22,13 +24,22 @@ defmodule Surface.API do
     :changeset,
     :form,
     :keyword,
+    :struct,
+    :tuple,
+    :pid,
+    :port,
+    :reference,
+    :bitstring,
+    :range,
+    :mapset,
+    :regex,
+    :uri,
+    :path,
     # Private
     :generator,
     :context_put,
     :context_get
   ]
-
-  @private_opts [:action, :to]
 
   defmacro __using__(include: include) do
     arities = %{
@@ -52,7 +63,6 @@ defmodule Surface.API do
 
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
-        unquote(__MODULE__).init_func(func, __MODULE__)
       end
     end
   end
@@ -72,16 +82,6 @@ defmodule Surface.API do
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
     end
-  end
-
-  @doc false
-  def init_func(:slot, module) do
-    Module.register_attribute(module, :used_slot, accumulate: true)
-    :ok
-  end
-
-  def init_func(_func, _caller) do
-    :ok
   end
 
   @doc "Defines a property for the component"
@@ -118,11 +118,11 @@ defmodule Surface.API do
     existing_assign = assigns[name]
 
     if existing_assign do
-      message = """
-      cannot use name \"#{assign.name}\". There's already \
-      a #{existing_assign.func} assign with the same name \
-      at line #{existing_assign.line}.\
-      """
+      component_type = Module.get_attribute(caller.module, :component_type)
+      builtin_assign? = name in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
+
+      details = existing_assign_details_message(builtin_assign?, existing_assign)
+      message = ~s(cannot use name "#{assign.name}". #{details}.)
 
       IOHelper.compile_error(message, caller.file, assign.line)
     else
@@ -131,6 +131,22 @@ defmodule Surface.API do
     end
 
     Module.put_attribute(caller.module, assign.func, assign)
+  end
+
+  defp existing_assign_details_message(true = _builtin?, %{func: func}) do
+    "There's already a built-in #{func} assign with the same name"
+  end
+
+  defp existing_assign_details_message(false = _builtin?, %{func: func, line: line})
+       when func == :slot do
+    """
+    There's already a #{func} assign with the same name at line #{line}.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+  end
+
+  defp existing_assign_details_message(false = _builtin?, %{func: func, line: line}) do
+    "There's already a #{func} assign with the same name at line #{line}"
   end
 
   @doc false
@@ -151,24 +167,28 @@ defmodule Surface.API do
 
   @doc false
   def get_slots(module) do
-    used_slots =
-      for %{name: name, line: line} <- Module.get_attribute(module, :used_slot) || [] do
-        %{func: :slot, name: name, type: :any, doc: nil, opts: [], opts_ast: [], line: line}
-      end
+    Module.get_attribute(module, :slot) || []
+  end
 
-    (Module.get_attribute(module, :slot) || []) ++ used_slots
+  @doc false
+  def get_props(module) do
+    Module.get_attribute(module, :prop) || []
+  end
+
+  @doc false
+  def get_data(module) do
+    Module.get_attribute(module, :data) || []
   end
 
   @doc false
   def get_defaults(module) do
-    for %{name: name, opts: opts} <- Module.get_attribute(module, :data),
-        Keyword.has_key?(opts, :default) do
+    for %{name: name, opts: opts} <- get_data(module), Keyword.has_key?(opts, :default) do
       {name, opts[:default]}
     end
   end
 
   defp quoted_data_funcs(env) do
-    data = Module.get_attribute(env.module, :data) || []
+    data = get_data(env.module)
 
     quote do
       @doc false
@@ -180,11 +200,13 @@ defmodule Surface.API do
 
   defp quoted_prop_funcs(env) do
     props =
-      (Module.get_attribute(env.module, :prop) || [])
-      |> Enum.sort_by(&{&1.name != :id, !&1.opts[:required], &1.line})
+      env.module
+      |> get_props()
+      |> sort_props()
 
-    props_names = Enum.map(props, fn prop -> prop.name end)
+    props_names = for p <- props, do: p.name
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
+    required_props_names = for %{name: name, opts: opts} <- props, opts[:required], do: name
 
     quote do
       @doc false
@@ -201,7 +223,17 @@ defmodule Surface.API do
       def __get_prop__(name) do
         Map.get(unquote(Macro.escape(props_by_name)), name)
       end
+
+      @doc false
+      def __required_props_names__() do
+        unquote(Macro.escape(required_props_names))
+      end
     end
+  end
+
+  @doc false
+  def sort_props(props) when is_list(props) do
+    Enum.sort_by(props, &{&1.name != :id, !&1.opts[:required], &1.line})
   end
 
   defp quoted_slot_funcs(env) do
@@ -258,8 +290,7 @@ defmodule Surface.API do
   def validate!(func, name, type, opts, caller) do
     with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
-         :ok <- validate_opts(func, type, opts),
-         :ok <- validate_required_opts(func, type, opts) do
+         :ok <- validate_opts(func, name, type, opts, caller) do
       :ok
     else
       {:error, message} ->
@@ -299,13 +330,13 @@ defmodule Surface.API do
     with true <- Keyword.keyword?(opts),
          keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
-         [] <- keys -- (valid_opts ++ @private_opts) do
+         [] <- keys -- valid_opts do
       :ok
     else
       false ->
         {:error,
          "invalid options for #{func} #{name}. " <>
-           "Expected a keyword list of options, got: #{inspect(remove_private_opts(opts))}"}
+           "Expected a keyword list of options, got: #{inspect(opts)}"}
 
       unknown_options ->
         valid_opts = get_valid_opts(func, type, opts)
@@ -327,9 +358,9 @@ defmodule Surface.API do
     opts
   end
 
-  defp validate_opts(func, type, opts) do
+  defp validate_opts(func, name, type, opts, caller) do
     Enum.reduce_while(opts, :ok, fn {key, value}, _acc ->
-      case validate_opt(func, type, key, value) do
+      case validate_opt(func, name, type, opts, key, value, caller) do
         :ok ->
           {:cont, :ok}
 
@@ -337,16 +368,6 @@ defmodule Surface.API do
           {:halt, error}
       end
     end)
-  end
-
-  defp validate_required_opts(func, type, opts) do
-    case get_required_opts(func, type, opts) -- Keyword.keys(opts) do
-      [] ->
-        :ok
-
-      missing_opts ->
-        {:error, "the following options are required: #{inspect(missing_opts)}"}
-    end
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
@@ -358,11 +379,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :props]
-  end
-
-  defp get_required_opts(_func, _type, _opts) do
-    []
+    [:required, :props, :as]
   end
 
   defp validate_opt_ast!(:slot, :props, args_ast, caller) do
@@ -386,20 +403,71 @@ defmodule Surface.API do
     value
   end
 
-  defp validate_opt(_func, _type, :required, value) when not is_boolean(value) do
+  defp validate_opt(_func, _name, _type, _opts, :required, value, _caller)
+       when not is_boolean(value) do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _type, :values, value) when not is_list(value) do
+  defp validate_opt(:prop, _name, _type, opts, :default, _value, caller) do
+    if Keyword.get(opts, :required, false) do
+      IOHelper.warn(
+        "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
+        caller,
+        fn _ -> caller.line end
+      )
+    end
+
+    :ok
+  end
+
+  defp validate_opt(_func, _name, _type, _opts, :values, value, _caller)
+       when not is_list(value) do
     {:error,
      "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:prop, _type, :accumulate, value) when not is_boolean(value) do
+  defp validate_opt(:prop, _name, _type, _opts, :accumulate, value, _caller)
+       when not is_boolean(value) do
     {:error, "invalid value for option :accumulate. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _type, _key, _value) do
+  defp validate_opt(:slot, _name, _type, _opts, :as, value, _caller) when not is_atom(value) do
+    {:error, "invalid value for option :as in slot. Expected an atom, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(:slot, :default, _type, _opts, :props, value, caller) do
+    if Module.defines?(caller.module, {:__slot_name__, 0}) do
+      slot_name = Module.get_attribute(caller.module, :__slot_name__)
+
+      prop_example =
+        value
+        |> Enum.map(fn %{name: name} -> "#{name}: #{name}" end)
+        |> Enum.join(", ")
+
+      component_name = Macro.to_string(caller.module)
+
+      message = """
+      props for the default slot in a slotable component are not accessible - instead the props \
+      from the parent's #{slot_name} slot will be exposed via `:let={{ ... }}`.
+
+      Hint: You can remove these props, pull them up to the parent component, or make this component not slotable \
+      and use it inside an explicit template element:
+      ```
+      <template name="#{slot_name}">
+        <#{component_name} :let={{ #{prop_example} }}>
+          ...
+        </#{component_name}>
+      </template>
+      ```
+      """
+
+      IOHelper.warn(message, caller, fn _ -> caller.line end)
+    end
+
+    :ok
+  end
+
+  defp validate_opt(_func, _name, _type, _opts, _key, _value, _caller) do
     :ok
   end
 
@@ -426,23 +494,34 @@ defmodule Surface.API do
   end
 
   defp generate_docs(env) do
-    case Module.get_attribute(env.module, :moduledoc) do
-      {_line, false} ->
-        :ok
+    do_generate_docs(Module.get_attribute(env.module, :moduledoc), env)
+  end
 
-      nil ->
-        props_doc = generate_props_docs(env.module)
-        Module.put_attribute(env.module, :moduledoc, {env.line, props_doc})
+  defp do_generate_docs({_line, false}, _env), do: :ok
+  defp do_generate_docs(nil, env), do: do_generate_docs({env.line, nil}, env)
 
-      {line, doc} ->
-        props_doc = generate_props_docs(env.module)
-        Module.put_attribute(env.module, :moduledoc, {line, doc <> "\n" <> props_doc})
-    end
+  defp do_generate_docs({line, doc}, env) do
+    docs =
+      [
+        doc,
+        generate_props_docs(env.module),
+        generate_slots_docs(env.module),
+        generate_events_docs(env.module)
+      ]
+      |> Enum.filter(&(&1 != nil))
+      |> Enum.join("\n")
+
+    Module.put_attribute(
+      env.module,
+      :moduledoc,
+      {line, docs}
+    )
   end
 
   defp generate_props_docs(module) do
+    # Events are special properties we treat in a separate doc section
     docs =
-      for prop <- Module.get_attribute(module, :prop) do
+      for prop <- get_props(module), prop.type != :event do
         doc = if prop.doc, do: " - #{prop.doc}.", else: ""
         opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
         "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"
@@ -450,11 +529,51 @@ defmodule Surface.API do
       |> Enum.reverse()
       |> Enum.join("\n")
 
-    """
-    ### Properties
+    if docs != "" do
+      """
+      ## Properties
 
-    #{docs}
-    """
+      #{docs}
+      """
+    end
+  end
+
+  defp generate_slots_docs(module) do
+    docs =
+      for slot <- get_slots(module) do
+        doc = if slot.doc, do: " - #{slot.doc}.", else: ""
+        opts = if slot.opts == [], do: "", else: ", #{format_opts(slot.opts_ast)}"
+        "* **#{slot.name}#{opts}**#{doc}"
+      end
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    if docs != "" do
+      """
+      ## Slots
+
+      #{docs}
+      """
+    end
+  end
+
+  defp generate_events_docs(module) do
+    docs =
+      for prop <- get_props(module), prop.type == :event do
+        doc = if prop.doc, do: " - #{prop.doc}.", else: ""
+        opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
+        "* **#{prop.name}#{opts}**#{doc}"
+      end
+      |> Enum.reverse()
+      |> Enum.join("\n")
+
+    if docs != "" do
+      """
+      ## Events
+
+      #{docs}
+      """
+    end
   end
 
   defp validate_slot_props_bindings!(env) do
@@ -468,7 +587,7 @@ defmodule Surface.API do
 
           message = """
           cannot bind slot prop `#{name}` to property `#{generator}`. \
-          Expected a existing property after `^`, \
+          Expected an existing property after `^`, \
           got: an undefined property `#{generator}`.
 
           Hint: Available properties are #{inspect(existing_properties_names)}\
@@ -514,14 +633,6 @@ defmodule Surface.API do
             line: caller.line
           ] do
       Surface.API.put_assign!(__ENV__, func, name, type, opts, opts_ast, line)
-    end
-  end
-
-  defp remove_private_opts(opts) do
-    if is_list(opts) do
-      Enum.reject(opts, fn o -> Enum.any?(@private_opts, fn p -> match?({^p, _}, o) end) end)
-    else
-      opts
     end
   end
 end

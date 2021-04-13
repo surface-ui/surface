@@ -20,6 +20,12 @@ defmodule Surface.Components.Form.MultipleSelect do
   @doc "The field name"
   prop field, :string
 
+  @doc "The id of the corresponding select field"
+  prop id, :string
+
+  @doc "The name of the corresponding select field"
+  prop name, :string
+
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
 
@@ -33,11 +39,12 @@ defmodule Surface.Components.Form.MultipleSelect do
   prop opts, :keyword, default: []
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:selected, class: get_config(:default_class)])
+    helper_opts = props_to_opts(assigns, [:selected])
+    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ multiple_select(form, field, @options, props ++ @opts) }}
+      {{ multiple_select(form, field, @options, helper_opts ++ attr_opts ++ @opts) }}
     </InputContext>
     """
   end

@@ -1,7 +1,5 @@
 defmodule Surface.Constructs.ForTest do
-  use ExUnit.Case, async: true
-
-  import ComponentTestHelper
+  use Surface.ConnCase, async: true
 
   defmodule ListProp do
     use Surface.Component
@@ -17,8 +15,10 @@ defmodule Surface.Constructs.ForTest do
   end
 
   test "iterates over the provided list" do
-    code =
-      quote do
+    alias Surface.Constructs.For
+
+    html =
+      render_surface do
         ~H"""
         <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
         <span>{{ fruit }}</span>
@@ -26,9 +26,9 @@ defmodule Surface.Constructs.ForTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <span>apples</span>\
-           <span>bananas</span>\
+    assert html =~ """
+           <span>apples</span>
+           <span>bananas</span>
            <span>oranges</span>
            """
   end
@@ -46,7 +46,7 @@ defmodule Surface.Constructs.ForTest do
     message = ~S(code:2: expected closing tag for "span")
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -55,7 +55,7 @@ defmodule Surface.Constructs.ForTest do
       quote do
         ~H"""
         <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
-          <ListProp prop="some string">The inner content</ListProp>
+          <ListProp prop="some string" />
         </For>
         """
       end
@@ -63,7 +63,7 @@ defmodule Surface.Constructs.ForTest do
     message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 end

@@ -1,10 +1,16 @@
 defmodule Surface.Components.FormTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form, warn: false
-  alias Surface.Components.Form.TextInput, warn: false
+  alias Surface.Components.Form
+  alias Surface.Components.Form.TextInput
 
-  import ComponentTestHelper
+  defmodule User do
+    use Ecto.Schema
+
+    schema "user" do
+      field(:name, :string)
+    end
+  end
 
   defmodule ViewWithForm do
     use Surface.LiveView
@@ -14,7 +20,7 @@ defmodule Surface.Components.FormTest do
     def render(assigns) do
       ~H"""
       <Form for={{ @changeset }} action="#" csrf_token="test" as={{ :user }} :let={{ form: f }}>
-        <TextInput field="name" />
+        <TextInput field={{ :name }} />
         {{ Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end) }}
       </Form>
       """
@@ -26,22 +32,24 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form as an atom" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" csrf_token="test">
         </Form>
         """
       end
 
-    assert render_live(code) =~ """
-           <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test"/></form>
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+           </form>
            """
   end
 
   test "form with a text input using context" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" csrf_token="test">
           <TextInput field="name" />
@@ -49,17 +57,17 @@ defmodule Surface.Components.FormTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="user_name" name="user[name]" type="text"/>\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="user_name" name="user[name]" type="text">
            </form>
            """
   end
 
   test "form with form_for/4 opts as props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" csrf_token="test">
           <TextInput field="name" />
@@ -67,15 +75,15 @@ defmodule Surface.Components.FormTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
-           <input id="user_name" name="user[name]" type="text"/>\
+           <input name="_csrf_token" type="hidden" value="test">
+             <input id="user_name" name="user[name]" type="text">
            </form>
            """
   end
 
-  test "form as a changeset" do
+  test "form as a changeset", %{conn: conn} do
     assigns = %{
       "changeset" =>
         Ecto.Changeset.cast(
@@ -85,29 +93,31 @@ defmodule Surface.Components.FormTest do
         )
     }
 
-    assert render_live(ViewWithForm, assigns) =~ """
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+
+    assert html =~ """
            <form action="#" method="post">\
            <input name="_csrf_token" type="hidden" value="test"/>\
            <input id="user_name" name="user[name]" type="text" value="myname"/>\
-           </form>
+           </form>\
            """
   end
 
   test "form with events" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <Form for={{:user}} action="#" change="change" submit="sumit">
         </Form>
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            <form action="#" method="post" phx-change="change" phx-submit="sumit">\
            """
   end
 
-  test "form exposes the generated form instance" do
+  test "form exposes the generated form instance", %{conn: conn} do
     assigns = %{
       "changeset" =>
         Ecto.Changeset.cast(
@@ -117,6 +127,88 @@ defmodule Surface.Components.FormTest do
         )
     }
 
-    assert render_live(ViewWithForm, assigns) =~ ~r/Name is invalid/
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+
+    assert html =~ ~r/Name is invalid/
+  end
+
+  test "form generates method input for prop" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{ :user }} action="#" method="put" csrf_token="test">
+        </Form>
+        """
+      end
+
+    assert html =~ ~s(<input name="_method" type="hidden" value="put">)
+  end
+
+  test "form generates method input for changeset", %{conn: conn} do
+    changeset =
+      %User{}
+      |> Ecto.put_meta(state: :loaded)
+      |> Ecto.Changeset.cast(%{name: "myname"}, [:name])
+
+    assigns = %{"changeset" => changeset}
+
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+
+    assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
+  end
+
+  test "setting the class" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class="form">
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form"/
+  end
+
+  test "setting multiple classes" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class="form form-user">
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form form-user"/
+  end
+
+  test "setting multiple classes as css_class" do
+    html =
+      render_surface do
+        ~H"""
+        <Form for={{:user}} action="#" class={{ "form", "form-user": true }}>
+        </Form>
+        """
+      end
+
+    assert html =~ ~r/class="form form-user"/
+  end
+end
+
+defmodule Surface.Components.Form.FormTestConfigTest do
+  use Surface.ConnCase
+
+  alias Surface.Components.Form
+
+  test ":default_class config" do
+    using_config Form, default_class: "default_class" do
+      html =
+        render_surface do
+          ~H"""
+          <Form for={{ :user }} action="#" />
+          """
+        end
+
+      assert html =~ ~r/class="default_class"/
+    end
   end
 end

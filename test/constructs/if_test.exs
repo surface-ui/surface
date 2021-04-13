@@ -1,7 +1,5 @@
 defmodule Surface.Constructs.IfTest do
-  use ExUnit.Case, async: true
-
-  import ComponentTestHelper
+  use Surface.ConnCase, async: true
 
   defmodule ListProp do
     use Surface.Component
@@ -17,8 +15,10 @@ defmodule Surface.Constructs.IfTest do
   end
 
   test "renders inner if condition is truthy" do
-    code =
-      quote do
+    alias Surface.Constructs.If
+
+    html =
+      render_surface do
         ~H"""
         <If condition={{ true }}>
         <span>The inner content</span>
@@ -27,8 +27,8 @@ defmodule Surface.Constructs.IfTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <span>The inner content</span>\
+    assert html =~ """
+           <span>The inner content</span>
            <span>with multiple tags</span>
            """
   end
@@ -46,7 +46,7 @@ defmodule Surface.Constructs.IfTest do
     message = ~S(code:2: expected closing tag for "span")
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 
@@ -55,7 +55,7 @@ defmodule Surface.Constructs.IfTest do
       quote do
         ~H"""
         <If condition={{ true }}>
-          <ListProp prop="some string">The inner content</ListProp>
+          <ListProp prop="some string" />
         </If>
         """
       end
@@ -63,7 +63,7 @@ defmodule Surface.Constructs.IfTest do
     message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
 
     assert_raise(CompileError, message, fn ->
-      render_live(code)
+      compile_surface(code)
     end)
   end
 end

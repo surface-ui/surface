@@ -30,20 +30,20 @@ defmodule Surface.Components.Form.Checkbox do
   prop unchecked_value, :any, default: false
 
   def render(assigns) do
-    props =
-      get_non_nil_props(assigns, [
+    helper_opts =
+      props_to_opts(assigns, [
         :checked_value,
         :hidden_input,
         :unchecked_value,
-        :value,
-        class: get_config(:default_class)
+        :value
       ])
 
-    event_opts = get_events_to_opts(assigns)
+    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
+    event_opts = events_to_opts(assigns)
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-    {{ checkbox(form, field, props ++ @opts ++ event_opts) }}
+    {{ checkbox(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts) }}
     </InputContext>
     """
   end

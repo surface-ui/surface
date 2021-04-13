@@ -1,13 +1,11 @@
 defmodule Surface.Components.FieldContextTest do
-  use ExUnit.Case, async: true
+  use Surface.ConnCase, async: true
 
-  alias Surface.Components.Form.{FieldContext, TextInput}, warn: false
-
-  import ComponentTestHelper
+  alias Surface.Components.Form.{FieldContext, TextInput}
 
   test "sets the provided field into the context" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <FieldContext name="my_field">
           <TextInput form="my_form"/>
@@ -15,6 +13,6 @@ defmodule Surface.Components.FieldContextTest do
         """
       end
 
-    assert render_live(code) =~ ~S(name="my_form[my_field]")
+    assert html =~ ~S(name="my_form[my_field]")
   end
 end

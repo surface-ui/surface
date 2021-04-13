@@ -106,8 +106,13 @@ defmodule Surface.Compiler.Parser do
     |> wrap()
     |> post_traverse(:attribute_value)
 
-  attr_name = ascii_string([?a..?z, ?0..?9, ?A..?Z, ?-, ?., ?_, ?:, ?@], min: 1)
-  whitespace = ascii_string([?\s, ?\n], min: 0)
+  # Follow the rules of XML Names and Tokens plus "@" as a first char
+  # https://www.w3.org/TR/2008/REC-xml-20081126/#NT-Name
+  attr_start_char = ascii_string([?a..?z, ?A..?Z, ?_, ?:, ?@], 1)
+  attr_name_char = ascii_string([?a..?z, ?A..?Z, ?0..?9, ?_, ?:, ?-, ?., ??], min: 0)
+  attr_name = attr_start_char |> concat(attr_name_char) |> reduce({Enum, :join, [""]})
+
+  whitespace = ascii_string(' \n\r\t\v\b\f\e\d\a', min: 0)
 
   attribute =
     whitespace
@@ -137,15 +142,18 @@ defmodule Surface.Compiler.Parser do
       string("base"),
       string("br"),
       string("col"),
+      string("command"),
+      string("embed"),
       string("hr"),
       string("img"),
       string("input"),
+      string("keygen"),
       string("link"),
       string("meta"),
       string("param"),
-      string("command"),
-      string("keygen"),
-      string("source")
+      string("source"),
+      string("track"),
+      string("wbr")
     ])
 
   void_element_node =
@@ -247,7 +255,7 @@ defmodule Surface.Compiler.Parser do
 
   defp interpolation(_rest, ["}}" | nodes], context, _line, _offset) do
     [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
-    {[{:interpolation, rest |> IO.iodata_to_binary(), %{line: opening_line}}], context}
+    {[{:interpolation, IO.chardata_to_string(rest), %{line: opening_line}}], context}
   end
 
   defp interpolation(_rest, _, _context, _line, _offset),

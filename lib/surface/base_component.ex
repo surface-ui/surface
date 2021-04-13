@@ -19,8 +19,8 @@ defmodule Surface.BaseComponent do
 
   @optional_callbacks transform: 1
 
-  defmacro __using__(opts \\ []) do
-    type = Keyword.get(opts, :type)
+  defmacro __using__(opts) do
+    type = Keyword.fetch!(opts, :type)
 
     quote do
       import Surface
@@ -35,5 +35,16 @@ defmodule Surface.BaseComponent do
         unquote(type)
       end
     end
+  end
+
+  @doc false
+  def restore_private_assigns(socket, %{__surface__: surface, __context__: context}) do
+    socket
+    |> Phoenix.LiveView.assign(:__surface__, surface)
+    |> Phoenix.LiveView.assign(:__context__, context)
+  end
+
+  def restore_private_assigns(socket, _assigns) do
+    socket
   end
 end

@@ -1,6 +1,6 @@
 defmodule Surface.LiveComponent do
   @moduledoc """
-  A live (stateless or stateful) component. A wrapper around `Phoenix.LiveComponent`.
+  A live stateful component. A wrapper around `Phoenix.LiveComponent`.
 
   ## Example
 
@@ -50,6 +50,8 @@ defmodule Surface.LiveComponent do
       end
   """
 
+  alias Surface.BaseComponent
+
   defmacro __using__(_) do
     quote do
       @before_compile Surface.Renderer
@@ -69,6 +71,12 @@ defmodule Surface.LiveComponent do
       The id of the live component (required by LiveView for stateful components).
       """
       prop id, :string, required: true
+
+      @doc "Built-in assign"
+      data socket, :struct
+
+      @doc "Built-in assign"
+      data myself, :struct
     end
   end
 
@@ -81,17 +89,9 @@ defmodule Surface.LiveComponent do
       quote do
         defoverridable update: 2
 
-        def update(%{__surface__: surface, __context__: context} = assigns, socket) do
-          super(
-            assigns,
-            socket
-            |> Phoenix.LiveView.assign(:__surface__, surface)
-            |> Phoenix.LiveView.assign(:__context__, context)
-          )
-        end
-
         def update(assigns, socket) do
-          super(assigns, socket)
+          {:ok, socket} = super(assigns, socket)
+          {:ok, BaseComponent.restore_private_assigns(socket, assigns)}
         end
       end
     end

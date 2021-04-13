@@ -1,8 +1,6 @@
 defmodule Surface.CompilerTest do
   use ExUnit.Case
 
-  import ComponentTestHelper
-
   defmodule Macro do
     use Surface.MacroComponent
 
@@ -19,6 +17,8 @@ defmodule Surface.CompilerTest do
 
   defmodule Div do
     use Surface.Component
+
+    slot default
 
     def render(assigns) do
       ~H"""
@@ -105,6 +105,23 @@ defmodule Surface.CompilerTest do
                    original: " @label ",
                    value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _]}
                  }
+               }
+             ]
+           } = node
+  end
+
+  test "component with expression using special characters in interpolation" do
+    code = """
+    <h2>{{ "héllo" }}</h2>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             children: [
+               %Surface.AST.Interpolation{
+                 original: " \"héllo\" ",
+                 value: "héllo"
                }
              ]
            } = node
@@ -580,7 +597,6 @@ defmodule Surface.CompilerSyncTest do
   use ExUnit.Case
 
   import ExUnit.CaptureIO
-  import ComponentTestHelper
 
   alias Surface.CompilerTest.{Button, Column}, warn: false
 
@@ -724,6 +740,70 @@ defmodule Surface.CompilerSyncTest do
     assert extract_line(output) == 6
   end
 
+  test "does not warn if H_sigil is used outside a render function of a component" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+        <div>
+          {{ sum(assigns) }}
+        </div>
+        "\""
+      end
+
+      def sum(assigns) do
+        ~H"\""
+        {{ @a + @b }}
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output == ""
+  end
+
+  test "does not warn if H_sigil is used outside a render function of a live component" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H"\""
+        <div>
+          {{ sum(assigns) }}
+        </div>
+        "\""
+      end
+
+      def sum(assigns) do
+        ~H"\""
+        {{ @a + @b }}
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output == ""
+  end
+
   test "warning on stateful components with text root element" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
@@ -747,6 +827,57 @@ defmodule Surface.CompilerSyncTest do
 
     assert output =~ "stateful live components must have a HTML root element"
     assert extract_line(output) == 6
+  end
+
+  test "warning on stateful components with other stateful component as root element" do
+    id_1 = :erlang.unique_integer([:positive]) |> to_string()
+    id_2 = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id_1} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H"\""
+        <div>Foo</div>
+        "\""
+      end
+    end
+    defmodule TestLiveComponent_#{id_2} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~H"\""
+          <TestLiveComponent_#{id_1} id="#{id_1}" />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           cannot have a LiveComponent as root node of another LiveComponent.
+
+           Hint: You can wrap the root `TestLiveComponent_#{id_1}` node in another element. Example:
+
+             def render(assigns) do
+               ~H"\""
+               <div>
+                 <TestLiveComponent_#{id_1} ... >
+                   ...
+                 </TestLiveComponent_#{id_1}>
+               </div>
+               "\""
+             end
+
+             code.exs:15: Surface.CompilerSyncTest.TestLiveComponent_#{id_2}.render/1
+
+           """
   end
 
   test "warning on stateful components with interpolation root element" do
@@ -774,6 +905,78 @@ defmodule Surface.CompilerSyncTest do
     assert extract_line(output) == 6
   end
 
+  test "warning on component with required slot that has a default value" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestComponent_#{id} do
+      use Surface.Component
+
+      slot default, required: true
+      slot header, required: true
+      slot footer
+
+      def render(assigns) do
+        ~H"\""
+        <div>
+          <slot>Default Content</slot>
+          <slot name="header">Default Header</slot>
+          <slot name="footer">Default Footer</slot>
+        </div>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           setting the fallback content on a required slot has no effect.
+
+           Hint: Either keep the fallback content and remove the `required: true`:
+
+             slot default
+             ...
+             <slot>Fallback content</slot>
+
+           or keep the slot as required and remove the fallback content:
+
+             slot default, required: true`
+             ...
+             <slot />
+
+           but not both.
+
+             code.exs:11: Surface.CompilerSyncTest.TestComponent_#{id}.render/1
+
+           """
+
+    assert output =~ """
+           setting the fallback content on a required slot has no effect.
+
+           Hint: Either keep the fallback content and remove the `required: true`:
+
+             slot header
+             ...
+             <slot name="header">Fallback content</slot>
+
+           or keep the slot as required and remove the fallback content:
+
+             slot header, required: true`
+             ...
+             <slot name="header" />
+
+           but not both.
+
+             code.exs:12: Surface.CompilerSyncTest.TestComponent_#{id}.render/1
+
+           """
+  end
+
   defp compile_component(code) do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
@@ -786,11 +989,14 @@ defmodule Surface.CompilerSyncTest do
     end\
     """
 
+    # See Surface.compute_line_offset/1 for more information
+    line_offset = if Version.match?(System.version(), "~> 1.11"), do: 1, else: 0
+
     output =
       capture_io(:standard_error, fn ->
-        # Setting line to 0 here because we aren't using heredoc for the above code and so the lines would
-        # be off
-        {{:module, module, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | line: 0})
+        {{:module, module, _, _}, _} =
+          Code.eval_string(component_code, [], %{__ENV__ | line: line_offset})
+
         send(self(), {:result, module})
       end)
 
@@ -828,6 +1034,16 @@ defmodule Surface.CompilerSyncTest do
 
       message ->
         {:warn, extract_line(output), message}
+    end
+  end
+
+  defp extract_line(message) do
+    case Regex.run(~r/.exs:(\d+)/, message) do
+      [_, line] ->
+        String.to_integer(line)
+
+      _ ->
+        :not_found
     end
   end
 end

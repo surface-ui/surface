@@ -1,11 +1,11 @@
 defmodule Surface.Components.Link do
   @moduledoc """
-  Defines a hyperlink.
+  Generates a link to the given URL.
 
-  Provides a wrapper for Phoenix.HTML.Link's `link/2` function.
+  Provides similar capabilities to Phoenix's built-in `link/2` function.
 
-  All options passed via `opts` will be sent to `link/2`, `label` and `class` can
-  be set directly and will override anything in `opts`.
+  Options `label` and `class` can be set directly and will override anything in `opts`.
+  All other options are forwarded to the underlying <a> tag.
 
   ## Examples
   ```
@@ -27,25 +27,44 @@ defmodule Surface.Components.Link do
 
   use Surface.Component
 
-  import Phoenix.HTML.Link, only: [link: 2]
+  import Surface.Components.Utils
 
-  @doc "Place to link to"
-  prop to, :string, required: true
+  @doc "The page to link to"
+  prop to, :any, required: true
+
+  @doc "The method to use with the link"
+  prop method, :atom, default: :get
+
+  @doc "Id to apply to the link"
+  prop id, :string
 
   @doc "Class or classes to apply to the link"
   prop class, :css_class
 
-  @doc "Keyword with options to be passed down to `link/2`"
-  prop opts, :keyword, default: []
-
   @doc """
-  The label for the generated `<a>` alement, if no content (default slot) is
-  provided.
+  The label for the generated `<a>` element, if no content (default slot) is provided.
   """
   prop label, :string
 
-  @doc "Triggered on click"
-  prop click, :event
+  @doc "Triggered when the component loses focus"
+  prop blur, :event
+
+  @doc "Triggered when the component receives focus"
+  prop focus, :event
+
+  @doc "Triggered when the component receives click"
+  prop capture_click, :event
+
+  @doc "Triggered when a button on the keyboard is pressed"
+  prop keydown, :event
+
+  @doc "Triggered when a button on the keyboard is released"
+  prop keyup, :event
+
+  @doc """
+  Additional attributes to add onto the generated element
+  """
+  prop opts, :keyword, default: []
 
   @doc """
   The content of the generated `<a>` element. If no content is provided,
@@ -53,11 +72,34 @@ defmodule Surface.Components.Link do
   """
   slot default
 
+  def update(assigns, socket) do
+    valid_label!(assigns)
+    {:ok, assign(socket, assigns)}
+  end
+
   def render(assigns) do
-    children = ~H"<slot>{{ @label }}</slot>"
+    to = valid_destination!(assigns.to, "<Link />")
+    opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
+    attrs = opts_to_attrs(opts)
 
     ~H"""
-    {{ link [to: @to] ++ prop_to_opts(@class, :class) ++ @opts ++ event_to_opts(@click, :phx_click), do: children }}
+    <a id={{ @id }} class={{ @class }} href={{ to }} :attrs={{ attrs }}><slot>{{ @label }}</slot></a>
     """
+  end
+
+  defp valid_label!(assigns) do
+    unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
+      raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
+    end
+  end
+
+  defp apply_method(to, method, opts) do
+    if method == :get do
+      skip_csrf(opts)
+    else
+      {csrf_data, opts} = csrf_data(to, opts)
+      opts = Keyword.put_new(opts, :rel, "nofollow")
+      [data: [method: method, to: to] ++ csrf_data] ++ opts
+    end
   end
 end

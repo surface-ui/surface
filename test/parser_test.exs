@@ -29,6 +29,10 @@ defmodule Surface.Compiler.ParserTest do
               ]}
   end
 
+  test "keep blank chars" do
+    assert parse("\n\r\t\v\b\f\e\d\a") == {:ok, ["\n\r\t\v\b\f\e\d\a"]}
+  end
+
   test "multiple nodes" do
     code = """
     <div>
@@ -412,6 +416,19 @@ defmodule Surface.Compiler.ParserTest do
   end
 
   describe "attributes" do
+    test "keep blank chars between attributes" do
+      code = """
+      <foo prop1="1"\n\r\t\v\b\f\e\d\aprop2="2"/>\
+      """
+
+      {:ok, [{_, attributes, _, _}]} = parse(code)
+
+      assert attributes == [
+               {"prop1", "1", %{line: 1, spaces: [" ", "", ""]}},
+               {"prop2", "2", %{line: 2, spaces: ["\n\r\t\v\b\f\e\d\a", "", ""]}}
+             ]
+    end
+
     test "regular nodes" do
       code = """
       <foo

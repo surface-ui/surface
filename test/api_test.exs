@@ -50,6 +50,13 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :as in slot" do
+    code = "slot label, as: \"default_label\""
+    message = ~r/invalid value for option :as in slot. Expected an atom, got: \"default_label\"/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
@@ -72,12 +79,163 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
 
     code = """
+    prop label, :string
+    slot label
+    """
+
+    message = ~r/cannot use name "label". There's already a prop/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    data label, :string
+    data label, :string
+    """
+
+    message = ~r/cannot use name "label". There's already a data assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
     data label, :string
     prop label, :string
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
     assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    data label, :string
+    slot label
+    """
+
+    message = ~r/cannot use name "label". There's already a data assign/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label
+    slot label
+    """
+
+    message = ~r"""
+    cannot use name "label". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label
+    data label, :string
+    """
+
+    message = ~r"""
+    cannot use name "label". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label
+    prop label, :string
+    """
+
+    message = ~r"""
+    cannot use name "label". There's already a slot assign with the same name at line \d.
+    You could use the optional ':as' option in slot macro to name the related assigns.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = """
+    slot label, as: :default_label
+    prop label, :string
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    prop label, :string
+    slot label, as: :default_label
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    data label, :string
+    slot label, as: :default_label
+    """
+
+    assert {:ok, _} = eval(code)
+
+    code = """
+    slot label, as: :default_label
+    data label, :string
+    """
+
+    assert {:ok, _} = eval(code)
+  end
+
+  test "validate duplicate built-in assigns for Component" do
+    code = """
+    data socket, :any
+    """
+
+    message = ~r"""
+    cannot use name "socket". \
+    There's already a built-in data assign with the same name.\
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code, "Component") end)
+
+    # Ignore built-in assigns from other component types
+    code = """
+    data myself, :any  # LiveComponent
+    data uploads, :any # LiveView
+    """
+
+    {:ok, _module} = eval(code, "Component")
+  end
+
+  test "validate duplicate built-in assigns for LiveComponent" do
+    code = """
+    data myself, :any
+    """
+
+    message = ~r"""
+    cannot use name "myself". \
+    There's already a built-in data assign with the same name.\
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code, "LiveComponent") end)
+
+    # Ignore built-in assigns from other component types
+    code = """
+    data inner_block, :any  # Component
+    data uploads, :string   # LiveView
+    """
+
+    {:ok, _module} = eval(code, "LiveComponent")
+  end
+
+  test "validate duplicate built-in assigns for LiveView" do
+    code = """
+    data uploads, :any
+    """
+
+    message = ~r"""
+    cannot use name "uploads". \
+    There's already a built-in data assign with the same name.\
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+
+    # Ignore built-in assigns from other component types
+    code = """
+    data inner_block, :any  # Component
+    data myself, :any       # LiveComponent
+    """
+
+    {:ok, _module} = eval(code, "LiveView")
   end
 
   test "accept invalid quoted expressions like literal maps as default value" do
@@ -155,7 +313,7 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :props\]/
+      message = ~r/unknown option :a. Available options: \[:required, :props, :as\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -181,7 +339,7 @@ defmodule Surface.APITest do
 
       message = """
       code.exs:7: cannot bind slot prop `item` to property `unknown`. \
-      Expected a existing property after `^`, got: an undefined property `unknown`.
+      Expected an existing property after `^`, got: an undefined property `unknown`.
 
       Hint: Available properties are [:label, :items]\
       """
@@ -245,12 +403,51 @@ defmodule Surface.APITest do
     end
   end
 
+  test "props are sorted semanticaly" do
+    props = [
+      %{
+        line: 3,
+        name: :header,
+        opts: [required: true]
+      },
+      %{
+        line: 2,
+        name: :id,
+        opts: [required: true]
+      },
+      %{
+        line: 1,
+        name: :footer,
+        opts: []
+      },
+      %{
+        line: 4,
+        name: :body,
+        opts: [required: true]
+      }
+    ]
+
+    sorted_props = Surface.API.sort_props(props)
+
+    assert [:id, :header, :body, :footer] = Enum.map(sorted_props, & &1.name)
+  end
+
   test "generate documentation when no @moduledoc is defined" do
     assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
-           ### Properties
+           ## Properties
 
-           * **label** *:string, required: true, default: ""* - The label.
+           * **label** *:string, required: true* - The label.
            * **class** *:css_class* - The class.
+
+           ## Slots
+
+           * **default** - The default slot.
+           * **header, required: true** - The required header slot.
+
+           ## Events
+
+           * **click, required: true** - The click event.
+           * **cancel** - The cancel event.
            """
   end
 
@@ -258,10 +455,20 @@ defmodule Surface.APITest do
     assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledoc) == """
            My component with @moduledoc
 
-           ### Properties
+           ## Properties
 
-           * **label** *:string, required: true, default: ""* - The label.
+           * **label** *:string, required: true* - The label.
            * **class** *:css_class* - The class.
+
+           ## Slots
+
+           * **default** - The default slot.
+           * **header, required: true** - The required header slot.
+
+           ## Events
+
+           * **click, required: true** - The click event.
+           * **cancel** - The cancel event.
            """
   end
 
@@ -269,13 +476,20 @@ defmodule Surface.APITest do
     assert get_docs(Surface.PropertiesTest.Components.MyComponentWithModuledocFalse) == nil
   end
 
-  defp eval(code) do
+  test "do not generate documentation sections when there is no props, slots or event" do
+    assert get_docs(Surface.PropertiesTest.Components.MyComponentWithDocButPropSlotAndEvent) ==
+             """
+             My Component with doc but props, slots and events
+             """
+  end
+
+  defp eval(code, component_type \\ "LiveComponent") do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module_name = "TestLiveComponent_#{id}"
 
     comp_code = """
     defmodule #{module_name} do
-      use Surface.LiveComponent
+      use Surface.#{component_type}
 
       #{code}
 

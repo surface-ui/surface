@@ -9,6 +9,8 @@ defmodule Surface.ContextChangeTrackingTest do
   defmodule ContextSetter do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <Context put={{ field: "field value" }}>
@@ -24,6 +26,8 @@ defmodule Surface.ContextChangeTrackingTest do
     alias Surface.CheckUpdated
 
     prop test_pid, :any, required: true
+
+    slot default
 
     def render(assigns) do
       ~H"""

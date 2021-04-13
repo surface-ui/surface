@@ -1,11 +1,5 @@
 defmodule LiveComponentTest do
-  use ExUnit.Case, async: true
-
-  import Phoenix.ConnTest
-  import Phoenix.LiveViewTest
-  import ComponentTestHelper
-
-  @endpoint Endpoint
+  use Surface.ConnCase, async: true
 
   defmodule StatelessComponent do
     use Surface.Component
@@ -67,9 +61,9 @@ defmodule LiveComponentTest do
       info = "Hi there!"
 
       ~H"""
-        <div>
-          <slot :props={{ info: info }}/>
-        </div>
+      <div>
+        <slot :props={{ info: info }}/>
+      </div>
       """
     end
   end
@@ -77,11 +71,13 @@ defmodule LiveComponentTest do
   defmodule InfoProviderWithoutSlotProps do
     use Surface.Component
 
+    slot default
+
     def render(assigns) do
       ~H"""
-        <div>
-          <slot/>
-        </div>
+      <div>
+        <slot/>
+      </div>
       """
     end
   end
@@ -111,8 +107,8 @@ defmodule LiveComponentTest do
   end
 
   test "render content without slot props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <InfoProviderWithoutSlotProps>
           <span>Hi there!</span>
@@ -120,14 +116,16 @@ defmodule LiveComponentTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <div><span>Hi there!</span></div>
+    assert html =~ """
+           <div>
+             <span>Hi there!</span>
+           </div>
            """
   end
 
   test "render content with slot props" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <InfoProvider :let={{ info: my_info }}>
           <span>{{ my_info }}</span>
@@ -135,33 +133,35 @@ defmodule LiveComponentTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <div><span>Hi there!</span></div>
+    assert html =~ """
+           <div>
+             <span>Hi there!</span>
+           </div>
            """
   end
 
   test "render stateful component with event" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <LiveComponentWithEvent event="click-event" id="button" />
         """
       end
 
-    assert render_live(code) =~ """
-           <button data-phx-component=\"1\" phx-click=\"click-event\"></button>
+    assert html =~ """
+           <button phx-click=\"click-event\"></button>
            """
   end
 
   test "do not set assign for `data` without default value" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <LiveComponentDataWithoutDefault id="counter"/>
         """
       end
 
-    assert render_live(code) =~ "false"
+    assert html =~ "false"
   end
 
   test "render stateless component" do

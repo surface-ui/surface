@@ -2,15 +2,18 @@ defmodule Surface.Components.Form.Label do
   @moduledoc """
   Defines a label.
 
-  Provides a wrapper for Phoenix.HTML.Form's `label/3` function.
+  Provides similar capabilities to Phoenix's built-in `label/2`
+  function.
 
-  All options passed via `opts` will be sent to `label/3`, `class` can
-  be set directly and will override anything in `opts`.
+  Option `class` can be set directly and will override anything in `opts`.
+
+  All given options are forwarded to the underlying tag. A default value is
+  provided for for attribute but can be overriden if you pass a value to the
+  for option. Text content would be inferred from field if not specified.
   """
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [label: 4]
   import Surface.Components.Form.Utils
   alias Surface.Components.Form.Input.InputContext
 
@@ -23,6 +26,11 @@ defmodule Surface.Components.Form.Label do
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
 
+  @doc """
+  The text for the generated `<label>` element, if no content (default slot) is provided.
+  """
+  prop text, :any
+
   @doc "Options list"
   prop opts, :keyword, default: []
 
@@ -32,16 +40,21 @@ defmodule Surface.Components.Form.Label do
   slot default
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, class: get_config(:default_class))
+    helper_opts = props_to_opts(assigns)
+    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ label(form, field, props ++ @opts, do: children(assigns, field)) }}
+      <label :attrs={{ helper_opts ++ attr_opts ++ input_id(form, field) ++ @opts }}>
+        <slot>{{ @text || Phoenix.Naming.humanize(field) }}</slot>
+      </label>
     </InputContext>
     """
   end
 
-  def children(assigns, field) do
-    ~H"<slot>{{ Phoenix.Naming.humanize(field) }}</slot>"
+  defp input_id(form, field) when is_nil(form) or is_nil(field), do: []
+
+  defp input_id(form, field) do
+    [for: Phoenix.HTML.Form.input_id(form, field)]
   end
 end

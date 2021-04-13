@@ -24,12 +24,13 @@ defmodule Surface.Components.Form.TelephoneInput do
   prop pattern, :string
 
   def render(assigns) do
-    props = get_non_nil_props(assigns, [:value, :pattern, class: @default_class])
-    event_opts = get_events_to_opts(assigns)
+    helper_opts = props_to_opts(assigns)
+    attr_opts = props_to_attr_opts(assigns, [:value, :pattern, class: get_default_class()])
+    event_opts = events_to_opts(assigns)
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ telephone_input(form, field, props ++ @opts ++ event_opts) }}
+      {{ telephone_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts) }}
     </InputContext>
     """
   end

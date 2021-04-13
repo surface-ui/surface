@@ -5,7 +5,7 @@ defmodule Surface do
   Built on top of the new `Phoenix.LiveComponent` API, Surface provides
   a more declarative way to express and use components in Phoenix.
 
-  Full documentation and live examples can be found at [surface-demo.msaraiva.io](http://surface-demo.msaraiva.io)
+  Full documentation and live examples can be found at [surface-ui.org](https://surface-ui.org)
 
   This module defines the `~H` sigil that should be used to translate Surface
   code into Phoenix templates.
@@ -32,7 +32,7 @@ defmodule Surface do
         use Phoenix.LiveView
         import Surface
 
-        def mount(socket) do
+        def mount(_params, _session, socket) do
           socket = Surface.init(socket)
           ...
           {:ok, socket}
@@ -73,7 +73,7 @@ defmodule Surface do
     * `Surface.LiveView` - A wrapper component around `Phoenix.LiveView`.
     * `Surface.MacroComponent` - A low-level component which is responsible for translating its own content at compile time.
 
-  ### Example
+  ## Example
 
       # A functional stateless component
 
@@ -103,10 +103,8 @@ defmodule Surface do
   @doc """
   Translates Surface code into Phoenix templates.
   """
-  defmacro sigil_H({:<<>>, _, [string]}, opts) do
-    # This will create accurate line numbers for heredoc usages of the sigil, but
-    # not for ~H* variants. See https://github.com/msaraiva/surface/issues/15#issuecomment-667305899
-    line_offset = __CALLER__.line + 1
+  defmacro sigil_H({:<<>>, meta, [string]}, opts) do
+    line_offset = __CALLER__.line + compute_line_offset(meta)
 
     caller_is_surface_component =
       Module.open?(__CALLER__.module) &&
@@ -123,23 +121,36 @@ defmodule Surface do
     )
   end
 
-  @doc "Retrieve a component's config based on the `key`"
-  defmacro get_config(component, key) do
-    config = get_components_config()
-
-    quote bind_quoted: [config: config, component: component, key: key] do
-      config[component][key]
+  defp compute_line_offset(meta) do
+    # Since `v1.11` this will create accurate line numbers for heredoc usages
+    # of the `~H` sigil. For version below `v1.11` single-line ~H will return
+    # an incorrect line number because there was no way to retrieve the information
+    # about the delimiter. See https://github.com/surface-ui/surface/issues/240
+    cond do
+      Keyword.has_key?(meta, :indentation) -> 1
+      not Version.match?(System.version(), "~> 1.11") -> 1
+      true -> 0
     end
+  end
+
+  @doc "Retrieve a component's config based on the `key`"
+  def get_config(component, key) do
+    config = get_components_config()
+    config[component][key]
   end
 
   @doc "Retrieve the component's config based on the `key`"
   defmacro get_config(key) do
     component = __CALLER__.module
-    config = get_components_config()
 
     quote do
-      unquote(config[component][key])
+      get_config(unquote(component), unquote(key))
     end
+  end
+
+  @doc "Retrieve all component's config"
+  def get_components_config() do
+    Application.get_env(:surface, :components, [])
   end
 
   @doc "Initialize surface state in the socket"
@@ -173,11 +184,20 @@ defmodule Surface do
         {name, Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias || module)}
       end)
 
-    props = Keyword.merge(Keyword.merge(default_props(module), dynamic_props), static_props)
+    props =
+      module
+      |> default_props()
+      |> Keyword.merge(dynamic_props)
+      |> Keyword.merge(static_props)
+      |> rename_id_if_stateless(module.component_type())
+
+    slot_assigns =
+      module
+      |> map_slots_to_assigns(slot_props)
 
     Map.new(
       props ++
-        slot_props ++
+        slot_assigns ++
         [
           __surface__: %{
             slots: Map.new(slots),
@@ -186,6 +206,16 @@ defmodule Surface do
           __context__: context
         ]
     )
+  end
+
+  defp map_slots_to_assigns(module, slot_props) do
+    mapping =
+      module.__slots__()
+      |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
+      |> Enum.filter(fn value -> not match?({_, nil}, value) end)
+
+    slot_props
+    |> Enum.map(fn {name, info} -> {Keyword.get(mapping, name, name), info} end)
   end
 
   @doc false
@@ -216,26 +246,22 @@ defmodule Surface do
   end
 
   @doc false
-  defmacro prop_to_opts(prop_value, prop_name) do
+  defmacro prop_to_attr_opts(prop_value, prop_name) do
     quote do
-      prop_to_opts(unquote(prop_value), unquote(prop_name), __ENV__)
+      prop_to_attr_opts(unquote(prop_value), unquote(prop_name), __ENV__)
     end
   end
 
   @doc false
-  def prop_to_opts(nil, _prop_name, _caller) do
+  def prop_to_attr_opts(nil, _prop_name, _caller) do
     []
   end
 
-  def prop_to_opts(prop_value, prop_name, caller) do
+  def prop_to_attr_opts(prop_value, prop_name, caller) do
     module = caller.module
     meta = %{caller: caller, line: caller.line, node_alias: module}
     {type, _opts} = Surface.TypeHandler.attribute_type_and_opts(module, prop_name, meta)
     Surface.TypeHandler.attr_to_opts!(type, prop_name, prop_value)
-  end
-
-  defp get_components_config() do
-    Application.get_env(:surface, :components, [])
   end
 
   @doc """
@@ -268,7 +294,6 @@ defmodule Surface do
   end
 
   @doc false
-  def slot_assigned?(assigns, :default), do: slot_assigned?(assigns, :__default__)
   def slot_assigned?(%{__surface__: %{provided_templates: slots}}, slot), do: slot in slots
   def slot_assigned?(_, _), do: false
 
@@ -302,5 +327,16 @@ defmodule Surface do
     """
 
     IOHelper.warn(message, caller, & &1)
+  end
+
+  defp rename_id_if_stateless(props, Surface.Component) do
+    case Keyword.pop(props, :id) do
+      {nil, rest} -> rest
+      {id, rest} -> Keyword.put(rest, :__id__, id)
+    end
+  end
+
+  defp rename_id_if_stateless(props, _type) do
+    props
   end
 end

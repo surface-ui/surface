@@ -1,11 +1,5 @@
 defmodule Surface.EventsTest do
-  use ExUnit.Case, async: true
-
-  import Phoenix.ConnTest
-  import Phoenix.LiveViewTest
-  import ComponentTestHelper
-
-  @endpoint Endpoint
+  use Surface.ConnCase, async: true
 
   defmodule LiveDiv do
     use Surface.LiveComponent
@@ -86,16 +80,14 @@ defmodule Surface.EventsTest do
   test "handle event in the parent liveview" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
 
-    assert_html(
-      html =~ """
-      <button data-phx-component="2" phx-click="click">Click me!</button>
-      """
-    )
+    assert html =~ """
+           <button data-phx-component="2" phx-click="click">Click me!</button>\
+           """
   end
 
   test "handle event in parent component" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Panel id="panel_id"/>
@@ -103,14 +95,14 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <button data-phx-component="2" phx-click="click" phx-target="1"\
+    assert html =~ """
+           <button phx-click="click" phx-target="1"\
            """
   end
 
   test "handle event locally" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id"/>
@@ -118,14 +110,14 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ """
-           <button data-phx-component="1" phx-click="click" phx-target="1"\
+    assert html =~ """
+           <button phx-click="click" phx-target="1"\
            """
   end
 
   test "override target" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ %{name: "ok", target: "#comp"} }}/>
@@ -133,7 +125,7 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ """
+    assert html =~ """
            phx-click="ok" phx-target="#comp"\
            """
   end
@@ -144,8 +136,8 @@ defmodule Surface.EventsTest do
     """
 
     # Event name as string
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ "ok", target: "#comp" }}/>
@@ -153,11 +145,11 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ expected
+    assert html =~ expected
 
     # Event name as atom
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ :ok, target: "#comp" }}/>
@@ -165,12 +157,12 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert render_live(code) =~ expected
+    assert html =~ expected
   end
 
   test "passing event as nil does not render phx-*" do
-    code =
-      quote do
+    html =
+      render_surface do
         ~H"""
         <div>
           <Button id="button_id" click={{ nil }}/>
@@ -178,23 +170,12 @@ defmodule Surface.EventsTest do
         """
       end
 
-    html = render_live(code)
-
     assert html =~ "<button"
     refute html =~ "phx-click"
     refute html =~ "phx-target"
   end
 
   test "raise error when passing an :event into a phx-* binding" do
-    code =
-      quote do
-        ~H"""
-        <div>
-          <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
-        </div>
-        """
-      end
-
     message = """
     invalid value for "phx-click". LiveView bindings only accept values \
     of type :string. If you want to pass an :event, please use directive \
@@ -202,7 +183,11 @@ defmodule Surface.EventsTest do
     """
 
     assert_raise(RuntimeError, message, fn ->
-      render_live(code)
+      render_surface do
+        ~H"""
+        <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
+        """
+      end
     end)
   end
 end

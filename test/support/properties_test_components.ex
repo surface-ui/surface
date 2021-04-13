@@ -3,14 +3,28 @@ defmodule Surface.PropertiesTest.Components do
     use Surface.Component
 
     @doc "The label"
-    prop label, :string, required: true, default: ""
+    prop label, :string, required: true
 
     @doc "The class"
     prop class, :css_class
 
+    @doc "The click event"
+    prop click, :event, required: true
+
+    @doc "The cancel event"
+    prop cancel, :event
+
+    @doc "The default slot"
+    slot default
+
+    @doc "The required header slot"
+    slot header, required: true
+
     def render(assigns) do
       ~H"""
-      <div />
+      <div>
+        <slot name="default" />
+      </div>
       """
     end
   end
@@ -23,7 +37,39 @@ defmodule Surface.PropertiesTest.Components do
     """
 
     @doc "The label"
-    prop label, :string, required: true, default: ""
+    prop label, :string, required: true
+
+    @doc "The class"
+    prop class, :css_class
+
+    @doc "The click event"
+    prop click, :event, required: true
+
+    @doc "The cancel event"
+    prop cancel, :event
+
+    @doc "The default slot"
+    slot default
+
+    @doc "The required header slot"
+    slot header, required: true
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <slot name="default" />
+      </div>
+      """
+    end
+  end
+
+  defmodule MyComponentWithModuledocFalse do
+    use Surface.Component
+
+    @moduledoc false
+
+    @doc "The label"
+    prop label, :string, required: true
 
     @doc "The class"
     prop class, :css_class
@@ -35,16 +81,12 @@ defmodule Surface.PropertiesTest.Components do
     end
   end
 
-  defmodule MyComponentWithModuledocFalse do
+  defmodule MyComponentWithDocButPropSlotAndEvent do
     use Surface.Component
 
-    @moduledoc false
-
-    @doc "The label"
-    prop label, :string, required: true, default: ""
-
-    @doc "The class"
-    prop class, :css_class
+    @moduledoc """
+    My Component with doc but props, slots and events
+    """
 
     def render(assigns) do
       ~H"""

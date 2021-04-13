@@ -53,6 +53,18 @@ defmodule Surface.LiveView do
       """
       prop session, :map
 
+      @doc "Built-in assign"
+      data socket, :struct
+
+      @doc "Built-in assign"
+      data flash, :map
+
+      @doc "Built-in assign"
+      data live_action, :atom
+
+      @doc "Built-in assign"
+      data uploads, :list
+
       use Phoenix.LiveView, unquote(opts)
     end
   end

@@ -1,7 +1,5 @@
 defmodule LiveViewTest do
-  use ExUnit.Case, async: true
-
-  import ComponentTestHelper
+  use Surface.ConnCase, async: true
 
   defmodule LiveViewDataWithoutDefault do
     use Surface.LiveView
@@ -15,7 +13,8 @@ defmodule LiveViewTest do
     end
   end
 
-  test "do not set assign for `data` without default value" do
-    assert render_live(LiveViewDataWithoutDefault) =~ "false"
+  test "do not set assign for `data` without default value", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, LiveViewDataWithoutDefault)
+    assert html =~ "false"
   end
 end
