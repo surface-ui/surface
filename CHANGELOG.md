@@ -6,6 +6,7 @@
   * Support defining form fields as strings. Consequently, fields defined as literal strings will
     no longer be auto-converted to `:atom` and will keep the original value (#319)
   * Do not encode HTML entities when passing attribute values as string literals (#323)
+  * Extract the Markdown macro component in its repository (#316)
 
 ## v0.3.2 (2021-03-19)
 
