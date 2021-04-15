@@ -82,6 +82,48 @@ defmodule ContextTest do
     end
   end
 
+  defmodule ContextFetcher do
+    use Surface.Component
+
+    slot default
+
+    data without_scope, :any
+    data with_scope, :any
+
+    def update(assigns, socket) do
+      socket =
+        assign(socket,
+          without_scope: Context.get(assigns, :without_scope),
+          with_scope: Context.get(assigns, {Foo, :with_scope})
+        )
+
+      {:ok, socket}
+    end
+
+    def render(assigns) do
+      ~H"""
+      <div>without_scope: {{ @without_scope }}</div>
+      <div>with_sope: {{ @with_scope }}</div>
+      """
+    end
+  end
+
+  test "read the context" do
+    html =
+      render_surface do
+        ~H"""
+        <Context put={{ without_scope: 1 }}  put={{ Foo, with_scope: 2 }}>
+          <ContextFetcher/>
+        </Context>
+        """
+      end
+
+    assert html =~ """
+           <div>without_scope: 1</div>
+           <div>with_sope: 2</div>\
+           """
+  end
+
   test "pass context to child component" do
     html =
       render_surface do

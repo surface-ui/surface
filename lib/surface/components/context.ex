@@ -109,6 +109,18 @@ defmodule Surface.Components.Context do
     """
   end
 
+  def get(assigns, key, default \\ nil) do
+    Map.get(assigns.__context__, key, default)
+  end
+
+  def fetch(assigns, key) do
+    Map.fetch(assigns.__context__, key)
+  end
+
+  def fetch!(assigns, key) do
+    Map.fetch!(assigns.__context__, key)
+  end
+
   defp context_map(context, puts, gets) do
     ctx =
       for {scope, values} <- puts, {key, value} <- values, reduce: context do
