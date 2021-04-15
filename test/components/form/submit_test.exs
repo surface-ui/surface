@@ -146,6 +146,32 @@ defmodule Surface.Components.Form.SubmitTest do
            """
   end
 
+  test "window keydown event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" window_keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-window-keydown="my_keydown" type="submit">Submit</button>
+           """
+  end
+
+  test "window keyup event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="Submit" window_keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <button phx-window-keyup="my_keyup" type="submit">Submit</button>
+           """
+  end
+
   test "keydown event with parent live view as target" do
     html =
       render_surface do

@@ -202,6 +202,32 @@ defmodule Surface.Components.Form.CheckboxTest do
            """
   end
 
+  test "window keydown event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox form="user" field="admin" window_keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" phx-window-keydown="my_keydown" type="checkbox" value="true">
+           """
+  end
+
+  test "window keyup event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox form="user" field="admin" window_keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" phx-window-keyup="my_keyup" type="checkbox" value="true">
+           """
+  end
+
   test "keydown event with parent live view as target" do
     html =
       render_surface do

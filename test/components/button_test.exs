@@ -184,6 +184,36 @@ defmodule Surface.Components.ButtonTest do
            """
   end
 
+  test "window keydown event with parent live view as target" do
+    csrf_token = Plug.CSRFProtection.get_csrf_token()
+
+    html =
+      render_surface do
+        ~H"""
+        <Button label="user" to="/users/1" window_keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-window-keydown="my_keydown">user</button>
+           """
+  end
+
+  test "window keyup event with parent live view as target" do
+    csrf_token = Plug.CSRFProtection.get_csrf_token()
+
+    html =
+      render_surface do
+        ~H"""
+        <Button label="user" to="/users/1" window_keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-window-keyup="my_keyup">user</button>
+           """
+  end
+
   test "keydown event with parent live view as target" do
     csrf_token = Plug.CSRFProtection.get_csrf_token()
 

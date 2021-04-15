@@ -142,6 +142,32 @@ defmodule Surface.Components.Form.ResetTest do
            """
   end
 
+  test "window keydown event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Reset value="ResetTheForm" window_keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <input phx-window-keydown="my_keydown" type="reset" value="ResetTheForm">
+           """
+  end
+
+  test "window keyup event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Reset value="ResetTheForm" window_keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <input phx-window-keyup="my_keyup" type="reset" value="ResetTheForm">
+           """
+  end
+
   test "keydown event with parent live view as target" do
     html =
       render_surface do

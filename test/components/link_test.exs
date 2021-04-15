@@ -164,6 +164,32 @@ defmodule Surface.Components.LinkTest do
            """
   end
 
+  test "window keydown event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" window_keydown="my_keydown" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-window-keydown="my_keydown" href="/users/1">user</a>
+           """
+  end
+
+  test "window keyup event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" window_keyup="my_keyup" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-window-keyup="my_keyup" href="/users/1">user</a>
+           """
+  end
+
   test "keydown event with parent live view as target" do
     html =
       render_surface do
