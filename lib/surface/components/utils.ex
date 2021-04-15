@@ -78,9 +78,12 @@ defmodule Surface.Components.Utils do
   def opts_to_attrs(opts) do
     for {key, value} <- opts do
       case key do
+        :phx_window_blur -> {:"phx-window-blur", value}
+        :phx_window_focus -> {:"phx-window-focus", value}
         :phx_blur -> {:"phx-blur", value}
         :phx_focus -> {:"phx-focus", value}
         :phx_capture_click -> {:"phx-capture-click", value}
+        :phx_click -> {:"phx-click", value}
         :phx_keydown -> {:"phx-keydown", value}
         :phx_keyup -> {:"phx-keyup", value}
         :phx_target -> {:"phx-target", value}
@@ -99,9 +102,12 @@ defmodule Surface.Components.Utils do
 
   def events_to_opts(assigns) do
     [
+      event_to_opts(assigns.window_blur, :phx_window_blur),
+      event_to_opts(assigns.window_focus, :phx_window_focus),
       event_to_opts(assigns.blur, :phx_blur),
       event_to_opts(assigns.focus, :phx_focus),
       event_to_opts(assigns.capture_click, :phx_capture_click),
+      event_to_opts(assigns.click, :phx_click),
       event_to_opts(assigns.keydown, :phx_keydown),
       event_to_opts(assigns.keyup, :phx_keyup)
     ]

@@ -26,6 +26,7 @@ defmodule Surface.Components.Link do
   """
 
   use Surface.Component
+  use Surface.Components.Events
 
   import Surface.Components.Utils
 
@@ -45,21 +46,6 @@ defmodule Surface.Components.Link do
   The label for the generated `<a>` element, if no content (default slot) is provided.
   """
   prop label, :string
-
-  @doc "Triggered when the component loses focus"
-  prop blur, :event
-
-  @doc "Triggered when the component receives focus"
-  prop focus, :event
-
-  @doc "Triggered when the component receives click"
-  prop capture_click, :event
-
-  @doc "Triggered when a button on the keyboard is pressed"
-  prop keydown, :event
-
-  @doc "Triggered when a button on the keyboard is released"
-  prop keyup, :event
 
   @doc """
   Additional attributes to add onto the generated element

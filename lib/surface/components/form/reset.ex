@@ -16,8 +16,10 @@ defmodule Surface.Components.Form.Reset do
   """
 
   use Surface.Component
+  use Surface.Components.Events
 
   import Phoenix.HTML.Form, only: [reset: 2]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   @doc "The id of the corresponding input field"
@@ -34,21 +36,6 @@ defmodule Surface.Components.Form.Reset do
 
   @doc "Keyword list with options to be passed down to `reset/2`"
   prop opts, :keyword, default: []
-
-  @doc "Triggered when the component loses focus"
-  prop blur, :event
-
-  @doc "Triggered when the component receives focus"
-  prop focus, :event
-
-  @doc "Triggered when the component receives click"
-  prop capture_click, :event
-
-  @doc "Triggered when a button on the keyboard is pressed"
-  prop keydown, :event
-
-  @doc "Triggered when a button on the keyboard is released"
-  prop keyup, :event
 
   def render(assigns) do
     helper_opts = props_to_opts(assigns)

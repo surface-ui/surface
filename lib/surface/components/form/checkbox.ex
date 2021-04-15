@@ -18,6 +18,7 @@ defmodule Surface.Components.Form.Checkbox do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [checkbox: 3]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   @doc "The value to be sent when the checkbox is checked. Defaults to \"true\""

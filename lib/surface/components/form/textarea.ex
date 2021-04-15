@@ -18,6 +18,7 @@ defmodule Surface.Components.Form.TextArea do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [textarea: 3]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   @doc "Specifies the visible number of lines in a text area"

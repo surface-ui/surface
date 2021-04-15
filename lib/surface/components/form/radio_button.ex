@@ -18,6 +18,7 @@ defmodule Surface.Components.Form.RadioButton do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [radio_button: 4]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   @doc "Indicates whether or not the radio button is the selected item in the group"
