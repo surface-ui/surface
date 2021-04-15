@@ -94,6 +94,36 @@ defmodule Surface.Components.ButtonTest do
            """
   end
 
+  test "window blur event with parent live view as target" do
+    csrf_token = Plug.CSRFProtection.get_csrf_token()
+
+    html =
+      render_surface do
+        ~H"""
+        <Button label="user" to="/users/1" window_blur="my_blur" />
+        """
+      end
+
+    assert html =~ """
+           <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-window-blur="my_blur">user</button>
+           """
+  end
+
+  test "window focus event with parent live view as target" do
+    csrf_token = Plug.CSRFProtection.get_csrf_token()
+
+    html =
+      render_surface do
+        ~H"""
+        <Button label="user" to="/users/1" window_focus="my_focus" />
+        """
+      end
+
+    assert html =~ """
+           <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-window-focus="my_focus">user</button>
+           """
+  end
+
   test "blur event with parent live view as target" do
     csrf_token = Plug.CSRFProtection.get_csrf_token()
 
@@ -136,6 +166,21 @@ defmodule Surface.Components.ButtonTest do
 
     assert html =~ """
            <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-capture-click="my_click">user</button>
+           """
+  end
+
+  test "click event with parent live view as target" do
+    csrf_token = Plug.CSRFProtection.get_csrf_token()
+
+    html =
+      render_surface do
+        ~H"""
+        <Button label="user" to="/users/1" click="my_click" />
+        """
+      end
+
+    assert html =~ """
+           <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-click="my_click">user</button>
            """
   end
 

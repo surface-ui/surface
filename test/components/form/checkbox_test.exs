@@ -124,6 +124,32 @@ defmodule Surface.Components.Form.CheckboxTest do
     refute html =~ ~r/hidden/
   end
 
+  test "window blur event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox form="user" field="admin" window_blur="my_blur" />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" phx-window-blur="my_blur" type="checkbox" value="true">
+           """
+  end
+
+  test "window focus event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox form="user" field="admin" window_focus="my_focus" />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" phx-window-focus="my_focus" type="checkbox" value="true">
+           """
+  end
+
   test "blur event with parent live view as target" do
     html =
       render_surface do
@@ -160,6 +186,19 @@ defmodule Surface.Components.Form.CheckboxTest do
 
     assert html =~ """
            <input id="user_admin" name="user[admin]" phx-capture-click="my_click" type="checkbox" value="true">
+           """
+  end
+
+  test "click event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Checkbox form="user" field="admin" click="my_click" />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" phx-click="my_click" type="checkbox" value="true">
            """
   end
 

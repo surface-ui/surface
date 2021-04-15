@@ -86,6 +86,32 @@ defmodule Surface.Components.LinkTest do
            """
   end
 
+  test "window blur event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" window_blur="my_blur" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-window-blur="my_blur" href="/users/1">user</a>
+           """
+  end
+
+  test "window focus event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" window_focus="my_focus" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-window-focus="my_focus" href="/users/1">user</a>
+           """
+  end
+
   test "blur event with parent live view as target" do
     html =
       render_surface do
@@ -122,6 +148,19 @@ defmodule Surface.Components.LinkTest do
 
     assert html =~ """
            <a phx-capture-click="my_click" href="/users/1">user</a>
+           """
+  end
+
+  test "click event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Link label="user" to="/users/1" click="my_click" />
+        """
+      end
+
+    assert html =~ """
+           <a phx-click="my_click" href="/users/1">user</a>
            """
   end
 

@@ -64,6 +64,32 @@ defmodule Surface.Components.Form.ResetTest do
            """
   end
 
+  test "window blur event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Reset value="ResetTheForm" window_blur="my_blur" />
+        """
+      end
+
+    assert html =~ """
+           <input phx-window-blur="my_blur" type="reset" value="ResetTheForm">
+           """
+  end
+
+  test "window focus event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Reset value="ResetTheForm" window_focus="my_focus" />
+        """
+      end
+
+    assert html =~ """
+           <input phx-window-focus="my_focus" type="reset" value="ResetTheForm">
+           """
+  end
+
   test "blur event with parent live view as target" do
     html =
       render_surface do
@@ -100,6 +126,19 @@ defmodule Surface.Components.Form.ResetTest do
 
     assert html =~ """
            <input phx-capture-click="my_click" type="reset" value="ResetTheForm">
+           """
+  end
+
+  test "click event with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Reset value="ResetTheForm" click="my_click" />
+        """
+      end
+
+    assert html =~ """
+           <input phx-click="my_click" type="reset" value="ResetTheForm">
            """
   end
 
