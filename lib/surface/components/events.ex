@@ -21,10 +21,16 @@ defmodule Surface.Components.Events do
       @doc "Triggered when the component receives click"
       prop click, :event
 
-      @doc "Triggered when a button on the keyboard is pressed"
+      @doc "Triggered when a key on the keyboard is pressed (window-level)"
+      prop window_keydown, :event
+
+      @doc "Triggered when a key on the keyboard is released (window-level)"
+      prop window_keyup, :event
+
+      @doc "Triggered when a key on the keyboard is pressed"
       prop keydown, :event
 
-      @doc "Triggered when a button on the keyboard is released"
+      @doc "Triggered when a key on the keyboard is released"
       prop keyup, :event
     end
   end

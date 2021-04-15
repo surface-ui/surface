@@ -84,6 +84,8 @@ defmodule Surface.Components.Utils do
         :phx_focus -> {:"phx-focus", value}
         :phx_capture_click -> {:"phx-capture-click", value}
         :phx_click -> {:"phx-click", value}
+        :phx_window_keydown -> {:"phx-window-keydown", value}
+        :phx_window_keyup -> {:"phx-window-keyup", value}
         :phx_keydown -> {:"phx-keydown", value}
         :phx_keyup -> {:"phx-keyup", value}
         :phx_target -> {:"phx-target", value}
@@ -108,6 +110,8 @@ defmodule Surface.Components.Utils do
       event_to_opts(assigns.focus, :phx_focus),
       event_to_opts(assigns.capture_click, :phx_capture_click),
       event_to_opts(assigns.click, :phx_click),
+      event_to_opts(assigns.window_keydown, :phx_window_keydown),
+      event_to_opts(assigns.window_keyup, :phx_window_keyup),
       event_to_opts(assigns.keydown, :phx_keydown),
       event_to_opts(assigns.keyup, :phx_keyup)
     ]
