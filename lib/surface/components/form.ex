@@ -53,6 +53,13 @@ defmodule Surface.Components.Form do
   @doc "Triggered when the form is submitted"
   prop submit, :event
 
+  @doc """
+  Triggered when the form is being recovered.
+  Use this event to enable specialized recovery when extra recovery handling
+  on the server is required.
+  """
+  prop auto_recover, :event
+
   @doc "The content of the `<form>`"
   slot default, props: [:form]
 
@@ -74,6 +81,7 @@ defmodule Surface.Components.Form do
       attr_opts ++
       assigns.opts ++
       event_to_opts(assigns.change, :phx_change) ++
-      event_to_opts(assigns.submit, :phx_submit)
+      event_to_opts(assigns.submit, :phx_submit) ++
+      event_to_opts(assigns.auto_recover, :phx_auto_recover)
   end
 end
