@@ -118,7 +118,7 @@ defmodule Surface.MacroComponent do
 
     Hint: properties of macro components can only accept static values like module attributes,
     literals or compile-time expressions. Runtime variables and expressions, including component
-    assigns, cannot be avaluated as they are not available during compilation.
+    assigns, cannot be evaluated as they are not available during compilation.
     """
   end
 end
