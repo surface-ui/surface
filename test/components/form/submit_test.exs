@@ -68,32 +68,6 @@ defmodule Surface.Components.Form.SubmitTest do
            """
   end
 
-  test "window blur event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Submit label="Submit" window_blur="my_blur" />
-        """
-      end
-
-    assert html =~ """
-           <button phx-window-blur="my_blur" type="submit">Submit</button>
-           """
-  end
-
-  test "window focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Submit label="Submit" window_focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <button phx-window-focus="my_focus" type="submit">Submit</button>
-           """
-  end
-
   test "events with parent live view as target" do
     html =
       render_surface do
