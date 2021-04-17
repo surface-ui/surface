@@ -96,69 +96,35 @@ defmodule Surface.Components.Form.FileInputTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <FileInput form="user" field="picture" blur="my_blur" />
+        <FileInput form="user" field="picture"
+          capture_click="my_capture_click"
+          click="my_click"
+          window_focus="my_window_focus"
+          window_blur="my_window_blur"
+          focus="my_focus"
+          blur="my_blur"
+          window_keyup="my_window_keyup"
+          window_keydown="my_window_keydown"
+          keyup="my_keyup"
+          keydown="my_keydown"
+        />
         """
       end
 
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-blur="my_blur" type="file">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-focus="my_focus" type="file">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-capture-click="my_click" type="file">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-keydown="my_keydown" type="file">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-keyup="my_keyup" type="file">
-           """
+    assert html =~ ~s(phx-capture-click="my_capture_click")
+    assert html =~ ~s(phx-click="my_click")
+    assert html =~ ~s(phx-window-focus="my_window_focus")
+    assert html =~ ~s(phx-window-blur="my_window_blur")
+    assert html =~ ~s(phx-focus="my_focus")
+    assert html =~ ~s(phx-blur="my_blur")
+    assert html =~ ~s(phx-window-keyup="my_window_keyup")
+    assert html =~ ~s(phx-window-keydown="my_window_keydown")
+    assert html =~ ~s(phx-keyup="my_keyup")
+    assert html =~ ~s(phx-keydown="my_keydown")
   end
 
   test "setting id and name through props" do

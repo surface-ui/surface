@@ -77,69 +77,35 @@ defmodule Surface.Components.Form.SearchInputTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <SearchInput form="user" field="color" value="mytitle" blur="my_blur" />
+        <SearchInput form="user" field="color" value="mytitle"
+          capture_click="my_capture_click"
+          click="my_click"
+          window_focus="my_window_focus"
+          window_blur="my_window_blur"
+          focus="my_focus"
+          blur="my_blur"
+          window_keyup="my_window_keyup"
+          window_keydown="my_window_keydown"
+          keyup="my_keyup"
+          keydown="my_keydown"
+        />
         """
       end
 
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-blur="my_blur" type="search" value="mytitle">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <SearchInput form="user" field="color" value="mytitle" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-focus="my_focus" type="search" value="mytitle">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <SearchInput form="user" field="color" value="mytitle" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-capture-click="my_click" type="search" value="mytitle">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <SearchInput form="user" field="color" value="mytitle" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-keydown="my_keydown" type="search" value="mytitle">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <SearchInput form="user" field="color" value="mytitle" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="search" value="mytitle">
-           """
+    assert html =~ ~s(phx-capture-click="my_capture_click")
+    assert html =~ ~s(phx-click="my_click")
+    assert html =~ ~s(phx-window-focus="my_window_focus")
+    assert html =~ ~s(phx-window-blur="my_window_blur")
+    assert html =~ ~s(phx-focus="my_focus")
+    assert html =~ ~s(phx-blur="my_blur")
+    assert html =~ ~s(phx-window-keyup="my_window_keyup")
+    assert html =~ ~s(phx-window-keydown="my_window_keydown")
+    assert html =~ ~s(phx-keyup="my_keyup")
+    assert html =~ ~s(phx-keydown="my_keydown")
   end
 
   test "setting id and name through props" do

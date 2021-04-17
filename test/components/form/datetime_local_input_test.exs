@@ -64,69 +64,35 @@ defmodule Surface.Components.Form.DateTimeLocalInputTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" value="2020-05-05T19:30" blur="my_blur" />
+        <DateTimeLocalInput form="order" field="completed_at" value="2020-05-05T19:30"
+          capture_click="my_capture_click"
+          click="my_click"
+          window_focus="my_window_focus"
+          window_blur="my_window_blur"
+          focus="my_focus"
+          blur="my_blur"
+          window_keyup="my_window_keyup"
+          window_keydown="my_window_keydown"
+          keyup="my_keyup"
+          keydown="my_keydown"
+        />
         """
       end
 
-    assert html =~ """
-           <input id="order_completed_at" name="order[completed_at]" phx-blur="my_blur" type="datetime-local" value="2020-05-05T19:30">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" value="2020-05-05T19:30" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="order_completed_at" name="order[completed_at]" phx-focus="my_focus" type="datetime-local" value="2020-05-05T19:30">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" value="2020-05-05T19:30" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="order_completed_at" name="order[completed_at]" phx-capture-click="my_click" type="datetime-local" value="2020-05-05T19:30">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" value="2020-05-05T19:30" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="order_completed_at" name="order[completed_at]" phx-keydown="my_keydown" type="datetime-local" value="2020-05-05T19:30">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" value="2020-05-05T19:30" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="order_completed_at" name="order[completed_at]" phx-keyup="my_keyup" type="datetime-local" value="2020-05-05T19:30">
-           """
+    assert html =~ ~s(phx-capture-click="my_capture_click")
+    assert html =~ ~s(phx-click="my_click")
+    assert html =~ ~s(phx-window-focus="my_window_focus")
+    assert html =~ ~s(phx-window-blur="my_window_blur")
+    assert html =~ ~s(phx-focus="my_focus")
+    assert html =~ ~s(phx-blur="my_blur")
+    assert html =~ ~s(phx-window-keyup="my_window_keyup")
+    assert html =~ ~s(phx-window-keydown="my_window_keydown")
+    assert html =~ ~s(phx-keyup="my_keyup")
+    assert html =~ ~s(phx-keydown="my_keydown")
   end
 
   test "setting id and name through props" do

@@ -86,149 +86,35 @@ defmodule Surface.Components.LinkTest do
            """
   end
 
-  test "window blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <Link label="user" to="/users/1" window_blur="my_blur" />
+        <Link label="user" to="/users/1"
+          capture_click="my_capture_click"
+          click="my_click"
+          window_focus="my_window_focus"
+          window_blur="my_window_blur"
+          focus="my_focus"
+          blur="my_blur"
+          window_keyup="my_window_keyup"
+          window_keydown="my_window_keydown"
+          keyup="my_keyup"
+          keydown="my_keydown"
+        />
         """
       end
 
-    assert html =~ """
-           <a phx-window-blur="my_blur" href="/users/1">user</a>
-           """
-  end
-
-  test "window focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" window_focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-window-focus="my_focus" href="/users/1">user</a>
-           """
-  end
-
-  test "blur event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" blur="my_blur" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-blur="my_blur" href="/users/1">user</a>
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-focus="my_focus" href="/users/1">user</a>
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-capture-click="my_click" href="/users/1">user</a>
-           """
-  end
-
-  test "click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-click="my_click" href="/users/1">user</a>
-           """
-  end
-
-  test "window keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" window_keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-window-keydown="my_keydown" href="/users/1">user</a>
-           """
-  end
-
-  test "window keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" window_keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-window-keyup="my_keyup" href="/users/1">user</a>
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-keydown="my_keydown" href="/users/1">user</a>
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Link label="user" to="/users/1" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <a phx-keyup="my_keyup" href="/users/1">user</a>
-           """
-  end
-
-  test "click event with @myself as target" do
-    html =
-      render_surface do
-        ~H"""
-        <ComponentWithLink id="comp"/>
-        """
-      end
-
-    assert html =~ ~r"""
-           <div>
-             <a phx-capture-click="my_click" phx-target="1" href="/users/1">user</a>
-           </div>
-           """
+    assert html =~ ~s(phx-capture-click="my_capture_click")
+    assert html =~ ~s(phx-click="my_click")
+    assert html =~ ~s(phx-window-focus="my_window_focus")
+    assert html =~ ~s(phx-window-blur="my_window_blur")
+    assert html =~ ~s(phx-focus="my_focus")
+    assert html =~ ~s(phx-blur="my_blur")
+    assert html =~ ~s(phx-window-keyup="my_window_keyup")
+    assert html =~ ~s(phx-window-keydown="my_window_keydown")
+    assert html =~ ~s(phx-keyup="my_keyup")
+    assert html =~ ~s(phx-keydown="my_keydown")
   end
 
   describe "is compatible with phoenix link/2" do
