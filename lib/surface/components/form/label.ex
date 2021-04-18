@@ -44,7 +44,7 @@ defmodule Surface.Components.Form.Label do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
-    event_opts = events_to_opts(assigns) |> opts_to_attrs()
+    event_opts = assigns |> events_to_opts() |> opts_to_attrs()
 
     ~H"""
     <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
