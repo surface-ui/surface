@@ -77,69 +77,15 @@ defmodule Surface.Components.Form.TimeInputTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <TimeInput form="user" field="color" value="23:59:59" blur="my_blur" />
+        <TimeInput form="user" field="color" value="23:59:59" click="my_click" />
         """
       end
 
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-blur="my_blur" type="time" value="23:59:59">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <TimeInput form="user" field="color" value="23:59:59" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-focus="my_focus" type="time" value="23:59:59">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <TimeInput form="user" field="color" value="23:59:59" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-capture-click="my_click" type="time" value="23:59:59">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <TimeInput form="user" field="color" value="23:59:59" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-keydown="my_keydown" type="time" value="23:59:59">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <TimeInput form="user" field="color" value="23:59:59" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="time" value="23:59:59">
-           """
+    assert html =~ ~s(phx-click="my_click")
   end
 
   test "setting id and name through props" do

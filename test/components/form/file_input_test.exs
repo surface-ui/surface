@@ -96,69 +96,15 @@ defmodule Surface.Components.Form.FileInputTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <FileInput form="user" field="picture" blur="my_blur" />
+        <FileInput form="user" field="picture" click="my_click" />
         """
       end
 
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-blur="my_blur" type="file">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-focus="my_focus" type="file">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-capture-click="my_click" type="file">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-keydown="my_keydown" type="file">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_picture" name="user[picture]" phx-keyup="my_keyup" type="file">
-           """
+    assert html =~ ~s(phx-click="my_click")
   end
 
   test "setting id and name through props" do

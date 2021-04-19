@@ -77,69 +77,15 @@ defmodule Surface.Components.Form.PasswordInputTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <PasswordInput form="user" field="color" value="secret" blur="my_blur" />
+        <PasswordInput form="user" field="color" value="secret" click="my_click" />
         """
       end
 
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-blur="my_blur" type="password" value="secret">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <PasswordInput form="user" field="color" value="secret" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-focus="my_focus" type="password" value="secret">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <PasswordInput form="user" field="color" value="secret" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-capture-click="my_click" type="password" value="secret">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <PasswordInput form="user" field="color" value="secret" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-keydown="my_keydown" type="password" value="secret">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <PasswordInput form="user" field="color" value="secret" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_color" name="user[color]" phx-keyup="my_keyup" type="password" value="secret">
-           """
+    assert html =~ ~s(phx-click="my_click")
   end
 
   test "setting id and name through props" do

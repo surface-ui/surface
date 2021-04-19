@@ -124,69 +124,15 @@ defmodule Surface.Components.Form.CheckboxTest do
     refute html =~ ~r/hidden/
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <Checkbox form="user" field="admin" blur="my_blur" />
+        <Checkbox form="user" field="admin" click="my_click" />
         """
       end
 
-    assert html =~ """
-           <input id="user_admin" name="user[admin]" phx-blur="my_blur" type="checkbox" value="true">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Checkbox form="user" field="admin" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_admin" name="user[admin]" phx-focus="my_focus" type="checkbox" value="true">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Checkbox form="user" field="admin" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_admin" name="user[admin]" phx-capture-click="my_click" type="checkbox" value="true">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Checkbox form="user" field="admin" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_admin" name="user[admin]" phx-keydown="my_keydown" type="checkbox" value="true">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Checkbox form="user" field="admin" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_admin" name="user[admin]" phx-keyup="my_keyup" type="checkbox" value="true">
-           """
+    assert html =~ ~s(phx-click="my_click")
   end
 
   test "passing other options" do

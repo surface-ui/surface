@@ -64,69 +64,15 @@ defmodule Surface.Components.Form.ResetTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <Reset value="ResetTheForm" blur="my_blur" />
+        <Reset value="ResetTheForm" click="my_click" />
         """
       end
 
-    assert html =~ """
-           <input phx-blur="my_blur" type="reset" value="ResetTheForm">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Reset value="ResetTheForm" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input phx-focus="my_focus" type="reset" value="ResetTheForm">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Reset value="ResetTheForm" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input phx-capture-click="my_click" type="reset" value="ResetTheForm">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Reset value="ResetTheForm" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input phx-keydown="my_keydown" type="reset" value="ResetTheForm">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <Reset value="ResetTheForm" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input phx-keyup="my_keyup" type="reset" value="ResetTheForm">
-           """
+    assert html =~ ~s(phx-click="my_click")
   end
 
   test "setting id and name through props" do

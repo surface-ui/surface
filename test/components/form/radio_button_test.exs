@@ -64,69 +64,15 @@ defmodule Surface.Components.Form.RadioButtonTest do
            """
   end
 
-  test "blur event with parent live view as target" do
+  test "events with parent live view as target" do
     html =
       render_surface do
         ~H"""
-        <RadioButton form="user" field="role" value="admin" blur="my_blur" />
+        <RadioButton form="user" field="role" value="admin" click="my_click" />
         """
       end
 
-    assert html =~ """
-           <input id="user_role_admin" name="user[role]" phx-blur="my_blur" type="radio" value="admin">
-           """
-  end
-
-  test "focus event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <RadioButton form="user" field="role" value="admin" focus="my_focus" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_role_admin" name="user[role]" phx-focus="my_focus" type="radio" value="admin">
-           """
-  end
-
-  test "capture click event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <RadioButton form="user" field="role" value="admin" capture_click="my_click" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_role_admin" name="user[role]" phx-capture-click="my_click" type="radio" value="admin">
-           """
-  end
-
-  test "keydown event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <RadioButton form="user" field="role" value="admin" keydown="my_keydown" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_role_admin" name="user[role]" phx-keydown="my_keydown" type="radio" value="admin">
-           """
-  end
-
-  test "keyup event with parent live view as target" do
-    html =
-      render_surface do
-        ~H"""
-        <RadioButton form="user" field="role" value="admin" keyup="my_keyup" />
-        """
-      end
-
-    assert html =~ """
-           <input id="user_role_admin" name="user[role]" phx-keyup="my_keyup" type="radio" value="admin">
-           """
+    assert html =~ ~s(phx-click="my_click")
   end
 
   test "setting id and name through props" do

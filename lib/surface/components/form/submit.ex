@@ -6,9 +6,10 @@ defmodule Surface.Components.Form.Submit do
   """
 
   use Surface.Component
+  use Surface.Components.Events
 
   import Phoenix.HTML.Form, only: [submit: 2]
-  import Surface.Components.Form.Utils
+  import Surface.Components.Utils, only: [events_to_opts: 1]
 
   @doc "The label to be used in the button"
   prop label, :string
@@ -18,21 +19,6 @@ defmodule Surface.Components.Form.Submit do
 
   @doc "Keyword list with options to be passed down to `submit/3`"
   prop opts, :keyword, default: []
-
-  @doc "Triggered when the component loses focus"
-  prop blur, :event
-
-  @doc "Triggered when the component receives focus"
-  prop focus, :event
-
-  @doc "Triggered when the component receives click"
-  prop capture_click, :event
-
-  @doc "Triggered when a button on the keyboard is pressed"
-  prop keydown, :event
-
-  @doc "Triggered when a button on the keyboard is released"
-  prop keyup, :event
 
   @doc "Slot used for having children other than plain text in the button"
   slot default

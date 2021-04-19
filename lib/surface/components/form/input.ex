@@ -4,6 +4,7 @@ defmodule Surface.Components.Form.Input do
   defmacro __using__(_) do
     quote do
       use Surface.Component
+      use Surface.Components.Events
 
       import unquote(__MODULE__)
       alias Surface.Components.Form.Input.InputContext
@@ -28,21 +29,6 @@ defmodule Surface.Components.Form.Input do
 
       @doc "Options list"
       prop opts, :keyword, default: []
-
-      @doc "Triggered when the component loses focus"
-      prop blur, :event
-
-      @doc "Triggered when the component receives focus"
-      prop focus, :event
-
-      @doc "Triggered when the component receives click"
-      prop capture_click, :event
-
-      @doc "Triggered when a button on the keyboard is pressed"
-      prop keydown, :event
-
-      @doc "Triggered when a button on the keyboard is released"
-      prop keyup, :event
     end
   end
 

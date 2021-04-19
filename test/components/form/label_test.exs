@@ -63,6 +63,17 @@ defmodule Surface.Components.Form.LabelTest do
     assert html =~ ~r[<label for="user_name">(.+)</label>]s
   end
 
+  test "events with parent live view as target" do
+    html =
+      render_surface do
+        ~H"""
+        <Label form="user" field="name" click="my_click" />
+        """
+      end
+
+    assert html =~ ~s(phx-click="my_click")
+  end
+
   describe "is compatible with phoenix label/2" do
     test "with block" do
       html = render_surface(do: ~H[<Label>Block</Label>])

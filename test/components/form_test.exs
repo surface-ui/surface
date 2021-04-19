@@ -107,13 +107,13 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" change="change" submit="sumit">
+        <Form for={{:user}} action="#" change="change" submit="submit" auto_recover="recover">
         </Form>
         """
       end
 
     assert html =~ """
-           <form action="#" method="post" phx-change="change" phx-submit="sumit">\
+           <form action="#" method="post" phx-auto-recover="recover" phx-change="change" phx-submit="submit">\
            """
   end
 
