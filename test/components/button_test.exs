@@ -98,31 +98,11 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1"
-          capture_click="my_capture_click"
-          click="my_click"
-          window_focus="my_window_focus"
-          window_blur="my_window_blur"
-          focus="my_focus"
-          blur="my_blur"
-          window_keyup="my_window_keyup"
-          window_keydown="my_window_keydown"
-          keyup="my_keyup"
-          keydown="my_keydown"
-        />
+        <Button label="user" to="/users/1" click="my_click" />
         """
       end
 
-    assert html =~ ~s(phx-capture-click="my_capture_click")
     assert html =~ ~s(phx-click="my_click")
-    assert html =~ ~s(phx-window-focus="my_window_focus")
-    assert html =~ ~s(phx-window-blur="my_window_blur")
-    assert html =~ ~s(phx-focus="my_focus")
-    assert html =~ ~s(phx-blur="my_blur")
-    assert html =~ ~s(phx-window-keyup="my_window_keyup")
-    assert html =~ ~s(phx-window-keydown="my_window_keydown")
-    assert html =~ ~s(phx-keyup="my_keyup")
-    assert html =~ ~s(phx-keydown="my_keydown")
   end
 
   test "click event with @myself as target" do
