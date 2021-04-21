@@ -105,30 +105,25 @@ defmodule Surface.Compiler.ParserTest do
            ]
   end
 
-  test "ignore comments" do
+  test "comments" do
     code = """
     <div>
-      <!-- This will be ignored -->
+    <!--
+    This is
+    a comment
+    -->
       <span/>
     </div>
     """
 
-    assert parse(code) ==
-             {:ok,
-              [
-                {
-                  "div",
-                  '',
-                  [
-                    "\n  ",
-                    "\n  ",
-                    {"span", [], [], %{line: 3, space: ""}},
-                    "\n"
-                  ],
-                  %{line: 1, space: ""}
-                },
-                "\n"
-              ]}
+    {:ok, [{"div", _, [_, {:comment, comment}, _, {"span", _, _, _}, _], _}, _]} = parse(code)
+
+    assert comment == """
+           <!--
+           This is
+           a comment
+           -->\
+           """
   end
 
   describe "void elements" do

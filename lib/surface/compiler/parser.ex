@@ -129,10 +129,10 @@ defmodule Surface.Compiler.Parser do
     |> wrap()
 
   comment =
-    ignore(string("<!--"))
+    string("<!--")
     |> repeat(lookahead_not(string("-->")) |> utf8_char([]))
-    |> ignore(string("-->"))
-    |> ignore()
+    |> string("-->")
+    |> post_traverse(:comment)
 
   ## Void element node
 
@@ -222,6 +222,11 @@ defmodule Surface.Compiler.Parser do
     |> wrap()
     |> optional(closing_tag)
     |> post_traverse(:match_tags)
+
+  defp comment(_rest, ["-->" | _] = nodes, context, _line, _offset) do
+    comment = nodes |> Enum.reverse() |> IO.chardata_to_string()
+    {[{:comment, comment}], context}
+  end
 
   defp match_tags(
          _rest,
