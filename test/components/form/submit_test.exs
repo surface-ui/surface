@@ -11,11 +11,7 @@ defmodule Surface.Components.Form.SubmitTest do
         """
       end
 
-    assert html =~ """
-           <button type="submit">
-             Submit
-           </button>
-           """
+    assert html =~ ~s(<button type="submit">Submit</button>)
   end
 
   test "with class" do
@@ -48,11 +44,7 @@ defmodule Surface.Components.Form.SubmitTest do
         """
       end
 
-    assert html =~ """
-           <button class="btn" id="submit-btn" type="submit">
-             Submit
-           </button>
-           """
+    assert html =~ ~s(<button class="btn" id="submit-btn" type="submit">Submit</button>)
   end
 
   test "with children" do
@@ -91,12 +83,7 @@ defmodule Surface.Components.Form.SubmitTest do
         """
       end
 
-    assert html =~
-             """
-             <button type="submit">
-               &lt;Submit&gt;
-             </button>
-             """
+    assert html =~ ~s(<button type="submit">&lt;Submit&gt;</button>)
 
     html =
       render_surface do
