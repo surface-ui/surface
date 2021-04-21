@@ -12,7 +12,9 @@ defmodule Surface.Components.Form.SubmitTest do
       end
 
     assert html =~ """
-           <button type="submit">Submit</button>
+           <button type="submit">
+             Submit
+           </button>
            """
   end
 
@@ -47,7 +49,9 @@ defmodule Surface.Components.Form.SubmitTest do
       end
 
     assert html =~ """
-           <button class="btn" id="submit-btn" type="submit">Submit</button>
+           <button class="btn" id="submit-btn" type="submit">
+             Submit
+           </button>
            """
   end
 
