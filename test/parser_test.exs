@@ -69,6 +69,13 @@ defmodule Surface.Compiler.ParserTest do
               ], [], %{line: 1, space: ""}}
   end
 
+  test "slot shorthand" do
+    code = ~S(<:footer :let={{ a: 1 }}/>)
+    {:ok, [node]} = parse(code)
+
+    assert {":footer", [{":let", _, _}], [], _} = node
+  end
+
   test "spaces and line break between children" do
     code = """
     <div>

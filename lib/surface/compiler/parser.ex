@@ -78,7 +78,7 @@ defmodule Surface.Compiler.Parser do
     |> optional(string("}}"))
 
   tag =
-    ascii_char([?a..?z, ?A..?Z])
+    ascii_char([?a..?z, ?A..?Z, ?:])
     |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
     |> reduce({List, :to_string, []})
 
