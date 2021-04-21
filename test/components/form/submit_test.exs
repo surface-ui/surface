@@ -78,4 +78,35 @@ defmodule Surface.Components.Form.SubmitTest do
 
     assert html =~ ~s(phx-click="my_click")
   end
+
+  test "is compatible with phoenix submit/2" do
+    html =
+      render_surface do
+        ~H"""
+        <Submit label="<Submit>" />
+        """
+      end
+
+    assert html =~
+             """
+             <button type="submit">
+               &lt;Submit&gt;
+             </button>
+             """
+
+    html =
+      render_surface do
+        ~H"""
+        <Submit>
+          {{ "<Submit>" }}
+        </Submit>
+        """
+      end
+
+    assert html =~ """
+           <button type="submit">
+             &lt;Submit&gt;
+           </button>
+           """
+  end
 end
