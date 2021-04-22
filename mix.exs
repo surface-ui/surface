@@ -47,7 +47,21 @@ defmodule Surface.MixProject do
     [
       main: "Surface",
       source_ref: "v#{@version}",
-      source_url: "https://github.com/surface-ui/surface"
+      source_url: "https://github.com/surface-ui/surface",
+      groups_for_modules: [
+        Compiler: ~r/Compiler/,
+        Components: ~r/Surface.Component/,
+        Directives: ~r/Surface.Directive/,
+        AST: ~r/AST/,
+        Catalogue: ~r/Catalogue/
+      ],
+      nest_modules_by_prefix: [
+        Surface.AST,
+        Surface.Catalogue,
+        Surface.Compiler,
+        Surface.Components,
+        Surface.Directive
+      ]
     ]
   end
 
