@@ -722,7 +722,11 @@ defmodule Surface.Compiler do
 
         message =
           if prop_name == :id do
-            message <> "\n\nDid you mean to `use Surface.Component`?"
+            message <>
+              """
+              \n\nHint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
+              If you meant to create a stateless component, you can switch to `use Surface.Component`.
+              """
           else
             message
           end

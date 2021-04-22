@@ -735,7 +735,8 @@ defmodule Surface.CompilerSyncTest do
     assert message =~ ~S"""
            Missing required property "id" for component <GridLive>
 
-           Did you mean to `use Surface.Component`?
+           Hint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
+           If you meant to create a stateless component, you can switch to `use Surface.Component`.
            """
 
     assert line == 1
