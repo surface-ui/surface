@@ -69,6 +69,13 @@ defmodule Surface.Compiler.ParserTest do
               ], [], %{line: 1, space: ""}}
   end
 
+  test "slot shorthand" do
+    code = ~S(<:footer :let={{ a: 1 }}/>)
+    {:ok, [node]} = parse(code)
+
+    assert {":footer", [{":let", _, _}], [], _} = node
+  end
+
   test "spaces and line break between children" do
     code = """
     <div>
@@ -98,30 +105,25 @@ defmodule Surface.Compiler.ParserTest do
            ]
   end
 
-  test "ignore comments" do
+  test "comments" do
     code = """
     <div>
-      <!-- This will be ignored -->
+    <!--
+    This is
+    a comment
+    -->
       <span/>
     </div>
     """
 
-    assert parse(code) ==
-             {:ok,
-              [
-                {
-                  "div",
-                  '',
-                  [
-                    "\n  ",
-                    "\n  ",
-                    {"span", [], [], %{line: 3, space: ""}},
-                    "\n"
-                  ],
-                  %{line: 1, space: ""}
-                },
-                "\n"
-              ]}
+    {:ok, [{"div", _, [_, {:comment, comment}, _, {"span", _, _, _}, _], _}, _]} = parse(code)
+
+    assert comment == """
+           <!--
+           This is
+           a comment
+           -->\
+           """
   end
 
   describe "void elements" do

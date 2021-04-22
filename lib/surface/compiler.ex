@@ -208,8 +208,10 @@ defmodule Surface.Compiler do
   end
 
   defp to_ast(nodes, compile_meta) do
-    for node <- nodes do
-      case convert_node_to_ast(node_type(node), node, compile_meta) do
+    for node <- nodes,
+        result = convert_node_to_ast(node_type(node), node, compile_meta),
+        result != :ignore do
+      case result do
         {:ok, ast} ->
           process_directives(ast)
 
@@ -232,6 +234,7 @@ defmodule Surface.Compiler do
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
+  defp node_type({:comment, _}), do: :comment
   defp node_type(_), do: :text
 
   defp process_directives(%{directives: directives} = node) do
@@ -243,6 +246,8 @@ defmodule Surface.Compiler do
   end
 
   defp process_directives(node), do: node
+
+  defp convert_node_to_ast(:comment, _, _), do: :ignore
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Literal{value: text}}
