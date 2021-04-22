@@ -8,8 +8,7 @@ defmodule Surface.Components.Form.Submit do
   use Surface.Component
   use Surface.Components.Events
 
-  import Phoenix.HTML.Form, only: [submit: 2]
-  import Surface.Components.Utils, only: [events_to_opts: 1]
+  import Surface.Components.Utils, only: [events_to_opts: 1, opts_to_attrs: 1]
 
   @doc "The label to be used in the button"
   prop label, :string
@@ -24,11 +23,11 @@ defmodule Surface.Components.Form.Submit do
   slot default
 
   def render(assigns) do
-    children = ~H"<slot>{{ @label }}</slot>"
-    event_opts = events_to_opts(assigns)
+    opts = prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns)
+    attrs = opts_to_attrs(opts)
 
     ~H"""
-    {{ submit prop_to_attr_opts(@class, :class) ++ @opts ++ event_opts, do: children }}
+    <button type="submit" :attrs={{ attrs }}><slot>{{ @label }}</slot></button>
     """
   end
 end
