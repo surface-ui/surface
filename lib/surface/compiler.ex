@@ -615,9 +615,7 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([%AST.Template{name: name} | _]) do
     {:error,
-     "templates are only allowed as children elements of components, but found template for #{
-       name
-     }"}
+     "templates are only allowed as children elements of components, but found template for #{name}"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
@@ -719,6 +717,14 @@ defmodule Surface.Compiler do
 
       for prop_name <- missing_props_names do
         message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
+
+        message =
+          if prop_name == :id do
+            message <> "\n\nDid you mean to `use Surface.Component`?"
+          else
+            message
+          end
+
         IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
       end
     end
