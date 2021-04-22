@@ -616,7 +616,7 @@ defmodule Surface.CompilerSyncTest do
 
   import ExUnit.CaptureIO
 
-  alias Surface.CompilerTest.{Button, Column}, warn: false
+  alias Surface.CompilerTest.{Button, Column, GridLive}, warn: false
 
   test "warning when a aliased component cannot be loaded" do
     alias Components.But, warn: false
@@ -722,6 +722,23 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ ~S(Missing required property "title" for component <Column>)
+    assert line == 1
+  end
+
+  test "warning on missing id for LiveComponent" do
+    code = """
+    <GridLive />
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ ~S"""
+           Missing required property "id" for component <GridLive>
+
+           Hint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
+           If you meant to create a stateless component, you can switch to `use Surface.Component`.
+           """
+
     assert line == 1
   end
 

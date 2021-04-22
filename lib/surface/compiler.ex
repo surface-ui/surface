@@ -719,6 +719,18 @@ defmodule Surface.Compiler do
 
       for prop_name <- missing_props_names do
         message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
+
+        message =
+          if prop_name == :id and is_stateful_component(module) do
+            message <>
+              """
+              \n\nHint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
+              If you meant to create a stateless component, you can switch to `use Surface.Component`.
+              """
+          else
+            message
+          end
+
         IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
       end
     end
