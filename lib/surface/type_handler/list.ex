@@ -35,7 +35,9 @@ defmodule Surface.TypeHandler.List do
           value
 
         value ->
-          raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{inspect(value)}"
+          raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{
+                  inspect(value)
+                }"
       end
     end
   end
