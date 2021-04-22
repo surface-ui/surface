@@ -615,9 +615,7 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([%AST.Template{name: name} | _]) do
     {:error,
-     "templates are only allowed as children elements of components, but found template for #{
-       name
-     }"}
+     "templates are only allowed as children elements of components, but found template for #{name}"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
@@ -721,7 +719,7 @@ defmodule Surface.Compiler do
         message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
 
         message =
-          if prop_name == :id do
+          if prop_name == :id and is_stateful_component(module) do
             message <>
               """
               \n\nHint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
