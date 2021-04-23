@@ -1,15 +1,15 @@
-defmodule Surface.Components.ButtonTest do
+defmodule Surface.Components.LinkButtonTest do
   use Surface.ConnCase, async: true
 
-  alias Surface.Components.Button
+  alias Surface.Components.LinkButton
 
-  defmodule ComponentWithButton do
+  defmodule ComponentWithLinkButton do
     use Surface.LiveComponent
 
     def render(assigns) do
       ~H"""
       <div>
-        <Button label="user" to="/users/1" capture_click="my_click" />
+        <LinkButton label="user" to="/users/1" capture_click="my_click" />
       </div>
       """
     end
@@ -25,7 +25,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" />
+        <LinkButton label="user" to="/users/1" />
         """
       end
 
@@ -40,7 +40,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button to="/users/1"><span>user</span></Button>
+        <LinkButton to="/users/1"><span>user</span></LinkButton>
         """
       end
 
@@ -55,7 +55,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" class="link" />
+        <LinkButton label="user" to="/users/1" class="link" />
         """
       end
 
@@ -70,7 +70,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" class="link primary" />
+        <LinkButton label="user" to="/users/1" class="link primary" />
         """
       end
 
@@ -85,7 +85,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" method={{ :delete }} opts={{ data: [confirm: "Really?"] }} />
+        <LinkButton label="user" to="/users/1" method={{ :delete }} opts={{ data: [confirm: "Really?"] }} />
         """
       end
 
@@ -98,7 +98,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" click="my_click" />
+        <LinkButton label="user" to="/users/1" click="my_click" />
         """
       end
 
@@ -111,7 +111,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <ComponentWithButton id="comp"/>
+        <ComponentWithLinkButton id="comp"/>
         """
       end
 
@@ -129,7 +129,7 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world" />
+          <LinkButton label="hello" to="/world" />
           """
         end
 
@@ -141,7 +141,7 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world"  opts={{ csrf_token: false }} />
+          <LinkButton label="hello" to="/world"  opts={{ csrf_token: false }} />
           """
         end
 
@@ -153,7 +153,7 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world" method={{ :get }} />
+          <LinkButton label="hello" to="/world" method={{ :get }} />
           """
         end
 
@@ -167,9 +167,9 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button to="/world" class="small">
+          <LinkButton to="/world" class="small">
             {{ Phoenix.HTML.raw("<span>Hi</span>") }}
-          </Button>
+          </LinkButton>
           """
         end
 
@@ -187,7 +187,7 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world" class="btn rounded" id="btn" />
+          <LinkButton label="hello" to="/world" class="btn rounded" id="btn" />
           """
         end
 
@@ -202,7 +202,11 @@ defmodule Surface.Components.ButtonTest do
       """
 
       assert_raise ArgumentError, msg, fn ->
-        render_surface(do: ~H[<Button label="foo" to="javascript:alert(1)" method={{ :get }} />])
+        render_surface do
+          ~H"""
+          <LinkButton label="foo" to="javascript:alert(1)" method={{ :get }} />
+          """
+        end
       end
     end
   end

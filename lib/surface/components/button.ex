@@ -1,4 +1,4 @@
-defmodule Surface.Components.Button do
+defmodule Surface.Components.LinkButton do
   @moduledoc """
   Generates a button that uses a regular HTML form to submit to the given URL.
 
@@ -11,19 +11,20 @@ defmodule Surface.Components.Button do
 
   ## Examples
   ```
-  <Button
+  <LinkButton
     label="user"
     to="/users/1"
     class="is-danger"
-    opts={{ method: :delete, data: [confirm: "Really?"] }}
+    method={{ :delete }}
+    opts={{ data: [confirm: "Really?"] }}
   />
 
-  <Button
+  <LinkButton
     to="/users/1"
     class="is-link"
   >
     <span>user</span>
-  </Button>
+  </LinkButton>
   ```
   """
 
