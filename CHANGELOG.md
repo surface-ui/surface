@@ -7,6 +7,7 @@
     no longer be auto-converted to `:atom` and will keep the original value (#319)
   * Do not encode HTML entities when passing attribute values as string literals (#323)
   * Extract the Markdown macro component in its repository (#316)
+  * Renamed `<Button>` to `<LinkButton>` ()
 
 ## v0.3.2 (2021-03-19)
 
