@@ -58,6 +58,29 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
+  describe "interpolation in body" do
+    test "represented as {:interpolation, value, meta}" do
+      assert tokenize("""
+             before
+             ={1} after\
+             """) == [
+               {:text, "before\n="},
+               {:interpolation, "1", %{column: 3, line: 2}},
+               {:text, " after"}
+             ]
+    end
+
+    test "value containing curly braces" do
+      tokens = tokenize("before{func({1, 3})}after")
+
+      assert tokens == [
+               {:text, "before"},
+               {:interpolation, "func({1, 3})", %{column: 8, line: 1}},
+               {:text, "after"}
+             ]
+    end
+  end
+
   describe "opening tag" do
     test "represented as {:tag_open, name, attrs, meta}" do
       tokens = tokenize("<div>")

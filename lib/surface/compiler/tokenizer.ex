@@ -47,6 +47,10 @@ defmodule Surface.Compiler.Tokenizer do
     end
   end
 
+  defp handle_text("{" <> rest, line, column, buffer, acc, state) do
+    handle_interpolation_in_body(rest, line, column + 1, text_to_acc(buffer, acc), state)
+  end
+
   defp handle_text("</" <> rest, line, column, buffer, acc, state) do
     handle_tag_close(rest, line, column + 2, text_to_acc(buffer, acc), state)
   end
@@ -61,6 +65,19 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text(<<>>, _line, _column, buffer, acc, _state) do
     ok(text_to_acc(buffer, acc))
+  end
+
+  ## handle_interpolation_in_body
+
+  defp handle_interpolation_in_body(text, line, column, acc, state) do
+    case handle_interpolation(text, line, column, [], state) do
+      {:ok, value, new_line, new_column, rest, state} ->
+        acc = [{:interpolation, value, %{line: line, column: column}} | acc]
+        handle_text(rest, new_line, new_column, [], acc, state)
+
+      {:error, message, line, column} ->
+        raise %ParseError{file: state.file, line: line, column: column, message: message}
+    end
   end
 
   ## handle_comment
