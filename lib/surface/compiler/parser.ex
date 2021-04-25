@@ -166,10 +166,10 @@ defmodule Surface.Compiler.Parser do
     |> wrap()
     |> post_traverse(:void_element_tags)
 
-  defp void_element_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
+  defp void_element_tags(_rest, [[tag_node, attr_nodes, _space]], context, _line, _offset) do
     {[tag], {line, _}} = tag_node
     attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, [], %{line: line, space: space}}], context}
+    {[{tag, attributes, [], %{line: line}}], context}
   end
 
   ## Self-closing node
@@ -184,10 +184,10 @@ defmodule Surface.Compiler.Parser do
     |> wrap()
     |> post_traverse(:self_closing_tags)
 
-  defp self_closing_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
+  defp self_closing_tags(_rest, [[tag_node, attr_nodes, _space]], context, _line, _offset) do
     {[tag], {line, _}} = tag_node
     attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, [], %{line: line, space: space}}], context}
+    {[{tag, attributes, [], %{line: line}}], context}
   end
 
   ## Regular node
@@ -230,13 +230,13 @@ defmodule Surface.Compiler.Parser do
 
   defp match_tags(
          _rest,
-         [tag, [[{[tag], {opening_line, _}}, attr_nodes, space] | nodes]],
+         [tag, [[{[tag], {opening_line, _}}, attr_nodes, _space] | nodes]],
          context,
          _line,
          _offset
        ) do
     attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, nodes, %{line: opening_line, space: space}}], context}
+    {[{tag, attributes, nodes, %{line: opening_line}}], context}
   end
 
   defp match_tags(_rest, [closing, [[tag_node | _] | _]], _context, _line, _offset) do
@@ -315,12 +315,12 @@ defmodule Surface.Compiler.Parser do
   defp build_attributes(attr_nodes) do
     Enum.map(attr_nodes, fn
       # attribute without value (e.g. disabled)
-      [space1, {[attr], {line, _}}, space2] ->
-        {attr, true, %{line: line, spaces: [space1, space2]}}
+      [_space1, {[attr], {line, _}}, _space2] ->
+        {attr, true, %{line: line}}
 
       # attribute with value
-      [space1, {[attr], {line, _}}, space2, space3, value] ->
-        {attr, value, %{line: line, spaces: [space1, space2, space3]}}
+      [_space1, {[attr], {line, _}}, _space2, _space3, value] ->
+        {attr, value, %{line: line}}
     end)
   end
 
@@ -372,14 +372,14 @@ defmodule Surface.Compiler.Parser do
   defp closing_macro_tag(
          _,
          [macro, rest],
-         %{macro: [{[macro], {line, _}}, attr_nodes, space]} = context,
+         %{macro: [{[macro], {line, _}}, attr_nodes, _space]} = context,
          _,
          _
        ) do
     tag = "#" <> macro
     attributes = build_attributes(attr_nodes)
     text = IO.iodata_to_binary(rest)
-    {[{tag, attributes, [text], %{line: line, space: space}}], %{context | macro: nil}}
+    {[{tag, attributes, [text], %{line: line}}], %{context | macro: nil}}
   end
 
   defp closing_macro_tag(
