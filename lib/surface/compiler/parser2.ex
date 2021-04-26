@@ -1,0 +1,141 @@
+defmodule Surface.Compiler.Parser2 do
+  @moduledoc false
+
+  alias Surface.Compiler.Tokenizer
+  alias Surface.Compiler.Tokenizer.ParseError
+
+  @void_elements [
+    "area",
+    "base",
+    "br",
+    "col",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "command",
+    "keygen",
+    "source"
+  ]
+
+  def parse(code) do
+    try do
+      tokens = Tokenizer.tokenize(code)
+      case to_ast(tokens) do
+        ast when is_list(ast) ->
+          {:ok, ast}
+
+        error ->
+          error
+      end
+
+    rescue
+      e in [ParseError] ->
+        %ParseError{line: line, column: _column, message: message} = e
+        {:error, message, line}
+      end
+  end
+
+  defp to_ast(tokens) do
+    to_ast(tokens, [[]], %{tags: []})
+  end
+
+  defp to_ast([], [buffer], _state) do
+    Enum.reverse(buffer)
+  end
+
+  defp to_ast([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, %{line: line}} | _]}) do
+    {:error, "expected closing tag for <#{tag_name}>", line}
+  end
+
+  defp to_ast([{:text, text} | rest], [buffer | buffers], state) do
+    # add to last buffer
+    # node = {:text, text}
+    node = text
+    buffer = [node | buffer]
+    buffers = [buffer | buffers]
+    to_ast(rest, buffers, state)
+  end
+
+  defp to_ast([{:interpolation, expr, %{line: line}} | rest], [buffer | buffers], state) do
+    # add to last buffer
+    node = {:interpolation, expr, %{line: line}}
+    buffer = [node | buffer]
+    buffers = [buffer | buffers]
+    to_ast(rest, buffers, state)
+  end
+
+  defp to_ast([{:tag_open, name, attrs, %{line: line}} | rest], [buffer | buffers], state) when name in @void_elements do
+    # add to last buffer
+    node = {name, transtate_attrs(attrs), [], %{line: line}}
+    buffer = [node | buffer]
+    buffers = [buffer | buffers]
+    to_ast(rest, buffers, state)
+  end
+
+  defp to_ast([{:tag_open, name, attrs, %{self_close: true, line: line}} | rest], [buffer | buffers], state) do
+    # add to last buffer
+    node = {name, transtate_attrs(attrs), [], %{line: line}}
+    buffer = [node | buffer]
+    buffers = [buffer | buffers]
+    to_ast(rest, buffers, state)
+  end
+
+  defp to_ast([{:tag_open, _name, _attrs, _meta} = token | rest], buffers, state) do
+    state = push_tag(state, token)
+    # create a new buffer
+    buffers = [[] | buffers]
+    to_ast(rest, buffers, state)
+  end
+
+  defp to_ast([{:tag_close, name, _meta} | rest], [buffer | buffers], state) do
+    case pop_tag(state, name) do
+      {:ok, {{:tag_open, _name, attrs, %{line: line}}, state}} ->
+        # include the tag in acc along with its childrens coming from the last buffer
+        # node = {:tag, name, Enum.reverse(buffer)}
+        node = {name, transtate_attrs(attrs), Enum.reverse(buffer), %{line: line}}
+        [buffer | buffers] = buffers
+        buffer = [node | buffer]
+        buffers = [buffer | buffers]
+        to_ast(rest, buffers, state)
+
+      error ->
+        error
+    end
+  end
+
+  defp transtate_attrs(attrs) do
+    Enum.map(attrs, &translate_attr/1)
+  end
+
+  defp translate_attr({name, {:string, value, %{delimiter: ?"}}, %{line: line}}) do
+    {name, value, %{line: line}}
+  end
+
+  defp translate_attr({name, {:expr, value, expr_meta}, attr_meta}) do
+    {name, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: attr_meta.line}}
+  end
+
+  defp translate_attr({name, nil, %{line: line}}) do
+    {name, true, %{line: line}}
+  end
+
+  defp push_tag(state, {:tag_open, tag, _attrs, _meta}) when tag in @void_elements do
+    state
+  end
+
+  defp push_tag(state, token) do
+    %{state | tags: [token | state.tags]}
+  end
+
+  defp pop_tag(%{tags: [{:tag_open, tag_name, _attrs, _meta} = tag | tags]} = state, tag_name) do
+    {:ok, {tag, %{state | tags: tags}}}
+  end
+
+  defp pop_tag(%{tags: [{:tag_open, tag_name, _attrs, %{line: line}} | _]}, _) do
+    # TODO: change message to "expected closing tag for <bar> defined at line 4, got </foo>"
+    {:error, "expected closing tag for <#{tag_name}>", line}
+  end
+end
