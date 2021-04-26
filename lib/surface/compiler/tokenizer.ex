@@ -1,7 +1,7 @@
 defmodule Surface.Compiler.Tokenizer do
   @moduledoc false
-  @space_chars '\s\t\f'
-  @name_stop_chars @space_chars ++ '>/=\r\n'
+  @space_chars '\n\r\t\v\b\f\e\d\a\s'
+  @name_stop_chars @space_chars ++ '>/='
 
   defmodule ParseError do
     defexception [:file, :line, :column, :message]
@@ -39,8 +39,8 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text("<!--" <> rest, line, column, buffer, acc, state) do
     case handle_comment(rest, line, column + 4, ["<!--" | buffer], state) do
-      {:ok, new_rest, new_live, new_column, new_buffer} ->
-        handle_text(new_rest, new_live, new_column, new_buffer, acc, state)
+      {:ok, new_rest, new_line, new_column, new_buffer} ->
+        handle_text(new_rest, new_line, new_column, new_buffer, acc, state)
 
       {:error, message} ->
         raise %ParseError{file: state.file, line: line, column: column, message: message}
@@ -103,6 +103,29 @@ defmodule Surface.Compiler.Tokenizer do
     raise %ParseError{file: state.file, line: line, column: column, message: message}
   end
 
+  ## handle_macro_body
+
+  defp handle_macro_body("\r\n" <> rest, line, _column, buffer, acc, state) do
+    handle_macro_body(rest, line + 1, state.column_offset, ["\r\n" | buffer], acc, state)
+  end
+
+  defp handle_macro_body("\n" <> rest, line, _column, buffer, acc, state) do
+    handle_macro_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
+  end
+
+  defp handle_macro_body("</#" <> <<first, rest::binary>>, line, column, buffer, acc, state)
+       when first in ?A..?Z do
+    handle_tag_close("#" <> <<first::utf8>> <> rest, line, column + 2, text_to_acc(buffer, acc), state)
+  end
+
+  defp handle_macro_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
+    handle_macro_body(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
+  end
+
+  defp handle_macro_body(<<>>, _line, _column, buffer, acc, _state) do
+    ok(text_to_acc(buffer, acc))
+  end
+
   ## handle_tag_open
 
   defp handle_tag_open(text, line, column, acc, state) do
@@ -121,7 +144,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_tag_close(text, line, column, acc, state) do
     case handle_tag_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        acc = [{:tag_close, name} | acc]
+        acc = [{:tag_close, name, %{line: line, column: column}} | acc]
         handle_tag_close_end(rest, line, new_column, acc, state)
 
       {:error, message} ->
@@ -174,6 +197,12 @@ defmodule Surface.Compiler.Tokenizer do
     handle_text(rest, line, column + 1, [], put_self_close(acc), state)
   end
 
+  defp handle_maybe_tag_open_end(">" <> rest, line, column, [{:tag_open, "#" <> <<first, _::binary>>, _, _} | _] = acc, state)
+       when first in ?A..?Z do
+    acc = reverse_attrs(acc)
+    handle_macro_body(rest, line, column + 1, [], acc, state)
+  end
+
   defp handle_maybe_tag_open_end(">" <> rest, line, column, acc, state) do
     acc = reverse_attrs(acc)
     handle_text(rest, line, column + 1, [], acc, state)
@@ -197,7 +226,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attribute(text, line, column, acc, state) do
     case handle_attr_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        acc = put_attr(acc, name)
+        acc = put_attr(acc, name, nil, %{line: line, column: column})
         handle_maybe_attr_value(rest, line, new_column, acc, state)
 
       {:error, message} ->
@@ -210,7 +239,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_root_attribute(text, line, column, acc, state) do
     case handle_interpolation(text, line, column, [], state) do
       {:ok, value, new_line, new_column, rest, state} ->
-        acc = put_attr(acc, :root, {:expr, value, %{line: line, column: column}})
+        acc = put_attr(acc, :root, {:expr, value, %{line: line, column: column}}, %{})
         handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
 
       {:error, message, line, column} ->
@@ -410,13 +439,13 @@ defmodule Surface.Compiler.Tokenizer do
   defp text_to_acc([], acc), do: acc
   defp text_to_acc(buffer, acc), do: [{:text, buffer_to_string(buffer)} | acc]
 
-  defp put_attr([{:tag_open, name, attrs, meta} | acc], attr, value \\ nil) do
-    attrs = [{attr, value} | attrs]
+  defp put_attr([{:tag_open, name, attrs, meta} | acc], attr, value, attr_meta) do
+    attrs = [{attr, value, attr_meta} | attrs]
     [{:tag_open, name, attrs, meta} | acc]
   end
 
-  defp put_attr_value([{:tag_open, name, [{attr, _value} | attrs], meta} | acc], value) do
-    attrs = [{attr, value} | attrs]
+  defp put_attr_value([{:tag_open, name, [{attr, _value, attr_meta} | attrs], meta} | acc], value) do
+    attrs = [{attr, value, attr_meta} | attrs]
     [{:tag_open, name, attrs, meta} | acc]
   end
 
