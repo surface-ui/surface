@@ -31,7 +31,7 @@ defmodule Surface.Components.Form.ErrorTag do
   ```
 
   ```surface
-  <Field name="password>
+  <Field name="password">
     <ErrorTag />
   </Field>
   ```
