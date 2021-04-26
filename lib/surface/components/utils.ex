@@ -126,6 +126,10 @@ defmodule Surface.Components.Utils do
     |> List.flatten()
   end
 
+  defp values_to_opts([]) do
+    []
+  end
+
   defp values_to_opts(values) when is_list(values) do
     {:values, values}
   end
