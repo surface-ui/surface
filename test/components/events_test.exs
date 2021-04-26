@@ -183,4 +183,17 @@ defmodule Surface.Components.EventsTest do
            </div>
            """
   end
+
+  test "event with values" do
+    html =
+      render_surface do
+        ~H"""
+        <ComponentWithEvents click="my_click" values={{ hello: :world, foo: "bar", one: 2 }} />
+        """
+      end
+
+    assert html =~ """
+           <div phx-click="my_click" phx-value-foo="bar" phx-value-hello="world" phx-value-one="2"></div>
+           """
+  end
 end
