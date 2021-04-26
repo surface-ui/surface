@@ -25,9 +25,11 @@ jobs:
             otp: 23.1.1
           - elixir: 1.11.1
             otp: 21.3.8.17
-          - elixir: 1.11.1
-            otp: 23.1.1
+          - elixir: 1.11.4
+            otp: 23.2
             check_formatted: true
+          - elixir: 1.12.0-rc.0
+            otp: 24.0-rc3
     env:
       MIX_ENV: test
     steps:
