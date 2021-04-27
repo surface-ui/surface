@@ -1,7 +1,7 @@
-defmodule Surface.Components.ButtonTest do
+defmodule Surface.Components.Link.ButtonTest do
   use Surface.ConnCase, async: true
 
-  alias Surface.Components.Button
+  alias Surface.Components.Link.Button
 
   defmodule ComponentWithButton do
     use Surface.LiveComponent
@@ -202,7 +202,11 @@ defmodule Surface.Components.ButtonTest do
       """
 
       assert_raise ArgumentError, msg, fn ->
-        render_surface(do: ~H[<Button label="foo" to="javascript:alert(1)" method={{ :get }} />])
+        render_surface do
+          ~H"""
+          <Button label="foo" to="javascript:alert(1)" method={{ :get }} />
+          """
+        end
       end
     end
   end
