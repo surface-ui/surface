@@ -1,6 +1,6 @@
 defmodule Surface.Compiler.Tokenizer do
   @moduledoc false
-  @space_chars '\n\r\t\v\b\f\e\d\a\s'
+  @space_chars '\n\r\t\f\s'
   @name_stop_chars @space_chars ++ '>/='
 
   defmodule ParseError do
@@ -72,7 +72,8 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_interpolation_in_body(text, line, column, acc, state) do
     case handle_interpolation(text, line, column, [], state) do
       {:ok, value, new_line, new_column, rest, state} ->
-        acc = [{:interpolation, value, %{line: line, column: column}} | acc]
+        meta = %{line: line, column: column, line_end: new_line, column_end: new_column - 1}
+        acc = [{:interpolation, value, meta} | acc]
         handle_text(rest, new_line, new_column, [], acc, state)
 
       {:error, message, line, column} ->
@@ -131,7 +132,8 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_tag_open(text, line, column, acc, state) do
     case handle_tag_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        acc = [{:tag_open, name, [], %{line: line, column: column - 1}} | acc]
+        meta = %{line: line, column: column, line_end: line, column_end: new_column}
+        acc = [{:tag_open, name, [], meta} | acc]
         handle_maybe_tag_open_end(rest, line, new_column, acc, state)
 
       {:error, message} ->
@@ -144,7 +146,8 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_tag_close(text, line, column, acc, state) do
     case handle_tag_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        acc = [{:tag_close, name, %{line: line, column: column}} | acc]
+        meta = %{line: line, column: column, line_end: line, column_end: new_column}
+        acc = [{:tag_close, name, meta} | acc]
         handle_tag_close_end(rest, line, new_column, acc, state)
 
       {:error, message} ->
@@ -226,7 +229,8 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attribute(text, line, column, acc, state) do
     case handle_attr_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        acc = put_attr(acc, name, nil, %{line: line, column: column})
+        meta = %{line: line, column: column, line_end: line, column_end: new_column}
+        acc = put_attr(acc, name, nil, meta)
         handle_maybe_attr_value(rest, line, new_column, acc, state)
 
       {:error, message} ->
@@ -379,7 +383,8 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attr_value_as_expr(text, line, column, acc, %{braces: []} = state) do
     case handle_interpolation(text, line, column, [], state) do
       {:ok, value, new_line, new_column, rest, state} ->
-        acc = put_attr_value(acc, {:expr, value, %{line: line, column: column}})
+        meta = %{line: line, column: column, line_end: new_line, column_end: new_column - 1}
+        acc = put_attr_value(acc, {:expr, value, meta})
         handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
 
       {:error, message, line, column} ->

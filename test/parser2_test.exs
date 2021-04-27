@@ -417,7 +417,7 @@ defmodule Surface.Compiler.Parser2Test do
   describe "attributes" do
     test "keep blank chars between attributes" do
       code = """
-      <foo prop1="1"\n\r\t\v\b\f\e\d\aprop2="2"/>\
+      <foo prop1="1"\n\r\t\fprop2="2"/>\
       """
 
       {:ok, [{_, attributes, _, _}]} = parse(code)

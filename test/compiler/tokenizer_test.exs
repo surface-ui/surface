@@ -40,10 +40,10 @@ defmodule Surface.Compiler.TokenizerTest do
       """
 
       assert [
-               {:tag_open, "p", [], %{line: 1, column: 1}},
+               {:tag_open, "p", [], %{line: 1, column: 2}},
                {:text, "\n<!--\n<div>\n-->\n"},
                {:tag_close, "p", %{line: 5, column: 3}},
-               {:tag_open, "br", [], %{line: 5, column: 5}}
+               {:tag_open, "br", [], %{line: 5, column: 6}}
              ] = tokenize(code)
     end
 
@@ -65,7 +65,7 @@ defmodule Surface.Compiler.TokenizerTest do
              ={1} after\
              """) == [
                {:text, "before\n="},
-               {:interpolation, "1", %{column: 3, line: 2}},
+               {:interpolation, "1", %{column: 3, line: 2, column_end: 4, line_end: 2}},
                {:text, " after"}
              ]
     end
@@ -75,7 +75,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert tokens == [
                {:text, "before"},
-               {:interpolation, "func({1, 3})", %{column: 8, line: 1}},
+               {:interpolation, "func({1, 3})", %{column: 8, line: 1, column_end: 20, line_end: 1}},
                {:text, "after"}
              ]
     end
@@ -112,11 +112,11 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [], %{line: 1, column: 1}},
+               {:tag_open, "div", [], %{line: 1, column: 2}},
                {:text, _},
-               {:tag_open, "span", [], %{line: 2, column: 3}},
+               {:tag_open, "span", [], %{line: 2, column: 4}},
                {:text, _},
-               {:tag_open, "p", [], %{line: 4, column: 1}}
+               {:tag_open, "p", [], %{line: 4, column: 2}}
              ] = tokens
     end
 
@@ -145,6 +145,20 @@ defmodule Surface.Compiler.TokenizerTest do
                {"class", {:string, "panel", %{}}, %{}},
                {"style", {:expr, "@style", %{}}, %{}},
                {"hidden", nil, %{}}
+             ] = attrs
+    end
+
+    test "compute line and column" do
+      attrs = tokenize_attrs("""
+      <div
+        class="panel"
+        style={@style} hidden>\
+      """)
+
+      assert [
+               {"class", {:string, "panel", %{}}, %{line: 2, column: 3, line_end: 2, column_end: 8}},
+               {"style", {:expr, "@style", %{}}, %{line: 3, column: 3, line_end: 3, column_end: 8}},
+               {"hidden", nil, %{line: 3, column: 18, line_end: 3, column_end: 24}}
              ] = attrs
     end
 
@@ -285,7 +299,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert [
                {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}], %{}},
-               {:tag_open, "span", [], %{line: 3, column: 8}}
+               {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
     end
 
@@ -331,7 +345,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert [
                {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}], %{}},
-               {:tag_open, "span", [], %{line: 3, column: 8}}
+               {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
     end
 
@@ -396,9 +410,9 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {"class", {:expr, _, %{line: 2, column: 10}}, %{}},
-               {"style", {:expr, _, %{line: 3, column: 12}}, %{}},
-               {"title", {:expr, _, %{line: 6, column: 10}}, %{}}
+               {"class", {:expr, _, %{line: 2, column: 10, line_end: 2, column_end: 16}}, %{}},
+               {"style", {:expr, _, %{line: 3, column: 12, line_end: 5, column_end: 5}}, %{}},
+               {"title", {:expr, _, %{line: 6, column: 10, line_end: 6, column_end: 16}}, %{}}
              ] = attrs
     end
 
@@ -500,7 +514,7 @@ defmodule Surface.Compiler.TokenizerTest do
                {:tag_open, "div", [], _meta},
                {:text, _},
                {:tag_close, "div", %{column: 3, line: 2}},
-               {:tag_open, "br", [], %{line: 2, column: 7}}
+               {:tag_open, "br", [], %{line: 2, column: 8}}
              ] = tokens
     end
 
