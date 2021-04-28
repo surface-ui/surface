@@ -548,41 +548,41 @@ defmodule Surface.Compiler.Parser2Test do
       assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
     end
 
-    # test "integer values" do
-    #   code = """
-    #   <foo
-    #     prop1=1
-    #     prop2=2
-    #   />
-    #   """
+    test "integer values" do
+      code = """
+      <foo
+        prop1=1
+        prop2=2
+      />
+      """
 
-    #   attributes = [
-    #     {"prop1", 1, %{line: 2}},
-    #     {"prop2", 2, %{line: 3}}
-    #   ]
+      attributes = [
+        {"prop1", 1, %{line: 2}},
+        {"prop2", 2, %{line: 3}}
+      ]
 
-    #   assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
-    # end
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
+    end
 
-  #   test "boolean values" do
-  #     code = """
-  #     <foo
-  #       prop1
-  #       prop2=true
-  #       prop3=false
-  #       prop4
-  #     />
-  #     """
+    test "boolean values" do
+      code = """
+      <foo
+        prop1
+        prop2=true
+        prop3=false
+        prop4
+      />
+      """
 
-  #     attributes = [
-  #       {"prop1", true, %{line: 2}},
-  #       {"prop2", true, %{line: 3}},
-  #       {"prop3", false, %{line: 4}},
-  #       {"prop4", true, %{line: 5}}
-  #     ]
+      attributes = [
+        {"prop1", true, %{line: 2}},
+        {"prop2", true, %{line: 3}},
+        {"prop3", false, %{line: 4}},
+        {"prop4", true, %{line: 5}}
+      ]
 
-  #     assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
-  #   end
+      assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
+    end
 
     test "string values" do
       code = """

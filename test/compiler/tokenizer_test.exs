@@ -139,12 +139,13 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "attributes" do
     test "represented as a list of {name, tuple | nil}, where tuple is the {type, value}" do
-      attrs = tokenize_attrs(~S(<div class="panel" style={@style} hidden>))
+      attrs = tokenize_attrs(~S(<div class="panel" style={@style} hidden selected=true>))
 
       assert [
                {"class", {:string, "panel", %{}}, %{}},
                {"style", {:expr, "@style", %{}}, %{}},
-               {"hidden", nil, %{}}
+               {"hidden", nil, %{}},
+               {"selected", {:unquoted_string, "true"}, %{}}
              ] = attrs
     end
 

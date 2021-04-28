@@ -2,6 +2,8 @@ defmodule Surface.Compiler.Tokenizer do
   @moduledoc false
   @space_chars '\n\r\t\f\s'
   @name_stop_chars @space_chars ++ '>/='
+  @unquoted_value_invalid_chars '"\'=<`'
+  @unquoted_value_stop_chars @space_chars ++ '>'
 
   defmodule ParseError do
     defexception [:file, :line, :column, :message]
@@ -317,6 +319,11 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_as_expr(rest, line, column + 1, acc, state)
   end
 
+  defp handle_attr_value_begin(<<c::utf8, _::binary>> = text, line, column, acc, state)
+       when c not in @name_stop_chars do
+    handle_attr_value_unquoted(text, line, column, [], acc, state)
+  end
+
   defp handle_attr_value_begin(_text, line, column, _acc, state) do
     message = "expected attribute value or expression after `=`"
     raise %ParseError{file: state.file, line: line, column: column, message: message}
@@ -376,6 +383,30 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attr_value_single_quote(<<>>, line, column, _buffer, _acc, state) do
     message = "expected closing `'` for attribute value"
     raise %ParseError{file: state.file, line: line, column: column, message: message}
+  end
+
+  ## handle_attr_value_unquoted
+
+  defp handle_attr_value_unquoted(<<c::utf8, _::binary>> = text, line, column, buffer, acc, state)
+      when c in @unquoted_value_stop_chars  do
+    value = buffer_to_string(buffer)
+    acc = put_attr_value(acc, {:unquoted_string, value})
+
+    handle_maybe_tag_open_end(text, line, column, acc, state)
+  end
+
+  defp handle_attr_value_unquoted(<<c::utf8, _::binary>>, line, column, _buffer, _acc, state)
+      when c in @unquoted_value_invalid_chars  do
+    message = """
+    unexpected character `#{<<c::utf8>>}`. \
+    Unquoted attribute values cannot contain `\"`, `'`, `=` nor `<`
+    """
+
+    raise %ParseError{file: state.file, line: line, column: column, message: message}
+  end
+
+  defp handle_attr_value_unquoted(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
+    handle_attr_value_unquoted(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
   end
 
   ## handle_attr_value_as_expr

@@ -114,6 +114,25 @@ defmodule Surface.Compiler.Parser2 do
     {name, value, %{line: line}}
   end
 
+  defp translate_attr({name, {:unquoted_string, "true"}, %{line: line}}) do
+    {name, true, %{line: line}}
+  end
+
+  defp translate_attr({name, {:unquoted_string, "false"}, %{line: line}}) do
+    {name, false, %{line: line}}
+  end
+
+  defp translate_attr({name, {:unquoted_string, value}, %{line: line}}) do
+    case Integer.parse(value) do
+      {int_value, ""} ->
+        {name, int_value, %{line: line}}
+
+      _ ->
+        message = "unexpected value for attribute \"#{name}\""
+        raise %ParseError{line: line, column: 1, message: message}
+    end
+  end
+
   defp translate_attr({name, {:expr, value, expr_meta}, attr_meta}) do
     {name, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: attr_meta.line}}
   end
