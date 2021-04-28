@@ -71,9 +71,6 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     dry_run: :boolean
   ]
 
-  @manifest "cached_dot_formatter"
-  @manifest_vsn 1
-
   @impl true
   def run(args) do
     {opts, args} = OptionParser.parse!(args, strict: @switches)
@@ -81,21 +78,8 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     {dot_formatter, formatter_opts} = eval_dot_formatter(opts)
       |> IO.inspect(label: "=============================== 0")
 
-    {{formatter_opts, subdirectories}, _sources} =
-      eval_deps_and_subdirectories(dot_formatter, [], formatter_opts, [dot_formatter])
-      |> IO.inspect(label: "=============================== A")
-
-    # surface_line_length can be used to override the line_length option
-    formatter_opts =
-      if line_length = formatter_opts[:surface_line_length] do
-        Keyword.put(formatter_opts, :line_length, line_length)
-      else
-        formatter_opts
-      end
-      |> IO.inspect(label: "=============================== B")
-
     args
-    |> expand_args(dot_formatter, {formatter_opts, subdirectories})
+    |> expand_args(dot_formatter, {formatter_opts, []})
     |> IO.inspect(label: "=============================== C")
     |> Task.async_stream(&convert_file(&1, opts), ordered: false, timeout: 30000)
     |> Enum.reduce([], &collect_status/2)
@@ -119,87 +103,6 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   rescue
     exception ->
       {:exit, file, exception, __STACKTRACE__}
-  end
-
-  # This function reads exported configuration from the imported
-  # dependencies and subdirectories and deals with caching the result
-  # of reading such configuration in a manifest file.
-  defp eval_deps_and_subdirectories(dot_formatter, prefix, formatter_opts, sources) do
-    deps = Keyword.get(formatter_opts, :import_deps, [])
-    subs = Keyword.get(formatter_opts, :subdirectories, [])
-
-    if not is_list(deps) do
-      Mix.raise("Expected :import_deps to return a list of dependencies, got: #{inspect(deps)}")
-    end
-
-    if not is_list(subs) do
-      Mix.raise("Expected :subdirectories to return a list of directories, got: #{inspect(subs)}")
-    end
-
-    if deps == [] and subs == [] do
-      {{formatter_opts, []}, sources}
-    else
-      manifest = Path.join(Mix.Project.manifest_path(), @manifest)
-
-      maybe_cache_in_manifest(dot_formatter, manifest, fn ->
-        {subdirectories, sources} = eval_subs_opts(subs, prefix, sources)
-        {{formatter_opts, subdirectories}, sources}
-      end)
-    end
-  end
-
-  defp eval_subs_opts(subs, prefix, sources) do
-    {subs, sources} =
-      Enum.flat_map_reduce(subs, sources, fn sub, sources ->
-        prefix = Path.join(prefix ++ [sub])
-        {Path.wildcard(prefix), [Path.join(prefix, ".formatter.exs") | sources]}
-      end)
-
-    Enum.flat_map_reduce(subs, sources, fn sub, sources ->
-      sub_formatter = Path.join(sub, ".formatter.exs")
-
-      if File.exists?(sub_formatter) do
-        formatter_opts = eval_file_with_keyword_list(sub_formatter)
-
-        {formatter_opts_and_subs, sources} =
-          eval_deps_and_subdirectories(:in_memory, [sub], formatter_opts, sources)
-
-        {[{sub, formatter_opts_and_subs}], sources}
-      else
-        {[], sources}
-      end
-    end)
-  end
-
-  defp maybe_cache_in_manifest(dot_formatter, manifest, fun) do
-    cond do
-      is_nil(Mix.Project.get()) or dot_formatter != ".formatter.exs" -> fun.()
-      entry = read_manifest(manifest) -> entry
-      true -> write_manifest!(manifest, fun.())
-    end
-  end
-
-  defp read_manifest(manifest) do
-    with {:ok, binary} <- File.read(manifest),
-         {:ok, {@manifest_vsn, entry, sources}} <- safe_binary_to_term(binary),
-         expanded_sources = Enum.flat_map(sources, &Path.wildcard(&1, match_dot: true)),
-         false <- Mix.Utils.stale?([Mix.Project.config_mtime() | expanded_sources], [manifest]) do
-      {entry, sources}
-    else
-      _ -> nil
-    end
-  end
-
-  defp safe_binary_to_term(binary) do
-    {:ok, :erlang.binary_to_term(binary)}
-  rescue
-    _ -> :error
-  end
-
-  defp write_manifest!(manifest, {entry, sources}) do
-    File.mkdir_p!(Path.dirname(manifest))
-    File.write!(manifest, :erlang.term_to_binary({@manifest_vsn, entry, sources}))
-    {entry, sources}
   end
 
   defp eval_dot_formatter(opts) do
