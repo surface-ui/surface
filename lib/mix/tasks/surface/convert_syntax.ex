@@ -25,8 +25,7 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
 
   use Mix.Task
 
-  defp format_string(string, opts) do
-    IO.inspect opts, label: "================ opts"
+  defp format_string(string) do
     Function.identity(string)
   end
 
@@ -34,31 +33,20 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   # Functions unique to surface.format (Everything else is taken from Mix.Tasks.Format)
   #
 
-  defp convert_file_contents!(file, input, opts) do
+  defp convert_file_contents!(file, input) do
     case Path.extname(file) do
       ".sface" ->
-        format_string(input, opts)
+        format_string(input)
 
       _ ->
-        convert_ex_string!(input, opts)
+        convert_ex_string!(input)
     end
   end
 
-  defp convert_ex_string!(input, opts) do
+  defp convert_ex_string!(input) do
     ~r/\n( *)~H"""(.*?)"""/s
     |> Regex.replace(input, fn _match, indentation, surface_code ->
-      # Indent the entire ~H sigil contents based on the indentation of `~H"""`
-      tabs =
-        indentation
-        |> String.length()
-        |> Kernel.div(2)
-
-      opts = Keyword.put(opts, :indent, tabs)
-
-      "\n#{indentation}~H\"\"\"#{
-        surface_code
-        |> format_string(opts)
-      }\"\"\""
+      "\n#{indentation}~H\"\"\"#{format_string(surface_code)}\"\"\""
     end)
   end
 
@@ -74,21 +62,18 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   @impl true
   def run(args) do
     {opts, args} = OptionParser.parse!(args, strict: @switches)
-      |> IO.inspect(label: "=============================== -1")
     {dot_formatter, formatter_opts} = eval_dot_formatter(opts)
-      |> IO.inspect(label: "=============================== 0")
 
     args
-    |> expand_args(dot_formatter, {formatter_opts, []})
-    |> IO.inspect(label: "=============================== C")
+    |> expand_args(dot_formatter, formatter_opts)
     |> Task.async_stream(&convert_file(&1, opts), ordered: false, timeout: 30000)
     |> Enum.reduce([], &collect_status/2)
     |> check!()
   end
 
-  defp convert_file({file, formatter_opts}, task_opts) do
-    {input, extra_opts} = read_file(file)
-    formatted = convert_file_contents!(file, input, extra_opts ++ formatter_opts)
+  defp convert_file({file, _formatter_opts}, task_opts) do
+    input = File.read!(file)
+    formatted = convert_file_contents!(file, input)
     output = IO.iodata_to_binary([formatted])
 
     dry_run? = Keyword.get(task_opts, :dry_run, false)
@@ -128,12 +113,8 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     opts
   end
 
-  defp read_file(file) do
-    {File.read!(file), file: file}
-  end
-
-  defp expand_args([], dot_formatter, formatter_opts_and_subs) do
-    if no_entries_in_formatter_opts?(formatter_opts_and_subs) do
+  defp expand_args([], dot_formatter, formatter_opts) do
+    if no_entries_in_formatter_opts?(formatter_opts) do
       Mix.raise(
         "Expected one or more files/patterns to be given to mix format " <>
           "or for a .formatter.exs file to exist with an :inputs, :surface_inputs or :subdirectories key"
@@ -141,11 +122,11 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     end
 
     dot_formatter
-    |> expand_dot_inputs([], formatter_opts_and_subs, %{})
+    |> expand_dot_inputs(formatter_opts)
     |> Enum.map(fn {file, {_dot_formatter, formatter_opts}} -> {file, formatter_opts} end)
   end
 
-  defp expand_args(files_and_patterns, _dot_formatter, {formatter_opts, subs}) do
+  defp expand_args(files_and_patterns, _dot_formatter, formatter_opts) do
     files =
       for file_or_pattern <- files_and_patterns,
           file <- stdin_or_wildcard(file_or_pattern),
@@ -160,43 +141,19 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     end
 
     for file <- files do
-      if file == :stdin do
-        {file, formatter_opts}
-      else
-        split = file |> Path.relative_to_cwd() |> Path.split()
-        {file, find_formatter_opts_for_file(split, {formatter_opts, subs})}
-      end
+      {file, formatter_opts}
     end
   end
 
-  defp expand_dot_inputs(dot_formatter, prefix, {formatter_opts, subs}, acc) do
-    if no_entries_in_formatter_opts?({formatter_opts, subs}) do
-      Mix.raise("Expected :inputs, :surface_inputs or :subdirectories key in #{dot_formatter}")
+  defp expand_dot_inputs(dot_formatter, formatter_opts) do
+    if no_entries_in_formatter_opts?(formatter_opts) do
+      Mix.raise("Expected :inputs or :surface_inputs key in #{dot_formatter}")
     end
 
-    map =
-      for input <- List.wrap(formatter_opts[:surface_inputs] || formatter_opts[:inputs]),
-          file <- Path.wildcard(Path.join(prefix ++ [input]), match_dot: true),
-          do: {expand_relative_to_cwd(file), {dot_formatter, formatter_opts}},
-          into: %{}
-
-    acc =
-      Map.merge(acc, map, fn file, {dot_formatter1, _}, {dot_formatter2, formatter_opts} ->
-        Mix.shell().error(
-          "Both #{dot_formatter1} and #{dot_formatter2} specify the file " <>
-            "#{Path.relative_to_cwd(file)} in their :inputs or :surface_inputs option. To resolve the " <>
-            "conflict, the configuration in #{dot_formatter1} will be ignored. " <>
-            "Please change the list of :inputs (or :surface_inputs) in one of the formatter files so only " <>
-            "one of them matches #{Path.relative_to_cwd(file)}"
-        )
-
-        {dot_formatter2, formatter_opts}
-      end)
-
-    Enum.reduce(subs, acc, fn {sub, formatter_opts_and_subs}, acc ->
-      sub_formatter = Path.join(sub, ".formatter.exs")
-      expand_dot_inputs(sub_formatter, [sub], formatter_opts_and_subs, acc)
-    end)
+    for input <- List.wrap(formatter_opts[:surface_inputs] || formatter_opts[:inputs]),
+        file <- Path.wildcard(Path.join([input]), match_dot: true),
+        do: {expand_relative_to_cwd(file), {dot_formatter, formatter_opts}},
+        into: %{}
   end
 
   defp expand_relative_to_cwd(path) do
@@ -206,19 +163,11 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     end
   end
 
-  defp find_formatter_opts_for_file(split, {formatter_opts, subs}) do
-    Enum.find_value(subs, formatter_opts, fn {sub, formatter_opts_and_subs} ->
-      if List.starts_with?(split, Path.split(sub)) do
-        find_formatter_opts_for_file(split, formatter_opts_and_subs)
-      end
-    end)
-  end
-
   defp stdin_or_wildcard("-"), do: [:stdin]
   defp stdin_or_wildcard(path), do: path |> Path.expand() |> Path.wildcard(match_dot: true)
 
-  defp no_entries_in_formatter_opts?({formatter_opts, subs}) do
-    is_nil(formatter_opts[:inputs]) and is_nil(formatter_opts[:surface_inputs]) and subs == []
+  defp no_entries_in_formatter_opts?(formatter_opts) do
+    is_nil(formatter_opts[:inputs]) and is_nil(formatter_opts[:surface_inputs])
   end
 
   defp write_or_print(file, input, output) do
