@@ -8,6 +8,61 @@ defmodule Surface.Compiler.Converter_0_4Test do
     Converter.convert(text, converter: Converter_0_4)
   end
 
+  test "don't convert code inside macros" do
+    expected =
+      convert("""
+      <template slot="footer">Footer</template>
+      <#Raw>
+        <template slot="footer">Footer</template>
+      </#Raw>
+      """)
+
+    assert expected == """
+    <#template slot="footer">Footer</#template>
+    <#Raw>
+      <template slot="footer">Footer</template>
+    </#Raw>
+    """
+  end
+
+  test "convert <template> into <#template>" do
+    expected =
+      convert("""
+      <div>
+        <template slot="footer">
+          Footer
+        </template>
+      </div>
+      """)
+
+    assert expected == """
+    <div>
+      <#template slot="footer">
+        Footer
+      </#template>
+    </div>
+    """
+  end
+
+  test "convert <slot> into <#slot>" do
+    expected =
+      convert("""
+      <div>
+        <slot name="footer">
+          Footer
+        </slot>
+      </div>
+      """)
+
+    assert expected == """
+    <div>
+      <#slot name="footer">
+        Footer
+      </#slot>
+    </div>
+    """
+  end
+
   test "convert <If> into <#if>" do
     expected =
       convert("""

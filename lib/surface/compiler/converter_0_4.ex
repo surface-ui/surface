@@ -3,6 +3,14 @@ defmodule Surface.Compiler.Converter_0_4 do
 
   @behaviour Surface.Compiler.Converter
 
+  def convert(:tag_name, "template", _opts) do
+    "#template"
+  end
+
+  def convert(:tag_name, "slot", _opts) do
+    "#slot"
+  end
+
   def convert(:tag_name, "If", _opts) do
     "#if"
   end
