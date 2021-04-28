@@ -50,6 +50,12 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :values when using a range" do
+    code = "prop age, :integer, values: 1..100"
+
+    {:ok, _module} = eval(code)
+  end
+
   test "validate :as in slot" do
     code = "slot label, as: \"default_label\""
     message = ~r/invalid value for option :as in slot. Expected an atom, got: \"default_label\"/
