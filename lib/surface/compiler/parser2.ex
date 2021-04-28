@@ -114,15 +114,15 @@ defmodule Surface.Compiler.Parser2 do
     {name, value, %{line: line}}
   end
 
-  defp translate_attr({name, {:unquoted_string, "true"}, %{line: line}}) do
+  defp translate_attr({name, {:unquoted_string, "true", %{}}, %{line: line}}) do
     {name, true, %{line: line}}
   end
 
-  defp translate_attr({name, {:unquoted_string, "false"}, %{line: line}}) do
+  defp translate_attr({name, {:unquoted_string, "false", %{}}, %{line: line}}) do
     {name, false, %{line: line}}
   end
 
-  defp translate_attr({name, {:unquoted_string, value}, %{line: line}}) do
+  defp translate_attr({name, {:unquoted_string, value, %{}}, %{line: line}}) do
     case Integer.parse(value) do
       {int_value, ""} ->
         {name, int_value, %{line: line}}

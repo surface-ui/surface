@@ -145,7 +145,7 @@ defmodule Surface.Compiler.TokenizerTest do
                {"class", {:string, "panel", %{}}, %{}},
                {"style", {:expr, "@style", %{}}, %{}},
                {"hidden", nil, %{}},
-               {"selected", {:unquoted_string, "true"}, %{}}
+               {"selected", {:unquoted_string, "true", %{}}, %{}}
              ] = attrs
     end
 
@@ -357,6 +357,28 @@ defmodule Surface.Compiler.TokenizerTest do
           class='panel\
         """)
       end
+    end
+  end
+
+  describe "attributes as unquoted strings" do
+    test "value is represented as {:unquoted_string, value, meta}" do
+      attrs = tokenize_attrs(~S(<div disabled=true>))
+      assert [{"disabled", {:unquoted_string, "true", %{}}, %{}}] = attrs
+    end
+
+    test "compute line and columns" do
+      attrs =
+        tokenize_attrs("""
+        <div
+          disabled=true
+          hidden=false
+        >\
+        """)
+
+      assert [
+               {"disabled", {_, _, %{column: 12, column_end: 16, line: 2, line_end: 2}}, %{}},
+               {"hidden", {_, _, %{column: 10, column_end: 15, line: 3, line_end: 3}}, %{}}
+             ] = attrs
     end
   end
 

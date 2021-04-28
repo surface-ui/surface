@@ -19,6 +19,10 @@ defmodule Surface.Compiler.Converter_0_4 do
     "#for"
   end
 
+  def convert(:unquoted_string, value, _opts) do
+    "{{#{value}}}"
+  end
+
   def convert(_type, text, _opts) do
     text
   end

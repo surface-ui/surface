@@ -16,22 +16,28 @@ defmodule Surface.Compiler.Converter do
     scan_text(text, 1, 1, [], [], metas, opts)
   end
 
+  defp scan_text("\r\n" <> rest, line, column, buffer, acc, [{type, %{line_end: line, column_end: column}} | metas], opts) do
+    scan_text(rest, line + 1, 1, ["\r\n"], convert_buffer_to_acc(type, buffer, acc, opts), metas, opts)
+  end
+
   defp scan_text("\r\n" <> rest, line, _column, buffer, acc, metas, opts) do
     scan_text(rest, line + 1, 1, ["\r\n" | buffer], acc, metas, opts)
+  end
+
+  defp scan_text("\n" <> rest, line, column, buffer, acc, [{type, %{line_end: line, column_end: column}} | metas], opts) do
+    scan_text(rest, line + 1, 1, ["\n"], convert_buffer_to_acc(type, buffer, acc, opts), metas, opts)
   end
 
   defp scan_text("\n" <> rest, line, _column, buffer, acc, metas, opts) do
     scan_text(rest, line + 1, 1, ["\n" | buffer], acc, metas, opts)
   end
 
-  defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, [{_type, %{line: line, column: meta_column}} | _] = metas, opts)
-       when column == meta_column do
+  defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, [{_type, %{line: line, column: column}} | _] = metas, opts) do
     scan_text(rest, line, column + 1, [<<c::utf8>>], buffer_to_acc(buffer, acc), metas, opts)
   end
 
-  defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, [{type, %{line_end: line, column_end: meta_column_end}} | metas], opts)
-    when column == meta_column_end - 1 do
-    scan_text(rest, line, column + 1, [], convert_buffer_to_acc(type, [<<c::utf8>> | buffer], acc, opts), metas, opts)
+  defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, [{type, %{line_end: line, column_end: column}} | metas], opts) do
+    scan_text(rest, line, column + 1, [<<c::utf8>>], convert_buffer_to_acc(type, buffer, acc, opts), metas, opts)
   end
 
   defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, metas, opts) do
@@ -71,6 +77,10 @@ defmodule Surface.Compiler.Converter do
 
   defp extract_meta({:tag_close, _name, meta}, acc) do
     [{:tag_name, meta} | acc]
+  end
+
+  defp extract_meta({:unquoted_string, _name, meta}, acc) do
+    [{:unquoted_string, meta} | acc]
   end
 
   defp extract_meta(_node, acc) do

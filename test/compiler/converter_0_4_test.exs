@@ -47,4 +47,23 @@ defmodule Surface.Compiler.Converter_0_4Test do
       #if = {{ true }}>1</div>
     """
   end
+
+  test "convert unquoted string" do
+    expected =
+      convert("""
+      <div disabled=true>
+        1
+      </div>
+      <div
+        tabindex=2>2</div>
+      """)
+
+    assert expected == """
+    <div disabled={{true}}>
+      1
+    </div>
+    <div
+      tabindex={{2}}>2</div>
+    """
+  end
 end

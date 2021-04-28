@@ -321,6 +321,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_attr_value_begin(<<c::utf8, _::binary>> = text, line, column, acc, state)
        when c not in @name_stop_chars do
+    acc = put_attr_value(acc, {:unquoted_string, nil, %{line: line, column: column}})
     handle_attr_value_unquoted(text, line, column, [], acc, state)
   end
 
@@ -390,7 +391,10 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attr_value_unquoted(<<c::utf8, _::binary>> = text, line, column, buffer, acc, state)
       when c in @unquoted_value_stop_chars  do
     value = buffer_to_string(buffer)
-    acc = put_attr_value(acc, {:unquoted_string, value})
+    acc =
+      update_attr_value(acc, fn {type, _old_value, meta} ->
+        {type, value, Map.merge(meta, %{line_end: line, column_end: column})}
+      end)
 
     handle_maybe_tag_open_end(text, line, column, acc, state)
   end
@@ -482,6 +486,11 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp put_attr_value([{:tag_open, name, [{attr, _value, attr_meta} | attrs], meta} | acc], value) do
     attrs = [{attr, value, attr_meta} | attrs]
+    [{:tag_open, name, attrs, meta} | acc]
+  end
+
+  defp update_attr_value([{:tag_open, name, [{attr, value, attr_meta} | attrs], meta} | acc], fun) do
+    attrs = [{attr, fun.(value), attr_meta} | attrs]
     [{:tag_open, name, attrs, meta} | acc]
   end
 
