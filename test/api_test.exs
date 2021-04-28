@@ -45,7 +45,7 @@ defmodule Surface.APITest do
 
   test "validate :values" do
     code = "prop label, :string, values: 1"
-    message = ~r/invalid value for option :values. Expected a list of values, got: 1/
+    message = ~r/invalid value for option :values. Expected a list of values or a Range, got: 1/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
