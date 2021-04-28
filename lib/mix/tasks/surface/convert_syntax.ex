@@ -97,12 +97,12 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     args
     |> expand_args(dot_formatter, {formatter_opts, subdirectories})
     |> IO.inspect(label: "=============================== C")
-    |> Task.async_stream(&format_file(&1, opts), ordered: false, timeout: 30000)
-    |> Enum.reduce({[], [], []}, &collect_status/2)
+    |> Task.async_stream(&convert_file(&1, opts), ordered: false, timeout: 30000)
+    |> Enum.reduce([], &collect_status/2)
     |> check!()
   end
 
-  defp format_file({file, formatter_opts}, task_opts) do
+  defp convert_file({file, formatter_opts}, task_opts) do
     {input, extra_opts} = read_file(file)
     formatted = convert_file_contents!(file, input, extra_opts ++ formatter_opts)
     output = IO.iodata_to_binary([formatted])
@@ -369,52 +369,23 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
     :ok
   end
 
-  defp collect_status({:ok, :ok}, acc), do: acc
+  defp collect_status({:ok, :ok}, exits), do: exits
 
-  defp collect_status({:ok, {:exit, _, _, _} = exit}, {exits, not_equivalent, not_formatted}) do
-    {[exit | exits], not_equivalent, not_formatted}
+  defp collect_status({:ok, {:exit, _, _, _} = exit}, exits) do
+    [exit | exits]
   end
 
-  defp collect_status({:ok, {:not_equivalent, file}}, {exits, not_equivalent, not_formatted}) do
-    {exits, [file | not_equivalent], not_formatted}
-  end
-
-  defp collect_status({:ok, {:not_formatted, file}}, {exits, not_equivalent, not_formatted}) do
-    {exits, not_equivalent, [file | not_formatted]}
-  end
-
-  defp check!({[], [], []}) do
+  defp check!([]) do
     :ok
   end
 
-  defp check!({[{:exit, :stdin, exception, stacktrace} | _], _not_equivalent, _not_formatted}) do
-    Mix.shell().error("mix surface.format failed for stdin")
+  defp check!([{:exit, :stdin, exception, stacktrace} | _]) do
+    Mix.shell().error("mix surface.convert_syntax failed for stdin")
     reraise exception, stacktrace
   end
 
-  defp check!({[{:exit, file, exception, stacktrace} | _], _not_equivalent, _not_formatted}) do
-    Mix.shell().error("mix surface.format failed for file: #{Path.relative_to_cwd(file)}")
+  defp check!([{:exit, file, exception, stacktrace} | _]) do
+    Mix.shell().error("mix surface.convert_syntax failed for file: #{Path.relative_to_cwd(file)}")
     reraise exception, stacktrace
-  end
-
-  defp check!({_exits, [_ | _] = not_equivalent, _not_formatted}) do
-    Mix.raise("""
-    mix surface.format failed due to --check-equivalent.
-    The following files are not equivalent:
-    #{to_bullet_list(not_equivalent)}
-    Please report this bug with the input files at https://github.com/surface-ui/surface_formatter/issues
-    """)
-  end
-
-  defp check!({_exits, _not_equivalent, [_ | _] = not_formatted}) do
-    Mix.raise("""
-    mix surface.format failed due to --check-formatted.
-    The following files are not formatted:
-    #{to_bullet_list(not_formatted)}
-    """)
-  end
-
-  defp to_bullet_list(files) do
-    Enum.map_join(files, "\n", &"  * #{&1 |> to_string() |> Path.relative_to_cwd()}")
   end
 end
