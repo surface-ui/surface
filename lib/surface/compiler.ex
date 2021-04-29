@@ -21,7 +21,8 @@ defmodule Surface.Compiler do
     Surface.Directive.If,
     Surface.Directive.For,
     Surface.Directive.Debug,
-    Surface.Directive.Hook
+    Surface.Directive.Hook,
+    Surface.Directive.Values
   ]
 
   @component_directive_handlers [
