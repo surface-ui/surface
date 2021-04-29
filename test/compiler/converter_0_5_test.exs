@@ -43,7 +43,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
     assert expected == """
     <div :props=""/>
-    <#slot :args=""/>
+    <#slot args=""/>
     <div :props=""/>
     """
   end

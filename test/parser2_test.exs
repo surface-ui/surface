@@ -105,26 +105,26 @@ defmodule Surface.Compiler.Parser2Test do
            ]
   end
 
-  # test "comments" do
-  #   code = """
-  #   <div>
-  #   <!--
-  #   This is
-  #   a comment
-  #   -->
-  #     <span/>
-  #   </div>
-  #   """
+  test "comments" do
+    code = """
+    <div>
+    <!--
+    This is
+    a comment
+    -->
+      <span/>
+    </div>
+    """
 
-  #   {:ok, [{"div", _, [_, {:comment, comment}, _, {"span", _, _, _}, _], _}, _]} = parse(code)
+    {:ok, [{"div", _, [_, {:comment, comment}, _, {"span", _, _, _}, _], _}, _]} = parse(code)
 
-  #   assert comment == """
-  #          <!--
-  #          This is
-  #          a comment
-  #          -->\
-  #          """
-  # end
+    assert comment == """
+           <!--
+           This is
+           a comment
+           -->\
+           """
+  end
 
   describe "void elements" do
     test "without attributes" do

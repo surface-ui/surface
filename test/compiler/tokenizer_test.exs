@@ -26,8 +26,9 @@ defmodule Surface.Compiler.TokenizerTest do
   end
 
   describe "comment" do
-    test "generated as text" do
-      assert tokenize("Begin<!-- comment -->End") == [{:text, "Begin<!-- comment -->End"}]
+    test "represented as {:comment, comment}" do
+      assert tokenize("Begin<!-- comment -->End") ==
+        [{:text, "Begin"}, {:comment, "<!-- comment -->"}, {:text, "End"}]
     end
 
     test "multiple lines and wrapped by tags" do
@@ -41,7 +42,9 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert [
                {:tag_open, "p", [], %{line: 1, column: 2}},
-               {:text, "\n<!--\n<div>\n-->\n"},
+               {:text, "\n"},
+               {:comment, "<!--\n<div>\n-->"},
+               {:text, "\n"},
                {:tag_close, "p", %{line: 5, column: 3}},
                {:tag_open, "br", [], %{line: 5, column: 6}}
              ] = tokenize(code)

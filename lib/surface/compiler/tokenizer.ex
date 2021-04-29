@@ -40,9 +40,11 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_text("<!--" <> rest, line, column, buffer, acc, state) do
-    case handle_comment(rest, line, column + 4, ["<!--" | buffer], state) do
+    acc = text_to_acc(buffer, acc)
+    case handle_comment(rest, line, column + 4, ["<!--"], state) do
       {:ok, new_rest, new_line, new_column, new_buffer} ->
-        handle_text(new_rest, new_line, new_column, new_buffer, acc, state)
+        comment = buffer_to_string(new_buffer)
+        handle_text(new_rest, new_line, new_column, [], [{:comment, comment} | acc], state)
 
       {:error, message} ->
         raise %ParseError{file: state.file, line: line, column: column, message: message}

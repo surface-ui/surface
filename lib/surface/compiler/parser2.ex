@@ -50,36 +50,30 @@ defmodule Surface.Compiler.Parser2 do
     {:error, "expected closing tag for <#{tag_name}>", line}
   end
 
-  defp to_ast([{:text, text} | rest], [buffer | buffers], state) do
-    # add to last buffer
-    # node = {:text, text}
-    node = text
-    buffer = [node | buffer]
-    buffers = [buffer | buffers]
+  defp to_ast([{:text, text} | rest], buffers, state) do
+    buffers = push_node_to_current_buffer(text, buffers)
     to_ast(rest, buffers, state)
   end
 
-  defp to_ast([{:interpolation, expr, %{line: line}} | rest], [buffer | buffers], state) do
-    # add to last buffer
-    node = {:interpolation, expr, %{line: line}}
-    buffer = [node | buffer]
-    buffers = [buffer | buffers]
+  defp to_ast([{:comment, comment} | rest], buffers, state) do
+    buffers = push_node_to_current_buffer({:comment, comment}, buffers)
     to_ast(rest, buffers, state)
   end
 
-  defp to_ast([{:tag_open, name, attrs, %{line: line}} | rest], [buffer | buffers], state) when name in @void_elements do
-    # add to last buffer
+  defp to_ast([{:interpolation, expr, %{line: line}} | rest], buffers, state) do
+    buffers = push_node_to_current_buffer({:interpolation, expr, %{line: line}}, buffers)
+    to_ast(rest, buffers, state)
+  end
+
+  defp to_ast([{:tag_open, name, attrs, %{line: line}} | rest], buffers, state) when name in @void_elements do
     node = {name, transtate_attrs(attrs), [], %{line: line}}
-    buffer = [node | buffer]
-    buffers = [buffer | buffers]
+    buffers = push_node_to_current_buffer(node, buffers)
     to_ast(rest, buffers, state)
   end
 
-  defp to_ast([{:tag_open, name, attrs, %{self_close: true, line: line}} | rest], [buffer | buffers], state) do
-    # add to last buffer
+  defp to_ast([{:tag_open, name, attrs, %{self_close: true, line: line}} | rest], buffers, state) do
     node = {name, transtate_attrs(attrs), [], %{line: line}}
-    buffer = [node | buffer]
-    buffers = [buffer | buffers]
+    buffers = push_node_to_current_buffer(node, buffers)
     to_ast(rest, buffers, state)
   end
 
@@ -90,20 +84,24 @@ defmodule Surface.Compiler.Parser2 do
     to_ast(rest, buffers, state)
   end
 
-  defp to_ast([{:tag_close, name, _meta} | rest], [buffer | buffers], state) do
+  defp to_ast([{:tag_close, name, _meta} | rest], buffers, state) do
     case pop_tag(state, name) do
       {:ok, {{:tag_open, _name, attrs, %{line: line}}, state}} ->
-        # include the tag in acc along with its childrens coming from the last buffer
-        # node = {:tag, name, Enum.reverse(buffer)}
-        node = {name, transtate_attrs(attrs), Enum.reverse(buffer), %{line: line}}
+        # pop the current buffer and use it as children for the tag node
         [buffer | buffers] = buffers
-        buffer = [node | buffer]
-        buffers = [buffer | buffers]
+        node = {name, transtate_attrs(attrs), Enum.reverse(buffer), %{line: line}}
+        buffers = push_node_to_current_buffer(node, buffers)
         to_ast(rest, buffers, state)
 
       error ->
         error
     end
+  end
+
+  defp push_node_to_current_buffer(node, buffers) do
+    [buffer | buffers] = buffers
+    buffer = [node | buffer]
+    [buffer | buffers]
   end
 
   defp transtate_attrs(attrs) do
