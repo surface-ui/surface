@@ -669,4 +669,124 @@ defmodule Surface.Compiler.Parser2Test do
                {:ok, [{"li", attributes, [], %{line: 1}}, "\n"]}
     end
   end
+
+  describe "sub-blocks" do
+    test "single sub-block" do
+      code = """
+      <#if {true}>
+        1
+      <#else>
+        2
+      </#if>\
+      """
+
+      assert parse(code) == {:ok, [
+        {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
+          [
+            {:default, [], ["\n  1\n"], %{}},
+            {"#else", [], ["\n  2\n"], %{line: 3}}
+          ],
+          %{line: 1, has_sub_blocks?: true}
+        }
+      ]}
+    end
+
+    test "multiple sub-blocks" do
+      code = """
+      <#if {true}>
+        1
+      <#elseif>
+        2
+      <#elseif>
+        3
+      <#else>
+        4
+      </#if>\
+      """
+
+      assert parse(code) == {:ok, [
+        {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
+          [
+            {:default, [], ["\n  1\n"], %{}},
+            {"#elseif", [], ["\n  2\n"], %{line: 3}},
+            {"#elseif", [], ["\n  3\n"], %{line: 5}},
+            {"#else", [], ["\n  4\n"], %{line: 7}}
+          ],
+          %{line: 1, has_sub_blocks?: true}
+        }
+      ]}
+    end
+
+    test "nested sub-blocks" do
+      code = """
+      <#if {1}>
+        111
+      <#elseif {2}>
+        222
+        <#if {3}>
+          333
+        <#else>
+          444
+        </#if>
+      <#else>
+        555
+      </#if>\
+      """
+
+      assert parse(code) == {:ok, [
+        {"#if", [{:root, {:attribute_expr, "1", %{line: 1}}, %{line: 1}}], [
+            {:default, [], ["\n  111\n"], %{}},
+            {"#elseif", [{:root, {:attribute_expr, "2", %{line: 3}}, %{line: 3}}], [
+                "\n  222\n  ",
+                {"#if", [{:root, {:attribute_expr, "3", %{line: 5}}, %{line: 5}}], [
+                  {:default, [], ["\n    333\n  "], %{}},
+                  {"#else", [], ["\n    444\n  "], %{line: 7}}
+                ], %{has_sub_blocks?: true, line: 5}},
+                "\n"
+            ], %{line: 3}},
+            {"#else", [], ["\n  555\n"], %{line: 10}
+          }], %{has_sub_blocks?: true, line: 1}}
+        ]}
+    end
+
+    test "handle invalid parents for #else" do
+      code = """
+      <div>
+      <#else>
+      </div>
+      """
+
+      assert parse(code) == {:error, "cannot use <#else> inside <div>. Possible parents are \"<#if>\" and \"<#for>\"", 2}
+    end
+
+    test "handle invalid parents for #elseif" do
+      code = """
+      <div>
+      <#elseif>
+      </div>
+      """
+
+      assert parse(code) == {:error, "cannot use <#elseif> inside <div>. The <#elseif> construct can only be used inside a \"<#if>\"", 2}
+    end
+
+    test "handle invalid parents for #match" do
+      code = """
+      <div>
+      <#match>
+      </div>
+      """
+
+      assert parse(code) == {:error, "cannot use <#match> inside <div>. The <#match> construct can only be used inside a \"<#case>\"", 2}
+    end
+
+    test "raise error on sub-blocks without parent node" do
+      code = """
+        1
+      <#else>
+        2
+      """
+
+      assert parse(code) == {:error, "no valid parent node defined for <#else>. Possible parents are \"<#if>\" and \"<#for>\"", 2}
+    end
+  end
 end
