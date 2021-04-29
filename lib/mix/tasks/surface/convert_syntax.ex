@@ -25,8 +25,11 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
 
   use Mix.Task
 
+  alias Surface.Compiler.Converter
+  alias Surface.Compiler.Converter_0_5
+
   defp format_string(string) do
-    Function.identity(string)
+    Converter.convert(string, converter: Converter_0_5)
   end
 
   #
