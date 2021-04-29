@@ -174,8 +174,7 @@ defmodule Surface.Compiler.ParserTest do
       assert parse("<foo>one<bar>two</bar>three</foo>") ==
                {:ok,
                 [
-                  {"foo", [], ["one", {"bar", [], ["two"], %{line: 1}}, "three"],
-                   %{line: 1}}
+                  {"foo", [], ["one", {"bar", [], ["two"], %{line: 1}}, "three"], %{line: 1}}
                 ]}
     end
 
@@ -238,8 +237,7 @@ defmodule Surface.Compiler.ParserTest do
       assert parse("<foo>bar{{baz}}bat</foo>") ==
                {:ok,
                 [
-                  {"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"],
-                   %{line: 1}}
+                  {"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"], %{line: 1}}
                 ]}
     end
 
@@ -247,8 +245,7 @@ defmodule Surface.Compiler.ParserTest do
       assert parse("<foo>bar{{ 'a}b' }}bat</foo>") ==
                {:ok,
                 [
-                  {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"],
-                   %{line: 1}}
+                  {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"], %{line: 1}}
                 ]}
     end
 
@@ -505,8 +502,7 @@ defmodule Surface.Compiler.ParserTest do
       attributes = [
         {"prop1", true, %{line: 2}},
         {"prop2", "value 2", %{line: 3}},
-        {"prop3", {:attribute_expr, " var3 ", %{line: 5}},
-         %{line: 4}},
+        {"prop3", {:attribute_expr, " var3 ", %{line: 5}}, %{line: 4}},
         {"prop4", true, %{line: 6}}
       ]
 
@@ -527,8 +523,7 @@ defmodule Surface.Compiler.ParserTest do
       attributes = [
         {"prop1", true, %{line: 2}},
         {"prop2", "2", %{line: 3}},
-        {"prop3", {:attribute_expr, " var3 ", %{line: 5}},
-         %{line: 4}},
+        {"prop3", {:attribute_expr, " var3 ", %{line: 5}}, %{line: 4}},
         {"prop4", true, %{line: 6}}
       ]
 

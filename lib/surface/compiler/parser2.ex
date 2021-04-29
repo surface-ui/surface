@@ -30,12 +30,13 @@ defmodule Surface.Compiler.Parser2 do
   @sub_blocks_valid_parents %{
     "#else" => ["#if", "#for"],
     "#elseif" => ["#if"],
-    "#match" => ["#case"],
+    "#match" => ["#case"]
   }
 
   def parse(code) do
     try do
       tokens = Tokenizer.tokenize(code)
+
       case handle_token(tokens) do
         ast when is_list(ast) ->
           {:ok, ast}
@@ -43,12 +44,11 @@ defmodule Surface.Compiler.Parser2 do
         error ->
           error
       end
-
     rescue
       e in [ParseError] ->
         %ParseError{line: line, column: _column, message: message} = e
         {:error, message, line}
-      end
+    end
   end
 
   defp handle_token(tokens) do
@@ -78,7 +78,8 @@ defmodule Surface.Compiler.Parser2 do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_open, name, attrs, meta} = token | rest], buffers, state) when name in @sub_blocks do
+  defp handle_token([{:tag_open, name, attrs, meta} = token | rest], buffers, state)
+       when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
 
     # push the current sub-block token to state
@@ -90,7 +91,8 @@ defmodule Surface.Compiler.Parser2 do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_open, name, attrs, meta} | rest], buffers, state) when name in @void_elements do
+  defp handle_token([{:tag_open, name, attrs, meta} | rest], buffers, state)
+       when name in @void_elements do
     node = {name, transtate_attrs(attrs), [], to_meta(meta)}
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
@@ -109,7 +111,11 @@ defmodule Surface.Compiler.Parser2 do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_close, _name, _meta} = token | _] = tokens, buffers, %{tags: [{:tag_open, name, _, _} | _]} = state)
+  defp handle_token(
+         [{:tag_close, _name, _meta} = token | _] = tokens,
+         buffers,
+         %{tags: [{:tag_open, name, _, _} | _]} = state
+       )
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
     handle_token(tokens, buffers, state)
@@ -247,7 +253,7 @@ defmodule Surface.Compiler.Parser2 do
     %{state | tags: [token | state.tags]}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, _meta} = tag | tags]} = state, tag_name) do
+  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _, _} = tag | tags]} = state, tag_name) do
     {:ok, {tag, %{state | tags: tags}}}
   end
 

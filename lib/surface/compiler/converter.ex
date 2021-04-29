@@ -3,7 +3,8 @@ defmodule Surface.Compiler.Converter do
 
   @type subject :: :interpolation | :tag_name | :attr_name
 
-  @callback convert(subject :: subject(), text :: binary(), state :: map(), opts :: keyword()) :: binary()
+  @callback convert(subject :: subject(), text :: binary(), state :: map(), opts :: keyword()) ::
+              binary()
 
   alias Surface.Compiler.Tokenizer
 
@@ -17,7 +18,16 @@ defmodule Surface.Compiler.Converter do
     scan_text(text, 1, 1, [], [], metas, state, opts)
   end
 
-  defp scan_text("\r\n" <> rest, line, column, buffer, acc, [{type, %{line_end: line, column_end: column}} | metas], state, opts) do
+  defp scan_text(
+         "\r\n" <> rest,
+         line,
+         column,
+         buffer,
+         acc,
+         [{type, %{line_end: line, column_end: column}} | metas],
+         state,
+         opts
+       ) do
     {acc, state} = convert_buffer_to_acc(type, buffer, acc, state, opts)
     scan_text(rest, line + 1, 1, ["\r\n"], acc, metas, state, opts)
   end
@@ -26,7 +36,16 @@ defmodule Surface.Compiler.Converter do
     scan_text(rest, line + 1, 1, ["\r\n" | buffer], acc, metas, state, opts)
   end
 
-  defp scan_text("\n" <> rest, line, column, buffer, acc, [{type, %{line_end: line, column_end: column}} | metas], state, opts) do
+  defp scan_text(
+         "\n" <> rest,
+         line,
+         column,
+         buffer,
+         acc,
+         [{type, %{line_end: line, column_end: column}} | metas],
+         state,
+         opts
+       ) do
     {acc, state} = convert_buffer_to_acc(type, buffer, acc, state, opts)
     scan_text(rest, line + 1, 1, ["\n"], acc, metas, state, opts)
   end
@@ -35,11 +54,30 @@ defmodule Surface.Compiler.Converter do
     scan_text(rest, line + 1, 1, ["\n" | buffer], acc, metas, state, opts)
   end
 
-  defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, [{_type, %{line: line, column: column}} | _] = metas, state, opts) do
-    scan_text(rest, line, column + 1, [<<c::utf8>>], buffer_to_acc(buffer, acc), metas, state, opts)
+  defp scan_text(
+         <<c::utf8, rest::binary>>,
+         line,
+         column,
+         buffer,
+         acc,
+         [{_type, %{line: line, column: column}} | _] = metas,
+         state,
+         opts
+       ) do
+    acc = buffer_to_acc(buffer, acc)
+    scan_text(rest, line, column + 1, [<<c::utf8>>], acc, metas, state, opts)
   end
 
-  defp scan_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, [{type, %{line_end: line, column_end: column}} | metas], state, opts) do
+  defp scan_text(
+         <<c::utf8, rest::binary>>,
+         line,
+         column,
+         buffer,
+         acc,
+         [{type, %{line_end: line, column_end: column}} | metas],
+         state,
+         opts
+       ) do
     {acc, state} = convert_buffer_to_acc(type, buffer, acc, state, opts)
     scan_text(rest, line, column + 1, [<<c::utf8>>], acc, metas, state, opts)
   end
@@ -95,6 +133,7 @@ defmodule Surface.Compiler.Converter do
   defp buffer_to_acc(buffer, acc), do: [buffer_to_string(buffer) | acc]
 
   defp convert_buffer_to_acc(_type, [], acc, _state, _opts), do: acc
+
   defp convert_buffer_to_acc(type, buffer, acc, state, opts) do
     converter = Keyword.fetch!(opts, :converter)
     value = buffer_to_string(buffer)

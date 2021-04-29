@@ -18,11 +18,11 @@ defmodule Surface.Compiler.Converter_0_4Test do
       """)
 
     assert expected == """
-    <#template slot="footer">Footer</#template>
-    <#Raw>
-      <template slot="footer">Footer</template>
-    </#Raw>
-    """
+           <#template slot="footer">Footer</#template>
+           <#Raw>
+             <template slot="footer">Footer</template>
+           </#Raw>
+           """
   end
 
   test "convert <template> into <#template>" do
@@ -36,12 +36,12 @@ defmodule Surface.Compiler.Converter_0_4Test do
       """)
 
     assert expected == """
-    <div>
-      <#template slot="footer">
-        Footer
-      </#template>
-    </div>
-    """
+           <div>
+             <#template slot="footer">
+               Footer
+             </#template>
+           </div>
+           """
   end
 
   test "convert <slot> into <#slot>" do
@@ -55,12 +55,12 @@ defmodule Surface.Compiler.Converter_0_4Test do
       """)
 
     assert expected == """
-    <div>
-      <#slot name="footer">
-        Footer
-      </#slot>
-    </div>
-    """
+           <div>
+             <#slot name="footer">
+               Footer
+             </#slot>
+           </div>
+           """
   end
 
   test "convert <If> into <#if>" do
@@ -75,13 +75,13 @@ defmodule Surface.Compiler.Converter_0_4Test do
       """)
 
     assert expected == """
-    <div>
-      <#if condition={{ @var }}>
-        1
-        </#if>
-      <#if   condition={{ @var }}>2</#if>
-    </div>
-    """
+           <div>
+             <#if condition={{ @var }}>
+               1
+               </#if>
+             <#if   condition={{ @var }}>2</#if>
+           </div>
+           """
   end
 
   test "convert :if into #if" do
@@ -95,12 +95,12 @@ defmodule Surface.Compiler.Converter_0_4Test do
       """)
 
     assert expected == """
-    <div #if={{ true }}>
-      1
-    </div>
-    <div
-      #if = {{ true }}>1</div>
-    """
+           <div #if={{ true }}>
+             1
+           </div>
+           <div
+             #if = {{ true }}>1</div>
+           """
   end
 
   test "convert unquoted string" do
@@ -114,11 +114,11 @@ defmodule Surface.Compiler.Converter_0_4Test do
       """)
 
     assert expected == """
-    <div disabled={{true}}>
-      1
-    </div>
-    <div
-      tabindex={{2}}>2</div>
-    """
+           <div disabled={{true}}>
+             1
+           </div>
+           <div
+             tabindex={{2}}>2</div>
+           """
   end
 end

@@ -28,7 +28,7 @@ defmodule Surface.Compiler.TokenizerTest do
   describe "comment" do
     test "represented as {:comment, comment}" do
       assert tokenize("Begin<!-- comment -->End") ==
-        [{:text, "Begin"}, {:comment, "<!-- comment -->"}, {:text, "End"}]
+               [{:text, "Begin"}, {:comment, "<!-- comment -->"}, {:text, "End"}]
     end
 
     test "multiple lines and wrapped by tags" do
@@ -78,7 +78,8 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert tokens == [
                {:text, "before"},
-               {:interpolation, "func({1, 3})", %{column: 8, line: 1, column_end: 20, line_end: 1}},
+               {:interpolation, "func({1, 3})",
+                %{column: 8, line: 1, column_end: 20, line_end: 1}},
                {:text, "after"}
              ]
     end
@@ -153,15 +154,18 @@ defmodule Surface.Compiler.TokenizerTest do
     end
 
     test "compute line and column" do
-      attrs = tokenize_attrs("""
-      <div
-        class="panel"
-        style={@style} hidden>\
-      """)
+      attrs =
+        tokenize_attrs("""
+        <div
+          class="panel"
+          style={@style} hidden>\
+        """)
 
       assert [
-               {"class", {:string, "panel", %{}}, %{line: 2, column: 3, line_end: 2, column_end: 8}},
-               {"style", {:expr, "@style", %{}}, %{line: 3, column: 3, line_end: 3, column_end: 8}},
+               {"class", {:string, "panel", %{}},
+                %{line: 2, column: 3, line_end: 2, column_end: 8}},
+               {"style", {:expr, "@style", %{}},
+                %{line: 3, column: 3, line_end: 3, column_end: 8}},
                {"hidden", nil, %{line: 3, column: 18, line_end: 3, column_end: 24}}
              ] = attrs
     end
@@ -302,7 +306,8 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}], %{}},
+               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}],
+                %{}},
                {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
     end
@@ -348,7 +353,8 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}], %{}},
+               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}],
+                %{}},
                {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
     end

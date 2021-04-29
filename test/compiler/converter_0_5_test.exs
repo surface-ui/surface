@@ -22,15 +22,15 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-    <div
-      id={ @id }   class={@class}
-      phone = { @phone }
-    >
-      <span title={123} />
-      1{ @name }2 3{ @name }4
-          5 { @value } 6
-    7 </div>
-    """
+           <div
+             id={ @id }   class={@class}
+             phone = { @phone }
+           >
+             <span title={123} />
+             1{ @name }2 3{ @name }4
+                 5 { @value } 6
+           7 </div>
+           """
   end
 
   test "convert slot's :props into :args" do
@@ -42,9 +42,9 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-    <div :props=""/>
-    <#slot args=""/>
-    <div :props=""/>
-    """
+           <div :props=""/>
+           <#slot args=""/>
+           <div :props=""/>
+           """
   end
 end

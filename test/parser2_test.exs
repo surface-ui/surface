@@ -174,8 +174,7 @@ defmodule Surface.Compiler.Parser2Test do
       assert parse("<foo>one<bar>two</bar>three</foo>") ==
                {:ok,
                 [
-                  {"foo", [], ["one", {"bar", [], ["two"], %{line: 1}}, "three"],
-                   %{line: 1}}
+                  {"foo", [], ["one", {"bar", [], ["two"], %{line: 1}}, "three"], %{line: 1}}
                 ]}
     end
 
@@ -233,49 +232,48 @@ defmodule Surface.Compiler.Parser2Test do
       assert parse("<foo>bar{baz}bat</foo>") ==
                {:ok,
                 [
-                  {"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"],
-                   %{line: 1}}
+                  {"foo", '', ["bar", {:interpolation, "baz", %{line: 1}}, "bat"], %{line: 1}}
                 ]}
     end
 
-  #  test "single-closing curly bracket" do
-  #    assert parse("<foo>bar{ 'a}b' }bat</foo>") ==
-  #             {:ok,
-  #              [
-  #                {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"],
-  #                 %{line: 1}}
-  #              ]}
-  #  end
+    #  test "single-closing curly bracket" do
+    #    assert parse("<foo>bar{ 'a}b' }bat</foo>") ==
+    #             {:ok,
+    #              [
+    #                {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"],
+    #                 %{line: 1}}
+    #              ]}
+    #  end
 
-  #  test "charlist with closing curly in tuple" do
-  #    assert parse("{{ 'a}}b' }}") ==
-  #             {:ok, [{:interpolation, " 'a}}b' ", %{line: 1}}]}
-  #  end
+    #  test "charlist with closing curly in tuple" do
+    #    assert parse("{{ 'a}}b' }}") ==
+    #             {:ok, [{:interpolation, " 'a}}b' ", %{line: 1}}]}
+    #  end
 
-  #   test "binary with closing curly in tuple" do
-  #     assert parse("{{ {{'a}}b'}} }}") ==
-  #              {:ok, [{:interpolation, " {{'a}}b'}} ", %{line: 1}}]}
-  #   end
+    #   test "binary with closing curly in tuple" do
+    #     assert parse("{{ {{'a}}b'}} }}") ==
+    #              {:ok, [{:interpolation, " {{'a}}b'}} ", %{line: 1}}]}
+    #   end
 
-  #   test "double closing curly brace inside charlist" do
-  #     assert parse("{{ {{\"a}}b\"}} }}") ==
-  #              {:ok, [{:interpolation, " {{\"a}}b\"}} ", %{line: 1}}]}
-  #   end
+    #   test "double closing curly brace inside charlist" do
+    #     assert parse("{{ {{\"a}}b\"}} }}") ==
+    #              {:ok, [{:interpolation, " {{\"a}}b\"}} ", %{line: 1}}]}
+    #   end
 
-  #   test "double closing curly brace inside binary" do
-  #     assert parse("{{ \"a}}b\" }}") ==
-  #              {:ok, [{:interpolation, " \"a}}b\" ", %{line: 1}}]}
-  #   end
+    #   test "double closing curly brace inside binary" do
+    #     assert parse("{{ \"a}}b\" }}") ==
+    #              {:ok, [{:interpolation, " \"a}}b\" ", %{line: 1}}]}
+    #   end
 
-  #   test "single-opening curly bracket inside single quotes" do
-  #     assert parse("{{ 'a{b' }}") ==
-  #              {:ok, [{:interpolation, " 'a{b' ", %{line: 1}}]}
-  #   end
+    #   test "single-opening curly bracket inside single quotes" do
+    #     assert parse("{{ 'a{b' }}") ==
+    #              {:ok, [{:interpolation, " 'a{b' ", %{line: 1}}]}
+    #   end
 
-  #   test "single-opening curly bracket inside double quotes" do
-  #     assert parse("{{ \"a{b\" }}") ==
-  #              {:ok, [{:interpolation, " \"a{b\" ", %{line: 1}}]}
-  #   end
+    #   test "single-opening curly bracket inside double quotes" do
+    #     assert parse("{{ \"a{b\" }}") ==
+    #              {:ok, [{:interpolation, " \"a{b\" ", %{line: 1}}]}
+    #   end
 
     test "containing a charlist with escaped single quote" do
       assert parse("{ 'a\\'b' }") ==
@@ -345,9 +343,9 @@ defmodule Surface.Compiler.Parser2Test do
   describe "errors on" do
     test "expected tag name" do
       assert parse("""
-      text
-      <>bar</>
-      """) == {:error, "expected tag name", 2}
+             text
+             <>bar</>
+             """) == {:error, "expected tag name", 2}
     end
 
     test "invalid closing tag" do
@@ -502,8 +500,7 @@ defmodule Surface.Compiler.Parser2Test do
       attributes = [
         {"prop1", true, %{line: 2}},
         {"prop2", "value 2", %{line: 3}},
-        {"prop3", {:attribute_expr, " var3 ", %{line: 5}},
-         %{line: 4}},
+        {"prop3", {:attribute_expr, " var3 ", %{line: 5}}, %{line: 4}},
         {"prop4", true, %{line: 6}}
       ]
 
@@ -524,8 +521,7 @@ defmodule Surface.Compiler.Parser2Test do
       attributes = [
         {"prop1", true, %{line: 2}},
         {"prop2", "2", %{line: 3}},
-        {"prop3", {:attribute_expr, " var3 ", %{line: 5}},
-         %{line: 4}},
+        {"prop3", {:attribute_expr, " var3 ", %{line: 5}}, %{line: 4}},
         {"prop4", true, %{line: 6}}
       ]
 
@@ -626,19 +622,19 @@ defmodule Surface.Compiler.Parser2Test do
     #   assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
     # end
 
-  #   test "string with only an embedded interpolation" do
-  #     code = """
-  #     <foo prop="{ var }"/>
-  #     """
+    #   test "string with only an embedded interpolation" do
+    #     code = """
+    #     <foo prop="{ var }"/>
+    #     """
 
-  #     attr_value = [{:attribute_expr, " var ", %{line: 1}}]
+    #     attr_value = [{:attribute_expr, " var ", %{line: 1}}]
 
-  #     attributes = [
-  #       {"prop", attr_value, %{line: 1}}
-  #     ]
+    #     attributes = [
+    #       {"prop", attr_value, %{line: 1}}
+    #     ]
 
-  #     assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
-  #   end
+    #     assert parse(code) == {:ok, [{"foo", attributes, [], %{line: 1}}, "\n"]}
+    #   end
 
     test "interpolation with nested curlies" do
       code = """
@@ -680,15 +676,15 @@ defmodule Surface.Compiler.Parser2Test do
       </#if>\
       """
 
-      assert parse(code) == {:ok, [
-        {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
-          [
-            {:default, [], ["\n  1\n"], %{}},
-            {"#else", [], ["\n  2\n"], %{line: 3}}
-          ],
-          %{line: 1, has_sub_blocks?: true}
-        }
-      ]}
+      assert parse(code) ==
+               {:ok,
+                [
+                  {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
+                   [
+                     {:default, [], ["\n  1\n"], %{}},
+                     {"#else", [], ["\n  2\n"], %{line: 3}}
+                   ], %{line: 1, has_sub_blocks?: true}}
+                ]}
     end
 
     test "multiple sub-blocks" do
@@ -704,17 +700,17 @@ defmodule Surface.Compiler.Parser2Test do
       </#if>\
       """
 
-      assert parse(code) == {:ok, [
-        {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
-          [
-            {:default, [], ["\n  1\n"], %{}},
-            {"#elseif", [], ["\n  2\n"], %{line: 3}},
-            {"#elseif", [], ["\n  3\n"], %{line: 5}},
-            {"#else", [], ["\n  4\n"], %{line: 7}}
-          ],
-          %{line: 1, has_sub_blocks?: true}
-        }
-      ]}
+      assert parse(code) ==
+               {:ok,
+                [
+                  {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
+                   [
+                     {:default, [], ["\n  1\n"], %{}},
+                     {"#elseif", [], ["\n  2\n"], %{line: 3}},
+                     {"#elseif", [], ["\n  3\n"], %{line: 5}},
+                     {"#else", [], ["\n  4\n"], %{line: 7}}
+                   ], %{line: 1, has_sub_blocks?: true}}
+                ]}
     end
 
     test "nested sub-blocks" do
@@ -733,20 +729,25 @@ defmodule Surface.Compiler.Parser2Test do
       </#if>\
       """
 
-      assert parse(code) == {:ok, [
-        {"#if", [{:root, {:attribute_expr, "1", %{line: 1}}, %{line: 1}}], [
-            {:default, [], ["\n  111\n"], %{}},
-            {"#elseif", [{:root, {:attribute_expr, "2", %{line: 3}}, %{line: 3}}], [
-                "\n  222\n  ",
-                {"#if", [{:root, {:attribute_expr, "3", %{line: 5}}, %{line: 5}}], [
-                  {:default, [], ["\n    333\n  "], %{}},
-                  {"#else", [], ["\n    444\n  "], %{line: 7}}
-                ], %{has_sub_blocks?: true, line: 5}},
-                "\n"
-            ], %{line: 3}},
-            {"#else", [], ["\n  555\n"], %{line: 10}
-          }], %{has_sub_blocks?: true, line: 1}}
-        ]}
+      assert parse(code) ==
+               {:ok,
+                [
+                  {"#if", [{:root, {:attribute_expr, "1", %{line: 1}}, %{line: 1}}],
+                   [
+                     {:default, [], ["\n  111\n"], %{}},
+                     {"#elseif", [{:root, {:attribute_expr, "2", %{line: 3}}, %{line: 3}}],
+                      [
+                        "\n  222\n  ",
+                        {"#if", [{:root, {:attribute_expr, "3", %{line: 5}}, %{line: 5}}],
+                         [
+                           {:default, [], ["\n    333\n  "], %{}},
+                           {"#else", [], ["\n    444\n  "], %{line: 7}}
+                         ], %{has_sub_blocks?: true, line: 5}},
+                        "\n"
+                      ], %{line: 3}},
+                     {"#else", [], ["\n  555\n"], %{line: 10}}
+                   ], %{has_sub_blocks?: true, line: 1}}
+                ]}
     end
 
     test "handle invalid parents for #else" do
@@ -756,7 +757,10 @@ defmodule Surface.Compiler.Parser2Test do
       </div>
       """
 
-      assert parse(code) == {:error, "cannot use <#else> inside <div>. Possible parents are \"<#if>\" and \"<#for>\"", 2}
+      assert parse(code) ==
+               {:error,
+                "cannot use <#else> inside <div>. Possible parents are \"<#if>\" and \"<#for>\"",
+                2}
     end
 
     test "handle invalid parents for #elseif" do
@@ -766,7 +770,10 @@ defmodule Surface.Compiler.Parser2Test do
       </div>
       """
 
-      assert parse(code) == {:error, "cannot use <#elseif> inside <div>. The <#elseif> construct can only be used inside a \"<#if>\"", 2}
+      assert parse(code) ==
+               {:error,
+                "cannot use <#elseif> inside <div>. The <#elseif> construct can only be used inside a \"<#if>\"",
+                2}
     end
 
     test "handle invalid parents for #match" do
@@ -776,7 +783,10 @@ defmodule Surface.Compiler.Parser2Test do
       </div>
       """
 
-      assert parse(code) == {:error, "cannot use <#match> inside <div>. The <#match> construct can only be used inside a \"<#case>\"", 2}
+      assert parse(code) ==
+               {:error,
+                "cannot use <#match> inside <div>. The <#match> construct can only be used inside a \"<#case>\"",
+                2}
     end
 
     test "raise error on sub-blocks without parent node" do
@@ -786,7 +796,10 @@ defmodule Surface.Compiler.Parser2Test do
         2
       """
 
-      assert parse(code) == {:error, "no valid parent node defined for <#else>. Possible parents are \"<#if>\" and \"<#for>\"", 2}
+      assert parse(code) ==
+               {:error,
+                "no valid parent node defined for <#else>. Possible parents are \"<#if>\" and \"<#for>\"",
+                2}
     end
   end
 end

@@ -41,6 +41,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text("<!--" <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
+
     case handle_comment(rest, line, column + 4, ["<!--"], state) do
       {:ok, new_rest, new_line, new_column, new_buffer} ->
         comment = buffer_to_string(new_buffer)
@@ -120,7 +121,13 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_macro_body("</#" <> <<first, rest::binary>>, line, column, buffer, acc, state)
        when first in ?A..?Z do
-    handle_tag_close("#" <> <<first::utf8>> <> rest, line, column + 2, text_to_acc(buffer, acc), state)
+    handle_tag_close(
+      "#" <> <<first::utf8>> <> rest,
+      line,
+      column + 2,
+      text_to_acc(buffer, acc),
+      state
+    )
   end
 
   defp handle_macro_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
@@ -204,7 +211,13 @@ defmodule Surface.Compiler.Tokenizer do
     handle_text(rest, line, column + 1, [], put_self_close(acc), state)
   end
 
-  defp handle_maybe_tag_open_end(">" <> rest, line, column, [{:tag_open, "#" <> <<first, _::binary>>, _, _} | _] = acc, state)
+  defp handle_maybe_tag_open_end(
+         ">" <> rest,
+         line,
+         column,
+         [{:tag_open, "#" <> <<first, _::binary>>, _, _} | _] = acc,
+         state
+       )
        when first in ?A..?Z do
     acc = reverse_attrs(acc)
     handle_macro_body(rest, line, column + 1, [], acc, state)
@@ -391,8 +404,9 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_attr_value_unquoted
 
   defp handle_attr_value_unquoted(<<c::utf8, _::binary>> = text, line, column, buffer, acc, state)
-      when c in @unquoted_value_stop_chars  do
+       when c in @unquoted_value_stop_chars do
     value = buffer_to_string(buffer)
+
     acc =
       update_attr_value(acc, fn {type, _old_value, meta} ->
         {type, value, Map.merge(meta, %{line_end: line, column_end: column})}
@@ -402,7 +416,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_attr_value_unquoted(<<c::utf8, _::binary>>, line, column, _buffer, _acc, state)
-      when c in @unquoted_value_invalid_chars  do
+       when c in @unquoted_value_invalid_chars do
     message = """
     unexpected character `#{<<c::utf8>>}`. \
     Unquoted attribute values cannot contain `\"`, `'`, `=` nor `<`
