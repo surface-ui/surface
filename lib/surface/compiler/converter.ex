@@ -121,7 +121,7 @@ defmodule Surface.Compiler.Converter do
     [{:tag_close, meta} | acc]
   end
 
-  defp extract_meta({:unquoted_string, _name, meta}, acc) do
+  defp extract_meta({:string, _name, %{delimiter: nil} = meta}, acc) do
     [{:unquoted_string, meta} | acc]
   end
 

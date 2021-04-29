@@ -336,7 +336,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_attr_value_begin(<<c::utf8, _::binary>> = text, line, column, acc, state)
        when c not in @name_stop_chars do
-    acc = put_attr_value(acc, {:unquoted_string, nil, %{line: line, column: column}})
+    acc = put_attr_value(acc, {:string, nil, %{line: line, column: column, delimiter: nil}})
     handle_attr_value_unquoted(text, line, column, [], acc, state)
   end
 
