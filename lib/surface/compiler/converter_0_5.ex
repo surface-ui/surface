@@ -11,25 +11,27 @@ defmodule Surface.Compiler.Converter_0_5 do
     "{#{value}}"
   end
 
-  def convert(:tag_name, "template", _state, _opts) do
-    "#template"
-  end
+  ## Planned changes. Uncomment as the related implementation gets merged
 
-  def convert(:tag_name, "slot", _state, _opts) do
-    "#slot"
-  end
+  # def convert(:tag_name, "template", _state, _opts) do
+  #   "#template"
+  # end
 
-  def convert(:tag_name, "If", _state, _opts) do
-    "#if"
-  end
+  # def convert(:tag_name, "slot", _state, _opts) do
+  #   "#slot"
+  # end
 
-  def convert(:tag_name, "For", _state, _opts) do
-    "#for"
-  end
+  # def convert(:tag_name, "If", _state, _opts) do
+  #   "#if"
+  # end
 
-  def convert(:attr_name, ":props", %{tag_name: "#slot"}, _opts) do
-    "args"
-  end
+  # def convert(:tag_name, "For", _state, _opts) do
+  #   "#for"
+  # end
+
+  # def convert(:attr_name, ":props", %{tag_name: "#slot"}, _opts) do
+  #   "args"
+  # end
 
   def convert(_type, text, _state, _opts) do
     text
