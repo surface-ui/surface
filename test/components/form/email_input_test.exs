@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.EmailInputTest do
     html =
       render_surface do
         ~H"""
-        <EmailInput form="user" field={{ :email }} />
+        <EmailInput form="user" field={:email} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.EmailInputTest do
     html =
       render_surface do
         ~H"""
-        <EmailInput form="user" field="email" opts={{ autofocus: "autofocus" }} />
+        <EmailInput form="user" field="email" opts={autofocus: "autofocus"} />
         """
       end
 

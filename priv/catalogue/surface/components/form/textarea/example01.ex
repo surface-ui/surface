@@ -9,7 +9,7 @@ defmodule Surface.Components.Form.TextArea.Example01 do
     <TextArea
       rows="4"
       class="textarea"
-      opts={{ placeholder: "4 lines of textarea" }}
+      opts={placeholder: "4 lines of textarea"}
     />
     """
   end

@@ -169,7 +169,7 @@ defmodule Surface.TransformTest do
 
     assert_raise(
       Surface.Compiler.ParseError,
-      "nofile:2: expected closing tag for \"DivToSpan\"",
+      "nofile:1: expected closing tag for <DivToSpan>",
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

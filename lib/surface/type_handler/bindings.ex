@@ -14,7 +14,7 @@ defmodule Surface.TypeHandler.Bindings do
     if clauses == [] and TypesHelper.is_bindings?(bindings) do
       {:ok, bindings}
     else
-      {:error, "Expected a keyword list of bindings, e.g. {{ item: user, info: info }}"}
+      {:error, "Expected a keyword list of bindings, e.g. {item: user, info: info}"}
     end
   end
 end

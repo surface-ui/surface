@@ -20,7 +20,7 @@ defmodule Surface.Components.FieldContextTest do
     html =
       render_surface do
         ~H"""
-        <FieldContext name={{ :my_field }}>
+        <FieldContext name={:my_field}>
           <TextInput form="my_form"/>
         </FieldContext>
         """

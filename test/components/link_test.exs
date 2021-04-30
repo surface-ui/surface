@@ -77,7 +77,7 @@ defmodule Surface.Components.LinkTest do
     html =
       render_surface do
         ~H"""
-        <Link label="user" to="/users/1" method={{ :delete }} opts={{ data: [confirm: "Really?"] }} />
+        <Link label="user" to="/users/1" method={:delete} opts={data: [confirm: "Really?"]} />
         """
       end
 
@@ -104,7 +104,7 @@ defmodule Surface.Components.LinkTest do
       html =
         render_surface do
           ~H"""
-          <Link label="hello" to="/world" method={{ :post }} />
+          <Link label="hello" to="/world" method={:post} />
           """
         end
 
@@ -115,13 +115,13 @@ defmodule Surface.Components.LinkTest do
     test "link with %URI{}" do
       url = "https://surface-ui.org/"
 
-      assert render_surface(do: ~H[<Link label="elixir" to={{ url }} />]) ==
-               render_surface(do: ~H[<Link label="elixir" to={{ URI.parse(url) }} />])
+      assert render_surface(do: ~H[<Link label="elixir" to={url} />]) ==
+               render_surface(do: ~H[<Link label="elixir" to={URI.parse(url)} />])
 
       path = "/surface"
 
-      assert render_surface(do: ~H[<Link label="elixir" to={{ path }} />]) ==
-               render_surface(do: ~H[<Link label="elixir" to={{ URI.parse(path) }} />])
+      assert render_surface(do: ~H[<Link label="elixir" to={path} />]) ==
+               render_surface(do: ~H[<Link label="elixir" to={URI.parse(path)} />])
     end
 
     test "link with put/delete" do
@@ -130,7 +130,7 @@ defmodule Surface.Components.LinkTest do
       html =
         render_surface do
           ~H"""
-          <Link label="hello" to="/world" method={{ :put }} />
+          <Link label="hello" to="/world" method={:put} />
           """
         end
 
@@ -142,7 +142,7 @@ defmodule Surface.Components.LinkTest do
       html =
         render_surface do
           ~H"""
-          <Link label="hello" to="/world" method={{ :put }} opts={{ csrf_token: false }} />
+          <Link label="hello" to="/world" method={:put} opts={csrf_token: false} />
           """
         end
 
@@ -155,7 +155,7 @@ defmodule Surface.Components.LinkTest do
         render_surface do
           ~H"""
           <Link to="/hello">
-            {{ Phoenix.HTML.Tag.content_tag(:p, "world") }}
+            {Phoenix.HTML.Tag.content_tag(:p, "world")}
           </Link>
           """
         end
@@ -172,23 +172,23 @@ defmodule Surface.Components.LinkTest do
       assert html =~ ~s[<a href="/javascript:alert(&lt;1&gt;)">foo</a>]
 
       html =
-        render_surface(do: ~H[<Link label="foo" to={{ {:safe, "/javascript:alert(<1>)"} }} />])
+        render_surface(do: ~H[<Link label="foo" to={{:safe, "/javascript:alert(<1>)"}} />])
 
       assert html =~ ~s[<a href="/javascript:alert(<1>)">foo</a>]
 
-      html = render_surface(do: ~H[<Link label="foo" to={{ {:javascript, "alert(<1>)"} }} />])
+      html = render_surface(do: ~H[<Link label="foo" to={{:javascript, "alert(<1>)"}} />])
       assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)">foo</a>]
 
-      html = render_surface(do: ~H[<Link label="foo" to={{ {:javascript, 'alert(<1>)'} }} />])
+      html = render_surface(do: ~H[<Link label="foo" to={{:javascript, 'alert(<1>)'}} />])
       assert html =~ ~s[<a href="javascript:alert(&lt;1&gt;)">foo</a>]
 
       html =
-        render_surface(do: ~H[<Link label="foo" to={{ {:javascript, {:safe, "alert(<1>)"}} }} />])
+        render_surface(do: ~H[<Link label="foo" to={{:javascript, {:safe, "alert(<1>)"}}} />])
 
       assert html =~ ~s[<a href="javascript:alert(<1>)">foo</a>]
 
       html =
-        render_surface(do: ~H[<Link label="foo" to={{ {:javascript, {:safe, 'alert(<1>)'}} }} />])
+        render_surface(do: ~H[<Link label="foo" to={{:javascript, {:safe, 'alert(<1>)'}}} />])
 
       assert html =~ ~s[<a href="javascript:alert(<1>)">foo</a>]
     end
@@ -205,11 +205,11 @@ defmodule Surface.Components.LinkTest do
       end
 
       assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
-        render_surface(do: ~H[<Link label="foo" to={{ {:safe, "javascript:alert(<1>)"} }} />])
+        render_surface(do: ~H[<Link label="foo" to={{:safe, "javascript:alert(<1>)"}} />])
       end
 
       assert_raise ArgumentError, ~r"unsupported scheme given to <Link />", fn ->
-        render_surface(do: ~H[<Link label="foo" to={{ {:safe, 'javascript:alert(<1>)'} }} />])
+        render_surface(do: ~H[<Link label="foo" to={{:safe, 'javascript:alert(<1>)'}} />])
       end
     end
   end

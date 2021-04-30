@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.TimeInputTest do
     html =
       render_surface do
         ~H"""
-        <TimeInput form="user" field={{ :time }} />
+        <TimeInput form="user" field={:time} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.TimeInputTest do
     html =
       render_surface do
         ~H"""
-        <TimeInput form="user" field="time" opts={{ autofocus: "autofocus" }} />
+        <TimeInput form="user" field="time" opts={autofocus: "autofocus"} />
         """
       end
 

@@ -10,7 +10,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context put={{ __MODULE__, field: "field from Outer" }}>
+      <Context put={__MODULE__, field: "field from Outer"}>
         <div><slot/></div>
       </Context>
       """
@@ -22,7 +22,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      Context: {{ inspect(@__context__) }}
+      Context: {inspect(@__context__)}
       """
     end
   end
@@ -33,10 +33,10 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context
-        get={{ ContextTest.Outer, field: field }}
-        get={{ ContextTest.InnerWrapper, field: other_field }}>
-        <span id="field">{{ field }}</span>
-        <span id="other_field">{{ other_field }}</span>
+        get={ContextTest.Outer, field: field}
+        get={ContextTest.InnerWrapper, field: other_field}>
+        <span id="field">{field}</span>
+        <span id="other_field">{other_field}</span>
       </Context>
       """
     end
@@ -47,7 +47,7 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context put={{ __MODULE__, field: "field from InnerWrapper" }}>
+      <Context put={__MODULE__, field: "field from InnerWrapper"}>
         <Inner />
       </Context>
       """
@@ -59,8 +59,8 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context get={{ ContextTest.Outer, field: my_field }}>
-        <span>{{ my_field }}</span>
+      <Context get={ContextTest.Outer, field: my_field}>
+        <span>{my_field}</span>
       </Context>
       """
     end
@@ -73,9 +73,9 @@ defmodule ContextTest do
 
     def render(assigns) do
       ~H"""
-      <Context put={{ field: "field from OuterWithNamedSlots" }}>
-        <span :for={{ {_slot, index} <- Enum.with_index(@my_slot) }}>
-          <slot name="my_slot" index={{ index }}/>
+      <Context put={field: "field from OuterWithNamedSlots"}>
+        <span :for={{_slot, index} <- Enum.with_index(@my_slot)}>
+          <slot name="my_slot" index={index}/>
         </span>
       </Context>
       """
@@ -167,8 +167,8 @@ defmodule ContextTest do
         ~H"""
         <OuterWithNamedSlots>
           <template slot="my_slot">
-            <Context get={{ field: field }}>
-              {{ field }}
+            <Context get={field: field}>
+              {field}
             </Context>
           </template>
         </OuterWithNamedSlots>
@@ -184,8 +184,8 @@ defmodule ContextTest do
         quote do
           ~H"""
           <Context
-            get={{ ContextTest.Outer, field: [field] }}>
-            {{ field }}
+            get={ContextTest.Outer, field: [field]}>
+            {field}
           </Context>
           """
         end
@@ -193,8 +193,8 @@ defmodule ContextTest do
       message = """
       code:2: invalid value for property "get". expected a scope \
       module (optional) along with a keyword list of bindings, \
-      e.g. {{ Form, form: form }} or {{ field: my_field }}, \
-      got: {{ ContextTest.Outer, field: [field] }}.\
+      e.g. {Form, form: form} or {field: my_field}, \
+      got: {ContextTest.Outer, field: [field]}.\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -207,8 +207,8 @@ defmodule ContextTest do
         quote do
           ~H"""
           <Context
-            get={{ ContextTest.Outer }}>
-            {{ field }}
+            get={ContextTest.Outer}>
+            {field}
           </Context>
           """
         end
@@ -223,8 +223,8 @@ defmodule ContextTest do
         quote do
           ~H"""
           <Context
-            get={{ 123, field: field }}>
-            {{ field }}
+            get={123, field: field}>
+            {field}
           </Context>
           """
         end
@@ -241,7 +241,7 @@ defmodule ContextTest do
         quote do
           ~H"""
           <Context
-            put={{ ContextTest.Outer, 123 }}>
+            put={ContextTest.Outer, 123}>
             Inner Content
           </Context>
           """
@@ -250,8 +250,8 @@ defmodule ContextTest do
       message = """
       code:2: invalid value for property "put". expected a scope \
       module (optional) along with a keyword list of values, \
-      e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}, \
-      got: {{ ContextTest.Outer, 123 }}.\
+      e.g. {MyModule, field: @value, other: "other"} or {field: @value}, \
+      got: {ContextTest.Outer, 123}.\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -264,7 +264,7 @@ defmodule ContextTest do
         quote do
           ~H"""
           <Context
-            put={{ ContextTest.Outer }}>
+            put={ContextTest.Outer}>
             Inner content
           </Context>
           """
@@ -280,7 +280,7 @@ defmodule ContextTest do
         quote do
           ~H"""
           <Context
-            put={{ 123, field: field }}>
+            put={123, field: field}>
             Inner content
           </Context>
           """

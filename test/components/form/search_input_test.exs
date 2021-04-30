@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.SearchInputTest do
     html =
       render_surface do
         ~H"""
-        <SearchInput form="song" field={{ :title }} />
+        <SearchInput form="song" field={:title} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.SearchInputTest do
     html =
       render_surface do
         ~H"""
-        <SearchInput form="song" field="title" opts={{ autofocus: "autofocus" }} />
+        <SearchInput form="song" field="title" opts={autofocus: "autofocus"} />
         """
       end
 

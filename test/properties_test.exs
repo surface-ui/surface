@@ -8,7 +8,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      {{ @label }}
+      {@label}
       """
     end
   end
@@ -32,8 +32,8 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      Map?: {{ is_map(@prop) }}
-      <span :for={{ {k, v} <- @prop }}>key: {{k}}, value: {{v}}</span>
+      Map?: {is_map(@prop)}
+      <span :for={{k, v} <- @prop}>key: {k}, value: {v}</span>
       """
     end
   end
@@ -45,8 +45,8 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      List?: {{ is_list(@prop) }}
-      <span :for={{ v <- @prop }}>value: {{inspect(v)}}</span>
+      List?: {is_list(@prop)}
+      <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
     end
   end
@@ -58,8 +58,8 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      Keyword?: {{ Keyword.keyword?(@prop) }}
-      <span :for={{ {k, v} <- @prop }}>key: {{k}}, value: {{v}}</span>
+      Keyword?: {Keyword.keyword?(@prop)}
+      <span :for={{k, v} <- @prop}>key: {k}, value: {v}</span>
       """
     end
   end
@@ -71,7 +71,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      <span class={{ @prop }}/>
+      <span class={@prop}/>
       """
     end
   end
@@ -83,7 +83,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      <div :for={{ c <- @prop }}>{{ c }}</div>
+      <div :for={c <- @prop}>{c}</div>
       """
     end
   end
@@ -95,24 +95,37 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      List?: {{ is_list(@prop) }}
-      <span :for={{ v <- @prop }}>value: {{v}}</span>
+      List?: {is_list(@prop)}
+      <span :for={v <- @prop}>value: {v}</span>
       """
     end
   end
 
   describe "string" do
-    test "passing a string with interpolation" do
-      assigns = %{a: 1, b: "two"}
+    test "passing a string literal" do
+      assigns = %{text: "text"}
 
       html =
         render_surface do
           ~H"""
-          <StringProp label="begin {{ @a }} {{ @b }} end"/>
+          <StringProp label="text"/>
           """
         end
 
-      assert html =~ "begin 1 two end"
+      assert html =~ "text"
+    end
+
+    test "passing a string as expression" do
+      assigns = %{text: "text"}
+
+      html =
+        render_surface do
+          ~H"""
+          <StringProp label={@text}/>
+          """
+        end
+
+      assert html =~ "text"
     end
   end
 
@@ -121,7 +134,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <KeywordProp prop={{ [option1: 1, option2: 2] }}/>
+          <KeywordProp prop={[option1: 1, option2: 2]}/>
           """
         end
 
@@ -136,7 +149,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <KeywordProp prop={{ option1: 1, option2: 2 }}/>
+          <KeywordProp prop={option1: 1, option2: 2}/>
           """
         end
 
@@ -153,7 +166,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <KeywordProp prop={{ @submit }}/>
+          <KeywordProp prop={@submit}/>
           """
         end
 
@@ -184,7 +197,7 @@ defmodule Surface.PropertiesTest do
       message = """
       invalid value for property "prop". Expected a :keyword, got: 1.
 
-      Original expression: {{ @var }}
+      Original expression: {@var}
       """
 
       assert_raise(RuntimeError, message, fn ->
@@ -192,7 +205,7 @@ defmodule Surface.PropertiesTest do
 
         render_surface do
           ~H"""
-          <KeywordProp prop={{ @var }}/>
+          <KeywordProp prop={@var}/>
           """
         end
       end)
@@ -204,7 +217,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <MapProp prop={{ %{option1: 1, option2: 2} }}/>
+          <MapProp prop={%{option1: 1, option2: 2}}/>
           """
         end
 
@@ -219,7 +232,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <MapProp prop={{ [option1: 1, option2: 2] }}/>
+          <MapProp prop={[option1: 1, option2: 2]}/>
           """
         end
 
@@ -234,7 +247,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <MapProp prop={{ option1: 1, option2: 2 }}/>
+          <MapProp prop={option1: 1, option2: 2}/>
           """
         end
 
@@ -251,7 +264,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <MapProp prop={{ @submit }}/>
+          <MapProp prop={@submit}/>
           """
         end
 
@@ -268,7 +281,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <MapProp prop={{ @submit }}/>
+          <MapProp prop={@submit}/>
           """
         end
 
@@ -299,7 +312,7 @@ defmodule Surface.PropertiesTest do
       message = """
       invalid value for property "prop". Expected a :map, got: 1.
 
-      Original expression: {{ @var }}
+      Original expression: {@var}
       """
 
       assert_raise(RuntimeError, message, fn ->
@@ -307,7 +320,7 @@ defmodule Surface.PropertiesTest do
 
         render_surface do
           ~H"""
-          <MapProp prop={{ @var }}/>
+          <MapProp prop={@var}/>
           """
         end
       end)
@@ -319,7 +332,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={{ [1, 2] }}/>
+          <ListProp prop={[1, 2]}/>
           """
         end
 
@@ -336,7 +349,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={{ @submit }}/>
+          <ListProp prop={@submit}/>
           """
         end
 
@@ -353,7 +366,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={{ @submit }}/>
+          <ListProp prop={@submit}/>
           """
         end
 
@@ -367,11 +380,11 @@ defmodule Surface.PropertiesTest do
       code =
         quote do
           ~H"""
-          <ListProp prop={{ 1, 2 }}/>
+          <ListProp prop={1, 2}/>
           """
         end
 
-      message = ~S(code:1: invalid value for property "prop". Expected a :list, got: {{ 1, 2 }}.)
+      message = ~S(code:1: invalid value for property "prop". Expected a :list, got: {1, 2}.)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -384,7 +397,7 @@ defmodule Surface.PropertiesTest do
       assert_raise(RuntimeError, message, fn ->
         render_surface do
           ~H"""
-          <ListProp prop={{ 1 }}/>
+          <ListProp prop={1}/>
           """
         end
       end)
@@ -394,7 +407,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={{ [a: 1, b: 2] }}/>
+          <ListProp prop={[a: 1, b: 2]}/>
           """
         end
 
@@ -408,7 +421,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={{ a: 1, b: 2 }}/>
+          <ListProp prop={a: 1, b: 2}/>
           """
         end
 
@@ -440,7 +453,7 @@ defmodule Surface.PropertiesTest do
       assert_raise(RuntimeError, message, fn ->
         render_surface do
           ~H"""
-          <ListProp prop={{ %{test: 1} }}/>
+          <ListProp prop={%{test: 1}}/>
           """
         end
       end)
@@ -465,7 +478,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <CSSClassProp prop={{ [class1: true, class2: false, class3: "truthy"] }}/>
+          <CSSClassProp prop={[class1: true, class2: false, class3: "truthy"]}/>
           """
         end
 
@@ -478,7 +491,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <CSSClassProp prop={{ class1: true, class2: false, class3: "truthy" }}/>
+          <CSSClassProp prop={class1: true, class2: false, class3: "truthy"}/>
           """
         end
 
@@ -491,7 +504,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <CSSClassProp prop={{ "", " class1 " , "", " ", "  ", " class2 class3 ", "" }}/>
+          <CSSClassProp prop={"", " class1 " , "", " ", "  ", " class2 class3 ", ""}/>
           """
         end
 
@@ -515,7 +528,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <CSSClassPropInspect prop={{ ["class1"] ++ ["class2 class3", :class4, class5: true] }}/>
+          <CSSClassPropInspect prop={["class1"] ++ ["class2 class3", :class4, class5: true]}/>
           """
         end
 
@@ -530,7 +543,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <AccumulateProp prop="str_1" prop={{ "str_2" }}/>
+          <AccumulateProp prop="str_1" prop={"str_2"}/>
           """
         end
 
@@ -576,38 +589,6 @@ defmodule Surface.PropertiesSyncTest do
 
   import ExUnit.CaptureIO
   alias Surface.PropertiesTest.StringProp, warn: false
-
-  test "raise error on the right line for string with interpolation" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "Surface.PropertiesTest_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Elixir.Surface.Component
-
-      def render(assigns) do
-        ~H"\""
-        <StringProp
-          label="Undefined func {{ func }}"
-        />
-        "\""
-      end
-    end
-    """
-
-    error_message = "code.exs:7: undefined function func/0"
-
-    output =
-      capture_io(:standard_error, fn ->
-        assert_raise(CompileError, error_message, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-        end)
-      end)
-
-    assert output =~ ~r/variable "func" does not exist/
-    assert output =~ ~r"  code.exs:7"
-  end
 
   test "warn if prop is required and has default value" do
     id = :erlang.unique_integer([:positive]) |> to_string()

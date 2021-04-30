@@ -1,4 +1,4 @@
-defmodule Surface.Compiler.Parser2 do
+defmodule Surface.Compiler.Parser do
   @moduledoc false
 
   alias Surface.Compiler.Tokenizer

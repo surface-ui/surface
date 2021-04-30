@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
     html =
       render_surface do
         ~H"""
-        <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} />
+        <OptionsForSelect options={["Admin": "admin", "User": "user"]} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
     html =
       render_surface do
         ~H"""
-        <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ "admin" }} />
+        <OptionsForSelect options={["Admin": "admin", "User": "user"]} selected={"admin"} />
         """
       end
 
@@ -46,7 +46,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
     html =
       render_surface do
         ~H"""
-        <OptionsForSelect options={{ ["Admin": "admin", "User": "user"] }} selected={{ ["admin", "user"] }} />
+        <OptionsForSelect options={["Admin": "admin", "User": "user"]} selected={["admin", "user"]} />
         """
       end
 

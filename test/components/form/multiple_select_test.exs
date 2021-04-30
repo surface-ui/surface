@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     html =
       render_surface do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} />
+        <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} />
         """
       end
 
@@ -36,7 +36,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     html =
       render_surface do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
+        <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} class="select" />
         """
       end
 
@@ -47,7 +47,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     html =
       render_surface do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
+        <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} class="select primary" />
         """
       end
 
@@ -58,7 +58,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     html =
       render_surface do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} selected="admin"/>
+        <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} selected="admin"/>
         """
       end
 
@@ -74,7 +74,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     html =
       render_surface do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} opts={{ disabled: "disabled" }}/>
+        <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} opts={disabled: "disabled"}/>
         """
       end
 
@@ -90,7 +90,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
     html =
       render_surface do
         ~H"""
-        <MultipleSelect form="user" field="roles" options={{ ["Admin": "admin", "User": "user"] }} id="roles" name="roles[]"/>
+        <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} id="roles" name="roles[]"/>
         """
       end
 

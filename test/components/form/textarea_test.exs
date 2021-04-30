@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.TextAreaTest do
     html =
       render_surface do
         ~H"""
-        <TextArea form="user" field={{ :summary }} />
+        <TextArea form="user" field={:summary} />
         """
       end
 
@@ -71,7 +71,7 @@ defmodule Surface.Components.Form.TextAreaTest do
     html =
       render_surface do
         ~H"""
-        <TextArea form="user" field="summary" opts={{ autofocus: "autofocus" }} />
+        <TextArea form="user" field="summary" opts={autofocus: "autofocus"} />
         """
       end
 

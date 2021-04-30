@@ -14,7 +14,7 @@ defmodule Surface.Components.EventsTest do
         |> opts_to_attrs()
 
       ~H"""
-      <div :attrs={{ attrs }} />
+      <div :attrs={attrs} />
       """
     end
 

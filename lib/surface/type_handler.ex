@@ -250,7 +250,7 @@ defmodule Surface.TypeHandler do
     invalid value for #{attr_kind} #{attr_name}. \
     Expected a #{inspect(type)}, got: #{inspect(value)}.
 
-    Original expression: {{#{original}}}
+    Original expression: {#{original}}
     #{details}\
     """
   end
@@ -303,7 +303,7 @@ defmodule Surface.TypeHandler do
   end
 
   defp as_expr(value) do
-    "{{#{value}}}"
+    "{#{value}}"
   end
 
   defp handler(:boolean), do: __MODULE__.Boolean

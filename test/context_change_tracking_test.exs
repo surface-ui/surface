@@ -13,7 +13,7 @@ defmodule Surface.ContextChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Context put={{ field: "field value" }}>
+      <Context put={field: "field value"}>
         <div><slot/></div>
       </Context>
       """
@@ -31,9 +31,9 @@ defmodule Surface.ContextChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      <Context get={{ field: field }}>
-        <CheckUpdated id="1" dest={{ @test_pid }} content={{ field }}/>
-        <CheckUpdated id="2" dest={{ @test_pid }}/>
+      <Context get={field: field}>
+        <CheckUpdated id="1" dest={@test_pid} content={field}/>
+        <CheckUpdated id="2" dest={@test_pid}/>
         <div><slot/></div>
       </Context>
       """
@@ -55,11 +55,11 @@ defmodule Surface.ContextChangeTrackingTest do
       ~H"""
       <div>
         <ContextSetter>
-          Count: {{ @count }}
-          <ContextGetter test_pid={{ @test_pid }}>
-            <CheckUpdated id="3" dest={{ @test_pid }}/>
+          Count: {@count}
+          <ContextGetter test_pid={@test_pid}>
+            <CheckUpdated id="3" dest={@test_pid}/>
           </ContextGetter>
-          <CheckUpdated id="4" dest={{ @test_pid }}/>
+          <CheckUpdated id="4" dest={@test_pid}/>
         </ContextSetter>
       </div>
       """

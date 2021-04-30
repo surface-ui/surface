@@ -30,8 +30,8 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <div :for={{ {data, index} <- Enum.with_index(@inner) }}>
-          {{ data.label }}: <slot name="inner" index={{ index }}/>
+        <div :for={{data, index} <- Enum.with_index(@inner)}>
+          {data.label}: <slot name="inner" index={index}/>
         </div>
         <div>
           <slot/>
@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="body" :props={{ info: "Info from slot" }}/>
+        <slot name="body" :props={info: "Info from slot"}/>
       </div>
       """
     end
@@ -85,7 +85,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot :props={{ info: "Info from slot" }}/>
+        <slot :props={info: "Info from slot"}/>
       </div>
       """
     end
@@ -111,10 +111,10 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <header :if={{ slot_assigned?(:header) }}>
+        <header :if={slot_assigned?(:header)}>
           <slot name="header"/>
         </header>
-        <main :if={{ slot_assigned?(:default) }}>
+        <main :if={slot_assigned?(:default)}>
           <slot>
             Default fallback
           </slot>
@@ -140,7 +140,7 @@ defmodule Surface.SlotTest do
       ~H"""
       <div>
         <slot name="header" />
-        {{ @header }}
+        {@header}
       </div>
       """
     end
@@ -157,7 +157,7 @@ defmodule Surface.SlotTest do
       ~H"""
       <div>
         <slot />
-        {{ @default }}
+        {@default}
       </div>
       """
     end
@@ -186,7 +186,7 @@ defmodule Surface.SlotTest do
       ~H"""
       <span class="fancy-column">
         <slot>
-          {{ @title }}
+          {@title}
         </slot>
       </span>
       """
@@ -204,7 +204,7 @@ defmodule Surface.SlotTest do
       ~H"""
       <span class="fancy-column">
         <slot>
-          {{ @title }}
+          {@title}
         </slot>
       </span>
       """
@@ -224,13 +224,13 @@ defmodule Surface.SlotTest do
       ~H"""
       <table>
         <tr>
-          <th :for={{ col <- @cols }}>
-            {{ col.title }}
+          <th :for={col <- @cols}>
+            {col.title}
           </th>
         </tr>
-        <tr :for={{ item <- @items }}>
-          <td :for={{ {_col, index} <- Enum.with_index(@cols) }}>
-            <slot name="cols" index={{ index }} :props={{ item: item, info: info }}/>
+        <tr :for={item <- @items}>
+          <td :for={{_col, index} <- Enum.with_index(@cols)}>
+            <slot name="cols" index={index} :props={item: item, info: info}/>
           </td>
         </tr>
       </table>
@@ -287,8 +287,8 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body" :let={{ info: my_info }}>
-            Info: {{ my_info }}
+          <template slot="body" :let={info: my_info}>
+            Info: {my_info}
           </template>
         </OuterWithNamedSlotAndProps>
         """
@@ -305,8 +305,8 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
-          Info: {{ my_info }}
+        <OuterWithDefaultSlotAndProps :let={info: my_info}>
+          Info: {my_info}
         </OuterWithDefaultSlotAndProps>
         """
       end
@@ -382,9 +382,9 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <ColumnWithDefaultTitle>
-            <b>Id: {{ user.id }}</b>
+            <b>Id: {user.id}</b>
           </ColumnWithDefaultTitle>
         </Grid>
         """
@@ -416,9 +416,9 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <ColumnWithRender title="column title">
-            <b>Id: {{ user.id }}</b>
+            <b>Id: {user.id}</b>
           </ColumnWithRender>
         </Grid>
         """
@@ -454,7 +454,7 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ _user <- @items }}>
+        <Grid items={_user <- @items}>
           <ColumnWithRenderAndDefaultTitle />
         </Grid>
         """
@@ -490,12 +490,12 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <Column title="ID">
-            <b>Id: {{ user.id }}</b>
+            <b>Id: {user.id}</b>
           </Column>
           <Column title="NAME">
-            Name: {{ user.name }}
+            Name: {user.name}
           </Column>
         </Grid>
         """
@@ -589,13 +589,13 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
-          <Column title="ID" :let={{ item: my_user }}>
-            <b>Id: {{ my_user.id }}</b>
+        <Grid items={user <- @items}>
+          <Column title="ID" :let={item: my_user}>
+            <b>Id: {my_user.id}</b>
           </Column>
-          <Column title="NAME" :let={{ info: my_info }}>
-            Name: {{ user.name }}
-            Info: {{ my_info }}
+          <Column title="NAME" :let={info: my_info}>
+            Name: {user.name}
+            Info: {my_info}
           </Column>
         </Grid>
         """
@@ -628,10 +628,10 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <Column title="ID"
-            :let={{ item: my_user, non_existing: value }}>
-            <b>Id: {{ my_user.id }}</b>
+            :let={item: my_user, non_existing: value}>
+            <b>Id: {my_user.id}</b>
           </Column>
         </Grid>
         """
@@ -659,7 +659,7 @@ defmodule Surface.SlotTest do
         ~H"""
         <OuterWithNamedSlotAndProps>
           <template slot="body"
-            :let={{ "a_string" }}>
+            :let={"a_string"}>
           </template>
         </OuterWithNamedSlotAndProps>
         """
@@ -668,7 +668,7 @@ defmodule Surface.SlotTest do
     message = """
     code:3: invalid value for directive :let. \
     Expected a keyword list of bindings, \
-    e.g. {{ item: user, info: info }}, got: {{ "a_string" }}.\
+    e.g. {item: user, info: info}, got: {"a_string"}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -680,8 +680,8 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~H"""
-        <OuterWithoutDefaultSlot :let={{ info: my_info }}>
-          Info: {{ my_info }}
+        <OuterWithoutDefaultSlot :let={info: my_info}>
+          Info: {my_info}
         </OuterWithoutDefaultSlot>
         """
       end
@@ -699,8 +699,8 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~H"""
-        <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: value }}>
-          Info: {{ my_info }}
+        <OuterWithDefaultSlotAndProps :let={info: my_info, non_existing: value}>
+          Info: {my_info}
         </OuterWithDefaultSlotAndProps>
         """
       end
@@ -725,8 +725,8 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body" :let={{ non_existing: my_info }}>
-            Info: {{ my_info }}
+          <template slot="body" :let={non_existing: my_info}>
+            Info: {my_info}
           </template>
         </OuterWithNamedSlotAndProps>
         """
@@ -752,15 +752,15 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithDefaultSlotAndProps
-          :let={{ info: [my_info] }}>
-          Info: {{ my_info }}
+          :let={info: [my_info]}>
+          Info: {my_info}
         </OuterWithDefaultSlotAndProps>
         """
       end
 
     message = """
     code:2: invalid value for directive :let. Expected a keyword list of bindings, \
-    e.g. {{ item: user, info: info }}, got: {{ info: [my_info] }}.\
+    e.g. {item: user, info: info}, got: {info: [my_info]}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -781,7 +781,7 @@ defmodule Surface.SlotTest do
         ~H"\""
           <span>
             <slot
-              :props={{ id: 1, name: "Joe" }}/>
+              :props={id: 1, name: "Joe"}/>
             </span>
         "\""
       end
@@ -902,7 +902,7 @@ defmodule Surface.SlotSyncTest do
     code =
       quote do
         ~H"""
-        <Grid items={{[]}}>
+        <Grid items={[]}>
           <InnerData/>
           <Column title="ID"/>
         </Grid>
@@ -1061,8 +1061,8 @@ defmodule Surface.SlotSyncTest do
     code =
       quote do
         ~H"""
-        <OuterWithoutDefaultSlot :let={{ info: my_info }}>
-          Info: {{ my_info }}
+        <OuterWithoutDefaultSlot :let={info: my_info}>
+          Info: {my_info}
         </OuterWithoutDefaultSlot>
         """
       end

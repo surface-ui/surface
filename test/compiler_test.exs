@@ -108,7 +108,7 @@ defmodule Surface.CompilerTest do
 
   test "component with expression" do
     code = """
-    <Button label={{ @label }}/>
+    <Button label={@label}/>
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -120,7 +120,7 @@ defmodule Surface.CompilerTest do
                  name: :label,
                  type: :string,
                  value: %Surface.AST.AttributeExpr{
-                   original: " @label ",
+                   original: "@label",
                    value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _]}
                  }
                }
@@ -130,7 +130,7 @@ defmodule Surface.CompilerTest do
 
   test "component with expression using special characters in interpolation" do
     code = """
-    <h2>{{ "héllo" }}</h2>
+    <h2>{"héllo"}</h2>
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -138,65 +138,8 @@ defmodule Surface.CompilerTest do
     assert %Surface.AST.Tag{
              children: [
                %Surface.AST.Interpolation{
-                 original: " \"héllo\" ",
+                 original: "\"héllo\"",
                  value: "héllo"
-               }
-             ]
-           } = node
-  end
-
-  test "component with expressions inside a string" do
-    code = """
-    <Button label="str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}" />
-    """
-
-    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
-
-    assert %Surface.AST.Component{
-             module: Surface.CompilerTest.Button,
-             props: [
-               %Surface.AST.Attribute{
-                 name: :label,
-                 type: :string,
-                 value: %Surface.AST.AttributeExpr{
-                   value: {
-                     {:., [generated: true],
-                      [
-                        {:__aliases__, [generated: true, alias: false], [:Surface, :TypeHandler]},
-                        :expr_to_value!
-                      ]},
-                     [generated: true],
-                     [
-                       :string,
-                       :label,
-                       [
-                         {:<<>>, _,
-                          [
-                            "str_1 ",
-                            {:"::", _,
-                             [
-                               {{:., _, [Kernel, :to_string]}, _, [{:@, _, [{:str_2, _, nil}]}]},
-                               {:binary, _, Elixir}
-                             ]},
-                            " str_3 ",
-                            {:"::", _,
-                             [
-                               {{:., _, [Kernel, :to_string]}, _,
-                                [
-                                  {:<>, _,
-                                   [{:@, _, [{:str_4, _, nil}]}, {:@, _, [{:str_5, _, nil}]}]}
-                                ]},
-                               {:binary, _, Elixir}
-                             ]}
-                          ]}
-                       ],
-                       [],
-                       Surface.CompilerTest.Button,
-                       "str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"
-                     ]
-                   },
-                   original: "str_1 {{@str_2}} str_3 {{@str_4 <> @str_5}}"
-                 }
                }
              ]
            } = node
@@ -413,7 +356,7 @@ defmodule Surface.CompilerTest do
 
   test "LiveView's propeties are forwarded to live_render as options" do
     code = """
-    <MyLiveViewWith id="my_id" session={{ %{user_id: 1} }} />
+    <MyLiveViewWith id="my_id" session={%{user_id: 1}} />
     """
 
     [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -430,7 +373,7 @@ defmodule Surface.CompilerTest do
                  name: :session,
                  type: :map,
                  value: %Surface.AST.AttributeExpr{
-                   original: " %{user_id: 1} ",
+                   original: "%{user_id: 1}",
                    value: _
                  }
                }
@@ -744,7 +687,7 @@ defmodule Surface.CompilerSyncTest do
 
   test "disable warning on missing required property when :props is passed" do
     code = """
-    <Column :props={{ title: "My Title" }}/>
+    <Column :props={title: "My Title"}/>
     """
 
     assert {:ok, _result} = run_compile(code, __ENV__)

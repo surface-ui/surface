@@ -10,8 +10,8 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div class={{ @class }}>
-        <span>{{ @label }}</span>
+      <div class={@class}>
+        <span>{@label}</span>
       </div>
       """
     end
@@ -48,7 +48,7 @@ defmodule Surface.ComponentTest do
       info = "My info"
 
       ~H"""
-      <div><slot :props={{ info: info }}/></div>
+      <div><slot :props={info: info}/></div>
       """
     end
   end
@@ -80,8 +80,8 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~H"""
-      <OuterWithSlotProps :let={{ info: my_info }}>
-        {{ my_info }}
+      <OuterWithSlotProps :let={info: my_info}>
+        {my_info}
       </OuterWithSlotProps>
       """
     end
@@ -94,7 +94,7 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ @id }}</div>
+      <div>{@id}</div>
       """
     end
   end
@@ -118,7 +118,7 @@ defmodule Surface.ComponentTest do
     @impl true
     def render(assigns) do
       ~H"""
-      <div>{{ @id }} - {{ @id_copy }}</div>
+      <div>{@id} - {@id_copy}</div>
       """
     end
   end
@@ -245,8 +245,8 @@ defmodule Surface.ComponentTest do
       html =
         render_surface do
           ~H"""
-          <OuterWithSlotProps :let={{ info: my_info }}>
-            {{ my_info }}
+          <OuterWithSlotProps :let={info: my_info}>
+            {my_info}
           </OuterWithSlotProps>
           """
         end

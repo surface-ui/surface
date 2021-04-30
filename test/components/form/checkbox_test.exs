@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Checkbox form="user" field={{ :admin }} />
+        <Checkbox form="user" field={:admin} />
         """
       end
 
@@ -34,8 +34,8 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :user }} csrf_token="test">
-          <Checkbox field={{ :admin }} />
+        <Form for={:user} csrf_token="test">
+          <Checkbox field={:admin} />
         </Form>
         """
       end
@@ -88,7 +88,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Checkbox value={{ true }}/>
+        <Checkbox value={true}/>
         """
       end
 
@@ -97,7 +97,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Checkbox value={{ false }}/>
+        <Checkbox value={false}/>
         """
       end
 
@@ -108,7 +108,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Checkbox hidden_input={{ true }}/>
+        <Checkbox hidden_input={true}/>
         """
       end
 
@@ -117,7 +117,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Checkbox hidden_input={{ false }}/>
+        <Checkbox hidden_input={false}/>
         """
       end
 
@@ -139,7 +139,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~H"""
-        <Checkbox form="user" field="admin" opts={{ disabled: "disabled" }} />
+        <Checkbox form="user" field="admin" opts={disabled: "disabled"} />
         """
       end
 

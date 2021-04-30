@@ -55,7 +55,7 @@ defmodule Surface.Components.Form.DateTimeLocalInputTest do
     html =
       render_surface do
         ~H"""
-        <DateTimeLocalInput form="order" field="completed_at" opts={{ autofocus: "autofocus" }} />
+        <DateTimeLocalInput form="order" field="completed_at" opts={autofocus: "autofocus"} />
         """
       end
 

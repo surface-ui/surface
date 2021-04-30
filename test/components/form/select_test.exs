@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field={{ :role }} />
+        <Select form="user" field={:role} />
         """
       end
 
@@ -33,7 +33,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} />
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} />
         """
       end
 
@@ -49,7 +49,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} class="select" />
         """
       end
 
@@ -60,7 +60,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} class="select primary" />
         """
       end
 
@@ -71,7 +71,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} prompt="Pick a role"/>
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} prompt="Pick a role"/>
         """
       end
 
@@ -88,7 +88,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} selected="user"/>
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} selected="user"/>
         """
       end
 
@@ -104,7 +104,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ disabled: true }}/>
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} opts={disabled: true}/>
         """
       end
 
@@ -120,7 +120,7 @@ defmodule Surface.Components.Form.SelectTest do
     html =
       render_surface do
         ~H"""
-        <Select form="user" field="role" id="role" name="role" options={{ ["Admin": "admin", "User": "user"] }}/>
+        <Select form="user" field="role" id="role" name="role" options={["Admin": "admin", "User": "user"]}/>
         """
       end
 

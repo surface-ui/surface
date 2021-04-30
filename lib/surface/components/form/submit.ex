@@ -27,7 +27,7 @@ defmodule Surface.Components.Form.Submit do
     attrs = opts_to_attrs(opts)
 
     ~H"""
-    <button type="submit" :attrs={{ attrs }}><slot>{{ @label }}</slot></button>
+    <button type="submit" :attrs={attrs}><slot>{@label}</slot></button>
     """
   end
 end
