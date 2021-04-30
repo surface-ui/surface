@@ -4,7 +4,9 @@ defmodule Surface.Compiler.Converter_0_5 do
   @behaviour Surface.Compiler.Converter
 
   def convert(:interpolation, text, _state, _opts) do
-    String.slice(text, 1..-2)
+    text
+    |> String.slice(1..-2)
+    |> String.trim()
   end
 
   def convert(:unquoted_string, value, _state, _opts) do

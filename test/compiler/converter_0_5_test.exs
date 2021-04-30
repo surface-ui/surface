@@ -18,7 +18,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div class={ @class }>text</div>
+           <div class={@class}>text</div>
            <#Raw>
              <div class={{ @class }}>text</div>
            </#Raw>
@@ -40,12 +40,12 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
     assert expected == """
            <div
-             id={ @id }   class={@class}
-             phone = { @phone }
+             id={@id}   class={@class}
+             phone = {@phone}
            >
              <span title={123} />
-             1{ @name }2 3{ @name }4
-                 5 { @value } 6
+             1{@name}2 3{@name}4
+                 5 {@value} 6
            7 </div>
            """
   end
@@ -122,7 +122,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
   #   assert expected == """
   #          <div>
-  #            <#if condition={ @var }>
+  #            <#if condition={@var}>
   #              1
   #              </#if>
   #            <#if   condition={@var}>2</#if>
@@ -143,7 +143,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
   #   assert expected == """
   #          <div>
-  #            <#for each={ _i <- @var }>
+  #            <#for each={_i <- @var}>
   #              1
   #              </#for>
   #            <#for   each={@var}>2</#for>

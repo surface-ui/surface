@@ -47,9 +47,15 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   end
 
   defp convert_ex_string!(input) do
-    ~r/\n( *)~H"""(.*?)"""/s
-    |> Regex.replace(input, fn _match, indentation, surface_code ->
-      "\n#{indentation}~H\"\"\"#{format_string(surface_code)}\"\"\""
+    converted_str =
+      ~r/( *)~H"\""(.*?)"""/s
+      |> Regex.replace(input, fn _match, indentation, surface_code ->
+        "#{indentation}~H\"\"\"#{format_string(surface_code)}\"\"\""
+      end)
+
+    ~r/( *)~H\[(.*?)\]/s
+    |> Regex.replace(converted_str, fn _match, indentation, surface_code ->
+      "#{indentation}~H\[#{format_string(surface_code)}]"
     end)
   end
 
