@@ -51,7 +51,10 @@ defmodule Surface.APITest do
   end
 
   test "validate :values when using a range" do
-    code = "prop age, :integer, values: 1..100"
+    code = """
+    prop age, :integer, values: 1..100
+    data items, :integer, values: 1..3
+    """
 
     {:ok, _module} = eval(code)
   end
