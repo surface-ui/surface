@@ -71,6 +71,10 @@ defmodule Surface.Directive.Events do
     }
   end
 
+  defp to_quoted_expr(name, [{:attribute_expr, original, expr_meta} = value], meta) do
+    to_quoted_expr(name, value, meta)
+  end
+
   defp to_quoted_expr(name, value, meta) when is_list(value) do
     to_quoted_expr(name, to_string(value), meta)
   end
