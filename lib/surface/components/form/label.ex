@@ -23,7 +23,7 @@ defmodule Surface.Components.Form.Label do
   prop form, :form
 
   @doc "The field name"
-  prop field, :atom
+  prop field, :any
 
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
