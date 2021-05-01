@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.0 (WIP)
+## v0.4.0 (2021-05-01)
 
   * Call render when defined in slotable components (#283)
   * Support defining form fields as strings. Consequently, fields defined as literal strings will
