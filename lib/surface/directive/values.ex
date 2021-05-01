@@ -30,17 +30,7 @@ defmodule Surface.Directive.Values do
         for {name, value} <- unquote(value) || [],
             attr_name = :"phx-value-#{name}",
             not Enum.member?(unquote(Macro.escape(attr_names)), attr_name) do
-          unless String.Chars.impl_for(value) do
-            message = """
-            invalid value for key "#{inspect(name)}" in attribute ":values".
-
-            Expected a type that implements the String.Chars protocol (e.g. string, boolean, integer, atom, ...), \
-            got: #{inspect(unquote(value))}\
-            """
-
-            IOHelper.runtime_error(message)
-          end
-
+          unquote(__MODULE__).validate_value!(name, value)
           {attr_name, {Surface.TypeHandler.attribute_type_and_opts(attr_name), to_string(value)}}
         end
       end
@@ -64,5 +54,18 @@ defmodule Surface.Directive.Values do
       value: Surface.TypeHandler.expr_to_quoted!(value, ":values", :map, meta),
       meta: meta
     }
+  end
+
+  def validate_value!(name, value) do
+    unless String.Chars.impl_for(value) do
+      message = """
+      invalid value for key "#{inspect(name)}" in attribute ":values".
+
+      Expected a type that implements the String.Chars protocol (e.g. string, boolean, integer, atom, ...), \
+      got: #{inspect(value)}\
+      """
+
+      IOHelper.runtime_error(message)
+    end
   end
 end
