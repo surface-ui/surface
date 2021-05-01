@@ -16,23 +16,31 @@ defmodule Surface.Directive.Values do
   def extract(_, _), do: []
 
   def process(
-        %AST.Directive{value: %AST.AttributeExpr{value: value} = expr, meta: meta},
+        %AST.Directive{
+          value: %AST.AttributeExpr{value: value} = expr,
+          meta: meta
+        },
         %type{attributes: attributes} = node
       )
       when type in [AST.Tag, AST.VoidTag] do
-    attr_names =
-      attributes
-      |> Enum.filter(fn
-        %AST.Attribute{} -> true
-        _ -> false
-      end)
-      |> Enum.map(fn %AST.Attribute{name: name} -> name end)
+    attr_names = for %AST.Attribute{name: name} <- attributes, do: name
 
     new_expr =
       quote generated: true do
         for {name, value} <- unquote(value) || [],
             attr_name = :"phx-value-#{name}",
             not Enum.member?(unquote(Macro.escape(attr_names)), attr_name) do
+          unless String.Chars.impl_for(value) do
+            message = """
+            invalid value for key "#{inspect(name)}" in attribute ":values".
+
+            Expected a type that implements the String.Chars protocol (e.g. string, boolean, integer, atom, ...), \
+            got: #{inspect(unquote(value))}\
+            """
+
+            IOHelper.runtime_error(message)
+          end
+
           {attr_name, {Surface.TypeHandler.attribute_type_and_opts(attr_name), to_string(value)}}
         end
       end
@@ -40,7 +48,11 @@ defmodule Surface.Directive.Values do
     %{
       node
       | attributes: [
-          %AST.DynamicAttribute{name: :attrs, meta: meta, expr: %{expr | value: new_expr}}
+          %AST.DynamicAttribute{
+            name: :values,
+            meta: meta,
+            expr: %AST.AttributeExpr{expr | value: new_expr}
+          }
           | attributes
         ]
     }

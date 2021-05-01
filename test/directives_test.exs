@@ -791,6 +791,18 @@ defmodule Surface.DirectivesTest do
              """
     end
 
+    test "passing unsupported types" do
+      assert_raise(RuntimeError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
+        render_surface do
+          ~H"""
+          <div :values={{ map: %{}, tuple: {} }}>
+            Some Text
+          </div>
+          """
+        end
+      end)
+    end
+
     test "using an assign" do
       assigns = %{values: [hello: :world, foo: "bar", one: 2, yes: true]}
 
