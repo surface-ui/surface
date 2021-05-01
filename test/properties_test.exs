@@ -13,6 +13,18 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule AtomProp do
+    use Surface.Component
+
+    prop as, :atom
+
+    def render(assigns) do
+      ~H"""
+      {{ @as }}
+      """
+    end
+  end
+
   defmodule MapProp do
     use Surface.Component
 
@@ -662,6 +674,41 @@ defmodule Surface.PropertiesSyncTest do
            This way the values will be accumulated in a list.
 
              code.exs:8:\
+           """
+  end
+
+  test "warn if prop of type :atom is passed as literal string" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithAtomPropPassedAsString_#{id}"
+
+    alias Surface.PropertiesTest.AtomProp, warn: false
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+        <AtomProp
+          as="first"
+        />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           automatic conversion of string literals into atoms is deprecated and will be removed in v0.5.0.
+
+           Hint: replace `as="first"` with `as={{ :first }}`
+
+             code.exs:7:\
            """
   end
 end

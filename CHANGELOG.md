@@ -5,6 +5,7 @@
   * Call render when defined in slotable components (#283)
   * Support defining form fields as strings. Consequently, fields defined as literal strings will
     no longer be auto-converted to `:atom` and will keep the original value (#319)
+  * Deprecate auto-conversion of attribute values passed as string literals into atoms
   * Do not encode HTML entities when passing attribute values as string literals (#323)
   * Extract the Markdown macro component in its repository (#316)
   * Renamed `Surface.Components.Button` to `Surface.Components.Link.Button` (#350)

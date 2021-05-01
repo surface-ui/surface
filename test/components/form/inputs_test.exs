@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ cs }} as="cs" opts={{ csrf_token: "test" }}>
+        <Form for={{ cs }} as={{ :cs }} opts={{ csrf_token: "test" }}>
           <Inputs for={{ :children }} :let={{ index: idx }}>
             <div>index: <span>{{ idx }}</span></div>
           </Inputs>

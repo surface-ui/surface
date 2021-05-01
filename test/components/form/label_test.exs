@@ -37,11 +37,22 @@ defmodule Surface.Components.Form.LabelTest do
     assert html =~ ~S(class="label primary")
   end
 
-  test "properties form and field" do
+  test "properties form and field as :string" do
     html =
       render_surface do
         ~H"""
         <Label form="user" field="name"/>
+        """
+      end
+
+    assert html =~ ~r[<label for="user_name">(.+)</label>]s
+  end
+
+  test "properties form and field as :atom" do
+    html =
+      render_surface do
+        ~H"""
+        <Label form={{ :user }} field={{ :name }}/>
         """
       end
 
