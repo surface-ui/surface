@@ -8,7 +8,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot/></div>
+      <div><#slot/></div>
       """
     end
   end
@@ -37,7 +37,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot :if={@show}/></div>
+      <div><#slot :if={@show}/></div>
       """
     end
   end
@@ -50,7 +50,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot :if={@show} :props={data: "data"}/></div>
+      <div><#slot :if={@show} :props={data: "data"}/></div>
       """
     end
   end
@@ -63,7 +63,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot :for={_i <- 1..@repeat}/></div>
+      <div><#slot :for={_i <- 1..@repeat}/></div>
       """
     end
   end

@@ -38,7 +38,7 @@ defmodule Surface.Components.Form.Inputs do
       <Context
         :for={{f, index}  <- Enum.with_index(inputs_for(@form || form, @for, @opts))}
         put={Surface.Components.Form, form: f}>
-        <slot :props={form: f, index: index}/>
+        <#slot :props={form: f, index: index}/>
       </Context>
     </Context>
     """

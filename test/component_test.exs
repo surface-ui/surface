@@ -24,7 +24,7 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot/></div>
+      <div><#slot/></div>
       """
     end
   end
@@ -48,7 +48,7 @@ defmodule Surface.ComponentTest do
       info = "My info"
 
       ~H"""
-      <div><slot :props={info: info}/></div>
+      <div><#slot :props={info: info}/></div>
       """
     end
   end

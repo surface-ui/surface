@@ -453,11 +453,11 @@ defmodule Surface.API do
       Hint: You can remove these props, pull them up to the parent component, or make this component not slotable \
       and use it inside an explicit template element:
       ```
-      <template name="#{slot_name}">
+      <#template name="#{slot_name}">
         <#{component_name} :let={{ #{prop_example} }}>
           ...
         </#{component_name}>
-      </template>
+      </#template>
       ```
       """
 

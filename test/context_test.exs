@@ -11,7 +11,7 @@ defmodule ContextTest do
     def render(assigns) do
       ~H"""
       <Context put={__MODULE__, field: "field from Outer"}>
-        <div><slot/></div>
+        <div><#slot/></div>
       </Context>
       """
     end
@@ -75,7 +75,7 @@ defmodule ContextTest do
       ~H"""
       <Context put={field: "field from OuterWithNamedSlots"}>
         <span :for={{_slot, index} <- Enum.with_index(@my_slot)}>
-          <slot name="my_slot" index={index}/>
+          <#slot name="my_slot" index={index}/>
         </span>
       </Context>
       """
@@ -166,11 +166,11 @@ defmodule ContextTest do
       render_surface do
         ~H"""
         <OuterWithNamedSlots>
-          <template slot="my_slot">
+          <#template slot="my_slot">
             <Context get={field: field}>
               {field}
             </Context>
-          </template>
+          </#template>
         </OuterWithNamedSlots>
         """
       end

@@ -22,7 +22,7 @@ defmodule Surface.CompilerTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot /></div>
+      <div><#slot /></div>
       """
     end
   end
@@ -897,9 +897,9 @@ defmodule Surface.CompilerSyncTest do
       def render(assigns) do
         ~H"\""
         <div>
-          <slot>Default Content</slot>
-          <slot name="header">Default Header</slot>
-          <slot name="footer">Default Footer</slot>
+          <#slot>Default Content</#slot>
+          <#slot name="header">Default Header</#slot>
+          <#slot name="footer">Default Footer</#slot>
         </div>
         "\""
       end
@@ -919,13 +919,13 @@ defmodule Surface.CompilerSyncTest do
 
              slot default
              ...
-             <slot>Fallback content</slot>
+             <#slot>Fallback content</#slot>
 
            or keep the slot as required and remove the fallback content:
 
              slot default, required: true`
              ...
-             <slot />
+             <#slot />
 
            but not both.
 
@@ -940,13 +940,13 @@ defmodule Surface.CompilerSyncTest do
 
              slot header
              ...
-             <slot name="header">Fallback content</slot>
+             <#slot name="header">Fallback content</#slot>
 
            or keep the slot as required and remove the fallback content:
 
              slot header, required: true`
              ...
-             <slot name="header" />
+             <#slot name="header" />
 
            but not both.
 

@@ -22,7 +22,7 @@ defmodule Surface.Components.Form.FieldContext do
   def render(assigns) do
     ~H"""
     <Context put={Field, field: @name}>
-      <slot/>
+      <#slot/>
     </Context>
     """
   end

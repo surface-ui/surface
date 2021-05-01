@@ -227,10 +227,10 @@ defmodule Surface.Compiler do
     end
   end
 
+  defp node_type({"#template", _, _, _}), do: :template
+  defp node_type({"#slot", _, _, _}), do: :slot
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
-  defp node_type({"template", _, _, _}), do: :template
-  defp node_type({"slot", _, _, _}), do: :slot
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
@@ -815,7 +815,7 @@ defmodule Surface.Compiler do
     message = """
     no slot `#{slot_name}` defined in the component `#{inspect(module)}`
 
-    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
@@ -910,13 +910,13 @@ defmodule Surface.Compiler do
 
         slot #{slot.name}
         ...
-        <slot#{slot_name_tag}>Fallback content</slot>
+        <#slot#{slot_name_tag}>Fallback content</#slot>
 
       or keep the slot as required and remove the fallback content:
 
         slot #{slot.name}, required: true`
         ...
-        <slot#{slot_name_tag} />
+        <#slot#{slot_name_tag} />
 
       but not both.
       """

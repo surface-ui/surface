@@ -69,7 +69,7 @@ defmodule Surface.Components.Link do
     attrs = opts_to_attrs(opts)
 
     ~H"""
-    <a id={@id} class={@class} href={to} :attrs={attrs}><slot>{@label}</slot></a>
+    <a id={@id} class={@class} href={to} :attrs={attrs}><#slot>{@label}</#slot></a>
     """
   end
 

@@ -24,7 +24,7 @@ defmodule Surface.Components.Form.Field do
     ~H"""
     <div class={class_value(@class)}>
       <Context put={__MODULE__, field: @name}>
-        <slot/>
+        <#slot/>
       </Context>
     </div>
     """

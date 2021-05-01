@@ -14,7 +14,7 @@ defmodule Surface.LiveViewTest do
 
     def render(assigns) do
       ~H"""
-      <slot/>
+      <#slot/>
       """
     end
   end

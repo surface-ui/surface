@@ -232,7 +232,7 @@ end
 
 defmodule Surface.AST.Slot do
   @moduledoc """
-  An AST node representing a <slot /> element
+  An AST node representing a <#slot /> element
 
   ## Properties
       * `:name` - the slot name
@@ -317,7 +317,7 @@ end
 
 defmodule Surface.AST.Template do
   @moduledoc """
-  An AST node representing a <template> element. This is used to provide content for slots
+  An AST node representing a <#template> element. This is used to provide content for slots
 
   ## Properties
       * `:name` - the template name

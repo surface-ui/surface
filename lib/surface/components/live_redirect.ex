@@ -47,7 +47,7 @@ defmodule Surface.Components.LiveRedirect do
       data-phx-link-state={if @replace, do: "replace", else: "push"}
       href={@to}
       :attrs={@opts}
-    ><slot>{@label}</slot></a>
+    ><#slot>{@label}</#slot></a>
     """
   end
 end

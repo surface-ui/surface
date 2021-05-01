@@ -67,7 +67,7 @@ defmodule Surface.Components.Form do
     ~H"""
     {form = form_for(@for, @action, get_opts(assigns))}
       <Context put={__MODULE__, form: form}>
-        <slot :props={form: form} />
+        <#slot :props={form: form} />
       </Context>
     <#Raw></form></#Raw>
     """

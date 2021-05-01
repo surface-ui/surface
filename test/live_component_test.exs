@@ -62,7 +62,7 @@ defmodule LiveComponentTest do
 
       ~H"""
       <div>
-        <slot :props={info: info}/>
+        <#slot :props={info: info}/>
       </div>
       """
     end
@@ -76,7 +76,7 @@ defmodule LiveComponentTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot/>
+        <#slot/>
       </div>
       """
     end

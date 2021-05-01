@@ -31,10 +31,10 @@ defmodule Surface.SlotTest do
       ~H"""
       <div>
         <div :for={{data, index} <- Enum.with_index(@inner)}>
-          {data.label}: <slot name="inner" index={index}/>
+          {data.label}: <#slot name="inner" index={index} />
         </div>
         <div>
-          <slot/>
+          <#slot />
         </div>
       </div>
       """
@@ -51,13 +51,13 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header"/>
-        <slot>
+        <#slot name="header"/>
+        <#slot>
           Default fallback
-        </slot>
-        <slot name="footer">
+        </#slot>
+        <#slot name="footer">
           Footer fallback
-        </slot>
+        </#slot>
       </div>
       """
     end
@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="body" :props={info: "Info from slot"}/>
+        <#slot name="body" :props={info: "Info from slot"}/>
       </div>
       """
     end
@@ -85,7 +85,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot :props={info: "Info from slot"}/>
+        <#slot :props={info: "Info from slot"}/>
       </div>
       """
     end
@@ -112,17 +112,17 @@ defmodule Surface.SlotTest do
       ~H"""
       <div>
         <header :if={slot_assigned?(:header)}>
-          <slot name="header"/>
+          <#slot name="header"/>
         </header>
         <main :if={slot_assigned?(:default)}>
-          <slot>
+          <#slot>
             Default fallback
-          </slot>
+          </#slot>
         </main>
         <footer>
-        <slot name="footer">
+        <#slot name="footer">
           Footer fallback
-        </slot>
+        </#slot>
         </footer>
       </div>
       """
@@ -139,7 +139,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header" />
+        <#slot name="header" />
         {@header}
       </div>
       """
@@ -156,7 +156,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot />
+        <#slot />
         {@default}
       </div>
       """
@@ -185,9 +185,9 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <span class="fancy-column">
-        <slot>
+        <#slot>
           {@title}
-        </slot>
+        </#slot>
       </span>
       """
     end
@@ -203,9 +203,9 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <span class="fancy-column">
-        <slot>
+        <#slot>
           {@title}
-        </slot>
+        </#slot>
       </span>
       """
     end
@@ -230,7 +230,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={{_col, index} <- Enum.with_index(@cols)}>
-            <slot name="cols" index={index} :props={item: item, info: info}/>
+            <#slot name="cols" index={index} :props={item: item, info: info}/>
           </td>
         </tr>
       </table>
@@ -287,9 +287,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body" :let={info: my_info}>
+          <#template slot="body" :let={info: my_info}>
             Info: {my_info}
-          </template>
+          </#template>
         </OuterWithNamedSlotAndProps>
         """
       end
@@ -340,13 +340,13 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithNamedSlot>
-          <template slot="header">
+          <#template slot="header">
             My header
-          </template>
+          </#template>
           My body
-          <template slot="footer">
+          <#template slot="footer">
             My footer
-          </template>
+          </#template>
         </OuterWithNamedSlot>
         """
       end
@@ -532,9 +532,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithRenamedSlot header="My Header Prop">
-          <template slot="header">
+          <#template slot="header">
             My Header Slot
-          </template>
+          </#template>
         </OuterWithRenamedSlot>
         """
       end
@@ -568,9 +568,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
-          <template name="default">
+          <#template name="default">
             Default Slot
-          </template>
+          </#template>
         </OuterWithDefaultPropAndSlot>
         """
       end
@@ -658,9 +658,9 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body"
+          <#template slot="body"
             :let={"a_string"}>
-          </template>
+          </#template>
         </OuterWithNamedSlotAndProps>
         """
       end
@@ -725,9 +725,9 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body" :let={non_existing: my_info}>
+          <#template slot="body" :let={non_existing: my_info}>
             Info: {my_info}
-          </template>
+          </#template>
         </OuterWithNamedSlotAndProps>
         """
       end
@@ -780,7 +780,7 @@ defmodule Surface.SlotTest do
       def render(assigns) do
         ~H"\""
           <span>
-            <slot
+            <#slot
               :props={id: 1, name: "Joe"}/>
             </span>
         "\""
@@ -824,9 +824,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithOptionalNamedSlot>
-          <template slot="header">
+          <#template slot="header">
             My Header
-          </template>
+          </#template>
         </OuterWithOptionalNamedSlot>
         """
       end
@@ -931,9 +931,9 @@ defmodule Surface.SlotSyncTest do
         <OuterWithNamedSlot>
           <div>
           </div>
-          <template slot="foot">
+          <#template slot="foot">
             My footer
-          </template>
+          </#template>
         </OuterWithNamedSlot>
         """
       end
@@ -962,9 +962,9 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~H"\""
           <div>
-            <slot name="header"/>
-            <slot />
-            <slot name="footer" />
+            <#slot name="header"/>
+            <#slot />
+            <#slot name="footer" />
           </div>
         "\""
       end
@@ -988,7 +988,7 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
-  test "raises compile error on component that uses short syntax <slot /> without declaring default slot" do
+  test "raises compile error on component that uses short syntax <#slot /> without declaring default slot" do
     component_code = """
     defmodule TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot do
       use Surface.Component
@@ -996,7 +996,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~H"\""
           <div>
-            <slot />
+            <#slot />
           </div>
         "\""
       end
@@ -1006,7 +1006,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:7: no slot `default` defined in the component `Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
 
-    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1029,11 +1029,11 @@ defmodule Surface.SlotSyncTest do
         ~H"\""
           <div>
             <header :if={{ slot_assigned?(:heade) }}>
-              <slot name="header"/>
+              <#slot name="header"/>
             </header>
-            <slot />
+            <#slot />
             <footer>
-              <slot name="footer" />
+              <#slot name="footer" />
             </footer>
           </div>
         "\""
@@ -1088,7 +1088,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~H"\""
         <span class="fancy-column">
-          <slot props={{ info: "this is a test" }} />
+          <#slot props={{ info: "this is a test" }} />
         </span>
         "\""
       end
@@ -1106,11 +1106,11 @@ defmodule Surface.SlotSyncTest do
 
            Hint: You can remove these props, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
            ```
-           <template name="cols">
+           <#template name="cols">
              <Surface.SlotSyncTest.ColumnWithRenderAndSlotProps :let={{ info: info }}>
                ...
              </Surface.SlotSyncTest.ColumnWithRenderAndSlotProps>
-           </template>
+           </#template>
            ```
            """
   end

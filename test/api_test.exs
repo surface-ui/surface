@@ -528,9 +528,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <#slot name="header"/>
+        <#slot/>
+        <#slot name="footer"/>
       </div>
       """
     end
@@ -546,9 +546,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <#slot name="header"/>
+        <#slot/>
+        <#slot name="footer"/>
       </div>
       """
     end
@@ -623,9 +623,9 @@ defmodule Surface.APISyncTest do
         def render(assigns) do
           ~H"\""
           <ComponentWithRequiredDefaultSlot>
-            <template slot="header">
+            <#template slot="header">
               Header
-            </template>
+            </#template>
           </ComponentWithRequiredDefaultSlot>
           "\""
         end

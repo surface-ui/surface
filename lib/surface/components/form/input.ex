@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.Input do
       <Context
         get={Surface.Components.Form, form: form}
         get={Surface.Components.Form.Field, field: field}>
-        <slot :props={form: @assigns[:form] || form, field: @assigns[:field] || field}/>
+        <#slot :props={form: @assigns[:form] || form, field: @assigns[:field] || field}/>
       </Context>
       """
     end
