@@ -761,7 +761,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :values={{ hello: :world, foo: "bar", one: 2, yes: true }}>
+          <div :values={hello: :world, foo: "bar", one: 2, yes: true}>
             Some Text
           </div>
           """
@@ -778,7 +778,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :values={{ %{hello: :world, foo: "bar", one: 2, yes: true} }}>
+          <div :values={%{hello: :world, foo: "bar", one: 2, yes: true}}>
             Some Text
           </div>
           """
@@ -795,7 +795,7 @@ defmodule Surface.DirectivesTest do
       assert_raise(RuntimeError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
         render_surface do
           ~H"""
-          <div :values={{ map: %{}, tuple: {} }}>
+          <div :values={map: %{}, tuple: {}}>
             Some Text
           </div>
           """
@@ -809,7 +809,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :values={{ @values }}>
+          <div :values={@values}>
             Some Text
           </div>
           """
@@ -826,7 +826,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div phx-value-hello="static-world" :values={{ hello: "dynamic-world" }}>
+          <div phx-value-hello="static-world" :values={hello: "dynamic-world"}>
             Some Text
           </div>
           """
