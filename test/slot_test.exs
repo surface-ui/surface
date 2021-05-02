@@ -862,6 +862,76 @@ defmodule Surface.SlotTest do
            </div>
            """
   end
+
+  describe "Shorthand notatation for assigning slots" do
+    test "assign named slots without props" do
+      html =
+        render_surface do
+          ~H"""
+          <OuterWithNamedSlot>
+            <:header>
+              My header
+            </:header>
+            My body
+            <:footer>
+              My footer
+            </:footer>
+          </OuterWithNamedSlot>
+          """
+        end
+
+      assert html =~ """
+             <div>
+                 My header
+               My body
+                 My footer
+             </div>
+             """
+    end
+
+    test "does not render slot if slot_assigned? returns false" do
+      html =
+        render_surface do
+          ~H"""
+          <OuterWithOptionalNamedSlot>
+            <:header>
+              My Header
+            </:header>
+          </OuterWithOptionalNamedSlot>
+          """
+        end
+
+      assert html =~ """
+             <div>
+               <header>
+                 My Header
+               </header>
+               <footer>
+                 Footer fallback
+               </footer>
+             </div>
+             """
+    end
+
+    test "assign named slots with props" do
+      html =
+        render_surface do
+          ~H"""
+          <OuterWithNamedSlotAndProps>
+            <:body :let={info: my_info}>
+              Info: {my_info}
+            </:body>
+          </OuterWithNamedSlotAndProps>
+          """
+        end
+
+      assert html =~ """
+             <div>
+                 Info: Info from slot
+             </div>
+             """
+    end
+  end
 end
 
 defmodule Surface.SlotSyncTest do

@@ -230,6 +230,7 @@ defmodule Surface.Compiler do
   defp node_type({"#template", _, _, _}), do: :template
   defp node_type({"#slot", _, _, _}), do: :slot
   defp node_type({"template", _, _, _}), do: :template
+  defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
@@ -269,14 +270,18 @@ defmodule Surface.Compiler do
      }}
   end
 
-  defp convert_node_to_ast(:template, {_, attributes, children, node_meta} = node, compile_meta) do
+  defp convert_node_to_ast(
+         :template,
+         {name, attributes, children, node_meta} = node,
+         compile_meta
+       ) do
     maybe_warn_on_deprecated_template_notation(node, compile_meta)
 
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, directives, attributes} <-
            collect_directives(@template_directive_handlers, attributes, meta),
-         slot <- attribute_value(attributes, "slot", :default) do
+         slot <- get_slot_name(name, attributes) do
       {:ok,
        %AST.Template{
          name: slot,
@@ -521,6 +526,10 @@ defmodule Surface.Compiler do
     end)
   end
 
+  defp get_slot_name("template", attributes), do: attribute_value(attributes, "slot", :default)
+  defp get_slot_name("#template", attributes), do: attribute_value(attributes, "slot", :default)
+  defp get_slot_name(":" <> name, _), do: String.to_atom(name)
+
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 
   defp process_attributes(_module, [], _meta), do: []
@@ -620,9 +629,7 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([%AST.Template{name: name} | _]) do
     {:error,
-     "templates are only allowed as children elements of components, but found template for #{
-       name
-     }"}
+     "templates are only allowed as children elements of components, but found template for #{name}"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
