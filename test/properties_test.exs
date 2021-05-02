@@ -46,7 +46,6 @@ defmodule Surface.PropertiesTest do
     def render(assigns) do
       ~H"""
       List?: { is_list(@prop) }
-      Range?: { is_struct(@prop, Range) }
       <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
     end
@@ -339,7 +338,6 @@ defmodule Surface.PropertiesTest do
 
       assert html =~ """
              List?: true
-             Range?: false
              <span>value: 1</span>\
              <span>value: 2</span>
              """
@@ -357,7 +355,6 @@ defmodule Surface.PropertiesTest do
 
       assert html =~ """
              List?: true
-             Range?: false
              <span>value: 1</span>\
              <span>value: 2</span>
              """
@@ -375,7 +372,6 @@ defmodule Surface.PropertiesTest do
 
       assert html =~ """
              List?: true
-             Range?: false
              <span>value: 1</span>
              """
     end
@@ -417,7 +413,6 @@ defmodule Surface.PropertiesTest do
 
       assert html =~ """
              List?: true
-             Range?: false
              <span>value: {:a, 1}</span><span>value: {:b, 2}</span>
              """
     end
@@ -431,8 +426,7 @@ defmodule Surface.PropertiesTest do
         end
 
       assert html =~ """
-             List?: false
-             Range?: true
+             List?: true
              <span>value: 1</span><span>value: 2</span><span>value: 3</span>
              """
     end
@@ -447,7 +441,6 @@ defmodule Surface.PropertiesTest do
 
       assert html =~ """
              List?: true
-             Range?: false
              <span>value: {:a, 1}</span><span>value: {:b, 2}</span>
              """
     end
