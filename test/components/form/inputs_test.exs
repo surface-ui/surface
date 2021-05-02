@@ -32,10 +32,10 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} :let={{ form: f }}>
-            <TextInput form={{ f }} field="name" />
-            <TextInput form={{ f }} field="email" />
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={form: f}>
+            <TextInput form={f} field="name" />
+            <TextInput form={f} field="email" />
           </Inputs>
         </Form>
         """
@@ -56,9 +56,9 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ cs }} as="cs" opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} :let={{ index: idx }}>
-            <div>index: <span>{{ idx }}</span></div>
+        <Form for={cs} as={:cs} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={index: idx}>
+            <div>index: <span>{idx}</span></div>
           </Inputs>
         </Form>
         """
@@ -77,8 +77,8 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }}>
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children}>
             <TextInput field="name" />
             <TextInput field="email" />
           </Inputs>
@@ -99,8 +99,8 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} opts={{ as: "custom_name"}}>
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} opts={as: "custom_name"}>
             <TextInput field="name" />
             <TextInput field="email" />
           </Inputs>

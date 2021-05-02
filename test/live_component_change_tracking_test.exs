@@ -20,8 +20,8 @@ defmodule LiveComponentChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      Count: {{ @count }}
-      <CheckUpdated id="1" dest={{ @test_pid }} content={{ assigns }} />
+      Count: {@count}
+      <CheckUpdated id="1" dest={@test_pid} content={assigns} />
       """
     end
 
@@ -43,8 +43,8 @@ defmodule LiveComponentChangeTrackingTest do
 
     def render(assigns) do
       ~H"""
-      Count: {{ @count }}
-      <CheckUpdated id="1" dest={{ @test_pid }} content={{ @passing_count }} />
+      Count: {@count}
+      <CheckUpdated id="1" dest={@test_pid} content={@passing_count} />
       """
     end
 

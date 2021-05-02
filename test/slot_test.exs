@@ -30,11 +30,11 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <div :for={{ {data, index} <- Enum.with_index(@inner) }}>
-          {{ data.label }}: <slot name="inner" index={{ index }}/>
+        <div :for={{data, index} <- Enum.with_index(@inner)}>
+          {data.label}: <#slot name="inner" index={index} />
         </div>
         <div>
-          <slot/>
+          <#slot />
         </div>
       </div>
       """
@@ -51,13 +51,13 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header"/>
-        <slot>
+        <#slot name="header"/>
+        <#slot>
           Default fallback
-        </slot>
-        <slot name="footer">
+        </#slot>
+        <#slot name="footer">
           Footer fallback
-        </slot>
+        </#slot>
       </div>
       """
     end
@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="body" :props={{ info: "Info from slot" }}/>
+        <#slot name="body" :props={info: "Info from slot"}/>
       </div>
       """
     end
@@ -85,7 +85,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot :props={{ info: "Info from slot" }}/>
+        <#slot :props={info: "Info from slot"}/>
       </div>
       """
     end
@@ -111,18 +111,18 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <header :if={{ slot_assigned?(:header) }}>
-          <slot name="header"/>
+        <header :if={slot_assigned?(:header)}>
+          <#slot name="header"/>
         </header>
-        <main :if={{ slot_assigned?(:default) }}>
-          <slot>
+        <main :if={slot_assigned?(:default)}>
+          <#slot>
             Default fallback
-          </slot>
+          </#slot>
         </main>
         <footer>
-        <slot name="footer">
+        <#slot name="footer">
           Footer fallback
-        </slot>
+        </#slot>
         </footer>
       </div>
       """
@@ -139,8 +139,8 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header" />
-        {{ @header }}
+        <#slot name="header" />
+        {@header}
       </div>
       """
     end
@@ -156,8 +156,8 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot />
-        {{ @default }}
+        <#slot />
+        {@default}
       </div>
       """
     end
@@ -185,9 +185,9 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <span class="fancy-column">
-        <slot>
-          {{ @title }}
-        </slot>
+        <#slot>
+          {@title}
+        </#slot>
       </span>
       """
     end
@@ -203,9 +203,9 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~H"""
       <span class="fancy-column">
-        <slot>
-          {{ @title }}
-        </slot>
+        <#slot>
+          {@title}
+        </#slot>
       </span>
       """
     end
@@ -224,13 +224,13 @@ defmodule Surface.SlotTest do
       ~H"""
       <table>
         <tr>
-          <th :for={{ col <- @cols }}>
-            {{ col.title }}
+          <th :for={col <- @cols}>
+            {col.title}
           </th>
         </tr>
-        <tr :for={{ item <- @items }}>
-          <td :for={{ {_col, index} <- Enum.with_index(@cols) }}>
-            <slot name="cols" index={{ index }} :props={{ item: item, info: info }}/>
+        <tr :for={item <- @items}>
+          <td :for={{_col, index} <- Enum.with_index(@cols)}>
+            <#slot name="cols" index={index} :props={item: item, info: info}/>
           </td>
         </tr>
       </table>
@@ -287,9 +287,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body" :let={{ info: my_info }}>
-            Info: {{ my_info }}
-          </template>
+          <#template slot="body" :let={info: my_info}>
+            Info: {my_info}
+          </#template>
         </OuterWithNamedSlotAndProps>
         """
       end
@@ -305,8 +305,8 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <OuterWithDefaultSlotAndProps :let={{ info: my_info }}>
-          Info: {{ my_info }}
+        <OuterWithDefaultSlotAndProps :let={info: my_info}>
+          Info: {my_info}
         </OuterWithDefaultSlotAndProps>
         """
       end
@@ -340,13 +340,13 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithNamedSlot>
-          <template slot="header">
+          <#template slot="header">
             My header
-          </template>
+          </#template>
           My body
-          <template slot="footer">
+          <#template slot="footer">
             My footer
-          </template>
+          </#template>
         </OuterWithNamedSlot>
         """
       end
@@ -382,9 +382,9 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <ColumnWithDefaultTitle>
-            <b>Id: {{ user.id }}</b>
+            <b>Id: {user.id}</b>
           </ColumnWithDefaultTitle>
         </Grid>
         """
@@ -416,9 +416,9 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <ColumnWithRender title="column title">
-            <b>Id: {{ user.id }}</b>
+            <b>Id: {user.id}</b>
           </ColumnWithRender>
         </Grid>
         """
@@ -454,7 +454,7 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ _user <- @items }}>
+        <Grid items={_user <- @items}>
           <ColumnWithRenderAndDefaultTitle />
         </Grid>
         """
@@ -490,12 +490,12 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <Column title="ID">
-            <b>Id: {{ user.id }}</b>
+            <b>Id: {user.id}</b>
           </Column>
           <Column title="NAME">
-            Name: {{ user.name }}
+            Name: {user.name}
           </Column>
         </Grid>
         """
@@ -532,9 +532,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithRenamedSlot header="My Header Prop">
-          <template slot="header">
+          <#template slot="header">
             My Header Slot
-          </template>
+          </#template>
         </OuterWithRenamedSlot>
         """
       end
@@ -568,9 +568,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
-          <template name="default">
+          <#template name="default">
             Default Slot
-          </template>
+          </#template>
         </OuterWithDefaultPropAndSlot>
         """
       end
@@ -589,13 +589,13 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~H"""
-        <Grid items={{ user <- @items }}>
-          <Column title="ID" :let={{ item: my_user }}>
-            <b>Id: {{ my_user.id }}</b>
+        <Grid items={user <- @items}>
+          <Column title="ID" :let={item: my_user}>
+            <b>Id: {my_user.id}</b>
           </Column>
-          <Column title="NAME" :let={{ info: my_info }}>
-            Name: {{ user.name }}
-            Info: {{ my_info }}
+          <Column title="NAME" :let={info: my_info}>
+            Name: {user.name}
+            Info: {my_info}
           </Column>
         </Grid>
         """
@@ -628,10 +628,10 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~H"""
-        <Grid items={{ user <- @items }}>
+        <Grid items={user <- @items}>
           <Column title="ID"
-            :let={{ item: my_user, non_existing: value }}>
-            <b>Id: {{ my_user.id }}</b>
+            :let={item: my_user, non_existing: value}>
+            <b>Id: {my_user.id}</b>
           </Column>
         </Grid>
         """
@@ -658,9 +658,9 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body"
-            :let={{ "a_string" }}>
-          </template>
+          <#template slot="body"
+            :let={"a_string"}>
+          </#template>
         </OuterWithNamedSlotAndProps>
         """
       end
@@ -668,7 +668,7 @@ defmodule Surface.SlotTest do
     message = """
     code:3: invalid value for directive :let. \
     Expected a keyword list of bindings, \
-    e.g. {{ item: user, info: info }}, got: {{ "a_string" }}.\
+    e.g. {item: user, info: info}, got: {"a_string"}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -680,8 +680,8 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~H"""
-        <OuterWithoutDefaultSlot :let={{ info: my_info }}>
-          Info: {{ my_info }}
+        <OuterWithoutDefaultSlot :let={info: my_info}>
+          Info: {my_info}
         </OuterWithoutDefaultSlot>
         """
       end
@@ -699,8 +699,8 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~H"""
-        <OuterWithDefaultSlotAndProps :let={{ info: my_info, non_existing: value }}>
-          Info: {{ my_info }}
+        <OuterWithDefaultSlotAndProps :let={info: my_info, non_existing: value}>
+          Info: {my_info}
         </OuterWithDefaultSlotAndProps>
         """
       end
@@ -725,9 +725,9 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithNamedSlotAndProps>
-          <template slot="body" :let={{ non_existing: my_info }}>
-            Info: {{ my_info }}
-          </template>
+          <#template slot="body" :let={non_existing: my_info}>
+            Info: {my_info}
+          </#template>
         </OuterWithNamedSlotAndProps>
         """
       end
@@ -752,15 +752,15 @@ defmodule Surface.SlotTest do
       quote do
         ~H"""
         <OuterWithDefaultSlotAndProps
-          :let={{ info: [my_info] }}>
-          Info: {{ my_info }}
+          :let={info: [my_info]}>
+          Info: {my_info}
         </OuterWithDefaultSlotAndProps>
         """
       end
 
     message = """
     code:2: invalid value for directive :let. Expected a keyword list of bindings, \
-    e.g. {{ item: user, info: info }}, got: {{ info: [my_info] }}.\
+    e.g. {item: user, info: info}, got: {info: [my_info]}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -780,8 +780,8 @@ defmodule Surface.SlotTest do
       def render(assigns) do
         ~H"\""
           <span>
-            <slot
-              :props={{ id: 1, name: "Joe" }}/>
+            <#slot
+              :props={id: 1, name: "Joe"}/>
             </span>
         "\""
       end
@@ -824,9 +824,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~H"""
         <OuterWithOptionalNamedSlot>
-          <template slot="header">
+          <#template slot="header">
             My Header
-          </template>
+          </#template>
         </OuterWithOptionalNamedSlot>
         """
       end
@@ -861,6 +861,76 @@ defmodule Surface.SlotTest do
              </footer>
            </div>
            """
+  end
+
+  describe "Shorthand notatation for assigning slots" do
+    test "assign named slots without props" do
+      html =
+        render_surface do
+          ~H"""
+          <OuterWithNamedSlot>
+            <:header>
+              My header
+            </:header>
+            My body
+            <:footer>
+              My footer
+            </:footer>
+          </OuterWithNamedSlot>
+          """
+        end
+
+      assert html =~ """
+             <div>
+                 My header
+               My body
+                 My footer
+             </div>
+             """
+    end
+
+    test "does not render slot if slot_assigned? returns false" do
+      html =
+        render_surface do
+          ~H"""
+          <OuterWithOptionalNamedSlot>
+            <:header>
+              My Header
+            </:header>
+          </OuterWithOptionalNamedSlot>
+          """
+        end
+
+      assert html =~ """
+             <div>
+               <header>
+                 My Header
+               </header>
+               <footer>
+                 Footer fallback
+               </footer>
+             </div>
+             """
+    end
+
+    test "assign named slots with props" do
+      html =
+        render_surface do
+          ~H"""
+          <OuterWithNamedSlotAndProps>
+            <:body :let={info: my_info}>
+              Info: {my_info}
+            </:body>
+          </OuterWithNamedSlotAndProps>
+          """
+        end
+
+      assert html =~ """
+             <div>
+                 Info: Info from slot
+             </div>
+             """
+    end
   end
 end
 
@@ -902,7 +972,7 @@ defmodule Surface.SlotSyncTest do
     code =
       quote do
         ~H"""
-        <Grid items={{[]}}>
+        <Grid items={[]}>
           <InnerData/>
           <Column title="ID"/>
         </Grid>
@@ -931,9 +1001,9 @@ defmodule Surface.SlotSyncTest do
         <OuterWithNamedSlot>
           <div>
           </div>
-          <template slot="foot">
+          <#template slot="foot">
             My footer
-          </template>
+          </#template>
         </OuterWithNamedSlot>
         """
       end
@@ -962,9 +1032,9 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~H"\""
           <div>
-            <slot name="header"/>
-            <slot />
-            <slot name="footer" />
+            <#slot name="header"/>
+            <#slot />
+            <#slot name="footer" />
           </div>
         "\""
       end
@@ -988,7 +1058,7 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
-  test "raises compile error on component that uses short syntax <slot /> without declaring default slot" do
+  test "raises compile error on component that uses short syntax <#slot /> without declaring default slot" do
     component_code = """
     defmodule TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot do
       use Surface.Component
@@ -996,7 +1066,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~H"\""
           <div>
-            <slot />
+            <#slot />
           </div>
         "\""
       end
@@ -1006,7 +1076,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:7: no slot `default` defined in the component `Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
 
-    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1029,11 +1099,11 @@ defmodule Surface.SlotSyncTest do
         ~H"\""
           <div>
             <header :if={{ slot_assigned?(:heade) }}>
-              <slot name="header"/>
+              <#slot name="header"/>
             </header>
-            <slot />
+            <#slot />
             <footer>
-              <slot name="footer" />
+              <#slot name="footer" />
             </footer>
           </div>
         "\""
@@ -1061,8 +1131,8 @@ defmodule Surface.SlotSyncTest do
     code =
       quote do
         ~H"""
-        <OuterWithoutDefaultSlot :let={{ info: my_info }}>
-          Info: {{ my_info }}
+        <OuterWithoutDefaultSlot :let={info: my_info}>
+          Info: {my_info}
         </OuterWithoutDefaultSlot>
         """
       end
@@ -1088,7 +1158,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~H"\""
         <span class="fancy-column">
-          <slot props={{ info: "this is a test" }} />
+          <#slot props={{ info: "this is a test" }} />
         </span>
         "\""
       end
@@ -1106,12 +1176,71 @@ defmodule Surface.SlotSyncTest do
 
            Hint: You can remove these props, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
            ```
-           <template name="cols">
+           <#template name="cols">
              <Surface.SlotSyncTest.ColumnWithRenderAndSlotProps :let={{ info: info }}>
                ...
              </Surface.SlotSyncTest.ColumnWithRenderAndSlotProps>
-           </template>
+           </#template>
            ```
+           """
+  end
+
+  test "warn when using deprecated <template>" do
+    code =
+      quote do
+        ~H"""
+        <OuterWithNamedSlot>
+          <template slot="footer">
+            My footer
+          </template>
+        </OuterWithNamedSlot>
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
+
+    assert output =~ ~r"""
+           using <template> to fill slots has been deprecated and will be removed in future versions.
+
+           Hint: replace `<template>` with `<#template>`
+
+             code:2:\
+           """
+  end
+
+  test "warn when using deprecated <slot>" do
+    component_code = """
+    defmodule WarnOnDeprecatedSlots do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~H"\""
+        <span>
+          <slot/>
+        </span>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           using <slot> to define component slots has been deprecated and will be removed in \
+           future versions.
+
+           Hint: replace `<slot>` with `<#slot>`
+
+             code.exs:9:\
            """
   end
 end

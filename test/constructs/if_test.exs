@@ -8,8 +8,8 @@ defmodule Surface.Constructs.IfTest do
 
     def render(assigns) do
       ~H"""
-      List?: {{ is_list(@prop) }}
-      <span :for={{ v <- @prop }}>value: {{inspect(v)}}</span>
+      List?: {is_list(@prop)}
+      <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
     end
   end
@@ -20,7 +20,7 @@ defmodule Surface.Constructs.IfTest do
     html =
       render_surface do
         ~H"""
-        <If condition={{ true }}>
+        <If condition={true}>
         <span>The inner content</span>
         <span>with multiple tags</span>
         </If>
@@ -37,13 +37,13 @@ defmodule Surface.Constructs.IfTest do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
+        <If condition={true}>
           <span>The inner content
         </If>
         """
       end
 
-    message = ~S(code:2: expected closing tag for "span")
+    message = ~S(code:2: expected closing tag for <span>)
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
       compile_surface(code)
@@ -54,7 +54,7 @@ defmodule Surface.Constructs.IfTest do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
+        <If condition={true}>
           <ListProp prop="some string" />
         </If>
         """

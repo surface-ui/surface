@@ -40,7 +40,7 @@ defmodule Surface.Components.Form.SubmitTest do
     html =
       render_surface do
         ~H"""
-        <Submit label="Submit" class="btn" opts={{ id: "submit-btn" }} />
+        <Submit label="Submit" class="btn" opts={id: "submit-btn"} />
         """
       end
 
@@ -89,7 +89,7 @@ defmodule Surface.Components.Form.SubmitTest do
       render_surface do
         ~H"""
         <Submit>
-          {{ "<Submit>" }}
+          {"<Submit>"}
         </Submit>
         """
       end

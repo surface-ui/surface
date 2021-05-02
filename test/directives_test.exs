@@ -8,7 +8,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot/></div>
+      <div><#slot/></div>
       """
     end
   end
@@ -22,8 +22,8 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div class={{ @class, hidden: @hidden, block: !@hidden }}>
-        {{ @content }}
+      <div class={@class, hidden: @hidden, block: !@hidden}>
+        {@content}
       </div>
       """
     end
@@ -37,7 +37,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot :if={{ @show }}/></div>
+      <div><#slot :if={@show}/></div>
       """
     end
   end
@@ -50,7 +50,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot :if={{ @show }} :props={{ data: "data" }}/></div>
+      <div><#slot :if={@show} :props={data: "data"}/></div>
       """
     end
   end
@@ -63,7 +63,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~H"""
-      <div><slot :for={{ _i <- 1..@repeat }}/></div>
+      <div><#slot :for={_i <- 1..@repeat}/></div>
       """
     end
   end
@@ -73,7 +73,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <DivWithProps :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+          <DivWithProps :props={class: "text-xs", hidden: false, content: "dynamic props content"} />
           """
         end
 
@@ -88,7 +88,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <DivWithProps content="static content" :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+          <DivWithProps content="static content" :props={class: "text-xs", hidden: false, content: "dynamic props content"} />
           """
         end
 
@@ -105,7 +105,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <DivWithProps :props={{ @opts }} />
+          <DivWithProps :props={@opts} />
           """
         end
 
@@ -122,7 +122,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div class="myclass" :attrs={{ id: "myid" }}>
+          <div class="myclass" :attrs={id: "myid"}>
             Some Text
           </div>
           """
@@ -139,7 +139,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div class="myclass" :attrs={{ %{id: "myid"} }}>
+          <div class="myclass" :attrs={%{id: "myid"}}>
             Some Text
           </div>
           """
@@ -158,7 +158,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div class="myclass" :attrs={{ @div_props }}>
+          <div class="myclass" :attrs={@div_props}>
             Some Text
           </div>
           """
@@ -175,7 +175,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div class="myclass" :attrs={{ disabled: true }}>
+          <div class="myclass" :attrs={disabled: true}>
             Some Text
           </div>
           """
@@ -192,7 +192,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div class="myclass" id="static-id" :attrs={{ id: "dynamic-id" }}>
+          <div class="myclass" id="static-id" :attrs={id: "dynamic-id"}>
             Some Text
           </div>
           """
@@ -213,8 +213,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :for.index.with_index={{ {i, j} <- @items }}>
-            i: {{ i }}, j: {{ j }}
+          <div :for.index.with_index={{i, j} <- @items}>
+            i: {i}, j: {j}
           </div>
           """
         end
@@ -234,8 +234,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <Div :for.with_index={{ {iii, index} <- @items }}>
-            Item: {{ iii }}, Index: {{ index }}
+          <Div :for.with_index={{iii, index} <- @items}>
+            Item: {iii}, Index: {index}
           </Div>
           """
         end
@@ -257,8 +257,8 @@ defmodule Surface.DirectivesTest do
         quote do
           ~H"""
           <br/>
-          <div :for.unknown={{ @items }}>
-            Index: {{ index }}
+          <div :for.unknown={@items}>
+            Index: {index}
           </div>
           """
         end
@@ -279,8 +279,8 @@ defmodule Surface.DirectivesTest do
         quote do
           ~H"""
           <br/>
-          <div :for.with_index={{ i <- a, j <- b }}>
-            Index: {{ index }}
+          <div :for.with_index={i <- a, j <- b}>
+            Index: {index}
           </div>
           """
         end
@@ -302,8 +302,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <Div :for={{ i <- @items }}>
-            Item: {{i}}
+          <Div :for={i <- @items}>
+            Item: {i}
           </Div>
           """
         end
@@ -324,8 +324,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :for={{ i <- @items }}>
-            Item: {{i}}
+          <div :for={i <- @items}>
+            Item: {i}
           </div>
           """
         end
@@ -343,7 +343,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <br :for={{ _ <- [1,2] }}>
+          <br :for={_ <- [1,2]}>
           """
         end
 
@@ -356,7 +356,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <DivWithSlotUsingFor repeat=3>
+          <DivWithSlotUsingFor repeat={3}>
             <span>surface</span>
           </DivWithSlotUsingFor>
           """
@@ -377,9 +377,9 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :for={{ i1 <- @items1, i2 <- @items2, i1 < 4 }}>
-            Item1: {{i1}}
-            Item2: {{i2}}
+          <div :for={i1 <- @items1, i2 <- @items2, i1 < 4}>
+            Item1: {i1}
+            Item2: {i2}
           </div>
           """
         end
@@ -410,8 +410,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :for.with_index={{ {item, index} <- @items }}>
-            Item: {{ item }}, Index: {{ index }}
+          <div :for.with_index={{item, index} <- @items}>
+            Item: {item}, Index: {index}
           </div>
           """
         end
@@ -431,8 +431,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :for.index={{ index <- @items }}>
-            Index: {{ index }}
+          <div :for.index={index <- @items}>
+            Index: {index}
           </div>
           """
         end
@@ -452,8 +452,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :for.index={{ @items }}>
-            Index: {{ index }}
+          <div :for.index={@items}>
+            Index: {index}
           </div>
           """
         end
@@ -475,10 +475,10 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <Div :if={{ @show }}>
+          <Div :if={@show}>
             Show
           </Div>
-          <Div :if={{ @dont_show }}>
+          <Div :if={@dont_show}>
             Dont's show
           </Div>
           """
@@ -497,10 +497,10 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :if={{ @show }}>
+          <div :if={@show}>
             Show
           </div>
-          <div :if={{ @dont_show }}>
+          <div :if={@dont_show}>
             Dont's show
           </div>
           """
@@ -519,8 +519,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <col class="show" :if={{ @show }}>
-          <col class="dont_show" :if={{ @dont_show }}>
+          <col class="show" :if={@show}>
+          <col class="dont_show" :if={@dont_show}>
           """
         end
 
@@ -533,9 +533,9 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <DivWithSlotUsingIf show=true>1</DivWithSlotUsingIf>
-          <DivWithSlotUsingIf show=false>2</DivWithSlotUsingIf>
-          <DivWithSlotUsingIf show=true>3</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show={true}>1</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show={false}>2</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show={true}>3</DivWithSlotUsingIf>
           """
         end
 
@@ -550,9 +550,9 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <DivWithSlotUsingIfAndProps show=true :let={{ data: d }}>1 - {{ d }}</DivWithSlotUsingIfAndProps>
-          <DivWithSlotUsingIfAndProps show=false :let={{ data: d }}>2 - {{ d }}</DivWithSlotUsingIfAndProps>
-          <DivWithSlotUsingIfAndProps show=true :let={{ data: d }}>3 - {{ d }}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show={true} :let={data: d}>1 - {d}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show={false} :let={data: d}>2 - {d}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show={true} :let={data: d}>3 - {d}</DivWithSlotUsingIfAndProps>
           """
         end
 
@@ -571,8 +571,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <col :show={{ @show }}>
-          <col :show=true>
+          <col :show={@show}>
+          <col :show={true}>
           """
         end
 
@@ -588,7 +588,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <col :show={{ @show }}>
+          <col :show={@show}>
           """
         end
 
@@ -601,7 +601,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <col :show=false>
+          <col :show={false}>
           """
         end
 
@@ -618,7 +618,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <button :on-click={{ @click }}>OK</button>
+          <button :on-click={@click}>OK</button>
           """
         end
 
@@ -633,7 +633,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <button :on-click={{ @click }}>OK</button>
+          <button :on-click={@click}>OK</button>
           """
         end
 
@@ -659,7 +659,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <button :on-click={{ "ok", target: "#comp" }}>OK</button>
+          <button :on-click={"ok", target: "#comp"}>OK</button>
           """
         end
 
@@ -700,7 +700,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook={{ "Button", from: Some.Fake.Comp }}></div>
+          <div :hook={"Button", from: Some.Fake.Comp}></div>
           """
         end
 
@@ -713,7 +713,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook={{ nil }}></div>
+          <div :hook={nil}></div>
           """
         end
 
@@ -724,7 +724,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook={{ nil, from: Some.Fake.Comp }}></div>
+          <div :hook={nil, from: Some.Fake.Comp}></div>
           """
         end
 
@@ -735,7 +735,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook={{ false }}></div>
+          <div :hook={false}></div>
           """
         end
 
@@ -746,7 +746,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook={{ false, from: Some.Fake.Comp }}></div>
+          <div :hook={false, from: Some.Fake.Comp}></div>
           """
         end
 
@@ -779,7 +779,7 @@ defmodule Surface.DirectivesSyncTest do
         capture_io(:standard_error, fn ->
           render_surface do
             ~H"""
-            <DivWithProps :props={{ @opts }} />
+            <DivWithProps :props={@opts} />
             """
           end
         end)

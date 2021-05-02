@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
     html =
       render_surface do
         ~H"""
-        <RadioButton form="user" field={{ :role }} value="admin"/>
+        <RadioButton form="user" field={:role} value="admin"/>
         """
       end
 
@@ -55,7 +55,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
     html =
       render_surface do
         ~H"""
-        <RadioButton form="user" field="role" value="admin" opts={{ autofocus: "autofocus" }} />
+        <RadioButton form="user" field="role" value="admin" opts={autofocus: "autofocus"} />
         """
       end
 

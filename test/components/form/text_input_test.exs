@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.TextInputTest do
     html =
       render_surface do
         ~H"""
-        <TextInput form="user" field={{ :name }} />
+        <TextInput form="user" field={:name} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.TextInputTest do
     html =
       render_surface do
         ~H"""
-        <TextInput form="user" field="name" opts={{ autofocus: "autofocus" }} />
+        <TextInput form="user" field="name" opts={autofocus: "autofocus"} />
         """
       end
 

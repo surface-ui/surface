@@ -8,8 +8,8 @@ defmodule Surface.Constructs.ForTest do
 
     def render(assigns) do
       ~H"""
-      List?: {{ is_list(@prop) }}
-      <span :for={{ v <- @prop }}>value: {{inspect(v)}}</span>
+      List?: {is_list(@prop)}
+      <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
     end
   end
@@ -20,8 +20,8 @@ defmodule Surface.Constructs.ForTest do
     html =
       render_surface do
         ~H"""
-        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
-        <span>{{ fruit }}</span>
+        <For each={fruit <- ["apples", "bananas", "oranges"]}>
+        <span>{fruit}</span>
         </For>
         """
       end
@@ -37,13 +37,13 @@ defmodule Surface.Constructs.ForTest do
     code =
       quote do
         ~H"""
-        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
+        <For each={fruit <- ["apples", "bananas", "oranges"]}>
           <span>The inner content
         </For>
         """
       end
 
-    message = ~S(code:2: expected closing tag for "span")
+    message = ~S(code:2: expected closing tag for <span>)
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
       compile_surface(code)
@@ -54,7 +54,7 @@ defmodule Surface.Constructs.ForTest do
     code =
       quote do
         ~H"""
-        <For each={{ fruit <- ["apples", "bananas", "oranges"] }}>
+        <For each={fruit <- ["apples", "bananas", "oranges"]}>
           <ListProp prop="some string" />
         </For>
         """

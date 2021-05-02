@@ -1,7 +1,7 @@
-defmodule Surface.Components.ButtonTest do
+defmodule Surface.Components.Link.ButtonTest do
   use Surface.ConnCase, async: true
 
-  alias Surface.Components.Button
+  alias Surface.Components.Link.Button
 
   defmodule ComponentWithButton do
     use Surface.LiveComponent
@@ -85,7 +85,7 @@ defmodule Surface.Components.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" method={{ :delete }} opts={{ data: [confirm: "Really?"] }} />
+        <Button label="user" to="/users/1" method={:delete} opts={data: [confirm: "Really?"]} />
         """
       end
 
@@ -141,7 +141,7 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world"  opts={{ csrf_token: false }} />
+          <Button label="hello" to="/world"  opts={csrf_token: false} />
           """
         end
 
@@ -153,7 +153,7 @@ defmodule Surface.Components.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world" method={{ :get }} />
+          <Button label="hello" to="/world" method={:get} />
           """
         end
 
@@ -168,7 +168,7 @@ defmodule Surface.Components.ButtonTest do
         render_surface do
           ~H"""
           <Button to="/world" class="small">
-            {{ Phoenix.HTML.raw("<span>Hi</span>") }}
+            {Phoenix.HTML.raw("<span>Hi</span>")}
           </Button>
           """
         end
@@ -202,7 +202,11 @@ defmodule Surface.Components.ButtonTest do
       """
 
       assert_raise ArgumentError, msg, fn ->
-        render_surface(do: ~H[<Button label="foo" to="javascript:alert(1)" method={{ :get }} />])
+        render_surface do
+          ~H"""
+          <Button label="foo" to="javascript:alert(1)" method={:get} />
+          """
+        end
       end
     end
   end

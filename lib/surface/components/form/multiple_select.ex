@@ -43,8 +43,8 @@ defmodule Surface.Components.Form.MultipleSelect do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
     ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ multiple_select(form, field, @options, helper_opts ++ attr_opts ++ @opts) }}
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+      {multiple_select(form, field, @options, helper_opts ++ attr_opts ++ @opts)}
     </InputContext>
     """
   end

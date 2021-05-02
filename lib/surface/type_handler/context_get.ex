@@ -18,7 +18,7 @@ defmodule Surface.TypeHandler.ContextGet do
       _ ->
         message = """
         expected a scope module (optional) along with a keyword list of bindings, \
-        e.g. {{ Form, form: form }} or {{ field: my_field }}\
+        e.g. {Form, form: form} or {field: my_field}\
         """
 
         {:error, message}

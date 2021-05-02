@@ -9,9 +9,9 @@ defmodule Surface.Components.Form.HiddenInputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} :let={{ form: f }}>
-            <HiddenInputs for={{ f }} />
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={form: f}>
+            <HiddenInputs for={f} />
           </Inputs>
         </Form>
         """
@@ -28,8 +28,8 @@ defmodule Surface.Components.Form.HiddenInputsTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }}>
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children}>
             <HiddenInputs />
           </Inputs>
         </Form>

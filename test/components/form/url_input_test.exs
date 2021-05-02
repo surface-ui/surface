@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.UrlInputTest do
     html =
       render_surface do
         ~H"""
-        <UrlInput form="user" field={{ :website }} />
+        <UrlInput form="user" field={:website} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.UrlInputTest do
     html =
       render_surface do
         ~H"""
-        <UrlInput form="user" field="website" opts={{ autofocus: "autofocus" }} />
+        <UrlInput form="user" field="website" opts={autofocus: "autofocus"} />
         """
       end
 

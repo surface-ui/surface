@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
     html =
       render_surface do
         ~H"""
-        <TelephoneInput form="user" field={{ :phone }} />
+        <TelephoneInput form="user" field={:phone} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
     html =
       render_surface do
         ~H"""
-        <TelephoneInput form="user" field="phone" opts={{ autofocus: "autofocus" }} />
+        <TelephoneInput form="user" field="phone" opts={autofocus: "autofocus"} />
         """
       end
 

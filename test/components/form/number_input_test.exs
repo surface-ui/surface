@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.NumberInputTest do
     html =
       render_surface do
         ~H"""
-        <NumberInput form="user" field={{ :age }} />
+        <NumberInput form="user" field={:age} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.NumberInputTest do
     html =
       render_surface do
         ~H"""
-        <NumberInput form="user" field="age" opts={{ autofocus: "autofocus" }} />
+        <NumberInput form="user" field="age" opts={autofocus: "autofocus"} />
         """
       end
 

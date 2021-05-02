@@ -31,7 +31,7 @@ defmodule Surface.Components.Form.ErrorTag do
   ```
 
   ```surface
-  <Field name="password>
+  <Field name="password">
     <ErrorTag />
   </Field>
   ```
@@ -104,12 +104,12 @@ defmodule Surface.Components.Form.ErrorTag do
     class = assigns.class || get_config(:default_class)
 
     ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
+    <InputContext assigns={assigns} :let={form: form, field: field}>
       <span
-        :for={{ error <- Keyword.get_values(form.errors, field) }}
-        class={{ class }}
-        phx-feedback-for={{ @phx_feedback_for || input_id(form, field) }}
-      >{{ translate_error.(error) }}</span>
+        :for={error <- Keyword.get_values(form.errors, field)}
+        class={class}
+        phx-feedback-for={@phx_feedback_for || input_id(form, field)}
+      >{translate_error.(error)}</span>
     </InputContext>
     """
   end

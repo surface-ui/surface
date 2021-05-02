@@ -114,7 +114,7 @@ defmodule Surface.MacroComponent do
     """
     invalid value for property "#{prop_name}"
 
-    Expected a #{prop_type} while evaluating {{ #{String.trim(expr)} }}, got: #{inspect(value)}
+    Expected a #{prop_type} while evaluating {#{String.trim(expr)}}, got: #{inspect(value)}
 
     Hint: properties of macro components can only accept static values like module attributes,
     literals or compile-time expressions. Runtime variables and expressions, including component

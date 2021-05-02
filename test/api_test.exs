@@ -45,9 +45,18 @@ defmodule Surface.APITest do
 
   test "validate :values" do
     code = "prop label, :string, values: 1"
-    message = ~r/invalid value for option :values. Expected a list of values, got: 1/
+    message = ~r/invalid value for option :values. Expected a list of values or a Range, got: 1/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate :values when using a range" do
+    code = """
+    prop age, :integer, values: 1..100
+    data items, :integer, values: 1..3
+    """
+
+    {:ok, _module} = eval(code)
   end
 
   test "validate :as in slot" do
@@ -528,9 +537,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <#slot name="header"/>
+        <#slot/>
+        <#slot name="footer"/>
       </div>
       """
     end
@@ -546,9 +555,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <#slot name="header"/>
+        <#slot/>
+        <#slot name="footer"/>
       </div>
       """
     end
@@ -623,9 +632,9 @@ defmodule Surface.APISyncTest do
         def render(assigns) do
           ~H"\""
           <ComponentWithRequiredDefaultSlot>
-            <template slot="header">
+            <#template slot="header">
               Header
-            </template>
+            </#template>
           </ComponentWithRequiredDefaultSlot>
           "\""
         end

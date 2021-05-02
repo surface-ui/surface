@@ -86,7 +86,7 @@ defmodule Surface do
         def render(assigns) do
           ~H"\""
           <button class="button {{ @kind }}" phx-click={{ @click }}>
-            <slot/>
+            <#slot/>
           </button>
           "\""
         end
@@ -274,7 +274,7 @@ defmodule Surface do
 
     ```
     <div :if={{ slot_assigned?(:header) }}>
-      <slot name="header"/>
+      <#slot name="header"/>
     </div>
     ```
   """

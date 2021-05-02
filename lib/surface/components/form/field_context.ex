@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.FieldContext do
   alias Surface.Components.Form.Field
 
   @doc "The field name"
-  prop name, :atom, required: true
+  prop name, :any, required: true
 
   @doc """
   The content for the field
@@ -21,8 +21,8 @@ defmodule Surface.Components.Form.FieldContext do
 
   def render(assigns) do
     ~H"""
-    <Context put={{ Field, field: @name }}>
-      <slot/>
+    <Context put={Field, field: @name}>
+      <#slot/>
     </Context>
     """
   end

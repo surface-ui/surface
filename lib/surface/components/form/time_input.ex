@@ -28,8 +28,8 @@ defmodule Surface.Components.Form.TimeInput do
     event_opts = events_to_opts(assigns)
 
     ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ time_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts) }}
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+      {time_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
     </InputContext>
     """
   end

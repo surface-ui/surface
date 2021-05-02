@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.RangeInputTest do
     html =
       render_surface do
         ~H"""
-        <RangeInput form="volume" field={{ :percent }} />
+        <RangeInput form="volume" field={:percent} />
         """
       end
 
@@ -81,7 +81,7 @@ defmodule Surface.Components.Form.RangeInputTest do
     html =
       render_surface do
         ~H"""
-        <RangeInput form="volume" field="percent" min="0" max="100" opts={{ disabled: "disabled" }} />
+        <RangeInput form="volume" field="percent" min="0" max="100" opts={disabled: "disabled"} />
         """
       end
 
