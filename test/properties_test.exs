@@ -417,6 +417,20 @@ defmodule Surface.PropertiesTest do
              """
     end
 
+    test "passing a range" do
+      html =
+        render_surface do
+          ~H"""
+          <ListProp prop={1..3}/>
+          """
+        end
+
+      assert html =~ """
+             List?: true
+             <span>value: 1</span><span>value: 2</span><span>value: 3</span>
+             """
+    end
+
     test "passing a keyword list without brackets" do
       html =
         render_surface do
