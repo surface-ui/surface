@@ -426,7 +426,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={{ 1..3 }}/>
+          <ListProp prop={ 1..3 }/>
           """
         end
 
