@@ -188,7 +188,7 @@ defmodule Surface.DirectivesTest do
              """
     end
 
-    test "static properties override dyanmic properties" do
+    test "static properties override dynamic properties" do
       html =
         render_surface do
           ~H"""
@@ -752,6 +752,90 @@ defmodule Surface.DirectivesTest do
 
       assert html =~ """
              <div></div>
+             """
+    end
+  end
+
+  describe ":values" do
+    test "passing a keyword list" do
+      html =
+        render_surface do
+          ~H"""
+          <div :values={hello: :world, foo: "bar", one: 2, yes: true}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
+               Some Text
+             </div>
+             """
+    end
+
+    test "passing a map" do
+      html =
+        render_surface do
+          ~H"""
+          <div :values={%{hello: :world, foo: "bar", one: 2, yes: true}}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
+               Some Text
+             </div>
+             """
+    end
+
+    test "passing unsupported types" do
+      assert_raise(RuntimeError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
+        render_surface do
+          ~H"""
+          <div :values={map: %{}, tuple: {}}>
+            Some Text
+          </div>
+          """
+        end
+      end)
+    end
+
+    test "using an assign" do
+      assigns = %{values: [hello: :world, foo: "bar", one: 2, yes: true]}
+
+      html =
+        render_surface do
+          ~H"""
+          <div :values={@values}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
+               Some Text
+             </div>
+             """
+    end
+
+    test "static properties override dynamic properties" do
+      html =
+        render_surface do
+          ~H"""
+          <div phx-value-hello="static-world" :values={hello: "dynamic-world"}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-hello="static-world">
+               Some Text
+             </div>
              """
     end
   end
