@@ -32,7 +32,7 @@ defmodule Surface.TypeHandler.List do
     quote generated: true do
       case unquote(expr) do
         value when is_list(value) or is_struct(value, Range) ->
-          value
+          Enum.to_list(value)
 
         value ->
           raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{
