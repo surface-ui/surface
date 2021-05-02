@@ -45,7 +45,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      List?: { is_list(@prop) }
+      List?: {is_list(@prop)}
       <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
     end
@@ -421,7 +421,7 @@ defmodule Surface.PropertiesTest do
       html =
         render_surface do
           ~H"""
-          <ListProp prop={ 1..3 }/>
+          <ListProp prop={1..3}/>
           """
         end
 
