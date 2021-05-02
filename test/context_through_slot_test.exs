@@ -9,8 +9,8 @@ defmodule Surface.ContextThroughSlotTest do
 
     def render(assigns) do
       ~H"""
-      <Context put={{ foo: @foo }}>
-        <slot />
+      <Context put={foo: @foo}>
+        <#slot />
       </Context>
       """
     end
@@ -25,7 +25,7 @@ defmodule Surface.ContextThroughSlotTest do
       ~H"""
       <div>
         <Parent.ContextProvider foo="bar">
-          <slot />
+          <#slot />
         </Parent.ContextProvider>
       </div>
       """
@@ -38,8 +38,8 @@ defmodule Surface.ContextThroughSlotTest do
     def render(assigns) do
       # @foo is nil here
       ~H"""
-      <Context get={{ foo: foo }}>
-        <div>{{ foo }}</div>
+      <Context get={foo: foo}>
+        <div>{foo}</div>
       </Context>
       """
     end

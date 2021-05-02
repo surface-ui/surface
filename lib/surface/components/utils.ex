@@ -90,6 +90,7 @@ defmodule Surface.Components.Utils do
         :phx_keydown -> {:"phx-keydown", value}
         :phx_target -> {:"phx-target", value}
         :data -> data_to_attrs(value)
+        :values -> values_to_attrs(value)
         _ -> {key, value}
       end
     end
@@ -99,6 +100,12 @@ defmodule Surface.Components.Utils do
   defp data_to_attrs(data) when is_list(data) do
     for {key, value} <- data do
       {:"data-#{key}", value}
+    end
+  end
+
+  defp values_to_attrs(values) when is_list(values) do
+    for {key, value} <- values do
+      {:"phx-value-#{key}", value}
     end
   end
 
@@ -113,8 +120,21 @@ defmodule Surface.Components.Utils do
       event_to_opts(assigns.window_keyup, :phx_window_keyup),
       event_to_opts(assigns.window_keydown, :phx_window_keydown),
       event_to_opts(assigns.keyup, :phx_keyup),
-      event_to_opts(assigns.keydown, :phx_keydown)
+      event_to_opts(assigns.keydown, :phx_keydown),
+      values_to_opts(assigns.values)
     ]
     |> List.flatten()
+  end
+
+  defp values_to_opts([]) do
+    []
+  end
+
+  defp values_to_opts(values) when is_list(values) do
+    {:values, values}
+  end
+
+  defp values_to_opts(_values) do
+    []
   end
 end

@@ -24,7 +24,7 @@ defmodule Surface.Components.FieldTest do
     html =
       render_surface do
         ~H"""
-        <Field name="name" class={{ :field }}>
+        <Field name="name" class={:field}>
           Hi
         </Field>
         """

@@ -8,7 +8,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div phx-click="click">{{ @label }}</div>
+      <div phx-click="click">{@label}</div>
       """
     end
   end
@@ -25,7 +25,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div :on-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
+      <div :on-click="click" id="theDiv">{@label} - {@assigned_in_update}</div>
       """
     end
 
@@ -42,7 +42,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <StatelessComponent label={{ @label }} />
+      <StatelessComponent label={@label} />
       <StatefulComponent id="comp" />
       """
     end
@@ -62,7 +62,7 @@ defmodule LiveComponentTest do
 
       ~H"""
       <div>
-        <slot :props={{ info: info }}/>
+        <#slot :props={info: info}/>
       </div>
       """
     end
@@ -76,7 +76,7 @@ defmodule LiveComponentTest do
     def render(assigns) do
       ~H"""
       <div>
-        <slot/>
+        <#slot/>
       </div>
       """
     end
@@ -89,7 +89,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <button :on-click={{ @event }} />
+      <button :on-click={@event} />
       """
     end
   end
@@ -101,7 +101,7 @@ defmodule LiveComponentTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ Map.has_key?(assigns, :count) }}</div>
+      <div>{Map.has_key?(assigns, :count)}</div>
       """
     end
   end
@@ -127,8 +127,8 @@ defmodule LiveComponentTest do
     html =
       render_surface do
         ~H"""
-        <InfoProvider :let={{ info: my_info }}>
-          <span>{{ my_info }}</span>
+        <InfoProvider :let={info: my_info}>
+          <span>{my_info}</span>
         </InfoProvider>
         """
       end

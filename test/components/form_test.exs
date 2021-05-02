@@ -19,9 +19,9 @@ defmodule Surface.Components.FormTest do
 
     def render(assigns) do
       ~H"""
-      <Form for={{ @changeset }} action="#" csrf_token="test" as={{ :user }} :let={{ form: f }}>
-        <TextInput field={{ :name }} />
-        {{ Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end) }}
+      <Form for={@changeset} action="#" csrf_token="test" as={:user} :let={form: f}>
+        <TextInput field={:name} />
+        {Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end)}
       </Form>
       """
     end
@@ -35,7 +35,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" csrf_token="test">
+        <Form for={:user} action="#" csrf_token="test">
         </Form>
         """
       end
@@ -51,7 +51,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" csrf_token="test">
+        <Form for={:user} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
         """
@@ -69,7 +69,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" csrf_token="test">
+        <Form for={:user} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
         """
@@ -107,7 +107,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" change="change" submit="submit" auto_recover="recover">
+        <Form for={:user} action="#" change="change" submit="submit" auto_recover="recover">
         </Form>
         """
       end
@@ -136,7 +136,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :user }} action="#" method="put" csrf_token="test">
+        <Form for={:user} action="#" method="put" csrf_token="test">
         </Form>
         """
       end
@@ -161,7 +161,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" class="form">
+        <Form for={:user} action="#" class="form">
         </Form>
         """
       end
@@ -173,7 +173,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" class="form form-user">
+        <Form for={:user} action="#" class="form form-user">
         </Form>
         """
       end
@@ -185,7 +185,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{:user}} action="#" class={{ "form", "form-user": true }}>
+        <Form for={:user} action="#" class={"form", "form-user": true}>
         </Form>
         """
       end
@@ -204,7 +204,7 @@ defmodule Surface.Components.Form.FormTestConfigTest do
       html =
         render_surface do
           ~H"""
-          <Form for={{ :user }} action="#" />
+          <Form for={:user} action="#" />
           """
         end
 

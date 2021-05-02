@@ -83,7 +83,7 @@ defmodule Surface.Components.LivePatchTest do
             label="user"
             to="/users/1"
             class="link"
-            opts={{ method: :delete, "data-confirm": "Really?", "csrf-token": "token" }}
+            opts={method: :delete, "data-confirm": "Really?", "csrf-token": "token"}
           />
           """
         end

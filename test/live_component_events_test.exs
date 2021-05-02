@@ -18,7 +18,7 @@ defmodule Surface.EventsTest do
 
     def render(assigns) do
       ~H"""
-      <button :on-click={{ @click }}>Click me!</button>
+      <button :on-click={@click}>Click me!</button>
       """
     end
 
@@ -35,7 +35,7 @@ defmodule Surface.EventsTest do
     def render(assigns) do
       ~H"""
       <div>
-        <Button id="button_id" click={{ @buttonClick }}/>
+        <Button id="button_id" click={@buttonClick}/>
       </div>
       """
     end
@@ -52,7 +52,7 @@ defmodule Surface.EventsTest do
 
     def render(assigns) do
       ~H"""
-      <button phx-click={{ @click }}/>
+      <button phx-click={@click}/>
       """
     end
 
@@ -120,7 +120,7 @@ defmodule Surface.EventsTest do
       render_surface do
         ~H"""
         <div>
-          <Button id="button_id" click={{ %{name: "ok", target: "#comp"} }}/>
+          <Button id="button_id" click={%{name: "ok", target: "#comp"}}/>
         </div>
         """
       end
@@ -140,7 +140,7 @@ defmodule Surface.EventsTest do
       render_surface do
         ~H"""
         <div>
-          <Button id="button_id" click={{ "ok", target: "#comp" }}/>
+          <Button id="button_id" click={"ok", target: "#comp"}/>
         </div>
         """
       end
@@ -152,7 +152,7 @@ defmodule Surface.EventsTest do
       render_surface do
         ~H"""
         <div>
-          <Button id="button_id" click={{ :ok, target: "#comp" }}/>
+          <Button id="button_id" click={:ok, target: "#comp"}/>
         </div>
         """
       end
@@ -165,7 +165,7 @@ defmodule Surface.EventsTest do
       render_surface do
         ~H"""
         <div>
-          <Button id="button_id" click={{ nil }}/>
+          <Button id="button_id" click={nil}/>
         </div>
         """
       end
@@ -185,7 +185,7 @@ defmodule Surface.EventsTest do
     assert_raise(RuntimeError, message, fn ->
       render_surface do
         ~H"""
-        <ButtonWithInvalidEvent id="button_id" click={{ "ok" }}/>
+        <ButtonWithInvalidEvent id="button_id" click={"ok"}/>
         """
       end
     end)

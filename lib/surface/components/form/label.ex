@@ -23,7 +23,7 @@ defmodule Surface.Components.Form.Label do
   prop form, :form
 
   @doc "The field name"
-  prop field, :atom
+  prop field, :any
 
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
@@ -47,9 +47,9 @@ defmodule Surface.Components.Form.Label do
     event_opts = assigns |> events_to_opts() |> opts_to_attrs()
 
     ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      <label :attrs={{ helper_opts ++ attr_opts ++ input_id(form, field) ++ @opts ++ event_opts }}>
-        <slot>{{ @text || Phoenix.Naming.humanize(field) }}</slot>
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+      <label :attrs={helper_opts ++ attr_opts ++ input_id(form, field) ++ @opts ++ event_opts}>
+        <#slot>{@text || Phoenix.Naming.humanize(field)}</#slot>
       </label>
     </InputContext>
     """

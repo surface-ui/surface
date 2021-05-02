@@ -55,7 +55,7 @@ defmodule Surface.Components.Form.ResetTest do
     html =
       render_surface do
         ~H"""
-        <Reset opts={{ autofocus: "autofocus" }} />
+        <Reset opts={autofocus: "autofocus"} />
         """
       end
 

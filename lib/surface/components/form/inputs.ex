@@ -34,11 +34,11 @@ defmodule Surface.Components.Form.Inputs do
 
   def render(assigns) do
     ~H"""
-    <Context get={{ Surface.Components.Form, form: form }}>
+    <Context get={Surface.Components.Form, form: form}>
       <Context
-        :for={{ {f, index}  <- Enum.with_index(inputs_for(@form || form, @for, @opts)) }}
-        put={{ Surface.Components.Form, form: f }}>
-        <slot :props={{ form: f, index: index }}/>
+        :for={{f, index}  <- Enum.with_index(inputs_for(@form || form, @for, @opts))}
+        put={Surface.Components.Form, form: f}>
+        <#slot :props={form: f, index: index}/>
       </Context>
     </Context>
     """

@@ -8,7 +8,7 @@ defmodule LiveViewTest do
 
     def render(assigns) do
       ~H"""
-      <div>{{ Map.has_key?(assigns, :count) }}</div>
+      <div>{Map.has_key?(assigns, :count)}</div>
       """
     end
   end

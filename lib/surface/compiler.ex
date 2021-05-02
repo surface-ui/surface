@@ -228,10 +228,13 @@ defmodule Surface.Compiler do
     end
   end
 
+  defp node_type({"#template", _, _, _}), do: :template
+  defp node_type({"#slot", _, _, _}), do: :slot
+  defp node_type({"template", _, _, _}), do: :template
+  defp node_type({":" <> _, _, _, _}), do: :template
+  defp node_type({"slot", _, _, _}), do: :slot
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
-  defp node_type({"template", _, _, _}), do: :template
-  defp node_type({"slot", _, _, _}), do: :slot
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
@@ -268,12 +271,18 @@ defmodule Surface.Compiler do
      }}
   end
 
-  defp convert_node_to_ast(:template, {_, attributes, children, node_meta}, compile_meta) do
+  defp convert_node_to_ast(
+         :template,
+         {name, attributes, children, node_meta} = node,
+         compile_meta
+       ) do
+    maybe_warn_on_deprecated_template_notation(node, compile_meta)
+
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, directives, attributes} <-
            collect_directives(@template_directive_handlers, attributes, meta),
-         slot <- attribute_value(attributes, "slot", :default) do
+         slot <- get_slot_name(name, attributes) do
       {:ok,
        %AST.Template{
          name: slot,
@@ -287,7 +296,8 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
+  defp convert_node_to_ast(:slot, {_, attributes, children, node_meta} = node, compile_meta) do
+    maybe_warn_on_deprecated_slot_notation(node, compile_meta)
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     defined_slots =
@@ -516,6 +526,10 @@ defmodule Surface.Compiler do
         nil
     end)
   end
+
+  defp get_slot_name("template", attributes), do: attribute_value(attributes, "slot", :default)
+  defp get_slot_name("#template", attributes), do: attribute_value(attributes, "slot", :default)
+  defp get_slot_name(":" <> name, _), do: String.to_atom(name)
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 
@@ -816,7 +830,7 @@ defmodule Surface.Compiler do
     message = """
     no slot `#{slot_name}` defined in the component `#{inspect(module)}`
 
-    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
@@ -911,18 +925,44 @@ defmodule Surface.Compiler do
 
         slot #{slot.name}
         ...
-        <slot#{slot_name_tag}>Fallback content</slot>
+        <#slot#{slot_name_tag}>Fallback content</#slot>
 
       or keep the slot as required and remove the fallback content:
 
         slot #{slot.name}, required: true`
         ...
-        <slot#{slot_name_tag} />
+        <#slot#{slot_name_tag} />
 
       but not both.
       """
 
       IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+    end
+  end
+
+  defp maybe_warn_on_deprecated_template_notation({name, _, _, %{line: line}}, compile_meta) do
+    if name == "template" do
+      message = """
+      using <template> to fill slots has been deprecated and will be removed in \
+      future versions.
+
+      Hint: replace `<template>` with `<#template>`
+      """
+
+      IOHelper.warn(message, compile_meta.caller, &(&1 + line))
+    end
+  end
+
+  defp maybe_warn_on_deprecated_slot_notation({name, _, _, %{line: line}}, compile_meta) do
+    if name == "slot" do
+      message = """
+      using <slot> to define component slots has been deprecated and will be removed in \
+      future versions.
+
+      Hint: replace `<slot>` with `<#slot>`
+      """
+
+      IOHelper.warn(message, compile_meta.caller, &(&1 + line))
     end
   end
 end

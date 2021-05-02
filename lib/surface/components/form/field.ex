@@ -22,9 +22,9 @@ defmodule Surface.Components.Form.Field do
 
   def render(assigns) do
     ~H"""
-    <div class={{ class_value(@class) }}>
-      <Context put={{ __MODULE__, field: @name }}>
-        <slot/>
+    <div class={class_value(@class)}>
+      <Context put={__MODULE__, field: @name}>
+        <#slot/>
       </Context>
     </div>
     """

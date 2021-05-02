@@ -16,7 +16,7 @@ defmodule Surface.Components.LiveFileInputTest do
 
     def render(assigns) do
       ~H"""
-        <LiveFileInput upload={{ @uploads.avatar }} class={{ "test_class", disabled_test: true  }} opts={{ "data-test": "test-data", name: "a name?" }} />
+        <LiveFileInput upload={@uploads.avatar} class={"test_class", disabled_test: true} opts={"data-test": "test-data", name: "a name?"} />
       """
     end
   end
@@ -34,7 +34,7 @@ defmodule Surface.Components.LiveFileInputTest do
 
     def render(assigns) do
       ~H"""
-        <LiveFileInput upload={{ @uploads.avatar }} />
+        <LiveFileInput upload={@uploads.avatar} />
       """
     end
   end

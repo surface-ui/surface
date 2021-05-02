@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.ColorInputTest do
     html =
       render_surface do
         ~H"""
-        <ColorInput form="user" field={{ :color }} />
+        <ColorInput form="user" field={:color} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.ColorInputTest do
     html =
       render_surface do
         ~H"""
-        <ColorInput form="user" field="color" opts={{ autofocus: "autofocus" }} />
+        <ColorInput form="user" field="color" opts={autofocus: "autofocus"} />
         """
       end
 

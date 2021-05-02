@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.PasswordInputTest do
     html =
       render_surface do
         ~H"""
-        <PasswordInput form="user" field={{ :password }} />
+        <PasswordInput form="user" field={:password} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.PasswordInputTest do
     html =
       render_surface do
         ~H"""
-        <PasswordInput form="user" field="password" opts={{ autofocus: "autofocus" }} />
+        <PasswordInput form="user" field="password" opts={autofocus: "autofocus"} />
         """
       end
 

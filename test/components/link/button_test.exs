@@ -85,7 +85,7 @@ defmodule Surface.Components.Link.ButtonTest do
     html =
       render_surface do
         ~H"""
-        <Button label="user" to="/users/1" method={{ :delete }} opts={{ data: [confirm: "Really?"] }} />
+        <Button label="user" to="/users/1" method={:delete} opts={data: [confirm: "Really?"]} />
         """
       end
 
@@ -141,7 +141,7 @@ defmodule Surface.Components.Link.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world"  opts={{ csrf_token: false }} />
+          <Button label="hello" to="/world"  opts={csrf_token: false} />
           """
         end
 
@@ -153,7 +153,7 @@ defmodule Surface.Components.Link.ButtonTest do
       html =
         render_surface do
           ~H"""
-          <Button label="hello" to="/world" method={{ :get }} />
+          <Button label="hello" to="/world" method={:get} />
           """
         end
 
@@ -168,7 +168,7 @@ defmodule Surface.Components.Link.ButtonTest do
         render_surface do
           ~H"""
           <Button to="/world" class="small">
-            {{ Phoenix.HTML.raw("<span>Hi</span>") }}
+            {Phoenix.HTML.raw("<span>Hi</span>")}
           </Button>
           """
         end
@@ -204,7 +204,7 @@ defmodule Surface.Components.Link.ButtonTest do
       assert_raise ArgumentError, msg, fn ->
         render_surface do
           ~H"""
-          <Button label="foo" to="javascript:alert(1)" method={{ :get }} />
+          <Button label="foo" to="javascript:alert(1)" method={:get} />
           """
         end
       end

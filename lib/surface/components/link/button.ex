@@ -72,7 +72,7 @@ defmodule Surface.Components.Link.Button do
     attrs = opts_to_attrs(opts)
 
     ~H"""
-    <button id={{ @id }} class={{ @class }} :attrs={{ attrs }}><slot>{{ @label }}</slot></button>
+    <button id={@id} class={@class} :attrs={attrs}><#slot>{@label}</#slot></button>
     """
   end
 

@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.OptionsForSelect do
 
   def render(assigns) do
     ~H"""
-    {{ options_for_select(@options, @selected) }}
+    {options_for_select(@options, @selected)}
     """
   end
 end

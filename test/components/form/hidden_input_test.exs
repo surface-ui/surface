@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
     html =
       render_surface do
         ~H"""
-        <HiddenInput form="user" field={{ :token }} />
+        <HiddenInput form="user" field={:token} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
     html =
       render_surface do
         ~H"""
-        <HiddenInput form="user" field="token" opts={{ autofocus: "autofocus" }} />
+        <HiddenInput form="user" field="token" opts={autofocus: "autofocus"} />
         """
       end
 

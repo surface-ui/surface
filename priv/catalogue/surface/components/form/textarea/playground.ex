@@ -14,7 +14,7 @@ defmodule Surface.Components.Form.TextArea.Playground do
 
   def render(assigns) do
     ~H"""
-    <TextArea :props={{ @props }}/>
+    <TextArea :props={@props}/>
     """
   end
 end

@@ -94,8 +94,8 @@ defmodule Surface.Components.Form.DateTimeSelect do
       |> parse_css_class_for(:second)
 
     ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ datetime_select(form, field, helper_opts ++ @opts) }}
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+      {datetime_select(form, field, helper_opts ++ @opts)}
     </InputContext>
     """
   end

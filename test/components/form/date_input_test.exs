@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.DateInputTest do
     html =
       render_surface do
         ~H"""
-        <DateInput form="user" field={{ :birthday }} />
+        <DateInput form="user" field={:birthday} />
         """
       end
 
@@ -68,7 +68,7 @@ defmodule Surface.Components.Form.DateInputTest do
     html =
       render_surface do
         ~H"""
-        <DateInput form="user" field="birthday" opts={{ autofocus: "autofocus" }} />
+        <DateInput form="user" field="birthday" opts={autofocus: "autofocus"} />
         """
       end
 

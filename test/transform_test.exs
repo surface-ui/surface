@@ -8,7 +8,7 @@ defmodule Surface.TransformTest do
 
     def render(assigns) do
       ~H"""
-      <span><slot /></span>
+      <span><#slot /></span>
       """
     end
   end
@@ -21,7 +21,7 @@ defmodule Surface.TransformTest do
     @impl true
     def render(assigns) do
       ~H"""
-      <div><slot /></div>
+      <div><#slot /></div>
       """
     end
 
@@ -40,7 +40,7 @@ defmodule Surface.TransformTest do
     @impl true
     def render(assigns) do
       ~H"""
-      <div><slot /></div>
+      <div><#slot /></div>
       """
     end
 
@@ -169,7 +169,7 @@ defmodule Surface.TransformTest do
 
     assert_raise(
       Surface.Compiler.ParseError,
-      "nofile:2: expected closing tag for \"DivToSpan\"",
+      "nofile:1: expected closing tag for <DivToSpan>",
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

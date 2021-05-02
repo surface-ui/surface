@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.FileInputTest do
     html =
       render_surface do
         ~H"""
-        <FileInput form="user" field={{ :picture }} />
+        <FileInput form="user" field={:picture} />
         """
       end
 
@@ -34,8 +34,8 @@ defmodule Surface.Components.Form.FileInputTest do
     html =
       render_surface do
         ~H"""
-        <Form for={{ :user }} csrf_token="test" multipart={{true}} >
-          <FileInput field={{ :picture }} />
+        <Form for={:user} csrf_token="test" multipart={true} >
+          <FileInput field={:picture} />
         </Form>
         """
       end
@@ -87,7 +87,7 @@ defmodule Surface.Components.Form.FileInputTest do
     html =
       render_surface do
         ~H"""
-        <FileInput form="user" field="picture" opts={{ autofocus: "autofocus" }} />
+        <FileInput form="user" field="picture" opts={autofocus: "autofocus"} />
         """
       end
 

@@ -19,7 +19,7 @@ defmodule Surface.TypeHandler.ContextPut do
       _ ->
         message = """
         expected a scope module (optional) along with a keyword list of values, \
-        e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}\
+        e.g. {MyModule, field: @value, other: "other"} or {field: @value}\
         """
 
         {:error, message}
