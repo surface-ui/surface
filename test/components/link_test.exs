@@ -171,8 +171,7 @@ defmodule Surface.Components.LinkTest do
       html = render_surface(do: ~H[<Link label="foo" to="/javascript:alert(<1>)" />])
       assert html =~ ~s[<a href="/javascript:alert(&lt;1&gt;)">foo</a>]
 
-      html =
-        render_surface(do: ~H[<Link label="foo" to={{:safe, "/javascript:alert(<1>)"}} />])
+      html = render_surface(do: ~H[<Link label="foo" to={{:safe, "/javascript:alert(<1>)"}} />])
 
       assert html =~ ~s[<a href="/javascript:alert(<1>)">foo</a>]
 
