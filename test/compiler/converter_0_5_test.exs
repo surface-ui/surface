@@ -69,45 +69,45 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert <template> into <#template>" do
+    expected =
+      convert("""
+      <div>
+        <template slot="footer">
+          Footer
+        </template>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             <#template slot="footer">
+               Footer
+             </#template>
+           </div>
+           """
+  end
+
+  test "convert <slot> into <#slot>" do
+    expected =
+      convert("""
+      <div>
+        <slot name="footer">
+          Footer
+        </slot>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             <#slot name="footer">
+               Footer
+             </#slot>
+           </div>
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
-
-  # test "convert <template> into <#template>" do
-  #   expected =
-  #     convert("""
-  #     <div>
-  #       <template slot="footer">
-  #         Footer
-  #       </template>
-  #     </div>
-  #     """)
-
-  #   assert expected == """
-  #          <div>
-  #            <#template slot="footer">
-  #              Footer
-  #            </#template>
-  #          </div>
-  #          """
-  # end
-
-  # test "convert <slot> into <#slot>" do
-  #   expected =
-  #     convert("""
-  #     <div>
-  #       <slot name="footer">
-  #         Footer
-  #       </slot>
-  #     </div>
-  #     """)
-
-  #   assert expected == """
-  #          <div>
-  #            <#slot name="footer">
-  #              Footer
-  #            </#slot>
-  #          </div>
-  #          """
-  # end
 
   # test "convert <If> into <#if>" do
   #   expected =
