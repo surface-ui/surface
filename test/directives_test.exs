@@ -68,6 +68,28 @@ defmodule Surface.DirectivesTest do
     end
   end
 
+  test "directive with \":\" prefix" do
+    html =
+      render_surface do
+        ~H"""
+        <div :attrs={class: "text-xs"} />
+        """
+      end
+
+    assert html =~ ~s(<div class="text-xs"></div>)
+  end
+
+  test "directive with \"s-\" prefix" do
+    html =
+      render_surface do
+        ~H"""
+        <div s-attrs={class: "text-xs"} />
+        """
+      end
+
+    assert html =~ ~s(<div class="text-xs"></div>)
+  end
+
   describe ":props for a component" do
     test "passing keyword list of props" do
       html =
