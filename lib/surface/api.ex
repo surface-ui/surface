@@ -421,9 +421,11 @@ defmodule Surface.API do
   end
 
   defp validate_opt(_func, _name, _type, _opts, :values, value, _caller)
-       when not is_list(value) do
+       when not is_list(value) and not is_struct(value, Range) do
     {:error,
-     "invalid value for option :values. Expected a list of values, got: #{inspect(value)}"}
+     "invalid value for option :values. Expected a list of values or a Range, got: #{
+       inspect(value)
+     }"}
   end
 
   defp validate_opt(:prop, _name, _type, _opts, :accumulate, value, _caller)
