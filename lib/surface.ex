@@ -105,9 +105,9 @@ defmodule Surface do
   """
   defmacro sigil_H({:<<>>, meta, [string]}, opts) do
     line = __CALLER__.line + compute_line_offset(meta)
-    # TODO: column or indentation here?
-    # i couldn't really figure out how to find the column for non heredoc usage
-    column = meta[:indentation] || 1
+    indentation = meta[:indentation] || 0
+    # TODO: is there a way to actually grab the column from the caller/compiler meta?
+    column = meta[:column] || 1
 
     caller_is_surface_component =
       Module.open?(__CALLER__.module) &&
@@ -116,6 +116,7 @@ defmodule Surface do
     string
     |> Surface.Compiler.compile(line, __CALLER__, __CALLER__.file,
       checks: [no_undefined_assigns: caller_is_surface_component],
+      indentation: indentation,
       column: column
     )
     |> Surface.Compiler.to_live_struct(
