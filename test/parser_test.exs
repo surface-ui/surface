@@ -473,8 +473,12 @@ defmodule Surface.Compiler.ParserTest do
       code = "<foo><#Bar></foo>"
 
       assert {:error,
-              %ParseError{column: _, file: _, message: "expected closing tag for <#Bar> defined on line 1, got EOF", line: 1}} =
-               parse(code)
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <#Bar> defined on line 1, got EOF",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for html node with surrounding text" do
@@ -511,8 +515,12 @@ defmodule Surface.Compiler.ParserTest do
       code = "<foo>bar"
 
       assert {:error,
-              %ParseError{column: _, file: _, message: "expected closing tag for <foo> defined on line 1, got EOF", line: 1}} =
-               parse(code)
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <foo> defined on line 1, got EOF",
+                line: 1
+              }} = parse(code)
     end
 
     test "incomplete macro content" do
