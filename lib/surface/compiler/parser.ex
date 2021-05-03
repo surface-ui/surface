@@ -34,20 +34,15 @@ defmodule Surface.Compiler.Parser do
   }
 
   def parse(code) do
-    try do
-      tokens = Tokenizer.tokenize(code)
-
-      case handle_token(tokens) do
-        ast when is_list(ast) ->
-          {:ok, ast}
-
-        error ->
-          error
-      end
-    rescue
-      e in [ParseError] ->
-        %ParseError{line: line, column: _column, message: message} = e
+    with tokens when is_list(tokens) <- Tokenizer.tokenize(code),
+         ast when is_list(ast) <- handle_token(tokens) do
+      {:ok, ast}
+    else
+      {:error, %ParseError{line: line, message: message}} ->
         {:error, message, line}
+
+      error ->
+        error
     end
   end
 
@@ -80,28 +75,32 @@ defmodule Surface.Compiler.Parser do
 
   defp handle_token([{:tag_open, name, attrs, meta} = token | rest], buffers, state)
        when name in @sub_blocks do
-    {buffers, state} = close_sub_block(token, buffers, state)
+    with {:ok, buffers, state} <- close_sub_block(token, buffers, state) do
+      # push the current sub-block token to state
+      state = push_tag(state, {:tag_open, name, attrs, meta})
 
-    # push the current sub-block token to state
-    state = push_tag(state, {:tag_open, name, attrs, meta})
+      # create a new buffer for the current sub-block
+      buffers = [[] | buffers]
 
-    # create a new buffer for the current sub-block
-    buffers = [[] | buffers]
-
-    handle_token(rest, buffers, state)
+      handle_token(rest, buffers, state)
+    end
   end
 
   defp handle_token([{:tag_open, name, attrs, meta} | rest], buffers, state)
        when name in @void_elements do
-    node = {name, transtate_attrs(attrs), [], to_meta(meta)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    handle_token(rest, buffers, state)
+    with {:ok, translated_attrs} <- transtate_attrs(attrs) do
+      node = {name, translated_attrs, [], to_meta(meta)}
+      buffers = push_node_to_current_buffer(node, buffers)
+      handle_token(rest, buffers, state)
+    end
   end
 
   defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
-    node = {name, transtate_attrs(attrs), [], to_meta(meta)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    handle_token(rest, buffers, state)
+    with {:ok, translated_attrs} <- transtate_attrs(attrs) do
+      node = {name, translated_attrs, [], to_meta(meta)}
+      buffers = push_node_to_current_buffer(node, buffers)
+      handle_token(rest, buffers, state)
+    end
   end
 
   defp handle_token([{:tag_open, _name, _attrs, _meta} = token | rest], buffers, state) do
@@ -117,54 +116,54 @@ defmodule Surface.Compiler.Parser do
          %{tags: [{:tag_open, name, _, _} | _]} = state
        )
        when name in @sub_blocks do
-    {buffers, state} = close_sub_block(token, buffers, state)
-    handle_token(tokens, buffers, state)
+    with {:ok, buffers, state} <- close_sub_block(token, buffers, state) do
+      handle_token(tokens, buffers, state)
+    end
   end
 
   defp handle_token([{:tag_close, name, _meta} | rest], buffers, state) do
-    case pop_matching_tag(state, name) do
-      {:ok, {{:tag_open, _name, attrs, meta}, state}} ->
-        # pop the current buffer and use it as children for the node
-        [buffer | buffers] = buffers
-        node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
-        buffers = push_node_to_current_buffer(node, buffers)
-        handle_token(rest, buffers, state)
-
-      error ->
-        error
+    with {:ok, {{:tag_open, _name, attrs, meta}, state}} <- pop_matching_tag(state, name),
+         {:ok, translated_attrs} <- transtate_attrs(attrs) do
+      # pop the current buffer and use it as children for the node
+      [buffer | buffers] = buffers
+      node = {name, translated_attrs, Enum.reverse(buffer), to_meta(meta)}
+      buffers = push_node_to_current_buffer(node, buffers)
+      handle_token(rest, buffers, state)
     end
   end
 
   # IF there's a previous sub-block defined. Close it.
   defp close_sub_block(_token, buffers, %{tags: [{:tag_open, name, attrs, meta} | tags]} = state)
        when name in @sub_blocks do
-    # pop the current buffer and use it as children for the sub-block node
-    [buffer | buffers] = buffers
-    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    state = %{state | tags: tags}
+    with {:ok, translated_attrs} <- transtate_attrs(attrs) do
+      # pop the current buffer and use it as children for the sub-block node
+      [buffer | buffers] = buffers
+      node = {name, translated_attrs, Enum.reverse(buffer), to_meta(meta)}
+      buffers = push_node_to_current_buffer(node, buffers)
+      state = %{state | tags: tags}
 
-    {buffers, state}
+      {:ok, buffers, state}
+    end
   end
 
   # If there's no previous sub-block defined. Create a :default sub-block,
   # move the buffer there and close it.
   defp close_sub_block(token, buffers, %{tags: [{:tag_open, name, attrs, meta} | tags]} = state) do
-    validate_sub_block!(token, name)
+    with :ok <- sub_block_valid?(token, name) do
+      # pop the current buffer and use it as children for the :default sub-block node
+      [buffer | buffers] = buffers
+      node = {:default, [], Enum.reverse(buffer), %{}}
 
-    # pop the current buffer and use it as children for the :default sub-block node
-    [buffer | buffers] = buffers
-    node = {:default, [], Enum.reverse(buffer), %{}}
+      # create a new buffer for the parent node to replace the one that was popped
+      buffers = [[] | buffers]
+      buffers = push_node_to_current_buffer(node, buffers)
 
-    # create a new buffer for the parent node to replace the one that was popped
-    buffers = [[] | buffers]
-    buffers = push_node_to_current_buffer(node, buffers)
+      # push back the parent token to state
+      meta = Map.put(meta, :has_sub_blocks?, true)
+      state = %{state | tags: [{:tag_open, name, attrs, meta} | tags]}
 
-    # push back the parent token to state
-    meta = Map.put(meta, :has_sub_blocks?, true)
-    state = %{state | tags: [{:tag_open, name, attrs, meta} | tags]}
-
-    {buffers, state}
+      {:ok, buffers, state}
+    end
   end
 
   defp close_sub_block({:tag_open, name, _attrs, meta}, _buffers, _state) do
@@ -172,16 +171,18 @@ defmodule Surface.Compiler.Parser do
     valid_parents_str = message_for_invalid_sub_block_parent(name)
 
     message = "no valid parent node defined for <#{name}>. #{valid_parents_str}"
-    raise %ParseError{line: line, column: column, message: message}
+    {:error, %ParseError{line: line, column: column, message: message}}
   end
 
-  defp validate_sub_block!({:tag_open, name, _attrs, meta}, parent_name) do
+  defp sub_block_valid?({:tag_open, name, _attrs, meta}, parent_name) do
     %{line: line, column: column} = meta
     valid_parents_str = message_for_invalid_sub_block_parent(name)
 
-    if parent_name not in @sub_blocks_valid_parents[name] do
+    if parent_name in @sub_blocks_valid_parents[name] do
+      :ok
+    else
       message = "cannot use <#{name}> inside <#{parent_name}>. #{valid_parents_str}"
-      raise %ParseError{line: line, column: column, message: message}
+      {:error, %ParseError{line: line, column: column, message: message}}
     end
   end
 
@@ -206,43 +207,47 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers]
   end
 
-  defp transtate_attrs(attrs) do
-    Enum.map(attrs, &translate_attr/1)
+  defp transtate_attrs([]), do: {:ok, []}
+
+  defp transtate_attrs([attr | attrs]) do
+    with {:ok, translated_attr} <- translate_attr(attr),
+         {:ok, translated_attrs} <- transtate_attrs(attrs) do
+      {:ok, [translated_attr | translated_attrs]}
+    end
   end
 
   defp translate_attr({name, {:string, value, %{delimiter: ?"}}, %{line: line}}) do
-    {name, value, %{line: line}}
+    {:ok, {name, value, %{line: line}}}
   end
 
   defp translate_attr({name, {:string, "true", %{delimiter: nil}}, %{line: line}}) do
-    {name, true, %{line: line}}
+    {:ok, {name, true, %{line: line}}}
   end
 
   defp translate_attr({name, {:string, "false", %{delimiter: nil}}, %{line: line}}) do
-    {name, false, %{line: line}}
+    {:ok, {name, false, %{line: line}}}
   end
 
   defp translate_attr({name, {:string, value, %{delimiter: nil}}, %{line: line}}) do
     case Integer.parse(value) do
       {int_value, ""} ->
-        {name, int_value, %{line: line}}
+        {:ok, {name, int_value, %{line: line}}}
 
       _ ->
-        message = "unexpected value for attribute \"#{name}\""
-        raise %ParseError{line: line, column: 1, message: message}
+        {:error, "unexpected value for attribute \"#{name}\"", line}
     end
   end
 
   defp translate_attr({:root, {:expr, value, expr_meta}, _attr_meta}) do
-    {:root, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: expr_meta.line}}
+    {:ok, {:root, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: expr_meta.line}}}
   end
 
   defp translate_attr({name, {:expr, value, expr_meta}, attr_meta}) do
-    {name, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: attr_meta.line}}
+    {:ok, {name, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: attr_meta.line}}}
   end
 
   defp translate_attr({name, nil, %{line: line}}) do
-    {name, true, %{line: line}}
+    {:ok, {name, true, %{line: line}}}
   end
 
   defp push_tag(state, {:tag_open, tag, _attrs, _meta}) when tag in @void_elements do
