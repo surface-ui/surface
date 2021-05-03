@@ -275,14 +275,13 @@ defmodule Surface.Compiler.Parser do
     {:ok, {tag, %{state | tags: tags}}}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, meta} | _]}, _closed_node_name) do
-    # TODO: change message to "expected closing tag for <bar> defined at line 4, got </foo>"
+  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, meta} | _]}, closed_node_name) do
     {:error,
      %ParseError{
        line: meta.line,
        column: meta.column,
        file: meta.file,
-       message: "expected closing tag for <#{tag_name}>"
+       message: "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{closed_node_name}>"
      }}
   end
 end

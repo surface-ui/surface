@@ -243,8 +243,11 @@ defmodule Surface.Compiler.ParserTest do
                {:ok,
                 [
                   {"foo", '',
-                   ["bar", {:interpolation, "baz", %{line: 1, file: "nofile", column: 10}}, "bat"],
-                   %{line: 1, file: "nofile", column: 2}}
+                   [
+                     "bar",
+                     {:interpolation, "baz", %{line: 1, file: "nofile", column: 10}},
+                     "bat"
+                   ], %{line: 1, file: "nofile", column: 2}}
                 ]}
     end
 
@@ -379,31 +382,57 @@ defmodule Surface.Compiler.ParserTest do
 
     test "invalid closing tag" do
       assert parse("<foo>bar</a></foo>") ==
-               {:error, "expected closing tag for <foo>", 1}
+               {:error, "expected closing tag for <foo> defined on line 1, got </a>", 1}
     end
 
-    test "missing closing tag" do
+    test "missing closing tag for html node" do
       code = "<foo><bar></foo>"
-      assert parse(code) == {:error, "expected closing tag for <bar>", 1}
 
+      assert parse(code) ==
+               {:error, "expected closing tag for <bar> defined on line 1, got </foo>", 1}
+    end
+
+    test "missing closing tag for component node" do
       code = "<foo><Bar></foo>"
-      assert parse(code) == {:error, "expected closing tag for <Bar>", 1}
 
+      assert parse(code) ==
+               {:error, "expected closing tag for <Bar> defined on line 1, got </foo>", 1}
+    end
+
+    test "missing closing tag for fully specified component node" do
       code = "<foo><Bar.Baz></foo>"
-      assert parse(code) == {:error, "expected closing tag for <Bar.Baz>", 1}
 
+      assert parse(code) ==
+               {:error, "expected closing tag for <Bar.Baz> defined on line 1, got </foo>", 1}
+    end
+
+    test "missing closing tag for component node with number" do
       code = "<foo><Bar1></foo>"
-      assert parse(code) == {:error, "expected closing tag for <Bar1>", 1}
 
+      assert parse(code) ==
+               {:error, "expected closing tag for <Bar1> defined on line 1, got </foo>", 1}
+    end
+
+    test "missing closing tag for component node with underscore and number" do
       code = "<foo><Bar_1></foo>"
-      assert parse(code) == {:error, "expected closing tag for <Bar_1>", 1}
 
+      assert parse(code) ==
+               {:error, "expected closing tag for <Bar_1> defined on line 1, got </foo>", 1}
+    end
+
+    test "missing closing tag for html node with dash" do
       code = "<foo><bar-baz></foo>"
-      assert parse(code) == {:error, "expected closing tag for <bar-baz>", 1}
 
+      assert parse(code) ==
+               {:error, "expected closing tag for <bar-baz> defined on line 1, got </foo>", 1}
+    end
+
+    test "missing closing tag for macro component node" do
       code = "<foo><#Bar></foo>"
       assert parse(code) == {:error, "expected closing tag for <#Bar>", 1}
+    end
 
+    test "missing closing tag for html node with surrounding text" do
       code = """
       <foo>
         text before
@@ -412,12 +441,13 @@ defmodule Surface.Compiler.ParserTest do
       </foo>
       """
 
-      assert parse(code) == {:error, "expected closing tag for <div>", 3}
+      assert parse(code) ==
+               {:error, "expected closing tag for <div> defined on line 3, got </foo>", 3}
     end
 
     test "tag mismatch" do
       assert parse("<foo>bar</baz>") ==
-               {:error, "expected closing tag for <foo>", 1}
+               {:error, "expected closing tag for <foo> defined on line 1, got </baz>", 1}
     end
 
     test "incomplete tag content" do
@@ -427,7 +457,7 @@ defmodule Surface.Compiler.ParserTest do
 
     test "incomplete macro content" do
       assert parse("<#foo>bar</#bar>") ==
-               {:error, "expected closing tag for <#foo>", 1}
+               {:error, "expected closing tag for <#foo> defined on line 1, got </#bar>", 1}
     end
 
     test "non-closing interpolation" do
