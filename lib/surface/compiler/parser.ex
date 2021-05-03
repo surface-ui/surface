@@ -281,7 +281,10 @@ defmodule Surface.Compiler.Parser do
        line: meta.line,
        column: meta.column,
        file: meta.file,
-       message: "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{closed_node_name}>"
+       message:
+         "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{
+           closed_node_name
+         }>"
      }}
   end
 end
