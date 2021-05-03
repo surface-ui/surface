@@ -1,5 +1,5 @@
 defmodule Surface.Compiler.ParseError do
-  defexception file: "nofile", line: 0, column: 1, message: "error parsing HTML/Surface"
+  defexception [:file, :line, :column, :message]
 
   @impl true
   def message(exception) do
