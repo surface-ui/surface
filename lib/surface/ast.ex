@@ -65,11 +65,12 @@ defmodule Surface.AST.Meta do
       * `:file` - the file from which the source was extracted
       * `:caller` - a Macro.Env struct representing the caller
   """
-  @derive {Inspect, only: [:line, :module, :node_alias, :file, :checks]}
-  defstruct [:line, :module, :node_alias, :file, :caller, :checks]
+  @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks]}
+  defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks]
 
   @type t :: %__MODULE__{
           line: non_neg_integer(),
+          column: non_neg_integer(),
           module: atom(),
           node_alias: binary() | nil,
           caller: Macro.Env.t(),

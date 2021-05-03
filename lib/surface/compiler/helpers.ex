@@ -102,14 +102,17 @@ defmodule Surface.Compiler.Helpers do
         caller: caller,
         checks: checks
       }) do
-    AST.Meta
-    |> Kernel.struct(tree_meta)
-    |> Map.put(:caller, caller)
-    |> Map.put(:checks, checks)
+    %AST.Meta{
+      line: tree_meta.line,
+      column: tree_meta.column,
+      file: tree_meta.file,
+      caller: caller,
+      checks: checks
+    }
   end
 
   def to_meta(tree_meta, %AST.Meta{} = parent_meta) do
-    Map.merge(parent_meta, tree_meta)
+    %{parent_meta | line: tree_meta.line, column: tree_meta.column}
   end
 
   def did_you_mean(target, list) do
