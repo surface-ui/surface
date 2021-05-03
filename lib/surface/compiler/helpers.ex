@@ -98,23 +98,18 @@ defmodule Surface.Compiler.Helpers do
     assigns
   end
 
-  def to_meta(%{line: line} = tree_meta, %CompileMeta{
-        file: file,
+  def to_meta(tree_meta, %CompileMeta{
         caller: caller,
         checks: checks
       }) do
     AST.Meta
     |> Kernel.struct(tree_meta)
-    |> Map.put(:line, line)
-    |> Map.put(:file, file)
     |> Map.put(:caller, caller)
     |> Map.put(:checks, checks)
   end
 
-  def to_meta(%{line: line} = tree_meta, %AST.Meta{} = parent_meta) do
-    parent_meta
-    |> Map.merge(tree_meta)
-    |> Map.put(:line, line)
+  def to_meta(tree_meta, %AST.Meta{} = parent_meta) do
+    Map.merge(parent_meta, tree_meta)
   end
 
   def did_you_mean(target, list) do
