@@ -98,7 +98,7 @@ defmodule Surface.Compiler do
     }
 
     string
-    |> Parser.parse!(file: file, line: line)
+    |> Parser.parse!(file: file, line: line, column: opts[:column] || 1)
     |> to_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
   end
