@@ -63,15 +63,13 @@ defmodule Surface.AST.Meta do
       * `:module` - the component module (e.g. `Surface.Components.LivePatch`)
       * `:node_alias` - the alias used inside the source code (e.g. `LivePatch`)
       * `:file` - the file from which the source was extracted
-      * `:line_offset` - the line offset from the caller's line to the start of this source
       * `:caller` - a Macro.Env struct representing the caller
   """
   @derive {Inspect, only: [:line, :module, :node_alias, :file, :checks]}
-  defstruct [:line, :module, :node_alias, :line_offset, :file, :caller, :checks]
+  defstruct [:line, :module, :node_alias, :file, :caller, :checks]
 
   @type t :: %__MODULE__{
           line: non_neg_integer(),
-          line_offset: non_neg_integer(),
           module: atom(),
           node_alias: binary() | nil,
           caller: Macro.Env.t(),

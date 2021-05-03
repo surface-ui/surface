@@ -99,26 +99,22 @@ defmodule Surface.Compiler.Helpers do
   end
 
   def to_meta(%{line: line} = tree_meta, %CompileMeta{
-        line_offset: offset,
         file: file,
         caller: caller,
         checks: checks
       }) do
     AST.Meta
     |> Kernel.struct(tree_meta)
-    # The rational here is that offset is the offset from the start of the file to the first line in the
-    # surface expression.
-    |> Map.put(:line, line + offset - 1)
-    |> Map.put(:line_offset, offset)
+    |> Map.put(:line, line)
     |> Map.put(:file, file)
     |> Map.put(:caller, caller)
     |> Map.put(:checks, checks)
   end
 
-  def to_meta(%{line: line} = tree_meta, %AST.Meta{line_offset: offset} = parent_meta) do
+  def to_meta(%{line: line} = tree_meta, %AST.Meta{} = parent_meta) do
     parent_meta
     |> Map.merge(tree_meta)
-    |> Map.put(:line, line + offset - 1)
+    |> Map.put(:line, line)
   end
 
   def did_you_mean(target, list) do
