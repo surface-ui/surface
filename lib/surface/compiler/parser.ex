@@ -33,6 +33,13 @@ defmodule Surface.Compiler.Parser do
     "#match" => ["#case"]
   }
 
+  def parse!(code, opts \\ []) do
+    case parse(code, opts) do
+      {:ok, nodes} -> nodes
+      {:error, error} -> raise error
+    end
+  end
+
   def parse(code, opts \\ []) do
     with tokens when is_list(tokens) <- Tokenizer.tokenize(code, opts),
          ast when is_list(ast) <- handle_token(tokens) do
@@ -49,7 +56,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
-    #TODO: EOF, or something better to indicate end of input?
+    # TODO: EOF, or something better to indicate end of input?
     {:error,
      %ParseError{
        line: meta.line,

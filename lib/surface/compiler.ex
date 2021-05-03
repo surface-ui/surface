@@ -6,7 +6,6 @@ defmodule Surface.Compiler do
   """
 
   alias Surface.Compiler.Parser
-  alias Surface.Compiler.ParseError
   alias Surface.IOHelper
   alias Surface.AST
   alias Surface.Compiler.Helpers
@@ -99,17 +98,7 @@ defmodule Surface.Compiler do
     }
 
     string
-    |> Parser.parse(file: file, line: line)
-    |> case do
-      {:ok, nodes} ->
-        nodes
-
-      {:error, error} ->
-        raise error
-
-      {:error, message, line} ->
-        raise %ParseError{line: line, file: file, message: message}
-    end
+    |> Parser.parse!(file: file, line: line)
     |> to_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
   end
