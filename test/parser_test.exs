@@ -3,6 +3,8 @@ defmodule Surface.Compiler.ParserTest do
 
   import Surface.Compiler.Parser
 
+  alias Surface.Compiler.ParseError
+
   test "empty node" do
     assert parse("") == {:ok, []}
   end
@@ -374,62 +376,105 @@ defmodule Surface.Compiler.ParserTest do
 
   describe "errors on" do
     test "expected tag name" do
-      assert parse("""
-             text
-             <>bar</>
-             """) == {:error, "expected tag name", 2}
+      code = """
+      text
+      <>bar</>
+      """
+
+      assert {:error, %ParseError{column: _, file: _, message: "expected tag name", line: 2}} =
+               parse(code)
     end
 
     test "invalid closing tag" do
-      assert parse("<foo>bar</a></foo>") ==
-               {:error, "expected closing tag for <foo> defined on line 1, got </a>", 1}
+      code = "<foo>bar</a></foo>"
+
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <foo> defined on line 1, got </a>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for html node" do
       code = "<foo><bar></foo>"
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <bar> defined on line 1, got </foo>", 1}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <bar> defined on line 1, got </foo>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for component node" do
       code = "<foo><Bar></foo>"
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <Bar> defined on line 1, got </foo>", 1}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <Bar> defined on line 1, got </foo>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for fully specified component node" do
       code = "<foo><Bar.Baz></foo>"
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <Bar.Baz> defined on line 1, got </foo>", 1}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <Bar.Baz> defined on line 1, got </foo>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for component node with number" do
       code = "<foo><Bar1></foo>"
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <Bar1> defined on line 1, got </foo>", 1}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <Bar1> defined on line 1, got </foo>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for component node with underscore and number" do
       code = "<foo><Bar_1></foo>"
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <Bar_1> defined on line 1, got </foo>", 1}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <Bar_1> defined on line 1, got </foo>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for html node with dash" do
       code = "<foo><bar-baz></foo>"
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <bar-baz> defined on line 1, got </foo>", 1}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <bar-baz> defined on line 1, got </foo>",
+                line: 1
+              }} = parse(code)
     end
 
     test "missing closing tag for macro component node" do
       code = "<foo><#Bar></foo>"
-      assert parse(code) == {:error, "expected closing tag for <#Bar>", 1}
+
+      assert {:error,
+              %ParseError{column: _, file: _, message: "expected closing tag for <#Bar> defined on line 1, got EOF", line: 1}} =
+               parse(code)
     end
 
     test "missing closing tag for html node with surrounding text" do
@@ -441,33 +486,69 @@ defmodule Surface.Compiler.ParserTest do
       </foo>
       """
 
-      assert parse(code) ==
-               {:error, "expected closing tag for <div> defined on line 3, got </foo>", 3}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <div> defined on line 3, got </foo>",
+                line: 3
+              }} = parse(code)
     end
 
     test "tag mismatch" do
-      assert parse("<foo>bar</baz>") ==
-               {:error, "expected closing tag for <foo> defined on line 1, got </baz>", 1}
+      code = "<foo>bar</baz>"
+
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <foo> defined on line 1, got </baz>",
+                line: 1
+              }} = parse(code)
     end
 
     test "incomplete tag content" do
-      assert parse("<foo>bar") ==
-               {:error, "expected closing tag for <foo>", 1}
+      code = "<foo>bar"
+
+      assert {:error,
+              %ParseError{column: _, file: _, message: "expected closing tag for <foo> defined on line 1, got EOF", line: 1}} =
+               parse(code)
     end
 
     test "incomplete macro content" do
-      assert parse("<#foo>bar</#bar>") ==
-               {:error, "expected closing tag for <#foo> defined on line 1, got </#bar>", 1}
+      code = "<#foo>bar</#bar>"
+
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing tag for <#foo> defined on line 1, got </#bar>",
+                line: 1
+              }} = parse(code)
     end
 
     test "non-closing interpolation" do
-      assert parse("<foo>{bar</foo>") ==
-               {:error, "expected closing `}` for expression", 1}
+      code = "<foo>{bar</foo>"
+
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing `}` for expression",
+                line: 1
+              }} = parse(code)
     end
 
     test "non-matched curlies inside interpolation" do
-      assert parse("<foo>{bar { }</foo>") ==
-               {:error, "expected closing `}` for expression", 1}
+      code = "<foo>{bar { }</foo>"
+
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message: "expected closing `}` for expression",
+                line: 1
+              }} = parse(code)
     end
   end
 
@@ -854,10 +935,14 @@ defmodule Surface.Compiler.ParserTest do
       </div>
       """
 
-      assert parse(code) ==
-               {:error,
-                "cannot use <#else> inside <div>. Possible parents are \"<#if>\" and \"<#for>\"",
-                2}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message:
+                  "cannot use <#else> inside <div>. Possible parents are \"<#if>\" and \"<#for>\"",
+                line: 2
+              }} = parse(code)
     end
 
     test "handle invalid parents for #elseif" do
@@ -867,10 +952,14 @@ defmodule Surface.Compiler.ParserTest do
       </div>
       """
 
-      assert parse(code) ==
-               {:error,
-                "cannot use <#elseif> inside <div>. The <#elseif> construct can only be used inside a \"<#if>\"",
-                2}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message:
+                  "cannot use <#elseif> inside <div>. The <#elseif> construct can only be used inside a \"<#if>\"",
+                line: 2
+              }} = parse(code)
     end
 
     test "handle invalid parents for #match" do
@@ -880,10 +969,14 @@ defmodule Surface.Compiler.ParserTest do
       </div>
       """
 
-      assert parse(code) ==
-               {:error,
-                "cannot use <#match> inside <div>. The <#match> construct can only be used inside a \"<#case>\"",
-                2}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message:
+                  "cannot use <#match> inside <div>. The <#match> construct can only be used inside a \"<#case>\"",
+                line: 2
+              }} = parse(code)
     end
 
     test "raise error on sub-blocks without parent node" do
@@ -893,10 +986,14 @@ defmodule Surface.Compiler.ParserTest do
         2
       """
 
-      assert parse(code) ==
-               {:error,
-                "no valid parent node defined for <#else>. Possible parents are \"<#if>\" and \"<#for>\"",
-                2}
+      assert {:error,
+              %ParseError{
+                column: _,
+                file: _,
+                message:
+                  "no valid parent node defined for <#else>. Possible parents are \"<#if>\" and \"<#for>\"",
+                line: 2
+              }} = parse(code)
     end
   end
 end

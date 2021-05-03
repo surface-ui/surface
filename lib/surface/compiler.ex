@@ -6,6 +6,7 @@ defmodule Surface.Compiler do
   """
 
   alias Surface.Compiler.Parser
+  alias Surface.Compiler.ParseError
   alias Surface.IOHelper
   alias Surface.AST
   alias Surface.Compiler.Helpers
@@ -68,15 +69,6 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
-  defmodule ParseError do
-    defexception file: "", line: 0, message: "error parsing HTML/Surface"
-
-    @impl true
-    def message(exception) do
-      "#{Path.relative_to_cwd(exception.file)}:#{exception.line}: #{exception.message}"
-    end
-  end
-
   defmodule CompileMeta do
     defstruct [:line, :file, :caller, :checks]
 
@@ -111,6 +103,9 @@ defmodule Surface.Compiler do
     |> case do
       {:ok, nodes} ->
         nodes
+
+      {:error, error} ->
+        raise error
 
       {:error, message, line} ->
         raise %ParseError{line: line, file: file, message: message}

@@ -2,7 +2,7 @@ defmodule Surface.Compiler.TokenizerTest do
   use ExUnit.Case, async: true
 
   import Surface.Compiler.Tokenizer
-  alias Surface.Compiler.Tokenizer.ParseError
+  alias Surface.Compiler.ParseError
 
   describe "text" do
     test "represented as {:text, value}" do

@@ -2,7 +2,7 @@ defmodule Surface.Compiler.Parser do
   @moduledoc false
 
   alias Surface.Compiler.Tokenizer
-  alias Surface.Compiler.Tokenizer.ParseError
+  alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
 
   @void_elements [
@@ -37,9 +37,6 @@ defmodule Surface.Compiler.Parser do
     with tokens when is_list(tokens) <- Tokenizer.tokenize(code, opts),
          ast when is_list(ast) <- handle_token(tokens) do
       {:ok, ast}
-    else
-      {:error, %ParseError{line: line, message: message}} ->
-        {:error, message, line}
     end
   end
 
@@ -52,12 +49,13 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
+    #TODO: EOF, or something better to indicate end of input?
     {:error,
      %ParseError{
        line: meta.line,
        column: meta.column,
        file: meta.file,
-       message: "expected closing tag for <#{tag_name}>"
+       message: "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got EOF"
      }}
   end
 

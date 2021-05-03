@@ -43,7 +43,7 @@ defmodule Surface.Constructs.IfTest do
         """
       end
 
-    message = ~S(code:2: expected closing tag for <span> defined on line 2, got </If>)
+    message = ~S(code:2:4: expected closing tag for <span> defined on line 2, got </If>)
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
       compile_surface(code)

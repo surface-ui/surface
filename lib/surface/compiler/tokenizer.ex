@@ -5,19 +5,7 @@ defmodule Surface.Compiler.Tokenizer do
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
 
-  defmodule ParseError do
-    defexception [:file, :line, :column, :message]
-
-    @impl true
-    def message(exception) do
-      location =
-        exception.file
-        |> Path.relative_to_cwd()
-        |> Exception.format_file_line_column(exception.line, exception.column)
-
-      "#{location} #{exception.message}"
-    end
-  end
+  alias Surface.Compiler.ParseError
 
   def tokenize!(text, opts \\ []) do
     case tokenize(text, opts) do
