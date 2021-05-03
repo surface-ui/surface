@@ -47,6 +47,8 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
+  @directive_prefixes [":", "s-"]
+
   @void_elements [
     "area",
     "base",
@@ -679,11 +681,28 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp collect_directives(handlers, attributes, meta)
-  defp collect_directives(_, [], _), do: {:ok, [], []}
+  defp collect_directives(handlers, attributes, meta) do
+    attributes =
+      for attr <- attributes,
+          attr_name = elem(attr, 0),
+          normalized_name = normalize_directive_prefix(attr_name) do
+        put_elem(attr, 0, normalized_name)
+      end
 
-  defp collect_directives(handlers, [attr | attributes], meta) do
-    {:ok, dirs, attrs} = collect_directives(handlers, attributes, meta)
+    do_collect_directives(handlers, attributes, meta)
+  end
+
+  for prefix <- @directive_prefixes do
+    defp normalize_directive_prefix(unquote(prefix) <> name), do: ":#{name}"
+  end
+
+  defp normalize_directive_prefix(name), do: name
+
+  defp do_collect_directives(handlers, attributes, meta)
+  defp do_collect_directives(_, [], _), do: {:ok, [], []}
+
+  defp do_collect_directives(handlers, [attr | attributes], meta) do
+    {:ok, dirs, attrs} = do_collect_directives(handlers, attributes, meta)
 
     attr = extract_modifiers(attr)
 
