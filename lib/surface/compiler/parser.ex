@@ -33,8 +33,8 @@ defmodule Surface.Compiler.Parser do
     "#match" => ["#case"]
   }
 
-  def parse(code) do
-    with tokens when is_list(tokens) <- Tokenizer.tokenize(code),
+  def parse(code, opts \\ []) do
+    with tokens when is_list(tokens) <- Tokenizer.tokenize(code, opts),
          ast when is_list(ast) <- handle_token(tokens) do
       {:ok, ast}
     else

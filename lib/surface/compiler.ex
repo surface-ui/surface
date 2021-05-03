@@ -107,7 +107,7 @@ defmodule Surface.Compiler do
     }
 
     string
-    |> Parser.parse()
+    |> Parser.parse(file: file)
     |> case do
       {:ok, nodes} ->
         nodes
