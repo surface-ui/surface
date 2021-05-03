@@ -124,6 +124,26 @@ defmodule Surface.Compiler.TokenizerTest do
              ] = tokens
     end
 
+    test "compute line and column with multiple tags on the same line" do
+      tokens =
+        tokenize("""
+        <div>
+          <span/> <span/>
+
+        <p>\
+        """)
+
+      assert [
+               {:tag_open, "div", [], %{line: 1, column: 2}},
+               {:text, _},
+               {:tag_open, "span", [], %{line: 2, column: 4}},
+               {:text, _},
+               {:tag_open, "span", [], %{line: 2, column: 12}},
+               {:text, _},
+               {:tag_open, "p", [], %{line: 4, column: 2}}
+             ] = tokens
+    end
+
     test "raise on missing tag name" do
       assert_raise ParseError, "nofile:2:4: expected tag name", fn ->
         tokenize("""

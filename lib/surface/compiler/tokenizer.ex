@@ -208,7 +208,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_maybe_tag_open_end("/>" <> rest, line, column, acc, state) do
     acc = reverse_attrs(acc)
-    handle_text(rest, line, column + 1, [], put_self_close(acc), state)
+    handle_text(rest, line, column + 2, [], put_self_close(acc), state)
   end
 
   defp handle_maybe_tag_open_end(
