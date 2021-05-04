@@ -106,7 +106,6 @@ defmodule Surface do
   defmacro sigil_H({:<<>>, meta, [string]}, opts) do
     line = __CALLER__.line + compute_line_offset(meta)
     indentation = meta[:indentation] || 0
-    # TODO: is there a way to actually grab the column from the caller/compiler meta?
     column = meta[:column] || 1
 
     caller_is_surface_component =
