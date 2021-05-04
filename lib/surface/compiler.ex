@@ -219,11 +219,18 @@ defmodule Surface.Compiler do
     end
   end
 
+  # Slots
   defp node_type({"#template", _, _, _}), do: :template
   defp node_type({"#slot", _, _, _}), do: :slot
   defp node_type({"template", _, _, _}), do: :template
   defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
+
+  # Conditionnal blocks
+  defp node_type({"#if", _, _, _}), do: :if_elseif_else
+  defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
+  defp node_type({"#else", _, _, _}), do: :if_elseif_else
+
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
@@ -258,6 +265,54 @@ defmodule Surface.Compiler do
      %AST.Interpolation{
        original: text,
        value: expr,
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :if_elseif_else,
+         {"#else", _attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    {:ok,
+     %AST.Container{
+       children: to_ast(children, compile_meta),
+       meta: meta,
+       directives: []
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :if_elseif_else,
+         {_name, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
+    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+
+    [if_children, else_children] =
+      case children do
+        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+          [default, [else_block]]
+
+        [{:default, [], default, _}, {"#elseif", a, c, m} | rest] ->
+          [default, [{"#elseif", a, [{:default, [], c, %{}} | rest], m}]]
+
+        [{:default, [], default, _}] ->
+          [default, []]
+
+        children ->
+          [children, []]
+      end
+
+    {:ok,
+     %AST.IfElse{
+       condition: condition,
+       if: to_ast(if_children, compile_meta),
+       else: to_ast(else_children, compile_meta),
        meta: meta
      }}
   end

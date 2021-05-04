@@ -23,11 +23,11 @@ defmodule Surface.Compiler.Converter_0_5 do
     "#slot"
   end
 
-  ## Planned changes. Uncomment as the related implementation gets merged
+  def convert(:tag_name, "If", _state, _opts) do
+    "#if"
+  end
 
-  # def convert(:tag_name, "If", _state, _opts) do
-  #   "#if"
-  # end
+  ## Planned changes. Uncomment as the related implementation gets merged
 
   # def convert(:tag_name, "For", _state, _opts) do
   #   "#for"

@@ -8,6 +8,7 @@ defmodule Surface.AST do
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
           | Surface.AST.If.t()
+          | Surface.AST.IfElse.t()
           | Surface.AST.For.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
@@ -149,6 +150,28 @@ defmodule Surface.AST.If do
           condition: any(),
           debug: list(atom()),
           children: list(Surface.AST.t()),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.IfElse do
+  @moduledoc """
+  An AST node representing an if/else expression
+
+  ## Properties
+      * `:condition` - a quoted expression
+      * `:if` - the children to insert into the dom if the condition evaluates truthy
+      * `:else` - the children to insert into the dom if the condition evaluates falsely
+      * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:condition, :if, :else, :meta, debug: []]
+
+  @type t :: %__MODULE__{
+          condition: any(),
+          debug: list(atom()),
+          if: list(Surface.AST.t()),
+          else: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
 end
