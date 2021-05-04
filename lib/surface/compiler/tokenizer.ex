@@ -248,12 +248,22 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_attribute
 
   defp handle_attribute(text, line, column, acc, state) do
-    {name, new_column, rest} = handle_attr_name(text, line, column, [], state)
+    case handle_attr_name(text, column, []) do
+      {:ok, name, new_column, rest} ->
+        meta = %{
+          line: line,
+          column: column,
+          line_end: line,
+          column_end: new_column,
+          file: state.file
+        }
 
-    meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
+        acc = put_attr(acc, name, nil, meta)
+        handle_maybe_attr_value(rest, line, new_column, acc, state)
 
-    acc = put_attr(acc, name, nil, meta)
-    handle_maybe_attr_value(rest, line, new_column, acc, state)
+      {:error, message} ->
+        raise parse_error(message, line, column, state)
+    end
   end
 
   ## handle_root_attribute
@@ -280,18 +290,18 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_attr_name
 
-  defp handle_attr_name(<<c::utf8, _rest::binary>>, line, column, [], state)
+  defp handle_attr_name(<<c::utf8, _rest::binary>>, _column, [])
        when c in @name_stop_chars do
-    raise parse_error("expected attribute name", line, column, state)
+    {:error, "expected attribute name"}
   end
 
-  defp handle_attr_name(<<c::utf8, _rest::binary>> = text, _line, column, buffer, _state)
+  defp handle_attr_name(<<c::utf8, _rest::binary>> = text, column, buffer)
        when c in @name_stop_chars do
-    {buffer_to_string(buffer), column, text}
+    {:ok, buffer_to_string(buffer), column, text}
   end
 
-  defp handle_attr_name(<<c::utf8, rest::binary>>, line, column, buffer, state) do
-    handle_attr_name(rest, line, column + 1, [<<c::utf8>> | buffer], state)
+  defp handle_attr_name(<<c::utf8, rest::binary>>, column, buffer) do
+    handle_attr_name(rest, column + 1, [<<c::utf8>> | buffer])
   end
 
   ## handle_maybe_attr_value
