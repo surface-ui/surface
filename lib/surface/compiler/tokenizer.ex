@@ -75,7 +75,7 @@ defmodule Surface.Compiler.Tokenizer do
         handle_text(rest, new_line, new_column, [], acc, state)
 
       {:error, message, line, column} ->
-        raise %ParseError{message: message, line: line, column: column, file: state.file}
+        raise parse_error(message, line, column, state)
     end
   end
 
@@ -98,12 +98,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_comment(<<>>, line, column, _buffer, state) do
-    raise %ParseError{
-      file: state.file,
-      line: line,
-      column: column,
-      message: "expected closing `-->` for comment"
-    }
+    raise parse_error("expected closing `-->` for comment", line, column, state)
   end
 
   ## handle_macro_body
@@ -152,7 +147,7 @@ defmodule Surface.Compiler.Tokenizer do
         handle_maybe_tag_open_end(rest, line, new_column, acc, state)
 
       {:error, message} ->
-        raise %ParseError{message: message, line: line, column: column, file: state.file}
+        raise parse_error(message, line, column, state)
     end
   end
 
@@ -173,7 +168,7 @@ defmodule Surface.Compiler.Tokenizer do
         handle_tag_close_end(rest, line, new_column, acc, state)
 
       {:error, message} ->
-        raise %ParseError{message: message, line: line, column: column, file: state.file}
+        raise parse_error(message, line, column, state)
     end
   end
 
@@ -182,12 +177,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_tag_close_end(_text, line, column, _acc, state) do
-    raise %ParseError{
-      file: state.file,
-      message: "expected closing `>`",
-      line: line,
-      column: column
-    }
+    raise parse_error("expected closing `>`", line, column, state)
   end
 
   ## handle_tag_name
@@ -248,12 +238,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_maybe_tag_open_end(<<>>, line, column, _acc, state) do
-    raise %ParseError{
-      file: state.file,
-      message: "expected closing `>` or `/>`",
-      line: line,
-      column: column
-    }
+    raise parse_error("expected closing `>` or `/>`", line, column, state)
   end
 
   defp handle_maybe_tag_open_end(text, line, column, acc, state) do
@@ -289,7 +274,7 @@ defmodule Surface.Compiler.Tokenizer do
         handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
 
       {:error, message, line, column} ->
-        raise %ParseError{message: message, line: line, column: column, file: state.file}
+        raise parse_error(message, line, column, state)
     end
   end
 
@@ -297,12 +282,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_attr_name(<<c::utf8, _rest::binary>>, line, column, [], state)
        when c in @name_stop_chars do
-    raise %ParseError{
-      message: "expected attribute name",
-      line: line,
-      column: column,
-      file: state.file
-    }
+    raise parse_error("expected attribute name", line, column, state)
   end
 
   defp handle_attr_name(<<c::utf8, _rest::binary>> = text, _line, column, buffer, _state)
@@ -371,12 +351,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_attr_value_begin(_text, line, column, _acc, state) do
-    raise %ParseError{
-      file: state.file,
-      message: "expected attribute value or expression after `=`",
-      line: line,
-      column: column
-    }
+    raise parse_error("expected attribute value or expression after `=`", line, column, state)
   end
 
   ## handle_attr_value_double_quote
@@ -403,12 +378,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_attr_value_double_quote(<<>>, line, column, _buffer, _acc, state) do
-    raise %ParseError{
-      file: state.file,
-      message: "expected closing `\"` for attribute value",
-      line: line,
-      column: column
-    }
+    raise parse_error("expected closing `\"` for attribute value", line, column, state)
   end
 
   ## handle_attr_value_single_quote
@@ -435,12 +405,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_attr_value_single_quote(<<>>, line, column, _buffer, _acc, state) do
-    raise %ParseError{
-      file: state.file,
-      message: "expected closing `'` for attribute value",
-      line: line,
-      column: column
-    }
+    raise parse_error("expected closing `'` for attribute value", line, column, state)
   end
 
   ## handle_attr_value_unquoted
@@ -464,12 +429,7 @@ defmodule Surface.Compiler.Tokenizer do
     Unquoted attribute values cannot contain `\"`, `'`, `=` nor `<`
     """
 
-    raise %ParseError{
-      file: state.file,
-      message: message,
-      line: line,
-      column: column
-    }
+    raise parse_error(message, line, column, state)
   end
 
   defp handle_attr_value_unquoted(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
@@ -493,7 +453,7 @@ defmodule Surface.Compiler.Tokenizer do
         handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
 
       {:error, message, line, column} ->
-        raise %ParseError{message: message, line: line, column: column, file: state.file}
+        raise parse_error(message, line, column, state)
     end
   end
 
@@ -580,5 +540,9 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp pop_brace(%{braces: [pos | braces]} = state) do
     {pos, %{state | braces: braces}}
+  end
+
+  defp parse_error(message, line, column, state) do
+    %ParseError{message: message, file: state.file, line: line, column: column}
   end
 end
