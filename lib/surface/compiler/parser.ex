@@ -44,6 +44,13 @@ defmodule Surface.Compiler.Parser do
     with tokens when is_list(tokens) <- Tokenizer.tokenize(code, opts),
          ast when is_list(ast) <- handle_token(tokens) do
       {:ok, ast}
+    else
+      {:error, message, meta} ->
+        {:error,
+         %ParseError{line: meta.line, column: meta.column, file: meta.file, message: message}}
+
+      {:error, %ParseError{}} = error ->
+        error
     end
   end
 
@@ -56,14 +63,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
-    # TODO: EOF, or something better to indicate end of input?
-    {:error,
-     %ParseError{
-       line: meta.line,
-       column: meta.column,
-       file: meta.file,
-       message: "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got EOF"
-     }}
+    {:error, "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got EOF", meta}
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
@@ -177,8 +177,7 @@ defmodule Surface.Compiler.Parser do
   defp close_sub_block({:tag_open, name, _attrs, meta}, _buffers, _state) do
     valid_parents_str = message_for_invalid_sub_block_parent(name)
 
-    message = "no valid parent node defined for <#{name}>. #{valid_parents_str}"
-    {:error, %ParseError{file: meta.file, line: meta.line, column: meta.column, message: message}}
+    {:error, "no valid parent node defined for <#{name}>. #{valid_parents_str}", meta}
   end
 
   defp sub_block_valid?({:tag_open, name, _attrs, meta}, parent_name) do
@@ -187,13 +186,7 @@ defmodule Surface.Compiler.Parser do
     if parent_name in @sub_blocks_valid_parents[name] do
       :ok
     else
-      {:error,
-       %ParseError{
-         file: meta.file,
-         line: meta.line,
-         column: meta.column,
-         message: "cannot use <#{name}> inside <#{parent_name}>. #{valid_parents_str}"
-       }}
+      {:error, "cannot use <#{name}> inside <#{parent_name}>. #{valid_parents_str}", meta}
     end
   end
 
@@ -245,13 +238,7 @@ defmodule Surface.Compiler.Parser do
         {:ok, {name, int_value, to_meta(meta)}}
 
       _ ->
-        {:error,
-         %ParseError{
-           line: meta.line,
-           column: meta.column,
-           file: meta.file,
-           message: "unexpected value for attribute \"#{name}\""
-         }}
+        {:error, "unexpected value for attribute \"#{name}\"", meta}
     end
   end
 
@@ -281,15 +268,10 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, meta} | _]}, closed_node_name) do
-    {:error,
-     %ParseError{
-       line: meta.line,
-       column: meta.column,
-       file: meta.file,
-       message:
-         "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{
-           closed_node_name
-         }>"
-     }}
+    message = """
+    expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{closed_node_name}>\
+    """
+
+    {:error, message, meta}
   end
 end
