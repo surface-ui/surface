@@ -8,21 +8,6 @@ defmodule Surface.Compiler.Tokenizer do
   alias Surface.Compiler.ParseError
 
   def tokenize!(text, opts \\ []) do
-    case tokenize(text, opts) do
-      nodes when is_list(nodes) ->
-        nodes
-
-      {:error, message, meta} ->
-        raise %ParseError{
-          file: meta.file,
-          line: meta.line,
-          column: meta.column,
-          message: message
-        }
-    end
-  end
-
-  def tokenize(text, opts \\ []) do
     file = Keyword.get(opts, :file, "nofile")
     line = Keyword.get(opts, :line, 1)
     column = Keyword.get(opts, :column, 1)
@@ -30,13 +15,7 @@ defmodule Surface.Compiler.Tokenizer do
 
     state = %{file: file, column_offset: indentation + 1, braces: []}
 
-    case handle_text(text, line, column, [], [], state) do
-      nodes when is_list(nodes) ->
-        nodes
-
-      {:error, message, line, column} ->
-        {:error, message, %{file: file, line: line, column: column}}
-    end
+    handle_text(text, line, column, [], [], state)
   end
 
   ## handle_text
@@ -52,11 +31,11 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_text("<!--" <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
 
-    with {:ok, new_rest, new_line, new_column, new_buffer} <-
-           handle_comment(rest, line, column + 4, ["<!--"], state) do
-      comment = buffer_to_string(new_buffer)
-      handle_text(new_rest, new_line, new_column, [], [{:comment, comment} | acc], state)
-    end
+    {new_rest, new_line, new_column, new_buffer} =
+      handle_comment(rest, line, column + 4, ["<!--"], state)
+
+    comment = buffer_to_string(new_buffer)
+    handle_text(new_rest, new_line, new_column, [], [{:comment, comment} | acc], state)
   end
 
   defp handle_text("{" <> rest, line, column, buffer, acc, state) do
@@ -82,19 +61,19 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_interpolation_in_body
 
   defp handle_interpolation_in_body(text, line, column, acc, state) do
-    with {:ok, value, new_line, new_column, rest, state} <-
-           handle_interpolation(text, line, column, [], state) do
-      meta = %{
-        line: line,
-        column: column,
-        line_end: new_line,
-        column_end: new_column - 1,
-        file: state.file
-      }
+    {value, new_line, new_column, rest, state} =
+      handle_interpolation(text, line, column, [], state)
 
-      acc = [{:interpolation, value, meta} | acc]
-      handle_text(rest, new_line, new_column, [], acc, state)
-    end
+    meta = %{
+      line: line,
+      column: column,
+      line_end: new_line,
+      column_end: new_column - 1,
+      file: state.file
+    }
+
+    acc = [{:interpolation, value, meta} | acc]
+    handle_text(rest, new_line, new_column, [], acc, state)
   end
 
   ## handle_comment
@@ -108,15 +87,20 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_comment("-->" <> rest, line, column, buffer, _state) do
-    {:ok, rest, line, column + 3, ["-->" | buffer]}
+    {rest, line, column + 3, ["-->" | buffer]}
   end
 
   defp handle_comment(<<c::utf8, rest::binary>>, line, column, buffer, state) do
     handle_comment(rest, line, column + 1, [<<c::utf8>> | buffer], state)
   end
 
-  defp handle_comment(<<>>, line, column, _buffer, _state) do
-    {:error, "expected closing `-->` for comment", line, column}
+  defp handle_comment(<<>>, line, column, _buffer, state) do
+    raise %ParseError{
+      file: state.file,
+      line: line,
+      column: column,
+      message: "expected closing `-->` for comment"
+    }
   end
 
   ## handle_macro_body
@@ -151,67 +135,69 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_tag_open
 
   defp handle_tag_open(text, line, column, acc, state) do
-    case handle_tag_name(text, column, []) do
-      {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+    {name, new_column, rest} = handle_tag_name(text, line, column, [], state)
 
-        acc = [{:tag_open, name, [], meta} | acc]
-        handle_maybe_tag_open_end(rest, line, new_column, acc, state)
+    meta = %{
+      line: line,
+      column: column,
+      line_end: line,
+      column_end: new_column,
+      file: state.file
+    }
 
-      {:error, message} ->
-        {:error, message, line, column}
-    end
+    acc = [{:tag_open, name, [], meta} | acc]
+    handle_maybe_tag_open_end(rest, line, new_column, acc, state)
   end
 
   ## handle_tag_close
 
   defp handle_tag_close(text, line, column, acc, state) do
-    case handle_tag_name(text, column, []) do
-      {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+    {name, new_column, rest} = handle_tag_name(text, line, column, [], state)
 
-        acc = [{:tag_close, name, meta} | acc]
-        handle_tag_close_end(rest, line, new_column, acc, state)
+    meta = %{
+      line: line,
+      column: column,
+      line_end: line,
+      column_end: new_column,
+      file: state.file
+    }
 
-      {:error, message} ->
-        {:error, message, line, column}
-    end
+    acc = [{:tag_close, name, meta} | acc]
+    handle_tag_close_end(rest, line, new_column, acc, state)
   end
 
   defp handle_tag_close_end(">" <> rest, line, column, acc, state) do
     handle_text(rest, line, column + 1, [], acc, state)
   end
 
-  defp handle_tag_close_end(_text, line, column, _acc, _state) do
-    {:error, "expected closing `>`", line, column}
+  defp handle_tag_close_end(_text, line, column, _acc, state) do
+    raise %ParseError{
+      file: state.file,
+      message: "expected closing `>`",
+      line: line,
+      column: column
+    }
   end
 
   ## handle_tag_name
 
-  defp handle_tag_name(<<c::utf8, _rest::binary>>, _column, _buffer = [])
+  defp handle_tag_name(<<c::utf8, _rest::binary>>, line, column, _buffer = [], state)
        when c in @name_stop_chars do
-    {:error, "expected tag name"}
+    raise %ParseError{
+      message: "expected tag name",
+      file: state.file,
+      line: line,
+      column: column
+    }
   end
 
-  defp handle_tag_name(<<c::utf8, _rest::binary>> = text, column, buffer)
+  defp handle_tag_name(<<c::utf8, _rest::binary>> = text, _line, column, buffer, _state)
        when c in @name_stop_chars do
-    {:ok, buffer_to_string(buffer), column, text}
+    {buffer_to_string(buffer), column, text}
   end
 
-  defp handle_tag_name(<<c::utf8, rest::binary>>, column, buffer) do
-    handle_tag_name(rest, column + 1, [<<c::utf8>> | buffer])
+  defp handle_tag_name(<<c::utf8, rest::binary>>, line, column, buffer, state) do
+    handle_tag_name(rest, line, column + 1, [<<c::utf8>> | buffer], state)
   end
 
   ## handle_maybe_tag_open_end
@@ -255,8 +241,13 @@ defmodule Surface.Compiler.Tokenizer do
     handle_root_attribute(rest, line, column + 1, acc, state)
   end
 
-  defp handle_maybe_tag_open_end(<<>>, line, column, _acc, _state) do
-    {:error, "expected closing `>` or `/>`", line, column}
+  defp handle_maybe_tag_open_end(<<>>, line, column, _acc, state) do
+    raise %ParseError{
+      file: state.file,
+      message: "expected closing `>` or `/>`",
+      line: line,
+      column: column
+    }
   end
 
   defp handle_maybe_tag_open_end(text, line, column, acc, state) do
@@ -266,50 +257,58 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_attribute
 
   defp handle_attribute(text, line, column, acc, state) do
-    case handle_attr_name(text, column, []) do
-      {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+    {name, new_column, rest} = handle_attr_name(text, line, column, [], state)
 
-        acc = put_attr(acc, name, nil, meta)
-        handle_maybe_attr_value(rest, line, new_column, acc, state)
+    meta = %{
+      line: line,
+      column: column,
+      line_end: line,
+      column_end: new_column,
+      file: state.file
+    }
 
-      {:error, message} ->
-        {:error, message, line, column}
-    end
+    acc = put_attr(acc, name, nil, meta)
+    handle_maybe_attr_value(rest, line, new_column, acc, state)
   end
 
   ## handle_root_attribute
 
   defp handle_root_attribute(text, line, column, acc, state) do
-    with {:ok, value, new_line, new_column, rest, state} <-
-           handle_interpolation(text, line, column, [], state) do
-      acc =
-        put_attr(acc, :root, {:expr, value, %{line: line, column: column, file: state.file}}, %{})
+    {value, new_line, new_column, rest, state} =
+      handle_interpolation(text, line, column, [], state)
 
-      handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
-    end
+    meta = %{
+      line: line,
+      column: column,
+      line_end: new_line,
+      column_end: new_column - 1,
+      file: state.file
+    }
+
+    acc = put_attr(acc, :root, {:expr, value, meta}, %{})
+
+    handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
   end
 
   ## handle_attr_name
 
-  defp handle_attr_name(<<c::utf8, _rest::binary>>, _column, [])
+  defp handle_attr_name(<<c::utf8, _rest::binary>>, line, column, [], state)
        when c in @name_stop_chars do
-    {:error, "expected attribute name"}
+    raise %ParseError{
+      message: "expected attribute name",
+      line: line,
+      column: column,
+      file: state.file
+    }
   end
 
-  defp handle_attr_name(<<c::utf8, _rest::binary>> = text, column, buffer)
+  defp handle_attr_name(<<c::utf8, _rest::binary>> = text, _line, column, buffer, _state)
        when c in @name_stop_chars do
-    {:ok, buffer_to_string(buffer), column, text}
+    {buffer_to_string(buffer), column, text}
   end
 
-  defp handle_attr_name(<<c::utf8, rest::binary>>, column, buffer) do
-    handle_attr_name(rest, column + 1, [<<c::utf8>> | buffer])
+  defp handle_attr_name(<<c::utf8, rest::binary>>, line, column, buffer, state) do
+    handle_attr_name(rest, line, column + 1, [<<c::utf8>> | buffer], state)
   end
 
   ## handle_maybe_attr_value
@@ -368,8 +367,13 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_unquoted(text, line, column, [], acc, state)
   end
 
-  defp handle_attr_value_begin(_text, line, column, _acc, _state) do
-    {:error, "expected attribute value or expression after `=`", line, column}
+  defp handle_attr_value_begin(_text, line, column, _acc, state) do
+    raise %ParseError{
+      file: state.file,
+      message: "expected attribute value or expression after `=`",
+      line: line,
+      column: column
+    }
   end
 
   ## handle_attr_value_double_quote
@@ -395,8 +399,13 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_double_quote(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
   end
 
-  defp handle_attr_value_double_quote(<<>>, line, column, _buffer, _acc, _state) do
-    {:error, "expected closing `\"` for attribute value", line, column}
+  defp handle_attr_value_double_quote(<<>>, line, column, _buffer, _acc, state) do
+    raise %ParseError{
+      file: state.file,
+      message: "expected closing `\"` for attribute value",
+      line: line,
+      column: column
+    }
   end
 
   ## handle_attr_value_single_quote
@@ -422,8 +431,13 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_single_quote(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
   end
 
-  defp handle_attr_value_single_quote(<<>>, line, column, _buffer, _acc, _state) do
-    {:error, "expected closing `'` for attribute value", line, column}
+  defp handle_attr_value_single_quote(<<>>, line, column, _buffer, _acc, state) do
+    raise %ParseError{
+      file: state.file,
+      message: "expected closing `'` for attribute value",
+      line: line,
+      column: column
+    }
   end
 
   ## handle_attr_value_unquoted
@@ -440,14 +454,19 @@ defmodule Surface.Compiler.Tokenizer do
     handle_maybe_tag_open_end(text, line, column, acc, state)
   end
 
-  defp handle_attr_value_unquoted(<<c::utf8, _::binary>>, line, column, _buffer, _acc, _state)
+  defp handle_attr_value_unquoted(<<c::utf8, _::binary>>, line, column, _buffer, _acc, state)
        when c in @unquoted_value_invalid_chars do
     message = """
     unexpected character `#{<<c::utf8>>}`. \
     Unquoted attribute values cannot contain `\"`, `'`, `=` nor `<`
     """
 
-    {:error, message, line, column}
+    raise %ParseError{
+      file: state.file,
+      message: message,
+      line: line,
+      column: column
+    }
   end
 
   defp handle_attr_value_unquoted(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
@@ -457,19 +476,19 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_attr_value_as_expr
 
   defp handle_attr_value_as_expr(text, line, column, acc, %{braces: []} = state) do
-    with {:ok, value, new_line, new_column, rest, state} <-
-           handle_interpolation(text, line, column, [], state) do
-      meta = %{
-        line: line,
-        column: column,
-        line_end: new_line,
-        column_end: new_column - 1,
-        file: state.file
-      }
+    {value, new_line, new_column, rest, state} =
+      handle_interpolation(text, line, column, [], state)
 
-      acc = put_attr_value(acc, {:expr, value, meta})
-      handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
-    end
+    meta = %{
+      line: line,
+      column: column,
+      line_end: new_line,
+      column_end: new_column - 1,
+      file: state.file
+    }
+
+    acc = put_attr_value(acc, {:expr, value, meta})
+    handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
   end
 
   ## handle_interpolation
@@ -484,7 +503,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_interpolation("}" <> rest, line, column, buffer, %{braces: []} = state) do
     value = buffer_to_string(buffer)
-    {:ok, value, line, column + 1, rest, state}
+    {value, line, column + 1, rest, state}
   end
 
   defp handle_interpolation(~S(\}) <> rest, line, column, buffer, state) do
@@ -509,8 +528,13 @@ defmodule Surface.Compiler.Tokenizer do
     handle_interpolation(rest, line, column + 1, [<<c::utf8>> | buffer], state)
   end
 
-  defp handle_interpolation(<<>>, line, column, _buffer, _state) do
-    {:error, "expected closing `}` for expression", line, column}
+  defp handle_interpolation(<<>>, line, column, _buffer, state) do
+    raise %ParseError{
+      file: state.file,
+      message: "expected closing `}` for expression",
+      line: line,
+      column: column
+    }
   end
 
   ## helpers
