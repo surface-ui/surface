@@ -265,13 +265,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attribute(text, line, column, acc, state) do
     {name, new_column, rest} = handle_attr_name(text, line, column, [], state)
 
-    meta = %{
-      line: line,
-      column: column,
-      line_end: line,
-      column_end: new_column,
-      file: state.file
-    }
+    meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
 
     acc = put_attr(acc, name, nil, meta)
     handle_maybe_attr_value(rest, line, new_column, acc, state)
