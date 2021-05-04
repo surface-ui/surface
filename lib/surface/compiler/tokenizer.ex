@@ -9,8 +9,16 @@ defmodule Surface.Compiler.Tokenizer do
 
   def tokenize!(text, opts \\ []) do
     case tokenize(text, opts) do
-      nodes when is_list(nodes) -> nodes
-      {:error, error} -> raise error
+      nodes when is_list(nodes) ->
+        nodes
+
+      {:error, message, meta} ->
+        raise %ParseError{
+          file: meta.file,
+          line: meta.line,
+          column: meta.column,
+          message: message
+        }
     end
   end
 
@@ -27,7 +35,7 @@ defmodule Surface.Compiler.Tokenizer do
         nodes
 
       {:error, message, line, column} ->
-        {:error, %ParseError{file: file, line: line, column: column, message: message}}
+        {:error, message, %{file: file, line: line, column: column}}
     end
   end
 
