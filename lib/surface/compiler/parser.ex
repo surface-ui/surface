@@ -193,7 +193,7 @@ defmodule Surface.Compiler.Parser do
     context = state.translator.context_for_subblock(state, :default, ctx, meta)
 
     {state, node} =
-      state.translator.handle_subblock(state, context, :default, [], Enum.reverse(buffer), %{})
+      state.translator.handle_subblock(state, context, :default, [], Enum.reverse(buffer), meta)
 
     # create a new buffer for the parent node to replace the one that was popped
     buffers = [[] | buffers]

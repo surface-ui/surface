@@ -40,6 +40,10 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {state, {name, attributes, body, to_meta(meta)}}
   end
 
+  def handle_subblock(state, _context, :default, attrs, children, _meta) do
+    {state, {:default, attrs, children, %{}}}
+  end
+
   def handle_subblock(state, _context, name, attrs, children, meta) do
     {state, {name, attrs, children, to_meta(meta)}}
   end
