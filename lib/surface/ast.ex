@@ -113,6 +113,52 @@ defmodule Surface.AST.Directive do
         }
 end
 
+defmodule Surface.AST.Construct do
+  @moduledoc """
+  An AST node representing a built in construct.
+
+  ## Properties
+      * `:name` - the construct name
+      * `:attributes` - a list of attributes
+      * `:body` - a list of ast nodes representing the `default` block
+      * `:sub_blocks` - an ordered list of sub blocks
+      * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:name, :attributes, :body, :sub_blocks, :meta, debug: []]
+
+  @type t :: %__MODULE__{
+          name: binary(),
+          attributes: list(Surface.AST.Attribute.t()),
+          body: list(Surface.AST.t()),
+          sub_blocks: list(Surface.AST.Construct.SubBlock.t()),
+          debug: list(atom()),
+          meta: Surface.AST.Meta.t()
+        }
+
+  defmodule SubBlock do
+    @moduledoc """
+    An AST node representing a built in construct.
+
+    ## Properties
+        * `:name` - the construct name
+        * `:attributes` - a list of attributes
+        * `:body` - a list of ast nodes representing the `default` block
+        * `:meta` - compilation meta data
+        * `:debug` - keyword list indicating when debug information should be printed during compilation
+    """
+    defstruct [:name, :attributes, :body, :meta, debug: []]
+
+    @type t :: %__MODULE__{
+            name: binary(),
+            attributes: list(Surface.AST.Attribute.t()),
+            body: list(Surface.AST.t()),
+            debug: list(atom()),
+            meta: Surface.AST.Meta.t()
+          }
+  end
+end
+
 defmodule Surface.AST.For do
   @moduledoc """
   An AST node representing a for comprehension.
@@ -379,6 +425,29 @@ defmodule Surface.AST.Component do
             :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
             optional(atom()) => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t())
           },
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.MacroComponent do
+  @moduledoc """
+  An AST node representing a macro component
+
+  ## Properties
+      * `:module` - the component module
+      * `:attributes` - the specified attributes
+      * `:children` - the tag children
+      * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:module, :name, :attributes, :body, :meta, debug: []]
+
+  @type t :: %__MODULE__{
+          module: module(),
+          debug: list(atom()),
+          name: binary(),
+          attributes: list(Surface.AST.Attribute.t()),
+          body: binary(),
           meta: Surface.AST.Meta.t()
         }
 end
