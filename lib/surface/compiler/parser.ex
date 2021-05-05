@@ -79,14 +79,34 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
-    node = state.translator.handle_node(state, name, translate_attrs(state, attrs), [], meta)
+    context = state.translator.context_for_node(state, name, meta)
+
+    node =
+      state.translator.handle_node(
+        state,
+        context,
+        name,
+        translate_attrs(state, context, attrs),
+        [],
+        meta
+      )
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
-    node = state.translator.handle_node(state, name, translate_attrs(state, attrs), [], meta)
+    context = state.translator.context_for_node(state, name, meta)
+
+    node =
+      state.translator.handle_node(
+        state,
+        context,
+        name,
+        translate_attrs(state, context, attrs),
+        [],
+        meta
+      )
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
@@ -115,11 +135,14 @@ defmodule Surface.Compiler.Parser do
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
 
+    context = state.translator.context_for_node(state, name, meta)
+
     node =
       state.translator.handle_node(
         state,
+        context,
         name,
-        translate_attrs(state, attrs),
+        translate_attrs(state, context, attrs),
         Enum.reverse(buffer),
         meta
       )
@@ -134,11 +157,16 @@ defmodule Surface.Compiler.Parser do
     # pop the current buffer and use it as children for the sub-block node
     [buffer | buffers] = buffers
 
+    [{:tag_open, parent_name, _attrs, _parent_meta} | _] = tags
+
+    context = state.translator.context_for_subblock(state, name, parent_name, meta)
+
     node =
       state.translator.handle_subblock(
         state,
+        context,
         name,
-        translate_attrs(state, attrs),
+        translate_attrs(state, context, attrs),
         Enum.reverse(buffer),
         meta
       )
@@ -156,7 +184,11 @@ defmodule Surface.Compiler.Parser do
 
     # pop the current buffer and use it as children for the :default sub-block node
     [buffer | buffers] = buffers
-    node = state.translator.handle_subblock(state, :default, [], Enum.reverse(buffer), %{})
+
+    context = state.translator.context_for_subblock(state, :default, name, meta)
+
+    node =
+      state.translator.handle_subblock(state, context, :default, [], Enum.reverse(buffer), %{})
 
     # create a new buffer for the parent node to replace the one that was popped
     buffers = [[] | buffers]
@@ -207,48 +239,41 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers]
   end
 
-  defp translate_attrs(state, attrs),
-    do: Enum.map(attrs, &translate_attr(state, &1))
+  defp translate_attrs(state, context, attrs),
+    do: Enum.map(attrs, &translate_attr(state, context, &1))
 
-  defp translate_attr(state, {name, {:string, value, %{delimiter: ?"}}, meta}) do
-    literal = state.translator.handle_literal(state, value)
-    state.translator.handle_attribute(state, name, literal, meta)
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: ?"}}, meta}) do
+    state.translator.handle_attribute(state, context, name, value, meta)
   end
 
-  defp translate_attr(state, {name, {:string, "true", %{delimiter: nil}}, meta}) do
-    value = state.translator.handle_literal(state, true)
-    state.translator.handle_attribute(state, name, value, meta)
+  defp translate_attr(state, context, {name, {:string, "true", %{delimiter: nil}}, meta}) do
+    state.translator.handle_attribute(state, context, name, true, meta)
   end
 
-  defp translate_attr(state, {name, {:string, "false", %{delimiter: nil}}, meta}) do
-    value = state.translator.handle_literal(state, false)
-    state.translator.handle_attribute(state, name, value, meta)
+  defp translate_attr(state, context, {name, {:string, "false", %{delimiter: nil}}, meta}) do
+    state.translator.handle_attribute(state, context, name, false, meta)
   end
 
-  defp translate_attr(state, {name, {:string, value, %{delimiter: nil}}, meta}) do
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
     case Integer.parse(value) do
       {int_value, ""} ->
-        value = state.translator.handle_literal(state, int_value)
-        state.translator.handle_attribute(state, name, value, meta)
+        state.translator.handle_attribute(state, context, name, int_value, meta)
 
       _ ->
         raise parse_error("unexpected value for attribute \"#{name}\"", meta)
     end
   end
 
-  defp translate_attr(state, {:root, {:expr, value, expr_meta}, _attr_meta}) do
-    expr = state.translator.handle_attribute_expression(state, value, expr_meta)
-    state.translator.handle_attribute(state, :root, expr, expr_meta)
+  defp translate_attr(state, context, {:root, {:expr, value, expr_meta}, _attr_meta}) do
+    state.translator.handle_attribute(state, context, :root, {:expr, value, expr_meta}, expr_meta)
   end
 
-  defp translate_attr(state, {name, {:expr, value, expr_meta}, attr_meta}) do
-    expr = state.translator.handle_attribute_expression(state, value, expr_meta)
-    state.translator.handle_attribute(state, name, expr, attr_meta)
+  defp translate_attr(state, context, {name, {:expr, value, expr_meta}, attr_meta}) do
+    state.translator.handle_attribute(state, context, name, {:expr, value, expr_meta}, attr_meta)
   end
 
-  defp translate_attr(state, {name, nil, meta}) do
-    value = state.translator.handle_literal(state, true)
-    state.translator.handle_attribute(state, name, value, meta)
+  defp translate_attr(state, context, {name, nil, meta}) do
+    state.translator.handle_attribute(state, context, name, true, meta)
   end
 
   defp push_tag(state, {:tag_open, _tag, _attrs, %{void_tag?: true}}) do

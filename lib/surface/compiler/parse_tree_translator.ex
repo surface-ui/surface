@@ -11,7 +11,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {:comment, comment}
   end
 
-  def handle_node(state, "template", attributes, body, meta) do
+  def handle_node(state, context, "template", attributes, body, meta) do
     message = """
     using <template> to fill slots has been deprecated and will be removed in \
     future versions.
@@ -21,10 +21,10 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
     IOHelper.warn(message, state.caller, fn _ -> meta.line end)
 
-    handle_node(state, "#template", attributes, body, meta)
+    handle_node(state, context, "#template", attributes, body, meta)
   end
 
-  def handle_node(state, "slot", attributes, body, meta) do
+  def handle_node(state, context, "slot", attributes, body, meta) do
     message = """
     using <slot> to define component slots has been deprecated and will be removed in \
     future versions.
@@ -33,14 +33,14 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     """
 
     IOHelper.warn(message, state.caller, fn _ -> meta.line end)
-    handle_node(state, "#slot", attributes, body, meta)
+    handle_node(state, context, "#slot", attributes, body, meta)
   end
 
-  def handle_node(_state, name, attributes, body, meta) do
+  def handle_node(_state, _context, name, attributes, body, meta) do
     {name, attributes, body, to_meta(meta)}
   end
 
-  def handle_subblock(_state, name, attrs, children, meta) do
+  def handle_subblock(_state, _context, name, attrs, children, meta) do
     {name, attrs, children, to_meta(meta)}
   end
 
@@ -52,12 +52,20 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     children
   end
 
-  def handle_attribute_expression(_state, value, meta) do
-    {:attribute_expr, value, to_meta(meta)}
+  def handle_attribute(_state, _context, name, {:expr, expr, expr_meta}, attr_meta) do
+    {name, {:attribute_expr, expr, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
 
-  def handle_attribute(_state, name, value, meta) do
-    {name, value, to_meta(meta)}
+  def handle_attribute(_state, _context, name, value, attr_meta) do
+    {name, value, to_meta(attr_meta)}
+  end
+
+  def context_for_node(_state, _name, _meta) do
+    nil
+  end
+
+  def context_for_subblock(_state, _name, _parent_name, _meta) do
+    nil
   end
 
   def to_meta(%{void_tag?: true} = meta) do

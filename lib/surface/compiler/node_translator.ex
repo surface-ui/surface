@@ -8,32 +8,41 @@ defmodule Surface.Compiler.NodeTranslator do
           checks: keyword(boolean()),
           warnings: keyword(boolean())
         }
-
-  @type type :: :tag | :void_tag | :attribute | :expression
+  @type context :: term()
 
   @callback handle_literal(state :: state(), value :: binary()) :: any()
   @callback handle_comment(state :: state(), comment :: binary()) :: any()
-  @callback handle_attribute_expression(
-              state :: state(),
-              value :: binary(),
-              meta :: parse_metadata()
-            ) :: any()
+
   @callback handle_attribute(
               state :: state(),
+              context :: context(),
               name :: binary() | atom(),
-              value :: any(),
-              meta :: parse_metadata()
+              value :: binary() | {:expr, binary(), parse_metadata()},
+              attr_meta :: parse_metadata()
             ) :: any()
+
+  @callback context_for_node(state :: state(), name :: binary(), meta :: parse_metadata()) ::
+              context()
+  @callback context_for_subblock(
+              state :: state(),
+              block_name :: :default | binary(),
+              parent_name :: binary(),
+              meta :: parse_metadata()
+            ) ::
+              context()
 
   @callback handle_node(
               state :: state(),
+              context :: context(),
               name :: binary(),
               attrs :: list(),
               children :: list(),
               meta :: parse_metadata()
             ) :: any()
+
   @callback handle_subblock(
               state :: state(),
+              context :: context(),
               name :: binary(),
               attrs :: list(),
               children :: list(),

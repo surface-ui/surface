@@ -5,8 +5,18 @@ defmodule Surface.Compiler.AstTranslator do
   alias Surface.AST
   alias Surface.Compiler.Helpers
 
-  def handle_interpolation(state, expression, parser_meta) do
-    ast_meta = to_meta(state, parser_meta)
+  def handle_comment(_state, _comment), do: :ignore
+
+  def handle_text(_state, text) do
+    %AST.Literal{value: text}
+  end
+
+  def handle_end(_state, children) do
+    children
+  end
+
+  def handle_interpolation(state, expression, parse_meta) do
+    ast_meta = to_meta(state, parse_meta)
 
     %AST.Interpolation{
       original: expression,
@@ -15,17 +25,22 @@ defmodule Surface.Compiler.AstTranslator do
     }
   end
 
-  def handle_comment(_state, comment) do
-    # TODO: allow ignoring results
-    %AST.Literal{value: comment}
+  def context_for_node(_state, name, meta) do
+
   end
 
-  def handle_text(_state, text) do
-    %AST.Literal{value: text}
+  def handle_attribute(state, context, name, {:expr, value, expr_meta}, attr_meta) do
+    %AST.Attribute{
+      name: name,
+      value: value
+    }
   end
 
-  def handle_end(_state, children) do
-    children
+  def handle_attribute(state, context, name, value, meta) do
+    %AST.Attribute{
+      name: name,
+      value: value
+    }
   end
 
   def handle_node(state, "template", attributes, body, meta) do
