@@ -754,6 +754,32 @@ defmodule Surface.DirectivesTest do
              <div></div>
              """
     end
+
+    test "is compatible with :if directive" do
+      html =
+        render_surface do
+          ~H"""
+            <div :hook="Button" :if={{ true }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button"></div>
+             """
+    end
+
+    test "is compatible with :for directive" do
+      html =
+        render_surface do
+          ~H"""
+            <div :hook="Button" :for={{ _ <- [1] }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button"></div>
+             """
+    end
   end
 end
 

@@ -18,10 +18,10 @@ defmodule Surface.Compiler do
     Surface.Directive.TagAttrs,
     Surface.Directive.Events,
     Surface.Directive.Show,
+    Surface.Directive.Hook,
     Surface.Directive.If,
     Surface.Directive.For,
-    Surface.Directive.Debug,
-    Surface.Directive.Hook
+    Surface.Directive.Debug
   ]
 
   @component_directive_handlers [
