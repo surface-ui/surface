@@ -1,5 +1,5 @@
-defmodule Surface.Compiler.CompilerEngine do
-  @behaviour Surface.Compiler.Engine
+defmodule Surface.Compiler.AstTranslator do
+  @behaviour Surface.Compiler.NodeTranslator
 
   alias Surface.IOHelper
   alias Surface.AST

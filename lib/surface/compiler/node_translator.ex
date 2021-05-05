@@ -1,4 +1,4 @@
-defmodule Surface.Compiler.Engine do
+defmodule Surface.Compiler.NodeTranslator do
   @type parse_metadata :: %{line: non_neg_integer(), column: non_neg_integer(), file: binary()}
 
   @type tag_info :: {:tag_open, binary, list(), parse_metadata()}

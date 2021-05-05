@@ -41,14 +41,14 @@ defmodule Surface.Compiler.Parser do
 
   defp handle_token(tokens, opts) do
     handle_token(tokens, [[]], %{
-      engine: opts[:engine] || Surface.Compiler.ParseTreeEngine,
+      translator: opts[:translator] || Surface.Compiler.ParseTreeTranslator,
       tags: [],
       caller: opts[:caller] || __ENV__
     })
   end
 
   defp handle_token([], [buffer], state) do
-    state.engine.handle_end(state, Enum.reverse(buffer))
+    state.translator.handle_end(state, Enum.reverse(buffer))
   end
 
   defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
@@ -59,20 +59,20 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
-    node = state.engine.handle_text(state, text)
+    node = state.translator.handle_text(state, text)
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:comment, comment} | rest], buffers, state) do
-    node = state.engine.handle_comment(state, comment)
+    node = state.translator.handle_comment(state, comment)
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:interpolation, expr, meta} | rest], buffers, state) do
-    node = state.engine.handle_interpolation(state, expr, to_meta(meta))
+    node = state.translator.handle_interpolation(state, expr, to_meta(meta))
 
     buffers = push_node_to_current_buffer(node, buffers)
 
@@ -95,7 +95,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token([{:tag_open, name, attrs, meta} | rest], buffers, state)
        when name in @void_elements do
     node =
-      state.engine.handle_node(
+      state.translator.handle_node(
         state,
         name,
         translate_attrs(attrs),
@@ -108,7 +108,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
-    node = state.engine.handle_node(state, name, translate_attrs(attrs), [], to_meta(meta))
+    node = state.translator.handle_node(state, name, translate_attrs(attrs), [], to_meta(meta))
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
@@ -137,7 +137,7 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers] = buffers
 
     node =
-      state.engine.handle_node(
+      state.translator.handle_node(
         state,
         name,
         translate_attrs(attrs),
@@ -156,7 +156,7 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers] = buffers
 
     node =
-      state.engine.handle_subblock(
+      state.translator.handle_subblock(
         state,
         name,
         translate_attrs(attrs),
@@ -177,7 +177,7 @@ defmodule Surface.Compiler.Parser do
 
     # pop the current buffer and use it as children for the :default sub-block node
     [buffer | buffers] = buffers
-    node = state.engine.handle_subblock(state, :default, [], Enum.reverse(buffer), %{})
+    node = state.translator.handle_subblock(state, :default, [], Enum.reverse(buffer), %{})
 
     # create a new buffer for the parent node to replace the one that was popped
     buffers = [[] | buffers]
