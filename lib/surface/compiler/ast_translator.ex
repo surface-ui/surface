@@ -5,10 +5,10 @@ defmodule Surface.Compiler.AstTranslator do
   alias Surface.Compiler.Helpers
   alias Surface.Compiler.Parser
 
-  def handle_comment(_state, _comment), do: :ignore
+  def handle_comment(state, _comment), do: {state, :ignore}
 
-  def handle_literal(_state, value) do
-    %AST.Literal{value: value}
+  def handle_literal(state, value) do
+    {state, %AST.Literal{value: value}}
   end
 
   def handle_end(_state, children) do
@@ -18,11 +18,12 @@ defmodule Surface.Compiler.AstTranslator do
   def handle_interpolation(state, expression, parse_meta) do
     ast_meta = to_meta(state, parse_meta)
 
-    %AST.Interpolation{
-      original: expression,
-      value: Helpers.interpolation_to_quoted!(expression, ast_meta),
-      meta: ast_meta
-    }
+    {state,
+     %AST.Interpolation{
+       original: expression,
+       value: Helpers.interpolation_to_quoted!(expression, ast_meta),
+       meta: ast_meta
+     }}
   end
 
   def context_for_node(state, name, meta) do

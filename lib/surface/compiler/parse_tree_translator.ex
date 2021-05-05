@@ -3,12 +3,12 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
   alias Surface.IOHelper
 
-  def handle_interpolation(_state, expression, meta) do
-    {:interpolation, expression, to_meta(meta)}
+  def handle_interpolation(state, expression, meta) do
+    {state, {:interpolation, expression, to_meta(meta)}}
   end
 
-  def handle_comment(_state, comment) do
-    {:comment, comment}
+  def handle_comment(state, comment) do
+    {state, {:comment, comment}}
   end
 
   def handle_node(state, context, "template", attributes, body, meta) do
@@ -36,16 +36,16 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     handle_node(state, context, "#slot", attributes, body, meta)
   end
 
-  def handle_node(_state, _context, name, attributes, body, meta) do
-    {name, attributes, body, to_meta(meta)}
+  def handle_node(state, _context, name, attributes, body, meta) do
+    {state, {name, attributes, body, to_meta(meta)}}
   end
 
-  def handle_subblock(_state, _context, name, attrs, children, meta) do
-    {name, attrs, children, to_meta(meta)}
+  def handle_subblock(state, _context, name, attrs, children, meta) do
+    {state, {name, attrs, children, to_meta(meta)}}
   end
 
-  def handle_literal(_state, text) do
-    text
+  def handle_literal(state, text) do
+    {state, text}
   end
 
   def handle_end(_state, children) do

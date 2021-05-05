@@ -45,20 +45,20 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
-    node = state.translator.handle_literal(state, text)
+    {state, node} = state.translator.handle_literal(state, text)
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:comment, comment} | rest], buffers, state) do
-    node = state.translator.handle_comment(state, comment)
+    {state, node} = state.translator.handle_comment(state, comment)
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:interpolation, expr, meta} | rest], buffers, state) do
-    node = state.translator.handle_interpolation(state, expr, meta)
+    {state, node} = state.translator.handle_interpolation(state, expr, meta)
 
     buffers = push_node_to_current_buffer(node, buffers)
 
@@ -83,7 +83,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
     context = state.translator.context_for_node(state, name, meta)
 
-    node =
+    {state, node} =
       state.translator.handle_node(
         state,
         context,
@@ -100,7 +100,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
     context = state.translator.context_for_node(state, name, meta)
 
-    node =
+    {state, node} =
       state.translator.handle_node(
         state,
         context,
@@ -138,7 +138,7 @@ defmodule Surface.Compiler.Parser do
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
 
-    node =
+    {state, node} =
       state.translator.handle_node(
         state,
         context,
@@ -162,7 +162,7 @@ defmodule Surface.Compiler.Parser do
     # pop the current buffer and use it as children for the sub-block node
     [buffer | buffers] = buffers
 
-    node =
+    {state, node} =
       state.translator.handle_subblock(
         state,
         context,
@@ -192,7 +192,7 @@ defmodule Surface.Compiler.Parser do
 
     context = state.translator.context_for_subblock(state, :default, ctx, meta)
 
-    node =
+    {state, node} =
       state.translator.handle_subblock(state, context, :default, [], Enum.reverse(buffer), %{})
 
     # create a new buffer for the parent node to replace the one that was popped

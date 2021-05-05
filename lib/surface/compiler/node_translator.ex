@@ -10,17 +10,6 @@ defmodule Surface.Compiler.NodeTranslator do
         }
   @type context :: term()
 
-  @callback handle_literal(state :: state(), value :: binary()) :: any()
-  @callback handle_comment(state :: state(), comment :: binary()) :: any()
-
-  @callback handle_attribute(
-              state :: state(),
-              context :: context(),
-              name :: binary() | atom(),
-              value :: binary() | {:expr, binary(), parse_metadata()},
-              attr_meta :: parse_metadata()
-            ) :: any()
-
   @callback context_for_node(state :: state(), name :: binary(), meta :: parse_metadata()) ::
               context()
   @callback context_for_subblock(
@@ -31,6 +20,17 @@ defmodule Surface.Compiler.NodeTranslator do
             ) ::
               context()
 
+  @callback handle_attribute(
+              state :: state(),
+              context :: context(),
+              name :: binary() | atom(),
+              value :: binary() | {:expr, binary(), parse_metadata()},
+              attr_meta :: parse_metadata()
+            ) :: any()
+
+  @callback handle_literal(state :: state(), value :: binary()) :: {state(), any()}
+  @callback handle_comment(state :: state(), comment :: binary()) :: {state(), any()}
+
   @callback handle_node(
               state :: state(),
               context :: context(),
@@ -38,7 +38,7 @@ defmodule Surface.Compiler.NodeTranslator do
               attrs :: list(),
               children :: list(),
               meta :: parse_metadata()
-            ) :: any()
+            ) :: {state(), any()}
 
   @callback handle_subblock(
               state :: state(),
@@ -47,12 +47,13 @@ defmodule Surface.Compiler.NodeTranslator do
               attrs :: list(),
               children :: list(),
               meta :: parse_metadata()
-            ) :: any()
+            ) :: {state(), any()}
 
   @callback handle_interpolation(
               state :: state(),
               expression :: binary(),
               meta :: parse_metadata()
-            ) :: any()
+            ) :: {state(), any()}
+
   @callback handle_end(state :: state(), children :: list()) :: any()
 end
