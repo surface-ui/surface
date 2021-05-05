@@ -133,7 +133,7 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       [{"div", [], ["\n  ", node, "\n"], _}, "\n"] = parse!(code)
-      assert node == {"hr", [], [], %{line: 2, file: "nofile", column: 4}}
+      assert node == {"hr", [], [], %{line: 2, file: "nofile", column: 4, void?: true}}
     end
 
     test "with attributes" do
@@ -153,7 +153,7 @@ defmodule Surface.Compiler.ParserTest do
                 [
                   {"src", "file.gif", %{line: 3, file: "nofile", column: 5}},
                   {"alt", "My image", %{line: 4, file: "nofile", column: 5}}
-                ], [], %{line: 2, file: "nofile", column: 4}}
+                ], [], %{line: 2, file: "nofile", column: 4, void?: true}}
     end
   end
 
