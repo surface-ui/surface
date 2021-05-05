@@ -11,7 +11,7 @@ defmodule Surface.Compiler.Converter do
   def convert(text, opts) do
     metas =
       text
-      |> Tokenizer.tokenize()
+      |> Tokenizer.tokenize!()
       |> extract_meta([])
 
     state = %{tag_name: nil}

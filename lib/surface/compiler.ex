@@ -68,20 +68,11 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
-  defmodule ParseError do
-    defexception file: "", line: 0, message: "error parsing HTML/Surface"
-
-    @impl true
-    def message(exception) do
-      "#{Path.relative_to_cwd(exception.file)}:#{exception.line}: #{exception.message}"
-    end
-  end
-
   defmodule CompileMeta do
-    defstruct [:line_offset, :file, :caller, :checks]
+    defstruct [:line, :file, :caller, :checks]
 
     @type t :: %__MODULE__{
-            line_offset: non_neg_integer(),
+            line: non_neg_integer(),
             file: binary(),
             caller: Macro.Env.t(),
             checks: Keyword.t(boolean())
@@ -91,30 +82,28 @@ defmodule Surface.Compiler do
   @doc """
   This function compiles a string into the Surface AST.This is used by ~H and Surface.Renderer to parse and compile templates.
 
-  A special note for line_offset: This is considered the line number for the first line in the string. If the first line of the
+  A special note for line: This is considered the line number for the first line in the string. If the first line of the
   string is also the first line of the file, then this should be 1. If this is being called within a macro (say to process a heredoc
   passed to ~H), this should be __CALLER__.line + 1.
   """
   @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary(), Keyword.t()) :: [
           Surface.AST.t()
         ]
-  def compile(string, line_offset, caller, file \\ "nofile", opts \\ []) do
+  def compile(string, line, caller, file \\ "nofile", opts \\ []) do
     compile_meta = %CompileMeta{
-      line_offset: line_offset,
+      line: line,
       file: file,
       caller: caller,
       checks: opts[:checks] || []
     }
 
     string
-    |> Parser.parse()
-    |> case do
-      {:ok, nodes} ->
-        nodes
-
-      {:error, message, line} ->
-        raise %ParseError{line: line + line_offset - 1, file: file, message: message}
-    end
+    |> Parser.parse!(
+      file: file,
+      line: line,
+      column: Keyword.get(opts, :column, 1),
+      indentation: Keyword.get(opts, :indentation, 0)
+    )
     |> to_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
   end
@@ -140,10 +129,10 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_stateful_component(ast, %CompileMeta{
-         line_offset: offset,
-         caller: %{function: {:render, _}} = caller
-       }) do
+  defp validate_stateful_component(
+         ast,
+         %CompileMeta{caller: %{function: {:render, _}}} = compile_meta
+       ) do
     num_tags =
       ast
       |> Enum.filter(fn
@@ -154,7 +143,7 @@ defmodule Surface.Compiler do
           true
 
         %AST.Component{type: Surface.LiveComponent, meta: meta} ->
-          warn_live_component_as_root_node_of_another_live_component(meta, caller, offset)
+          warn_live_component_as_root_node_of_another_live_component(meta, compile_meta.caller)
 
           true
 
@@ -170,15 +159,15 @@ defmodule Surface.Compiler do
       num_tags == 0 ->
         IOHelper.warn(
           "stateful live components must have a HTML root element",
-          caller,
-          fn _ -> offset end
+          compile_meta.caller,
+          fn _ -> compile_meta.line end
         )
 
       num_tags > 1 ->
         IOHelper.warn(
           "stateful live components must have a single HTML root element",
-          caller,
-          fn _ -> offset end
+          compile_meta.caller,
+          fn _ -> compile_meta.line end
         )
 
       true ->
@@ -188,7 +177,7 @@ defmodule Surface.Compiler do
 
   defp validate_stateful_component(_ast, %CompileMeta{}), do: nil
 
-  defp warn_live_component_as_root_node_of_another_live_component(meta, caller, offset) do
+  defp warn_live_component_as_root_node_of_another_live_component(meta, caller) do
     IOHelper.warn(
       """
       cannot have a LiveComponent as root node of another LiveComponent.
@@ -206,7 +195,7 @@ defmodule Surface.Compiler do
         end
       """,
       caller,
-      fn _ -> offset end
+      fn _ -> meta.line end
     )
   end
 
@@ -981,7 +970,7 @@ defmodule Surface.Compiler do
       Hint: replace `<slot>` with `<#slot>`
       """
 
-      IOHelper.warn(message, compile_meta.caller, &(&1 + line))
+      IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
     end
   end
 end

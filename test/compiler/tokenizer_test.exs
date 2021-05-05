@@ -2,16 +2,16 @@ defmodule Surface.Compiler.TokenizerTest do
   use ExUnit.Case, async: true
 
   import Surface.Compiler.Tokenizer
-  alias Surface.Compiler.Tokenizer.ParseError
+  alias Surface.Compiler.ParseError
 
   describe "text" do
     test "represented as {:text, value}" do
-      assert tokenize("Hello") == [{:text, "Hello"}]
+      assert tokenize!("Hello") == [{:text, "Hello"}]
     end
 
     test "with multiple lines" do
       tokens =
-        tokenize("""
+        tokenize!("""
         first
         second
         third
@@ -21,13 +21,13 @@ defmodule Surface.Compiler.TokenizerTest do
     end
 
     test "keep line breaks unchanged" do
-      assert tokenize("first\nsecond\r\nthird") == [{:text, "first\nsecond\r\nthird"}]
+      assert tokenize!("first\nsecond\r\nthird") == [{:text, "first\nsecond\r\nthird"}]
     end
   end
 
   describe "comment" do
     test "represented as {:comment, comment}" do
-      assert tokenize("Begin<!-- comment -->End") ==
+      assert tokenize!("Begin<!-- comment -->End") ==
                [{:text, "Begin"}, {:comment, "<!-- comment -->"}, {:text, "End"}]
     end
 
@@ -47,12 +47,12 @@ defmodule Surface.Compiler.TokenizerTest do
                {:text, "\n"},
                {:tag_close, "p", %{line: 5, column: 3}},
                {:tag_open, "br", [], %{line: 5, column: 6}}
-             ] = tokenize(code)
+             ] = tokenize!(code)
     end
 
     test "raise on incomplete comment (EOF)" do
       assert_raise ParseError, "nofile:3:7: expected closing `-->` for comment", fn ->
-        tokenize("""
+        tokenize!("""
         <div>
         <!-- a comment)
         </div>\
@@ -63,23 +63,24 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "interpolation in body" do
     test "represented as {:interpolation, value, meta}" do
-      assert tokenize("""
+      assert tokenize!("""
              before
              ={1} after\
              """) == [
                {:text, "before\n="},
-               {:interpolation, "1", %{column: 3, line: 2, column_end: 4, line_end: 2}},
+               {:interpolation, "1",
+                %{column: 3, line: 2, column_end: 4, line_end: 2, file: "nofile"}},
                {:text, " after"}
              ]
     end
 
     test "value containing curly braces" do
-      tokens = tokenize("before{func({1, 3})}after")
+      tokens = tokenize!("before{func({1, 3})}after")
 
       assert tokens == [
                {:text, "before"},
                {:interpolation, "func({1, 3})",
-                %{column: 8, line: 1, column_end: 20, line_end: 1}},
+                %{column: 8, line: 1, column_end: 20, line_end: 1, file: "nofile"}},
                {:text, "after"}
              ]
     end
@@ -87,28 +88,28 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "opening tag" do
     test "represented as {:tag_open, name, attrs, meta}" do
-      tokens = tokenize("<div>")
+      tokens = tokenize!("<div>")
       assert [{:tag_open, "div", [], %{}}] = tokens
     end
 
     test "with space after name" do
-      tokens = tokenize("<div >")
+      tokens = tokenize!("<div >")
       assert [{:tag_open, "div", [], %{}}] = tokens
     end
 
     test "with line break after name" do
-      tokens = tokenize("<div\n>")
+      tokens = tokenize!("<div\n>")
       assert [{:tag_open, "div", [], %{}}] = tokens
     end
 
     test "self close" do
-      tokens = tokenize("<div/>")
+      tokens = tokenize!("<div/>")
       assert [{:tag_open, "div", [], %{self_close: true}}] = tokens
     end
 
     test "compute line and column" do
       tokens =
-        tokenize("""
+        tokenize!("""
         <div>
           <span>
 
@@ -126,7 +127,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "compute line and column with multiple tags on the same line" do
       tokens =
-        tokenize("""
+        tokenize!("""
         <div>
           <span/> <span/>
 
@@ -146,14 +147,14 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "raise on missing tag name" do
       assert_raise ParseError, "nofile:2:4: expected tag name", fn ->
-        tokenize("""
+        tokenize!("""
         <div>
           <>\
         """)
       end
 
       assert_raise ParseError, "nofile:2:5: expected tag name", fn ->
-        tokenize("""
+        tokenize!("""
         <div>
           </>\
         """)
@@ -226,7 +227,7 @@ defmodule Surface.Compiler.TokenizerTest do
       message = "nofile:2:9: expected attribute value or expression after `=`"
 
       assert_raise ParseError, message, fn ->
-        tokenize("""
+        tokenize!("""
         <div
           class=>\
         """)
@@ -235,30 +236,30 @@ defmodule Surface.Compiler.TokenizerTest do
       message = "nofile:1:13: expected attribute value or expression after `=`"
 
       assert_raise ParseError, message, fn ->
-        tokenize(~S(<div class= >))
+        tokenize!(~S(<div class= >))
       end
 
       message = "nofile:1:12: expected attribute value or expression after `=`"
 
       assert_raise ParseError, message, fn ->
-        tokenize("<div class=")
+        tokenize!("<div class=")
       end
     end
 
     test "raise on missing attribure name" do
       assert_raise ParseError, "nofile:2:8: expected attribute name", fn ->
-        tokenize("""
+        tokenize!("""
         <div>
           <div ="panel">\
         """)
       end
 
       assert_raise ParseError, "nofile:1:6: expected attribute name", fn ->
-        tokenize(~S(<div = >))
+        tokenize!(~S(<div = >))
       end
 
       assert_raise ParseError, "nofile:1:6: expected attribute name", fn ->
-        tokenize(~S(<div / >))
+        tokenize!(~S(<div / >))
       end
     end
   end
@@ -319,7 +320,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "value containing line breaks" do
       tokens =
-        tokenize("""
+        tokenize!("""
         <div title="first
           second
         third"><span>\
@@ -334,7 +335,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "raise on incomplete attribute value (EOF)" do
       assert_raise ParseError, "nofile:2:15: expected closing `\"` for attribute value", fn ->
-        tokenize("""
+        tokenize!("""
         <div
           class="panel\
         """)
@@ -366,7 +367,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "value containing line breaks" do
       tokens =
-        tokenize("""
+        tokenize!("""
         <div title='first
           second
         third'><span>\
@@ -381,7 +382,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "raise on incomplete attribute value (EOF)" do
       assert_raise ParseError, "nofile:2:15: expected closing `\'` for attribute value", fn ->
-        tokenize("""
+        tokenize!("""
         <div
           class='panel\
         """)
@@ -472,7 +473,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "raise on incomplete attribute expression (EOF)" do
       assert_raise ParseError, "nofile:2:15: expected closing `}` for expression", fn ->
-        tokenize("""
+        tokenize!("""
         <div
           class={panel\
         """)
@@ -543,7 +544,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "raise on incomplete expression (EOF)" do
       assert_raise ParseError, "nofile:2:10: expected closing `}` for expression", fn ->
-        tokenize("""
+        tokenize!("""
         <div
           {@attrs\
         """)
@@ -553,13 +554,13 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "closing tag" do
     test "represented as {:tag_close, name, meta}" do
-      tokens = tokenize("</div>")
+      tokens = tokenize!("</div>")
       assert [{:tag_close, "div", %{column: 3, line: 1}}] = tokens
     end
 
     test "compute line and columns" do
       tokens =
-        tokenize("""
+        tokenize!("""
         <div>
         </div><br>\
         """)
@@ -574,7 +575,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
     test "raise on missing closing `>`" do
       assert_raise ParseError, "nofile:2:6: expected closing `>`", fn ->
-        tokenize("""
+        tokenize!("""
         <div>
         </div text\
         """)
@@ -584,7 +585,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
   test "mixing text and tags" do
     tokens =
-      tokenize("""
+      tokenize!("""
       text before
       <div>
         text
@@ -602,7 +603,7 @@ defmodule Surface.Compiler.TokenizerTest do
   end
 
   defp tokenize_attrs(code) do
-    [{:tag_open, "div", attrs, %{}}] = tokenize(code)
+    [{:tag_open, "div", attrs, %{}}] = tokenize!(code)
     attrs
   end
 end

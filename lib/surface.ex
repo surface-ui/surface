@@ -104,20 +104,24 @@ defmodule Surface do
   Translates Surface code into Phoenix templates.
   """
   defmacro sigil_H({:<<>>, meta, [string]}, opts) do
-    line_offset = __CALLER__.line + compute_line_offset(meta)
+    line = __CALLER__.line + compute_line_offset(meta)
+    indentation = meta[:indentation] || 0
+    column = meta[:column] || 1
 
     caller_is_surface_component =
       Module.open?(__CALLER__.module) &&
         Module.get_attribute(__CALLER__.module, :component_type) != nil
 
     string
-    |> Surface.Compiler.compile(line_offset, __CALLER__, __CALLER__.file,
-      checks: [no_undefined_assigns: caller_is_surface_component]
+    |> Surface.Compiler.compile(line, __CALLER__, __CALLER__.file,
+      checks: [no_undefined_assigns: caller_is_surface_component],
+      indentation: indentation,
+      column: column
     )
     |> Surface.Compiler.to_live_struct(
       debug: Enum.member?(opts, ?d),
       file: __CALLER__.file,
-      line: __CALLER__.line
+      line: line
     )
   end
 

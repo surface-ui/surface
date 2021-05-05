@@ -2,7 +2,7 @@ defmodule Surface.Compiler.Parser do
   @moduledoc false
 
   alias Surface.Compiler.Tokenizer
-  alias Surface.Compiler.Tokenizer.ParseError
+  alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
 
   @void_elements [
@@ -33,22 +33,10 @@ defmodule Surface.Compiler.Parser do
     "#match" => ["#case"]
   }
 
-  def parse(code) do
-    try do
-      tokens = Tokenizer.tokenize(code)
-
-      case handle_token(tokens) do
-        ast when is_list(ast) ->
-          {:ok, ast}
-
-        error ->
-          error
-      end
-    rescue
-      e in [ParseError] ->
-        %ParseError{line: line, column: _column, message: message} = e
-        {:error, message, line}
-    end
+  def parse!(code, opts \\ []) do
+    code
+    |> Tokenizer.tokenize!(opts)
+    |> handle_token()
   end
 
   defp handle_token(tokens) do
@@ -59,8 +47,11 @@ defmodule Surface.Compiler.Parser do
     Enum.reverse(buffer)
   end
 
-  defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, %{line: line}} | _]}) do
-    {:error, "expected closing tag for <#{tag_name}>", line}
+  defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
+    raise parse_error(
+            "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got EOF",
+            meta
+          )
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
@@ -122,17 +113,13 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:tag_close, name, _meta} | rest], buffers, state) do
-    case pop_matching_tag(state, name) do
-      {:ok, {{:tag_open, _name, attrs, meta}, state}} ->
-        # pop the current buffer and use it as children for the node
-        [buffer | buffers] = buffers
-        node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
-        buffers = push_node_to_current_buffer(node, buffers)
-        handle_token(rest, buffers, state)
+    {{:tag_open, _name, attrs, meta}, state} = pop_matching_tag(state, name)
 
-      error ->
-        error
-    end
+    # pop the current buffer and use it as children for the node
+    [buffer | buffers] = buffers
+    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
   end
 
   # IF there's a previous sub-block defined. Close it.
@@ -168,20 +155,19 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp close_sub_block({:tag_open, name, _attrs, meta}, _buffers, _state) do
-    %{line: line, column: column} = meta
     valid_parents_str = message_for_invalid_sub_block_parent(name)
 
-    message = "no valid parent node defined for <#{name}>. #{valid_parents_str}"
-    raise %ParseError{line: line, column: column, message: message}
+    raise parse_error("no valid parent node defined for <#{name}>. #{valid_parents_str}", meta)
   end
 
   defp validate_sub_block!({:tag_open, name, _attrs, meta}, parent_name) do
-    %{line: line, column: column} = meta
     valid_parents_str = message_for_invalid_sub_block_parent(name)
 
     if parent_name not in @sub_blocks_valid_parents[name] do
-      message = "cannot use <#{name}> inside <#{parent_name}>. #{valid_parents_str}"
-      raise %ParseError{line: line, column: column, message: message}
+      raise parse_error(
+              "cannot use <#{name}> inside <#{parent_name}>. #{valid_parents_str}",
+              meta
+            )
     end
   end
 
@@ -197,7 +183,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp to_meta(meta) do
-    Map.drop(meta, [:self_close, :column, :line_end, :column_end])
+    Map.drop(meta, [:self_close, :line_end, :column_end])
   end
 
   defp push_node_to_current_buffer(node, buffers) do
@@ -206,43 +192,42 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers]
   end
 
-  defp transtate_attrs(attrs) do
-    Enum.map(attrs, &translate_attr/1)
+  defp transtate_attrs(attrs),
+    do: Enum.map(attrs, &translate_attr/1)
+
+  defp translate_attr({name, {:string, value, %{delimiter: ?"}}, meta}) do
+    {name, value, to_meta(meta)}
   end
 
-  defp translate_attr({name, {:string, value, %{delimiter: ?"}}, %{line: line}}) do
-    {name, value, %{line: line}}
+  defp translate_attr({name, {:string, "true", %{delimiter: nil}}, meta}) do
+    {name, true, to_meta(meta)}
   end
 
-  defp translate_attr({name, {:string, "true", %{delimiter: nil}}, %{line: line}}) do
-    {name, true, %{line: line}}
+  defp translate_attr({name, {:string, "false", %{delimiter: nil}}, meta}) do
+    {name, false, to_meta(meta)}
   end
 
-  defp translate_attr({name, {:string, "false", %{delimiter: nil}}, %{line: line}}) do
-    {name, false, %{line: line}}
-  end
-
-  defp translate_attr({name, {:string, value, %{delimiter: nil}}, %{line: line}}) do
+  defp translate_attr({name, {:string, value, %{delimiter: nil}}, meta}) do
     case Integer.parse(value) do
       {int_value, ""} ->
-        {name, int_value, %{line: line}}
+        {name, int_value, to_meta(meta)}
 
       _ ->
-        message = "unexpected value for attribute \"#{name}\""
-        raise %ParseError{line: line, column: 1, message: message}
+        raise parse_error("unexpected value for attribute \"#{name}\"", meta)
     end
   end
 
   defp translate_attr({:root, {:expr, value, expr_meta}, _attr_meta}) do
-    {:root, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: expr_meta.line}}
+    meta = to_meta(expr_meta)
+    {:root, {:attribute_expr, value, meta}, meta}
   end
 
   defp translate_attr({name, {:expr, value, expr_meta}, attr_meta}) do
-    {name, {:attribute_expr, value, %{line: expr_meta.line}}, %{line: attr_meta.line}}
+    {name, {:attribute_expr, value, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
 
-  defp translate_attr({name, nil, %{line: line}}) do
-    {name, true, %{line: line}}
+  defp translate_attr({name, nil, meta}) do
+    {name, true, to_meta(meta)}
   end
 
   defp push_tag(state, {:tag_open, tag, _attrs, _meta}) when tag in @void_elements do
@@ -254,11 +239,23 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _, _} = tag | tags]} = state, tag_name) do
-    {:ok, {tag, %{state | tags: tags}}}
+    {tag, %{state | tags: tags}}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, %{line: line}} | _]}, _) do
-    # TODO: change message to "expected closing tag for <bar> defined at line 4, got </foo>"
-    {:error, "expected closing tag for <#{tag_name}>", line}
+  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, meta} | _]}, closed_node_name) do
+    message = """
+    expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{closed_node_name}>\
+    """
+
+    raise parse_error(message, meta)
+  end
+
+  defp parse_error(message, meta) do
+    %ParseError{
+      message: message,
+      file: meta.file,
+      line: meta.line,
+      column: meta.column
+    }
   end
 end
