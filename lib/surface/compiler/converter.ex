@@ -24,6 +24,20 @@ defmodule Surface.Compiler.Converter do
          column,
          buffer,
          acc,
+         [{_type, %{line: line, column: column}} | _] = metas,
+         state,
+         opts
+       ) do
+    acc = buffer_to_acc(buffer, acc)
+    scan_text(rest, line + 1, 1, ["\r\n"], acc, metas, state, opts)
+  end
+
+  defp scan_text(
+         "\r\n" <> rest,
+         line,
+         column,
+         buffer,
+         acc,
          [{type, %{line_end: line, column_end: column}} | metas],
          state,
          opts
@@ -34,6 +48,20 @@ defmodule Surface.Compiler.Converter do
 
   defp scan_text("\r\n" <> rest, line, _column, buffer, acc, metas, state, opts) do
     scan_text(rest, line + 1, 1, ["\r\n" | buffer], acc, metas, state, opts)
+  end
+
+  defp scan_text(
+         "\n" <> rest,
+         line,
+         column,
+         buffer,
+         acc,
+         [{_type, %{line: line, column: column}} | _] = metas,
+         state,
+         opts
+       ) do
+    acc = buffer_to_acc(buffer, acc)
+    scan_text(rest, line + 1, 1, ["\n"], acc, metas, state, opts)
   end
 
   defp scan_text(

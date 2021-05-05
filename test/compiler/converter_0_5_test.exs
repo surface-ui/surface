@@ -18,36 +18,100 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div class={@class}>text</div>
+           <div class={ @class }>text</div>
            <#Raw>
              <div class={{ @class }}>text</div>
            </#Raw>
            """
   end
 
-  test "convert {{ }} into { }" do
-    expected =
-      convert("""
-      <div
-        id={{ @id }}   class={{@class}}
-        phone = {{ @phone }}
-      >
-        <span title={{123}} />
-        1{{ @name }}2 3{{ @name }}4
-            5 {{ @value }} 6
-      7 </div>
-      """)
+  describe "convert interpolation (expressions)" do
+    test "convert {{ }} into { }" do
+      expected =
+        convert("""
+        <div
+          id={{ @id }}   class={{@class}}
+          phone = {{ @phone }}
+        >
+          <span title={{123}} />
+          1{{ @name }}2 3{{@name}}4
+              5 {{ @value }} 6
+        7 </div>
+        """)
 
-    assert expected == """
-           <div
-             id={@id}   class={@class}
-             phone = {@phone}
-           >
-             <span title={123} />
-             1{@name}2 3{@name}4
-                 5 {@value} 6
-           7 </div>
-           """
+      assert expected == """
+             <div
+               id={ @id }   class={@class}
+               phone = { @phone }
+             >
+               <span title={123} />
+               1{ @name }2 3{@name}4
+                   5 { @value } 6
+             7 </div>
+             """
+    end
+
+    test "convert {{ }} into { } even when expressions start with line breaks" do
+      expected =
+        convert("""
+        {{
+          Enum.join(
+            @list1,
+            ","
+          )
+        }} text
+        {
+          Enum.join(
+            @list2,
+            ","
+          )
+        }
+        """)
+
+      assert expected == """
+             {
+               Enum.join(
+                 @list1,
+                 ","
+               )
+             } text
+             {
+               Enum.join(
+                 @list2,
+                 ","
+               )
+             }
+             """
+    end
+
+    test "only convert {{ }} into { } if the first and last chars are `{` and `}` respectively" do
+      expected =
+        convert("""
+        <div class={{@class}}>
+          {{ @name }}
+        </div>
+        <div class={ {1, 2} }>
+          { {3, 4} }
+        </div>
+        <!-- The edge case we can't distingush. This breaks the code. -->
+        <Comp a_tuple={{1, 2}}>
+          {{3, 4}}
+        </Comp>
+        """)
+
+      assert expected == """
+             <div class={@class}>
+               { @name }
+             </div>
+             <div class={ {1, 2} }>
+               { {3, 4} }
+             </div>
+             <!-- The edge case we can't distingush. This breaks the code. -->
+             <Comp a_tuple={1, 2}>
+               {3, 4}
+             </Comp>
+             """
+    end
   end
 
   test "convert unquoted string" do
