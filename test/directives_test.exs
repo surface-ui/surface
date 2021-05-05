@@ -754,6 +754,63 @@ defmodule Surface.DirectivesTest do
              <div></div>
              """
     end
+
+    test "is compatible with other directives" do
+      html =
+        render_surface do
+          ~H"""
+          <div :hook="Button" :if={{ true }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button"></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook="Button" :for={{ _ <- [1] }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button"></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook="Button" :attrs={{id: "myid" }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button" id="myid"></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook="Button" :show={{ false }}></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button" hidden></div>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <div :hook="Button" :on-click="click"></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#Button" phx-click="click"></div>
+             """
+    end
   end
 end
 
