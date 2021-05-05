@@ -465,9 +465,17 @@ defmodule Surface.Compiler do
          :ok <- validate_properties(mod, attributes, directives, meta) do
       expanded = mod.expand(attributes, children, meta)
 
+      compile_dep_expr = %AST.Expr{
+        value:
+          quote generated: true, line: node_meta.line do
+            require(unquote(mod)).__compile_dep__()
+          end,
+        meta: %AST.Meta{}
+      }
+
       {:ok,
        %AST.Container{
-         children: List.wrap(expanded),
+         children: [compile_dep_expr, expanded],
          directives: directives,
          meta: meta
        }}

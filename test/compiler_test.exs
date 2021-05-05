@@ -397,6 +397,21 @@ defmodule Surface.CompilerTest do
   end
 
   describe "macro components" do
+    test "inject a __compile_dep__/0 macro call to force compile-time dependency" do
+      code = """
+      <#Macro />
+      """
+
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+      assert %Surface.AST.Container{
+               children: [
+                 %Surface.AST.Expr{value: {{:., _, [{:require, _, _}, :__compile_dep__]}, _, []}},
+                 %Surface.AST.Tag{}
+               ]
+             } = node
+    end
+
     test "expanded at top level" do
       code = """
       <#Macro />
@@ -406,6 +421,7 @@ defmodule Surface.CompilerTest do
 
       assert %Surface.AST.Container{
                children: [
+                 _,
                  %Surface.AST.Tag{children: ["I'm a macro"], element: "div"}
                ]
              } = node
@@ -427,6 +443,7 @@ defmodule Surface.CompilerTest do
                      children: [
                        %Surface.AST.Container{
                          children: [
+                           _,
                            %Surface.AST.Tag{
                              children: ["I'm a macro"],
                              element: "div"
@@ -452,6 +469,7 @@ defmodule Surface.CompilerTest do
                children: [
                  %Surface.AST.Container{
                    children: [
+                     %Surface.AST.Expr{},
                      %Surface.AST.Tag{children: ["I'm a macro"], element: "div"}
                    ]
                  }
