@@ -310,7 +310,7 @@ defmodule Surface.Compiler.Parser do
   defp parent_context([{_tag, context} | _]), do: context
   defp parent_context([]), do: nil
 
-  defp parse_error(message, meta) do
+  def parse_error(message, meta) do
     %ParseError{
       message: message,
       file: meta.file,
