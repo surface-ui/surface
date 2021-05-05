@@ -467,10 +467,10 @@ defmodule Surface.Compiler do
 
       compile_dep_expr = %AST.Expr{
         value:
-          quote generated: true, line: node_meta.line do
+          quote generated: true, line: meta.line do
             require(unquote(mod)).__compile_dep__()
           end,
-        meta: %AST.Meta{}
+        meta: meta
       }
 
       {:ok,
