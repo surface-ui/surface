@@ -5,6 +5,22 @@ defmodule Surface.Compiler.Tokenizer do
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
 
+  @void_elements [
+    "area",
+    "base",
+    "br",
+    "col",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "command",
+    "keygen",
+    "source"
+  ]
+
   alias Surface.Compiler.ParseError
 
   def tokenize!(text, opts \\ []) do
@@ -140,7 +156,8 @@ defmodule Surface.Compiler.Tokenizer do
           column: column,
           line_end: line,
           column_end: new_column,
-          file: state.file
+          file: state.file,
+          void_tag?: name in @void_elements
         }
 
         acc = [{:tag_open, name, [], meta} | acc]

@@ -5,22 +5,6 @@ defmodule Surface.Compiler.Parser do
   alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
 
-  @void_elements [
-    "area",
-    "base",
-    "br",
-    "col",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "command",
-    "keygen",
-    "source"
-  ]
-
   @sub_blocks [
     "#else",
     "#elseif",
@@ -43,7 +27,9 @@ defmodule Surface.Compiler.Parser do
     handle_token(tokens, [[]], %{
       translator: opts[:translator] || Surface.Compiler.ParseTreeTranslator,
       tags: [],
-      caller: opts[:caller] || __ENV__
+      caller: opts[:caller] || __ENV__,
+      checks: opts[:checks] || [],
+      warnings: opts[:warnings] || []
     })
   end
 
@@ -59,7 +45,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
-    node = state.translator.handle_text(state, text)
+    node = state.translator.handle_literal(state, text)
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
@@ -72,7 +58,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:interpolation, expr, meta} | rest], buffers, state) do
-    node = state.translator.handle_interpolation(state, expr, to_meta(meta))
+    node = state.translator.handle_interpolation(state, expr, meta)
 
     buffers = push_node_to_current_buffer(node, buffers)
 
@@ -92,23 +78,16 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_open, name, attrs, meta} | rest], buffers, state)
-       when name in @void_elements do
-    node =
-      state.translator.handle_node(
-        state,
-        name,
-        translate_attrs(attrs),
-        [],
-        to_meta(meta, void?: true)
-      )
+  defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
+    node = state.translator.handle_node(state, name, translate_attrs(state, attrs), [], meta)
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
-    node = state.translator.handle_node(state, name, translate_attrs(attrs), [], to_meta(meta))
+    node = state.translator.handle_node(state, name, translate_attrs(state, attrs), [], meta)
+
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
@@ -140,9 +119,9 @@ defmodule Surface.Compiler.Parser do
       state.translator.handle_node(
         state,
         name,
-        translate_attrs(attrs),
+        translate_attrs(state, attrs),
         Enum.reverse(buffer),
-        to_meta(meta)
+        meta
       )
 
     buffers = push_node_to_current_buffer(node, buffers)
@@ -159,9 +138,9 @@ defmodule Surface.Compiler.Parser do
       state.translator.handle_subblock(
         state,
         name,
-        translate_attrs(attrs),
+        translate_attrs(state, attrs),
         Enum.reverse(buffer),
-        to_meta(meta)
+        meta
       )
 
     state = %{state | tags: tags}
@@ -218,10 +197,8 @@ defmodule Surface.Compiler.Parser do
     )
   end
 
-  defp to_meta(meta, extras \\ []) do
-    meta
-    |> Map.drop([:self_close, :line_end, :column_end])
-    |> Map.merge(Map.new(extras))
+  defp push_node_to_current_buffer(:ignore, buffers) do
+    buffers
   end
 
   defp push_node_to_current_buffer(node, buffers) do
@@ -230,45 +207,51 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers]
   end
 
-  defp translate_attrs(attrs),
-    do: Enum.map(attrs, &translate_attr/1)
+  defp translate_attrs(state, attrs),
+    do: Enum.map(attrs, &translate_attr(state, &1))
 
-  defp translate_attr({name, {:string, value, %{delimiter: ?"}}, meta}) do
-    {name, value, to_meta(meta)}
+  defp translate_attr(state, {name, {:string, value, %{delimiter: ?"}}, meta}) do
+    literal = state.translator.handle_literal(state, value)
+    state.translator.handle_attribute(state, name, literal, meta)
   end
 
-  defp translate_attr({name, {:string, "true", %{delimiter: nil}}, meta}) do
-    {name, true, to_meta(meta)}
+  defp translate_attr(state, {name, {:string, "true", %{delimiter: nil}}, meta}) do
+    value = state.translator.handle_literal(state, true)
+    state.translator.handle_attribute(state, name, value, meta)
   end
 
-  defp translate_attr({name, {:string, "false", %{delimiter: nil}}, meta}) do
-    {name, false, to_meta(meta)}
+  defp translate_attr(state, {name, {:string, "false", %{delimiter: nil}}, meta}) do
+    value = state.translator.handle_literal(state, false)
+    state.translator.handle_attribute(state, name, value, meta)
   end
 
-  defp translate_attr({name, {:string, value, %{delimiter: nil}}, meta}) do
+  defp translate_attr(state, {name, {:string, value, %{delimiter: nil}}, meta}) do
     case Integer.parse(value) do
       {int_value, ""} ->
-        {name, int_value, to_meta(meta)}
+        value = state.translator.handle_literal(state, int_value)
+        state.translator.handle_attribute(state, name, value, meta)
 
       _ ->
         raise parse_error("unexpected value for attribute \"#{name}\"", meta)
     end
   end
 
-  defp translate_attr({:root, {:expr, value, expr_meta}, _attr_meta}) do
-    meta = to_meta(expr_meta)
-    {:root, {:attribute_expr, value, meta}, meta}
+  defp translate_attr(state, {:root, {:expr, value, expr_meta}, _attr_meta}) do
+    expr = state.translator.handle_attribute_expression(state, value, expr_meta)
+    state.translator.handle_attribute(state, :root, expr, expr_meta)
   end
 
-  defp translate_attr({name, {:expr, value, expr_meta}, attr_meta}) do
-    {name, {:attribute_expr, value, to_meta(expr_meta)}, to_meta(attr_meta)}
+  defp translate_attr(state, {name, {:expr, value, expr_meta}, attr_meta}) do
+    expr = state.translator.handle_attribute_expression(state, value, expr_meta)
+    state.translator.handle_attribute(state, name, expr, attr_meta)
   end
 
-  defp translate_attr({name, nil, meta}) do
-    {name, true, to_meta(meta)}
+  defp translate_attr(state, {name, nil, meta}) do
+    value = state.translator.handle_literal(state, true)
+    state.translator.handle_attribute(state, name, value, meta)
   end
 
-  defp push_tag(state, {:tag_open, tag, _attrs, _meta}) when tag in @void_elements do
+  defp push_tag(state, {:tag_open, _tag, _attrs, %{void_tag?: true}}) do
     state
   end
 

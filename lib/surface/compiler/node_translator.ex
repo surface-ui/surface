@@ -2,10 +2,28 @@ defmodule Surface.Compiler.NodeTranslator do
   @type parse_metadata :: %{line: non_neg_integer(), column: non_neg_integer(), file: binary()}
 
   @type tag_info :: {:tag_open, binary, list(), parse_metadata()}
-  @type state :: %{caller: Macro.Env.t(), tags: list(tag_info())}
+  @type state :: %{
+          caller: Macro.Env.t(),
+          tags: list(tag_info()),
+          checks: keyword(boolean()),
+          warnings: keyword(boolean())
+        }
 
-  @callback handle_text(state :: state(), value :: binary()) :: any()
+  @type type :: :tag | :void_tag | :attribute | :expression
+
+  @callback handle_literal(state :: state(), value :: binary()) :: any()
   @callback handle_comment(state :: state(), comment :: binary()) :: any()
+  @callback handle_attribute_expression(
+              state :: state(),
+              value :: binary(),
+              meta :: parse_metadata()
+            ) :: any()
+  @callback handle_attribute(
+              state :: state(),
+              name :: binary() | atom(),
+              value :: any(),
+              meta :: parse_metadata()
+            ) :: any()
 
   @callback handle_node(
               state :: state(),

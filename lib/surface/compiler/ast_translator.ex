@@ -29,39 +29,43 @@ defmodule Surface.Compiler.AstTranslator do
   end
 
   def handle_node(state, "template", attributes, body, meta) do
-    message = """
-    using <template> to fill slots has been deprecated and will be removed in \
-    future versions.
+    if warning_enabled?(state, :deprecation_notice) do
+      message = """
+      using <template> to fill slots has been deprecated and will be removed in \
+      future versions.
 
-    Hint: replace `<template>` with `<#template>`
-    """
+      Hint: replace `<template>` with `<#template>`
+      """
 
-    IOHelper.warn(message, state.caller, fn _ -> meta.line end)
+      IOHelper.warn(message, state.caller, fn _ -> meta.line end)
+    end
 
     handle_node(state, "#template", attributes, body, meta)
   end
 
   def handle_node(state, "slot", attributes, body, meta) do
-    message = """
-    using <slot> to define component slots has been deprecated and will be removed in \
-    future versions.
+    if warning_enabled?(state, :deprecation_notice) do
+      message = """
+      using <slot> to define component slots has been deprecated and will be removed in \
+      future versions.
 
-    Hint: replace `<slot>` with `<#slot>`
-    """
+      Hint: replace `<slot>` with `<#slot>`
+      """
 
-    IOHelper.warn(message, state.caller, fn _ -> meta.line end)
+      IOHelper.warn(message, state.caller, fn _ -> meta.line end)
+    end
+
     handle_node(state, "#slot", attributes, body, meta)
   end
 
   def handle_node(state, <<"#", first, _::binary>> = name, attributes, body, meta)
       when first in ?A..?Z do
-        %AST.MacroComponent{
-          name: name,
-          attributes: attributes,
-          body: body,
-          meta: to_meta(state, meta)
-        }
-    {name, attributes, body, meta}
+    %AST.MacroComponent{
+      name: name,
+      attributes: attributes,
+      body: body,
+      meta: to_meta(state, meta)
+    }
   end
 
   def handle_node(state, <<"#", first, _::binary>> = name, attributes, [block | sub_blocks], meta)
@@ -77,13 +81,14 @@ defmodule Surface.Compiler.AstTranslator do
 
   def handle_node(state, <<first, _::binary>> = name, attributes, [block | sub_blocks], meta)
       when first in ?A..?Z do
-    %AST.Component{
-      name: name,
-      attributes: attributes,
-      body: block.body,
-      sub_blocks: sub_blocks,
-      meta: to_meta(state, meta)
-    }
+    # %AST.Component{
+    #   name: name,
+    #   attributes: attributes,
+    #   body: block.body,
+    #   sub_blocks: sub_blocks,
+    #   meta: to_meta(state, meta)
+    # }
+    nil
   end
 
   def handle_subblock(state, name, attrs, children, meta) do
@@ -102,7 +107,11 @@ defmodule Surface.Compiler.AstTranslator do
       column: parse_meta.column,
       file: parse_meta.file,
       caller: state.caller,
-      checks: []
+      checks: state.checks
     }
+  end
+
+  defp warning_enabled?(state, warning) do
+    Keyword.get(state.warnings, warning, true)
   end
 end

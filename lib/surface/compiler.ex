@@ -102,6 +102,8 @@ defmodule Surface.Compiler do
       file: file,
       line: line,
       caller: caller,
+      checks: opts[:checks] || [],
+      warnings: opts[:warnings] || [],
       column: Keyword.get(opts, :column, 1),
       indentation: Keyword.get(opts, :indentation, 0)
     )
