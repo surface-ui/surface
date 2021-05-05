@@ -37,7 +37,7 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_end(state, Enum.reverse(buffer))
   end
 
-  defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
+  defp handle_token([], _buffers, %{tags: [{{:tag_open, tag_name, _attrs, meta}, _ctx} | _]}) do
     raise parse_error(
             "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got EOF",
             meta
@@ -69,8 +69,10 @@ defmodule Surface.Compiler.Parser do
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
 
+    context = state.translator.context_for_subblock(state, name, parent_context(state.tags), meta)
+
     # push the current sub-block token to state
-    state = push_tag(state, {:tag_open, name, attrs, meta})
+    state = push_tag(state, {:tag_open, name, attrs, meta}, context)
 
     # create a new buffer for the current sub-block
     buffers = [[] | buffers]
@@ -112,8 +114,9 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_open, _name, _attrs, _meta} = token | rest], buffers, state) do
-    state = push_tag(state, token)
+  defp handle_token([{:tag_open, name, _attrs, meta} = token | rest], buffers, state) do
+    context = state.translator.context_for_node(state, name, meta)
+    state = push_tag(state, token, context)
     # create a new buffer for the node
     buffers = [[] | buffers]
     handle_token(rest, buffers, state)
@@ -122,7 +125,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token(
          [{:tag_close, _name, _meta} = token | _] = tokens,
          buffers,
-         %{tags: [{:tag_open, name, _, _} | _]} = state
+         %{tags: [{{:tag_open, name, _, _}, _} | _]} = state
        )
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
@@ -130,12 +133,10 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:tag_close, name, _meta} | rest], buffers, state) do
-    {{:tag_open, _name, attrs, meta}, state} = pop_matching_tag(state, name)
+    {{:tag_open, _name, attrs, meta}, context, state} = pop_matching_tag(state, name)
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
-
-    context = state.translator.context_for_node(state, name, meta)
 
     node =
       state.translator.handle_node(
@@ -152,14 +153,14 @@ defmodule Surface.Compiler.Parser do
   end
 
   # IF there's a previous sub-block defined. Close it.
-  defp close_sub_block(_token, buffers, %{tags: [{:tag_open, name, attrs, meta} | tags]} = state)
+  defp close_sub_block(
+         _token,
+         buffers,
+         %{tags: [{{:tag_open, name, attrs, meta}, context} | tags]} = state
+       )
        when name in @sub_blocks do
     # pop the current buffer and use it as children for the sub-block node
     [buffer | buffers] = buffers
-
-    [{:tag_open, parent_name, _attrs, _parent_meta} | _] = tags
-
-    context = state.translator.context_for_subblock(state, name, parent_name, meta)
 
     node =
       state.translator.handle_subblock(
@@ -179,13 +180,17 @@ defmodule Surface.Compiler.Parser do
 
   # If there's no previous sub-block defined. Create a :default sub-block,
   # move the buffer there and close it.
-  defp close_sub_block(token, buffers, %{tags: [{:tag_open, name, attrs, meta} | tags]} = state) do
+  defp close_sub_block(
+         token,
+         buffers,
+         %{tags: [{{:tag_open, name, attrs, meta}, ctx} | tags]} = state
+       ) do
     validate_sub_block!(token, name)
 
     # pop the current buffer and use it as children for the :default sub-block node
     [buffer | buffers] = buffers
 
-    context = state.translator.context_for_subblock(state, :default, name, meta)
+    context = state.translator.context_for_subblock(state, :default, ctx, meta)
 
     node =
       state.translator.handle_subblock(state, context, :default, [], Enum.reverse(buffer), %{})
@@ -196,7 +201,7 @@ defmodule Surface.Compiler.Parser do
 
     # push back the parent token to state
     meta = Map.put(meta, :has_sub_blocks?, true)
-    state = %{state | tags: [{:tag_open, name, attrs, meta} | tags]}
+    state = %{state | tags: [{{:tag_open, name, attrs, meta}, ctx} | tags]}
 
     {buffers, state}
   end
@@ -276,25 +281,34 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(state, context, name, true, meta)
   end
 
-  defp push_tag(state, {:tag_open, _tag, _attrs, %{void_tag?: true}}) do
+  defp push_tag(state, {:tag_open, _tag, _attrs, %{void_tag?: true}}, _context) do
     state
   end
 
-  defp push_tag(state, token) do
-    %{state | tags: [token | state.tags]}
+  defp push_tag(state, token, context) do
+    %{state | tags: [{token, context} | state.tags]}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _, _} = tag | tags]} = state, tag_name) do
-    {tag, %{state | tags: tags}}
+  defp pop_matching_tag(
+         %{tags: [{{:tag_open, tag_name, _, _} = tag, context} | tags]} = state,
+         tag_name
+       ) do
+    {tag, context, %{state | tags: tags}}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, meta} | _]}, closed_node_name) do
+  defp pop_matching_tag(
+         %{tags: [{{:tag_open, tag_name, _attrs, meta}, _context} | _]},
+         closed_node_name
+       ) do
     message = """
     expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{closed_node_name}>\
     """
 
     raise parse_error(message, meta)
   end
+
+  defp parent_context([{_tag, context} | _]), do: context
+  defp parent_context([]), do: nil
 
   defp parse_error(message, meta) do
     %ParseError{

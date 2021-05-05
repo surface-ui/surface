@@ -1,7 +1,7 @@
 defmodule Surface.Compiler.NodeTranslator do
   @type parse_metadata :: %{line: non_neg_integer(), column: non_neg_integer(), file: binary()}
 
-  @type tag_info :: {:tag_open, binary, list(), parse_metadata()}
+  @type tag_info :: {:tag_open, binary, list(), parse_metadata(), context()}
   @type state :: %{
           caller: Macro.Env.t(),
           tags: list(tag_info()),
@@ -26,7 +26,7 @@ defmodule Surface.Compiler.NodeTranslator do
   @callback context_for_subblock(
               state :: state(),
               block_name :: :default | binary(),
-              parent_name :: binary(),
+              parent_context :: context(),
               meta :: parse_metadata()
             ) ::
               context()

@@ -25,108 +25,55 @@ defmodule Surface.Compiler.AstTranslator do
     }
   end
 
-  def context_for_node(_state, name, meta) do
+  def context_for_node(state, name, meta) do
+    {node_type, node_alias} = node_type_and_alias(name, meta)
+    module = module_for_node(state, node_type, node_alias)
 
-  end
+    ast_meta = to_meta(state, meta, node_alias: node_alias, module: module)
 
-  def handle_attribute(state, context, name, {:expr, value, expr_meta}, attr_meta) do
-    %AST.Attribute{
-      name: name,
-      value: value
+    %{
+      type: node_type,
+      meta: ast_meta,
+      module: module,
+      name: name
     }
   end
 
-  def handle_attribute(state, context, name, value, meta) do
-    %AST.Attribute{
-      name: name,
-      value: value
-    }
+  defp node_type_and_alias(<<"#", first, rest::binary>>, _meta) when first in ?A..?Z,
+    do: {AST.MacroComponent, rest}
+
+  defp node_type_and_alias(<<"#", first, rest::binary>>, _meta) when first in ?a..?z,
+    do: {AST.Construct, rest}
+
+  defp node_type_and_alias(<<first, _::binary>> = name, _meta) when first in ?A..?Z,
+    do: {AST.Construct, name}
+
+  defp node_type_and_alias(name, %{void_tag?: true}), do: {AST.VoidTag, name}
+  defp node_type_and_alias(name, _meta), do: {AST.Tag, name}
+
+  defp module_for_node(_state, AST.Construct, name) do
+    # :-/
+    construct_module_name = "Surface.Constructs.#{String.capitalize(name)}"
+    Helpers.actual_component_module!(construct_module_name, __ENV__)
   end
 
-  def handle_node(state, "template", attributes, body, meta) do
-    if warning_enabled?(state, :deprecation_notice) do
-      message = """
-      using <template> to fill slots has been deprecated and will be removed in \
-      future versions.
-
-      Hint: replace `<template>` with `<#template>`
-      """
-
-      IOHelper.warn(message, state.caller, fn _ -> meta.line end)
-    end
-
-    handle_node(state, "#template", attributes, body, meta)
+  defp module_for_node(state, type, name) when type in [AST.Component, AST.MacroComponent] do
+    Helpers.actual_component_module!(name, state.caller)
   end
 
-  def handle_node(state, "slot", attributes, body, meta) do
-    if warning_enabled?(state, :deprecation_notice) do
-      message = """
-      using <slot> to define component slots has been deprecated and will be removed in \
-      future versions.
-
-      Hint: replace `<slot>` with `<#slot>`
-      """
-
-      IOHelper.warn(message, state.caller, fn _ -> meta.line end)
-    end
-
-    handle_node(state, "#slot", attributes, body, meta)
-  end
-
-  def handle_node(state, <<"#", first, _::binary>> = name, attributes, body, meta)
-      when first in ?A..?Z do
-    %AST.MacroComponent{
-      name: name,
-      attributes: attributes,
-      body: body,
-      meta: to_meta(state, meta)
-    }
-  end
-
-  def handle_node(state, <<"#", first, _::binary>> = name, attributes, [block | sub_blocks], meta)
-      when first in ?a..?z do
-    %AST.Construct{
-      name: name,
-      attributes: attributes,
-      body: block.body,
-      sub_blocks: sub_blocks,
-      meta: to_meta(state, meta)
-    }
-  end
-
-  def handle_node(state, <<first, _::binary>> = name, attributes, [block | sub_blocks], meta)
-      when first in ?A..?Z do
-    # %AST.Component{
-    #   name: name,
-    #   attributes: attributes,
-    #   body: block.body,
-    #   sub_blocks: sub_blocks,
-    #   meta: to_meta(state, meta)
-    # }
+  defp module_for_node(_state, _type, _name) do
     nil
   end
 
-  def handle_subblock(state, name, attrs, children, meta) do
-    %AST.Construct.SubBlock{
-      name: name,
-      # TODO: allow translating attributes ?
-      attributes: attrs,
-      body: children,
-      meta: to_meta(state, meta)
-    }
-  end
-
-  def to_meta(state, parse_meta) do
+  defp to_meta(state, parse_meta, extra \\ []) do
     %AST.Meta{
       line: parse_meta.line,
       column: parse_meta.column,
       file: parse_meta.file,
       caller: state.caller,
-      checks: state.checks
+      checks: state.checks,
+      node_alias: extra[:node_alias],
+      module: extra[:module]
     }
-  end
-
-  defp warning_enabled?(state, warning) do
-    Keyword.get(state.warnings, warning, true)
   end
 end
