@@ -37,14 +37,15 @@ defmodule Surface.Compiler.AstTranslator do
       meta: ast_meta,
       module: module,
       name: name,
-      allowed_subblocks: if(node_type == AST.Construct, do: module.valid_subblocks(), else: nil)
+      allowed_subblocks:
+        if(node_type == Surface.Construct, do: module.valid_subblocks(), else: nil)
     }
   end
 
-  def context_for_subblock(state, :default = name, %{type: AST.Construct} = parent, meta) do
+  def context_for_subblock(state, :default = name, %{type: Surface.Construct} = parent, meta) do
     if name in parent.allowed_subblocks do
       %{
-        type: AST.Construct.SubBlock,
+        type: Surface.Construct.SubBlock,
         meta: to_meta(state, meta, node_alias: name, module: parent.module),
         module: parent.module,
         name: name
@@ -54,10 +55,10 @@ defmodule Surface.Compiler.AstTranslator do
     end
   end
 
-  def context_for_subblock(state, "#" <> name, %{type: AST.Construct} = parent, meta) do
+  def context_for_subblock(state, "#" <> name, %{type: Surface.Construct} = parent, meta) do
     if name in parent.allowed_subblocks do
       %{
-        type: AST.Construct.SubBlock,
+        type: Surface.Construct.SubBlock,
         meta: to_meta(state, meta, node_alias: name, module: parent.module),
         module: parent.module,
         name: "#" <> name
@@ -79,10 +80,10 @@ defmodule Surface.Compiler.AstTranslator do
     do: {AST.MacroComponent, rest}
 
   defp node_type_and_alias(<<"#", first, rest::binary>>, _meta) when first in ?a..?z,
-    do: {AST.Construct, rest}
+    do: {Surface.Construct, rest}
 
   defp node_type_and_alias(name, _meta) when name in ["template", "slot"],
-    do: {AST.Construct, name}
+    do: {Surface.Construct, name}
 
   defp node_type_and_alias(<<first, _::binary>> = name, _meta) when first in ?A..?Z,
     do: {AST.Component, name}
@@ -90,7 +91,7 @@ defmodule Surface.Compiler.AstTranslator do
   defp node_type_and_alias(name, %{void_tag?: true}), do: {AST.VoidTag, name}
   defp node_type_and_alias(name, _meta), do: {AST.Tag, name}
 
-  defp module_for_node(_state, AST.Construct, name, meta) do
+  defp module_for_node(_state, Surface.Construct, name, meta) do
     # :-/
     construct_module_name = "Surface.Constructs.#{String.capitalize(name)}"
     module = Helpers.actual_component_module!(construct_module_name, __ENV__)
@@ -165,7 +166,7 @@ defmodule Surface.Compiler.AstTranslator do
        ) do
     {construct, tags_to_close} =
       Enum.reduce(state.tags, {nil, []}, fn
-        {_, %{type: AST.Construct} = ctx}, {nil, acc} ->
+        {_, %{type: Surface.Construct} = ctx}, {nil, acc} ->
           {ctx, Enum.reverse(acc)}
 
         {_, ctx}, {nil, acc} ->
