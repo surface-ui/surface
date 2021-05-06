@@ -260,7 +260,7 @@ defmodule Surface.Compiler.AstTranslator do
       if construct do
         """
         Did you mean to close #{Enum.join(", ", tags_to_close)} above line #{node_meta.line}? \
-        will associate this sub block with the <#{construct.name}> defined on line #{
+        That would associate this sub block with the <#{construct.name}> defined on line #{
           construct.line
         }.
         """
