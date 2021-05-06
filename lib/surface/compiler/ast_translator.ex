@@ -62,23 +62,25 @@ defmodule Surface.Compiler.AstTranslator do
       end)
 
     if directive do
-      %Surface.Directive{
-        module: directive,
-        original_name: name,
-        name: normalized_name,
-        value: parse_value(state, directive.type(), name, value, meta),
-        meta: meta
-      }
+      {String.to_atom(normalized_name),
+       %Surface.Directive{
+         module: directive,
+         original_name: name,
+         name: normalized_name,
+         value: parse_value(state, directive.type(), name, value, meta),
+         meta: meta
+       }}
     else
       {type, type_opts} = attribute_type_and_opts(context, name, meta)
 
-      %Surface.AST.Attribute{
-        type: type,
-        type_opts: type_opts,
-        name: name,
-        value: parse_value(state, type, name, value, meta),
-        meta: meta
-      }
+      {String.to_atom(name),
+       %Surface.AST.Attribute{
+         type: type,
+         type_opts: type_opts,
+         name: name,
+         value: parse_value(state, type, name, value, meta),
+         meta: meta
+       }}
     end
   end
 
