@@ -37,9 +37,9 @@ defmodule Surface.Constructs.If do
         do: [],
         else: List.first(node.templates.default).children
 
-    %AST.If{
+    %AST.IfElse{
       condition: condition,
-      children: children,
+      if: children,
       meta: node.meta
     }
   end
