@@ -784,18 +784,21 @@ defmodule Surface.Compiler.ParserTest do
       </#if>\
       """
 
-      assert parse(code) ==
-               {:ok,
-                [
-                  {"#if", [{:root, {:attribute_expr, "true", %{line: 1}}, %{line: 1}}],
-                   [
-                     "\n  1\n  ",
-                     {"span", [], ["2"], %{line: 3}},
-                     "\n  ",
-                     {"span", [], ["3"], %{line: 4}},
-                     "\n"
-                   ], %{line: 1}}
-                ]}
+      assert parse!(code) ==
+               [
+                 {"#if",
+                  [
+                    {:root, {:attribute_expr, "true", %{line: 1, column: 7, file: "nofile"}},
+                     %{line: 1, column: 7, file: "nofile"}}
+                  ],
+                  [
+                    "\n  1\n  ",
+                    {"span", [], ["2"], %{line: 3, column: 4, file: "nofile"}},
+                    "\n  ",
+                    {"span", [], ["3"], %{line: 4, column: 4, file: "nofile"}},
+                    "\n"
+                  ], %{line: 1, column: 2, file: "nofile"}}
+               ]
     end
 
     test "single sub-block" do

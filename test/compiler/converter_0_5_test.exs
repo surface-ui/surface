@@ -184,7 +184,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
     assert expected == """
            <div>
-             <#if condition={@var}>
+             <#if condition={ @var }>
                1
                </#if>
              <#if   condition={@var}>2</#if>
