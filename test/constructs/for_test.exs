@@ -15,7 +15,7 @@ defmodule Surface.Constructs.ForTest do
   end
 
   test "iterates over the provided list" do
-    alias Surface.Constructs.For
+    alias Surface.Constructs.Deprecated.For
 
     html =
       render_surface do
