@@ -146,7 +146,7 @@ defmodule Surface.AST.If do
   defstruct [:condition, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
-          condition: any(),
+          condition: Surface.AST.AttributeExpr.t(),
           debug: list(atom()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()

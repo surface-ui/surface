@@ -20,10 +20,26 @@ defmodule Surface.Construct do
   end
 
   @callback valid_subblocks() :: list(:default | binary())
+  @callback attribute_type(
+              block :: :default | binary(),
+              name :: :root | binary(),
+              meta :: Surface.AST.Meta.t()
+            ) :: atom()
   @callback process(
               attributes :: list(Surface.AST.Attribute.t()),
               body :: list(Surface.AST.t()),
               sub_blocks :: list(SubBlock.t()),
               meta :: Surface.AST.Meta.t()
             ) :: Surface.AST.t()
+
+  defmacro __using__(_opts \\ []) do
+    quote do
+      @behaviour Surface.Construct
+
+      def valid_subblocks(), do: [:default]
+      def attribute_type(_, _, _), do: :any
+
+      defoverridable valid_subblocks: 0, attribute_type: 3
+    end
+  end
 end
