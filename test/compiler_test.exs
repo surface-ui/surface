@@ -508,23 +508,23 @@ defmodule Surface.CompilerTest do
                element: "div",
                children: [
                  %Surface.AST.Literal{value: "\n  "},
-                 %Surface.AST.IfElse{
+                 %Surface.AST.If{
                    condition: %Surface.AST.AttributeExpr{original: "false"},
                    if: [%Surface.AST.Literal{value: "\n    IF\n  "}],
                    else: [
-                     %Surface.AST.IfElse{
+                     %Surface.AST.If{
                        condition: %Surface.AST.AttributeExpr{original: "false"},
                        if: [%Surface.AST.Literal{value: "\n    ELSEIF FALSE\n  "}],
                        else: [
-                         %Surface.AST.IfElse{
+                         %Surface.AST.If{
                            condition: %Surface.AST.AttributeExpr{original: "true"},
                            if: [
                              %Surface.AST.Literal{value: "\n    BEFORE\n    "},
-                             %Surface.AST.IfElse{
+                             %Surface.AST.If{
                                condition: %Surface.AST.AttributeExpr{original: "false"},
                                if: [%Surface.AST.Literal{value: "\n      NESTED IF\n    "}],
                                else: [
-                                 %Surface.AST.IfElse{
+                                 %Surface.AST.If{
                                    condition: %Surface.AST.AttributeExpr{original: "true"},
                                    if: [
                                      %Surface.AST.Literal{

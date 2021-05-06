@@ -7,7 +7,7 @@ defmodule Surface.AST do
           | Surface.AST.VoidTag.t()
           | Surface.AST.Template.t()
           | Surface.AST.Slot.t()
-          | Surface.AST.IfElse.t()
+          | Surface.AST.If.t()
           | Surface.AST.For.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
@@ -133,7 +133,7 @@ defmodule Surface.AST.For do
         }
 end
 
-defmodule Surface.AST.IfElse do
+defmodule Surface.AST.If do
   @moduledoc """
   An AST node representing an if/else expression
 
