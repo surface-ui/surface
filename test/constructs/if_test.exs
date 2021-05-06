@@ -148,7 +148,7 @@ defmodule Surface.Constructs.IfTest do
   end
 
   describe "#else language structure" do
-    test "renders inner if condition if condition is truthy" do
+    test "renders inner `if` condition, if condition is truthy" do
       html =
         render_surface do
           ~H"""
@@ -168,7 +168,7 @@ defmodule Surface.Constructs.IfTest do
              """
     end
 
-    test "renders inner else condition is falsly" do
+    test "renders inner `else` condition if condition is fasly" do
       html =
         render_surface do
           ~H"""
@@ -190,7 +190,26 @@ defmodule Surface.Constructs.IfTest do
   end
 
   describe "#elseif language structure" do
-    test "renders inner elseif condition is truthy without else" do
+    test "renders inner `elseif` condition if condition is truthy" do
+      html =
+        render_surface do
+          ~H"""
+          <#if condition={false}>
+            IF
+          <#elseif condition={true}>
+            ELSEIF TRUE
+          <#else>
+            ELSE
+          </#if>
+          """
+        end
+
+      assert html =~ """
+             ELSEIF TRUE
+             """
+    end
+
+    test "renders inner `elseif` condition if condition is truthy even without an else clause" do
       html =
         render_surface do
           ~H"""
@@ -207,26 +226,7 @@ defmodule Surface.Constructs.IfTest do
              """
     end
 
-    test "renders multiple inner elseif condition is truthy returns the first true block" do
-      html =
-        render_surface do
-          ~H"""
-          <#if condition={false}>
-            IF
-          <#elseif condition={true}>
-            ELSEIF TRUE 1
-          <#elseif condition={true}>
-            ELSEIF TRUE 2
-          </#if>
-          """
-        end
-
-      assert html =~ """
-             ELSEIF TRUE 1
-             """
-    end
-
-    test "renders inner elseif condition is falsy without else" do
+    test "renders nothing if all conditions are falsly" do
       html =
         render_surface do
           ~H"""
@@ -243,7 +243,7 @@ defmodule Surface.Constructs.IfTest do
       assert html =~ ""
     end
 
-    test "renders inner elseif condition is falsly" do
+    test "renders inner `else` condition if all `elseif` conditions are falsly" do
       html =
         render_surface do
           ~H"""
@@ -266,30 +266,7 @@ defmodule Surface.Constructs.IfTest do
              """
     end
 
-    test "renders inner elseif condition is truthy" do
-      html =
-        render_surface do
-          ~H"""
-          <#if condition={false}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          <#elseif condition={true}>
-          <span>The elseif content</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#if>
-          """
-        end
-
-      assert html =~ """
-             <span>The elseif content</span>
-             <span>with multiple tags</span>
-             """
-    end
-
-    test "renders inner if condition is truthy" do
+    test "renders only first truthy condition" do
       html =
         render_surface do
           ~H"""
@@ -314,7 +291,7 @@ defmodule Surface.Constructs.IfTest do
   end
 
   describe "nested if/elseif/else" do
-    test "renders inner elseif condition is falsy without else" do
+    test "renders inner `elseif` condition if condition is truthy" do
       html =
         render_surface do
           ~H"""
