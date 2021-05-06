@@ -1,9 +1,34 @@
 defmodule Surface.Compiler.AstTranslator do
   @behaviour Surface.Compiler.NodeTranslator
 
+  @constructs %{
+    "if" => Surface.Construct.If,
+    "for" => Surface.Construct.For,
+    "template" => Surface.Construct.Template,
+    "slot" => Surface.Construct.Slot
+  }
+
+  @directives [
+    Surface.Directive.ComponentProps,
+    Surface.Directive.Let,
+    Surface.Directive.Hook,
+    Surface.Directive.Values,
+    Surface.Directive.TagAttrs,
+    Surface.Directive.Events,
+    Surface.Directive.Show,
+    Surface.Directive.If,
+    Surface.Directive.For,
+    Surface.Directive.Debug
+  ]
+
   alias Surface.AST
   alias Surface.Compiler.Helpers
   alias Surface.Compiler.Parser
+
+  defguardp is_component(context) when context.type in [AST.Component, AST.MacroComponent]
+  defguardp is_construct(context) when context.type == Surface.Construct
+  defguardp is_subblock(context) when context.type == Surface.Construct.SubBlock
+  defguardp is_tag(context) when context.type in [AST.Tag, AST.VoidTag]
 
   def handle_comment(state, _comment), do: {state, :ignore}
 
@@ -24,6 +49,37 @@ defmodule Surface.Compiler.AstTranslator do
        value: Helpers.interpolation_to_quoted!(expression, ast_meta),
        meta: ast_meta
      }}
+  end
+
+  def handle_attribute(state, context, name, value, attr_meta) do
+    meta = to_meta(state, attr_meta)
+
+    normalized_name = Surface.Directive.normalize_name(name)
+
+    directive =
+      Enum.find(@directives, fn directive ->
+        directive.matches?(context.type, normalized_name)
+      end)
+
+    if directive do
+      %Surface.Directive{
+        module: directive,
+        original_name: name,
+        name: normalized_name,
+        value: parse_value(state, directive.type(), name, value, meta),
+        meta: meta
+      }
+    else
+      {type, type_opts} = attribute_type_and_opts(context, name, meta)
+
+      %Surface.AST.Attribute{
+        type: type,
+        type_opts: type_opts,
+        name: name,
+        value: parse_value(state, type, name, value, meta),
+        meta: meta
+      }
+    end
   end
 
   def context_for_node(state, name, meta) do
@@ -61,7 +117,7 @@ defmodule Surface.Compiler.AstTranslator do
         type: Surface.Construct.SubBlock,
         meta: to_meta(state, meta, node_alias: name, module: parent.module),
         module: parent.module,
-        name: "#" <> name
+        name: name
       }
     else
       raise_unexpected_subblock_error!(name, parent, meta)
@@ -92,11 +148,7 @@ defmodule Surface.Compiler.AstTranslator do
   defp node_type_and_alias(name, _meta), do: {AST.Tag, name}
 
   defp module_for_node(_state, Surface.Construct, name, meta) do
-    # :-/
-    construct_module_name = "Surface.Constructs.#{String.capitalize(name)}"
-    module = Helpers.actual_component_module!(construct_module_name, __ENV__)
-
-    if function_exported?(module, :valid_subblocks, 0) do
+    if module = @constructs[name] do
       module
     else
       raise_unknown_construct_error!(name, meta)
@@ -110,6 +162,32 @@ defmodule Surface.Compiler.AstTranslator do
 
   defp module_for_node(_state, _type, _name, _meta) do
     nil
+  end
+
+  defp attribute_type_and_opts(context, name, meta)
+       when is_component(context) or is_tag(context) do
+    Surface.TypeHandler.attribute_type_and_opts(context.module, name, meta)
+  end
+
+  defp attribute_type_and_opts(context, name, meta)
+       when is_construct(context) or is_subblock(context) do
+    block_name = if is_subblock(context), do: context.name, else: :default
+    type = context.module.attribute_type(block_name, name, meta)
+    {type, []}
+  end
+
+  defp parse_value(state, type, name, {:expr, value, expr_meta}, _attr_meta) do
+    meta = to_meta(state, expr_meta)
+
+    %AST.AttributeExpr{
+      original: value,
+      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, meta),
+      meta: meta
+    }
+  end
+
+  defp parse_value(_state, type, name, value, meta) do
+    Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
   end
 
   defp to_meta(state, parse_meta, extra \\ []) do
