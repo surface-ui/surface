@@ -45,7 +45,7 @@ defmodule Surface.Directive.Debug do
         },
         debug: node.debug,
         meta: node.meta,
-        if: [node]
+        children: [node]
       }
     else
       node

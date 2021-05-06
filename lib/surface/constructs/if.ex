@@ -39,7 +39,7 @@ defmodule Surface.Constructs.If do
 
     %AST.If{
       condition: condition,
-      if: children,
+      children: children,
       meta: node.meta
     }
   end

@@ -311,7 +311,7 @@ defmodule Surface.Compiler do
     {:ok,
      %AST.If{
        condition: condition,
-       if: to_ast(if_children, compile_meta),
+       children: to_ast(if_children, compile_meta),
        else: to_ast(else_children, compile_meta),
        meta: meta
      }}

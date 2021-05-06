@@ -226,7 +226,7 @@ defmodule Surface.Constructs.IfTest do
              """
     end
 
-    test "renders nothing if all conditions are falsly" do
+    test "renders nothing if all conditions are fasly" do
       html =
         render_surface do
           ~H"""
@@ -243,7 +243,7 @@ defmodule Surface.Constructs.IfTest do
       assert html =~ ""
     end
 
-    test "renders inner `else` condition if all `elseif` conditions are falsly" do
+    test "renders inner `else` condition if all `elseif` conditions are fasly" do
       html =
         render_surface do
           ~H"""

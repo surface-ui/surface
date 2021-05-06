@@ -139,17 +139,17 @@ defmodule Surface.AST.If do
 
   ## Properties
       * `:condition` - a quoted expression
-      * `:if` - the children to insert into the dom if the condition evaluates truthy
-      * `:else` - the children to insert into the dom if the condition evaluates falsely
+      * `:children` - the children to insert into the dom if the condition evaluates truthy
+      * `:else` - the children to insert into the dom if the condition evaluates fasly
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:condition, :if, :meta, else: [], debug: []]
+  defstruct [:condition, :children, :meta, else: [], debug: []]
 
   @type t :: %__MODULE__{
           condition: any(),
           debug: list(atom()),
-          if: list(Surface.AST.t()),
+          children: list(Surface.AST.t()),
           else: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
