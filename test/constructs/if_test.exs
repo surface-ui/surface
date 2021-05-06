@@ -40,25 +40,6 @@ defmodule Surface.Constructs.IfTest do
            """
   end
 
-  test "renders inner if condition is truthy" do
-    alias Surface.Constructs.If
-
-    html =
-      render_surface do
-        ~H"""
-        <If condition={true}>
-        <span>The inner content</span>
-        <span>with multiple tags</span>
-        </If>
-        """
-      end
-
-    assert html =~ """
-           <span>The inner content</span>
-           <span>with multiple tags</span>
-           """
-  end
-
   test "parser error message contains the correct line" do
     code =
       quote do
@@ -72,7 +53,9 @@ defmodule Surface.Constructs.IfTest do
     message = ~S(code:2:12: expected closing tag for <span> defined on line 2, got </If>)
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
-      compile_surface(code)
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
     end)
   end
 
