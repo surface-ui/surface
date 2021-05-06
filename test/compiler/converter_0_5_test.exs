@@ -171,28 +171,28 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert <If> into <#if>" do
+    expected =
+      convert("""
+      <div>
+        <If condition={{ @var }}>
+          1
+          </If>
+        <If   condition={{@var}}>2</If>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             <#if condition={ @var }>
+               1
+               </#if>
+             <#if   condition={@var}>2</#if>
+           </div>
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
-
-  # test "convert <If> into <#if>" do
-  #   expected =
-  #     convert("""
-  #     <div>
-  #       <If condition={{ @var }}>
-  #         1
-  #         </If>
-  #       <If   condition={{@var}}>2</If>
-  #     </div>
-  #     """)
-
-  #   assert expected == """
-  #          <div>
-  #            <#if condition={@var}>
-  #              1
-  #              </#if>
-  #            <#if   condition={@var}>2</#if>
-  #          </div>
-  #          """
-  # end
 
   # test "convert <For> into <#For>" do
   #   expected =

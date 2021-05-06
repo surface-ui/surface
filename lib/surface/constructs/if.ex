@@ -13,6 +13,7 @@ defmodule Surface.Constructs.If do
   use Surface.Component
 
   alias Surface.AST
+  alias Surface.IOHelper
 
   @doc "The condition for the if expression"
   prop condition, :boolean, required: true
@@ -21,6 +22,8 @@ defmodule Surface.Constructs.If do
   def render(_), do: ""
 
   def transform(node) do
+    warn_on_deprecated_if_notation(node)
+
     condition =
       Enum.find_value(
         node.props,
@@ -42,5 +45,16 @@ defmodule Surface.Constructs.If do
       children: children,
       meta: node.meta
     }
+  end
+
+  defp warn_on_deprecated_if_notation(node) do
+    message = """
+    using <If> to wrap elements in an if experssion has been depreacated and will be removed in \
+    future versions.
+
+    Hint: replace `<If>` with `<#if>`
+    """
+
+    IOHelper.warn(message, node.meta.caller, fn _ -> node.meta.line end)
   end
 end
