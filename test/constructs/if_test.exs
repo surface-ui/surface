@@ -1,5 +1,6 @@
 defmodule Surface.Constructs.IfTest do
   use Surface.ConnCase, async: true
+  import ExUnit.CaptureIO
 
   defmodule ListProp do
     use Surface.Component
@@ -12,6 +13,31 @@ defmodule Surface.Constructs.IfTest do
       <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
     end
+  end
+
+  test "warn when using deprecated <If>" do
+    code =
+      quote do
+        ~H"""
+        <If condition={{ true }}>
+          Warning
+        </If>
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
+
+    assert output =~ ~r"""
+           using <If> to wrap elements in an if experssion has been depreacated and will be removed in \
+           future versions.
+
+           Hint: replace `<If>` with `<#if>`
+
+             code:1:\
+           """
   end
 
   test "renders inner if condition is truthy" do

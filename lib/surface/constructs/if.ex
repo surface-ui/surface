@@ -13,6 +13,7 @@ defmodule Surface.Constructs.If do
   use Surface.Component
 
   alias Surface.AST
+  alias Surface.IOHelper
 
   @doc "The condition for the if expression"
   prop condition, :boolean, required: true

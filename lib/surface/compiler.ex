@@ -435,7 +435,13 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(:component, {name, attributes, children, node_meta}, compile_meta) do
+  defp convert_node_to_ast(
+         :component,
+         {name, attributes, children, node_meta} = node,
+         compile_meta
+       ) do
+    maybe_warn_on_deprecated_if_notation(node, compile_meta)
+
     # TODO: validate live views vs live components ?
     meta = Helpers.to_meta(node_meta, compile_meta)
     mod = Helpers.actual_component_module!(name, meta.caller)
@@ -1031,6 +1037,19 @@ defmodule Surface.Compiler do
       future versions.
 
       Hint: replace `<slot>` with `<#slot>`
+      """
+
+      IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
+    end
+  end
+
+  defp maybe_warn_on_deprecated_if_notation({name, _, _, %{line: line}}, compile_meta) do
+    if name == "If" do
+      message = """
+      using <If> to wrap elements in an if experssion has been depreacated and will be removed in \
+      future versions.
+
+      Hint: replace `<If>` with `<#if>`
       """
 
       IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
