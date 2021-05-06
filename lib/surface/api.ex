@@ -371,11 +371,11 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :accumulate]
+    [:required, :default, :values, :values!, :accumulate]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
-    [:default, :values]
+    [:default, :values, :values!]
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
@@ -408,7 +408,7 @@ defmodule Surface.API do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:prop, _name, _type, opts, :default, _value, caller) do
+  defp validate_opt(:prop, name, _type, opts, :default, value, caller) do
     if Keyword.get(opts, :required, false) do
       IOHelper.warn(
         "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
@@ -416,6 +416,14 @@ defmodule Surface.API do
         fn _ -> caller.line end
       )
     end
+
+    warn_on_invalid_default(:prop, name, value, opts, caller)
+
+    :ok
+  end
+
+  defp validate_opt(:data, name, _type, opts, :default, value, caller) do
+    warn_on_invalid_default(:data, name, value, opts, caller)
 
     :ok
   end
@@ -471,6 +479,38 @@ defmodule Surface.API do
 
   defp validate_opt(_func, _name, _type, _opts, _key, _value, _caller) do
     :ok
+  end
+
+  defp warn_on_invalid_default(type, name, default, opts, caller) do
+    accumulate? = Keyword.get(opts, :accumulate, false)
+    values! = Keyword.get(opts, :values!)
+
+    cond do
+      accumulate? and not is_list(default) ->
+        IOHelper.warn(
+          "#{type} `#{name}` default value #{inspect(default)} must be a list when accumulate: true",
+          caller,
+          fn _ -> caller.line end
+        )
+
+      accumulate? and not is_nil(values!) and
+          not MapSet.subset?(MapSet.new(default), MapSet.new(values!)) ->
+        IOHelper.warn(
+          "#{type} `#{name}` default value #{inspect(default)} does not exist in :values!",
+          caller,
+          fn _ -> caller.line end
+        )
+
+      not accumulate? and not is_nil(values!) and not (default in values!) ->
+        IOHelper.warn(
+          "#{type} `#{name}` default value #{inspect(default)} does not exist in :values!",
+          caller,
+          fn _ -> caller.line end
+        )
+
+      true ->
+        :ok
+    end
   end
 
   defp unknown_options_message(valid_opts, unknown_options) do
