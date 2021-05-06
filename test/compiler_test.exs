@@ -478,6 +478,89 @@ defmodule Surface.CompilerTest do
     end
   end
 
+  describe "constructs" do
+    test "#if/#elseif/#else" do
+      code = """
+      <div>
+        <#if condition={false}>
+          IF
+        <#elseif condition={false}>
+          ELSEIF FALSE
+        <#elseif condition={true}>
+          BEFORE
+          <#if condition={false}>
+            NESTED IF
+          <#elseif condition={true}>
+            NESTED ELSEIF TRUE
+          <#else>
+            NESTED ELSE
+          </#if>
+          AFTER
+        <#else>
+          ELSE
+        </#if>
+      </div>
+      """
+
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+      assert %Surface.AST.Tag{
+               element: "div",
+               children: [
+                 %Surface.AST.Literal{value: "\n  "},
+                 %Surface.AST.IfElse{
+                   condition: %Surface.AST.AttributeExpr{original: "false"},
+                   if: [%Surface.AST.Literal{value: "\n    IF\n  "}],
+                   else: [
+                     %Surface.AST.IfElse{
+                       condition: %Surface.AST.AttributeExpr{original: "false"},
+                       if: [%Surface.AST.Literal{value: "\n    ELSEIF FALSE\n  "}],
+                       else: [
+                         %Surface.AST.IfElse{
+                           condition: %Surface.AST.AttributeExpr{original: "true"},
+                           if: [
+                             %Surface.AST.Literal{value: "\n    BEFORE\n    "},
+                             %Surface.AST.IfElse{
+                               condition: %Surface.AST.AttributeExpr{original: "false"},
+                               if: [%Surface.AST.Literal{value: "\n      NESTED IF\n    "}],
+                               else: [
+                                 %Surface.AST.IfElse{
+                                   condition: %Surface.AST.AttributeExpr{original: "true"},
+                                   if: [
+                                     %Surface.AST.Literal{
+                                       value: "\n      NESTED ELSEIF TRUE\n    "
+                                     }
+                                   ],
+                                   else: [
+                                     %Surface.AST.Container{
+                                       children: [
+                                         %Surface.AST.Literal{value: "\n      NESTED ELSE\n    "}
+                                       ]
+                                     }
+                                   ]
+                                 }
+                               ]
+                             },
+                             %Surface.AST.Literal{value: "\n    AFTER\n  "}
+                           ],
+                           else: [
+                             %Surface.AST.Container{
+                               children: [
+                                 %Surface.AST.Literal{value: "\n    ELSE\n  "}
+                               ]
+                             }
+                           ]
+                         }
+                       ]
+                     }
+                   ]
+                 },
+                 %Surface.AST.Literal{value: "\n"}
+               ]
+             } = node
+    end
+  end
+
   describe "errors/warnings" do
     test "raise error for invalid expressions on properties" do
       code = """
