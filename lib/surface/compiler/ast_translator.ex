@@ -134,11 +134,11 @@ defmodule Surface.Compiler.AstTranslator do
     raise_subblock_parent_not_a_construct_error!(state, name, parent, node_meta)
   end
 
-  defp node_type_and_alias(<<"#", first, rest::binary>>, _meta) when first in ?A..?Z,
-    do: {AST.MacroComponent, rest}
+  defp node_type_and_alias(<<"#", first, _rest::binary>> = name, _meta) when first in ?A..?Z,
+    do: {AST.MacroComponent, String.slice(name, 1..-1)}
 
-  defp node_type_and_alias(<<"#", first, rest::binary>>, _meta) when first in ?a..?z,
-    do: {Surface.Construct, rest}
+  defp node_type_and_alias(<<"#", first, _rest::binary>> = name, _meta) when first in ?a..?z,
+    do: {Surface.Construct, String.slice(name, 1..-1)}
 
   defp node_type_and_alias(name, _meta) when name in ["template", "slot"],
     do: {Surface.Construct, name}
