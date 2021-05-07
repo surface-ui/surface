@@ -230,6 +230,7 @@ defmodule Surface.Compiler do
   defp node_type({"#if", _, _, _}), do: :if_elseif_else
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
   defp node_type({"#else", _, _, _}), do: :if_elseif_else
+  defp node_type({"#unless", _, _, _}), do: :unless
 
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
@@ -313,6 +314,39 @@ defmodule Surface.Compiler do
        condition: condition,
        children: to_ast(if_children, compile_meta),
        else: to_ast(else_children, compile_meta),
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :unless,
+         {_, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
+
+    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+
+    inverted_condition =
+      case condition do
+        %AST.AttributeExpr{value: value} = expr ->
+          value =
+            quote generated: true do
+              !unquote(value)
+            end
+
+          %AST.AttributeExpr{expr | value: value}
+
+        condition ->
+          condition
+      end
+
+    {:ok,
+     %AST.If{
+       condition: inverted_condition,
+       children: to_ast(children, compile_meta),
        meta: meta
      }}
   end
