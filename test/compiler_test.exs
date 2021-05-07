@@ -477,7 +477,7 @@ defmodule Surface.CompilerTest do
              } = node
     end
 
-    test "#raw is treated as a LiteralValue" do
+    test "#raw is treated as a Literal" do
       code = """
       <div>
         <#raw>
