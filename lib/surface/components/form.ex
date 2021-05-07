@@ -15,7 +15,6 @@ defmodule Surface.Components.Form do
 
   import Phoenix.HTML.Form
   import Surface.Components.Form.Utils, only: [props_to_opts: 2, props_to_attr_opts: 2]
-  alias Surface.Components.Raw
 
   @doc "Atom or changeset to inform the form data"
   prop for, :any, required: true
@@ -69,7 +68,7 @@ defmodule Surface.Components.Form do
       <Context put={__MODULE__, form: form}>
         <#slot :props={form: form} />
       </Context>
-    <#Raw></form></#Raw>
+    <#raw></form></#raw>
     """
   end
 
