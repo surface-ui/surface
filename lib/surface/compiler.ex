@@ -226,7 +226,7 @@ defmodule Surface.Compiler do
   defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
 
-  # Conditionnal blocks
+  # Conditional blocks
   defp node_type({"#if", _, _, _}), do: :if_elseif_else
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
   defp node_type({"#else", _, _, _}), do: :if_elseif_else
