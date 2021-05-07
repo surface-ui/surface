@@ -4,9 +4,11 @@ defmodule Surface.Compiler.Converter_0_5 do
   @behaviour Surface.Compiler.Converter
 
   def convert(:interpolation, text, _state, _opts) do
-    text
-    |> String.slice(1..-2)
-    |> String.trim()
+    if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
+      String.slice(text, 1..-2)
+    else
+      text
+    end
   end
 
   def convert(:unquoted_string, value, _state, _opts) do
@@ -21,11 +23,15 @@ defmodule Surface.Compiler.Converter_0_5 do
     "#slot"
   end
 
-  ## Planned changes. Uncomment as the related implementation gets merged
+  def convert(:tag_name, "If", _state, _opts) do
+    "#if"
+  end
 
-  # def convert(:tag_name, "If", _state, _opts) do
-  #   "#if"
-  # end
+  def convert(:tag_name, "#Raw", _state, _opts) do
+    "#raw"
+  end
+
+  ## Planned changes. Uncomment as the related implementation gets merged
 
   # def convert(:tag_name, "For", _state, _opts) do
   #   "#for"

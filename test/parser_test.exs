@@ -775,6 +775,32 @@ defmodule Surface.Compiler.ParserTest do
   end
 
   describe "sub-blocks" do
+    test "no sub-block with nested child" do
+      code = """
+      <#if {true}>
+        1
+        <span>2</span>
+        <span>3</span>
+      </#if>\
+      """
+
+      assert parse!(code) ==
+               [
+                 {"#if",
+                  [
+                    {:root, {:attribute_expr, "true", %{line: 1, column: 7, file: "nofile"}},
+                     %{line: 1, column: 7, file: "nofile"}}
+                  ],
+                  [
+                    "\n  1\n  ",
+                    {"span", [], ["2"], %{line: 3, column: 4, file: "nofile"}},
+                    "\n  ",
+                    {"span", [], ["3"], %{line: 4, column: 4, file: "nofile"}},
+                    "\n"
+                  ], %{line: 1, column: 2, file: "nofile"}}
+               ]
+    end
+
     test "single sub-block" do
       code = """
       <#if {true}>
