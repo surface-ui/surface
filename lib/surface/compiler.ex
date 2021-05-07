@@ -324,7 +324,7 @@ defmodule Surface.Compiler do
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
-    default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
     condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
 
     {:ok,
