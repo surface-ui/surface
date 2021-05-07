@@ -577,26 +577,11 @@ defmodule Surface.CompilerTest do
              children: [
                %Surface.AST.Literal{value: "\n  "},
                %Surface.AST.If{
-                 condition: %Surface.AST.AttributeExpr{
-                   original: "false",
-                   value: {
-                     :__block__,
-                     [generated: true],
-                     [
-                       {:!, [generated: true, context: Surface.Compiler, import: Kernel],
-                        [
-                          {{:., [generated: true],
-                            [
-                              {:__aliases__, [generated: true, alias: false],
-                               [:Surface, :TypeHandler]},
-                              :expr_to_value!
-                            ]}, [generated: true],
-                           [:integer, "condition", [false], [], nil, "false"]}
-                        ]}
-                     ]
-                   }
-                 },
-                 children: [%Surface.AST.Literal{value: "\n    UNLESS\n  "}]
+                 children: [],
+                 condition: %Surface.AST.AttributeExpr{original: "false"},
+                 else: [
+                   %Surface.AST.Literal{value: "\n    UNLESS\n  "}
+                 ]
                },
                %Surface.AST.Literal{value: "\n"}
              ]
