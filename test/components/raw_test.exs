@@ -2,7 +2,6 @@ defmodule Surface.Components.RawTest do
   use Surface.ConnCase
 
   import ExUnit.CaptureIO
-  alias Surface.PropertiesTest.StringProp, warn: false
 
   test "warn if deprecated <#Raw> is used" do
     id = :erlang.unique_integer([:positive]) |> to_string()
