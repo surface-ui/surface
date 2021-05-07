@@ -683,6 +683,48 @@ defmodule Surface.CompilerSyncTest do
 
   alias Surface.CompilerTest.{Button, Column, GridLive}, warn: false
 
+  test "warning when passing integer attribute values that are not enclosed by {}" do
+    code = """
+    <div>
+      <div tabindex=1 />
+    </div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+            Passing attribute values as `tabindex=1` has been deprecated and will be removed in future version.
+
+             Hint: replace `tabindex=1` by `tabindex={1}`
+           """
+
+    assert line == 2
+  end
+
+  test "warning when passing boolean attribute values that are not enclosed by {}" do
+    code = """
+    <div>
+      <div selected=true checked=false />
+    </div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+            Passing attribute values as `selected=true` has been deprecated and will be removed in future version.
+
+             Hint: replace `selected=true` by `selected={true}`
+           """
+
+    assert message =~ """
+            Passing attribute values as `checked=false` has been deprecated and will be removed in future version.
+
+             Hint: replace `checked=false` by `checked={false}`
+           """
+
+    assert line == 2
+  end
+
   test "warning when a aliased component cannot be loaded" do
     alias Components.But, warn: false
 

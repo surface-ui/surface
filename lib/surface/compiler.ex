@@ -672,7 +672,19 @@ defmodule Surface.Compiler do
     }
   end
 
-  defp attr_value(name, type, value, meta) do
+  defp attr_value(name, type, value, meta) when is_boolean(value) or is_integer(value) do
+    message = """
+      Passing attribute values as `#{name}=#{value}` has been deprecated and will be removed in future version.
+
+      Hint: replace `#{name}=#{value}` by `#{name}={#{value}}`
+    """
+
+    IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+
+    Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
+  end
+
+  defp attr_value(name, type, value, meta) when is_binary(value) do
     Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
   end
 
