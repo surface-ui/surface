@@ -329,24 +329,11 @@ defmodule Surface.Compiler do
 
     condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
 
-    inverted_condition =
-      case condition do
-        %AST.AttributeExpr{value: value} = expr ->
-          value =
-            quote generated: true do
-              !unquote(value)
-            end
-
-          %AST.AttributeExpr{expr | value: value}
-
-        condition ->
-          condition
-      end
-
     {:ok,
      %AST.If{
-       condition: inverted_condition,
-       children: to_ast(children, compile_meta),
+       condition: condition,
+       children: [],
+       else: to_ast(children, compile_meta),
        meta: meta
      }}
   end
