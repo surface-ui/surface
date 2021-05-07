@@ -1,90 +1,46 @@
-defmodule Surface.Constructs.If do
-  use Surface.Construct
-  alias Surface.Construct
-  alias Surface.IOHelper
+defmodule Surface.Constructs.Deprecated.If do
+  @moduledoc """
+  Provides an alternative to the `:if` directive for wrapping multiple elements in an if expression.
 
-  def valid_subblocks(), do: [:default, "elseif", "else"]
+  ## Examples
+  ```
+  <If condition={{ @display_link }}>
+    <Icon name="cheveron_left" />
+    <a href={{ @item.to }}>{{ @item.label }}</a>
+  </If>
+  ```
+  """
+  use Surface.Component
 
-  def attribute_type(block, attribute, _)
-      when block in [:default, "elseif"] and attribute in [:root, "condition"],
-      do: :boolean
+  alias Surface.AST
 
-  def attribute_type("else", name, meta) when name in [:root, "condition"] do
-    IOHelper.warn(
-      "else does not accept a condition property, did you mean to use <#elseif>?",
-      meta.caller,
-      fn _ -> meta.line end
-    )
+  @doc "The condition for the if expression"
+  prop condition, :boolean, required: true
+  slot default, required: true
 
-    :ignore
-  end
+  def render(_), do: ""
 
-  def attribute_type("else", name, meta) do
-    IOHelper.warn(
-      "#{name} is an unknown property for <#else> and will be ignored.",
-      meta.caller,
-      fn _ -> meta.line end
-    )
-
-    :ignore
-  end
-
-  def attribute_type(block, name, meta) do
-    block_name = if block == :default, do: "if", else: block
-
-    IOHelper.warn(
-      """
-      "#{name}" is an unknown attribute for <##{block_name}> and will be ignored.
-
-      Did you mean to use either "condition" or the root prop?
-      """,
-      meta.caller,
-      fn _ -> meta.line end
-    )
-
-    :ignore
-  end
-
-  def process(attributes, body, [], meta) do
-    %Surface.AST.If{
-      condition: find_condition(attributes),
-      children: body,
-      meta: meta
-    }
-  end
-
-  def process(_attributes, _body, _blocks, meta) do
-    IOHelper.compile_error(
-      "sub block support is not implemented yet for #if",
-      meta.file,
-      meta.line
-    )
-  end
-
-  defp find_condition([%Surface.AST.Attribute{value: value, meta: meta} | remainder]) do
-    warn_ignored_attributes(remainder)
-
-    case value do
-      %Surface.AST.Literal{value: expression} ->
-        %Surface.AST.AttributeExpr{original: expression, value: expression, meta: meta}
-
-      %Surface.AST.AttributeExpr{} ->
-        value
-    end
-  end
-
-  defp warn_ignored_attributes(ignored_attributes) do
-    Enum.each(ignored_attributes, fn attr ->
-      IOHelper.warn(
-        """
-        #if ignores duplicate/repeated attributes. Only the first condition found will be used.
-
-        Hint: either specify the condition via a root property (`<#if { ... }>`) or via the \
-        condition property (`<#if condition={ ... }>`), but not both (`<#if { ... } condition={ ... }>`)
-        """,
-        attr.meta.caller,
-        fn _ -> attr.meta.line end
+  def transform(node) do
+    condition =
+      Enum.find_value(
+        node.props,
+        %AST.AttributeExpr{value: false, original: "", meta: node.meta},
+        fn prop ->
+          if prop.name == :condition do
+            prop.value
+          end
+        end
       )
-    end)
+
+    children =
+      if Enum.empty?(node.templates.default),
+        do: [],
+        else: List.first(node.templates.default).children
+
+    %AST.If{
+      condition: condition,
+      children: children,
+      meta: node.meta
+    }
   end
 end
