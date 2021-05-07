@@ -488,7 +488,7 @@ defmodule Surface.API do
     cond do
       accumulate? and not is_list(default) ->
         IOHelper.warn(
-          "#{type} `#{name}` default value #{inspect(default)} must be a list when accumulate: true",
+          "#{type} `#{name}` default value `#{inspect(default)}` must be a list when `accumulate: true`",
           caller,
           fn _ -> caller.line end
         )
@@ -496,14 +496,14 @@ defmodule Surface.API do
       accumulate? and not is_nil(values!) and
           not MapSet.subset?(MapSet.new(default), MapSet.new(values!)) ->
         IOHelper.warn(
-          "#{type} `#{name}` default value #{inspect(default)} does not exist in :values!",
+          "#{type} `#{name}` default value `#{inspect(default)}` does not exist in `:values!`",
           caller,
           fn _ -> caller.line end
         )
 
       not accumulate? and not is_nil(values!) and not (default in values!) ->
         IOHelper.warn(
-          "#{type} `#{name}` default value #{inspect(default)} does not exist in :values!",
+          "#{type} `#{name}` default value `#{inspect(default)}` does not exist in `:values!`",
           caller,
           fn _ -> caller.line end
         )

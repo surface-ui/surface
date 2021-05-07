@@ -740,15 +740,15 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~S"""
-           prop `type` default value "x-large" does not exist in :values!
+           prop `type` default value `"x-large"` does not exist in `:values!`
            """
 
     assert output =~ ~S"""
-           data `data_type` default value "x-large" does not exist in :values!
+           data `data_type` default value `"x-large"` does not exist in `:values!`
            """
 
     assert output =~ ~S"""
-           prop `invalid_type` default value [] does not exist in :values!
+           prop `invalid_type` default value `[]` does not exist in `:values!`
            """
 
     refute output =~ ~S"""
@@ -756,11 +756,11 @@ defmodule Surface.PropertiesSyncTest do
            """
 
     assert output =~ ~S"""
-           prop `invalid_acc1` default value [3] does not exist in :values!
+           prop `invalid_acc1` default value `[3]` does not exist in `:values!`
            """
 
     assert output =~ ~S"""
-           prop `invalid_acc2` default value 3 must be a list when accumulate: true
+           prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
            """
   end
 end
