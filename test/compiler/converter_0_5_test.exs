@@ -8,6 +8,21 @@ defmodule Surface.Compiler.Converter_0_5Test do
     Converter.convert(text, converter: Converter_0_5)
   end
 
+  test "convert <#Raw> to <#raw>" do
+    expected =
+      convert("""
+      <#Raw>
+        <div>Raw content</div>
+      </#Raw>
+      """)
+
+    assert expected == """
+           <#raw>
+             <div>Raw content</div>
+           </#raw>
+           """
+  end
+
   test "don't convert code inside macros" do
     expected =
       convert("""
@@ -19,9 +34,9 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
     assert expected == """
            <div class={ @class }>text</div>
-           <#Raw>
+           <#raw>
              <div class={{ @class }}>text</div>
-           </#Raw>
+           </#raw>
            """
   end
 
