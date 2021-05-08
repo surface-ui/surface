@@ -200,16 +200,19 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp translate_attr({name, {:string, "true", %{delimiter: nil}}, meta}) do
+    meta = Map.put(meta, :unquoted_string?, true)
     {name, true, to_meta(meta)}
   end
 
   defp translate_attr({name, {:string, "false", %{delimiter: nil}}, meta}) do
+    meta = Map.put(meta, :unquoted_string?, true)
     {name, false, to_meta(meta)}
   end
 
   defp translate_attr({name, {:string, value, %{delimiter: nil}}, meta}) do
     case Integer.parse(value) do
       {int_value, ""} ->
+        meta = Map.put(meta, :unquoted_string?, true)
         {name, int_value, to_meta(meta)}
 
       _ ->
