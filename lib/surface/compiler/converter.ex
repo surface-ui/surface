@@ -153,6 +153,11 @@ defmodule Surface.Compiler.Converter do
     [{:unquoted_string, meta} | acc]
   end
 
+  defp extract_meta({:string, _name, %{delimiter: ?"} = meta}, acc) do
+    meta = %{meta | column: meta.column - 1, column_end: meta.column_end + 1}
+    [{:double_quoted_string, meta} | acc]
+  end
+
   defp extract_meta(_node, acc) do
     acc
   end

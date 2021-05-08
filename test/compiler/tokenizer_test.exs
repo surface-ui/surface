@@ -333,6 +333,20 @@ defmodule Surface.Compiler.TokenizerTest do
              ] = tokens
     end
 
+    test "compute line and columns" do
+      attrs =
+        tokenize_attrs("""
+        <div
+          title="first
+            second
+        third">\
+        """)
+
+      assert [
+               {"title", {:string, _, %{line: 2, column: 10, line_end: 4, column_end: 6}}, %{}}
+             ] = attrs
+    end
+
     test "raise on incomplete attribute value (EOF)" do
       assert_raise ParseError, "nofile:2:15: expected closing `\"` for attribute value", fn ->
         tokenize!("""
@@ -378,6 +392,20 @@ defmodule Surface.Compiler.TokenizerTest do
                 %{}},
                {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
+    end
+
+    test "compute line and columns" do
+      attrs =
+        tokenize_attrs("""
+        <div
+          title='first
+            second
+        third'>\
+        """)
+
+      assert [
+               {"title", {:string, _, %{line: 2, column: 10, line_end: 4, column_end: 6}}, %{}}
+             ] = attrs
     end
 
     test "raise on incomplete attribute value (EOF)" do

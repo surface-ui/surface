@@ -207,6 +207,29 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert literal strings with embedded interpolation" do
+    expected =
+      convert("""
+      <div id="id_{{@id}}">
+        <div id=
+          "
+          id_{{@id}}
+        ">
+        </div>
+      </div>
+      """)
+
+    assert expected == """
+           <div id={"id_\#{@id}"}>
+             <div id=
+               {"
+               id_\#{@id}
+             "}>
+             </div>
+           </div>
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
 
   # test "convert <For> into <#For>" do
