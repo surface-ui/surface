@@ -371,7 +371,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate]
+    [:required, :default, :values, :values!, :accumulate, :root]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
