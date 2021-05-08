@@ -15,6 +15,16 @@ defmodule Surface.Compiler.Converter_0_5 do
     "{#{value}}"
   end
 
+  def convert(:double_quoted_string, value, _state, _opts) do
+    new_value = Regex.replace(~r/{{(.+?)}}/, value, "\#{\\1}")
+
+    if new_value != value do
+      "{#{new_value}}"
+    else
+      value
+    end
+  end
+
   def convert(:tag_name, "template", _state, _opts) do
     "#template"
   end
