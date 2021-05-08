@@ -231,6 +231,9 @@ defmodule Surface.Compiler do
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
   defp node_type({"#else", _, _, _}), do: :if_elseif_else
 
+  # Raw
+  defp node_type({"#raw", _, _, _}), do: :raw
+
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
@@ -253,6 +256,10 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Literal{value: text}}
+
+  defp convert_node_to_ast(:raw, {_, _, children, _}, _) do
+    {:ok, %AST.Literal{value: List.to_string(children)}}
+  end
 
   defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)

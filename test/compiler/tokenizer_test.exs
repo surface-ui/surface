@@ -602,6 +602,60 @@ defmodule Surface.Compiler.TokenizerTest do
            ] = tokens
   end
 
+  describe "macro components" do
+    test "do not tokenize its contents" do
+      tokens =
+        tokenize!("""
+        <#Macro>
+        text before
+        <div>
+          text
+        </div>
+        text after
+        </#Macro>
+        """)
+
+      assert [
+               {:tag_open, "#Macro", [], %{line: 1, column: 2}},
+               {:text, "\ntext before\n<div>\n  text\n</div>\ntext after\n"},
+               {:tag_close, "#Macro", %{line: 7, column: 3}},
+               {:text, "\n"}
+             ] = tokens
+    end
+
+    test "<#raw> multi lines is treated like a macro" do
+      tokens =
+        tokenize!("""
+        <#raw>
+          <div>
+            { @id }
+          </div>
+        </#raw>
+        """)
+
+      assert [
+               {:tag_open, "#raw", [], %{line: 1, column: 2}},
+               {:text, "\n  <div>\n    { @id }\n  </div>\n"},
+               {:tag_close, "#raw", %{line: 5, column: 3}},
+               {:text, "\n"}
+             ] = tokens
+    end
+
+    test "<#raw> single line is treated like a macro" do
+      tokens =
+        tokenize!("""
+        <#raw><div>{ @id }</div></#raw>
+        """)
+
+      assert [
+               {:tag_open, "#raw", [], %{line: 1, column: 2}},
+               {:text, "<div>{ @id }</div>"},
+               {:tag_close, "#raw", %{line: 1, column: 27}},
+               {:text, "\n"}
+             ] = tokens
+    end
+  end
+
   defp tokenize_attrs(code) do
     [{:tag_open, "div", attrs, %{}}] = tokenize!(code)
     attrs
