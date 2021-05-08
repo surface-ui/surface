@@ -29,8 +29,7 @@ defmodule Surface.Components.RawTest do
       end)
 
     assert output =~ ~r"""
-           using <#Raw> to not translate any of its contents has been deprecated and will be \
-           removed in future versions.
+           using <#Raw> has been deprecated and will be removed in future versions.
 
            Hint: replace `<#Raw>` with `<#raw>`
            """

@@ -19,8 +19,7 @@ defmodule Surface.Components.Raw do
 
   def expand(_attributes, children, meta) do
     message = """
-    using <#Raw> to not translate any of its contents has been deprecated and will be \
-    removed in future versions.
+    using <#Raw> has been deprecated and will be removed in future versions.
 
     Hint: replace `<#Raw>` with `<#raw>`
     """
