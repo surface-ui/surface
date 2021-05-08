@@ -604,6 +604,24 @@ defmodule Surface.Compiler do
     |> Enum.reverse()
   end
 
+  defp process_attributes(mod, [{:root, value, attr_meta} | attrs], meta, acc) do
+    with true <- function_exported?(mod, :__props__, 0),
+         prop when not is_nil(prop) <- Enum.find(mod.__props__(), & &1.opts[:root]) do
+      name = Atom.to_string(prop.name)
+      process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc)
+    else
+      _ ->
+        message = """
+        No root property for component <#{meta.node_alias}>
+
+        Hint: declare a root property with `root: true`
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+        process_attributes(mod, attrs, meta, acc)
+    end
+  end
+
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc) do
     unquoted_string? = attr_meta[:unquoted_string?]
     name = String.to_atom(name)
@@ -613,21 +631,29 @@ defmodule Surface.Compiler do
     accumulate? = Keyword.get(type_opts, :accumulate, false)
 
     if not accumulate? and Keyword.has_key?(acc, name) do
-      IOHelper.warn(
-        """
-        The prop `#{name}` has been passed multiple times. Considering only the last value.
+      message =
+        if Keyword.get(type_opts, :root, false) do
+          """
+          The prop `#{name}` has been passed multiple times. Considering only the last value.
 
-        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+          Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
+          explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
+          """
+        else
+          """
+          The prop `#{name}` has been passed multiple times. Considering only the last value.
 
-        ```
-          prop #{name}, :#{type}, accumulate: true
-        ```
+          Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
-        This way the values will be accumulated in a list.
-        """,
-        meta.caller,
-        fn _ -> attr_meta.line end
-      )
+          ```
+            prop #{name}, :#{type}, accumulate: true
+          ```
+
+          This way the values will be accumulated in a list.
+          """
+        end
+
+      IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
     end
 
     if unquoted_string? do

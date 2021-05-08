@@ -59,6 +59,8 @@ defmodule Surface.API do
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
+      Module.register_attribute(__MODULE__, :root_prop, accumulate: false)
+
       Module.put_attribute(__MODULE__, :use_context?, false)
 
       for func <- unquote(include) do
@@ -114,6 +116,22 @@ defmodule Surface.API do
     }
 
     assigns = Module.get_attribute(caller.module, :assigns) || %{}
+
+    validate_existing_assign!(assign, assigns, caller)
+
+    if Keyword.get(opts, :root, false) do
+      validate_existing_root_prop!(assign, caller)
+      Module.put_attribute(caller.module, :root_prop, assign)
+    end
+
+    name = Keyword.get(assign.opts, :as, assign.name)
+    new_assigns = Map.put(assigns, name, assign)
+
+    Module.put_attribute(caller.module, :assigns, new_assigns)
+    Module.put_attribute(caller.module, assign.func, assign)
+  end
+
+  defp validate_existing_assign!(assign, assigns, caller) do
     name = Keyword.get(assign.opts, :as, assign.name)
     existing_assign = assigns[name]
 
@@ -125,12 +143,22 @@ defmodule Surface.API do
       message = ~s(cannot use name "#{assign.name}". #{details}.)
 
       IOHelper.compile_error(message, caller.file, assign.line)
-    else
-      assigns = Map.put(assigns, name, assign)
-      Module.put_attribute(caller.module, :assigns, assigns)
     end
+  end
 
-    Module.put_attribute(caller.module, assign.func, assign)
+  defp validate_existing_root_prop!(_assign, caller) do
+    root_prop = Module.get_attribute(caller.module, :root_prop)
+
+    if root_prop do
+      message = """
+      prop `label` is declared as a root property but another property \
+      has also been declared has root property
+
+      Hint: remove `root: true` from the properties that you don't want to use as root property
+      """
+
+      IOHelper.compile_error(message, caller.file, caller.line)
+    end
   end
 
   defp existing_assign_details_message(true = _builtin?, %{func: func}) do
@@ -401,6 +429,11 @@ defmodule Surface.API do
 
   defp validate_opt_ast!(_func, _key, value, _caller) do
     value
+  end
+
+  defp validate_opt(:prop, _name, _type, _opts, :root, value, _caller)
+       when not is_boolean(value) do
+    {:error, "invalid value for option :root. Expected a boolean, got: #{inspect(value)}"}
   end
 
   defp validate_opt(_func, _name, _type, _opts, :required, value, _caller)

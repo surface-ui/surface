@@ -66,6 +66,13 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :root in prop" do
+    code = "prop label, :string, root: 1"
+    message = ~r/invalid value for option :root. Expected a boolean, got: 1/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
@@ -245,6 +252,22 @@ defmodule Surface.APITest do
     """
 
     {:ok, _module} = eval(code, "LiveView")
+  end
+
+  test "raise compile error for component with multiple root properties" do
+    code = """
+    prop title, :string, root: true
+    prop label, :string, root: true
+    """
+
+    message = ~r"""
+    prop `label` is declared as a root property but another property \
+    has also been declared has root property
+
+    Hint: remove `root: true` from the properties that you don't want to use as root property
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
   test "accept invalid quoted expressions like literal maps as default value" do
