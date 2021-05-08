@@ -674,9 +674,9 @@ defmodule Surface.Compiler do
 
   defp attr_value(name, type, value, meta) when is_boolean(value) or is_integer(value) do
     message = """
-      Passing attribute values as `#{name}=#{value}` has been deprecated and will be removed in future version.
+      passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-      Hint: replace `#{name}=#{value}` by `#{name}={#{value}}`
+      Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
     """
 
     IOHelper.warn(message, meta.caller, fn _ -> meta.line end)

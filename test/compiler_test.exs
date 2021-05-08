@@ -693,9 +693,9 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-            Passing attribute values as `tabindex=1` has been deprecated and will be removed in future version.
+            passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `tabindex=1` by `tabindex={1}`
+             Hint: replace `tabindex=1` with `tabindex={1}`
            """
 
     assert line == 2
@@ -711,15 +711,15 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-            Passing attribute values as `selected=true` has been deprecated and will be removed in future version.
+            passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `selected=true` by `selected={true}`
+             Hint: replace `selected=true` with `selected={true}`
            """
 
     assert message =~ """
-            Passing attribute values as `checked=false` has been deprecated and will be removed in future version.
+            passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `checked=false` by `checked={false}`
+             Hint: replace `checked=false` with `checked={false}`
            """
 
     assert line == 2
