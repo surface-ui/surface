@@ -146,12 +146,12 @@ defmodule Surface.API do
     end
   end
 
-  defp validate_existing_root_prop!(_assign, caller) do
+  defp validate_existing_root_prop!(assign, caller) do
     root_prop = Module.get_attribute(caller.module, :root_prop)
 
     if root_prop do
       message = """
-      prop `label` is declared as a root property but another property \
+      prop `#{assign.name}` is declared as a root property but another property \
       has also been declared has root property
 
       Hint: remove `root: true` from the properties that you don't want to use as root property
