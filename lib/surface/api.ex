@@ -116,15 +116,13 @@ defmodule Surface.API do
       line: line
     }
 
-    assigns = Module.get_attribute(caller.module, :assigns) || %{}
-
-    validate_existing_assign!(assign, assigns, caller)
-
     if Keyword.get(opts, :root, false) do
       validate_existing_root_prop!(assign, caller)
       Module.put_attribute(caller.module, :root_prop, assign)
     end
 
+    assigns = Module.get_attribute(caller.module, :assigns) || %{}
+    validate_existing_assign!(assign, assigns, caller)
     new_assigns = Map.put(assigns, assign.as, assign)
 
     Module.put_attribute(caller.module, :assigns, new_assigns)
