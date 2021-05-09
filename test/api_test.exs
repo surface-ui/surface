@@ -261,10 +261,10 @@ defmodule Surface.APITest do
     """
 
     message = ~r"""
-    prop `label` is declared as a root property but another property \
-    has also been declared has root property
+    cannot define multiple properties as `root: true`. \
+    Property `title` at line 4 was already defined as root.
 
-    Hint: remove `root: true` from the properties that you don't want to use as root property
+    Hint: choose a single property to be the root prop.
     """
 
     assert_raise(CompileError, message, fn -> eval(code) end)

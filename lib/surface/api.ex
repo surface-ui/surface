@@ -59,8 +59,6 @@ defmodule Surface.API do
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
-      Module.register_attribute(__MODULE__, :root_prop, accumulate: false)
-
       Module.put_attribute(__MODULE__, :use_context?, false)
 
       for func <- unquote(include) do
@@ -84,6 +82,8 @@ defmodule Surface.API do
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
     end
+
+    validate_duplicate_root_props!(env)
   end
 
   @doc "Defines a property for the component"
@@ -116,11 +116,6 @@ defmodule Surface.API do
       line: line
     }
 
-    if Keyword.get(opts, :root, false) do
-      validate_existing_root_prop!(assign, caller)
-      Module.put_attribute(caller.module, :root_prop, assign)
-    end
-
     assigns = Module.get_attribute(caller.module, :assigns) || %{}
     validate_existing_assign!(assign, assigns, caller)
     new_assigns = Map.put(assigns, assign.as, assign)
@@ -145,18 +140,24 @@ defmodule Surface.API do
     end
   end
 
-  defp validate_existing_root_prop!(assign, caller) do
-    root_prop = Module.get_attribute(caller.module, :root_prop)
+  defp validate_duplicate_root_props!(env) do
+    props =
+      env.module.__props__()
+      |> Enum.filter(& &1.opts[:root])
 
-    if root_prop do
-      message = """
-      prop `#{assign.name}` is declared as a root property but another property \
-      has also been declared has root property
+    case props do
+      [prop, _dupicated | _] ->
+        message = """
+        cannot define multiple properties as `root: true`. \
+        Property `#{prop.name}` at line #{prop.line} was already defined as root.
 
-      Hint: remove `root: true` from the properties that you don't want to use as root property
-      """
+        Hint: choose a single property to be the root prop.
+        """
 
-      IOHelper.compile_error(message, caller.file, caller.line)
+        IOHelper.compile_error(message, env.file, env.line)
+
+      _ ->
+        nil
     end
   end
 
