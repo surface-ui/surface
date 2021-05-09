@@ -108,6 +108,7 @@ defmodule Surface.API do
     assign = %{
       func: func,
       name: name,
+      as: Keyword.get(opts, :as, name),
       type: type,
       doc: pop_doc(caller.module),
       opts: opts,
@@ -124,20 +125,20 @@ defmodule Surface.API do
       Module.put_attribute(caller.module, :root_prop, assign)
     end
 
-    name = Keyword.get(assign.opts, :as, assign.name)
-    new_assigns = Map.put(assigns, name, assign)
+    new_assigns = Map.put(assigns, assign.as, assign)
 
     Module.put_attribute(caller.module, :assigns, new_assigns)
     Module.put_attribute(caller.module, assign.func, assign)
   end
 
   defp validate_existing_assign!(assign, assigns, caller) do
-    name = Keyword.get(assign.opts, :as, assign.name)
-    existing_assign = assigns[name]
+    existing_assign = assigns[assign.as]
 
     if existing_assign do
       component_type = Module.get_attribute(caller.module, :component_type)
-      builtin_assign? = name in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
+
+      builtin_assign? =
+        assign.as in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
 
       details = existing_assign_details_message(builtin_assign?, existing_assign)
       message = ~s(cannot use name "#{assign.name}". #{details}.)
