@@ -612,9 +612,9 @@ defmodule Surface.Compiler do
     else
       _ ->
         message = """
-        No root property for component <#{meta.node_alias}>
+        no root property defined for component <#{meta.node_alias}>
 
-        Hint: declare a root property with `root: true`
+        Hint: you can declare a root property using option `root: true`
         """
 
         IOHelper.warn(message, meta.caller, fn _ -> meta.line end)

@@ -810,9 +810,9 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           No root property for component <StringProp>
+           no root property defined for component <StringProp>
 
-           Hint: declare a root property with `root: true`
+           Hint: you can declare a root property using option `root: true`
            """
   end
 
