@@ -97,6 +97,15 @@ defmodule Surface.Components.Utils do
     |> List.flatten()
   end
 
+  def opts_to_phx_opts(opts) do
+    for {key, value} <- opts do
+      case key do
+        :trigger_action -> {:phx_trigger_action, value}
+        _ -> {key, value}
+      end
+    end
+  end
+
   defp data_to_attrs(data) when is_list(data) do
     for {key, value} <- data do
       {:"data-#{key}", value}
