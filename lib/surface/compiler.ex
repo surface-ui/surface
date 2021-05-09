@@ -617,7 +617,7 @@ defmodule Surface.Compiler do
         Hint: you can declare a root property using option `root: true`
         """
 
-        IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
         process_attributes(mod, attrs, meta, acc)
     end
   end
@@ -634,14 +634,14 @@ defmodule Surface.Compiler do
       message =
         if Keyword.get(type_opts, :root, false) do
           """
-          The prop `#{name}` has been passed multiple times. Considering only the last value.
+          the prop `#{name}` has been passed multiple times. Considering only the last value.
 
           Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
           explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
           """
         else
           """
-          The prop `#{name}` has been passed multiple times. Considering only the last value.
+          the prop `#{name}` has been passed multiple times. Considering only the last value.
 
           Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
