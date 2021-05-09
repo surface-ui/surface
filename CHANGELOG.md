@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0 (WIP)
+
+  * [components] ErrorTag: Renamed prop `phx_trigger_action` to `trigger_action`
+
 ## v0.4.0 (2021-05-01)
 
   * Call render when defined in slotable components (#283)
