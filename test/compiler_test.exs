@@ -30,7 +30,7 @@ defmodule Surface.CompilerTest do
   defmodule Button do
     use Surface.Component
 
-    prop label, :string, default: ""
+    prop label, :string, default: "", root: true
     prop click, :event
     prop class, :css_class
     prop disabled, :boolean
@@ -200,6 +200,27 @@ defmodule Surface.CompilerTest do
                  name: :label,
                  type: :string,
                  value: %Surface.AST.Literal{value: ""}
+               }
+             ]
+           } = node
+  end
+
+  test "component with root property" do
+    code = """
+    <Button {"click"} />
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Component{
+             module: Surface.CompilerTest.Button,
+             props: [
+               %Surface.AST.Attribute{
+                 name: :label,
+                 type: :string,
+                 value: %Surface.AST.AttributeExpr{
+                   original: "\"click\""
+                 }
                }
              ]
            } = node

@@ -101,6 +101,18 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule RootProp do
+    use Surface.Component
+
+    prop label, :string, root: true
+
+    def render(assigns) do
+      ~H"""
+      { @label }
+      """
+    end
+  end
+
   describe "string" do
     test "passing a string literal" do
       assigns = %{text: "text"}
@@ -596,6 +608,23 @@ defmodule Surface.PropertiesTest do
              """
     end
   end
+
+  describe "root property" do
+    test "component accepts root property" do
+      assigns = %{label: "Label"}
+
+      html =
+        render_surface do
+          ~H"""
+          <RootProp {@label} />
+          """
+        end
+
+      assert html =~ """
+             Label
+             """
+    end
+  end
 end
 
 defmodule Surface.PropertiesSyncTest do
@@ -603,6 +632,7 @@ defmodule Surface.PropertiesSyncTest do
 
   import ExUnit.CaptureIO
   alias Surface.PropertiesTest.StringProp, warn: false
+  alias Surface.PropertiesTest.RootProp, warn: false
 
   test "warn if prop is required and has default value" do
     id = :erlang.unique_integer([:positive]) |> to_string()
@@ -658,7 +688,7 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           The prop `label` has been passed multiple times. Considering only the last value.
+           the prop `label` has been passed multiple times. Considering only the last value.
 
            Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
@@ -761,6 +791,60 @@ defmodule Surface.PropertiesSyncTest do
 
     assert output =~ ~S"""
            prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
+           """
+  end
+
+  test "warn if component does not accept a root property" do
+    assigns = %{label: "root"}
+
+    code =
+      quote do
+        ~H"""
+        <StringProp
+          {@label}
+        />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, assigns)
+      end)
+
+    assert output =~ ~r"""
+           no root property defined for component <StringProp>
+
+           Hint: you can declare a root property using option `root: true`
+
+             code:2:\
+           """
+  end
+
+  test "warn if tag has a root property and the property assigned normally" do
+    assigns = %{label: "root"}
+
+    code =
+      quote do
+        ~H"""
+        <RootProp
+          {@label}
+          label="toor"
+        />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, assigns)
+      end)
+
+    assert output =~ ~r"""
+           the prop `label` has been passed multiple times. Considering only the last value.
+
+           Hint: Either specify the `label` via the root property \(`<RootProp { ... }>`\) or \
+           explicitly via the label property \(`<RootProp label="...">`\), but not both.
+
+             code:3:\
            """
   end
 end

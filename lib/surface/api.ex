@@ -82,6 +82,8 @@ defmodule Surface.API do
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
     end
+
+    validate_duplicate_root_props!(env)
   end
 
   @doc "Defines a property for the component"
@@ -106,6 +108,7 @@ defmodule Surface.API do
     assign = %{
       func: func,
       name: name,
+      as: Keyword.get(opts, :as, name),
       type: type,
       doc: pop_doc(caller.module),
       opts: opts,
@@ -114,23 +117,48 @@ defmodule Surface.API do
     }
 
     assigns = Module.get_attribute(caller.module, :assigns) || %{}
-    name = Keyword.get(assign.opts, :as, assign.name)
-    existing_assign = assigns[name]
+    validate_existing_assign!(assign, assigns, caller)
+    new_assigns = Map.put(assigns, assign.as, assign)
+
+    Module.put_attribute(caller.module, :assigns, new_assigns)
+    Module.put_attribute(caller.module, assign.func, assign)
+  end
+
+  defp validate_existing_assign!(assign, assigns, caller) do
+    existing_assign = assigns[assign.as]
 
     if existing_assign do
       component_type = Module.get_attribute(caller.module, :component_type)
-      builtin_assign? = name in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
+
+      builtin_assign? =
+        assign.as in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
 
       details = existing_assign_details_message(builtin_assign?, existing_assign)
       message = ~s(cannot use name "#{assign.name}". #{details}.)
 
       IOHelper.compile_error(message, caller.file, assign.line)
-    else
-      assigns = Map.put(assigns, name, assign)
-      Module.put_attribute(caller.module, :assigns, assigns)
     end
+  end
 
-    Module.put_attribute(caller.module, assign.func, assign)
+  defp validate_duplicate_root_props!(env) do
+    props =
+      env.module.__props__()
+      |> Enum.filter(& &1.opts[:root])
+
+    case props do
+      [prop, _dupicated | _] ->
+        message = """
+        cannot define multiple properties as `root: true`. \
+        Property `#{prop.name}` at line #{prop.line} was already defined as root.
+
+        Hint: choose a single property to be the root prop.
+        """
+
+        IOHelper.compile_error(message, env.file, env.line)
+
+      _ ->
+        nil
+    end
   end
 
   defp existing_assign_details_message(true = _builtin?, %{func: func}) do
@@ -371,7 +399,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate]
+    [:required, :default, :values, :values!, :accumulate, :root]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
@@ -401,6 +429,11 @@ defmodule Surface.API do
 
   defp validate_opt_ast!(_func, _key, value, _caller) do
     value
+  end
+
+  defp validate_opt(:prop, _name, _type, _opts, :root, value, _caller)
+       when not is_boolean(value) do
+    {:error, "invalid value for option :root. Expected a boolean, got: #{inspect(value)}"}
   end
 
   defp validate_opt(_func, _name, _type, _opts, :required, value, _caller)
