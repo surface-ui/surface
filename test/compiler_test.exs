@@ -603,6 +603,33 @@ defmodule Surface.CompilerTest do
     end
   end
 
+  test "#unless" do
+    code = """
+    <div>
+      <#unless condition={false}>
+        UNLESS
+      </#unless>
+    </div>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             element: "div",
+             children: [
+               %Surface.AST.Literal{value: "\n  "},
+               %Surface.AST.If{
+                 children: [],
+                 condition: %Surface.AST.AttributeExpr{original: "false"},
+                 else: [
+                   %Surface.AST.Literal{value: "\n    UNLESS\n  "}
+                 ]
+               },
+               %Surface.AST.Literal{value: "\n"}
+             ]
+           } = node
+  end
+
   describe "errors/warnings" do
     test "raise error for invalid expressions on properties" do
       code = """

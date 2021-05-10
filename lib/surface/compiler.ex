@@ -226,10 +226,11 @@ defmodule Surface.Compiler do
   defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
 
-  # Conditionnal blocks
+  # Conditional blocks
   defp node_type({"#if", _, _, _}), do: :if_elseif_else
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
   defp node_type({"#else", _, _, _}), do: :if_elseif_else
+  defp node_type({"#unless", _, _, _}), do: :unless
 
   # Raw
   defp node_type({"#raw", _, _, _}), do: :raw
@@ -320,6 +321,24 @@ defmodule Surface.Compiler do
        condition: condition,
        children: to_ast(if_children, compile_meta),
        else: to_ast(else_children, compile_meta),
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :unless,
+         {_, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+
+    {:ok,
+     %AST.If{
+       condition: condition,
+       children: [],
+       else: to_ast(children, compile_meta),
        meta: meta
      }}
   end

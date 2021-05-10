@@ -369,4 +369,58 @@ defmodule Surface.Constructs.IfTest do
       end)
     end
   end
+
+  describe "#unless language structure" do
+    test "renders inner unless condition is falsy" do
+      html =
+        render_surface do
+          ~H"""
+          <#unless condition={false}>
+          <span>The inner content</span>
+          <span>with multiple tags</span>
+          </#unless>
+          """
+        end
+
+      assert html =~ """
+             <span>The inner content</span>
+             <span>with multiple tags</span>
+             """
+    end
+
+    test "parser error message contains the correct line" do
+      code =
+        quote do
+          ~H"""
+          <#unless condition={false}>
+            <span>The inner content
+          </#unless>
+          """
+        end
+
+      message = ~S(code:2:14: expected closing tag for <span> defined on line 2, got </#unless>)
+
+      assert_raise(Surface.Compiler.ParseError, message, fn ->
+        compile_surface(code)
+      end)
+    end
+
+    test "compile error message contains the correct line" do
+      code =
+        quote do
+          ~H"""
+          <#unless condition={false}>
+            <ListProp prop="some string" />
+          </#unless>
+          """
+        end
+
+      message =
+        ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
+      end)
+    end
+  end
 end
