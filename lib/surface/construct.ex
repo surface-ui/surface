@@ -19,7 +19,7 @@ defmodule Surface.Construct do
           }
   end
 
-  @callback valid_subblocks() :: list(:default | binary())
+  @callback validate_subblock(name :: :default | binary()) :: :ok | {:error, binary()}
   @callback attribute_type(
               block :: :default | binary(),
               name :: :root | binary(),
@@ -36,10 +36,9 @@ defmodule Surface.Construct do
     quote do
       @behaviour Surface.Construct
 
-      def valid_subblocks(), do: [:default]
       def attribute_type(_, _, _), do: :any
 
-      defoverridable valid_subblocks: 0, attribute_type: 3
+      defoverridable attribute_type: 3
     end
   end
 end

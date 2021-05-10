@@ -3,7 +3,23 @@ defmodule Surface.Constructs.If do
   alias Surface.Construct
   alias Surface.IOHelper
 
-  def valid_subblocks(), do: [:default, "elseif", "else"]
+  def validate_subblock(name) when name in [:default, "else", "elseif"], do: :ok
+
+  def validate_subblock(_name) do
+    {:error,
+     """
+     #if only allows else and elseif sub blocks like so:
+     ```
+     <#if {...}>
+       ...
+     <#elseif {...}>
+       ...
+     <#else>
+       ...
+     </#if>
+     ```
+     """}
+  end
 
   def attribute_type(block, attribute, _)
       when block in [:default, "elseif"] and attribute in [:root, "condition"],

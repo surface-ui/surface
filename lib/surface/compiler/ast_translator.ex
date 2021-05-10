@@ -121,15 +121,17 @@ defmodule Surface.Compiler.AstTranslator do
   end
 
   def context_for_subblock(state, "#" <> name, %{type: Surface.Construct} = parent, meta) do
-    if name in parent.allowed_subblocks do
-      %{
-        type: Surface.Construct.SubBlock,
-        meta: to_meta(state, meta, node_alias: name, module: parent.module),
-        module: parent.module,
-        name: name
-      }
-    else
-      raise_unexpected_subblock_error!(name, parent, meta)
+    case parent.module.validate_subblock(name) do
+      :ok ->
+        %{
+          type: Surface.Construct.SubBlock,
+          meta: to_meta(state, meta, node_alias: name, module: parent.module),
+          module: parent.module,
+          name: name
+        }
+
+      {:error, message} ->
+        raise_unexpected_subblock_error!(name, parent, message, meta)
     end
   end
 
@@ -220,21 +222,12 @@ defmodule Surface.Compiler.AstTranslator do
     raise Parser.parse_error(message, meta)
   end
 
-  defp raise_unexpected_subblock_error!(name, parent, meta) do
-    hint =
-      if Enum.empty?(parent.allowed_subblocks) do
-        "#{parent.name} does not support any sub blocks. Did you mean to use another construct?"
-      else
-        "#{parent.name} only supports the following subblock(s): #{
-          Enum.join(parent.allowed_subblocks)
-        }"
-      end
-
+  defp raise_unexpected_subblock_error!(name, parent, message, meta) do
     raise Parser.parse_error(
             """
             <#{name}> is not allowed inside #{parent.name}
 
-            Hint: #{hint}
+            Hint: #{message}
             """,
             meta
           )
