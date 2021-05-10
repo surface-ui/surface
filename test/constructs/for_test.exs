@@ -96,6 +96,23 @@ defmodule Surface.Constructs.ForTest do
              """
     end
 
+    test "renders inner content with generator and filter" do
+      html =
+        render_surface do
+          ~H"""
+          <#for each={fruit <- ["apples", "bananas", "oranges"], fruit in ["apples"]}>
+          <span>The inner content {fruit}</span>
+          <span>with multiple tags</span>
+          </#for>
+          """
+        end
+
+      assert html =~ """
+             <span>The inner content apples</span>
+             <span>with multiple tags</span>
+             """
+    end
+
     test "parser error message contains the correct line" do
       code =
         quote do
@@ -153,6 +170,26 @@ defmodule Surface.Constructs.ForTest do
              <span>The inner content bananas</span>
              <span>with multiple tags</span>
              <span>The inner content oranges</span>
+             <span>with multiple tags</span>
+             """
+    end
+
+    test "renders inner `for` content with filter" do
+      html =
+        render_surface do
+          ~H"""
+          <#for each={fruit <- ["apples", "bananas", "oranges"], fruit in ["apples"]}>
+          <span>The inner content {fruit}</span>
+          <span>with multiple tags</span>
+          <#else>
+          <span>The else content</span>
+          <span>with multiple tags</span>
+          </#for>
+          """
+        end
+
+      assert html =~ """
+             <span>The inner content apples</span>
              <span>with multiple tags</span>
              """
     end
