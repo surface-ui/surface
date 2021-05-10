@@ -22,7 +22,7 @@ defmodule Surface.Constructs.For do
   def render(_), do: ""
 
   def transform(node) do
-    warn_on_deprecated_if_notation(node)
+    warn_on_deprecated_for_notation(node)
 
     generator =
       Enum.find_value(
@@ -47,7 +47,7 @@ defmodule Surface.Constructs.For do
     }
   end
 
-  defp warn_on_deprecated_if_notation(node) do
+  defp warn_on_deprecated_for_notation(node) do
     message = """
     using <For> to wrap elements in a for expression has been deprecated and will be removed in \
     future versions.
