@@ -41,11 +41,11 @@ defmodule Surface.Compiler.Converter_0_5 do
     "#raw"
   end
 
-  ## Planned changes. Uncomment as the related implementation gets merged
+  def convert(:tag_name, "For", _state, _opts) do
+    "#for"
+  end
 
-  # def convert(:tag_name, "For", _state, _opts) do
-  #   "#for"
-  # end
+  ## Planned changes. Uncomment as the related implementation gets merged
 
   # def convert(:attr_name, ":props", %{tag_name: "#slot"}, _opts) do
   #   "args"
