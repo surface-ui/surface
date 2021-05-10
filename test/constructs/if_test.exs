@@ -19,7 +19,7 @@ defmodule Surface.Constructs.IfTest do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
+        <If condition={true}>
           Warning
         </If>
         """
@@ -31,7 +31,7 @@ defmodule Surface.Constructs.IfTest do
       end)
 
     assert output =~ ~r"""
-           using <If> to wrap elements in an if experssion has been depreacated and will be removed in \
+           using <If> to wrap elements in an if expression has been deprecated and will be removed in \
            future versions.
 
            Hint: replace `<If>` with `<#if>`
