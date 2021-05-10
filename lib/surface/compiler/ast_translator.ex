@@ -51,6 +51,15 @@ defmodule Surface.Compiler.AstTranslator do
      }}
   end
 
+  def handle_node(state, %{type: Surface.Construct} = context, name, attrs, children, meta) do
+  end
+
+  def handle_node(state, %{type: AST.MacroComponent} = context, name, attrs, children, meta) do
+  end
+
+  def handle_node(state, %{type: AST.Component} = context, name, attrs, children, meta) do
+  end
+
   def handle_attribute(state, context, name, value, attr_meta) do
     meta = to_meta(state, attr_meta)
 
@@ -101,23 +110,8 @@ defmodule Surface.Compiler.AstTranslator do
       type: node_type,
       meta: ast_meta,
       module: module,
-      name: name,
-      allowed_subblocks:
-        if(node_type == Surface.Construct, do: module.valid_subblocks(), else: nil)
+      name: name
     }
-  end
-
-  def context_for_subblock(state, :default = name, %{type: Surface.Construct} = parent, meta) do
-    if name in parent.allowed_subblocks do
-      %{
-        type: Surface.Construct.SubBlock,
-        meta: to_meta(state, meta, node_alias: name, module: parent.module),
-        module: parent.module,
-        name: name
-      }
-    else
-      raise_default_subblock_not_allowed_error!(parent, meta)
-    end
   end
 
   def context_for_subblock(state, "#" <> name, %{type: Surface.Construct} = parent, meta) do
@@ -213,13 +207,15 @@ defmodule Surface.Compiler.AstTranslator do
     }
   end
 
-  defp raise_default_subblock_not_allowed_error!(parent, meta) do
-    message = """
-    #{parent.name} requires all content to be wrapped in one of the following \
-    sub blocks: #{Enum.join(parent.allowed_subblocks)}
-    """
+  defp raise_unexpected_subblock_error!(:default, parent, message, meta) do
+    raise Parser.parse_error(
+            """
+            #{parent.name} requires all content to be wrapped in a subblock
 
-    raise Parser.parse_error(message, meta)
+            Hint: #{message}
+            """,
+            meta
+          )
   end
 
   defp raise_unexpected_subblock_error!(name, parent, message, meta) do
