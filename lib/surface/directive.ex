@@ -15,13 +15,14 @@ defmodule Surface.Directive do
 
   @optional_callbacks process: 2, process: 4
 
-  defstruct [:module, :name, :original_name, :value, :meta]
+  defstruct [:module, :name, :original_name, :value, :modifiers, :meta]
 
   @type name :: atom() | binary()
   @type t :: %__MODULE__{
           module: atom(),
           name: name(),
           original_name: binary(),
+          modifiers: list(binary()),
           # the value here is defined by the individual directive
           value: Surface.AST.AttributeExpr.t() | Surface.AST.Literal.t() | nil,
           meta: Surface.AST.Meta.t()
@@ -42,7 +43,23 @@ defmodule Surface.Directive do
     end
   end
 
-  def normalize_name(":" <> name), do: name
-  def normalize_name("s-" <> name), do: name
-  def normalize_name(name), do: name
+  @doc """
+  Extracts the directive name and any modifiers specified from an attribute name. The first
+  element is the normalized directive name (or nil if the specified name does not begin with
+  a valid prefix). The second element is the list of modifiers added to the directive.
+  """
+  @spec name_and_modifiers(name :: binary()) :: {nil | binary(), list(binary())}
+  def name_and_modifiers(":" <> name), do: extract_modifiers(name)
+  def name_and_modifiers("s-" <> name), do: extract_modifiers(name)
+  def name_and_modifiers(_name), do: {nil, []}
+
+  defp extract_modifiers(name) do
+    case String.split(name, ".") do
+      [name] ->
+        {name, []}
+
+      [name | modifiers] ->
+        {name, modifiers}
+    end
+  end
 end

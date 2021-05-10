@@ -54,18 +54,16 @@ defmodule Surface.Compiler.AstTranslator do
   def handle_attribute(state, context, name, value, attr_meta) do
     meta = to_meta(state, attr_meta)
 
-    normalized_name = Surface.Directive.normalize_name(name)
+    {normalized_name, modifiers} = Surface.Directive.name_and_modifiers(name)
 
-    directive =
-      Enum.find(@directives, fn directive ->
-        directive.matches?(context.type, normalized_name)
-      end)
+    directive = find_directive(context.type, context.module, normalized_name)
 
     if directive do
       {String.to_atom(normalized_name),
        %Surface.Directive{
          module: directive,
          original_name: name,
+         modifiers: modifiers,
          name: normalized_name,
          value: parse_value(state, directive.type(), name, value, meta),
          meta: meta
@@ -82,6 +80,15 @@ defmodule Surface.Compiler.AstTranslator do
          meta: meta
        }}
     end
+  end
+
+  defp find_directive(type, module, normalized_name)
+  defp find_directive(_type, _module, nil), do: nil
+
+  defp find_directive(type, module, normalized_name) do
+    Enum.find(@directives, fn directive ->
+      directive.matches?(type, module, normalized_name)
+    end)
   end
 
   def context_for_node(state, name, meta) do
