@@ -232,10 +232,12 @@ defmodule Surface.Compiler do
   defp node_type({"#else", _, _, _}), do: :if_elseif_else
   defp node_type({"#unless", _, _, _}), do: :unless
 
+  # For
+  defp node_type({"#for", _, _, _}), do: :for_else
+
   # Raw
   defp node_type({"#raw", _, _, _}), do: :raw
 
-  defp node_type({"#for", _, _, _}), do: :for_else
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
@@ -374,13 +376,18 @@ defmodule Surface.Compiler do
     if else_children == [] do
       {:ok, for_ast}
     else
-      [{_, _, [{_, _, _}, value]}] = generator.value
+      [{_, _, [{var, _, _}, _]} | _] = generator.value
+      generator_expr = generator.value ++ [[do: {var, [], nil}]]
 
       condition = %AST.AttributeExpr{
         original: "",
         value:
-          quote generated: true do
-            unquote(value) != []
+          quote do
+            unquote({:for, [generated: true], generator_expr})
+            |> case do
+              [] -> false
+              _ -> true
+            end
           end,
         meta: compile_meta
       }
