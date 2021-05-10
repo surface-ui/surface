@@ -235,6 +235,7 @@ defmodule Surface.Compiler do
   # Raw
   defp node_type({"#raw", _, _, _}), do: :raw
 
+  defp node_type({"#for", _, _, _}), do: :for_else
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
@@ -341,6 +342,57 @@ defmodule Surface.Compiler do
        else: to_ast(children, compile_meta),
        meta: meta
      }}
+  end
+
+  defp convert_node_to_ast(
+         :for_else,
+         {_name, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    generator = attribute_value_as_ast(attributes, "each", :generator, default, compile_meta)
+
+    [for_children, else_children] =
+      case children do
+        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+          [default, [else_block]]
+
+        [{:default, [], default, _}] ->
+          [default, []]
+
+        children ->
+          [children, []]
+      end
+
+    for_ast = %AST.For{
+      generator: generator,
+      children: to_ast(for_children, compile_meta),
+      meta: meta
+    }
+
+    if else_children == [] do
+      {:ok, for_ast}
+    else
+      [{_, _, [{_, _, _}, value]}] = generator.value
+
+      condition = %AST.AttributeExpr{
+        original: "",
+        value:
+          quote generated: true do
+            unquote(value) != []
+          end,
+        meta: compile_meta
+      }
+
+      {:ok,
+       %AST.If{
+         condition: condition,
+         children: [for_ast],
+         else: to_ast(else_children, compile_meta),
+         meta: meta
+       }}
+    end
   end
 
   defp convert_node_to_ast(
@@ -587,20 +639,20 @@ defmodule Surface.Compiler do
   defp has_attribute?(attributes, attr_name),
     do: Enum.any?(attributes, &match?({^attr_name, _, _}, &1))
 
-  defp attribute_value_as_ast(attributes, attr_name, default, meta) do
+  defp attribute_value_as_ast(attributes, attr_name, type \\ :integer, default, meta) do
     Enum.find_value(attributes, default, fn
       {^attr_name, {:attribute_expr, value, expr_meta}, _attr_meta} ->
         expr_meta = Helpers.to_meta(expr_meta, meta)
 
         %AST.AttributeExpr{
           original: value,
-          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, :integer, expr_meta),
+          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta),
           meta: expr_meta
         }
 
       {^attr_name, value, attr_meta} ->
         attr_meta = Helpers.to_meta(attr_meta, meta)
-        Surface.TypeHandler.literal_to_ast_node!(:integer, attr_name, value, attr_meta)
+        Surface.TypeHandler.literal_to_ast_node!(type, attr_name, value, attr_meta)
 
       _ ->
         nil
