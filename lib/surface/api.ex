@@ -496,14 +496,22 @@ defmodule Surface.API do
       accumulate? and not is_nil(values!) and
           not MapSet.subset?(MapSet.new(default), MapSet.new(values!)) ->
         IOHelper.warn(
-          "#{type} `#{name}` default value `#{inspect(default)}` does not exist in `:values!`",
+          """
+          #{type} `#{name}` default value `#{inspect(default)}` does not exist in `:values!`
+
+          Hint: Either choose an existing value or replace `:values!` with `:values` to skip validation.
+          """,
           caller,
           fn _ -> caller.line end
         )
 
       not accumulate? and not is_nil(values!) and not (default in values!) ->
         IOHelper.warn(
-          "#{type} `#{name}` default value `#{inspect(default)}` does not exist in `:values!`",
+          """
+          #{type} `#{name}` default value `#{inspect(default)}` does not exist in `:values!`
+
+          Hint: Either choose an existing value or replace `:values!` with `:values` to skip validation.
+          """,
           caller,
           fn _ -> caller.line end
         )
