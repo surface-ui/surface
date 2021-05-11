@@ -15,6 +15,18 @@ defmodule Surface.Constructs.ForTest do
     end
   end
 
+  defmodule SomeComponent do
+    use Surface.Component
+
+    prop content, :any
+
+    def render(assigns) do
+      ~H"""
+      <span>{@content}</span>
+      """
+    end
+  end
+
   test "warn when using deprecated <For>" do
     code =
       quote do
@@ -114,6 +126,23 @@ defmodule Surface.Constructs.ForTest do
              """
     end
 
+    test "renders inner content with component" do
+      html =
+        render_surface do
+          ~H"""
+          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
+          <SomeComponent content={fruit} />
+          </#for>
+          """
+        end
+
+      assert html =~ """
+             <span>apples</span>
+             <span>bananas</span>
+             <span>oranges</span>
+             """
+    end
+
     test "parser error message contains the correct line" do
       code =
         quote do
@@ -175,13 +204,14 @@ defmodule Surface.Constructs.ForTest do
              """
     end
 
-    test "renders inner `for` content with filter" do
+    test "renders inner `for` content with complex generator" do
+      assigns = %{list1: [1, 4], list2: [2, 3, 4], range: 1..3}
+
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"], fruit in ["apples"]}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
+          <#for each={x <- @list1, y <- @list2, x in @range, y in @range}>
+          <span>x: {x}, y: {y}</span>
           <#else>
           <span>The else content</span>
           <span>with multiple tags</span>
@@ -190,8 +220,28 @@ defmodule Surface.Constructs.ForTest do
         end
 
       assert html =~ """
-             <span>The inner content apples</span>
-             <span>with multiple tags</span>
+             <span>x: 1, y: 2</span>
+             <span>x: 1, y: 3</span>
+             """
+    end
+
+    test "renders inner content with component" do
+      html =
+        render_surface do
+          ~H"""
+          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
+          <SomeComponent content={fruit} />
+          <#else>
+          <span>The else content</span>
+          <span>with multiple tags</span>
+          </#for>
+          """
+        end
+
+      assert html =~ """
+             <span>apples</span>
+             <span>bananas</span>
+             <span>oranges</span>
              """
     end
 
@@ -239,6 +289,24 @@ defmodule Surface.Constructs.ForTest do
       assert html =~ """
              <span>The else content</span>
              <span>with multiple tags</span>
+             """
+    end
+
+    test "renders inner `else` with component" do
+      html =
+        render_surface do
+          ~H"""
+          <#for each={fruit <- []}>
+          <span>The inner content {fruit}</span>
+          <span>with multiple tags</span>
+          <#else>
+          <SomeComponent content="The else content" />
+          </#for>
+          """
+        end
+
+      assert html =~ """
+             <span>The else content</span>
              """
     end
   end
