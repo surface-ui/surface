@@ -85,23 +85,7 @@ defmodule Surface.API do
       Surface.API.validate!(assign, env)
     end
 
-    duplicated_assigns =
-      assigns
-      |> Enum.group_by(fn %{name: name, opts: opts} -> opts[:as] || name end)
-      |> Map.new(fn {key, list} -> {key, length(list)} end)
-      |> Enum.filter(fn {_, count} -> count > 1 end)
-
-    for {assign, _} <- duplicated_assigns do
-      assign =
-        Enum.find(assigns, nil, fn %{name: name, opts: opts} -> (opts[:as] || name) == assign end)
-        |> IO.inspect(label: "Assign")
-
-      validate_existing_assign!(
-        assign,
-        assigns,
-        env
-      )
-    end
+    validate_duplicated_assigns!(env)
 
     if function_exported?(env.module, :__slots__, 0) do
       validate_slot_props_bindings!(env)
@@ -130,7 +114,6 @@ defmodule Surface.API do
     assign = %{
       func: func,
       name: name,
-      as: Keyword.get(opts, :as, name),
       type: type,
       doc: pop_doc(caller.module),
       opts: opts,
@@ -142,23 +125,29 @@ defmodule Surface.API do
     Module.put_attribute(caller.module, assign.func, assign)
   end
 
-  defp validate_existing_assign!(assign, assigns, env) do
-    existing_assign =
-      Enum.find(assigns, nil, fn duplicated -> duplicated.opts[:as] || duplicated.name end)
+  defp validate_duplicated_assigns!(env) do
+    env.module
+    |> Module.get_attribute(:assigns, [])
+    |> Enum.group_by(fn %{name: name, opts: opts} -> opts[:as] || name end)
+    |> Enum.filter(fn {_, list} -> length(list) > 1 end)
+    |> validate_duplicated_assigns!(env)
+  end
 
-    if existing_assign do
-      component_type = Module.get_attribute(env.module, :component_type)
+  defp validate_duplicated_assigns!([], _env), do: :ok
 
-      builtin_assign? =
-        (existing_assign.opts[:as] || existing_assign.name) in Surface.Compiler.Helpers.builtin_assigns_by_type(
-          component_type
-        )
+  defp validate_duplicated_assigns!([assign | rest], env) do
+    validate_duplicated_assign!(assign, env)
+    validate_duplicated_assigns!(rest, env)
+  end
 
-      details = existing_assign_details_message(builtin_assign?, existing_assign)
-      message = ~s(cannot use name "#{assign.name}". #{details}.)
+  defp validate_duplicated_assign!({name, [assign, duplicated | _]}, env) do
+    component_type = Module.get_attribute(env.module, :component_type)
+    builtin_assign? = name in Surface.Compiler.Helpers.builtin_assigns_by_type(component_type)
 
-      IOHelper.compile_error(message, env.file, assign.line)
-    end
+    details = existing_assign_details_message(builtin_assign?, duplicated)
+    message = ~s(cannot use name "#{name}". #{details}.)
+
+    IOHelper.compile_error(message, env.file, assign.line)
   end
 
   defp validate_duplicate_root_props!(env) do
