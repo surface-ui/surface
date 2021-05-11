@@ -44,8 +44,11 @@ defmodule Surface.Compiler.AstTranslator do
     })
   end
 
-  def handle_end(_state, children) do
-    children
+  def handle_end(%{__MODULE__ => extras}, children) do
+    # the idea here is to return enough information to perform additional validation
+    # and inject the required code to add a compile time dependency
+    # that might be a bit simpler than injecting AST.Expr statements into the ast itself
+    {extras, children}
   end
 
   def handle_interpolation(state, expression, parse_meta) do
