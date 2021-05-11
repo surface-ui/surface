@@ -24,13 +24,15 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token(tokens, opts) do
-    handle_token(tokens, [[]], %{
+    state = %{
       translator: opts[:translator] || Surface.Compiler.ParseTreeTranslator,
       tags: [],
       caller: opts[:caller] || __ENV__,
       checks: opts[:checks] || [],
       warnings: opts[:warnings] || []
-    })
+    }
+
+    handle_token(tokens, [[]], state.translator.handle_init(state))
   end
 
   defp handle_token([], [buffer], state) do

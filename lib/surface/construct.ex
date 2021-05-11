@@ -8,13 +8,12 @@ defmodule Surface.Construct do
         * `:meta` - compilation meta data
         * `:debug` - keyword list indicating when debug information should be printed during compilation
     """
-    defstruct [:name, :attributes, :body, :meta, debug: []]
+    defstruct [:name, :attributes, :body, :meta]
 
     @type t :: %__MODULE__{
             name: binary(),
             attributes: list(Surface.AST.Attribute.t()),
             body: list(Surface.AST.t()),
-            debug: list(atom()),
             meta: Surface.AST.Meta.t()
           }
   end

@@ -28,6 +28,8 @@ defmodule Surface.Compiler.NodeTranslator do
               attr_meta :: parse_metadata()
             ) :: any()
 
+  @callback handle_init(state :: state()) :: state()
+
   @callback handle_literal(state :: state(), value :: binary()) :: {state(), any()}
   @callback handle_comment(state :: state(), comment :: binary()) :: {state(), any()}
 

@@ -3,6 +3,8 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
   alias Surface.IOHelper
 
+  def handle_init(state), do: state
+
   def handle_interpolation(state, expression, meta) do
     {state, {:interpolation, expression, to_meta(meta)}}
   end

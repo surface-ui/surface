@@ -23,6 +23,7 @@ defmodule Surface.Compiler.AstTranslator do
 
   alias Surface.AST
   alias Surface.Compiler.Helpers
+  alias Surface.IOHelper
   alias Surface.Compiler.Parser
 
   defguardp is_component(context) when context.type in [AST.Component, AST.MacroComponent]
@@ -34,6 +35,10 @@ defmodule Surface.Compiler.AstTranslator do
 
   def handle_literal(state, value) do
     {state, %AST.Literal{value: value}}
+  end
+
+  def handle_init(state) do
+    Map.put(state, __MODULE__, %{})
   end
 
   def handle_end(_state, children) do
@@ -51,13 +56,139 @@ defmodule Surface.Compiler.AstTranslator do
      }}
   end
 
-  def handle_node(state, %{type: Surface.Construct} = context, name, attrs, children, meta) do
+  def handle_subblock(state, context, name, attrs, children, _parse_meta) do
+    {attributes, directives} = split_attrs_and_directives(attrs)
+
+    if not Enum.empty?(directives) do
+      IOHelper.warn(
+        "directives are not supported on subblocks and will be ignored",
+        context.meta.caller,
+        context.meta.line
+      )
+    end
+
+    {state,
+     %Surface.Construct.SubBlock{
+       name: name,
+       attributes: attributes,
+       body: children,
+       meta: context.meta
+     }}
   end
 
-  def handle_node(state, %{type: AST.MacroComponent} = context, name, attrs, children, meta) do
+  def handle_node(state, context, name, attrs, children, _parse_meta) do
+    {attributes, directives} = split_attrs_and_directives(attrs)
+
+    ast = create_ast(context.type, name, attributes, directives, children, context)
+
+    {state, expand_node(ast)}
   end
 
-  def handle_node(state, %{type: AST.Component} = context, name, attrs, children, meta) do
+  defp create_ast(Surface.Construct, _name, attributes, directives, children, context) do
+    [body, sub_blocks] =
+      case children do
+        [%Surface.Construct.SubBlock{name: :default, body: body} | sub_blocks] ->
+          {body, sub_blocks}
+
+        _ ->
+          {[], children}
+      end
+
+    context.module.process(attributes, body, sub_blocks, context.meta)
+    |> wrap_in_container(directives, context.meta)
+  end
+
+  defp create_ast(AST.MacroComponent, name, attributes, directives, children, context) do
+    %AST.MacroComponent{
+      name: name,
+      module: context.module,
+      attributes: attributes,
+      directives: directives,
+      body: children,
+      meta: context.meta
+    }
+  end
+
+  defp create_ast(AST.Component, _name, attributes, directives, children, context) do
+    %AST.Component{
+      module: context.module,
+      type: component_type(context.module),
+      props: attributes,
+      directives: directives,
+      templates: extract_templates(children),
+      meta: context.meta
+    }
+  end
+
+  defp create_ast(AST.Tag, name, attributes, directives, children, context) do
+    %AST.Tag{
+      element: name,
+      attributes: attributes,
+      directives: directives,
+      children: children,
+      meta: context.meta
+    }
+  end
+
+  defp create_ast(AST.VoidTag, name, attributes, directives, _children, context) do
+    %AST.VoidTag{
+      element: name,
+      attributes: attributes,
+      directives: directives,
+      meta: context.meta
+    }
+  end
+
+  defp extract_templates(_children) do
+    %{}
+  end
+
+  defp component_type(module) do
+    cond do
+      Module.open?(module) ->
+        Module.get_attribute(module, :component_type, Surface.BaseComponent)
+
+      function_exported?(module, :component_type, 0) ->
+        module.component_type()
+
+      true ->
+        Surface.BaseComponent
+    end
+  end
+
+  defp expand_node(%AST.MacroComponent{} = ast) do
+    ast.module.expand(ast.attributes, ast.body, ast.meta)
+    # TODO: do we want to make it so that macros can be used/returned from
+    # a macro expansion?
+    # |> recursively_expand()
+    |> wrap_in_container(ast.directives, ast.meta)
+  end
+
+  defp expand_node(%{directives: [_ | _] = directives} = ast) do
+    directives
+    |> Enum.sort_by(fn directive ->
+      Enum.find_index(@directives, fn module -> module == directive.module end)
+    end)
+    |> Enum.reduce(ast, fn directive, node ->
+      directive.module.process(directive.name, directive.value, directive.meta, node)
+    end)
+    |> expand_node()
+  end
+
+  defp expand_node(ast), do: ast
+
+  defp wrap_in_container(children, directives, meta)
+
+  defp wrap_in_container(children, directives, meta) when is_list(children) do
+    %AST.Container{children: children, directives: directives, meta: meta}
+  end
+
+  defp wrap_in_container(child, directives, meta) do
+    wrap_in_container([child], directives, meta)
+  end
+
+  defp split_attrs_and_directives(attrs) do
+    Enum.split_with(attrs, fn {_name, %type{}} -> type == AST.Attribute end)
   end
 
   def handle_attribute(state, context, name, value, attr_meta) do
