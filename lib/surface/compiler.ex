@@ -360,9 +360,6 @@ defmodule Surface.Compiler do
         [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
           [default, [else_block]]
 
-        [{:default, [], default, _}] ->
-          [default, []]
-
         children ->
           [children, []]
       end
