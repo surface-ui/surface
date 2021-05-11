@@ -50,6 +50,7 @@ defmodule Surface.AST.Expr do
   @type t :: %__MODULE__{
           # quoted expression
           value: any(),
+          directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -128,6 +129,7 @@ defmodule Surface.AST.For do
   @type t :: %__MODULE__{
           generator: any(),
           debug: list(atom()),
+          directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -149,6 +151,7 @@ defmodule Surface.AST.If do
   @type t :: %__MODULE__{
           condition: Surface.AST.AttributeExpr.t(),
           debug: list(atom()),
+          directives: list(Surface.AST.Directive.t()),
           children: list(Surface.AST.t()),
           else: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
@@ -227,6 +230,7 @@ defmodule Surface.AST.Interpolation do
           original: binary(),
           # quoted
           value: any(),
+          directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -266,6 +270,7 @@ defmodule Surface.AST.Literal do
   defstruct [:value]
 
   @type t :: %__MODULE__{
+          directives: list(Surface.AST.Directive.t()),
           value: binary | boolean | integer | atom
         }
 end
@@ -351,6 +356,7 @@ defmodule Surface.AST.Error do
 
   @type t :: %__MODULE__{
           message: binary(),
+          directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
 end
