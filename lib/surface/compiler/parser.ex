@@ -220,7 +220,24 @@ defmodule Surface.Compiler.Parser do
     end
   end
 
+  defp translate_attr({:root, {:expr, "..." <> value, expr_meta}, _attr_meta}) do
+    {tag_name, expr_meta} = Map.pop!(expr_meta, :tag_name)
+    meta = to_meta(expr_meta)
+
+    directive =
+      case tag_name do
+        <<first, _::binary>> when first in ?A..?Z ->
+          ":props"
+
+        _ ->
+          ":attrs"
+      end
+
+    {directive, {:attribute_expr, value, meta}, meta}
+  end
+
   defp translate_attr({:root, {:expr, value, expr_meta}, _attr_meta}) do
+    {_tag_name, expr_meta} = Map.pop!(expr_meta, :tag_name)
     meta = to_meta(expr_meta)
     {:root, {:attribute_expr, value, meta}, meta}
   end

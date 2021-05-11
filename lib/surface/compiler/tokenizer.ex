@@ -281,12 +281,15 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_root_attribute(text, line, column, acc, state) do
     case handle_interpolation(text, line, column, [], state) do
       {:ok, value, new_line, new_column, rest, state} ->
+        [{:tag_open, tag_name, _attrs, _meta} | _] = acc
+
         meta = %{
           line: line,
           column: column,
           line_end: new_line,
           column_end: new_column - 1,
-          file: state.file
+          file: state.file,
+          tag_name: tag_name
         }
 
         acc = put_attr(acc, :root, {:expr, value, meta}, %{})

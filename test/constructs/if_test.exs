@@ -77,6 +77,35 @@ defmodule Surface.Constructs.IfTest do
   end
 
   describe "#if language structure" do
+    test "using root prop" do
+      html =
+        render_surface do
+          ~H"""
+          <#if {true}>
+          <span>The inner content</span>
+          <span>with multiple tags</span>
+          </#if>
+          """
+        end
+
+      assert html =~ """
+             <span>The inner content</span>
+             <span>with multiple tags</span>
+             """
+
+      html =
+        render_surface do
+          ~H"""
+          <#if {false}>
+          <span>The inner content</span>
+          <span>with multiple tags</span>
+          </#if>
+          """
+        end
+
+      assert html =~ "\n"
+    end
+
     test "renders inner if condition is truthy" do
       html =
         render_surface do
@@ -173,6 +202,25 @@ defmodule Surface.Constructs.IfTest do
   end
 
   describe "#elseif language structure" do
+    test "using root prop" do
+      html =
+        render_surface do
+          ~H"""
+          <#if {false}>
+            IF
+          <#elseif {true}>
+            ELSEIF TRUE
+          <#else>
+            ELSE
+          </#if>
+          """
+        end
+
+      assert html =~ """
+             ELSEIF TRUE
+             """
+    end
+
     test "renders inner `elseif` condition if condition is truthy" do
       html =
         render_surface do

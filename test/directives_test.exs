@@ -137,6 +137,23 @@ defmodule Surface.DirectivesTest do
              </div>
              """
     end
+
+    test "shorthand notation `{...@props}`" do
+      assigns = %{props: %{class: "text-xs", hidden: false, content: "dynamic props content"}}
+
+      html =
+        render_surface do
+          ~H"""
+          <DivWithProps {...@props} />
+          """
+        end
+
+      assert html =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
   end
 
   describe ":attrs in html tags" do
@@ -225,6 +242,19 @@ defmodule Surface.DirectivesTest do
                Some Text
              </div>
              """
+    end
+
+    test "shorthand notation `{...@attrs}`" do
+      assigns = %{attrs: [class: "text-xs", style: "color: black;"]}
+
+      html =
+        render_surface do
+          ~H"""
+          <div {...@attrs}/>
+          """
+        end
+
+      assert html =~ ~s(<div class="text-xs" style="color: black;"></div>)
     end
   end
 

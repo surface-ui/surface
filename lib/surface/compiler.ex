@@ -299,7 +299,10 @@ defmodule Surface.Compiler do
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
-    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+
+    condition =
+      attribute_value_as_ast(attributes, :root, nil, compile_meta) ||
+        attribute_value_as_ast(attributes, "condition", default, compile_meta)
 
     [if_children, else_children] =
       case children do
