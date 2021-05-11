@@ -1179,13 +1179,9 @@ defmodule Surface.CompilerSyncTest do
     end\
     """
 
-    # See Surface.compute_line_offset/1 for more information
-    line_offset = if Version.match?(System.version(), "~> 1.11"), do: 1, else: 0
-
     output =
       capture_io(:standard_error, fn ->
-        {{:module, module, _, _}, _} =
-          Code.eval_string(component_code, [], %{__ENV__ | line: line_offset})
+        {{:module, module, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | line: 1})
 
         send(self(), {:result, module})
       end)
