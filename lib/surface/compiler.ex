@@ -696,28 +696,6 @@ defmodule Surface.Compiler do
     process_attributes(mod, attrs, meta, [{name, node} | acc])
   end
 
-  defp attr_value(name, type, values, attr_meta) when is_list(values) do
-    {originals, quoted_values} =
-      Enum.reduce(values, {[], []}, fn
-        {:attribute_expr, value, expr_meta}, {originals, quoted_values} ->
-          expr_meta = Helpers.to_meta(expr_meta, attr_meta)
-          {["{{#{value}}}" | originals], [quote_embedded_expr(value, expr_meta) | quoted_values]}
-
-        value, {originals, quoted_values} ->
-          {[value | originals], [value | quoted_values]}
-      end)
-
-    original = originals |> Enum.reverse() |> Enum.join()
-    quoted_values = Enum.reverse(quoted_values)
-    expr_value = {:<<>>, [line: attr_meta.line], quoted_values}
-
-    %AST.AttributeExpr{
-      original: original,
-      value: Surface.TypeHandler.expr_to_quoted!(expr_value, name, type, attr_meta, original),
-      meta: attr_meta
-    }
-  end
-
   defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
     expr_meta = Helpers.to_meta(expr_meta, attr_meta)
 
@@ -730,17 +708,6 @@ defmodule Surface.Compiler do
 
   defp attr_value(name, type, value, meta) do
     Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
-  end
-
-  defp quote_embedded_expr(value, expr_meta) do
-    meta = [line: expr_meta.line]
-    quoted_value = Code.string_to_quoted!(value, meta)
-
-    {:"::", meta,
-     [
-       {{:., meta, [Kernel, :to_string]}, meta, [quoted_value]},
-       {:binary, meta, Elixir}
-     ]}
   end
 
   defp validate_tag_children([]), do: :ok
