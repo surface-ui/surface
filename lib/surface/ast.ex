@@ -11,6 +11,7 @@ defmodule Surface.AST do
           | Surface.AST.For.t()
           | Surface.AST.Container.t()
           | Surface.AST.Component.t()
+          | Surface.AST.MacroComponent.t()
           | Surface.AST.SlotableComponent.t()
           | Surface.AST.Error.t()
 end
