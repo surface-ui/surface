@@ -68,7 +68,6 @@ defmodule Surface.API do
   end
 
   defmacro __before_compile__(env) do
-    validate_assigns!(env)
     generate_docs(env)
 
     [
@@ -80,6 +79,7 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
+    validate_assigns!(env)
     validate_duplicated_assigns!(env)
     validate_slot_props_bindings!(env)
     validate_duplicate_root_props!(env)
@@ -337,6 +337,19 @@ defmodule Surface.API do
     IOHelper.compile_error(message, caller.file, caller.line)
   end
 
+  defp validate_type_ast!(_func, _name, type, _caller) when is_atom(type) do
+    type
+  end
+
+  defp validate_type_ast!(func, name, type_ast, caller) do
+    message = """
+    invalid type for #{func} #{name}. \
+    Expected an atom, got: #{Macro.to_string(type_ast)}
+    """
+
+    IOHelper.compile_error(message, caller.file, caller.line)
+  end
+
   defp validate_type(_func, _name, type) when type in @types do
     :ok
   end
@@ -351,36 +364,31 @@ defmodule Surface.API do
     {:error, message}
   end
 
-  defp validate_opts_keys(func, name, type, opts) do
-    with true <- Keyword.keyword?(opts),
-         keys <- Keyword.keys(opts),
+  defp validate_opts_keys(func, _name, type, opts) do
+    with keys <- Keyword.keys(opts),
          valid_opts <- get_valid_opts(func, type, opts),
          [] <- keys -- valid_opts do
       :ok
     else
-      false ->
-        {:error,
-         "invalid options for #{func} #{name}. " <>
-           "Expected a keyword list of options, got: #{inspect(opts)}"}
-
       unknown_options ->
         valid_opts = get_valid_opts(func, type, opts)
         {:error, unknown_options_message(valid_opts, unknown_options)}
     end
   end
 
-  defp validate_opts_ast!(func, opts, caller) when is_list(opts) do
-    if Keyword.keyword?(opts) do
-      for {key, value} <- opts do
-        {key, validate_opt_ast!(func, key, value, caller)}
-      end
-    else
-      opts
+  defp validate_opts_ast!(func, _name, opts, caller) when is_list(opts) do
+    for {key, value} <- opts do
+      {key, validate_opt_ast!(func, key, value, caller)}
     end
   end
 
-  defp validate_opts_ast!(_func, opts, _caller) do
-    opts
+  defp validate_opts_ast!(func, name, opts, caller) do
+    message = """
+    invalid options for #{func} #{name}. \
+    Expected a keyword list of options, got: #{Macro.to_string(opts)}
+    """
+
+    IOHelper.compile_error(message, caller.file, caller.line)
   end
 
   defp validate_opts(func, name, type, opts, line, env) do
@@ -703,11 +711,15 @@ defmodule Surface.API do
   end
 
   defp build_assign_ast(func, name_ast, type_ast, opts_ast, caller) do
+    name = validate_name_ast!(func, name_ast, caller)
+    opts = validate_opts_ast!(func, name, opts_ast, caller)
+    type = validate_type_ast!(func, name, type_ast, caller)
+
     quote bind_quoted: [
             func: func,
-            name: validate_name_ast!(func, name_ast, caller),
-            type: type_ast,
-            opts: validate_opts_ast!(func, opts_ast, caller),
+            name: name,
+            type: type,
+            opts: opts,
             opts_ast: Macro.escape(opts_ast),
             line: caller.line
           ] do
