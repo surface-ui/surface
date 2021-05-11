@@ -101,6 +101,33 @@ defmodule Surface.API do
   end
 
   @doc false
+  def get_assigns(module) do
+    Module.get_attribute(module, :assigns, [])
+  end
+
+  @doc false
+  def get_slots(module) do
+    Module.get_attribute(module, :slot, [])
+  end
+
+  @doc false
+  def get_props(module) do
+    Module.get_attribute(module, :prop, [])
+  end
+
+  @doc false
+  def get_data(module) do
+    Module.get_attribute(module, :data, [])
+  end
+
+  @doc false
+  def get_defaults(module) do
+    for %{name: name, opts: opts} <- get_data(module), Keyword.has_key?(opts, :default) do
+      {name, opts[:default]}
+    end
+  end
+
+  @doc false
   def put_assign(caller, func, name, type, opts, opts_ast, line) do
     assign = %{
       func: func,
@@ -114,6 +141,11 @@ defmodule Surface.API do
 
     Module.put_attribute(caller.module, :assigns, assign)
     Module.put_attribute(caller.module, assign.func, assign)
+  end
+
+  @doc false
+  def sort_props(props) when is_list(props) do
+    Enum.sort_by(props, &{&1.name != :id, !&1.opts[:required], &1.line})
   end
 
   defp validate_duplicated_assigns!(env) do
@@ -177,33 +209,6 @@ defmodule Surface.API do
     "There's already a #{func} assign with the same name at line #{line}"
   end
 
-  @doc false
-  def get_assigns(module) do
-    Module.get_attribute(module, :assigns, [])
-  end
-
-  @doc false
-  def get_slots(module) do
-    Module.get_attribute(module, :slot, [])
-  end
-
-  @doc false
-  def get_props(module) do
-    Module.get_attribute(module, :prop, [])
-  end
-
-  @doc false
-  def get_data(module) do
-    Module.get_attribute(module, :data, [])
-  end
-
-  @doc false
-  def get_defaults(module) do
-    for %{name: name, opts: opts} <- get_data(module), Keyword.has_key?(opts, :default) do
-      {name, opts[:default]}
-    end
-  end
-
   defp quoted_data_funcs(env) do
     data = get_data(env.module)
 
@@ -246,11 +251,6 @@ defmodule Surface.API do
         unquote(Macro.escape(required_props_names))
       end
     end
-  end
-
-  @doc false
-  def sort_props(props) when is_list(props) do
-    Enum.sort_by(props, &{&1.name != :id, !&1.opts[:required], &1.line})
   end
 
   defp quoted_slot_funcs(env) do
