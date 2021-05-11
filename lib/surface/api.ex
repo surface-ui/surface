@@ -79,10 +79,10 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
-    assigns = Module.get_attribute(env.module, :assigns) || []
+    assigns = Module.get_attribute(env.module, :assigns, [])
 
     for assign <- assigns do
-      Surface.API.validate!(assign, env)
+      Surface.API.validate_assign!(assign, env)
     end
 
     validate_duplicated_assigns!(env)
@@ -325,7 +325,7 @@ defmodule Surface.API do
     end
   end
 
-  def validate!(%{func: func, name: name, type: type, opts: opts, line: line}, env) do
+  def validate_assign!(%{func: func, name: name, type: type, opts: opts, line: line}, env) do
     with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
          :ok <- validate_opts(func, name, type, opts, line, env) do
