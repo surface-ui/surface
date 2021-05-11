@@ -79,18 +79,9 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
-    assigns = Module.get_attribute(env.module, :assigns, [])
-
-    for assign <- assigns do
-      Surface.API.validate_assign!(assign, env)
-    end
-
+    validate_assigns!(env)
     validate_duplicated_assigns!(env)
-
-    if function_exported?(env.module, :__slots__, 0) do
-      validate_slot_props_bindings!(env)
-    end
-
+    validate_slot_props_bindings!(env)
     validate_duplicate_root_props!(env)
   end
 
@@ -133,11 +124,10 @@ defmodule Surface.API do
     |> validate_duplicated_assigns!(env)
   end
 
-  defp validate_duplicated_assigns!([], _env), do: :ok
-
-  defp validate_duplicated_assigns!([assign | rest], env) do
-    validate_duplicated_assign!(assign, env)
-    validate_duplicated_assigns!(rest, env)
+  defp validate_duplicated_assigns!(assigns, env) do
+    for assign <- assigns do
+      validate_duplicated_assign!(assign, env)
+    end
   end
 
   defp validate_duplicated_assign!({name, [assign, duplicated | _]}, env) do
@@ -325,7 +315,15 @@ defmodule Surface.API do
     end
   end
 
-  def validate_assign!(%{func: func, name: name, type: type, opts: opts, line: line}, env) do
+  defp validate_assigns!(env) do
+    assigns = Module.get_attribute(env.module, :assigns, [])
+
+    for assign <- assigns do
+      validate_assign!(assign, env)
+    end
+  end
+
+  defp validate_assign!(%{func: func, name: name, type: type, opts: opts, line: line}, env) do
     with :ok <- validate_type(func, name, type),
          :ok <- validate_opts_keys(func, name, type, opts),
          :ok <- validate_opts(func, name, type, opts, line, env) do
@@ -702,8 +700,6 @@ defmodule Surface.API do
           :ok
       end
     end
-
-    :ok
   end
 
   defp pop_doc(module) do
