@@ -46,7 +46,7 @@ defmodule Surface.AST.Expr do
       * `:value` - a quoted expression
       * `:meta` - compile meta
   """
-  defstruct [:value, :meta]
+  defstruct [:value, :meta, :directives]
 
   @type t :: %__MODULE__{
           # quoted expression
@@ -125,7 +125,7 @@ defmodule Surface.AST.For do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:generator, :children, :meta, debug: []]
+  defstruct [:generator, :directives, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
           generator: any(),
@@ -147,7 +147,7 @@ defmodule Surface.AST.If do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:condition, :children, :meta, else: [], debug: []]
+  defstruct [:condition, :directives, :children, :meta, else: [], debug: []]
 
   @type t :: %__MODULE__{
           condition: Surface.AST.AttributeExpr.t(),
@@ -225,7 +225,7 @@ defmodule Surface.AST.Interpolation do
       * `:value` - a quoted expression
       * `:meta` - compilation meta data
   """
-  defstruct [:original, :value, :meta]
+  defstruct [:original, :directives, :value, :meta]
 
   @type t :: %__MODULE__{
           original: binary(),
@@ -268,7 +268,7 @@ defmodule Surface.AST.Literal do
   ## Properties
       * `:value` - the value
   """
-  defstruct [:value]
+  defstruct [:value, :directives]
 
   @type t :: %__MODULE__{
           directives: list(Surface.AST.Directive.t()),
@@ -353,7 +353,7 @@ defmodule Surface.AST.Error do
       * `:message` - the error message
       * `:meta` - compilation meta data
   """
-  defstruct [:message, :meta]
+  defstruct [:message, :directives, :meta]
 
   @type t :: %__MODULE__{
           message: binary(),

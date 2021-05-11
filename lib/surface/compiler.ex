@@ -246,7 +246,7 @@ defmodule Surface.Compiler do
   defp node_type({:comment, _}), do: :comment
   defp node_type(_), do: :text
 
-  defp process_directives(%{directives: directives} = node) do
+  defp process_directives(%{directives: directives} = node) when is_list(directives) do
     directives
     |> Enum.filter(fn %AST.Directive{module: mod} -> function_exported?(mod, :process, 2) end)
     |> Enum.reduce(node, fn %AST.Directive{module: mod} = directive, node ->
