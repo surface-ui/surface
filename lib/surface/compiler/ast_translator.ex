@@ -38,7 +38,10 @@ defmodule Surface.Compiler.AstTranslator do
   end
 
   def handle_init(state) do
-    Map.put(state, __MODULE__, %{})
+    Map.put(state, __MODULE__, %{
+      modules: [],
+      templates: []
+    })
   end
 
   def handle_end(_state, children) do
@@ -81,7 +84,16 @@ defmodule Surface.Compiler.AstTranslator do
 
     ast = create_ast(context.type, name, attributes, directives, children, context)
 
-    {state, expand_node(ast)}
+    extra_info =
+      state
+      |> Map.get(__MODULE__)
+      |> update_extra_info(context, name, ast)
+
+    {Map.put(state, __MODULE__, extra_info), expand_node(ast)}
+  end
+
+  defp update_extra_info(extra_info, %{type: AST.Component} = context, _name, _ast) do
+    update_in(extra_info.modules, fn modules -> [context.module | modules] end)
   end
 
   defp create_ast(Surface.Construct, _name, attributes, directives, children, context) do
@@ -94,8 +106,9 @@ defmodule Surface.Compiler.AstTranslator do
           {[], children}
       end
 
-    context.module.process(attributes, body, sub_blocks, context.meta)
-    |> wrap_in_container(directives, context.meta)
+    ast = context.module.process(attributes, body, sub_blocks, context.meta)
+
+    %{ast | directives: directives}
   end
 
   defp create_ast(AST.MacroComponent, name, attributes, directives, children, context) do
@@ -162,6 +175,7 @@ defmodule Surface.Compiler.AstTranslator do
     # a macro expansion?
     # |> recursively_expand()
     |> wrap_in_container(ast.directives, ast.meta)
+    |> expand_node()
   end
 
   defp expand_node(%{directives: [_ | _] = directives} = ast) do
