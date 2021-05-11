@@ -265,6 +265,7 @@ defmodule Surface.Compiler.Parser do
 
   defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
     meta = Map.put(meta, :unquoted_string?, true)
+
     case Integer.parse(value) do
       {int_value, ""} ->
         state.translator.handle_attribute(state, context, name, int_value, meta)
