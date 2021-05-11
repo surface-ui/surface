@@ -8,10 +8,12 @@ defmodule Surface.ComponentTest do
     prop label, :string, default: ""
     prop class, :css_class
 
+    slot default
+
     def render(assigns) do
       ~H"""
       <div class={@class}>
-        <span>{@label}</span>
+        <span><#slot>{@label}</#slot></span>
       </div>
       """
     end
@@ -300,6 +302,38 @@ defmodule Surface.ComponentTest do
       assert output =~ ~r"""
              cannot render <Enum> \(module Enum is not a component\)
                code:2:\
+             """
+    end
+  end
+
+  describe "recursive component" do
+    test "stateless component can inject itself" do
+      html =
+        render_surface do
+          ~H"""
+          <Stateless class="myclass">
+            <Stateless class="myclass">
+              <Stateless
+                label="My label"
+                class="myclass"
+              />
+            </Stateless>
+          </Stateless>
+          """
+        end
+
+      assert html =~ """
+             <div class="myclass">
+               <span>
+               <div class="myclass">
+               <span>
+                 <div class="myclass">
+               <span>My label</span>
+             </div>
+               </span>
+             </div>
+             </span>
+             </div>
              """
     end
   end

@@ -87,13 +87,17 @@ defmodule Surface.API do
 
     duplicated_assigns =
       assigns
-      |> Enum.group_by(& &1.name)
+      |> Enum.group_by(fn %{name: name, opts: opts} -> opts[:as] || name end)
       |> Map.new(fn {key, list} -> {key, length(list)} end)
       |> Enum.filter(fn {_, count} -> count > 1 end)
 
     for {assign, _} <- duplicated_assigns do
+      assign =
+        Enum.find(assigns, nil, fn %{name: name, opts: opts} -> (opts[:as] || name) == assign end)
+        |> IO.inspect(label: "Assign")
+
       validate_existing_assign!(
-        Enum.find(assigns, nil, fn %{name: name} -> name == assign end),
+        assign,
         assigns,
         env
       )
@@ -458,7 +462,7 @@ defmodule Surface.API do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:prop, _name, _type, opts, :default, _value, line, env) do
+  defp validate_opt(:prop, name, _type, opts, :default, value, line, env) do
     if Keyword.get(opts, :required, false) do
       IOHelper.warn(
         "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
@@ -467,13 +471,13 @@ defmodule Surface.API do
       )
     end
 
-    warn_on_invalid_default(:prop, name, value, opts, caller)
+    warn_on_invalid_default(:prop, name, value, opts, line, env)
 
     :ok
   end
 
-  defp validate_opt(:data, name, _type, opts, :default, value, caller) do
-    warn_on_invalid_default(:data, name, value, opts, caller)
+  defp validate_opt(:data, name, _type, opts, :default, value, line, env) do
+    warn_on_invalid_default(:data, name, value, opts, line, env)
 
     :ok
   end
@@ -532,7 +536,7 @@ defmodule Surface.API do
     :ok
   end
 
-  defp warn_on_invalid_default(type, name, default, opts, caller) do
+  defp warn_on_invalid_default(type, name, default, opts, line, env) do
     accumulate? = Keyword.get(opts, :accumulate, false)
     values! = Keyword.get(opts, :values!)
 
@@ -540,8 +544,8 @@ defmodule Surface.API do
       accumulate? and not is_list(default) ->
         IOHelper.warn(
           "#{type} `#{name}` default value `#{inspect(default)}` must be a list when `accumulate: true`",
-          caller,
-          fn _ -> caller.line end
+          env,
+          fn _ -> line end
         )
 
       accumulate? and not is_nil(values!) and
@@ -552,8 +556,8 @@ defmodule Surface.API do
 
           Hint: Either choose an existing value or replace `:values!` with `:values` to skip validation.
           """,
-          caller,
-          fn _ -> caller.line end
+          env,
+          fn _ -> line end
         )
 
       not accumulate? and not is_nil(values!) and not (default in values!) ->
@@ -563,8 +567,8 @@ defmodule Surface.API do
 
           Hint: Either choose an existing value or replace `:values!` with `:values` to skip validation.
           """,
-          caller,
-          fn _ -> caller.line end
+          env,
+          fn _ -> line end
         )
 
       true ->
