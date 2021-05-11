@@ -96,20 +96,21 @@ defmodule Surface.Constructs.ForTest do
              """
     end
 
-    test "renders inner content with generator and filter" do
+    test "renders inner content with complex generator" do
+      assigns = %{list1: [1, 4], list2: [2, 3, 4], range: 1..3}
+
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"], fruit in ["apples"]}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
+          <#for each={x <- @list1, y <- @list2, x in @range, y in @range}>
+          <span>x: {x}, y: {y}</span>
           </#for>
           """
         end
 
       assert html =~ """
-             <span>The inner content apples</span>
-             <span>with multiple tags</span>
+             <span>x: 1, y: 2</span>
+             <span>x: 1, y: 3</span>
              """
     end
 
