@@ -68,6 +68,7 @@ defmodule Surface.API do
   end
 
   defmacro __before_compile__(env) do
+    validate_assigns!(env)
     generate_docs(env)
 
     [
@@ -79,7 +80,6 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
-    validate_assigns!(env)
     validate_duplicated_assigns!(env)
     validate_slot_props_bindings!(env)
     validate_duplicate_root_props!(env)
@@ -179,33 +179,22 @@ defmodule Surface.API do
 
   @doc false
   def get_assigns(module) do
-    if Module.open?(module) do
-      module
-      |> Module.get_attribute(:assigns)
-      |> Kernel.||(%{})
-      |> Enum.map(fn %{name: name, line: line} -> {name, line} end)
-    else
-      data = if function_exported?(module, :__data__, 0), do: module.__data__(), else: []
-      props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
-      slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
-
-      Enum.map(data ++ props ++ slots, fn %{name: name, line: line} -> {name, line} end)
-    end
+    Module.get_attribute(module, :assigns, [])
   end
 
   @doc false
   def get_slots(module) do
-    Module.get_attribute(module, :slot) || []
+    Module.get_attribute(module, :slot, [])
   end
 
   @doc false
   def get_props(module) do
-    Module.get_attribute(module, :prop) || []
+    Module.get_attribute(module, :prop, [])
   end
 
   @doc false
   def get_data(module) do
-    Module.get_attribute(module, :data) || []
+    Module.get_attribute(module, :data, [])
   end
 
   @doc false
