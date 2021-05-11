@@ -333,6 +333,20 @@ defmodule Surface.Compiler.TokenizerTest do
              ] = tokens
     end
 
+    test "compute line and columns" do
+      attrs =
+        tokenize_attrs("""
+        <div
+          title="first
+            second
+        third">\
+        """)
+
+      assert [
+               {"title", {:string, _, %{line: 2, column: 10, line_end: 4, column_end: 6}}, %{}}
+             ] = attrs
+    end
+
     test "raise on incomplete attribute value (EOF)" do
       assert_raise ParseError, "nofile:2:15: expected closing `\"` for attribute value", fn ->
         tokenize!("""
@@ -378,6 +392,20 @@ defmodule Surface.Compiler.TokenizerTest do
                 %{}},
                {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
+    end
+
+    test "compute line and columns" do
+      attrs =
+        tokenize_attrs("""
+        <div
+          title='first
+            second
+        third'>\
+        """)
+
+      assert [
+               {"title", {:string, _, %{line: 2, column: 10, line_end: 4, column_end: 6}}, %{}}
+             ] = attrs
     end
 
     test "raise on incomplete attribute value (EOF)" do
@@ -600,6 +628,60 @@ defmodule Surface.Compiler.TokenizerTest do
              {:tag_close, "div", %{column: 3, line: 4}},
              {:text, "\ntext after\n"}
            ] = tokens
+  end
+
+  describe "macro components" do
+    test "do not tokenize its contents" do
+      tokens =
+        tokenize!("""
+        <#Macro>
+        text before
+        <div>
+          text
+        </div>
+        text after
+        </#Macro>
+        """)
+
+      assert [
+               {:tag_open, "#Macro", [], %{line: 1, column: 2}},
+               {:text, "\ntext before\n<div>\n  text\n</div>\ntext after\n"},
+               {:tag_close, "#Macro", %{line: 7, column: 3}},
+               {:text, "\n"}
+             ] = tokens
+    end
+
+    test "<#raw> multi lines is treated like a macro" do
+      tokens =
+        tokenize!("""
+        <#raw>
+          <div>
+            { @id }
+          </div>
+        </#raw>
+        """)
+
+      assert [
+               {:tag_open, "#raw", [], %{line: 1, column: 2}},
+               {:text, "\n  <div>\n    { @id }\n  </div>\n"},
+               {:tag_close, "#raw", %{line: 5, column: 3}},
+               {:text, "\n"}
+             ] = tokens
+    end
+
+    test "<#raw> single line is treated like a macro" do
+      tokens =
+        tokenize!("""
+        <#raw><div>{ @id }</div></#raw>
+        """)
+
+      assert [
+               {:tag_open, "#raw", [], %{line: 1, column: 2}},
+               {:text, "<div>{ @id }</div>"},
+               {:tag_close, "#raw", %{line: 1, column: 27}},
+               {:text, "\n"}
+             ] = tokens
+    end
   end
 
   defp tokenize_attrs(code) do

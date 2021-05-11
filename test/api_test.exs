@@ -66,6 +66,13 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :root in prop" do
+    code = "prop label, :string, root: 1"
+    message = ~r/invalid value for option :root. Expected a boolean, got: 1/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
@@ -247,6 +254,22 @@ defmodule Surface.APITest do
     {:ok, _module} = eval(code, "LiveView")
   end
 
+  test "raise compile error for component with multiple root properties" do
+    code = """
+    prop title, :string, root: true
+    prop label, :string, root: true
+    """
+
+    message = ~r"""
+    cannot define multiple properties as `root: true`. \
+    Property `title` at line 4 was already defined as root.
+
+    Hint: choose a single property to be the root prop.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "accept invalid quoted expressions like literal maps as default value" do
     code = """
     prop map, :map, default: %{a: 1, b: 2}
@@ -289,7 +312,7 @@ defmodule Surface.APITest do
       code = "prop label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :accumulate\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -404,7 +427,7 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "data label, :string, a: 1"
-      message = ~r/unknown option :a. Available options: \[:default, :values\]/
+      message = ~r/unknown option :a. Available options: \[:default, :values, :values!\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

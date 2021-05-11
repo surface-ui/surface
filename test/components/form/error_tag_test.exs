@@ -66,7 +66,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
     refute html =~ "another test error"
   end
 
-  test "prop phx_feedback_for", %{changeset: changeset} do
+  test "prop feedback_for", %{changeset: changeset} do
     assigns = %{changeset: changeset}
 
     html =
@@ -74,7 +74,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
         ~H"""
         <Form for={@changeset} opts={as: :user}>
           <Field name={:name}>
-            <ErrorTag phx_feedback_for="test-id" />
+            <ErrorTag feedback_for="test-id" />
           </Field>
         </Form>
         """

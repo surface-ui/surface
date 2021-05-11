@@ -654,8 +654,8 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       attributes = [
-        {"prop1", 1, %{line: 2, file: "nofile", column: 3}},
-        {"prop2", 2, %{line: 3, file: "nofile", column: 3}}
+        {"prop1", 1, %{line: 2, file: "nofile", column: 3, unquoted_string?: true}},
+        {"prop2", 2, %{line: 3, file: "nofile", column: 3, unquoted_string?: true}}
       ]
 
       assert parse!(code) ==
@@ -674,8 +674,8 @@ defmodule Surface.Compiler.ParserTest do
 
       attributes = [
         {"prop1", true, %{line: 2, file: "nofile", column: 3}},
-        {"prop2", true, %{line: 3, file: "nofile", column: 3}},
-        {"prop3", false, %{line: 4, file: "nofile", column: 3}},
+        {"prop2", true, %{line: 3, file: "nofile", column: 3, unquoted_string?: true}},
+        {"prop3", false, %{line: 4, file: "nofile", column: 3, unquoted_string?: true}},
         {"prop4", true, %{line: 5, file: "nofile", column: 3}}
       ]
 

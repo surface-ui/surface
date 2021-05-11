@@ -229,10 +229,14 @@ defmodule Surface.Compiler do
   defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
 
-  # Conditionnal blocks
+  # Conditional blocks
   defp node_type({"#if", _, _, _}), do: :if_elseif_else
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
   defp node_type({"#else", _, _, _}), do: :if_elseif_else
+  defp node_type({"#unless", _, _, _}), do: :unless
+
+  # Raw
+  defp node_type({"#raw", _, _, _}), do: :raw
 
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
@@ -256,6 +260,10 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Literal{value: text}}
+
+  defp convert_node_to_ast(:raw, {_, _, children, _}, _) do
+    {:ok, %AST.Literal{value: List.to_string(children)}}
+  end
 
   defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
@@ -316,6 +324,24 @@ defmodule Surface.Compiler do
        condition: condition,
        children: to_ast(if_children, compile_meta),
        else: to_ast(else_children, compile_meta),
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :unless,
+         {_, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+
+    {:ok,
+     %AST.If{
+       condition: condition,
+       children: [],
+       else: to_ast(children, compile_meta),
        meta: meta
      }}
   end
@@ -596,7 +622,26 @@ defmodule Surface.Compiler do
     |> Enum.reverse()
   end
 
+  defp process_attributes(mod, [{:root, value, attr_meta} | attrs], meta, acc) do
+    with true <- function_exported?(mod, :__props__, 0),
+         prop when not is_nil(prop) <- Enum.find(mod.__props__(), & &1.opts[:root]) do
+      name = Atom.to_string(prop.name)
+      process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc)
+    else
+      _ ->
+        message = """
+        no root property defined for component <#{meta.node_alias}>
+
+        Hint: you can declare a root property using option `root: true`
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        process_attributes(mod, attrs, meta, acc)
+    end
+  end
+
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc) do
+    unquoted_string? = attr_meta[:unquoted_string?]
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
@@ -604,21 +649,39 @@ defmodule Surface.Compiler do
     accumulate? = Keyword.get(type_opts, :accumulate, false)
 
     if not accumulate? and Keyword.has_key?(acc, name) do
-      IOHelper.warn(
-        """
-        The prop `#{name}` has been passed multiple times. Considering only the last value.
+      message =
+        if Keyword.get(type_opts, :root, false) do
+          """
+          the prop `#{name}` has been passed multiple times. Considering only the last value.
 
-        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+          Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
+          explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
+          """
+        else
+          """
+          the prop `#{name}` has been passed multiple times. Considering only the last value.
 
-        ```
-          prop #{name}, :#{type}, accumulate: true
-        ```
+          Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
-        This way the values will be accumulated in a list.
-        """,
-        meta.caller,
-        fn _ -> attr_meta.line end
-      )
+          ```
+            prop #{name}, :#{type}, accumulate: true
+          ```
+
+          This way the values will be accumulated in a list.
+          """
+        end
+
+      IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+    end
+
+    if unquoted_string? do
+      message = """
+        passing unquoted attribute values has been deprecated and will be removed in future versions.
+
+        Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
+      """
+
+      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
     end
 
     node = %AST.Attribute{
@@ -630,28 +693,6 @@ defmodule Surface.Compiler do
     }
 
     process_attributes(mod, attrs, meta, [{name, node} | acc])
-  end
-
-  defp attr_value(name, type, values, attr_meta) when is_list(values) do
-    {originals, quoted_values} =
-      Enum.reduce(values, {[], []}, fn
-        {:attribute_expr, value, expr_meta}, {originals, quoted_values} ->
-          expr_meta = Helpers.to_meta(expr_meta, attr_meta)
-          {["{{#{value}}}" | originals], [quote_embedded_expr(value, expr_meta) | quoted_values]}
-
-        value, {originals, quoted_values} ->
-          {[value | originals], [value | quoted_values]}
-      end)
-
-    original = originals |> Enum.reverse() |> Enum.join()
-    quoted_values = Enum.reverse(quoted_values)
-    expr_value = {:<<>>, [line: attr_meta.line], quoted_values}
-
-    %AST.AttributeExpr{
-      original: original,
-      value: Surface.TypeHandler.expr_to_quoted!(expr_value, name, type, attr_meta, original),
-      meta: attr_meta
-    }
   end
 
   defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
@@ -666,17 +707,6 @@ defmodule Surface.Compiler do
 
   defp attr_value(name, type, value, meta) do
     Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
-  end
-
-  defp quote_embedded_expr(value, expr_meta) do
-    meta = [line: expr_meta.line]
-    quoted_value = Code.string_to_quoted!(value, meta)
-
-    {:"::", meta,
-     [
-       {{:., meta, [Kernel, :to_string]}, meta, [quoted_value]},
-       {:binary, meta, Elixir}
-     ]}
   end
 
   defp validate_tag_children([]), do: :ok

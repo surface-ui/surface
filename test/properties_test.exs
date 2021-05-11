@@ -101,6 +101,18 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule RootProp do
+    use Surface.Component
+
+    prop label, :string, root: true
+
+    def render(assigns) do
+      ~H"""
+      { @label }
+      """
+    end
+  end
+
   describe "string" do
     test "passing a string literal" do
       assigns = %{text: "text"}
@@ -596,6 +608,23 @@ defmodule Surface.PropertiesTest do
              """
     end
   end
+
+  describe "root property" do
+    test "component accepts root property" do
+      assigns = %{label: "Label"}
+
+      html =
+        render_surface do
+          ~H"""
+          <RootProp {@label} />
+          """
+        end
+
+      assert html =~ """
+             Label
+             """
+    end
+  end
 end
 
 defmodule Surface.PropertiesSyncTest do
@@ -603,6 +632,7 @@ defmodule Surface.PropertiesSyncTest do
 
   import ExUnit.CaptureIO
   alias Surface.PropertiesTest.StringProp, warn: false
+  alias Surface.PropertiesTest.RootProp, warn: false
 
   test "warn if prop is required and has default value" do
     id = :erlang.unique_integer([:positive]) |> to_string()
@@ -658,7 +688,7 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           The prop `label` has been passed multiple times. Considering only the last value.
+           the prop `label` has been passed multiple times. Considering only the last value.
 
            Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
@@ -704,6 +734,117 @@ defmodule Surface.PropertiesSyncTest do
            Hint: replace `as="first"` with `as={{ :first }}`
 
              code.exs:7:\
+           """
+  end
+
+  test "warn if given default value doesn't exist in values list" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithDefaultValueThatDoesntExistInValues_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      prop type, :string, values!: ["small", "medium", "large"], default: "x-large"
+
+      data data_type, :string, values!: ["small", "medium", "large"], default: "x-large"
+
+      prop invalid_type, :integer, default: [], values!: [0, 1, 2]
+
+      prop valid_acc, :integer, default: [1], values!: [0, 1, 2], accumulate: true
+
+      prop invalid_acc1, :integer, default: [3], values!: [0, 1, 2], accumulate: true
+
+      prop invalid_acc2, :string, values!: [1, 2, 3], default: 3, accumulate: true
+
+      def render(assigns) do
+        ~H""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~S"""
+           prop `type` default value `"x-large"` does not exist in `:values!`
+           """
+
+    assert output =~ ~S"""
+           data `data_type` default value `"x-large"` does not exist in `:values!`
+           """
+
+    assert output =~ ~S"""
+           prop `invalid_type` default value `[]` does not exist in `:values!`
+           """
+
+    refute output =~ ~S"""
+           prop `valid_acc`
+           """
+
+    assert output =~ ~S"""
+           prop `invalid_acc1` default value `[3]` does not exist in `:values!`
+           """
+
+    assert output =~ ~S"""
+           prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
+           """
+  end
+
+  test "warn if component does not accept a root property" do
+    assigns = %{label: "root"}
+
+    code =
+      quote do
+        ~H"""
+        <StringProp
+          {@label}
+        />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, assigns)
+      end)
+
+    assert output =~ ~r"""
+           no root property defined for component <StringProp>
+
+           Hint: you can declare a root property using option `root: true`
+
+             code:2:\
+           """
+  end
+
+  test "warn if tag has a root property and the property assigned normally" do
+    assigns = %{label: "root"}
+
+    code =
+      quote do
+        ~H"""
+        <RootProp
+          {@label}
+          label="toor"
+        />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, assigns)
+      end)
+
+    assert output =~ ~r"""
+           the prop `label` has been passed multiple times. Considering only the last value.
+
+           Hint: Either specify the `label` via the root property \(`<RootProp { ... }>`\) or \
+           explicitly via the label property \(`<RootProp label="...">`\), but not both.
+
+             code:3:\
            """
   end
 end

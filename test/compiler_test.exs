@@ -30,7 +30,7 @@ defmodule Surface.CompilerTest do
   defmodule Button do
     use Surface.Component
 
-    prop label, :string, default: ""
+    prop label, :string, default: "", root: true
     prop click, :event
     prop class, :css_class
     prop disabled, :boolean
@@ -200,6 +200,27 @@ defmodule Surface.CompilerTest do
                  name: :label,
                  type: :string,
                  value: %Surface.AST.Literal{value: ""}
+               }
+             ]
+           } = node
+  end
+
+  test "component with root property" do
+    code = """
+    <Button {"click"} />
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Component{
+             module: Surface.CompilerTest.Button,
+             props: [
+               %Surface.AST.Attribute{
+                 name: :label,
+                 type: :string,
+                 value: %Surface.AST.AttributeExpr{
+                   original: "\"click\""
+                 }
                }
              ]
            } = node
@@ -476,6 +497,27 @@ defmodule Surface.CompilerTest do
                ]
              } = node
     end
+
+    test "#raw is treated as a Literal" do
+      code = """
+      <div>
+        <#raw>
+          I am a macro
+        </#raw>
+      </div>
+      """
+
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+      assert %Surface.AST.Tag{
+               element: "div",
+               children: [
+                 %Surface.AST.Literal{value: "\n  "},
+                 %Surface.AST.Literal{value: "\n    I am a macro\n  "},
+                 %Surface.AST.Literal{value: "\n"}
+               ]
+             } = node
+    end
   end
 
   describe "constructs" do
@@ -559,6 +601,33 @@ defmodule Surface.CompilerTest do
                ]
              } = node
     end
+  end
+
+  test "#unless" do
+    code = """
+    <div>
+      <#unless condition={false}>
+        UNLESS
+      </#unless>
+    </div>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             element: "div",
+             children: [
+               %Surface.AST.Literal{value: "\n  "},
+               %Surface.AST.If{
+                 children: [],
+                 condition: %Surface.AST.AttributeExpr{original: "false"},
+                 else: [
+                   %Surface.AST.Literal{value: "\n    UNLESS\n  "}
+                 ]
+               },
+               %Surface.AST.Literal{value: "\n"}
+             ]
+           } = node
   end
 
   describe "errors/warnings" do
@@ -661,6 +730,48 @@ defmodule Surface.CompilerSyncTest do
   import ExUnit.CaptureIO
 
   alias Surface.CompilerTest.{Button, Column, GridLive}, warn: false
+
+  test "warning when passing integer attribute values that are not enclosed by {}" do
+    code = """
+    <div>
+      <div tabindex=1 />
+    </div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+            passing unquoted attribute values has been deprecated and will be removed in future versions.
+
+             Hint: replace `tabindex=1` with `tabindex={1}`
+           """
+
+    assert line == 2
+  end
+
+  test "warning when passing boolean attribute values that are not enclosed by {}" do
+    code = """
+    <div>
+      <div selected=true checked=false />
+    </div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+            passing unquoted attribute values has been deprecated and will be removed in future versions.
+
+             Hint: replace `selected=true` with `selected={true}`
+           """
+
+    assert message =~ """
+            passing unquoted attribute values has been deprecated and will be removed in future versions.
+
+             Hint: replace `checked=false` with `checked={false}`
+           """
+
+    assert line == 2
+  end
 
   test "warning when a aliased component cannot be loaded" do
     alias Components.But, warn: false

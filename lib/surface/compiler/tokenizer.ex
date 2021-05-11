@@ -127,6 +127,16 @@ defmodule Surface.Compiler.Tokenizer do
     handle_macro_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
   end
 
+  defp handle_macro_body("</#raw" <> rest, line, column, buffer, acc, state) do
+    handle_tag_close(
+      "#raw" <> rest,
+      line,
+      column + 2,
+      text_to_acc(buffer, acc),
+      state
+    )
+  end
+
   defp handle_macro_body("</#" <> <<first, rest::binary>>, line, column, buffer, acc, state)
        when first in ?A..?Z do
     handle_tag_close(
@@ -237,10 +247,10 @@ defmodule Surface.Compiler.Tokenizer do
          ">" <> rest,
          line,
          column,
-         [{:tag_open, "#" <> <<first, _::binary>>, _, _} | _] = acc,
+         [{:tag_open, "#" <> <<first, _::binary>> = name, _, _} | _] = acc,
          state
        )
-       when first in ?A..?Z do
+       when first in ?A..?Z or name == "#raw" do
     acc = reverse_attrs(acc)
     handle_macro_body(rest, line, column + 1, [], acc, state)
   end
@@ -360,10 +370,12 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_attr_value_begin("\"" <> rest, line, column, acc, state) do
+    acc = put_attr_value(acc, {:string, nil, %{line: line, column: column + 1, delimiter: ?"}})
     handle_attr_value_double_quote(rest, line, column + 1, [], acc, state)
   end
 
   defp handle_attr_value_begin("'" <> rest, line, column, acc, state) do
+    acc = put_attr_value(acc, {:string, nil, %{line: line, column: column + 1, delimiter: ?'}})
     handle_attr_value_single_quote(rest, line, column + 1, [], acc, state)
   end
 
@@ -395,7 +407,11 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_attr_value_double_quote("\"" <> rest, line, column, buffer, acc, state) do
     value = buffer_to_string(buffer)
-    acc = put_attr_value(acc, {:string, value, %{delimiter: ?"}})
+
+    acc =
+      update_attr_value(acc, fn {type, _old_value, meta} ->
+        {type, value, Map.merge(meta, %{line_end: line, column_end: column})}
+      end)
 
     handle_maybe_tag_open_end(rest, line, column + 1, acc, state)
   end
@@ -422,7 +438,11 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_attr_value_single_quote("'" <> rest, line, column, buffer, acc, state) do
     value = buffer_to_string(buffer)
-    acc = put_attr_value(acc, {:string, value, %{delimiter: ?'}})
+
+    acc =
+      update_attr_value(acc, fn {type, _old_value, meta} ->
+        {type, value, Map.merge(meta, %{line_end: line, column_end: column})}
+      end)
 
     handle_maybe_tag_open_end(rest, line, column + 1, acc, state)
   end
