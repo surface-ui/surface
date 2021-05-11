@@ -367,39 +367,13 @@ defmodule Surface.Compiler do
           [children, []]
       end
 
-    for_ast = %AST.For{
-      generator: generator,
-      children: to_ast(for_children, compile_meta),
-      meta: meta
-    }
-
-    if else_children == [] do
-      {:ok, for_ast}
-    else
-      [{_, _, [{var, _, _}, _]} | _] = generator.value
-      generator_expr = generator.value ++ [[do: {var, [], nil}]]
-
-      condition = %AST.AttributeExpr{
-        original: "",
-        value:
-          quote do
-            unquote({:for, [generated: true], generator_expr})
-            |> case do
-              [] -> false
-              _ -> true
-            end
-          end,
-        meta: compile_meta
-      }
-
-      {:ok,
-       %AST.If{
-         condition: condition,
-         children: [for_ast],
-         else: to_ast(else_children, compile_meta),
-         meta: meta
-       }}
-    end
+    {:ok,
+     %AST.For{
+       generator: generator,
+       children: to_ast(for_children, compile_meta),
+       else: to_ast(else_children, compile_meta),
+       meta: meta
+     }}
   end
 
   defp convert_node_to_ast(

@@ -120,15 +120,17 @@ defmodule Surface.AST.For do
   ## Properties
       * `:generator` - a quoted expression
       * `:children` - the children to collect over the generator
+      * `:else` - the children to insert into the dom if the geenrator is empty
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:generator, :children, :meta, debug: []]
+  defstruct [:generator, :children, :meta, else: [], debug: []]
 
   @type t :: %__MODULE__{
           generator: any(),
           debug: list(atom()),
           children: list(Surface.AST.t()),
+          else: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
 end
