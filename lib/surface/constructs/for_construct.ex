@@ -19,7 +19,7 @@ defmodule Surface.Constructs.For do
   end
 
   def attribute_type(block, attribute, _)
-      when block in [:default, "elseif"] and attribute in [:root, "condition"],
+      when block in [:default] and attribute in [:root, "condition"],
       do: :boolean
 
   def attribute_type("else", name, meta) when name in [:root, "condition"] do
