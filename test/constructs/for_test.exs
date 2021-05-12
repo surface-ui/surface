@@ -268,7 +268,8 @@ defmodule Surface.Constructs.ForTest do
           """
         end
 
-      message = ~r/using <#for>..<#else> only supports single generators without filters./
+      message =
+        ~r/code:3: using `<#else>` is only supported when the expression in `<#for>` has a single generator and no filters./
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code, assigns)

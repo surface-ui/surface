@@ -374,10 +374,12 @@ defmodule Surface.Compiler do
     if else_children == [] do
       {:ok, for_ast}
     else
+      [else_ast | _] = to_ast(else_children, compile_meta)
+
       value =
         case generator.value do
           [{:<-, _, [_, value]}] -> value
-          _ -> raise_complex_generator(meta)
+          _ -> raise_complex_generator(else_ast.meta)
         end
 
       condition = %AST.AttributeExpr{
@@ -393,7 +395,7 @@ defmodule Surface.Compiler do
        %AST.If{
          condition: condition,
          children: [for_ast],
-         else: to_ast(else_children, compile_meta),
+         else: [else_ast],
          meta: meta
        }}
     end
