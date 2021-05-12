@@ -15,11 +15,23 @@ defmodule Surface.Constructs.IfTest do
     end
   end
 
+  defmodule SomeComponent do
+    use Surface.Component
+
+    prop content, :any
+
+    def render(assigns) do
+      ~H"""
+      <span>{@content}</span>
+      """
+    end
+  end
+
   test "warn when using deprecated <If>" do
     code =
       quote do
         ~H"""
-        <If condition={{ true }}>
+        <If condition={true}>
           Warning
         </If>
         """
@@ -31,7 +43,7 @@ defmodule Surface.Constructs.IfTest do
       end)
 
     assert output =~ ~r"""
-           using <If> to wrap elements in an if experssion has been depreacated and will be removed in \
+           using <If> to wrap elements in an if expression has been deprecated and will be removed in \
            future versions.
 
            Hint: replace `<If>` with `<#if>`
@@ -94,6 +106,21 @@ defmodule Surface.Constructs.IfTest do
              """
     end
 
+    test "renders inner if condition with component" do
+      html =
+        render_surface do
+          ~H"""
+          <#if condition={true}>
+            <SomeComponent content="The inner content" />
+          </#if>
+          """
+        end
+
+      assert html =~ """
+             <span>The inner content</span>
+             """
+    end
+
     test "parser error message contains the correct line" do
       code =
         quote do
@@ -151,7 +178,7 @@ defmodule Surface.Constructs.IfTest do
              """
     end
 
-    test "renders inner `else` condition if condition is fasly" do
+    test "renders inner `else` condition if condition is falsy" do
       html =
         render_surface do
           ~H"""
@@ -168,6 +195,24 @@ defmodule Surface.Constructs.IfTest do
       assert html =~ """
              <span>The else content</span>
              <span>with multiple tags</span>
+             """
+    end
+
+    test "renders inner `else` condition with component" do
+      html =
+        render_surface do
+          ~H"""
+          <#if condition={false}>
+          <span>The inner content</span>
+          <span>with multiple tags</span>
+          <#else>
+            <SomeComponent content="The else content" />
+          </#if>
+          """
+        end
+
+      assert html =~ """
+             <span>The else content</span>
              """
     end
   end

@@ -123,7 +123,7 @@ defmodule Surface.AST.For do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:generator, :children, :meta, debug: []]
+  defstruct [:generator, :children, :meta, else: [], debug: []]
 
   @type t :: %__MODULE__{
           generator: any(),
@@ -140,7 +140,7 @@ defmodule Surface.AST.If do
   ## Properties
       * `:condition` - a quoted expression
       * `:children` - the children to insert into the dom if the condition evaluates truthy
-      * `:else` - the children to insert into the dom if the condition evaluates fasly
+      * `:else` - the children to insert into the dom if the condition evaluates falsy
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
