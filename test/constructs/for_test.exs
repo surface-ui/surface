@@ -74,12 +74,13 @@ defmodule Surface.Constructs.ForTest do
       quote do
         ~H"""
         <For each={fruit <- ["apples", "bananas", "oranges"]}>
-          <ListProp prop="some string" />
+          <ListProp
+            prop="some string" />
         </For>
         """
       end
 
-    message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
+    message = ~S(code:3: invalid value for property "prop". Expected a :list, got: "some string".)
 
     assert_raise(CompileError, message, fn ->
       compile_surface(code)
@@ -165,13 +166,14 @@ defmodule Surface.Constructs.ForTest do
         quote do
           ~H"""
           <#for each={fruit <- ["apples", "bananas", "oranges"]}>
-            <ListProp prop="some string" />
+            <ListProp
+              prop="some string" />
           </#for>
           """
         end
 
       message =
-        ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
+        ~S(code:3: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -201,27 +203,6 @@ defmodule Surface.Constructs.ForTest do
              <span>with multiple tags</span>
              <span>The inner content oranges</span>
              <span>with multiple tags</span>
-             """
-    end
-
-    test "renders inner `for` content with complex generator" do
-      assigns = %{list1: [1, 4], list2: [2, 3, 4], range: 1..3}
-
-      html =
-        render_surface do
-          ~H"""
-          <#for each={x <- @list1, y <- @list2, x in @range, y in @range}>
-          <span>x: {x}, y: {y}</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#for>
-          """
-        end
-
-      assert html =~ """
-             <span>x: 1, y: 2</span>
-             <span>x: 1, y: 3</span>
              """
     end
 
@@ -270,6 +251,28 @@ defmodule Surface.Constructs.ForTest do
              <span>The inner content oranges</span>
              <span>with multiple tags</span>
              """
+    end
+
+    test "raises compile error with complex generator" do
+      assigns = %{list1: [1, 4], list2: [2, 3, 4], range: 1..3}
+
+      code =
+        quote do
+          ~H"""
+          <#for each={x <- @list1, y <- @list2, x in @range, y in @range}>
+          <span>x: {x}, y: {y}</span>
+          <#else>
+          <span>The else content</span>
+          <span>with multiple tags</span>
+          </#for>
+          """
+        end
+
+      message = ~r/using <#for>..<#else> only supports single generators without filters./
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code, assigns)
+      end)
     end
 
     test "renders inner `else` if generator is empty" do

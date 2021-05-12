@@ -84,7 +84,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Expr{value: expr}, _buffer, _state), do: {:__block__, [], [expr]}
 
   defp to_expression(
-         %AST.For{generator: %AST.AttributeExpr{value: generator}, children: children, else: []} =
+         %AST.For{generator: %AST.AttributeExpr{value: generator}, children: children} =
            comprehension,
          buffer,
          state
@@ -99,45 +99,6 @@ defmodule Surface.Compiler.EExEngine do
     generator_expr = generator ++ [[do: buffer]]
 
     {:for, [generated: true], generator_expr}
-    |> maybe_print_expression(comprehension)
-  end
-
-  defp to_expression(
-         %AST.For{
-           generator: %AST.AttributeExpr{value: generator},
-           children: children,
-           else: else_children
-         } = comprehension,
-         buffer,
-         state
-       ) do
-    for_buffer =
-      handle_nested_block(children, buffer, %{
-        state
-        | depth: state.depth + 1,
-          context: [:for | state.context]
-      })
-
-    else_buffer =
-      handle_nested_block(else_children, buffer, %{
-        state
-        | depth: state.depth + 1,
-          context: [:for | state.context]
-      })
-
-    generator_expr = generator ++ [[do: for_buffer]]
-    for_expr = {:for, [generated: true], generator_expr}
-
-    case_expr =
-      quote generated: true do
-        unquote(for_expr)
-        |> case do
-          [] -> unquote(else_buffer)
-          result -> result
-        end
-      end
-
-    case_expr
     |> maybe_print_expression(comprehension)
   end
 
@@ -587,17 +548,8 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([
-         %AST.For{children: children, else: else_children} = comprehension | nodes
-       ]) do
-    [
-      %{
-        comprehension
-        | children: to_token_sequence(children),
-          else: to_token_sequence(else_children)
-      },
-      to_dynamic_nested_html(nodes)
-    ]
+  defp to_dynamic_nested_html([%AST.For{children: children} = comprehension | nodes]) do
+    [%{comprehension | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([

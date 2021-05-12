@@ -229,7 +229,7 @@ defmodule Surface.Compiler do
   # Conditional blocks
   defp node_type({"#if", _, _, _}), do: :if_elseif_else
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
-  defp node_type({"#else", _, _, _}), do: :if_elseif_else
+  defp node_type({"#else", _, _, _}), do: :else
   defp node_type({"#unless", _, _, _}), do: :unless
 
   # For
@@ -281,8 +281,8 @@ defmodule Surface.Compiler do
   end
 
   defp convert_node_to_ast(
-         :if_elseif_else,
-         {"#else", _attributes, children, node_meta},
+         :else,
+         {_name, _attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
@@ -364,13 +364,39 @@ defmodule Surface.Compiler do
           [children, []]
       end
 
-    {:ok,
-     %AST.For{
-       generator: generator,
-       children: to_ast(for_children, compile_meta),
-       else: to_ast(else_children, compile_meta),
-       meta: meta
-     }}
+    for_ast = %AST.For{
+      generator: generator,
+      children: to_ast(for_children, compile_meta),
+      else: to_ast(else_children, compile_meta),
+      meta: meta
+    }
+
+    if else_children == [] do
+      {:ok, for_ast}
+    else
+      value =
+        case generator.value do
+          [{:<-, _, [_, value]}] -> value
+          _ -> raise_complex_generator(meta)
+        end
+
+      condition = %AST.AttributeExpr{
+        original: "",
+        value:
+          quote do
+            unquote(value) != []
+          end,
+        meta: compile_meta
+      }
+
+      {:ok,
+       %AST.If{
+         condition: condition,
+         children: [for_ast],
+         else: to_ast(else_children, compile_meta),
+         meta: meta
+       }}
+    end
   end
 
   defp convert_node_to_ast(
@@ -1054,6 +1080,23 @@ defmodule Surface.Compiler do
     """
 
     IOHelper.compile_error(message, template_meta.file, template_meta.line)
+  end
+
+  defp raise_complex_generator(meta) do
+    message = """
+    using <#for>..<#else> only supports single generators without filters.
+
+    Example:
+      ```
+      <#for each={i <- [1, 2, 3]}>
+      ...
+      <#else>
+      ...
+      </#for>
+      ```
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
   end
 
   defp similar_slot_message(slot_name, list_of_slot_names, opts \\ []) do
