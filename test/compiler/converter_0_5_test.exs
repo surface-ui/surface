@@ -230,28 +230,28 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert <For> into <#For>" do
+    expected =
+      convert("""
+      <div>
+        <For each={{ _i <- @var }}>
+          1
+          </For>
+        <For   each={{@var}}>2</For>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             <#for each={ _i <- @var }>
+               1
+               </#for>
+             <#for   each={@var}>2</#for>
+           </div>
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
-
-  # test "convert <For> into <#For>" do
-  #   expected =
-  #     convert("""
-  #     <div>
-  #       <For each={{ _i <- @var }}>
-  #         1
-  #         </For>
-  #       <For   each={{@var}}>2</For>
-  #     </div>
-  #     """)
-
-  #   assert expected == """
-  #          <div>
-  #            <#for each={_i <- @var}>
-  #              1
-  #              </#for>
-  #            <#for   each={@var}>2</#for>
-  #          </div>
-  #          """
-  # end
 
   # test "convert slot's :props into :args" do
   #   expected =
