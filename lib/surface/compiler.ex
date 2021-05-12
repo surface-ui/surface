@@ -1084,16 +1084,15 @@ defmodule Surface.Compiler do
 
   defp raise_complex_generator(meta) do
     message = """
-    using <#for>..<#else> only supports single generators without filters.
+    using `<#else>` is only supported when the expression in `<#for>` has a single generator and no filters.
 
     Example:
-      ```
+
       <#for each={i <- [1, 2, 3]}>
-      ...
+        ...
       <#else>
-      ...
+        ...
       </#for>
-      ```
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
