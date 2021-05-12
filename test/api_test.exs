@@ -8,9 +8,20 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
-  test "validate type" do
+  test "validate ast type" do
     code = "prop label, {:a, :b}"
-    message = ~r/invalid type {:a, :b} for prop label.\nExpected one of \[:any/
+
+    message = ~r"""
+    invalid type for prop label. \
+    Expected an atom, got: {:a, :b}
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate type in list of available types" do
+    code = "prop label, :foo"
+    message = ~r/invalid type :foo for prop label.\nExpected one of \[:any/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
