@@ -705,39 +705,56 @@ defmodule Surface.Compiler do
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
 
-    accumulate? = Keyword.get(type_opts, :accumulate, false)
+    duplicated_attr? = Keyword.has_key?(acc, name)
+    duplicated_prop? = mod && (!Keyword.get(type_opts, :accumulate, false) and duplicated_attr?)
+    duplicated_html_attr? = !mod && duplicated_attr?
+    root_prop? = Keyword.get(type_opts, :root, false)
 
-    if not accumulate? and Keyword.has_key?(acc, name) do
-      message =
-        if Keyword.get(type_opts, :root, false) do
-          """
-          the prop `#{name}` has been passed multiple times. Considering only the last value.
+    cond do
+      duplicated_prop? && root_prop? ->
+        message = """
+        the prop `#{name}` has been passed multiple times. Considering only the last value.
 
-          Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
-          explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
-          """
-        else
-          """
-          the prop `#{name}` has been passed multiple times. Considering only the last value.
+        Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
+        explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
+        """
 
-          Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
 
-          ```
-            prop #{name}, :#{type}, accumulate: true
-          ```
+      duplicated_prop? && not root_prop? ->
+        message = """
+        the prop `#{name}` has been passed multiple times. Considering only the last value.
 
-          This way the values will be accumulated in a list.
-          """
-        end
+        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
-      IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        ```
+          prop #{name}, :#{type}, accumulate: true
+        ```
+
+        This way the values will be accumulated in a list.
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      duplicated_html_attr? ->
+        message = """
+        the attribute `#{name}` has been passed multiple times on line #{meta.line}. \
+        Considering only the last value.
+
+        Hint: remove all redundant definitions
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      true ->
+        nil
     end
 
     if unquoted_string? do
       message = """
-        passing unquoted attribute values has been deprecated and will be removed in future versions.
+      passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-        Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
+      Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
       """
 
       IOHelper.warn(message, meta.caller, fn _ -> meta.line end)

@@ -702,6 +702,41 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
+  test "warn if attrs are specified multiple times for html tag" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithAttrsSpecifiedMultipleTimes_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      def render(assigns) do
+        ~H"\""
+        <div
+          class="foo"
+          class="bar"
+        />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           the attribute `class` has been passed multiple times on line 6. \
+           Considering only the last value.
+
+           Hint: remove all redundant definitions
+
+             code.exs:8:\
+           """
+  end
+
   test "warn if prop of type :atom is passed as literal string" do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module = "TestComponentWithAtomPropPassedAsString_#{id}"
