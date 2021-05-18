@@ -134,6 +134,17 @@ defmodule Surface.Compiler.Parser do
     |> string("-->")
     |> post_traverse(:comment)
 
+  embedded_elixir =
+    string("<%=")
+    |> repeat(lookahead_not(string("%>")) |> utf8_char([]))
+    |> string("%>")
+    |> post_traverse(:embedded_elixir)
+
+  defp embedded_elixir(_rest, ["%>" | _] = nodes, context, _line, _offset) do
+    embedded_elixir = nodes |> Enum.reverse() |> IO.chardata_to_string()
+    {[{:embedded_elixir, embedded_elixir}], context}
+  end
+
   ## Void element node
 
   void_element =
@@ -413,7 +424,8 @@ defmodule Surface.Compiler.Parser do
       self_closing_macro_node,
       regular_node,
       self_closing_node,
-      comment
+      comment,
+      embedded_elixir
     ]
     |> choice()
     |> label("opening HTML tag"),
