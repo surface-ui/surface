@@ -78,7 +78,11 @@ defmodule Surface.Compiler.Parser do
   # should be moved to the tokenizer or not. We could also hold the expression
   # directly instead of using the :root attribute.
   for block <- @blocks do
-    defp handle_token([{:interpolation, "#" <> unquote(block) <> " " <> expr, meta} | rest], buffers, state) do
+    defp handle_token(
+           [{:interpolation, "#" <> unquote(block) <> " " <> expr, meta} | rest],
+           buffers,
+           state
+         ) do
       expr_meta = %{meta | column: meta.column + String.length(unquote(block)) + 2}
       attrs = [{:root, {:expr, expr, expr_meta}, expr_meta}]
       handle_token([{:block_open, unquote(block), attrs, meta} | rest], buffers, state)
@@ -169,7 +173,11 @@ defmodule Surface.Compiler.Parser do
   end
 
   # If there's a previous sub-block defined. Close it.
-  defp close_sub_block(_token, buffers, %{tags: [{:block_open, name, attrs, meta} | tags]} = state)
+  defp close_sub_block(
+         _token,
+         buffers,
+         %{tags: [{:block_open, name, attrs, meta} | tags]} = state
+       )
        when name in @sub_blocks do
     # pop the current buffer and use it as children for the sub-block node
     [buffer | buffers] = buffers
@@ -284,11 +292,17 @@ defmodule Surface.Compiler.Parser do
     %{state | tags: [token | state.tags]}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _, _} = tag | tags]} = state, {:tag_close, tag_name, _}) do
+  defp pop_matching_tag(
+         %{tags: [{:tag_open, tag_name, _, _} = tag | tags]} = state,
+         {:tag_close, tag_name, _}
+       ) do
     {tag, %{state | tags: tags}}
   end
 
-  defp pop_matching_tag(%{tags: [{:block_open, name, _, _} = tag | tags]} = state, {:block_close, name, _}) do
+  defp pop_matching_tag(
+         %{tags: [{:block_open, name, _, _} = tag | tags]} = state,
+         {:block_close, name, _}
+       ) do
     {tag, %{state | tags: tags}}
   end
 

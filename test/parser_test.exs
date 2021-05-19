@@ -892,7 +892,8 @@ defmodule Surface.Compiler.ParserTest do
                         ],
                         [
                           {:block, :default, [], ["\n    333\n  "], %{}},
-                          {:block, "else", [], ["\n    444\n  "], %{line: 7, file: "nofile", column: 4}}
+                          {:block, "else", [], ["\n    444\n  "],
+                           %{line: 7, file: "nofile", column: 4}}
                         ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 4}},
                        "\n"
                      ], %{line: 3, file: "nofile", column: 2}},
@@ -910,7 +911,9 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
+      message =
+        "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
+
       assert %ParseError{message: ^message, line: 2} = exception
     end
 
