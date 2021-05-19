@@ -1,5 +1,9 @@
 defmodule Surface.Directive.ComponentProps do
-  use Surface.Directive
+  use Surface.Directive,
+    type: :map
+
+  def matches?(Surface.Component, _, "props"), do: true
+  def matches?(_, _, _), do: false
 
   def extract({":props", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)

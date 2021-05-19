@@ -1,5 +1,6 @@
 defmodule Surface.Directive do
-  @callback matches?(type :: module(), attribute_name :: :root | binary()) :: boolean()
+  @callback matches?(type :: module(), module :: module(), attribute_name :: :root | binary()) ::
+              boolean()
   @callback type() :: atom()
   @callback extract(node :: any, meta :: Surface.AST.Meta.t()) ::
               [Surface.AST.Directive.t()]
@@ -13,7 +14,7 @@ defmodule Surface.Directive do
               node :: Surface.AST.t()
             ) :: Surface.AST.t()
 
-  @optional_callbacks process: 2, process: 4
+  @optional_callbacks process: 2, process: 4, extract: 2
 
   defstruct [:module, :name, :original_name, :value, :modifiers, :meta]
 
@@ -28,18 +29,50 @@ defmodule Surface.Directive do
           meta: Surface.AST.Meta.t()
         }
 
-  defmacro __using__(_) do
+  defmacro __using__(opts) do
+    type = opts[:type] || :any
+    name_pattern = opts[:name_pattern]
+
     quote do
       alias Surface.AST
       alias Surface.Compiler.Helpers
       alias Surface.IOHelper
 
       @behaviour unquote(__MODULE__)
+      @before_compile unquote(__MODULE__)
 
-      def matches?(_, _), do: false
-      def type(), do: :any
+      if unquote(name_pattern != nil) do
+        def matches?(_, _, unquote(name_pattern)), do: true
+      end
 
-      defoverridable matches?: 2, type: 0
+      def matches?(_, _, _), do: false
+      def type(), do: unquote(type)
+
+      defoverridable matches?: 3, type: 0
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    [quoted_process(env), quoted_extract(env)]
+  end
+
+  def quoted_process(env) do
+    if Module.defines?(env.module, {:process, 2}) && !Module.defines?(env.module, {:process, 4}) do
+      quote do
+        def process(name, value, meta, node) do
+          process(%Surface.AST.Directive{name: name, value: value, meta: meta}, node)
+        end
+      end
+    end
+  end
+
+  def quoted_extract(env) do
+    if !Module.defines?(env.module, {:extract, 2}) do
+      quote do
+        def extract(name, value, meta, node) do
+          raise "This directive isn't compatible with old directives!"
+        end
+      end
     end
   end
 

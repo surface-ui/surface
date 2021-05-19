@@ -1,5 +1,7 @@
 defmodule Surface.Directive.Let do
-  use Surface.Directive
+  use Surface.Directive,
+    type: :bindings,
+    name_pattern: "let"
 
   def extract({":let", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
@@ -12,9 +14,22 @@ defmodule Surface.Directive.Let do
 
   def extract(_, _), do: []
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, node) do
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %AST.Component{} = node) do
+    update_in(node.templates, fn
+      %{default: [first | others]} = tpls ->
+        Map.put(tpls, :default, [%{first | let: value} | others])
+
+      tpls ->
+        tpls
+    end)
+  end
+
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %AST.Template{} = node) do
     %{node | let: value}
   end
+
+  # TODO: log warning
+  def process(_, node), do: node
 
   defp directive_value(value, meta) do
     %AST.AttributeExpr{

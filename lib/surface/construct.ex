@@ -34,10 +34,19 @@ defmodule Surface.Construct do
   defmacro __using__(_opts \\ []) do
     quote do
       @behaviour Surface.Construct
+      import Surface.Construct, only: [find_prop_value: 3]
 
       def attribute_type(_, _, _), do: :any
 
       defoverridable attribute_type: 3
     end
+  end
+
+  def find_prop_value(attributes, name, default, opts \\ []) do
+    Enum.find_value(attributes, default, fn attr ->
+      if attr.name == name || (opts[:root] && attr.name == :root) do
+        attr.value
+      end
+    end)
   end
 end

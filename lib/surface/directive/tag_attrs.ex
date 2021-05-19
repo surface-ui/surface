@@ -1,5 +1,7 @@
 defmodule Surface.Directive.TagAttrs do
-  use Surface.Directive
+  use Surface.Directive,
+    type: :map,
+    name_pattern: "attrs"
 
   def extract({":attrs", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)

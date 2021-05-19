@@ -24,11 +24,11 @@ defmodule Surface.AST.Container do
 
   ## Properties
       * `:children` - children AST nodes
-      * `:directives` - directives associated with this container
+      *` - directives associated with this containe, directives: []r
       * `:meta` - compile meta
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:children, :directives, :meta, debug: []]
+  defstruct [:children, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           children: list(Surface.AST.t()),
@@ -46,7 +46,7 @@ defmodule Surface.AST.Expr do
       * `:value` - a quoted expression
       * `:meta` - compile meta
   """
-  defstruct [:value, :meta, :directives]
+  defstruct [:value, :meta, directives: []]
 
   @type t :: %__MODULE__{
           # quoted expression
@@ -125,7 +125,7 @@ defmodule Surface.AST.For do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:generator, :directives, :children, :meta, else: [], debug: []]
+  defstruct [:generator, :children, :meta, else: [], debug: [], directives: []]
 
   @type t :: %__MODULE__{
           generator: any(),
@@ -147,7 +147,7 @@ defmodule Surface.AST.If do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:condition, :directives, :children, :meta, else: [], debug: []]
+  defstruct [:condition, :children, :meta, else: [], debug: [], directives: []]
 
   @type t :: %__MODULE__{
           condition: Surface.AST.AttributeExpr.t(),
@@ -225,7 +225,7 @@ defmodule Surface.AST.Interpolation do
       * `:value` - a quoted expression
       * `:meta` - compilation meta data
   """
-  defstruct [:original, :directives, :value, :meta]
+  defstruct [:original, :value, :meta, directives: []]
 
   @type t :: %__MODULE__{
           original: binary(),
@@ -247,7 +247,7 @@ defmodule Surface.AST.Slot do
       * `:props` - either an atom or a quoted expression representing bindings for this slot
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :directives, :index, :props, :default, :meta]
+  defstruct [:name, :index, :props, :default, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: binary(),
@@ -268,7 +268,7 @@ defmodule Surface.AST.Literal do
   ## Properties
       * `:value` - the value
   """
-  defstruct [:value, :directives]
+  defstruct [:value, directives: []]
 
   @type t :: %__MODULE__{
           directives: list(Surface.AST.Directive.t()),
@@ -283,12 +283,12 @@ defmodule Surface.AST.Tag do
   ## Properties
       * `:element` - the element name
       * `:attributes` - the attributes for this tag
-      * `:directives` - any directives to be applied to this tag
+      *` - any directives to be applied to this ta, directives: []g
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:element, :attributes, :directives, :children, :meta, debug: []]
+  defstruct [:element, :attributes, :children, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           element: binary(),
@@ -307,11 +307,11 @@ defmodule Surface.AST.VoidTag do
   ## Properties
       * `:element` - the element name
       * `:attributes` - the attributes for this tag
-      * `:directives` - any directives to be applied to this tag
+      *` - any directives to be applied to this ta, directives: []g
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:element, :attributes, :directives, :meta, debug: []]
+  defstruct [:element, :attributes, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           element: binary(),
@@ -333,7 +333,7 @@ defmodule Surface.AST.Template do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:name, :children, :directives, :let, :meta]
+  defstruct [:name, :children, :let, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: atom(),
@@ -353,7 +353,7 @@ defmodule Surface.AST.Error do
       * `:message` - the error message
       * `:meta` - compilation meta data
   """
-  defstruct [:message, :directives, :meta]
+  defstruct [:message, :meta, directives: []]
 
   @type t :: %__MODULE__{
           message: binary(),
@@ -370,12 +370,12 @@ defmodule Surface.AST.Component do
       * `:module` - the component module
       * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.LiveView)
       * `:props` - the props for this component
-      * `:directives` - any directives to be applied to this tag
+      *` - any directives to be applied to this ta, directives: []g
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :type, :props, :dynamic_props, :directives, :templates, :meta, debug: []]
+  defstruct [:module, :type, :props, :dynamic_props, :templates, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           module: module(),
@@ -399,12 +399,12 @@ defmodule Surface.AST.MacroComponent do
   ## Properties
       * `:module` - the component module
       * `:attributes` - the specified attributes
-      * `:directives` - any directives to be applied to this tag
+      *` - any directives to be applied to this ta, directives: []g
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :name, :attributes, :directives, :body, :meta, debug: []]
+  defstruct [:module, :name, :attributes, :body, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           module: module(),
@@ -427,7 +427,7 @@ defmodule Surface.AST.SlotableComponent do
       * `:slot` - the name of the slot that this component is for
       * `:let` - the bindings for this template
       * `:props` - the props for this component
-      * `:directives` - any directives to be applied to this tag
+      *` - any directives to be applied to this ta, directives: []g
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
@@ -439,10 +439,10 @@ defmodule Surface.AST.SlotableComponent do
     :let,
     :props,
     :dynamic_props,
-    :directives,
     :templates,
     :meta,
-    debug: []
+    debug: [],
+    directives: []
   ]
 
   @type t :: %__MODULE__{

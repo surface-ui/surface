@@ -2,22 +2,22 @@ defmodule Surface.Compiler.AstTranslator do
   @behaviour Surface.Compiler.NodeTranslator
 
   @constructs %{
-    "if" => Surface.Construct.If,
-    "for" => Surface.Construct.For,
-    "template" => Surface.Construct.Template,
-    "slot" => Surface.Construct.Slot
+    "if" => Surface.Constructs.If,
+    "for" => Surface.Constructs.For,
+    "template" => Surface.Constructs.Template,
+    "slot" => Surface.Constructs.Slot
   }
 
   @directives [
     Surface.Directive.ComponentProps,
+    Surface.Directive.SlotProps,
     Surface.Directive.Let,
     Surface.Directive.Hook,
     Surface.Directive.Values,
     Surface.Directive.TagAttrs,
     Surface.Directive.Events,
     Surface.Directive.Show,
-    Surface.Directive.If,
-    Surface.Directive.For,
+    Surface.Constructs.If.Directive,
     Surface.Directive.Debug
   ]
 
@@ -48,8 +48,8 @@ defmodule Surface.Compiler.AstTranslator do
     # the idea here is to return enough information to perform additional validation
     # and inject the required code to add a compile time dependency
     # that might be a bit simpler than injecting AST.Expr statements into the ast itself
-    extras = Map.get(state, __MODULE__)
-    {extras, children}
+    # extras = Map.get(state, __MODULE__)
+    children
   end
 
   def handle_interpolation(state, expression, parse_meta) do
@@ -100,14 +100,21 @@ defmodule Surface.Compiler.AstTranslator do
     update_in(extra_info.modules, fn modules -> [context.module | modules] end)
   end
 
+  defp update_extra_info(extras, _, _, _) do
+    extras
+  end
+
   defp create_ast(Surface.Construct, _name, attributes, directives, children, context) do
-    [body, sub_blocks] =
+    {body, sub_blocks} =
       case children do
         [%Surface.Construct.SubBlock{name: :default, body: body} | sub_blocks] ->
           {body, sub_blocks}
 
+        [%Surface.Construct.SubBlock{} | sub_blocks] ->
+          {[], sub_blocks}
+
         _ ->
-          {[], children}
+          {children, []}
       end
 
     ast = context.module.process(attributes, body, sub_blocks, context.meta)
@@ -206,7 +213,9 @@ defmodule Surface.Compiler.AstTranslator do
   end
 
   defp split_attrs_and_directives(attrs) do
-    Enum.split_with(attrs, fn {_name, %type{}} -> type == AST.Attribute end)
+    attrs
+    |> Enum.map(fn {_name, attr} -> attr end)
+    |> Enum.split_with(fn %type{} -> type == AST.Attribute end)
   end
 
   def handle_attribute(state, context, name, value, attr_meta) do

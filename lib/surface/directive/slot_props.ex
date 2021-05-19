@@ -1,5 +1,9 @@
 defmodule Surface.Directive.SlotProps do
-  use Surface.Directive
+  use Surface.Directive,
+    type: :explict_keyword
+
+  def matches?(Surface.Construct, Surface.Constructs.Slot, "props"), do: true
+  def matches?(_, _, _), do: false
 
   def extract({":props", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{

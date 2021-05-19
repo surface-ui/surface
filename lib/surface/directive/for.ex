@@ -1,5 +1,7 @@
 defmodule Surface.Directive.For do
-  use Surface.Directive
+  use Surface.Directive,
+    type: :generator,
+    name_pattern: "for"
 
   def extract({":for", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{

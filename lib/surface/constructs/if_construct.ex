@@ -1,6 +1,6 @@
 defmodule Surface.Constructs.If do
   use Surface.Construct
-  alias Surface.Construct
+  # alias Surface.Construct
   alias Surface.IOHelper
 
   def validate_subblock(name) when name in [:default, "else", "elseif"], do: :ok

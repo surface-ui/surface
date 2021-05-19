@@ -1,5 +1,7 @@
 defmodule Surface.Directive.Show do
-  use Surface.Directive
+  use Surface.Directive,
+    type: :boolean,
+    name_pattern: "show"
 
   def extract({":show", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
