@@ -232,8 +232,11 @@ defmodule Surface.Compiler do
   # Conditional blocks
   defp node_type({"#if", _, _, _}), do: :if_elseif_else
   defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
-  defp node_type({"#else", _, _, _}), do: :if_elseif_else
+  defp node_type({"#else", _, _, _}), do: :else
   defp node_type({"#unless", _, _, _}), do: :unless
+
+  # For
+  defp node_type({"#for", _, _, _}), do: :for_else
 
   # Raw
   defp node_type({"#raw", _, _, _}), do: :raw
@@ -281,8 +284,8 @@ defmodule Surface.Compiler do
   end
 
   defp convert_node_to_ast(
-         :if_elseif_else,
-         {"#else", _attributes, children, node_meta},
+         :else,
+         {_name, _attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
@@ -344,6 +347,61 @@ defmodule Surface.Compiler do
        else: to_ast(children, compile_meta),
        meta: meta
      }}
+  end
+
+  defp convert_node_to_ast(
+         :for_else,
+         {_name, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    generator = attribute_value_as_ast(attributes, "each", :generator, default, compile_meta)
+
+    [for_children, else_children] =
+      case children do
+        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+          [default, [else_block]]
+
+        children ->
+          [children, []]
+      end
+
+    for_ast = %AST.For{
+      generator: generator,
+      children: to_ast(for_children, compile_meta),
+      else: to_ast(else_children, compile_meta),
+      meta: meta
+    }
+
+    if else_children == [] do
+      {:ok, for_ast}
+    else
+      [else_ast | _] = to_ast(else_children, compile_meta)
+
+      value =
+        case generator.value do
+          [{:<-, _, [_, value]}] -> value
+          _ -> raise_complex_generator(else_ast.meta)
+        end
+
+      condition = %AST.AttributeExpr{
+        original: "",
+        value:
+          quote do
+            unquote(value) != []
+          end,
+        meta: compile_meta
+      }
+
+      {:ok,
+       %AST.If{
+         condition: condition,
+         children: [for_ast],
+         else: [else_ast],
+         meta: meta
+       }}
+    end
   end
 
   defp convert_node_to_ast(
@@ -587,20 +645,20 @@ defmodule Surface.Compiler do
   defp has_attribute?(attributes, attr_name),
     do: Enum.any?(attributes, &match?({^attr_name, _, _}, &1))
 
-  defp attribute_value_as_ast(attributes, attr_name, default, meta) do
+  defp attribute_value_as_ast(attributes, attr_name, type \\ :integer, default, meta) do
     Enum.find_value(attributes, default, fn
       {^attr_name, {:attribute_expr, value, expr_meta}, _attr_meta} ->
         expr_meta = Helpers.to_meta(expr_meta, meta)
 
         %AST.AttributeExpr{
           original: value,
-          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, :integer, expr_meta),
+          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta),
           meta: expr_meta
         }
 
       {^attr_name, value, attr_meta} ->
         attr_meta = Helpers.to_meta(attr_meta, meta)
-        Surface.TypeHandler.literal_to_ast_node!(:integer, attr_name, value, attr_meta)
+        Surface.TypeHandler.literal_to_ast_node!(type, attr_name, value, attr_meta)
 
       _ ->
         nil
@@ -990,6 +1048,22 @@ defmodule Surface.Compiler do
     """
 
     IOHelper.compile_error(message, template_meta.file, template_meta.line)
+  end
+
+  defp raise_complex_generator(meta) do
+    message = """
+    using `<#else>` is only supported when the expression in `<#for>` has a single generator and no filters.
+
+    Example:
+
+      <#for each={i <- [1, 2, 3]}>
+        ...
+      <#else>
+        ...
+      </#for>
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
   end
 
   defp similar_slot_message(slot_name, list_of_slot_names, opts \\ []) do
