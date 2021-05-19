@@ -46,7 +46,7 @@ defmodule Surface.Constructs.ForTest do
            using <For> to wrap elements in a for expression has been deprecated and will be removed in \
            future versions.
 
-           Hint: replace `<For>` with `<#for>`
+           Hint: replace `<For>` with `{#for}`
 
              code:1:\
            """
@@ -62,7 +62,7 @@ defmodule Surface.Constructs.ForTest do
         """
       end
 
-    message = ~S(code:2:12: expected closing tag for <span> defined on line 2, got </For>)
+    message = ~S(code:2:12: expected closing node for <span> defined on line 2, got </For>)
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
       compile_surface(code)
@@ -92,20 +92,20 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
-          </#for>
+          {#for fruit <- ["apples", "bananas", "oranges"]}
+            <span>The inner content {fruit}</span>
+            <span>with multiple tags</span>
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>The inner content apples</span>
-             <span>with multiple tags</span>
-             <span>The inner content bananas</span>
-             <span>with multiple tags</span>
-             <span>The inner content oranges</span>
-             <span>with multiple tags</span>
+               <span>The inner content apples</span>
+               <span>with multiple tags</span>
+               <span>The inner content bananas</span>
+               <span>with multiple tags</span>
+               <span>The inner content oranges</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -115,15 +115,15 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={x <- @list1, y <- @list2, x in @range, y in @range}>
-          <span>x: {x}, y: {y}</span>
-          </#for>
+          {#for x <- @list1, y <- @list2, x in @range, y in @range}
+            <span>x: {x}, y: {y}</span>
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>x: 1, y: 2</span>
-             <span>x: 1, y: 3</span>
+               <span>x: 1, y: 2</span>
+               <span>x: 1, y: 3</span>
              """
     end
 
@@ -131,16 +131,16 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
-          <SomeComponent content={fruit} />
-          </#for>
+          {#for fruit <- ["apples", "bananas", "oranges"]}
+            <SomeComponent content={fruit} />
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>apples</span>
-             <span>bananas</span>
-             <span>oranges</span>
+               <span>apples</span>
+               <span>bananas</span>
+               <span>oranges</span>
              """
     end
 
@@ -148,13 +148,13 @@ defmodule Surface.Constructs.ForTest do
       code =
         quote do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
+          {#for fruit <- ["apples", "bananas", "oranges"]}
             <span>The inner content
-          </#for>
+          {/for}
           """
         end
 
-      message = ~S(code:2:14: expected closing tag for <span> defined on line 2, got </#for>)
+      message = ~S(code:2:14: expected closing node for <span> defined on line 2, got {/for})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
@@ -165,10 +165,10 @@ defmodule Surface.Constructs.ForTest do
       code =
         quote do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
+          {#for fruit <- ["apples", "bananas", "oranges"]}
             <ListProp
               prop="some string" />
-          </#for>
+          {/for}
           """
         end
 
@@ -186,23 +186,23 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#for>
+          {#for fruit <- ["apples", "bananas", "oranges"]}
+            <span>The inner content {fruit}</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>The inner content apples</span>
-             <span>with multiple tags</span>
-             <span>The inner content bananas</span>
-             <span>with multiple tags</span>
-             <span>The inner content oranges</span>
-             <span>with multiple tags</span>
+               <span>The inner content apples</span>
+               <span>with multiple tags</span>
+               <span>The inner content bananas</span>
+               <span>with multiple tags</span>
+               <span>The inner content oranges</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -210,19 +210,19 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- ["apples", "bananas", "oranges"]}>
-          <SomeComponent content={fruit} />
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#for>
+          {#for fruit <- ["apples", "bananas", "oranges"]}
+            <SomeComponent content={fruit} />
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>apples</span>
-             <span>bananas</span>
-             <span>oranges</span>
+               <span>apples</span>
+               <span>bananas</span>
+               <span>oranges</span>
              """
     end
 
@@ -233,23 +233,23 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- @fruits}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#for>
+          {#for fruit <- @fruits}
+            <span>The inner content {fruit}</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>The inner content apples</span>
-             <span>with multiple tags</span>
-             <span>The inner content bananas</span>
-             <span>with multiple tags</span>
-             <span>The inner content oranges</span>
-             <span>with multiple tags</span>
+               <span>The inner content apples</span>
+               <span>with multiple tags</span>
+               <span>The inner content bananas</span>
+               <span>with multiple tags</span>
+               <span>The inner content oranges</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -259,17 +259,17 @@ defmodule Surface.Constructs.ForTest do
       code =
         quote do
           ~H"""
-          <#for each={x <- @list1, y <- @list2, x in @range, y in @range}>
-          <span>x: {x}, y: {y}</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#for>
+          {#for x <- @list1, y <- @list2, x in @range, y in @range}
+            <span>x: {x}, y: {y}</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/for}
           """
         end
 
       message =
-        ~r/code:3: using `<#else>` is only supported when the expression in `<#for>` has a single generator and no filters./
+        ~r/code:3: using `{#else}` is only supported when the expression in `{#for}` has a single generator and no filters./
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code, assigns)
@@ -280,19 +280,19 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- []}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#for>
+          {#for fruit <- []}
+            <span>The inner content {fruit}</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/for}
           """
         end
 
       assert html =~ """
-             <span>The else content</span>
-             <span>with multiple tags</span>
+               <span>The else content</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -300,12 +300,12 @@ defmodule Surface.Constructs.ForTest do
       html =
         render_surface do
           ~H"""
-          <#for each={fruit <- []}>
-          <span>The inner content {fruit}</span>
-          <span>with multiple tags</span>
-          <#else>
-          <SomeComponent content="The else content" />
-          </#for>
+          {#for fruit <- []}
+            <span>The inner content {fruit}</span>
+            <span>with multiple tags</span>
+          {#else}
+            <SomeComponent content="The else content" />
+          {/for}
           """
         end
 

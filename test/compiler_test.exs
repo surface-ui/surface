@@ -524,23 +524,23 @@ defmodule Surface.CompilerTest do
     test "#if/#elseif/#else" do
       code = """
       <div>
-        <#if condition={false}>
+        {#if false}
           IF
-        <#elseif condition={false}>
+        {#elseif false}
           ELSEIF FALSE
-        <#elseif condition={true}>
+        {#elseif true}
           BEFORE
-          <#if condition={false}>
+          {#if false}
             NESTED IF
-          <#elseif condition={true}>
+          {#elseif true}
             NESTED ELSEIF TRUE
-          <#else>
+          {#else}
             NESTED ELSE
-          </#if>
+          {/if}
           AFTER
-        <#else>
+        {#else}
           ELSE
-        </#if>
+        {/if}
       </div>
       """
 
@@ -606,9 +606,9 @@ defmodule Surface.CompilerTest do
   test "#unless" do
     code = """
     <div>
-      <#unless condition={false}>
+      {#unless false}
         UNLESS
-      </#unless>
+      {/unless}
     </div>
     """
 

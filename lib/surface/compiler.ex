@@ -227,13 +227,13 @@ defmodule Surface.Compiler do
   defp node_type({"slot", _, _, _}), do: :slot
 
   # Conditional blocks
-  defp node_type({"#if", _, _, _}), do: :if_elseif_else
-  defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
-  defp node_type({"#else", _, _, _}), do: :else
-  defp node_type({"#unless", _, _, _}), do: :unless
+  defp node_type({:block, "if", _, _, _}), do: :if_elseif_else
+  defp node_type({:block, "elseif", _, _, _}), do: :if_elseif_else
+  defp node_type({:block, "else", _, _, _}), do: :else
+  defp node_type({:block, "unless", _, _, _}), do: :unless
 
   # For
-  defp node_type({"#for", _, _, _}), do: :for_else
+  defp node_type({:block, "for", _, _, _}), do: :for_else
 
   # Raw
   defp node_type({"#raw", _, _, _}), do: :raw
@@ -282,7 +282,7 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :else,
-         {_name, _attributes, children, node_meta},
+         {:block, _name, _expr, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
@@ -297,22 +297,22 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :if_elseif_else,
-         {_name, attributes, children, node_meta},
+         {:block, _name, attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
-    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+    condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
 
     [if_children, else_children] =
       case children do
-        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+        [{:block, :default, [], default, _}, {:block, "else", _, _, _} = else_block] ->
           [default, [else_block]]
 
-        [{:default, [], default, _}, {"#elseif", a, c, m} | rest] ->
-          [default, [{"#elseif", a, [{:default, [], c, %{}} | rest], m}]]
+        [{:block, :default, [], default, _}, {:block, "elseif", a, c, m} | rest] ->
+          [default, [{:block, "elseif", a, [{:block, :default, [], c, %{}} | rest], m}]]
 
-        [{:default, [], default, _}] ->
+        [{:block, :default, [], default, _}] ->
           [default, []]
 
         children ->
@@ -330,12 +330,12 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :unless,
-         {_, attributes, children, node_meta},
+         {:block, _name, attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: meta}
-    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+    condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
 
     {:ok,
      %AST.If{
@@ -348,16 +348,16 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :for_else,
-         {_name, attributes, children, node_meta},
+         {:block, _name, attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: meta}
-    generator = attribute_value_as_ast(attributes, "each", :generator, default, compile_meta)
+    generator = attribute_value_as_ast(attributes, :root, :generator, default, compile_meta)
 
     [for_children, else_children] =
       case children do
-        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+        [{:block, :default, [], default, _}, {:block, "else", _, _, _} = else_block] ->
           [default, [else_block]]
 
         children ->
@@ -1053,15 +1053,15 @@ defmodule Surface.Compiler do
 
   defp raise_complex_generator(meta) do
     message = """
-    using `<#else>` is only supported when the expression in `<#for>` has a single generator and no filters.
+    using `{#else}` is only supported when the expression in `{#for}` has a single generator and no filters.
 
     Example:
 
-      <#for each={i <- [1, 2, 3]}>
+      {#for i <- [1, 2, 3]}
         ...
-      <#else>
+      {#else}
         ...
-      </#for>
+      {/for}
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)

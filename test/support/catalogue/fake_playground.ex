@@ -10,9 +10,9 @@ defmodule Surface.Catalogue.FakePlayground do
 
   def render(assigns) do
     ~H"""
-    <#for each={{prop, value} <- @props}>
+    {#for {prop, value} <- @props}
       {prop}: {value}
-    </#for>
+    {/for}
     """
   end
 end

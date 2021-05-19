@@ -52,7 +52,7 @@ defmodule Surface.Constructs.For do
     using <For> to wrap elements in a for expression has been deprecated and will be removed in \
     future versions.
 
-    Hint: replace `<For>` with `<#for>`
+    Hint: replace `<For>` with `{#for}`
     """
 
     IOHelper.warn(message, node.meta.caller, fn _ -> node.meta.line end)
