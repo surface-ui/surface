@@ -22,7 +22,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text("<%=" <> _rest, line, column, _buffer, _acc, state) do
     raise parse_error(
-            "EEx syntax `<%=` not allowed. Please use the Surface interpolation syntax `{{ foo = :bar }}`",
+            "EEx syntax `<%= foo = :bar %>` not allowed. Please use the Surface interpolation syntax `{{ foo = :bar }}`",
             line,
             column + 4,
             state
