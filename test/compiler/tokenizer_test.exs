@@ -61,6 +61,20 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
+  describe "EEx interpolation" do
+    test "raises when present" do
+      assert_raise ParseError,
+                   "nofile:2:5: EEx syntax `<%=` not allowed. Please use the Surface interpolation syntax `{{ foo = :bar }}`",
+                   fn ->
+                     tokenize!("""
+                     <div>
+                     <%= foo = :bar %>
+                     </div>
+                     """)
+                   end
+    end
+  end
+
   describe "interpolation in body" do
     test "represented as {:interpolation, value, meta}" do
       assert tokenize!("""
