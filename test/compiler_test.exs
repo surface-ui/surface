@@ -88,10 +88,29 @@ defmodule Surface.CompilerTest do
     end
   end
 
-  test "ignore comments" do
+  test "show public comments" do
     code = """
     <br>
     <!-- comment -->
+    <hr>
+    """
+
+    nodes = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert [
+             %Surface.AST.VoidTag{element: "br"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.Literal{value: "<!-- comment -->"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.VoidTag{element: "hr"},
+             %Surface.AST.Literal{value: "\n"}
+           ] = nodes
+  end
+
+  test "hide private comments" do
+    code = """
+    <br>
+    {!-- comment --}
     <hr>
     """
 

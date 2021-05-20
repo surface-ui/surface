@@ -69,8 +69,8 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:comment, comment} | rest], buffers, state) do
-    buffers = push_node_to_current_buffer({:comment, comment}, buffers)
+  defp handle_token([{:comment, comment, meta} | rest], buffers, state) do
+    buffers = push_node_to_current_buffer({:comment, comment, meta}, buffers)
     handle_token(rest, buffers, state)
   end
 

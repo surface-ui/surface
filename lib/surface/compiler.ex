@@ -243,7 +243,7 @@ defmodule Surface.Compiler do
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
   defp node_type({:interpolation, _, _}), do: :interpolation
-  defp node_type({:comment, _}), do: :comment
+  defp node_type({:comment, _, _}), do: :comment
   defp node_type(_), do: :text
 
   defp process_directives(%{directives: directives} = node) do
@@ -256,7 +256,10 @@ defmodule Surface.Compiler do
 
   defp process_directives(node), do: node
 
-  defp convert_node_to_ast(:comment, _, _), do: :ignore
+  defp convert_node_to_ast(:comment, {_, _comment, %{visibility: :private}}, _), do: :ignore
+
+  defp convert_node_to_ast(:comment, {_, comment, %{visibility: :public}}, _),
+    do: {:ok, %AST.Literal{value: comment}}
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Literal{value: text}}

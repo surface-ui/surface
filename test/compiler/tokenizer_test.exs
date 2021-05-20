@@ -25,10 +25,14 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
-  describe "comment" do
-    test "represented as {:comment, comment}" do
+  describe "public comment" do
+    test "represented as {:comment, comment, meta}" do
       assert tokenize!("Begin<!-- comment -->End") ==
-               [{:text, "Begin"}, {:comment, "<!-- comment -->"}, {:text, "End"}]
+               [
+                 {:text, "Begin"},
+                 {:comment, "<!-- comment -->", %{visibility: :public}},
+                 {:text, "End"}
+               ]
     end
 
     test "multiple lines and wrapped by tags" do
@@ -43,7 +47,7 @@ defmodule Surface.Compiler.TokenizerTest do
       assert [
                {:tag_open, "p", [], %{line: 1, column: 2}},
                {:text, "\n"},
-               {:comment, "<!--\n<div>\n-->"},
+               {:comment, "<!--\n<div>\n-->", %{visibility: :public}},
                {:text, "\n"},
                {:tag_close, "p", %{line: 5, column: 3}},
                {:tag_open, "br", [], %{line: 5, column: 6}}
@@ -55,6 +59,46 @@ defmodule Surface.Compiler.TokenizerTest do
         tokenize!("""
         <div>
         <!-- a comment)
+        </div>\
+        """)
+      end
+    end
+  end
+
+  describe "private comment" do
+    test "represented as {:comment, comment, meta}" do
+      assert tokenize!("Begin{!-- comment --}End") ==
+               [
+                 {:text, "Begin"},
+                 {:comment, "{!-- comment --}", %{visibility: :private}},
+                 {:text, "End"}
+               ]
+    end
+
+    test "multiple lines and wrapped by tags" do
+      code = """
+      <p>
+      {!--
+      <div>
+      --}
+      </p><br>\
+      """
+
+      assert [
+               {:tag_open, "p", [], %{line: 1, column: 2}},
+               {:text, "\n"},
+               {:comment, "{!--\n<div>\n--}", %{visibility: :private}},
+               {:text, "\n"},
+               {:tag_close, "p", %{line: 5, column: 3}},
+               {:tag_open, "br", [], %{line: 5, column: 6}}
+             ] = tokenize!(code)
+    end
+
+    test "raise on incomplete comment (EOF)" do
+      assert_raise ParseError, "nofile:3:7: expected closing `--}` for comment", fn ->
+        tokenize!("""
+        <div>
+        {!-- a comment)
         </div>\
         """)
       end

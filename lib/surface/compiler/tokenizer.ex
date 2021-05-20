@@ -35,7 +35,33 @@ defmodule Surface.Compiler.Tokenizer do
       handle_comment(rest, line, column + 4, ["<!--"], state)
 
     comment = buffer_to_string(new_buffer)
-    handle_text(new_rest, new_line, new_column, [], [{:comment, comment} | acc], state)
+
+    handle_text(
+      new_rest,
+      new_line,
+      new_column,
+      [],
+      [{:comment, comment, %{visibility: :public}} | acc],
+      state
+    )
+  end
+
+  defp handle_text("{!--" <> rest, line, column, buffer, acc, state) do
+    acc = text_to_acc(buffer, acc)
+
+    {new_rest, new_line, new_column, new_buffer} =
+      handle_private_comment(rest, line, column + 4, ["{!--"], state)
+
+    comment = buffer_to_string(new_buffer)
+
+    handle_text(
+      new_rest,
+      new_line,
+      new_column,
+      [],
+      [{:comment, comment, %{visibility: :private}} | acc],
+      state
+    )
   end
 
   defp handle_text("{" <> rest, line, column, buffer, acc, state) do
@@ -99,6 +125,28 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_comment(<<>>, line, column, _buffer, state) do
     raise parse_error("expected closing `-->` for comment", line, column, state)
+  end
+
+  ## handle_private_comment
+
+  defp handle_private_comment("\r\n" <> rest, line, _column, buffer, state) do
+    handle_private_comment(rest, line + 1, state.column_offset, ["\r\n" | buffer], state)
+  end
+
+  defp handle_private_comment("\n" <> rest, line, _column, buffer, state) do
+    handle_private_comment(rest, line + 1, state.column_offset, ["\n" | buffer], state)
+  end
+
+  defp handle_private_comment("--}" <> rest, line, column, buffer, _state) do
+    {rest, line, column + 3, ["--}" | buffer]}
+  end
+
+  defp handle_private_comment(<<c::utf8, rest::binary>>, line, column, buffer, state) do
+    handle_private_comment(rest, line, column + 1, [<<c::utf8>> | buffer], state)
+  end
+
+  defp handle_private_comment(<<>>, line, column, _buffer, state) do
+    raise parse_error("expected closing `--}` for comment", line, column, state)
   end
 
   ## handle_macro_body

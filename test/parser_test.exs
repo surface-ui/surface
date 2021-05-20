@@ -103,7 +103,7 @@ defmodule Surface.Compiler.ParserTest do
            ]
   end
 
-  test "comments" do
+  test "public comments" do
     code = """
     <div>
     <!--
@@ -114,13 +114,36 @@ defmodule Surface.Compiler.ParserTest do
     </div>
     """
 
-    [{"div", _, [_, {:comment, comment}, _, {"span", _, _, _}, _], _}, _] = parse!(code)
+    [{"div", _, [_, {:comment, comment, %{visibility: :public}}, _, {"span", _, _, _}, _], _}, _] =
+      parse!(code)
 
     assert comment == """
            <!--
            This is
            a comment
            -->\
+           """
+  end
+
+  test "private comments" do
+    code = """
+    <div>
+    {!--
+    This is
+    a comment
+    --}
+      <span/>
+    </div>
+    """
+
+    [{"div", _, [_, {:comment, comment, %{visibility: :private}}, _, {"span", _, _, _}, _], _}, _] =
+      parse!(code)
+
+    assert comment == """
+           {!--
+           This is
+           a comment
+           --}\
            """
   end
 
