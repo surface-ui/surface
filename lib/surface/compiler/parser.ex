@@ -25,10 +25,7 @@ defmodule Surface.Compiler.Parser do
     "if",
     "unless",
     "for",
-    "case",
-    "else",
-    "elseif",
-    "match"
+    "case"
   ]
 
   @sub_blocks [
@@ -74,44 +71,8 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  # This is mostly a temporary solution until we decide whether this logic
-  # should be moved to the tokenizer or not. We could also hold the expression
-  # directly instead of using the :root attribute.
-  for block <- @blocks do
-    defp handle_token(
-           [{:interpolation, "#" <> unquote(block) <> " " <> expr, meta} | rest],
-           buffers,
-           state
-         ) do
-      expr_meta = %{meta | column: meta.column + String.length(unquote(block)) + 2}
-      attrs = [{:root, {:expr, expr, expr_meta}, expr_meta}]
-      handle_token([{:block_open, unquote(block), attrs, meta} | rest], buffers, state)
-    end
-
-    defp handle_token([{:interpolation, "#" <> unquote(block), meta} | rest], buffers, state) do
-      handle_token([{:block_open, unquote(block), [], meta} | rest], buffers, state)
-    end
-
-    defp handle_token([{:interpolation, "/" <> unquote(block), meta} | rest], buffers, state) do
-      handle_token([{:block_close, unquote(block), meta} | rest], buffers, state)
-    end
-  end
-
   defp handle_token([{:interpolation, expr, meta} | rest], buffers, state) do
     buffers = push_node_to_current_buffer({:interpolation, expr, to_meta(meta)}, buffers)
-    handle_token(rest, buffers, state)
-  end
-
-  defp handle_token([{:block_open, name, attrs, meta} = token | rest], buffers, state)
-       when name in @sub_blocks do
-    {buffers, state} = close_sub_block(token, buffers, state)
-
-    # push the current sub-block token to state
-    state = push_tag(state, {:block_open, name, attrs, meta})
-
-    # create a new buffer for the current sub-block
-    buffers = [[] | buffers]
-
     handle_token(rest, buffers, state)
   end
 
@@ -135,11 +96,56 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:block_open, _name, _attrs, _meta} = token | rest], buffers, state) do
+  defp handle_token([{:tag_close, name, _meta} = token | rest], buffers, state) do
+    {{:tag_open, _name, attrs, meta}, state} = pop_matching_tag(state, token)
+
+    # pop the current buffer and use it as children for the node
+    [buffer | buffers] = buffers
+    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  # TODO: Remove these after accepting the expression directly instead of the :root attribute
+  defp handle_token(
+         [{:block_open, name, {:expr, expr, expr_meta}, meta} | rest],
+         buffers,
+         state
+       ) do
+    attrs = [{:root, {:expr, expr, expr_meta}, expr_meta}]
+    handle_token([{:block_open, name, attrs, meta} | rest], buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, nil, meta} | rest], buffers, state) do
+    handle_token([{:block_open, name, [], meta} | rest], buffers, state)
+  end
+
+  ###
+
+  defp handle_token([{:block_open, name, attrs, meta} = token | rest], buffers, state)
+       when name in @sub_blocks do
+    {buffers, state} = close_sub_block(token, buffers, state)
+
+    # push the current sub-block token to state
+    state = push_tag(state, {:block_open, name, attrs, meta})
+
+    # create a new buffer for the current sub-block
+    buffers = [[] | buffers]
+
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, _attrs, _meta} = token | rest], buffers, state)
+       when name in @blocks do
     state = push_tag(state, token)
     # create a new buffer for the node
     buffers = [[] | buffers]
     handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, _attrs, meta} | _], _buffers, _state) do
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks ++ @sub_blocks)
+    raise parse_error("unknown `{##{name}}` block. Available #{blocks}", meta)
   end
 
   defp handle_token(
@@ -152,17 +158,8 @@ defmodule Surface.Compiler.Parser do
     handle_token(tokens, buffers, state)
   end
 
-  defp handle_token([{:tag_close, name, _meta} = token | rest], buffers, state) do
-    {{:tag_open, _name, attrs, meta}, state} = pop_matching_tag(state, token)
-
-    # pop the current buffer and use it as children for the node
-    [buffer | buffers] = buffers
-    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    handle_token(rest, buffers, state)
-  end
-
-  defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state) do
+  defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state)
+       when name in @blocks do
     {{:block_open, _name, attrs, meta}, state} = pop_matching_tag(state, token)
 
     # pop the current buffer and use it as children for the node
@@ -170,6 +167,11 @@ defmodule Surface.Compiler.Parser do
     node = {:block, name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_close, name, meta} | _], _buffers, _state) do
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks ++ @sub_blocks)
+    raise parse_error("unknown `{/#{name}}` block. Available #{blocks}", meta)
   end
 
   # If there's a previous sub-block defined. Close it.

@@ -4,6 +4,7 @@ defmodule Surface.Compiler.Tokenizer do
   @name_stop_chars @space_chars ++ '>/='
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
+  @block_name_stop_chars @space_chars ++ '}'
 
   alias Surface.Compiler.ParseError
 
@@ -64,6 +65,14 @@ defmodule Surface.Compiler.Tokenizer do
     )
   end
 
+  defp handle_text("{#" <> rest, line, column, buffer, acc, state) do
+    handle_block_open(rest, line, column + 2, text_to_acc(buffer, acc), state)
+  end
+
+  defp handle_text("{/" <> rest, line, column, buffer, acc, state) do
+    handle_block_close(rest, line, column + 2, text_to_acc(buffer, acc), state)
+  end
+
   defp handle_text("{" <> rest, line, column, buffer, acc, state) do
     handle_interpolation_in_body(rest, line, column + 1, text_to_acc(buffer, acc), state)
   end
@@ -82,6 +91,98 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text(<<>>, _line, _column, buffer, acc, _state) do
     ok(text_to_acc(buffer, acc))
+  end
+
+  ## handle_block_open
+
+  defp handle_block_open(text, line, column, acc, state) do
+    case handle_block_name(text, column, []) do
+      {:ok, name, new_column, rest} ->
+        meta = %{
+          line: line,
+          column: column,
+          line_end: line,
+          column_end: new_column,
+          file: state.file
+        }
+
+        {new_rest, new_line, new_column} = ignore_spaces(rest, line, new_column, state)
+        acc = [{:block_open, name, nil, meta} | acc]
+        handle_block_expr(new_rest, new_line, new_column, acc, state)
+
+      {:error, message} ->
+        raise parse_error(message, line, column, state)
+    end
+  end
+
+  ## handle_block_close
+
+  defp handle_block_close(text, line, column, acc, state) do
+    case handle_block_name(text, column, []) do
+      {:ok, name, new_column, rest} ->
+        meta = %{
+          line: line,
+          column: column,
+          line_end: line,
+          column_end: new_column,
+          file: state.file
+        }
+
+        acc = [{:block_close, name, meta} | acc]
+        handle_block_close_end(rest, line, new_column, acc, state)
+
+      {:error, message} ->
+        raise parse_error(message, line, column, state)
+    end
+  end
+
+  defp handle_block_close_end("}" <> rest, line, column, acc, state) do
+    handle_text(rest, line, column + 1, [], acc, state)
+  end
+
+  defp handle_block_close_end(_text, line, column, _acc, state) do
+    raise parse_error("expected closing `}`", line, column, state)
+  end
+
+  ## handle_block_name
+
+  defp handle_block_name(<<c::utf8, _rest::binary>>, _column, [])
+       when c in @block_name_stop_chars do
+    {:error, "expected block name"}
+  end
+
+  defp handle_block_name(<<c::utf8, _rest::binary>> = text, column, buffer)
+       when c in @block_name_stop_chars do
+    {:ok, buffer_to_string(buffer), column, text}
+  end
+
+  defp handle_block_name(<<c::utf8, rest::binary>>, column, buffer) do
+    handle_block_name(rest, column + 1, [<<c::utf8>> | buffer])
+  end
+
+  ## handle_block_expr
+
+  defp handle_block_expr(text, line, column, acc, state) do
+    case handle_interpolation(text, line, column, [], state) do
+      {:ok, value, new_line, new_column, rest, state} ->
+        expr_meta = %{
+          line: line,
+          column: column,
+          line_end: new_line,
+          column_end: new_column - 1,
+          file: state.file
+        }
+
+        expr = if value == "", do: nil, else: {:expr, value, expr_meta}
+
+        [{:block_open, name, nil, meta} | acc] = acc
+        acc = [{:block_open, name, expr, meta} | acc]
+
+        handle_text(rest, new_line, new_column, [], acc, state)
+
+      {:error, message, line, column} ->
+        raise parse_error(message, line, column, state)
+    end
   end
 
   ## handle_interpolation_in_body
@@ -574,6 +675,25 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_interpolation(<<>>, line, column, _buffer, _state) do
     {:error, "expected closing `}` for expression", line, column}
+  end
+
+  ## ignore_spaces
+
+  defp ignore_spaces("\r\n" <> rest, line, _column, state) do
+    ignore_spaces(rest, line + 1, state.column_offset, state)
+  end
+
+  defp ignore_spaces("\n" <> rest, line, _column, state) do
+    ignore_spaces(rest, line + 1, state.column_offset, state)
+  end
+
+  defp ignore_spaces(<<c::utf8, rest::binary>>, line, column, state)
+       when c in @space_chars do
+    ignore_spaces(rest, line, column + 1, state)
+  end
+
+  defp ignore_spaces(text, line, column, _state) do
+    {text, line, column}
   end
 
   ## helpers

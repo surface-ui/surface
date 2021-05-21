@@ -130,6 +130,69 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
+  describe "opening block" do
+    test "without expression" do
+      tokens = tokenize!("{#if}")
+
+      assert [
+               {:block_open, "if", nil, %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "with expression" do
+      tokens = tokenize!("{#if x > 0}")
+
+      assert [
+               {:block_open, "if",
+                {:expr, "x > 0", %{line: 1, column: 6, line_end: 1, column_end: 11}},
+                %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "with expression with multiple spaces" do
+      tokens =
+        tokenize!("""
+        {#if
+          x >
+            0  }\
+        """)
+
+      assert [
+               {:block_open, "if",
+                {:expr, "x >\n    0  ", %{line: 2, column: 3, line_end: 3, column_end: 8}},
+                %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "raise on missing block name" do
+      assert_raise ParseError, "nofile:2:5: expected block name", fn ->
+        tokenize!("""
+        <div>
+          {#}\
+        """)
+      end
+    end
+  end
+
+  describe "closing block" do
+    test "represented as {:block_close, name, meta}" do
+      tokens = tokenize!("{/if}")
+
+      assert [
+               {:block_close, "if", %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "raise on missing block name" do
+      assert_raise ParseError, "nofile:2:5: expected block name", fn ->
+        tokenize!("""
+        <div>
+          {/}\
+        """)
+      end
+    end
+  end
+
   describe "opening tag" do
     test "represented as {:tag_open, name, attrs, meta}" do
       tokens = tokenize!("<div>")

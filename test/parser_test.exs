@@ -736,34 +736,6 @@ defmodule Surface.Compiler.ParserTest do
                [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
     end
 
-    # test "string with embedded interpolation" do
-    #   code = """
-    #   <foo prop="before { var } after"/>
-    #   """
-
-    #   attr_value = ["before ", {:attribute_expr, " var ", %{line: 1}}, " after"]
-
-    #   attributes = [
-    #     {"prop", attr_value, %{line: 1}}
-    #   ]
-
-    #   assert parse!(code) ==  [{"foo", attributes, [], %{line: 1}}, "\n"]
-    # end
-
-    #   test "string with only an embedded interpolation" do
-    #     code = """
-    #     <foo prop="{ var }"/>
-    #     """
-
-    #     attr_value = [{:attribute_expr, " var ", %{line: 1}}]
-
-    #     attributes = [
-    #       {"prop", attr_value, %{line: 1}}
-    #     ]
-
-    #     assert parse!(code) ==  [{"foo", attributes, [], %{line: 1}}, "\n"]
-    #   end
-
     test "interpolation with nested curlies" do
       code = """
       <foo prop={ {{}} }/>
@@ -797,8 +769,8 @@ defmodule Surface.Compiler.ParserTest do
     end
   end
 
-  describe "sub-blocks" do
-    test "no sub-block with nested child" do
+  describe "blocks" do
+    test "without sub-blocks with nested child" do
       code = """
       {#if true}
         1
@@ -820,7 +792,7 @@ defmodule Surface.Compiler.ParserTest do
                     "\n  ",
                     {"span", [], ["3"], %{line: 4, column: 4, file: "nofile"}},
                     "\n"
-                  ], %{line: 1, column: 2, file: "nofile"}}
+                  ], %{line: 1, column: 3, file: "nofile"}}
                ]
     end
 
@@ -842,8 +814,8 @@ defmodule Surface.Compiler.ParserTest do
                   ],
                   [
                     {:block, :default, [], ["\n  1\n"], %{}},
-                    {:block, "else", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 2}}
-                  ], %{line: 1, file: "nofile", column: 2, has_sub_blocks?: true}}
+                    {:block, "else", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 3}}
+                  ], %{line: 1, file: "nofile", column: 3, has_sub_blocks?: true}}
                ]
     end
 
@@ -869,10 +841,10 @@ defmodule Surface.Compiler.ParserTest do
                   ],
                   [
                     {:block, :default, [], ["\n  1\n"], %{}},
-                    {:block, "elseif", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 2}},
-                    {:block, "elseif", [], ["\n  3\n"], %{line: 5, file: "nofile", column: 2}},
-                    {:block, "else", [], ["\n  4\n"], %{line: 7, file: "nofile", column: 2}}
-                  ], %{line: 1, file: "nofile", column: 2, has_sub_blocks?: true}}
+                    {:block, "elseif", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 3}},
+                    {:block, "elseif", [], ["\n  3\n"], %{line: 5, file: "nofile", column: 3}},
+                    {:block, "else", [], ["\n  4\n"], %{line: 7, file: "nofile", column: 3}}
+                  ], %{line: 1, file: "nofile", column: 3, has_sub_blocks?: true}}
                ]
     end
 
@@ -916,12 +888,12 @@ defmodule Surface.Compiler.ParserTest do
                         [
                           {:block, :default, [], ["\n    333\n  "], %{}},
                           {:block, "else", [], ["\n    444\n  "],
-                           %{line: 7, file: "nofile", column: 4}}
-                        ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 4}},
+                           %{line: 7, file: "nofile", column: 5}}
+                        ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 5}},
                        "\n"
-                     ], %{line: 3, file: "nofile", column: 2}},
-                    {:block, "else", [], ["\n  555\n"], %{line: 10, file: "nofile", column: 2}}
-                  ], %{has_sub_blocks?: true, line: 1, file: "nofile", column: 2}}
+                     ], %{line: 3, file: "nofile", column: 3}},
+                    {:block, "else", [], ["\n  555\n"], %{line: 10, file: "nofile", column: 3}}
+                  ], %{has_sub_blocks?: true, line: 1, file: "nofile", column: 3}}
                ]
     end
 
@@ -983,6 +955,40 @@ defmodule Surface.Compiler.ParserTest do
         "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
 
       assert %ParseError{message: ^message, line: 2} = exception
+    end
+
+    test "raise error on unknown block open" do
+      code = """
+      {#iff}
+        1
+      {/if}
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message = """
+      unknown `{#iff}` block. Available blocks are \
+      "if", "unless", "for", "case", "else", "elseif" and "match"\
+      """
+
+      assert %ParseError{message: ^message, line: 1} = exception
+    end
+
+    test "raise error on unknown block close" do
+      code = """
+      {#if}
+        1
+      {/iff}
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message = """
+      unknown `{/iff}` block. Available blocks are \
+      "if", "unless", "for", "case", "else", "elseif" and "match"\
+      """
+
+      assert %ParseError{message: ^message, line: 3} = exception
     end
   end
 end
