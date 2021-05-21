@@ -269,6 +269,58 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
+  describe "tagged expressions with markers `=`, `...`, `~`, `%`, `$`)" do
+    test "represented as {:tagged_expr, marker, value, meta}" do
+      tokens = tokenize!("{=@class}")
+
+      assert [
+        {:tagged_expr, "=", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+          %{line: 1, column: 2, line_end: 1, column_end: 3}}
+      ] = tokens
+
+      tokens = tokenize!("{~@class}")
+
+      assert [
+        {:tagged_expr, "~", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+          %{line: 1, column: 2, line_end: 1, column_end: 3}}
+      ] = tokens
+
+      tokens = tokenize!("{%@class}")
+
+      assert [
+        {:tagged_expr, "%", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+          %{line: 1, column: 2, line_end: 1, column_end: 3}}
+      ] = tokens
+
+      tokens = tokenize!("{$@class}")
+
+      assert [
+        {:tagged_expr, "$", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+          %{line: 1, column: 2, line_end: 1, column_end: 3}}
+      ] = tokens
+
+      tokens = tokenize!("{...@attrs}")
+
+      assert [
+        {:tagged_expr, "...", {:expr, "@attrs", %{line: 1, column: 5, line_end: 1, column_end: 11}},
+          %{line: 1, column: 2, line_end: 1, column_end: 5}}
+      ] = tokens
+    end
+
+    test "with spaces between the marker and the expression" do
+      tokens = tokenize!("""
+      {=
+        @class
+      }\
+      """)
+
+      assert [
+        {:tagged_expr, "=", {:expr, "@class\n", %{line: 2, column: 3, line_end: 3, column_end: 1}},
+          %{line: 1, column: 2, line_end: 1, column_end: 3}}
+      ] = tokens
+    end
+  end
+
   describe "attributes" do
     test "represented as a list of {name, tuple | nil}, where tuple is the {type, value}" do
       attrs = tokenize_attrs(~S(<div class="panel" style={@style} hidden selected=true>))

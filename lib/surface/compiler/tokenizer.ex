@@ -5,6 +5,7 @@ defmodule Surface.Compiler.Tokenizer do
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
   @block_name_stop_chars @space_chars ++ '}'
+  @markers ["=", "...", "~", "%", "$"]
 
   alias Surface.Compiler.ParseError
 
@@ -73,6 +74,25 @@ defmodule Surface.Compiler.Tokenizer do
     handle_block_close(rest, line, column + 2, text_to_acc(buffer, acc), state)
   end
 
+  for marker <- @markers do
+    defp handle_text("{" <> unquote(marker) <> rest, line, column, buffer, acc, state) do
+      acc = text_to_acc(buffer, acc)
+      marker = unquote(marker)
+      new_column = column + 1 + String.length(marker)
+
+      meta = %{
+        line: line,
+        column: column + 1,
+        line_end: line,
+        column_end: new_column,
+        file: state.file
+      }
+
+      acc = [{:tagged_expr, marker, nil, meta} | acc]
+      handle_tagged_expression(rest, line, new_column, acc, state)
+    end
+  end
+
   defp handle_text("{" <> rest, line, column, buffer, acc, state) do
     handle_interpolation_in_body(rest, line, column + 1, text_to_acc(buffer, acc), state)
   end
@@ -91,6 +111,32 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text(<<>>, _line, _column, buffer, acc, _state) do
     ok(text_to_acc(buffer, acc))
+  end
+
+  # handle_tagged_expression
+  defp handle_tagged_expression(text, line, column, acc, state)  do
+    {text, line, column} = ignore_spaces(text, line, column, state)
+
+    case handle_interpolation(text, line, column, [], state) do
+      {:ok, value, new_line, new_column, rest, state} ->
+        expr_meta = %{
+          line: line,
+          column: column,
+          line_end: new_line,
+          column_end: new_column - 1,
+          file: state.file
+        }
+
+        expr = if value == "", do: nil, else: {:expr, value, expr_meta}
+
+        [{:tagged_expr, marker, nil, meta} | acc] = acc
+        acc = [{:tagged_expr, marker, expr, meta} | acc]
+
+        handle_text(rest, new_line, new_column, [], acc, state)
+
+      {:error, message, line, column} ->
+        raise parse_error(message, line, column, state)
+    end
   end
 
   ## handle_block_open
