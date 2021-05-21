@@ -274,50 +274,57 @@ defmodule Surface.Compiler.TokenizerTest do
       tokens = tokenize!("{=@class}")
 
       assert [
-        {:tagged_expr, "=", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
-          %{line: 1, column: 2, line_end: 1, column_end: 3}}
-      ] = tokens
+               {:tagged_expr, "=",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
 
       tokens = tokenize!("{~@class}")
 
       assert [
-        {:tagged_expr, "~", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
-          %{line: 1, column: 2, line_end: 1, column_end: 3}}
-      ] = tokens
+               {:tagged_expr, "~",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
 
       tokens = tokenize!("{%@class}")
 
       assert [
-        {:tagged_expr, "%", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
-          %{line: 1, column: 2, line_end: 1, column_end: 3}}
-      ] = tokens
+               {:tagged_expr, "%",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
 
       tokens = tokenize!("{$@class}")
 
       assert [
-        {:tagged_expr, "$", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
-          %{line: 1, column: 2, line_end: 1, column_end: 3}}
-      ] = tokens
+               {:tagged_expr, "$",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
 
       tokens = tokenize!("{...@attrs}")
 
       assert [
-        {:tagged_expr, "...", {:expr, "@attrs", %{line: 1, column: 5, line_end: 1, column_end: 11}},
-          %{line: 1, column: 2, line_end: 1, column_end: 5}}
-      ] = tokens
+               {:tagged_expr, "...",
+                {:expr, "@attrs", %{line: 1, column: 5, line_end: 1, column_end: 11}},
+                %{line: 1, column: 2, line_end: 1, column_end: 5}}
+             ] = tokens
     end
 
     test "with spaces between the marker and the expression" do
-      tokens = tokenize!("""
-      {=
-        @class
-      }\
-      """)
+      tokens =
+        tokenize!("""
+        {=
+          @class
+        }\
+        """)
 
       assert [
-        {:tagged_expr, "=", {:expr, "@class\n", %{line: 2, column: 3, line_end: 3, column_end: 1}},
-          %{line: 1, column: 2, line_end: 1, column_end: 3}}
-      ] = tokens
+               {:tagged_expr, "=",
+                {:expr, "@class\n", %{line: 2, column: 3, line_end: 3, column_end: 1}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
     end
   end
 

@@ -114,7 +114,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   # handle_tagged_expression
-  defp handle_tagged_expression(text, line, column, acc, state)  do
+  defp handle_tagged_expression(text, line, column, acc, state) do
     {text, line, column} = ignore_spaces(text, line, column, state)
 
     case handle_interpolation(text, line, column, [], state) do
