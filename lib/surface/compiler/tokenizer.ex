@@ -5,7 +5,7 @@ defmodule Surface.Compiler.Tokenizer do
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
   @block_name_stop_chars @space_chars ++ '}'
-  @markers ["=", "...", "~", "%", "$"]
+  @markers ["=", "...", "~", "$"]
 
   alias Surface.Compiler.ParseError
 
@@ -74,27 +74,10 @@ defmodule Surface.Compiler.Tokenizer do
     handle_block_close(rest, line, column + 2, text_to_acc(buffer, acc), state)
   end
 
-  for marker <- @markers do
-    defp handle_text("{" <> unquote(marker) <> rest, line, column, buffer, acc, state) do
-      acc = text_to_acc(buffer, acc)
-      marker = unquote(marker)
-      new_column = column + 1 + String.length(marker)
-
-      meta = %{
-        line: line,
-        column: column + 1,
-        line_end: line,
-        column_end: new_column,
-        file: state.file
-      }
-
-      acc = [{:tagged_expr, marker, nil, meta} | acc]
-      handle_tagged_expression(rest, line, new_column, acc, state)
-    end
-  end
-
   defp handle_text("{" <> rest, line, column, buffer, acc, state) do
-    handle_interpolation_in_body(rest, line, column + 1, text_to_acc(buffer, acc), state)
+    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
+    acc = [expr | text_to_acc(buffer, acc)]
+    handle_text(rest, new_line, new_column, [], acc, state)
   end
 
   defp handle_text("</" <> rest, line, column, buffer, acc, state) do
@@ -111,32 +94,6 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text(<<>>, _line, _column, buffer, acc, _state) do
     ok(text_to_acc(buffer, acc))
-  end
-
-  # handle_tagged_expression
-  defp handle_tagged_expression(text, line, column, acc, state) do
-    {text, line, column} = ignore_spaces(text, line, column, state)
-
-    case handle_interpolation(text, line, column, [], state) do
-      {:ok, value, new_line, new_column, rest, state} ->
-        expr_meta = %{
-          line: line,
-          column: column,
-          line_end: new_line,
-          column_end: new_column - 1,
-          file: state.file
-        }
-
-        expr = if value == "", do: nil, else: {:expr, value, expr_meta}
-
-        [{:tagged_expr, marker, nil, meta} | acc] = acc
-        acc = [{:tagged_expr, marker, expr, meta} | acc]
-
-        handle_text(rest, new_line, new_column, [], acc, state)
-
-      {:error, message, line, column} ->
-        raise parse_error(message, line, column, state)
-    end
   end
 
   ## handle_block_open
@@ -209,42 +166,13 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_block_expr
 
   defp handle_block_expr(text, line, column, acc, state) do
-    case handle_interpolation(text, line, column, [], state) do
-      {:ok, value, new_line, new_column, rest, state} ->
-        expr_meta = %{
-          line: line,
-          column: column,
-          line_end: new_line,
-          column_end: new_column - 1,
-          file: state.file
-        }
-
+    case handle_expression_value(text, line, column, state) do
+      {:ok, {:expr, value, expr_meta}, new_line, new_column, rest, state} ->
         expr = if value == "", do: nil, else: {:expr, value, expr_meta}
 
         [{:block_open, name, nil, meta} | acc] = acc
         acc = [{:block_open, name, expr, meta} | acc]
 
-        handle_text(rest, new_line, new_column, [], acc, state)
-
-      {:error, message, line, column} ->
-        raise parse_error(message, line, column, state)
-    end
-  end
-
-  ## handle_interpolation_in_body
-
-  defp handle_interpolation_in_body(text, line, column, acc, state) do
-    case handle_interpolation(text, line, column, [], state) do
-      {:ok, value, new_line, new_column, rest, state} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: new_line,
-          column_end: new_column - 1,
-          file: state.file
-        }
-
-        acc = [{:interpolation, value, meta} | acc]
         handle_text(rest, new_line, new_column, [], acc, state)
 
       {:error, message, line, column} ->
@@ -474,17 +402,9 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_root_attribute
 
   defp handle_root_attribute(text, line, column, acc, state) do
-    case handle_interpolation(text, line, column, [], state) do
-      {:ok, value, new_line, new_column, rest, state} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: new_line,
-          column_end: new_column - 1,
-          file: state.file
-        }
-
-        acc = put_attr(acc, :root, {:expr, value, meta}, %{})
+    case handle_expression_value(text, line, column, state) do
+      {:ok, expr, new_line, new_column, rest, state} ->
+        acc = put_attr(acc, :root, expr, %{})
 
         handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
 
@@ -558,7 +478,9 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_attr_value_begin("{" <> rest, line, column, acc, state) do
-    handle_attr_value_as_expr(rest, line, column + 1, acc, state)
+    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
+    acc = put_attr_value(acc, expr)
+    handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
   end
 
   defp handle_attr_value_begin(<<c::utf8, _::binary>> = text, line, column, acc, state)
@@ -661,10 +583,51 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_unquoted(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
   end
 
-  ## handle_attr_value_as_expr
+  ## handle_expression
 
-  defp handle_attr_value_as_expr(text, line, column, acc, %{braces: []} = state) do
-    case handle_interpolation(text, line, column, [], state) do
+  # handle all tagged expressions
+  for marker <- @markers do
+    defp handle_expression(unquote(marker) <> rest, line, column, state) do
+      marker = unquote(marker)
+      marker_column_end = column + String.length(marker)
+
+      meta = %{
+        line: line,
+        column: column,
+        line_end: line,
+        column_end: marker_column_end,
+        file: state.file
+      }
+
+      {rest, line_after_spaces, column_after_spaces} =
+        ignore_spaces(rest, line, marker_column_end, state)
+
+      case handle_expression_value(rest, line_after_spaces, column_after_spaces, state) do
+        {:ok, {:expr, value, expr_meta}, new_line, new_column, rest, _state} ->
+          expr = if value == "", do: nil, else: {:expr, value, expr_meta}
+          {{:tagged_expr, marker, expr, meta}, new_line, new_column, rest}
+
+        {:error, message, line, column} ->
+          raise parse_error(message, line, column, state)
+      end
+    end
+  end
+
+  # handle normal expression (interpolation)
+  defp handle_expression(text, line, column, state) do
+    case handle_expression_value(text, line, column, state) do
+      {:ok, expr, new_line, new_column, rest, _state} ->
+        {expr, new_line, new_column, rest}
+
+      {:error, message, line, column} ->
+        raise parse_error(message, line, column, state)
+    end
+  end
+
+  ## handle_expression_value
+
+  defp handle_expression_value(text, line, column, state) do
+    case handle_expression_value_end(text, line, column, [], state) do
       {:ok, value, new_line, new_column, rest, state} ->
         meta = %{
           line: line,
@@ -674,52 +637,49 @@ defmodule Surface.Compiler.Tokenizer do
           file: state.file
         }
 
-        acc = put_attr_value(acc, {:expr, value, meta})
-        handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
+        {:ok, {:expr, value, meta}, new_line, new_column, rest, state}
 
-      {:error, message, line, column} ->
-        raise parse_error(message, line, column, state)
+      error ->
+        error
     end
   end
 
-  ## handle_interpolation
-
-  defp handle_interpolation("\r\n" <> rest, line, _column, buffer, state) do
-    handle_interpolation(rest, line + 1, state.column_offset, ["\r\n" | buffer], state)
+  defp handle_expression_value_end("\r\n" <> rest, line, _column, buffer, state) do
+    handle_expression_value_end(rest, line + 1, state.column_offset, ["\r\n" | buffer], state)
   end
 
-  defp handle_interpolation("\n" <> rest, line, _column, buffer, state) do
-    handle_interpolation(rest, line + 1, state.column_offset, ["\n" | buffer], state)
+  defp handle_expression_value_end("\n" <> rest, line, _column, buffer, state) do
+    handle_expression_value_end(rest, line + 1, state.column_offset, ["\n" | buffer], state)
   end
 
-  defp handle_interpolation("}" <> rest, line, column, buffer, %{braces: []} = state) do
+  defp handle_expression_value_end("}" <> rest, line, column, buffer, %{braces: []} = state) do
     value = buffer_to_string(buffer)
     {:ok, value, line, column + 1, rest, state}
   end
 
-  defp handle_interpolation(~S(\}) <> rest, line, column, buffer, state) do
-    handle_interpolation(rest, line, column + 2, [~S(\}) | buffer], state)
+  defp handle_expression_value_end(~S(\}) <> rest, line, column, buffer, state) do
+    handle_expression_value_end(rest, line, column + 2, [~S(\}) | buffer], state)
   end
 
-  defp handle_interpolation(~S(\{) <> rest, line, column, buffer, state) do
-    handle_interpolation(rest, line, column + 2, [~S(\{) | buffer], state)
+  defp handle_expression_value_end(~S(\{) <> rest, line, column, buffer, state) do
+    handle_expression_value_end(rest, line, column + 2, [~S(\{) | buffer], state)
   end
 
-  defp handle_interpolation("}" <> rest, line, column, buffer, state) do
+  defp handle_expression_value_end("}" <> rest, line, column, buffer, state) do
     {_pos, state} = pop_brace(state)
-    handle_interpolation(rest, line, column + 1, ["}" | buffer], state)
+    handle_expression_value_end(rest, line, column + 1, ["}" | buffer], state)
   end
 
-  defp handle_interpolation("{" <> rest, line, column, buffer, state) do
+  defp handle_expression_value_end("{" <> rest, line, column, buffer, state) do
     state = push_brace(state, {line, column})
-    handle_interpolation(rest, line, column + 1, ["{" | buffer], state)
+    handle_expression_value_end(rest, line, column + 1, ["{" | buffer], state)
   end
 
-  defp handle_interpolation(<<c::utf8, rest::binary>>, line, column, buffer, state) do
-    handle_interpolation(rest, line, column + 1, [<<c::utf8>> | buffer], state)
+  defp handle_expression_value_end(<<c::utf8, rest::binary>>, line, column, buffer, state) do
+    handle_expression_value_end(rest, line, column + 1, [<<c::utf8>> | buffer], state)
   end
 
-  defp handle_interpolation(<<>>, line, column, _buffer, _state) do
+  defp handle_expression_value_end(<<>>, line, column, _buffer, _state) do
     {:error, "expected closing `}` for expression", line, column}
   end
 

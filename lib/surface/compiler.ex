@@ -242,7 +242,7 @@ defmodule Surface.Compiler do
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
-  defp node_type({:interpolation, _, _}), do: :interpolation
+  defp node_type({:expr, _, _}), do: :interpolation
   defp node_type({:comment, _, _}), do: :comment
   defp node_type(_), do: :text
 

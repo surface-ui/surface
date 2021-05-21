@@ -1,7 +1,7 @@
 defmodule Surface.Compiler.Converter do
   @moduledoc false
 
-  @type subject :: :interpolation | :tag_name | :attr_name
+  @type subject :: :expr | :tag_name | :attr_name
 
   @callback convert(subject :: subject(), text :: binary(), state :: map(), opts :: keyword()) ::
               binary()
@@ -127,17 +127,13 @@ defmodule Surface.Compiler.Converter do
     extract_meta(node, acc)
   end
 
-  defp extract_meta({:interpolation, _value, meta}, acc) do
-    [{:interpolation, meta} | acc]
+  defp extract_meta({:expr, _value, meta}, acc) do
+    [{:expr, meta} | acc]
   end
 
   defp extract_meta({attr, value, meta}, acc) when is_binary(attr) do
     acc = extract_meta(value, acc)
     [{:attr_name, meta} | acc]
-  end
-
-  defp extract_meta({:expr, _value, meta}, acc) do
-    [{:interpolation, meta} | acc]
   end
 
   defp extract_meta({:tag_open, _name, attrs, meta}, acc) do

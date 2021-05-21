@@ -105,15 +105,14 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
-  describe "interpolation in body" do
-    test "represented as {:interpolation, value, meta}" do
+  describe "expression in body" do
+    test "represented as {:expr, value, meta}" do
       assert tokenize!("""
              before
              ={1} after\
              """) == [
                {:text, "before\n="},
-               {:interpolation, "1",
-                %{column: 3, line: 2, column_end: 4, line_end: 2, file: "nofile"}},
+               {:expr, "1", %{column: 3, line: 2, column_end: 4, line_end: 2, file: "nofile"}},
                {:text, " after"}
              ]
     end
@@ -123,7 +122,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert tokens == [
                {:text, "before"},
-               {:interpolation, "func({1, 3})",
+               {:expr, "func({1, 3})",
                 %{column: 8, line: 1, column_end: 20, line_end: 1, file: "nofile"}},
                {:text, "after"}
              ]
@@ -269,7 +268,7 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
-  describe "tagged expressions with markers `=`, `...`, `~`, `%`, `$`)" do
+  describe "tagged expressions with markers `=`, `...`, `~`, `$`)" do
     test "represented as {:tagged_expr, marker, value, meta}" do
       tokens = tokenize!("{=@class}")
 
@@ -283,14 +282,6 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert [
                {:tagged_expr, "~",
-                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
-                %{line: 1, column: 2, line_end: 1, column_end: 3}}
-             ] = tokens
-
-      tokens = tokenize!("{%@class}")
-
-      assert [
-               {:tagged_expr, "%",
                 {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
                 %{line: 1, column: 2, line_end: 1, column_end: 3}}
              ] = tokens
@@ -672,6 +663,23 @@ defmodule Surface.Compiler.TokenizerTest do
           class={panel\
         """)
       end
+    end
+  end
+
+  describe "attributes as tagged expressions" do
+    test "value is represented as {:tagged_expr, marker, expr, meta}" do
+      attrs = tokenize_attrs(~S(<div title={~"My title"}>))
+
+      assert [
+               {
+                 "title",
+                 {:tagged_expr, "~",
+                  {:expr, "\"My title\"",
+                   %{column: 14, line: 1, column_end: 24, line_end: 1}},
+                  %{column: 13, line: 1, column_end: 14, line_end: 1}},
+                 %{column: 6, column_end: 11, line: 1, line_end: 1}
+               }
+             ] = attrs
     end
   end
 

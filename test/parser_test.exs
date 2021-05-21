@@ -214,41 +214,41 @@ defmodule Surface.Compiler.ParserTest do
     end
   end
 
-  describe "interpolation" do
+  describe "expressions" do
     test "as root" do
       assert parse!("{baz}") ==
-               [{:interpolation, "baz", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, "baz", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "with curlies embedded" do
       assert parse!("{ {1, 3} }") ==
-               [{:interpolation, " {1, 3} ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " {1, 3} ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "with deeply nested curlies" do
       assert parse!("{{{{{{{{{{{}}}}}}}}}}}") ==
-               [{:interpolation, "{{{{{{{{{{}}}}}}}}}}", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, "{{{{{{{{{{}}}}}}}}}}", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "matched curlies for a map expression" do
       assert parse!("{ %{a: %{b: 1}} }") ==
-               [{:interpolation, " %{a: %{b: 1}} ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " %{a: %{b: 1}} ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "tuple without spaces between enclosing curlies" do
       assert parse!("{{:a, :b}}") ==
-               [{:interpolation, "{:a, :b}", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, "{:a, :b}", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "without root node but with text" do
       assert parse!("foo {baz} bar") ==
-               ["foo ", {:interpolation, "baz", %{line: 1, file: "nofile", column: 6}}, " bar"]
+               ["foo ", {:expr, "baz", %{line: 1, file: "nofile", column: 6}}, " bar"]
     end
 
     test "with root node" do
       assert parse!("<foo>{baz}</foo>") ==
                [
-                 {"foo", '', [{:interpolation, "baz", %{line: 1, file: "nofile", column: 7}}],
+                 {"foo", '', [{:expr, "baz", %{line: 1, file: "nofile", column: 7}}],
                   %{line: 1, file: "nofile", column: 2}}
                ]
     end
@@ -259,7 +259,7 @@ defmodule Surface.Compiler.ParserTest do
                  {"foo", '',
                   [
                     "bar",
-                    {:interpolation, "baz", %{line: 1, file: "nofile", column: 10}},
+                    {:expr, "baz", %{line: 1, file: "nofile", column: 10}},
                     "bat"
                   ], %{line: 1, file: "nofile", column: 2}}
                ]
@@ -306,12 +306,12 @@ defmodule Surface.Compiler.ParserTest do
 
     test "containing a charlist with escaped single quote" do
       assert parse!("{ 'a\\'b' }") ==
-               [{:interpolation, " 'a\\'b' ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " 'a\\'b' ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "containing a binary with escaped double quote" do
       assert parse!("{ \"a\\\"b\" }") ==
-               [{:interpolation, " \"a\\\"b\" ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " \"a\\\"b\" ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "nested multi-element tuples" do
@@ -319,7 +319,7 @@ defmodule Surface.Compiler.ParserTest do
              { {a, {b, c}} <- [{"a", {"b", "c"}}]}
              """) ==
                [
-                 {:interpolation, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
+                 {:expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
                   %{line: 1, file: "nofile", column: 2}},
                  "\n"
                ]
@@ -558,7 +558,7 @@ defmodule Surface.Compiler.ParserTest do
 
       children = [
         "\n  bar\n  ",
-        {"div", [], [{:interpolation, " var ", %{line: 6, file: "nofile", column: 9}}],
+        {"div", [], [{:expr, " var ", %{line: 6, file: "nofile", column: 9}}],
          %{line: 6, file: "nofile", column: 4}},
         "\n"
       ]

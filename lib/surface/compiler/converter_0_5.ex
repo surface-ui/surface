@@ -3,7 +3,7 @@ defmodule Surface.Compiler.Converter_0_5 do
 
   @behaviour Surface.Compiler.Converter
 
-  def convert(:interpolation, text, _state, _opts) do
+  def convert(:expr, text, _state, _opts) do
     if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
       String.slice(text, 1..-2)
     else

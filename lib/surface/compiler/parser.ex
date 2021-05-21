@@ -71,8 +71,8 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:interpolation, expr, meta} | rest], buffers, state) do
-    buffers = push_node_to_current_buffer({:interpolation, expr, to_meta(meta)}, buffers)
+  defp handle_token([{:expr, expr, meta} | rest], buffers, state) do
+    buffers = push_node_to_current_buffer({:expr, expr, to_meta(meta)}, buffers)
     handle_token(rest, buffers, state)
   end
 
