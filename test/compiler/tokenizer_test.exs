@@ -128,7 +128,7 @@ defmodule Surface.Compiler.TokenizerTest do
              ]
     end
 
-    test "raise on incomplete expression (EOF)" do
+    test "raise on incomplete root expression (EOF)" do
       message = "nofile:5:7: expected closing `}` for expression begining at line: 2, column: 4"
 
       assert_raise ParseError, message, fn ->
@@ -185,6 +185,23 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
       end
     end
+
+    test "raise on missing expected closing brace (EOF)" do
+      message = """
+      nofile:5:7: expected closing `}` for opening block expression `{#if` \
+      begining at line: 2, column: 4\
+      """
+
+      assert_raise ParseError, message, fn ->
+        tokenize!("""
+        <div>
+          {#if true
+            <br>
+          {/if}
+        </div>\
+        """)
+      end
+    end
   end
 
   describe "closing block" do
@@ -201,6 +218,18 @@ defmodule Surface.Compiler.TokenizerTest do
         tokenize!("""
         <div>
           {/}\
+        """)
+      end
+    end
+
+    test "raise on missing expected closing brace (EOF)" do
+      assert_raise ParseError, "nofile:4:7: expected closing `}`", fn ->
+        tokenize!("""
+        <div>
+          {#if true}
+            <br>
+          {/if
+        </div>\
         """)
       end
     end
