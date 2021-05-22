@@ -506,24 +506,6 @@ defmodule Surface.Compiler.ParserTest do
       message = "expected closing node for <#foo> defined on line 1, got </#bar>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
-
-    test "non-closing interpolation" do
-      code = "<foo>{bar</foo>"
-
-      exception = assert_raise ParseError, fn -> parse!(code) end
-
-      message = "expected closing `}` for expression"
-      assert %ParseError{message: ^message, line: 1} = exception
-    end
-
-    test "non-matched curlies inside interpolation" do
-      code = "<foo>{bar { }</foo>"
-
-      exception = assert_raise ParseError, fn -> parse!(code) end
-
-      message = "expected closing `}` for expression"
-      assert %ParseError{message: ^message, line: 1} = exception
-    end
   end
 
   describe "attributes" do

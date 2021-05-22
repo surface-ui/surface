@@ -367,7 +367,9 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_maybe_tag_open_end("{" <> rest, line, column, acc, state) do
-    handle_root_attribute(rest, line, column + 1, acc, state)
+    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
+    acc = put_attr(acc, :root, expr, %{})
+    handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
   end
 
   defp handle_maybe_tag_open_end(<<>>, line, column, _acc, state) do
@@ -395,20 +397,6 @@ defmodule Surface.Compiler.Tokenizer do
         handle_maybe_attr_value(rest, line, new_column, acc, state)
 
       {:error, message} ->
-        raise parse_error(message, line, column, state)
-    end
-  end
-
-  ## handle_root_attribute
-
-  defp handle_root_attribute(text, line, column, acc, state) do
-    case handle_expression_value(text, line, column, state) do
-      {:ok, expr, new_line, new_column, rest, state} ->
-        acc = put_attr(acc, :root, expr, %{})
-
-        handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
-
-      {:error, message, line, column} ->
         raise parse_error(message, line, column, state)
     end
   end
@@ -585,7 +573,7 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_expression
 
-  # handle all tagged expressions
+  # handle tagged expressions
   for marker <- @markers do
     defp handle_expression(unquote(marker) <> rest, line, column, state) do
       marker = unquote(marker)
@@ -607,20 +595,35 @@ defmodule Surface.Compiler.Tokenizer do
           expr = if value == "", do: nil, else: {:expr, value, expr_meta}
           {{:tagged_expr, marker, expr, meta}, new_line, new_column, rest}
 
-        {:error, message, line, column} ->
-          raise parse_error(message, line, column, state)
+        {:error, :expected_closing_blace, error_line, error_column} ->
+          message = """
+          expected closing `}` for tagged expression `{#{marker}` begining at \
+          line: #{line}, column: #{column}\
+          """
+
+          raise parse_error(message, error_line, error_column, state)
+
+        {:error, type, line, column} ->
+          raise parse_error("parser error: #{inspect(type)}", line, column, state)
       end
     end
   end
 
-  # handle normal expression (interpolation)
+  # handle normal expression
   defp handle_expression(text, line, column, state) do
     case handle_expression_value(text, line, column, state) do
       {:ok, expr, new_line, new_column, rest, _state} ->
         {expr, new_line, new_column, rest}
 
-      {:error, message, line, column} ->
-        raise parse_error(message, line, column, state)
+      {:error, :expected_closing_blace, error_line, error_column} ->
+        message = """
+        expected closing `}` for expression begining at line: #{line}, column: #{column}\
+        """
+
+        raise parse_error(message, error_line, error_column, state)
+
+      {:error, type, line, column} ->
+        raise parse_error("parser error: #{inspect(type)}", line, column, state)
     end
   end
 
@@ -680,7 +683,7 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_expression_value_end(<<>>, line, column, _buffer, _state) do
-    {:error, "expected closing `}` for expression", line, column}
+    {:error, :expected_closing_blace, line, column}
   end
 
   ## ignore_spaces
