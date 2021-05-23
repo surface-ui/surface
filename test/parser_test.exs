@@ -103,7 +103,7 @@ defmodule Surface.Compiler.ParserTest do
            ]
   end
 
-  test "comments" do
+  test "public comments" do
     code = """
     <div>
     <!--
@@ -114,13 +114,36 @@ defmodule Surface.Compiler.ParserTest do
     </div>
     """
 
-    [{"div", _, [_, {:comment, comment}, _, {"span", _, _, _}, _], _}, _] = parse!(code)
+    [{"div", _, [_, {:comment, comment, %{visibility: :public}}, _, {"span", _, _, _}, _], _}, _] =
+      parse!(code)
 
     assert comment == """
            <!--
            This is
            a comment
            -->\
+           """
+  end
+
+  test "private comments" do
+    code = """
+    <div>
+    {!--
+    This is
+    a comment
+    --}
+      <span/>
+    </div>
+    """
+
+    [{"div", _, [_, {:comment, comment, %{visibility: :private}}, _, {"span", _, _, _}, _], _}, _] =
+      parse!(code)
+
+    assert comment == """
+           {!--
+           This is
+           a comment
+           --}\
            """
   end
 
@@ -191,41 +214,41 @@ defmodule Surface.Compiler.ParserTest do
     end
   end
 
-  describe "interpolation" do
+  describe "expressions" do
     test "as root" do
       assert parse!("{baz}") ==
-               [{:interpolation, "baz", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, "baz", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "with curlies embedded" do
       assert parse!("{ {1, 3} }") ==
-               [{:interpolation, " {1, 3} ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " {1, 3} ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "with deeply nested curlies" do
       assert parse!("{{{{{{{{{{{}}}}}}}}}}}") ==
-               [{:interpolation, "{{{{{{{{{{}}}}}}}}}}", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, "{{{{{{{{{{}}}}}}}}}}", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "matched curlies for a map expression" do
       assert parse!("{ %{a: %{b: 1}} }") ==
-               [{:interpolation, " %{a: %{b: 1}} ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " %{a: %{b: 1}} ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "tuple without spaces between enclosing curlies" do
       assert parse!("{{:a, :b}}") ==
-               [{:interpolation, "{:a, :b}", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, "{:a, :b}", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "without root node but with text" do
       assert parse!("foo {baz} bar") ==
-               ["foo ", {:interpolation, "baz", %{line: 1, file: "nofile", column: 6}}, " bar"]
+               ["foo ", {:expr, "baz", %{line: 1, file: "nofile", column: 6}}, " bar"]
     end
 
     test "with root node" do
       assert parse!("<foo>{baz}</foo>") ==
                [
-                 {"foo", '', [{:interpolation, "baz", %{line: 1, file: "nofile", column: 7}}],
+                 {"foo", '', [{:expr, "baz", %{line: 1, file: "nofile", column: 7}}],
                   %{line: 1, file: "nofile", column: 2}}
                ]
     end
@@ -236,7 +259,7 @@ defmodule Surface.Compiler.ParserTest do
                  {"foo", '',
                   [
                     "bar",
-                    {:interpolation, "baz", %{line: 1, file: "nofile", column: 10}},
+                    {:expr, "baz", %{line: 1, file: "nofile", column: 10}},
                     "bat"
                   ], %{line: 1, file: "nofile", column: 2}}
                ]
@@ -283,12 +306,12 @@ defmodule Surface.Compiler.ParserTest do
 
     test "containing a charlist with escaped single quote" do
       assert parse!("{ 'a\\'b' }") ==
-               [{:interpolation, " 'a\\'b' ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " 'a\\'b' ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "containing a binary with escaped double quote" do
       assert parse!("{ \"a\\\"b\" }") ==
-               [{:interpolation, " \"a\\\"b\" ", %{line: 1, file: "nofile", column: 2}}]
+               [{:expr, " \"a\\\"b\" ", %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "nested multi-element tuples" do
@@ -296,7 +319,7 @@ defmodule Surface.Compiler.ParserTest do
              { {a, {b, c}} <- [{"a", {"b", "c"}}]}
              """) ==
                [
-                 {:interpolation, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
+                 {:expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
                   %{line: 1, file: "nofile", column: 2}},
                  "\n"
                ]
@@ -374,7 +397,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <foo> defined on line 1, got </a>"
+      message = "expected closing node for <foo> defined on line 1, got </a>"
 
       assert %ParseError{message: ^message, line: 1} = exception
     end
@@ -384,7 +407,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <bar> defined on line 1, got </foo>"
+      message = "expected closing node for <bar> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -393,7 +416,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <Bar> defined on line 1, got </foo>"
+      message = "expected closing node for <Bar> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -402,7 +425,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <Bar.Baz> defined on line 1, got </foo>"
+      message = "expected closing node for <Bar.Baz> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -411,7 +434,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <Bar1> defined on line 1, got </foo>"
+      message = "expected closing node for <Bar1> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -420,7 +443,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <Bar_1> defined on line 1, got </foo>"
+      message = "expected closing node for <Bar_1> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -429,7 +452,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <bar-baz> defined on line 1, got </foo>"
+      message = "expected closing node for <bar-baz> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -438,7 +461,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <#Bar> defined on line 1, got EOF"
+      message = "expected closing node for <#Bar> defined on line 1, got EOF"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -453,7 +476,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <div> defined on line 3, got </foo>"
+      message = "expected closing node for <div> defined on line 3, got </foo>"
       assert %ParseError{message: ^message, line: 3} = exception
     end
 
@@ -462,7 +485,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <foo> defined on line 1, got </baz>"
+      message = "expected closing node for <foo> defined on line 1, got </baz>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -471,7 +494,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <foo> defined on line 1, got EOF"
+      message = "expected closing node for <foo> defined on line 1, got EOF"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -480,25 +503,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing tag for <#foo> defined on line 1, got </#bar>"
-      assert %ParseError{message: ^message, line: 1} = exception
-    end
-
-    test "non-closing interpolation" do
-      code = "<foo>{bar</foo>"
-
-      exception = assert_raise ParseError, fn -> parse!(code) end
-
-      message = "expected closing `}` for expression"
-      assert %ParseError{message: ^message, line: 1} = exception
-    end
-
-    test "non-matched curlies inside interpolation" do
-      code = "<foo>{bar { }</foo>"
-
-      exception = assert_raise ParseError, fn -> parse!(code) end
-
-      message = "expected closing `}` for expression"
+      message = "expected closing node for <#foo> defined on line 1, got </#bar>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
   end
@@ -535,7 +540,7 @@ defmodule Surface.Compiler.ParserTest do
 
       children = [
         "\n  bar\n  ",
-        {"div", [], [{:interpolation, " var ", %{line: 6, file: "nofile", column: 9}}],
+        {"div", [], [{:expr, " var ", %{line: 6, file: "nofile", column: 9}}],
          %{line: 6, file: "nofile", column: 4}},
         "\n"
       ]
@@ -713,34 +718,6 @@ defmodule Surface.Compiler.ParserTest do
                [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
     end
 
-    # test "string with embedded interpolation" do
-    #   code = """
-    #   <foo prop="before { var } after"/>
-    #   """
-
-    #   attr_value = ["before ", {:attribute_expr, " var ", %{line: 1}}, " after"]
-
-    #   attributes = [
-    #     {"prop", attr_value, %{line: 1}}
-    #   ]
-
-    #   assert parse!(code) ==  [{"foo", attributes, [], %{line: 1}}, "\n"]
-    # end
-
-    #   test "string with only an embedded interpolation" do
-    #     code = """
-    #     <foo prop="{ var }"/>
-    #     """
-
-    #     attr_value = [{:attribute_expr, " var ", %{line: 1}}]
-
-    #     attributes = [
-    #       {"prop", attr_value, %{line: 1}}
-    #     ]
-
-    #     assert parse!(code) ==  [{"foo", attributes, [], %{line: 1}}, "\n"]
-    #   end
-
     test "interpolation with nested curlies" do
       code = """
       <foo prop={ {{}} }/>
@@ -774,22 +751,22 @@ defmodule Surface.Compiler.ParserTest do
     end
   end
 
-  describe "sub-blocks" do
-    test "no sub-block with nested child" do
+  describe "blocks" do
+    test "without sub-blocks with nested child" do
       code = """
-      <#if {true}>
+      {#if true}
         1
         <span>2</span>
         <span>3</span>
-      </#if>\
+      {/if}\
       """
 
       assert parse!(code) ==
                [
-                 {"#if",
+                 {:block, "if",
                   [
-                    {:root, {:attribute_expr, "true", %{line: 1, column: 7, file: "nofile"}},
-                     %{line: 1, column: 7, file: "nofile"}}
+                    {:root, {:attribute_expr, "true", %{line: 1, column: 6, file: "nofile"}},
+                     %{line: 1, column: 6, file: "nofile"}}
                   ],
                   [
                     "\n  1\n  ",
@@ -797,134 +774,137 @@ defmodule Surface.Compiler.ParserTest do
                     "\n  ",
                     {"span", [], ["3"], %{line: 4, column: 4, file: "nofile"}},
                     "\n"
-                  ], %{line: 1, column: 2, file: "nofile"}}
+                  ], %{line: 1, column: 3, file: "nofile"}}
                ]
     end
 
     test "single sub-block" do
       code = """
-      <#if {true}>
+      {#if true}
         1
-      <#else>
+      {#else}
         2
-      </#if>\
+      {/if}\
       """
 
       assert parse!(code) ==
                [
-                 {"#if",
+                 {:block, "if",
                   [
-                    {:root, {:attribute_expr, "true", %{line: 1, file: "nofile", column: 7}},
-                     %{line: 1, file: "nofile", column: 7}}
+                    {:root, {:attribute_expr, "true", %{line: 1, file: "nofile", column: 6}},
+                     %{line: 1, file: "nofile", column: 6}}
                   ],
                   [
-                    {:default, [], ["\n  1\n"], %{}},
-                    {"#else", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 2}}
-                  ], %{line: 1, file: "nofile", column: 2, has_sub_blocks?: true}}
+                    {:block, :default, [], ["\n  1\n"], %{}},
+                    {:block, "else", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 3}}
+                  ], %{line: 1, file: "nofile", column: 3, has_sub_blocks?: true}}
                ]
     end
 
     test "multiple sub-blocks" do
       code = """
-      <#if {true}>
+      {#if true}
         1
-      <#elseif>
+      {#elseif}
         2
-      <#elseif>
+      {#elseif}
         3
-      <#else>
+      {#else}
         4
-      </#if>\
+      {/if}\
       """
 
       assert parse!(code) ==
                [
-                 {"#if",
+                 {:block, "if",
                   [
-                    {:root, {:attribute_expr, "true", %{line: 1, file: "nofile", column: 7}},
-                     %{line: 1, file: "nofile", column: 7}}
+                    {:root, {:attribute_expr, "true", %{line: 1, file: "nofile", column: 6}},
+                     %{line: 1, file: "nofile", column: 6}}
                   ],
                   [
-                    {:default, [], ["\n  1\n"], %{}},
-                    {"#elseif", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 2}},
-                    {"#elseif", [], ["\n  3\n"], %{line: 5, file: "nofile", column: 2}},
-                    {"#else", [], ["\n  4\n"], %{line: 7, file: "nofile", column: 2}}
-                  ], %{line: 1, file: "nofile", column: 2, has_sub_blocks?: true}}
+                    {:block, :default, [], ["\n  1\n"], %{}},
+                    {:block, "elseif", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 3}},
+                    {:block, "elseif", [], ["\n  3\n"], %{line: 5, file: "nofile", column: 3}},
+                    {:block, "else", [], ["\n  4\n"], %{line: 7, file: "nofile", column: 3}}
+                  ], %{line: 1, file: "nofile", column: 3, has_sub_blocks?: true}}
                ]
     end
 
     test "nested sub-blocks" do
       code = """
-      <#if {1}>
+      {#if 1}
         111
-      <#elseif {2}>
+      {#elseif 2}
         222
-        <#if {3}>
+        {#if 3}
           333
-        <#else>
+        {#else}
           444
-        </#if>
-      <#else>
+        {/if}
+      {#else}
         555
-      </#if>\
+      {/if}\
       """
 
       assert parse!(code) ==
                [
-                 {"#if",
+                 {:block, "if",
                   [
-                    {:root, {:attribute_expr, "1", %{line: 1, file: "nofile", column: 7}},
-                     %{line: 1, file: "nofile", column: 7}}
+                    {:root, {:attribute_expr, "1", %{line: 1, file: "nofile", column: 6}},
+                     %{line: 1, file: "nofile", column: 6}}
                   ],
                   [
-                    {:default, [], ["\n  111\n"], %{}},
-                    {"#elseif",
+                    {:block, :default, [], ["\n  111\n"], %{}},
+                    {:block, "elseif",
                      [
-                       {:root, {:attribute_expr, "2", %{line: 3, file: "nofile", column: 11}},
-                        %{line: 3, file: "nofile", column: 11}}
+                       {:root, {:attribute_expr, "2", %{line: 3, file: "nofile", column: 10}},
+                        %{line: 3, file: "nofile", column: 10}}
                      ],
                      [
                        "\n  222\n  ",
-                       {"#if",
+                       {:block, "if",
                         [
-                          {:root, {:attribute_expr, "3", %{line: 5, file: "nofile", column: 9}},
-                           %{line: 5, file: "nofile", column: 9}}
+                          {:root, {:attribute_expr, "3", %{line: 5, file: "nofile", column: 8}},
+                           %{line: 5, file: "nofile", column: 8}}
                         ],
                         [
-                          {:default, [], ["\n    333\n  "], %{}},
-                          {"#else", [], ["\n    444\n  "], %{line: 7, file: "nofile", column: 4}}
-                        ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 4}},
+                          {:block, :default, [], ["\n    333\n  "], %{}},
+                          {:block, "else", [], ["\n    444\n  "],
+                           %{line: 7, file: "nofile", column: 5}}
+                        ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 5}},
                        "\n"
-                     ], %{line: 3, file: "nofile", column: 2}},
-                    {"#else", [], ["\n  555\n"], %{line: 10, file: "nofile", column: 2}}
-                  ], %{has_sub_blocks?: true, line: 1, file: "nofile", column: 2}}
+                     ], %{line: 3, file: "nofile", column: 3}},
+                    {:block, "else", [], ["\n  555\n"], %{line: 10, file: "nofile", column: 3}}
+                  ], %{has_sub_blocks?: true, line: 1, file: "nofile", column: 3}}
                ]
     end
 
     test "handle invalid parents for #else" do
       code = """
       <div>
-      <#else>
-      </div>
-      """
-
-      exception = assert_raise ParseError, fn -> parse!(code) end
-
-      message = "cannot use <#else> inside <div>. Possible parents are \"<#if>\" and \"<#for>\""
-      assert %ParseError{message: ^message, line: 2} = exception
-    end
-
-    test "handle invalid parents for #elseif" do
-      code = """
-      <div>
-      <#elseif>
+      {#else}
       </div>
       """
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
       message =
-        "cannot use <#elseif> inside <div>. The <#elseif> construct can only be used inside a \"<#if>\""
+        "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
+
+      assert %ParseError{message: ^message, line: 2} = exception
+    end
+
+    test "handle invalid parents for #elseif" do
+      code = """
+      <div>
+      {#elseif}
+      </div>
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message =
+        "no valid parent node defined for {#elseif}. The {#elseif} construct can only be used inside a \"{#if}\""
 
       assert %ParseError{message: ^message, line: 2} = exception
     end
@@ -932,14 +912,14 @@ defmodule Surface.Compiler.ParserTest do
     test "handle invalid parents for #match" do
       code = """
       <div>
-      <#match>
+      {#match}
       </div>
       """
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
       message =
-        "cannot use <#match> inside <div>. The <#match> construct can only be used inside a \"<#case>\""
+        "no valid parent node defined for {#match}. The {#match} construct can only be used inside a \"{#case}\""
 
       assert %ParseError{message: ^message, line: 2} = exception
     end
@@ -947,16 +927,50 @@ defmodule Surface.Compiler.ParserTest do
     test "raise error on sub-blocks without parent node" do
       code = """
         1
-      <#else>
+      {#else}
         2
       """
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
       message =
-        "no valid parent node defined for <#else>. Possible parents are \"<#if>\" and \"<#for>\""
+        "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
 
       assert %ParseError{message: ^message, line: 2} = exception
+    end
+
+    test "raise error on unknown block open" do
+      code = """
+      {#iff}
+        1
+      {/if}
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message = """
+      unknown `{#iff}` block. Available blocks are \
+      "if", "unless", "for", "case", "else", "elseif" and "match"\
+      """
+
+      assert %ParseError{message: ^message, line: 1} = exception
+    end
+
+    test "raise error on unknown block close" do
+      code = """
+      {#if}
+        1
+      {/iff}
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message = """
+      unknown `{/iff}` block. Available blocks are \
+      "if", "unless", "for" and "case"\
+      """
+
+      assert %ParseError{message: ^message, line: 3} = exception
     end
   end
 end

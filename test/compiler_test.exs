@@ -88,10 +88,29 @@ defmodule Surface.CompilerTest do
     end
   end
 
-  test "ignore comments" do
+  test "show public comments" do
     code = """
     <br>
     <!-- comment -->
+    <hr>
+    """
+
+    nodes = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert [
+             %Surface.AST.VoidTag{element: "br"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.Literal{value: "<!-- comment -->"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.VoidTag{element: "hr"},
+             %Surface.AST.Literal{value: "\n"}
+           ] = nodes
+  end
+
+  test "hide private comments" do
+    code = """
+    <br>
+    {!-- comment --}
     <hr>
     """
 
@@ -524,23 +543,23 @@ defmodule Surface.CompilerTest do
     test "#if/#elseif/#else" do
       code = """
       <div>
-        <#if condition={false}>
+        {#if false}
           IF
-        <#elseif condition={false}>
+        {#elseif false}
           ELSEIF FALSE
-        <#elseif condition={true}>
+        {#elseif true}
           BEFORE
-          <#if condition={false}>
+          {#if false}
             NESTED IF
-          <#elseif condition={true}>
+          {#elseif true}
             NESTED ELSEIF TRUE
-          <#else>
+          {#else}
             NESTED ELSE
-          </#if>
+          {/if}
           AFTER
-        <#else>
+        {#else}
           ELSE
-        </#if>
+        {/if}
       </div>
       """
 
@@ -606,9 +625,9 @@ defmodule Surface.CompilerTest do
   test "#unless" do
     code = """
     <div>
-      <#unless condition={false}>
+      {#unless false}
         UNLESS
-      </#unless>
+      {/unless}
     </div>
     """
 
