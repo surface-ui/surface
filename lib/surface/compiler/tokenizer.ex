@@ -372,7 +372,11 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_maybe_tag_open_end(">" <> rest, line, column, acc, state) do
-    acc = reverse_attrs(acc)
+    acc =
+      acc
+      |> reverse_attrs()
+      |> update_meta(&Map.merge(&1, %{node_line_end: line, node_column_end: column}))
+
     handle_text(rest, line, column + 1, [], acc, state)
   end
 
@@ -739,6 +743,10 @@ defmodule Surface.Compiler.Tokenizer do
   defp update_attr_value([{:tag_open, name, [{attr, value, attr_meta} | attrs], meta} | acc], fun) do
     attrs = [{attr, fun.(value), attr_meta} | attrs]
     [{:tag_open, name, attrs, meta} | acc]
+  end
+
+  defp update_meta([{:tag_open, name, attrs, meta} | acc], fun) do
+    [{:tag_open, name, attrs, fun.(meta)} | acc]
   end
 
   defp reverse_attrs([{:tag_open, name, attrs, meta} | acc]) do

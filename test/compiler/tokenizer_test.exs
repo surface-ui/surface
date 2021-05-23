@@ -266,11 +266,35 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [], %{line: 1, column: 2}},
-               {:text, _},
-               {:tag_open, "span", [], %{line: 2, column: 4}},
-               {:text, _},
-               {:tag_open, "p", [], %{line: 4, column: 2}}
+               {:tag_open, "div", [],
+                %{
+                  column: 2,
+                  line: 1,
+                  column_end: 5,
+                  line_end: 1,
+                  node_column_end: 5,
+                  node_line_end: 1
+                }},
+               {:text, "\n  "},
+               {:tag_open, "span", [],
+                %{
+                  column: 4,
+                  line: 2,
+                  column_end: 8,
+                  line_end: 2,
+                  node_column_end: 8,
+                  node_line_end: 2
+                }},
+               {:text, "\n\n"},
+               {:tag_open, "p", [],
+                %{
+                  column: 2,
+                  line: 4,
+                  column_end: 3,
+                  line_end: 4,
+                  node_column_end: 3,
+                  node_line_end: 4
+                }}
              ] = tokens
     end
 
