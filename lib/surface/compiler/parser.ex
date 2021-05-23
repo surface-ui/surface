@@ -170,7 +170,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:block_close, name, meta} | _], _buffers, _state) do
-    blocks = Helpers.list_to_string("block is", "blocks are", @blocks ++ @sub_blocks)
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks)
     raise parse_error("unknown `{/#{name}}` block. Available #{blocks}", meta)
   end
 
