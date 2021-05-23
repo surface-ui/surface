@@ -186,7 +186,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
-  test "convert <If> into <#if>" do
+  test "convert <If> into {#if}" do
     expected =
       convert("""
       <div>
@@ -199,10 +199,31 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
     assert expected == """
            <div>
-             <#if condition={ @var }>
+             {#if @var}
                1
-               </#if>
-             <#if   condition={@var}>2</#if>
+               {/if}
+             {#if @var}2{/if}
+           </div>
+           """
+  end
+
+  test "convert <For> into <#For>" do
+    expected =
+      convert("""
+      <div>
+        <For each={{ _i <- @var }}>
+          1
+          </For>
+        <For   each={{@var}}>2</For>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             {#for _i <- @var}
+               1
+               {/for}
+             {#for @var}2{/for}
            </div>
            """
   end
@@ -226,27 +247,6 @@ defmodule Surface.Compiler.Converter_0_5Test do
                id_\#{@id}
              "}>
              </div>
-           </div>
-           """
-  end
-
-  test "convert <For> into <#For>" do
-    expected =
-      convert("""
-      <div>
-        <For each={{ _i <- @var }}>
-          1
-          </For>
-        <For   each={{@var}}>2</For>
-      </div>
-      """)
-
-    assert expected == """
-           <div>
-             <#for each={ _i <- @var }>
-               1
-               </#for>
-             <#for   each={@var}>2</#for>
            </div>
            """
   end

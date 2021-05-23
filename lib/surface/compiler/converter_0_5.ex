@@ -3,6 +3,12 @@ defmodule Surface.Compiler.Converter_0_5 do
 
   @behaviour Surface.Compiler.Converter
 
+  @impl true
+  def opts() do
+    [handle_full_node: ["If", "For"]]
+  end
+
+  @impl true
   def convert(:expr, text, _state, _opts) do
     if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
       String.slice(text, 1..-2)
@@ -25,6 +31,32 @@ defmodule Surface.Compiler.Converter_0_5 do
     end
   end
 
+  def convert(:tag_open_begin, "<If", _state, _opts) do
+    "{#if"
+  end
+
+  def convert(:tag_open_end, text, %{tag_open_begin: "<If"}, _opts) do
+    [_, condition] = Regex.run(~r/condition={{(.+)}}/, text)
+    " #{String.trim(condition)}}"
+  end
+
+  def convert(:tag_close, "</If>", _state, _opts) do
+    "{/if}"
+  end
+
+  def convert(:tag_open_begin, "<For", _state, _opts) do
+    "{#for"
+  end
+
+  def convert(:tag_open_end, text, %{tag_open_begin: "<For"}, _opts) do
+    [_, each] = Regex.run(~r/each={{(.+)}}/, text)
+    " #{String.trim(each)}}"
+  end
+
+  def convert(:tag_close, "</For>", _state, _opts) do
+    "{/for}"
+  end
+
   def convert(:tag_name, "template", _state, _opts) do
     "#template"
   end
@@ -33,16 +65,8 @@ defmodule Surface.Compiler.Converter_0_5 do
     "#slot"
   end
 
-  def convert(:tag_name, "If", _state, _opts) do
-    "#if"
-  end
-
   def convert(:tag_name, "#Raw", _state, _opts) do
     "#raw"
-  end
-
-  def convert(:tag_name, "For", _state, _opts) do
-    "#for"
   end
 
   ## Planned changes. Uncomment as the related implementation gets merged

@@ -13,19 +13,17 @@ defmodule Surface.Compiler.ParserTest do
   end
 
   test "keep spaces before node" do
-    assert parse!("\n<div></div>") ==
-             [
-               "\n",
-               {"div", [], [], %{line: 2, file: "nofile", column: 2}}
-             ]
+    assert [
+             "\n",
+             {"div", [], [], %{line: 2, file: "nofile", column: 2}}
+           ] = parse!("\n<div></div>")
   end
 
   test "keep spaces after node" do
-    assert parse!("<div></div>\n") ==
-             [
-               {"div", [], [], %{line: 1, file: "nofile", column: 2}},
-               "\n"
-             ]
+    assert [
+             {"div", [], [], %{line: 1, file: "nofile", column: 2}},
+             "\n"
+           ] = parse!("<div></div>\n")
   end
 
   test "keep blank chars" do
@@ -42,18 +40,17 @@ defmodule Surface.Compiler.ParserTest do
     </div>
     """
 
-    assert parse!(code) ==
-             [
-               {"div", [], ["\n  Div 1\n"], %{line: 1, file: "nofile", column: 2}},
-               "\n",
-               {"div", [], ["\n  Div 2\n"], %{line: 4, file: "nofile", column: 2}},
-               "\n"
-             ]
+    assert [
+             {"div", [], ["\n  Div 1\n"], %{line: 1, file: "nofile", column: 2}},
+             "\n",
+             {"div", [], ["\n  Div 2\n"], %{line: 4, file: "nofile", column: 2}},
+             "\n"
+           ] = parse!(code)
   end
 
   test "text before and after" do
-    assert parse!("hello<foo>bar</foo>world") ==
-             ["hello", {"foo", [], ["bar"], %{line: 1, file: "nofile", column: 7}}, "world"]
+    assert ["hello", {"foo", [], ["bar"], %{line: 1, file: "nofile", column: 7}}, "world"] =
+             parse!("hello<foo>bar</foo>world")
   end
 
   test "component" do
@@ -84,7 +81,7 @@ defmodule Surface.Compiler.ParserTest do
 
     tree = parse!(code)
 
-    assert tree == [
+    assert [
              {
                "div",
                '',
@@ -100,7 +97,7 @@ defmodule Surface.Compiler.ParserTest do
                %{line: 1, file: "nofile", column: 2}
              },
              "\n"
-           ]
+           ] = tree
   end
 
   test "public comments" do
@@ -156,7 +153,7 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       [{"div", [], ["\n  ", node, "\n"], _}, "\n"] = parse!(code)
-      assert node == {"hr", [], [], %{line: 2, file: "nofile", column: 4}}
+      assert {"hr", [], [], %{line: 2, file: "nofile", column: 4}} = node
     end
 
     test "with attributes" do
@@ -171,46 +168,43 @@ defmodule Surface.Compiler.ParserTest do
 
       [{"div", [], ["\n  ", node, "\n"], _}, "\n"] = parse!(code)
 
-      assert node ==
-               {"img",
-                [
-                  {"src", "file.gif", %{line: 3, file: "nofile", column: 5}},
-                  {"alt", "My image", %{line: 4, file: "nofile", column: 5}}
-                ], [], %{line: 2, file: "nofile", column: 4}}
+      assert {"img",
+              [
+                {"src", "file.gif", %{line: 3, file: "nofile", column: 5}},
+                {"alt", "My image", %{line: 4, file: "nofile", column: 5}}
+              ], [], %{line: 2, file: "nofile", column: 4}} = node
     end
   end
 
   describe "HTML only" do
     test "single node" do
-      assert parse!("<foo>bar</foo>") ==
-               [{"foo", [], ["bar"], %{line: 1, file: "nofile", column: 2}}]
+      assert [{"foo", [], ["bar"], %{line: 1, file: "nofile", column: 2}}] =
+               parse!("<foo>bar</foo>")
     end
 
     test "Elixir node" do
-      assert parse!("<Foo.Bar>bar</Foo.Bar>") ==
-               [{"Foo.Bar", [], ["bar"], %{line: 1, file: "nofile", column: 2}}]
+      assert [{"Foo.Bar", [], ["bar"], %{line: 1, file: "nofile", column: 2}}] =
+               parse!("<Foo.Bar>bar</Foo.Bar>")
     end
 
     test "mixed nodes" do
-      assert parse!("<foo>one<bar>two</bar>three</foo>") ==
-               [
-                 {"foo", [],
-                  ["one", {"bar", [], ["two"], %{line: 1, file: "nofile", column: 10}}, "three"],
-                  %{line: 1, file: "nofile", column: 2}}
-               ]
+      assert [
+               {"foo", [],
+                ["one", {"bar", [], ["two"], %{line: 1, file: "nofile", column: 10}}, "three"],
+                %{line: 1, file: "nofile", column: 2}}
+             ] = parse!("<foo>one<bar>two</bar>three</foo>")
     end
 
     test "self-closing nodes" do
-      assert parse!("<foo>one<bar><bat/></bar>three</foo>") ==
-               [
-                 {"foo", [],
-                  [
-                    "one",
-                    {"bar", [], [{"bat", [], [], %{line: 1, file: "nofile", column: 15}}],
-                     %{line: 1, file: "nofile", column: 10}},
-                    "three"
-                  ], %{line: 1, file: "nofile", column: 2}}
-               ]
+      assert [
+               {"foo", [],
+                [
+                  "one",
+                  {"bar", [], [{"bat", [], [], %{line: 1, file: "nofile", column: 15}}],
+                   %{line: 1, file: "nofile", column: 10}},
+                  "three"
+                ], %{line: 1, file: "nofile", column: 2}}
+             ] = parse!("<foo>one<bar><bat/></bar>three</foo>")
     end
   end
 
@@ -246,23 +240,21 @@ defmodule Surface.Compiler.ParserTest do
     end
 
     test "with root node" do
-      assert parse!("<foo>{baz}</foo>") ==
-               [
-                 {"foo", '', [{:expr, "baz", %{line: 1, file: "nofile", column: 7}}],
-                  %{line: 1, file: "nofile", column: 2}}
-               ]
+      assert [
+               {"foo", '', [{:expr, "baz", %{line: 1, file: "nofile", column: 7}}],
+                %{line: 1, file: "nofile", column: 2}}
+             ] = parse!("<foo>{baz}</foo>")
     end
 
     test "mixed curly bracket" do
-      assert parse!("<foo>bar{baz}bat</foo>") ==
-               [
-                 {"foo", '',
-                  [
-                    "bar",
-                    {:expr, "baz", %{line: 1, file: "nofile", column: 10}},
-                    "bat"
-                  ], %{line: 1, file: "nofile", column: 2}}
-               ]
+      assert [
+               {"foo", '',
+                [
+                  "bar",
+                  {:expr, "baz", %{line: 1, file: "nofile", column: 10}},
+                  "bat"
+                ], %{line: 1, file: "nofile", column: 2}}
+             ] = parse!("<foo>bar{baz}bat</foo>")
     end
 
     #  test "single-closing curly bracket" do
@@ -533,20 +525,20 @@ defmodule Surface.Compiler.ParserTest do
       </foo>
       """
 
-      attributes = [
-        {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
-        {"prop2", "value2", %{line: 3, file: "nofile", column: 3}}
-      ]
+      assert [{"foo", attributes, children, %{line: 1, file: "nofile", column: 2}}, "\n"] =
+               parse!(code)
 
-      children = [
-        "\n  bar\n  ",
-        {"div", [], [{:expr, " var ", %{line: 6, file: "nofile", column: 9}}],
-         %{line: 6, file: "nofile", column: 4}},
-        "\n"
-      ]
+      assert [
+               {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
+               {"prop2", "value2", %{line: 3, file: "nofile", column: 3}}
+             ] = attributes
 
-      assert parse!(code) ==
-               [{"foo", attributes, children, %{line: 1, file: "nofile", column: 2}}, "\n"]
+      assert [
+               "\n  bar\n  ",
+               {"div", [], [{:expr, " var ", %{line: 6, file: "nofile", column: 9}}],
+                %{line: 6, file: "nofile", column: 4}},
+               "\n"
+             ] = children
     end
 
     test "self-closing nodes" do
@@ -576,13 +568,13 @@ defmodule Surface.Compiler.ParserTest do
       </#foo>
       """
 
-      attributes = [
-        {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
-        {"prop2", "value2", %{line: 3, file: "nofile", column: 3}}
-      ]
+      assert [{"#foo", attributes, ["\n  bar\n"], %{line: 1, file: "nofile", column: 2}}, "\n"] =
+               parse!(code)
 
-      assert parse!(code) ==
-               [{"#foo", attributes, ["\n  bar\n"], %{line: 1, file: "nofile", column: 2}}, "\n"]
+      assert attributes == [
+               {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
+               {"prop2", "value2", %{line: 3, file: "nofile", column: 3}}
+             ]
     end
 
     test "regular nodes with whitespaces" do
@@ -596,16 +588,15 @@ defmodule Surface.Compiler.ParserTest do
       ></foo>
       """
 
-      attributes = [
-        {"prop1", true, %{line: 2, file: "nofile", column: 3}},
-        {"prop2", "value 2", %{line: 3, file: "nofile", column: 3}},
-        {"prop3", {:attribute_expr, " var3 ", %{line: 5, file: "nofile", column: 6}},
-         %{line: 4, file: "nofile", column: 3}},
-        {"prop4", true, %{line: 6, file: "nofile", column: 3}}
-      ]
+      assert [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"] = parse!(code)
 
-      assert parse!(code) ==
-               [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
+      assert attributes == [
+               {"prop1", true, %{line: 2, file: "nofile", column: 3}},
+               {"prop2", "value 2", %{line: 3, file: "nofile", column: 3}},
+               {"prop3", {:attribute_expr, " var3 ", %{line: 5, file: "nofile", column: 6}},
+                %{line: 4, file: "nofile", column: 3}},
+               {"prop4", true, %{line: 6, file: "nofile", column: 3}}
+             ]
     end
 
     test "self-closing nodes with whitespaces" do
@@ -761,21 +752,20 @@ defmodule Surface.Compiler.ParserTest do
       {/if}\
       """
 
-      assert parse!(code) ==
-               [
-                 {:block, "if",
-                  [
-                    {:root, {:attribute_expr, "true", %{line: 1, column: 6, file: "nofile"}},
-                     %{line: 1, column: 6, file: "nofile"}}
-                  ],
-                  [
-                    "\n  1\n  ",
-                    {"span", [], ["2"], %{line: 3, column: 4, file: "nofile"}},
-                    "\n  ",
-                    {"span", [], ["3"], %{line: 4, column: 4, file: "nofile"}},
-                    "\n"
-                  ], %{line: 1, column: 3, file: "nofile"}}
-               ]
+      assert [
+               {:block, "if",
+                [
+                  {:root, {:attribute_expr, "true", %{line: 1, column: 6, file: "nofile"}},
+                   %{line: 1, column: 6, file: "nofile"}}
+                ],
+                [
+                  "\n  1\n  ",
+                  {"span", [], ["2"], %{line: 3, column: 4, file: "nofile"}},
+                  "\n  ",
+                  {"span", [], ["3"], %{line: 4, column: 4, file: "nofile"}},
+                  "\n"
+                ], %{line: 1, column: 3, file: "nofile"}}
+             ] = parse!(code)
     end
 
     test "single sub-block" do
