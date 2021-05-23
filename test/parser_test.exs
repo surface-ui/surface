@@ -967,7 +967,7 @@ defmodule Surface.Compiler.ParserTest do
 
       message = """
       unknown `{/iff}` block. Available blocks are \
-      "if", "unless", "for", "case", "else", "elseif" and "match"\
+      "if", "unless", "for" and "case"\
       """
 
       assert %ParseError{message: ^message, line: 3} = exception
