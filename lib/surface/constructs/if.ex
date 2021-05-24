@@ -52,7 +52,7 @@ defmodule Surface.Constructs.Deprecated.If do
     using <If> to wrap elements in an if expression has been deprecated and will be removed in \
     future versions.
 
-    Hint: replace `<If>` with `<#if>`
+    Hint: replace `<If>` with `{#if}`
     """
 
     IOHelper.warn(message, node.meta.caller, fn _ -> node.meta.line end)

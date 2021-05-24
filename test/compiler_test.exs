@@ -88,10 +88,29 @@ defmodule Surface.CompilerTest do
     end
   end
 
-  test "ignore comments" do
+  test "show public comments" do
     code = """
     <br>
     <!-- comment -->
+    <hr>
+    """
+
+    nodes = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert [
+             %Surface.AST.VoidTag{element: "br"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.Literal{value: "<!-- comment -->"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.VoidTag{element: "hr"},
+             %Surface.AST.Literal{value: "\n"}
+           ] = nodes
+  end
+
+  test "hide private comments" do
+    code = """
+    <br>
+    {!-- comment --}
     <hr>
     """
 
@@ -524,23 +543,23 @@ defmodule Surface.CompilerTest do
     test "#if/#elseif/#else" do
       code = """
       <div>
-        <#if condition={false}>
+        {#if false}
           IF
-        <#elseif condition={false}>
+        {#elseif false}
           ELSEIF FALSE
-        <#elseif condition={true}>
+        {#elseif true}
           BEFORE
-          <#if condition={false}>
+          {#if false}
             NESTED IF
-          <#elseif condition={true}>
+          {#elseif true}
             NESTED ELSEIF TRUE
-          <#else>
+          {#else}
             NESTED ELSE
-          </#if>
+          {/if}
           AFTER
-        <#else>
+        {#else}
           ELSE
-        </#if>
+        {/if}
       </div>
       """
 
@@ -606,9 +625,9 @@ defmodule Surface.CompilerTest do
   test "#unless" do
     code = """
     <div>
-      <#unless condition={false}>
+      {#unless false}
         UNLESS
-      </#unless>
+      {/unless}
     </div>
     """
 
@@ -741,9 +760,9 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-            passing unquoted attribute values has been deprecated and will be removed in future versions.
+           passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `tabindex=1` with `tabindex={1}`
+           Hint: replace `tabindex=1` with `tabindex={1}`
            """
 
     assert line == 2
@@ -759,15 +778,15 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-            passing unquoted attribute values has been deprecated and will be removed in future versions.
+           passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `selected=true` with `selected={true}`
+           Hint: replace `selected=true` with `selected={true}`
            """
 
     assert message =~ """
-            passing unquoted attribute values has been deprecated and will be removed in future versions.
+           passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `checked=false` with `checked={false}`
+           Hint: replace `checked=false` with `checked={false}`
            """
 
     assert line == 2

@@ -25,10 +25,14 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
-  describe "comment" do
-    test "represented as {:comment, comment}" do
+  describe "public comment" do
+    test "represented as {:comment, comment, meta}" do
       assert tokenize!("Begin<!-- comment -->End") ==
-               [{:text, "Begin"}, {:comment, "<!-- comment -->"}, {:text, "End"}]
+               [
+                 {:text, "Begin"},
+                 {:comment, "<!-- comment -->", %{visibility: :public}},
+                 {:text, "End"}
+               ]
     end
 
     test "multiple lines and wrapped by tags" do
@@ -43,7 +47,7 @@ defmodule Surface.Compiler.TokenizerTest do
       assert [
                {:tag_open, "p", [], %{line: 1, column: 2}},
                {:text, "\n"},
-               {:comment, "<!--\n<div>\n-->"},
+               {:comment, "<!--\n<div>\n-->", %{visibility: :public}},
                {:text, "\n"},
                {:tag_close, "p", %{line: 5, column: 3}},
                {:tag_open, "br", [], %{line: 5, column: 6}}
@@ -61,15 +65,54 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
-  describe "interpolation in body" do
-    test "represented as {:interpolation, value, meta}" do
+  describe "private comment" do
+    test "represented as {:comment, comment, meta}" do
+      assert tokenize!("Begin{!-- comment --}End") ==
+               [
+                 {:text, "Begin"},
+                 {:comment, "{!-- comment --}", %{visibility: :private}},
+                 {:text, "End"}
+               ]
+    end
+
+    test "multiple lines and wrapped by tags" do
+      code = """
+      <p>
+      {!--
+      <div>
+      --}
+      </p><br>\
+      """
+
+      assert [
+               {:tag_open, "p", [], %{line: 1, column: 2}},
+               {:text, "\n"},
+               {:comment, "{!--\n<div>\n--}", %{visibility: :private}},
+               {:text, "\n"},
+               {:tag_close, "p", %{line: 5, column: 3}},
+               {:tag_open, "br", [], %{line: 5, column: 6}}
+             ] = tokenize!(code)
+    end
+
+    test "raise on incomplete comment (EOF)" do
+      assert_raise ParseError, "nofile:3:7: expected closing `--}` for comment", fn ->
+        tokenize!("""
+        <div>
+        {!-- a comment)
+        </div>\
+        """)
+      end
+    end
+  end
+
+  describe "expression in body" do
+    test "represented as {:expr, value, meta}" do
       assert tokenize!("""
              before
              ={1} after\
              """) == [
                {:text, "before\n="},
-               {:interpolation, "1",
-                %{column: 3, line: 2, column_end: 4, line_end: 2, file: "nofile"}},
+               {:expr, "1", %{column: 3, line: 2, column_end: 4, line_end: 2, file: "nofile"}},
                {:text, " after"}
              ]
     end
@@ -79,10 +122,116 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert tokens == [
                {:text, "before"},
-               {:interpolation, "func({1, 3})",
+               {:expr, "func({1, 3})",
                 %{column: 8, line: 1, column_end: 20, line_end: 1, file: "nofile"}},
                {:text, "after"}
              ]
+    end
+
+    test "raise on incomplete root expression (EOF)" do
+      message = "nofile:5:7: expected closing `}` for expression begining at line: 2, column: 4"
+
+      assert_raise ParseError, message, fn ->
+        tokenize!("""
+        <div
+          {@value1
+          <br>
+          {@value2}
+        </div>\
+        """)
+      end
+    end
+  end
+
+  describe "opening block" do
+    test "without expression" do
+      tokens = tokenize!("{#if}")
+
+      assert [
+               {:block_open, "if", nil, %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "with expression" do
+      tokens = tokenize!("{#if x > 0}")
+
+      assert [
+               {:block_open, "if",
+                {:expr, "x > 0", %{line: 1, column: 6, line_end: 1, column_end: 11}},
+                %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "with expression with multiple spaces" do
+      tokens =
+        tokenize!("""
+        {#if
+          x >
+            0  }\
+        """)
+
+      assert [
+               {:block_open, "if",
+                {:expr, "x >\n    0  ", %{line: 2, column: 3, line_end: 3, column_end: 8}},
+                %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "raise on missing block name" do
+      assert_raise ParseError, "nofile:2:5: expected block name", fn ->
+        tokenize!("""
+        <div>
+          {#}\
+        """)
+      end
+    end
+
+    test "raise on missing expected closing brace (EOF)" do
+      message = """
+      nofile:5:7: expected closing `}` for opening block expression `{#if` \
+      begining at line: 2, column: 4\
+      """
+
+      assert_raise ParseError, message, fn ->
+        tokenize!("""
+        <div>
+          {#if true
+            <br>
+          {/if}
+        </div>\
+        """)
+      end
+    end
+  end
+
+  describe "closing block" do
+    test "represented as {:block_close, name, meta}" do
+      tokens = tokenize!("{/if}")
+
+      assert [
+               {:block_close, "if", %{line: 1, column: 3, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "raise on missing block name" do
+      assert_raise ParseError, "nofile:2:5: expected block name", fn ->
+        tokenize!("""
+        <div>
+          {/}\
+        """)
+      end
+    end
+
+    test "raise on missing expected closing brace (EOF)" do
+      assert_raise ParseError, "nofile:4:7: expected closing `}`", fn ->
+        tokenize!("""
+        <div>
+          {#if true}
+            <br>
+          {/if
+        </div>\
+        """)
+      end
     end
   end
 
@@ -117,11 +266,35 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [], %{line: 1, column: 2}},
-               {:text, _},
-               {:tag_open, "span", [], %{line: 2, column: 4}},
-               {:text, _},
-               {:tag_open, "p", [], %{line: 4, column: 2}}
+               {:tag_open, "div", [],
+                %{
+                  column: 2,
+                  line: 1,
+                  column_end: 5,
+                  line_end: 1,
+                  node_column_end: 5,
+                  node_line_end: 1
+                }},
+               {:text, "\n  "},
+               {:tag_open, "span", [],
+                %{
+                  column: 4,
+                  line: 2,
+                  column_end: 8,
+                  line_end: 2,
+                  node_column_end: 8,
+                  node_line_end: 2
+                }},
+               {:text, "\n\n"},
+               {:tag_open, "p", [],
+                %{
+                  column: 2,
+                  line: 4,
+                  column_end: 3,
+                  line_end: 4,
+                  node_column_end: 3,
+                  node_line_end: 4
+                }}
              ] = tokens
     end
 
@@ -157,6 +330,71 @@ defmodule Surface.Compiler.TokenizerTest do
         tokenize!("""
         <div>
           </>\
+        """)
+      end
+    end
+  end
+
+  describe "tagged expressions with markers `=`, `...`, `~`, `$`)" do
+    test "represented as {:tagged_expr, marker, value, meta}" do
+      tokens = tokenize!("{=@class}")
+
+      assert [
+               {:tagged_expr, "=",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
+
+      tokens = tokenize!("{~@class}")
+
+      assert [
+               {:tagged_expr, "~",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
+
+      tokens = tokenize!("{$@class}")
+
+      assert [
+               {:tagged_expr, "$",
+                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
+
+      tokens = tokenize!("{...@attrs}")
+
+      assert [
+               {:tagged_expr, "...",
+                {:expr, "@attrs", %{line: 1, column: 5, line_end: 1, column_end: 11}},
+                %{line: 1, column: 2, line_end: 1, column_end: 5}}
+             ] = tokens
+    end
+
+    test "with spaces between the marker and the expression" do
+      tokens =
+        tokenize!("""
+        {=
+          @class
+        }\
+        """)
+
+      assert [
+               {:tagged_expr, "=",
+                {:expr, "@class\n", %{line: 2, column: 3, line_end: 3, column_end: 1}},
+                %{line: 1, column: 2, line_end: 1, column_end: 3}}
+             ] = tokens
+    end
+
+    test "raise on incomplete comment (EOF)" do
+      message = """
+      nofile:3:7: expected closing `}` for tagged expression `{...` begining at line: 2, column: 4\
+      """
+
+      assert_raise ParseError, message, fn ->
+        tokenize!("""
+        <div
+          {...@attrs>
+        </div>\
         """)
       end
     end
@@ -500,20 +738,47 @@ defmodule Surface.Compiler.TokenizerTest do
     end
 
     test "raise on incomplete attribute expression (EOF)" do
-      assert_raise ParseError, "nofile:2:15: expected closing `}` for expression", fn ->
+      message = "nofile:3:7: expected closing `}` for expression begining at line: 2, column: 10"
+
+      assert_raise ParseError, message, fn ->
         tokenize!("""
         <div
-          class={panel\
+          class={panel>
+        </div>\
         """)
       end
     end
   end
 
+  describe "attributes as tagged expressions" do
+    test "value is represented as {:tagged_expr, marker, expr, meta}" do
+      attrs = tokenize_attrs(~S(<div title={~"My title"}>))
+
+      assert [
+               {
+                 "title",
+                 {:tagged_expr, "~",
+                  {:expr, "\"My title\"", %{column: 14, line: 1, column_end: 24, line_end: 1}},
+                  %{column: 13, line: 1, column_end: 14, line_end: 1}},
+                 %{column: 6, column_end: 11, line: 1, line_end: 1}
+               }
+             ] = attrs
+    end
+  end
+
   describe "root attributes" do
-    test "represented as {:root, value, meta}" do
+    test "as expression" do
       attrs = tokenize_attrs("<div {@attrs}>")
 
       assert [{:root, {:expr, "@attrs", %{}}, %{}}] = attrs
+    end
+
+    test "as tagged expression" do
+      attrs = tokenize_attrs("<div {...@attrs}>")
+
+      assert [
+               {:root, {:tagged_expr, "...", {:expr, "@attrs", %{}}, %{}}, %{}}
+             ] = attrs
     end
 
     test "with space after" do
@@ -560,21 +825,29 @@ defmodule Surface.Compiler.TokenizerTest do
               @root2
             }
           {@root3}
+          {...@attrs}
         >\
         """)
 
       assert [
                {:root, {:expr, "@root1", %{line: 2, column: 4}}, %{}},
                {:root, {:expr, "\n      @root2\n    ", %{line: 3, column: 6}}, %{}},
-               {:root, {:expr, "@root3", %{line: 6, column: 4}}, %{}}
+               {:root, {:expr, "@root3", %{line: 6, column: 4}}, %{}},
+               {:root,
+                {:tagged_expr, "...",
+                 {:expr, "@attrs", %{line: 7, column: 7, line_end: 7, column_end: 13}},
+                 %{line: 7, column: 4, line_end: 7, column_end: 7}}, %{}}
              ] = attrs
     end
 
     test "raise on incomplete expression (EOF)" do
-      assert_raise ParseError, "nofile:2:10: expected closing `}` for expression", fn ->
+      message = "nofile:3:7: expected closing `}` for expression begining at line: 2, column: 4"
+
+      assert_raise ParseError, message, fn ->
         tokenize!("""
         <div
-          {@attrs\
+          {@attrs id="123">
+        </div>\
         """)
       end
     end

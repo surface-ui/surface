@@ -20,7 +20,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      {{ @as }}
+      {inspect(@as)}
       """
     end
   end
@@ -113,10 +113,49 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  describe "atom" do
+    test "passing an atom" do
+      html =
+        render_surface do
+          ~H"""
+          <AtomProp as={:some_atom}/>
+          """
+        end
+
+      assert html =~ ":some_atom"
+    end
+
+    test "passing an atom as expression" do
+      assigns = %{atom: :some_atom}
+
+      html =
+        render_surface do
+          ~H"""
+          <AtomProp as={@atom}/>
+          """
+        end
+
+      assert html =~ ":some_atom"
+    end
+
+    test "validate invalid atom at compile time" do
+      code =
+        quote do
+          ~H"""
+          <AtomProp as="some string"/>
+          """
+        end
+
+      message = ~S(code:1: invalid value for property "as". Expected a :atom, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
+      end)
+    end
+  end
+
   describe "string" do
     test "passing a string literal" do
-      assigns = %{text: "text"}
-
       html =
         render_surface do
           ~H"""
@@ -702,11 +741,9 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
-  test "warn if prop of type :atom is passed as literal string" do
+  test "warn if attrs are specified multiple times for html tag" do
     id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestComponentWithAtomPropPassedAsString_#{id}"
-
-    alias Surface.PropertiesTest.AtomProp, warn: false
+    module = "TestComponentWithAttrsSpecifiedMultipleTimes_#{id}"
 
     code = """
     defmodule #{module} do
@@ -714,8 +751,9 @@ defmodule Surface.PropertiesSyncTest do
 
       def render(assigns) do
         ~H"\""
-        <AtomProp
-          as="first"
+        <div
+          class="foo"
+          class="bar"
         />
         "\""
       end
@@ -729,11 +767,12 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           automatic conversion of string literals into atoms is deprecated and will be removed in v0.5.0.
+           the attribute `class` has been passed multiple times on line 6. \
+           Considering only the last value.
 
-           Hint: replace `as="first"` with `as={{ :first }}`
+           Hint: remove all redundant definitions
 
-             code.exs:7:\
+             code.exs:8:\
            """
   end
 

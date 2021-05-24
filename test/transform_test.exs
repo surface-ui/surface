@@ -169,7 +169,7 @@ defmodule Surface.TransformTest do
 
     assert_raise(
       Surface.Compiler.ParseError,
-      "nofile:1:2: expected closing tag for <DivToSpan> defined on line 1, got EOF",
+      "nofile:1:2: expected closing node for <DivToSpan> defined on line 1, got EOF",
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

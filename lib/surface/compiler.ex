@@ -229,13 +229,13 @@ defmodule Surface.Compiler do
   defp node_type({"slot", _, _, _}), do: :slot
 
   # Conditional blocks
-  defp node_type({"#if", _, _, _}), do: :if_elseif_else
-  defp node_type({"#elseif", _, _, _}), do: :if_elseif_else
-  defp node_type({"#else", _, _, _}), do: :else
-  defp node_type({"#unless", _, _, _}), do: :unless
+  defp node_type({:block, "if", _, _, _}), do: :if_elseif_else
+  defp node_type({:block, "elseif", _, _, _}), do: :if_elseif_else
+  defp node_type({:block, "else", _, _, _}), do: :else
+  defp node_type({:block, "unless", _, _, _}), do: :unless
 
   # For
-  defp node_type({"#for", _, _, _}), do: :for_else
+  defp node_type({:block, "for", _, _, _}), do: :for_else
 
   # Raw
   defp node_type({"#raw", _, _, _}), do: :raw
@@ -244,8 +244,8 @@ defmodule Surface.Compiler do
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
-  defp node_type({:interpolation, _, _}), do: :interpolation
-  defp node_type({:comment, _}), do: :comment
+  defp node_type({:expr, _, _}), do: :interpolation
+  defp node_type({:comment, _, _}), do: :comment
   defp node_type(_), do: :text
 
   defp process_directives(%{directives: directives} = node) when is_list(directives) do
@@ -258,7 +258,10 @@ defmodule Surface.Compiler do
 
   defp process_directives(node), do: node
 
-  defp convert_node_to_ast(:comment, _, _), do: :ignore
+  defp convert_node_to_ast(:comment, {_, _comment, %{visibility: :private}}, _), do: :ignore
+
+  defp convert_node_to_ast(:comment, {_, comment, %{visibility: :public}}, _),
+    do: {:ok, %AST.Literal{value: comment}}
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Literal{value: text}}
@@ -284,7 +287,7 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :else,
-         {_name, _attributes, children, node_meta},
+         {:block, _name, _expr, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
@@ -299,22 +302,22 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :if_elseif_else,
-         {_name, attributes, children, node_meta},
+         {:block, _name, attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
-    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+    condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
 
     [if_children, else_children] =
       case children do
-        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+        [{:block, :default, [], default, _}, {:block, "else", _, _, _} = else_block] ->
           [default, [else_block]]
 
-        [{:default, [], default, _}, {"#elseif", a, c, m} | rest] ->
-          [default, [{"#elseif", a, [{:default, [], c, %{}} | rest], m}]]
+        [{:block, :default, [], default, _}, {:block, "elseif", a, c, m} | rest] ->
+          [default, [{:block, "elseif", a, [{:block, :default, [], c, %{}} | rest], m}]]
 
-        [{:default, [], default, _}] ->
+        [{:block, :default, [], default, _}] ->
           [default, []]
 
         children ->
@@ -332,12 +335,12 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :unless,
-         {_, attributes, children, node_meta},
+         {:block, _name, attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: meta}
-    condition = attribute_value_as_ast(attributes, "condition", default, compile_meta)
+    condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
 
     {:ok,
      %AST.If{
@@ -350,16 +353,16 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :for_else,
-         {_name, attributes, children, node_meta},
+         {:block, _name, attributes, children, node_meta},
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = %AST.AttributeExpr{value: false, original: "", meta: meta}
-    generator = attribute_value_as_ast(attributes, "each", :generator, default, compile_meta)
+    generator = attribute_value_as_ast(attributes, :root, :generator, default, compile_meta)
 
     [for_children, else_children] =
       case children do
-        [{:default, [], default, _}, {"#else", _, _, _} = else_block] ->
+        [{:block, :default, [], default, _}, {:block, "else", _, _, _} = else_block] ->
           [default, [else_block]]
 
         children ->
@@ -703,39 +706,56 @@ defmodule Surface.Compiler do
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
 
-    accumulate? = Keyword.get(type_opts, :accumulate, false)
+    duplicated_attr? = Keyword.has_key?(acc, name)
+    duplicated_prop? = mod && (!Keyword.get(type_opts, :accumulate, false) and duplicated_attr?)
+    duplicated_html_attr? = !mod && duplicated_attr?
+    root_prop? = Keyword.get(type_opts, :root, false)
 
-    if not accumulate? and Keyword.has_key?(acc, name) do
-      message =
-        if Keyword.get(type_opts, :root, false) do
-          """
-          the prop `#{name}` has been passed multiple times. Considering only the last value.
+    cond do
+      duplicated_prop? && root_prop? ->
+        message = """
+        the prop `#{name}` has been passed multiple times. Considering only the last value.
 
-          Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
-          explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
-          """
-        else
-          """
-          the prop `#{name}` has been passed multiple times. Considering only the last value.
+        Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
+        explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
+        """
 
-          Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
 
-          ```
-            prop #{name}, :#{type}, accumulate: true
-          ```
+      duplicated_prop? && not root_prop? ->
+        message = """
+        the prop `#{name}` has been passed multiple times. Considering only the last value.
 
-          This way the values will be accumulated in a list.
-          """
-        end
+        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
-      IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        ```
+          prop #{name}, :#{type}, accumulate: true
+        ```
+
+        This way the values will be accumulated in a list.
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      duplicated_html_attr? ->
+        message = """
+        the attribute `#{name}` has been passed multiple times on line #{meta.line}. \
+        Considering only the last value.
+
+        Hint: remove all redundant definitions
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      true ->
+        nil
     end
 
     if unquoted_string? do
       message = """
-        passing unquoted attribute values has been deprecated and will be removed in future versions.
+      passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-        Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
+      Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
       """
 
       IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
@@ -770,9 +790,7 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([%AST.Template{name: name} | _]) do
     {:error,
-     "templates are only allowed as children elements of components, but found template for #{
-       name
-     }"}
+     "templates are only allowed as children elements of components, but found template for #{name}"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
@@ -1051,15 +1069,15 @@ defmodule Surface.Compiler do
 
   defp raise_complex_generator(meta) do
     message = """
-    using `<#else>` is only supported when the expression in `<#for>` has a single generator and no filters.
+    using `{#else}` is only supported when the expression in `{#for}` has a single generator and no filters.
 
     Example:
 
-      <#for each={i <- [1, 2, 3]}>
+      {#for i <- [1, 2, 3]}
         ...
-      <#else>
+      {#else}
         ...
-      </#for>
+      {/for}
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)

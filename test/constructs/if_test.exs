@@ -46,7 +46,7 @@ defmodule Surface.Constructs.IfTest do
            using <If> to wrap elements in an if expression has been deprecated and will be removed in \
            future versions.
 
-           Hint: replace `<If>` with `<#if>`
+           Hint: replace `<If>` with `{#if}`
 
              code:1:\
            """
@@ -62,7 +62,7 @@ defmodule Surface.Constructs.IfTest do
         """
       end
 
-    message = ~S(code:2:12: expected closing tag for <span> defined on line 2, got </If>)
+    message = ~S(code:2:12: expected closing node for <span> defined on line 2, got </If>)
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
       capture_io(:standard_error, fn ->
@@ -93,10 +93,10 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={true}>
+          {#if true}
           <span>The inner content</span>
           <span>with multiple tags</span>
-          </#if>
+          {/if}
           """
         end
 
@@ -110,9 +110,9 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={true}>
+          {#if true}
             <SomeComponent content="The inner content" />
-          </#if>
+          {/if}
           """
         end
 
@@ -125,13 +125,13 @@ defmodule Surface.Constructs.IfTest do
       code =
         quote do
           ~H"""
-          <#if condition={true}>
+          {#if true}
             <span>The inner content
-          </#if>
+          {/if}
           """
         end
 
-      message = ~S(code:2:14: expected closing tag for <span> defined on line 2, got </#if>)
+      message = ~S(code:2:14: expected closing node for <span> defined on line 2, got {/if})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
@@ -142,9 +142,9 @@ defmodule Surface.Constructs.IfTest do
       code =
         quote do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             <ListProp prop="some string" />
-          </#if>
+          {/if}
           """
         end
 
@@ -162,19 +162,19 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={true}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#if>
+          {#if true}
+            <span>The inner content</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/if}
           """
         end
 
       assert html =~ """
-             <span>The inner content</span>
-             <span>with multiple tags</span>
+               <span>The inner content</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -182,19 +182,19 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#if>
+          {#if false}
+            <span>The inner content</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/if}
           """
         end
 
       assert html =~ """
-             <span>The else content</span>
-             <span>with multiple tags</span>
+               <span>The else content</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -202,17 +202,17 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          <#else>
+          {#if false}
+            <span>The inner content</span>
+            <span>with multiple tags</span>
+          {#else}
             <SomeComponent content="The else content" />
-          </#if>
+          {/if}
           """
         end
 
       assert html =~ """
-             <span>The else content</span>
+               <span>The else content</span>
              """
     end
   end
@@ -222,13 +222,13 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             IF
-          <#elseif condition={true}>
+          {#elseif true}
             ELSEIF TRUE
-          <#else>
+          {#else}
             ELSE
-          </#if>
+          {/if}
           """
         end
 
@@ -241,11 +241,11 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             IF
-          <#elseif condition={true}>
+          {#elseif true}
             ELSEIF TRUE
-          </#if>
+          {/if}
           """
         end
 
@@ -258,13 +258,13 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             IF
-          <#elseif condition={false}>
+          {#elseif false}
             ELSEIF FALSE
-          <#elseif condition={false}>
+          {#elseif false}
             ELSEIF TRUE
-          </#if>
+          {/if}
           """
         end
 
@@ -275,22 +275,22 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          <#elseif condition={false}>
-          <span>The elseif content</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#if>
+          {#if false}
+            <span>The inner content</span>
+            <span>with multiple tags</span>
+          {#elseif false}
+            <span>The elseif content</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/if}
           """
         end
 
       assert html =~ """
-             <span>The else content</span>
-             <span>with multiple tags</span>
+               <span>The else content</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -298,22 +298,22 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={true}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          <#elseif condition={true}>
-          <span>The elseif content</span>
-          <span>with multiple tags</span>
-          <#else>
-          <span>The else content</span>
-          <span>with multiple tags</span>
-          </#if>
+          {#if true}
+            <span>The inner content</span>
+            <span>with multiple tags</span>
+          {#elseif true}
+            <span>The elseif content</span>
+            <span>with multiple tags</span>
+          {#else}
+            <span>The else content</span>
+            <span>with multiple tags</span>
+          {/if}
           """
         end
 
       assert html =~ """
-             <span>The inner content</span>
-             <span>with multiple tags</span>
+               <span>The inner content</span>
+               <span>with multiple tags</span>
              """
     end
   end
@@ -323,23 +323,23 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             IF
-          <#elseif condition={false}>
+          {#elseif false}
             ELSEIF FALSE
-          <#elseif condition={true}>
+          {#elseif true}
             BEFORE
-            <#if condition={false}>
+            {#if false}
               NESTED IF
-            <#elseif condition={true}>
+            {#elseif true}
               NESTED ELSEIF TRUE
-            <#else>
+            {#else}
               NESTED FALSE
-            </#if>
+            {/if}
             AFTER
-          <#else>
+          {#else}
             ELSE
-          </#if>
+          {/if}
           """
         end
 
@@ -354,23 +354,23 @@ defmodule Surface.Constructs.IfTest do
       code =
         quote do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             IF
-          <#elseif condition={false}>
+          {#elseif false}
             ELSEIF FALSE
-          <#elseif condition={true}>
+          {#elseif true}
             BEFORE
-            <#if condition={false}>
+            {#if false}
               NESTED IF
-            <#elseif condition={true}>
+            {#elseif true}
               NESTED ELSEIF TRUE
-            <#else>
+            {#else}
               <ListProp prop="some string" />
-            </#if>
+            {/if}
             AFTER
-          <#else>
+          {#else}
             ELSE
-          </#if>
+          {/if}
           """
         end
 
@@ -386,28 +386,28 @@ defmodule Surface.Constructs.IfTest do
       code =
         quote do
           ~H"""
-          <#if condition={false}>
+          {#if false}
             IF
-          <#elseif condition={false}>
+          {#elseif false}
             ELSEIF FALSE
-          <#elseif condition={true}>
+          {#elseif true}
             BEFORE
-            <#if condition={false}>
+            {#if false}
               NESTED IF
-            <#elseif condition={true}>
+            {#elseif true}
               NESTED ELSEIF TRUE
-            <#else>
+            {#else}
               ELSE
               <span>Some text
-            </#if>
+            {/if}
             AFTER
-          <#else>
+          {#else}
             ELSE
-          </#if>
+          {/if}
           """
         end
 
-      message = ~S(code:13:16: expected closing tag for <span> defined on line 13, got </#if>)
+      message = ~S(code:13:16: expected closing node for <span> defined on line 13, got {/if})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
@@ -420,16 +420,16 @@ defmodule Surface.Constructs.IfTest do
       html =
         render_surface do
           ~H"""
-          <#unless condition={false}>
-          <span>The inner content</span>
-          <span>with multiple tags</span>
-          </#unless>
+          {#unless false}
+            <span>The inner content</span>
+            <span>with multiple tags</span>
+          {/unless}
           """
         end
 
       assert html =~ """
-             <span>The inner content</span>
-             <span>with multiple tags</span>
+               <span>The inner content</span>
+               <span>with multiple tags</span>
              """
     end
 
@@ -437,13 +437,13 @@ defmodule Surface.Constructs.IfTest do
       code =
         quote do
           ~H"""
-          <#unless condition={false}>
+          {#unless false}
             <span>The inner content
-          </#unless>
+          {/unless}
           """
         end
 
-      message = ~S(code:2:14: expected closing tag for <span> defined on line 2, got </#unless>)
+      message = ~S(code:2:14: expected closing node for <span> defined on line 2, got {/unless})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
@@ -454,9 +454,9 @@ defmodule Surface.Constructs.IfTest do
       code =
         quote do
           ~H"""
-          <#unless condition={false}>
+          {#unless false}
             <ListProp prop="some string" />
-          </#unless>
+          {/unless}
           """
         end
 
