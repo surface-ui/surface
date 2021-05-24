@@ -102,13 +102,12 @@ defmodule Surface.Compiler do
       file: file,
       line: line,
       caller: caller,
-      translator: Surface.Compiler.AstTranslator,
       checks: opts[:checks] || [],
       warnings: opts[:warnings] || [],
       column: Keyword.get(opts, :column, 1),
       indentation: Keyword.get(opts, :indentation, 0)
     )
-    # |> to_ast(compile_meta)
+    |> to_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
   end
 
