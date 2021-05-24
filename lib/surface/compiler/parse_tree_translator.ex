@@ -9,7 +9,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {state, {:interpolation, expression, to_meta(meta)}}
   end
 
-  def handle_comment(state, comment) do
+  def handle_comment(state, comment, _meta) do
     {state, {:comment, comment}}
   end
 
@@ -67,6 +67,10 @@ defmodule Surface.Compiler.ParseTreeTranslator do
   end
 
   def context_for_subblock(_state, _name, _parent_name, _meta) do
+    nil
+  end
+
+  def context_for_block(_state, _name, _parent_name, _meta) do
     nil
   end
 

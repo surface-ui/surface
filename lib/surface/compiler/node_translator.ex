@@ -12,6 +12,8 @@ defmodule Surface.Compiler.NodeTranslator do
 
   @callback context_for_node(state :: state(), name :: binary(), meta :: parse_metadata()) ::
               context()
+  @callback context_for_block(state :: state(), name :: binary(), meta :: parse_metadata()) ::
+              context()
   @callback context_for_subblock(
               state :: state(),
               block_name :: :default | binary(),
@@ -31,7 +33,7 @@ defmodule Surface.Compiler.NodeTranslator do
   @callback handle_init(state :: state()) :: state()
 
   @callback handle_literal(state :: state(), value :: binary()) :: {state(), any()}
-  @callback handle_comment(state :: state(), comment :: binary()) :: {state(), any()}
+  @callback handle_comment(state :: state(), comment :: binary(), meta :: parse_metadata()) :: {state(), any()}
 
   @callback handle_node(
               state :: state(),

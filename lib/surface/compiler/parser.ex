@@ -58,7 +58,7 @@ defmodule Surface.Compiler.Parser do
     handle_token(tokens, [[]], state.translator.handle_init(state))
   end
 
-  defp handle_token([], [buffer], state) do
+  defp handle_token([], [buffer], _state) do
     Enum.reverse(buffer)
   end
 
@@ -76,7 +76,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:comment, comment, meta} | rest], buffers, state) do
-    {state, node} = state.translator.handle_comment(state, comment)
+    {state, node} = state.translator.handle_comment(state, comment, meta)
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
@@ -133,11 +133,20 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:tag_close, name, _meta} = token | rest], buffers, state) do
-    {{:tag_open, _name, attrs, meta}, state} = pop_matching_tag(state, token)
+    {{:tag_open, _name, attrs, meta}, context, state} = pop_matching_tag(state, token)
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
-    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
+    {state, node} =
+      state.translator.handle_node(
+        state,
+        context,
+        name,
+        translate_attrs(state, context, attrs),
+        Enum.reverse(buffer),
+        meta
+      )
+
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
@@ -162,8 +171,10 @@ defmodule Surface.Compiler.Parser do
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
 
+    context = state.translator.context_for_subblock(state, name, parent_context(state.tags), meta)
+
     # push the current sub-block token to state
-    state = push_tag(state, {:block_open, name, attrs, meta})
+    state = push_tag(state, {:block_open, name, attrs, meta}, context)
 
     # create a new buffer for the current sub-block
     buffers = [[] | buffers]
@@ -173,7 +184,9 @@ defmodule Surface.Compiler.Parser do
 
   defp handle_token([{:block_open, name, _attrs, _meta} = token | rest], buffers, state)
        when name in @blocks do
-    state = push_tag(state, token)
+    context = state.translator.context_for_block(state, name, meta)
+
+    state = push_tag(state, token, context)
     # create a new buffer for the node
     buffers = [[] | buffers]
     handle_token(rest, buffers, state)
@@ -200,7 +213,14 @@ defmodule Surface.Compiler.Parser do
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
-    node = {:block, name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
+    {state, node} = state.translator.handle_subblock(
+      state,
+      context,
+      name,
+      attrs,
+      Enum.reverse(buffer),
+      meta
+    )
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
