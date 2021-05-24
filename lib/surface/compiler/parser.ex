@@ -183,7 +183,7 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:block_open, name, _attrs, _meta} = token | rest], buffers, state)
+  defp handle_token([{:block_open, name, _attrs, meta} = token | rest], buffers, state)
        when name in @blocks do
     context = state.translator.context_for_block(state, name, meta)
 
