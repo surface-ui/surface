@@ -137,6 +137,7 @@ defmodule Surface.Compiler.Parser do
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
+
     {state, node} =
       state.translator.handle_node(
         state,
@@ -213,14 +214,17 @@ defmodule Surface.Compiler.Parser do
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
-    {state, node} = state.translator.handle_subblock(
-      state,
-      context,
-      name,
-      attrs,
-      Enum.reverse(buffer),
-      meta
-    )
+
+    {state, node} =
+      state.translator.handle_subblock(
+        state,
+        context,
+        name,
+        attrs,
+        Enum.reverse(buffer),
+        meta
+      )
+
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
@@ -258,7 +262,11 @@ defmodule Surface.Compiler.Parser do
 
   # If there's no previous sub-block defined. Create a :default sub-block,
   # move the buffer there and close it.
-  defp close_sub_block(token, buffers, %{tags: [{{:block_open, name, attrs, meta}, ctx} | tags]} = state) do
+  defp close_sub_block(
+         token,
+         buffers,
+         %{tags: [{{:block_open, name, attrs, meta}, ctx} | tags]} = state
+       ) do
     validate_sub_block!(token, name)
 
     # pop the current buffer and use it as children for the :default sub-block node
