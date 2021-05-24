@@ -20,7 +20,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~H"""
-      {{ @as }}
+      {inspect(@as)}
       """
     end
   end
@@ -113,10 +113,49 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  describe "atom" do
+    test "passing an atom" do
+      html =
+        render_surface do
+          ~H"""
+          <AtomProp as={:some_atom}/>
+          """
+        end
+
+      assert html =~ ":some_atom"
+    end
+
+    test "passing an atom as expression" do
+      assigns = %{atom: :some_atom}
+
+      html =
+        render_surface do
+          ~H"""
+          <AtomProp as={@atom}/>
+          """
+        end
+
+      assert html =~ ":some_atom"
+    end
+
+    test "validate invalid atom at compile time" do
+      code =
+        quote do
+          ~H"""
+          <AtomProp as="some string"/>
+          """
+        end
+
+      message = ~S(code:1: invalid value for property "as". Expected a :atom, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
+      end)
+    end
+  end
+
   describe "string" do
     test "passing a string literal" do
-      assigns = %{text: "text"}
-
       html =
         render_surface do
           ~H"""
@@ -734,41 +773,6 @@ defmodule Surface.PropertiesSyncTest do
            Hint: remove all redundant definitions
 
              code.exs:8:\
-           """
-  end
-
-  test "warn if prop of type :atom is passed as literal string" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestComponentWithAtomPropPassedAsString_#{id}"
-
-    alias Surface.PropertiesTest.AtomProp, warn: false
-
-    code = """
-    defmodule #{module} do
-      use Surface.Component
-
-      def render(assigns) do
-        ~H"\""
-        <AtomProp
-          as="first"
-        />
-        "\""
-      end
-    end
-    """
-
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
-
-    assert output =~ ~r"""
-           automatic conversion of string literals into atoms is deprecated and will be removed in v0.5.0.
-
-           Hint: replace `as="first"` with `as={{ :first }}`
-
-             code.exs:7:\
            """
   end
 
