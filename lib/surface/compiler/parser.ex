@@ -36,7 +36,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([], [buffer], state) do
-    state.translator.handle_end(state, Enum.reverse(buffer))
+    Enum.reverse(buffer)
   end
 
   defp handle_token([], _buffers, %{tags: [{{:tag_open, tag_name, _attrs, meta}, _ctx} | _]}) do

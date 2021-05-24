@@ -56,6 +56,4 @@ defmodule Surface.Compiler.NodeTranslator do
               expression :: binary(),
               meta :: parse_metadata()
             ) :: {state(), any()}
-
-  @callback handle_end(state :: state(), children :: list()) :: any()
 end

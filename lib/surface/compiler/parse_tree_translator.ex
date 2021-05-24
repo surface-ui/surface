@@ -54,10 +54,6 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {state, text}
   end
 
-  def handle_end(_state, children) do
-    children
-  end
-
   def handle_attribute(_state, _context, name, {:expr, expr, expr_meta}, attr_meta) do
     {name, {:attribute_expr, expr, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
