@@ -204,7 +204,7 @@ defmodule Surface.Compiler.Parser do
         state,
         context,
         name,
-        attrs,
+        translate_attrs(state, context, attrs),
         Enum.reverse(buffer),
         meta
       )
