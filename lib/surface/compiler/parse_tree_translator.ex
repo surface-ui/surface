@@ -5,15 +5,15 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
   def handle_init(state), do: state
 
-  def handle_expression(state, expression, meta) do
+  def handle_expression(expression, meta, state) do
     {state, {:expr, expression, to_meta(meta)}}
   end
 
-  def handle_comment(state, comment, meta) do
+  def handle_comment(comment, meta, state) do
     {state, {:comment, comment, meta}}
   end
 
-  def handle_node(state, context, "template", attributes, body, meta) do
+  def handle_node("template", attributes, body, meta, state, context) do
     message = """
     using <template> to fill slots has been deprecated and will be removed in \
     future versions.
@@ -23,10 +23,10 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
     IOHelper.warn(message, state.caller, fn _ -> meta.line end)
 
-    handle_node(state, context, "#template", attributes, body, meta)
+    handle_node("#template", attributes, body, meta, state, context)
   end
 
-  def handle_node(state, context, "slot", attributes, body, meta) do
+  def handle_node("slot", attributes, body, meta, state, context) do
     message = """
     using <slot> to define component slots has been deprecated and will be removed in \
     future versions.
@@ -35,56 +35,56 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     """
 
     IOHelper.warn(message, state.caller, fn _ -> meta.line end)
-    handle_node(state, context, "#slot", attributes, body, meta)
+    handle_node("#slot", attributes, body, meta, state, context)
   end
 
-  def handle_node(state, _context, name, attributes, body, meta) do
+  def handle_node(name, attributes, body, meta, state, _context) do
     {state, {name, attributes, body, to_meta(meta)}}
   end
 
-  def handle_block(state, _context, name, expr, body, meta) do
+  def handle_block(name, expr, body, meta, state, _context) do
     {state, {:block, name, expr, body, to_meta(meta)}}
   end
 
-  def handle_subblock(state, _context, :default, expr, children, _meta) do
+  def handle_subblock(:default, expr, children, _meta, state, _context) do
     {state, {:block, :default, expr, children, %{}}}
   end
 
-  def handle_subblock(state, _context, name, expr, children, meta) do
+  def handle_subblock(name, expr, children, meta, state, _context) do
     {state, {:block, name, expr, children, to_meta(meta)}}
   end
 
-  def handle_text(state, text) do
+  def handle_text(text, state) do
     {state, text}
   end
 
   # TODO: Update these after accepting the expression directly instead of the :root attribute
-  def handle_block_expression(_state, _context, _block_name, nil) do
+  def handle_block_expression(_block_name, nil, _state, _context) do
     []
   end
 
-  def handle_block_expression(_state, _context, _block_name, {:expr, expr, expr_meta}) do
+  def handle_block_expression(_block_name, {:expr, expr, expr_meta}, _state, _context) do
     meta = to_meta(expr_meta)
     [{:root, {:attribute_expr, expr, meta}, meta}]
   end
 
-  def handle_attribute(_state, _context, name, {:expr, expr, expr_meta}, attr_meta) do
+  def handle_attribute(name, {:expr, expr, expr_meta}, attr_meta, _state, _context) do
     {name, {:attribute_expr, expr, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
 
-  def handle_attribute(_state, _context, name, value, attr_meta) do
+  def handle_attribute(name, value, attr_meta, _state, _context) do
     {name, value, to_meta(attr_meta)}
   end
 
-  def context_for_node(_state, _name, _meta) do
+  def context_for_node(_name, _meta, _state) do
     nil
   end
 
-  def context_for_subblock(_state, _name, _parent_name, _meta) do
+  def context_for_subblock(_name, _meta, _state, _parent_context) do
     nil
   end
 
-  def context_for_block(_state, _name, _meta) do
+  def context_for_block(_name, _meta, _state) do
     nil
   end
 

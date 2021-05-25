@@ -12,69 +12,69 @@ defmodule Surface.Compiler.NodeTranslator do
           warnings: keyword(boolean())
         }
 
-  @callback context_for_node(state :: state(), name :: binary(), meta :: parse_metadata()) ::
+  @callback context_for_node(name :: binary(), meta :: parse_metadata(), state :: state()) ::
               context()
-  @callback context_for_block(state :: state(), name :: binary(), meta :: parse_metadata()) ::
+  @callback context_for_block(name :: binary(), meta :: parse_metadata(), state :: state()) ::
               context()
   @callback context_for_subblock(
-              state :: state(),
               block_name :: :default | binary(),
-              parent_context :: context(),
-              meta :: parse_metadata()
+              meta :: parse_metadata(),
+              state :: state(),
+              parent_context :: context()
             ) ::
               context()
 
   @callback handle_attribute(
-              state :: state(),
-              context :: context(),
               name :: binary() | atom(),
               value :: binary() | {:expr, binary(), parse_metadata()},
-              attr_meta :: parse_metadata()
+              attr_meta :: parse_metadata(),
+              state :: state(),
+              context :: context()
             ) :: any()
 
   @callback handle_block_expression(
-              state :: state(),
-              context :: context(),
               block_name :: :default | binary(),
-              nil | {:expr, binary(), parse_metadata()}
+              nil | {:expr, binary(), parse_metadata()},
+              state :: state(),
+              context :: context()
             ) :: any()
 
   @callback handle_init(state :: state()) :: state()
 
-  @callback handle_text(state :: state(), value :: binary()) :: {state(), any()}
-  @callback handle_comment(state :: state(), comment :: binary(), meta :: parse_metadata()) ::
+  @callback handle_text(value :: binary(), state :: state()) :: {state(), any()}
+  @callback handle_comment(comment :: binary(), meta :: parse_metadata(), state :: state()) ::
               {state(), any()}
 
   @callback handle_node(
-              state :: state(),
-              context :: context(),
               name :: binary(),
               attrs :: list(),
               children :: list(),
-              meta :: parse_metadata()
+              meta :: parse_metadata(),
+              state :: state(),
+              context :: context()
             ) :: {state(), any()}
 
   @callback handle_block(
-              state :: state(),
-              context :: context(),
               name :: binary(),
               expr :: any(),
               children :: list(),
-              meta :: parse_metadata()
+              meta :: parse_metadata(),
+              state :: state(),
+              context :: context()
             ) :: {state(), any()}
 
   @callback handle_subblock(
-              state :: state(),
-              context :: context(),
               name :: binary(),
               expr :: any(),
               children :: list(),
-              meta :: parse_metadata()
+              meta :: parse_metadata(),
+              state :: state(),
+              context :: context()
             ) :: {state(), any()}
 
   @callback handle_expression(
-              state :: state(),
               expression :: binary(),
-              meta :: parse_metadata()
+              meta :: parse_metadata(),
+              state :: state()
             ) :: {state(), any()}
 end
