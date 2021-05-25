@@ -34,7 +34,7 @@ defmodule Surface.Compiler.NodeTranslator do
 
   @callback handle_init(state :: state()) :: state()
 
-  @callback handle_literal(state :: state(), value :: binary()) :: {state(), any()}
+  @callback handle_text(state :: state(), value :: binary()) :: {state(), any()}
   @callback handle_comment(state :: state(), comment :: binary(), meta :: parse_metadata()) ::
               {state(), any()}
 

@@ -54,7 +54,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {state, {:block, name, attrs, children, to_meta(meta)}}
   end
 
-  def handle_literal(state, text) do
+  def handle_text(state, text) do
     {state, text}
   end
 

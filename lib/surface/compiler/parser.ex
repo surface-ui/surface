@@ -54,7 +54,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
-    {state, node} = state.translator.handle_literal(state, text)
+    {state, node} = state.translator.handle_text(state, text)
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
