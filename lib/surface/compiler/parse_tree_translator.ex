@@ -43,7 +43,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
   end
 
   def handle_block(state, _context, name, attributes, body, meta) do
-    {:block, name, attributes, body, to_meta(meta)}
+    {state, {:block, name, attributes, body, to_meta(meta)}}
   end
 
   def handle_subblock(state, _context, :default, attrs, children, _meta) do
