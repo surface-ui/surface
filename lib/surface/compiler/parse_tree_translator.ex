@@ -9,8 +9,8 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {state, {:expr, expression, to_meta(meta)}}
   end
 
-  def handle_comment(state, comment, _meta) do
-    {state, {:comment, comment}}
+  def handle_comment(state, comment, meta) do
+    {state, {:comment, comment, meta}}
   end
 
   def handle_node(state, context, "template", attributes, body, meta) do

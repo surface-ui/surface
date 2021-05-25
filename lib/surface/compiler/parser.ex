@@ -46,7 +46,7 @@ defmodule Surface.Compiler.Parser do
     Enum.reverse(buffer)
   end
 
-  defp handle_token([], _buffers, %{tags: [{_, _name, _attrs, meta} = node | _]}) do
+  defp handle_token([], _buffers, %{tags: [{{_, _name, _attrs, meta} = node, _ctx} | _]}) do
     raise parse_error(
             "expected closing node for #{format_node(node)} defined on line #{meta.line}, got EOF",
             meta
