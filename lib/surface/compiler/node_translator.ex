@@ -1,7 +1,7 @@
 defmodule Surface.Compiler.NodeTranslator do
   @type parse_metadata :: %{line: non_neg_integer(), column: non_neg_integer(), file: binary()}
 
-  @type block_info :: {:block_open, binary(), list(), parse_metadata()}
+  @type block_info :: {:block_open, nil | Macro.t(), list(), parse_metadata()}
   @type tag_info :: {:tag_open, binary(), list(), parse_metadata()}
   @type context :: term()
 
@@ -51,7 +51,7 @@ defmodule Surface.Compiler.NodeTranslator do
               state :: state(),
               context :: context(),
               name :: binary(),
-              attrs :: list(),
+              expr :: nil | Macro.t(),
               children :: list(),
               meta :: parse_metadata()
             ) :: {state(), any()}
@@ -60,7 +60,7 @@ defmodule Surface.Compiler.NodeTranslator do
               state :: state(),
               context :: context(),
               name :: binary(),
-              attrs :: list(),
+              expr :: nil | Macro.t(),
               children :: list(),
               meta :: parse_metadata()
             ) :: {state(), any()}

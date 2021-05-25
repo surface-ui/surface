@@ -136,30 +136,15 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  # TODO: Remove these after accepting the expression directly instead of the :root attribute
-  defp handle_token(
-         [{:block_open, name, {:expr, expr, expr_meta}, meta} | rest],
-         buffers,
-         state
-       ) do
-    attrs = [{:root, {:expr, expr, expr_meta}, expr_meta}]
-    handle_token([{:block_open, name, attrs, meta} | rest], buffers, state)
-  end
-
-  defp handle_token([{:block_open, name, nil, meta} | rest], buffers, state) do
-    handle_token([{:block_open, name, [], meta} | rest], buffers, state)
-  end
-
-  ###
-
-  defp handle_token([{:block_open, name, attrs, meta} = token | rest], buffers, state)
+  defp handle_token([{:block_open, name, expr, meta} = token | rest], buffers, state)
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
 
-    context = state.translator.context_for_subblock(state, name, parent_context(state.token_stack), meta)
+    context =
+      state.translator.context_for_subblock(state, name, parent_context(state.token_stack), meta)
 
     # push the current sub-block token to state
-    state = push_tag(state, {:block_open, name, attrs, meta}, context)
+    state = push_tag(state, {:block_open, name, expr, meta}, context)
 
     # create a new buffer for the current sub-block
     buffers = [[] | buffers]
@@ -167,7 +152,7 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:block_open, name, _attrs, meta} = token | rest], buffers, state)
+  defp handle_token([{:block_open, name, _expr, meta} = token | rest], buffers, state)
        when name in @blocks do
     context = state.translator.context_for_block(state, name, meta)
 
@@ -177,7 +162,7 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:block_open, name, _attrs, meta} | _], _buffers, _state) do
+  defp handle_token([{:block_open, name, _expr, meta} | _], _buffers, _state) do
     blocks = Helpers.list_to_string("block is", "blocks are", @blocks ++ @sub_blocks)
     raise parse_error("unknown `{##{name}}` block. Available #{blocks}", meta)
   end
@@ -194,7 +179,7 @@ defmodule Surface.Compiler.Parser do
 
   defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state)
        when name in @blocks do
-    {{:block_open, _name, attrs, meta}, context, state} = pop_matching_tag(state, token)
+    {{:block_open, _name, expr, meta}, context, state} = pop_matching_tag(state, token)
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
@@ -204,7 +189,7 @@ defmodule Surface.Compiler.Parser do
         state,
         context,
         name,
-        translate_attrs(state, context, attrs),
+        expr,
         Enum.reverse(buffer),
         meta
       )
@@ -222,7 +207,7 @@ defmodule Surface.Compiler.Parser do
   defp close_sub_block(
          _token,
          buffers,
-         %{token_stack: [{{:block_open, name, attrs, meta}, context} | tokens]} = state
+         %{token_stack: [{{:block_open, name, expr, meta}, context} | tokens]} = state
        )
        when name in @sub_blocks do
     # pop the current buffer and use it as children for the sub-block node
@@ -233,7 +218,7 @@ defmodule Surface.Compiler.Parser do
         state,
         context,
         name,
-        translate_attrs(state, context, attrs),
+        expr,
         Enum.reverse(buffer),
         meta
       )
@@ -249,7 +234,7 @@ defmodule Surface.Compiler.Parser do
   defp close_sub_block(
          token,
          buffers,
-         %{token_stack: [{{:block_open, name, attrs, meta}, ctx} | tokens]} = state
+         %{token_stack: [{{:block_open, name, expr, meta}, ctx} | tokens]} = state
        ) do
     validate_sub_block!(token, name)
 
@@ -259,7 +244,7 @@ defmodule Surface.Compiler.Parser do
     context = state.translator.context_for_subblock(state, :default, ctx, meta)
 
     {state, node} =
-      state.translator.handle_subblock(state, context, :default, [], Enum.reverse(buffer), meta)
+      state.translator.handle_subblock(state, context, :default, nil, Enum.reverse(buffer), meta)
 
     # create a new buffer for the parent node to replace the one that was popped
     buffers = [[] | buffers]
@@ -267,18 +252,18 @@ defmodule Surface.Compiler.Parser do
 
     # push back the parent token to state
     meta = Map.put(meta, :has_sub_blocks?, true)
-    state = %{state | token_stack: [{{:block_open, name, attrs, meta}, ctx} | tokens]}
+    state = %{state | token_stack: [{{:block_open, name, expr, meta}, ctx} | tokens]}
 
     {buffers, state}
   end
 
   # If there's no parent node
-  defp close_sub_block({:block_open, name, _attrs, meta}, _buffers, _state) do
+  defp close_sub_block({:block_open, name, _expr, meta}, _buffers, _state) do
     message = message_for_invalid_sub_block_parent(name)
     raise parse_error(message, meta)
   end
 
-  defp validate_sub_block!({:block_open, name, _attrs, meta}, parent_name) do
+  defp validate_sub_block!({:block_open, name, _expr, meta}, parent_name) do
     if parent_name not in @sub_blocks_valid_parents[name] do
       message = message_for_invalid_sub_block_parent(name)
       raise parse_error(message, meta)
