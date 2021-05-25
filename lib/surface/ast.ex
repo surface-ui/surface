@@ -45,6 +45,7 @@ defmodule Surface.AST.Expr do
   ## Properties
       * `:value` - a quoted expression
       * `:meta` - compile meta
+      * `:directives` - directives associated with this expression node
   """
   defstruct [:value, :meta, directives: []]
 
@@ -124,6 +125,7 @@ defmodule Surface.AST.For do
       * `:children` - the children to collect over the generator
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
+      * `:directives` - directives associated with this node
   """
   defstruct [:generator, :children, :meta, else: [], debug: [], directives: []]
 
@@ -146,6 +148,7 @@ defmodule Surface.AST.If do
       * `:else` - the children to insert into the dom if the condition evaluates falsy
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
+      * `:directives` - directives associated with this node
   """
   defstruct [:condition, :children, :meta, else: [], debug: [], directives: []]
 
@@ -224,6 +227,7 @@ defmodule Surface.AST.Interpolation do
       * `:original` - the original text, useful for debugging and error messages
       * `:value` - a quoted expression
       * `:meta` - compilation meta data
+      * `:directives` - directives associated with this interpolation
   """
   defstruct [:original, :value, :meta, directives: []]
 
@@ -246,6 +250,7 @@ defmodule Surface.AST.Slot do
       * `:default` - a list of AST nodes representing the default content for this slot
       * `:props` - either an atom or a quoted expression representing bindings for this slot
       * `:meta` - compilation meta data
+      * `:directives` - directives associated with this slot
   """
   defstruct [:name, :index, :props, :default, :meta, directives: []]
 
@@ -267,6 +272,7 @@ defmodule Surface.AST.Literal do
 
   ## Properties
       * `:value` - the value
+      * `:directives` - directives associated with this literal value
   """
   defstruct [:value, directives: []]
 
@@ -332,6 +338,7 @@ defmodule Surface.AST.Template do
       * `:children` - the template children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
+      * `:directives` - directives associated with this template
   """
   defstruct [:name, :children, :let, :meta, directives: []]
 
@@ -352,6 +359,7 @@ defmodule Surface.AST.Error do
   ## Properties
       * `:message` - the error message
       * `:meta` - compilation meta data
+      * `:directives` - directives associated with this error node
   """
   defstruct [:message, :meta, directives: []]
 
@@ -399,8 +407,8 @@ defmodule Surface.AST.MacroComponent do
   ## Properties
       * `:module` - the component module
       * `:attributes` - the specified attributes
-      * `:directives` - any directives to be applied to this tag
-      * `:children` - the tag children
+      * `:directives` - any directives to be applied to this macro
+      * `:body` - the macro body
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
