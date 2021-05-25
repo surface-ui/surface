@@ -399,7 +399,14 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_maybe_tag_open_end("{" <> rest, line, column, acc, state) do
     {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
-    acc = put_attr(acc, :root, expr, %{})
+    meta = %{
+      line: line,
+      column: column,
+      line_end: new_line,
+      column_end: new_column,
+      file: state.file
+    }
+    acc = put_attr(acc, :root, expr, meta)
     handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
   end
 
