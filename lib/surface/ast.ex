@@ -24,7 +24,7 @@ defmodule Surface.AST.Container do
 
   ## Properties
       * `:children` - children AST nodes
-      *` - directives associated with this containe, directives: []r
+      * `:directives` - directives associated with this container
       * `:meta` - compile meta
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
@@ -283,7 +283,7 @@ defmodule Surface.AST.Tag do
   ## Properties
       * `:element` - the element name
       * `:attributes` - the attributes for this tag
-      *` - any directives to be applied to this ta, directives: []g
+      * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
@@ -307,7 +307,7 @@ defmodule Surface.AST.VoidTag do
   ## Properties
       * `:element` - the element name
       * `:attributes` - the attributes for this tag
-      *` - any directives to be applied to this ta, directives: []g
+      * `:directives` - any directives to be applied to this tag
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
@@ -370,7 +370,7 @@ defmodule Surface.AST.Component do
       * `:module` - the component module
       * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.LiveView)
       * `:props` - the props for this component
-      *` - any directives to be applied to this ta, directives: []g
+      * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
@@ -399,7 +399,7 @@ defmodule Surface.AST.MacroComponent do
   ## Properties
       * `:module` - the component module
       * `:attributes` - the specified attributes
-      *` - any directives to be applied to this ta, directives: []g
+      * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
@@ -427,7 +427,7 @@ defmodule Surface.AST.SlotableComponent do
       * `:slot` - the name of the slot that this component is for
       * `:let` - the bindings for this template
       * `:props` - the props for this component
-      *` - any directives to be applied to this ta, directives: []g
+      * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
