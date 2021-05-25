@@ -243,7 +243,6 @@ defmodule Surface.Compiler.EExEngine do
 
     quote generated: true do
       live_component(
-        @socket,
         unquote(module),
         Surface.build_assigns(
           unquote(context_expr),
