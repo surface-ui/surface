@@ -74,7 +74,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     nil
   end
 
-  def context_for_block(_state, _name, _parent_name, _meta) do
+  def context_for_block(_state, _name, _meta) do
     nil
   end
 
