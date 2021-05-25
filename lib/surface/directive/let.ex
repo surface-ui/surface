@@ -22,7 +22,7 @@ defmodule Surface.Directive.Let do
     end)
   end
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %AST.Template{} = node) do
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %type{} = node) when type in [AST.Template, AST.SlotableComponent] do
     %{node | let: value}
   end
 
