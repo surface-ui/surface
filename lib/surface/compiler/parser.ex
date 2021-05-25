@@ -5,22 +5,6 @@ defmodule Surface.Compiler.Parser do
   alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
 
-  @void_elements [
-    "area",
-    "base",
-    "br",
-    "col",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "command",
-    "keygen",
-    "source"
-  ]
-
   @blocks [
     "if",
     "unless",
@@ -386,7 +370,7 @@ defmodule Surface.Compiler.Parser do
     {tag, context, %{state | tags: tags}}
   end
 
-  defp pop_matching_tag(%{tags: [{_, _, _, meta} = token_open | _]}, token_close) do
+  defp pop_matching_tag(%{tags: [{{_, _, _, meta} = token_open, _ctx} | _]}, token_close) do
     message = """
     expected closing node for #{format_node(token_open)} defined on line #{meta.line}, \
     got #{format_node(token_close)}\
