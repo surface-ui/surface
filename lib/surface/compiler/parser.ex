@@ -357,7 +357,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp pop_matching_tag(
-         %{tags: [{{:tag_open, tag_name, _, _}, context} = tag | tags]} = state,
+         %{tags: [{{:tag_open, tag_name, _, _} = tag, context}| tags]} = state,
          {:tag_close, tag_name, _}
        ) do
     {tag, context, %{state | tags: tags}}
