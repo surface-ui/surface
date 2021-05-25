@@ -42,23 +42,30 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {state, {name, attributes, body, to_meta(meta)}}
   end
 
-  def handle_block(state, context, name, expr, body, meta) do
-    attrs = block_expr_to_attr_list(expr, state, context)
-    {state, {:block, name, attrs, body, to_meta(meta)}}
+  def handle_block(state, _context, name, expr, body, meta) do
+    {state, {:block, name, expr, body, to_meta(meta)}}
   end
 
-  def handle_subblock(state, context, :default, expr, children, _meta) do
-    attrs = block_expr_to_attr_list(expr, state, context)
-    {state, {:block, :default, attrs, children, %{}}}
+  def handle_subblock(state, _context, :default, expr, children, _meta) do
+    {state, {:block, :default, expr, children, %{}}}
   end
 
-  def handle_subblock(state, context, name, expr, children, meta) do
-    attrs = block_expr_to_attr_list(expr, state, context)
-    {state, {:block, name, attrs, children, to_meta(meta)}}
+  def handle_subblock(state, _context, name, expr, children, meta) do
+    {state, {:block, name, expr, children, to_meta(meta)}}
   end
 
   def handle_text(state, text) do
     {state, text}
+  end
+
+  # TODO: Update these after accepting the expression directly instead of the :root attribute
+  def handle_block_expression(_state, _context, _block_name, nil) do
+    []
+  end
+
+  def handle_block_expression(_state, _context, _block_name, {:expr, expr, expr_meta}) do
+    meta = to_meta(expr_meta)
+    [{:root, {:attribute_expr, expr, meta}, meta}]
   end
 
   def handle_attribute(_state, _context, name, {:expr, expr, expr_meta}, attr_meta) do
@@ -87,12 +94,5 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
   def to_meta(meta) do
     Map.drop(meta, [:self_close, :line_end, :column_end, :void_tag?])
-  end
-
-  # TODO: Update these after accepting the expression directly instead of the :root attribute
-  defp block_expr_to_attr_list(nil, _state, _context), do: []
-
-  defp block_expr_to_attr_list({:expr, _, expr_meta} = expr, state, context) do
-    [handle_attribute(state, context, :root, expr, expr_meta)]
   end
 end

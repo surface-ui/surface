@@ -179,17 +179,19 @@ defmodule Surface.Compiler.Parser do
 
   defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state)
        when name in @blocks do
-    {{:block_open, _name, expr, meta}, context, state} = pop_matching_tag(state, token)
+    {{:block_open, name, expr, meta}, context, state} = pop_matching_tag(state, token)
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
+
+    expression = state.translator.handle_block_expression(state, context, name, expr)
 
     {state, node} =
       state.translator.handle_block(
         state,
         context,
         name,
-        expr,
+        expression,
         Enum.reverse(buffer),
         meta
       )
@@ -213,12 +215,14 @@ defmodule Surface.Compiler.Parser do
     # pop the current buffer and use it as children for the sub-block node
     [buffer | buffers] = buffers
 
+    expression = state.translator.handle_block_expression(state, context, name, expr)
+
     {state, node} =
       state.translator.handle_subblock(
         state,
         context,
         name,
-        expr,
+        expression,
         Enum.reverse(buffer),
         meta
       )
@@ -242,9 +246,17 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers] = buffers
 
     context = state.translator.context_for_subblock(state, :default, ctx, meta)
+    expression = state.translator.handle_block_expression(state, context, :default, nil)
 
     {state, node} =
-      state.translator.handle_subblock(state, context, :default, nil, Enum.reverse(buffer), meta)
+      state.translator.handle_subblock(
+        state,
+        context,
+        :default,
+        expression,
+        Enum.reverse(buffer),
+        meta
+      )
 
     # create a new buffer for the parent node to replace the one that was popped
     buffers = [[] | buffers]

@@ -32,6 +32,13 @@ defmodule Surface.Compiler.NodeTranslator do
               attr_meta :: parse_metadata()
             ) :: any()
 
+  @callback handle_block_expression(
+              state :: state(),
+              context :: context(),
+              block_name :: :default | binary(),
+              nil | {:expr, binary(), parse_metadata()}
+            ) :: any()
+
   @callback handle_init(state :: state()) :: state()
 
   @callback handle_text(state :: state(), value :: binary()) :: {state(), any()}
@@ -51,7 +58,7 @@ defmodule Surface.Compiler.NodeTranslator do
               state :: state(),
               context :: context(),
               name :: binary(),
-              expr :: nil | Macro.t(),
+              expr :: any(),
               children :: list(),
               meta :: parse_metadata()
             ) :: {state(), any()}
@@ -60,7 +67,7 @@ defmodule Surface.Compiler.NodeTranslator do
               state :: state(),
               context :: context(),
               name :: binary(),
-              expr :: nil | Macro.t(),
+              expr :: any(),
               children :: list(),
               meta :: parse_metadata()
             ) :: {state(), any()}
