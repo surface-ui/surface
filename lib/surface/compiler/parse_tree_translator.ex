@@ -5,8 +5,8 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
   def handle_init(state), do: state
 
-  def handle_interpolation(state, expression, meta) do
-    {state, {:interpolation, expression, to_meta(meta)}}
+  def handle_expression(state, expression, meta) do
+    {state, {:expr, expression, to_meta(meta)}}
   end
 
   def handle_comment(state, comment, _meta) do

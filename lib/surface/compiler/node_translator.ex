@@ -63,7 +63,7 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata()
             ) :: {state(), any()}
 
-  @callback handle_interpolation(
+  @callback handle_expression(
               state :: state(),
               expression :: binary(),
               meta :: parse_metadata()
