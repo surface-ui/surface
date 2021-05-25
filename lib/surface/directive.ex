@@ -7,7 +7,7 @@ defmodule Surface.Directive do
 
   @optional_callbacks process: 2
 
-  defmacro __using__(_) do
+  defmacro __using__(_opts) do
     quote do
       alias Surface.AST
       alias Surface.Compiler.Helpers

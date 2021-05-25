@@ -1,4 +1,4 @@
-defmodule Surface.Constructs.For do
+defmodule Surface.Constructs.Deprecated.For do
   @moduledoc """
   Provides an alternative to the `:for` directive for wrapping multiple elements in a for loop.
 

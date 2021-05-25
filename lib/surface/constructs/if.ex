@@ -1,4 +1,4 @@
-defmodule Surface.Constructs.If do
+defmodule Surface.Constructs.Deprecated.If do
   @moduledoc """
   Provides an alternative to the `:if` directive for wrapping multiple elements in an if expression.
 

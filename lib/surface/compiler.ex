@@ -101,6 +101,9 @@ defmodule Surface.Compiler do
     |> Parser.parse!(
       file: file,
       line: line,
+      caller: caller,
+      checks: opts[:checks] || [],
+      warnings: opts[:warnings] || [],
       column: Keyword.get(opts, :column, 1),
       indentation: Keyword.get(opts, :indentation, 0)
     )
@@ -222,7 +225,6 @@ defmodule Surface.Compiler do
   # Slots
   defp node_type({"#template", _, _, _}), do: :template
   defp node_type({"#slot", _, _, _}), do: :slot
-  defp node_type({"template", _, _, _}), do: :template
   defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
 
@@ -246,7 +248,7 @@ defmodule Surface.Compiler do
   defp node_type({:comment, _, _}), do: :comment
   defp node_type(_), do: :text
 
-  defp process_directives(%{directives: directives} = node) do
+  defp process_directives(%{directives: directives} = node) when is_list(directives) do
     directives
     |> Enum.filter(fn %AST.Directive{module: mod} -> function_exported?(mod, :process, 2) end)
     |> Enum.reduce(node, fn %AST.Directive{module: mod} = directive, node ->
@@ -406,11 +408,9 @@ defmodule Surface.Compiler do
 
   defp convert_node_to_ast(
          :template,
-         {name, attributes, children, node_meta} = node,
+         {name, attributes, children, node_meta},
          compile_meta
        ) do
-    maybe_warn_on_deprecated_template_notation(node, compile_meta)
-
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, directives, attributes} <-
@@ -429,8 +429,7 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(:slot, {_, attributes, children, node_meta} = node, compile_meta) do
-    maybe_warn_on_deprecated_slot_notation(node, compile_meta)
+  defp convert_node_to_ast(:slot, {_, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     defined_slots =
@@ -668,7 +667,6 @@ defmodule Surface.Compiler do
     end)
   end
 
-  defp get_slot_name("template", attributes), do: attribute_value(attributes, "slot", :default)
   defp get_slot_name("#template", attributes), do: attribute_value(attributes, "slot", :default)
   defp get_slot_name(":" <> name, _), do: String.to_atom(name)
 
@@ -1130,32 +1128,6 @@ defmodule Surface.Compiler do
       """
 
       IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
-    end
-  end
-
-  defp maybe_warn_on_deprecated_template_notation({name, _, _, %{line: line}}, compile_meta) do
-    if name == "template" do
-      message = """
-      using <template> to fill slots has been deprecated and will be removed in \
-      future versions.
-
-      Hint: replace `<template>` with `<#template>`
-      """
-
-      IOHelper.warn(message, compile_meta.caller, &(&1 + line))
-    end
-  end
-
-  defp maybe_warn_on_deprecated_slot_notation({name, _, _, %{line: line}}, compile_meta) do
-    if name == "slot" do
-      message = """
-      using <slot> to define component slots has been deprecated and will be removed in \
-      future versions.
-
-      Hint: replace `<slot>` with `<#slot>`
-      """
-
-      IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
     end
   end
 end
