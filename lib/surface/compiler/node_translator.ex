@@ -45,6 +45,15 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata()
             ) :: {state(), any()}
 
+  @callback handle_block(
+              state :: state(),
+              context :: context(),
+              name :: binary(),
+              attrs :: list(),
+              children :: list(),
+              meta :: parse_metadata()
+            ) :: {state(), any()}
+
   @callback handle_subblock(
               state :: state(),
               context :: context(),

@@ -216,7 +216,7 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers] = buffers
 
     {state, node} =
-      state.translator.handle_subblock(
+      state.translator.handle_block(
         state,
         context,
         name,
