@@ -1,7 +1,5 @@
 defmodule Surface.Directive.Hook do
-  use Surface.Directive,
-    type: :hook,
-    name_pattern: "hook"
+  use Surface.Directive
 
   def extract({":hook", value, attr_meta}, meta) do
     %AST.Directive{

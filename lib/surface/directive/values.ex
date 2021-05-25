@@ -1,7 +1,5 @@
 defmodule Surface.Directive.Values do
-  use Surface.Directive,
-    type: :map,
-    name_pattern: "values"
+  use Surface.Directive
 
   def extract({":values", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)

@@ -1,8 +1,5 @@
 defmodule Surface.Directive.Events do
-  use Surface.Directive,
-    type: :event,
-    # stop-gap to get directives to work
-    name_pattern: "on-" <> _event_name
+  use Surface.Directive
 
   @events [
     "click",
