@@ -54,20 +54,20 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
-    {state, node} = state.translator.handle_text(text, state)
+    {node, state} = state.translator.handle_text(text, state)
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:comment, comment, meta} | rest], buffers, state) do
-    {state, node} = state.translator.handle_comment(comment, meta, state)
+    {node, state} = state.translator.handle_comment(comment, meta, state)
 
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
   defp handle_token([{:expr, expr, meta} | rest], buffers, state) do
-    {state, node} = state.translator.handle_expression(expr, meta, state)
+    {node, state} = state.translator.handle_expression(expr, meta, state)
 
     buffers = push_node_to_current_buffer(node, buffers)
 
@@ -77,7 +77,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
     context = state.translator.context_for_node(name, meta, state)
 
-    {state, node} =
+    {node, state} =
       state.translator.handle_node(
         name,
         translate_attrs(state, context, attrs),
@@ -94,7 +94,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
     context = state.translator.context_for_node(name, meta, state)
 
-    {state, node} =
+    {node, state} =
       state.translator.handle_node(
         name,
         translate_attrs(state, context, attrs),
@@ -122,7 +122,7 @@ defmodule Surface.Compiler.Parser do
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
 
-    {state, node} =
+    {node, state} =
       state.translator.handle_node(
         name,
         translate_attrs(state, context, attrs),
@@ -186,7 +186,7 @@ defmodule Surface.Compiler.Parser do
 
     expression = state.translator.handle_block_expression(name, expr, state, context)
 
-    {state, node} =
+    {node, state} =
       state.translator.handle_block(
         name,
         expression,
@@ -217,7 +217,7 @@ defmodule Surface.Compiler.Parser do
 
     expression = state.translator.handle_block_expression(name, expr, state, context)
 
-    {state, node} =
+    {node, state} =
       state.translator.handle_subblock(
         name,
         expression,
@@ -248,7 +248,7 @@ defmodule Surface.Compiler.Parser do
     context = state.translator.context_for_subblock(:default, meta, state, ctx)
     expression = state.translator.handle_block_expression(:default, nil, state, context)
 
-    {state, node} =
+    {node, state} =
       state.translator.handle_subblock(
         :default,
         expression,

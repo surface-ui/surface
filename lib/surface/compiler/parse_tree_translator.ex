@@ -6,11 +6,11 @@ defmodule Surface.Compiler.ParseTreeTranslator do
   def handle_init(state), do: state
 
   def handle_expression(expression, meta, state) do
-    {state, {:expr, expression, to_meta(meta)}}
+    {{:expr, expression, to_meta(meta)}, state}
   end
 
   def handle_comment(comment, meta, state) do
-    {state, {:comment, comment, meta}}
+    {{:comment, comment, meta}, state}
   end
 
   def handle_node("template", attributes, body, meta, state, context) do
@@ -39,23 +39,23 @@ defmodule Surface.Compiler.ParseTreeTranslator do
   end
 
   def handle_node(name, attributes, body, meta, state, _context) do
-    {state, {name, attributes, body, to_meta(meta)}}
+    {{name, attributes, body, to_meta(meta)}, state}
   end
 
   def handle_block(name, expr, body, meta, state, _context) do
-    {state, {:block, name, expr, body, to_meta(meta)}}
+    {{:block, name, expr, body, to_meta(meta)}, state}
   end
 
   def handle_subblock(:default, expr, children, _meta, state, _context) do
-    {state, {:block, :default, expr, children, %{}}}
+    {{:block, :default, expr, children, %{}}, state}
   end
 
   def handle_subblock(name, expr, children, meta, state, _context) do
-    {state, {:block, name, expr, children, to_meta(meta)}}
+    {{:block, name, expr, children, to_meta(meta)}, state}
   end
 
   def handle_text(text, state) do
-    {state, text}
+    {text, state}
   end
 
   # TODO: Update these after accepting the expression directly instead of the :root attribute

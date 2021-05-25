@@ -41,9 +41,9 @@ defmodule Surface.Compiler.NodeTranslator do
 
   @callback handle_init(state :: state()) :: state()
 
-  @callback handle_text(value :: binary(), state :: state()) :: {state(), any()}
+  @callback handle_text(value :: binary(), state :: state()) :: {any(), state()}
   @callback handle_comment(comment :: binary(), meta :: parse_metadata(), state :: state()) ::
-              {state(), any()}
+              {any(), state()}
 
   @callback handle_node(
               name :: binary(),
@@ -52,7 +52,7 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata(),
               state :: state(),
               context :: context()
-            ) :: {state(), any()}
+            ) :: {any(), state()}
 
   @callback handle_block(
               name :: binary(),
@@ -61,7 +61,7 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata(),
               state :: state(),
               context :: context()
-            ) :: {state(), any()}
+            ) :: {any(), state()}
 
   @callback handle_subblock(
               name :: binary(),
@@ -70,11 +70,11 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata(),
               state :: state(),
               context :: context()
-            ) :: {state(), any()}
+            ) :: {any(), state()}
 
   @callback handle_expression(
               expression :: binary(),
               meta :: parse_metadata(),
               state :: state()
-            ) :: {state(), any()}
+            ) :: {any(), state()}
 end
