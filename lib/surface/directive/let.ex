@@ -26,7 +26,6 @@ defmodule Surface.Directive.Let do
     %{node | let: value}
   end
 
-  # TODO: log warning
   def process(_, node), do: node
 
   defp directive_value(value, meta) do
