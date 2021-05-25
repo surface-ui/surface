@@ -33,7 +33,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token(tokens, opts) do
     state = %{
       translator: opts[:translator] || Surface.Compiler.ParseTreeTranslator,
-      tags: [],
+      token_stack: [],
       caller: opts[:caller] || __ENV__,
       checks: opts[:checks] || [],
       warnings: opts[:warnings] || []
@@ -46,7 +46,7 @@ defmodule Surface.Compiler.Parser do
     Enum.reverse(buffer)
   end
 
-  defp handle_token([], _buffers, %{tags: [{{_, _name, _attrs, meta} = node, _ctx} | _]}) do
+  defp handle_token([], _buffers, %{token_stack: [{{_, _name, _attrs, meta} = node, _ctx} | _]}) do
     raise parse_error(
             "expected closing node for #{format_node(node)} defined on line #{meta.line}, got EOF",
             meta
@@ -156,7 +156,7 @@ defmodule Surface.Compiler.Parser do
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
 
-    context = state.translator.context_for_subblock(state, name, parent_context(state.tags), meta)
+    context = state.translator.context_for_subblock(state, name, parent_context(state.token_stack), meta)
 
     # push the current sub-block token to state
     state = push_tag(state, {:block_open, name, attrs, meta}, context)
@@ -185,7 +185,7 @@ defmodule Surface.Compiler.Parser do
   defp handle_token(
          [{:block_close, _name, _meta} = token | _] = tokens,
          buffers,
-         %{tags: [{{:block_open, name, _, _}, _} | _]} = state
+         %{token_stack: [{{:block_open, name, _, _}, _} | _]} = state
        )
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
@@ -222,7 +222,7 @@ defmodule Surface.Compiler.Parser do
   defp close_sub_block(
          _token,
          buffers,
-         %{tags: [{{:block_open, name, attrs, meta}, context} | tags]} = state
+         %{token_stack: [{{:block_open, name, attrs, meta}, context} | tokens]} = state
        )
        when name in @sub_blocks do
     # pop the current buffer and use it as children for the sub-block node
@@ -238,7 +238,7 @@ defmodule Surface.Compiler.Parser do
         meta
       )
 
-    state = %{state | tags: tags}
+    state = %{state | token_stack: tokens}
     buffers = push_node_to_current_buffer(node, buffers)
 
     {buffers, state}
@@ -249,7 +249,7 @@ defmodule Surface.Compiler.Parser do
   defp close_sub_block(
          token,
          buffers,
-         %{tags: [{{:block_open, name, attrs, meta}, ctx} | tags]} = state
+         %{token_stack: [{{:block_open, name, attrs, meta}, ctx} | tokens]} = state
        ) do
     validate_sub_block!(token, name)
 
@@ -267,7 +267,7 @@ defmodule Surface.Compiler.Parser do
 
     # push back the parent token to state
     meta = Map.put(meta, :has_sub_blocks?, true)
-    state = %{state | tags: [{{:block_open, name, attrs, meta}, ctx} | tags]}
+    state = %{state | token_stack: [{{:block_open, name, attrs, meta}, ctx} | tokens]}
 
     {buffers, state}
   end
@@ -287,13 +287,13 @@ defmodule Surface.Compiler.Parser do
 
   defp message_for_invalid_sub_block_parent(name) do
     valid_parents = @sub_blocks_valid_parents[name]
-    valid_parents_tags = Enum.map(valid_parents, &"{##{&1}}")
+    valid_parents_tokens = Enum.map(valid_parents, &"{##{&1}}")
 
     "no valid parent node defined for {##{name}}. " <>
       Helpers.list_to_string(
         "The {##{name}} construct can only be used inside a",
         "Possible parents are",
-        valid_parents_tags
+        valid_parents_tokens
       )
   end
 
@@ -353,24 +353,24 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp push_tag(state, token, context) do
-    %{state | tags: [{token, context} | state.tags]}
+    %{state | token_stack: [{token, context} | state.token_stack]}
   end
 
   defp pop_matching_tag(
-         %{tags: [{{:tag_open, tag_name, _, _} = tag, context} | tags]} = state,
+         %{token_stack: [{{:tag_open, tag_name, _, _} = token, context} | tokens]} = state,
          {:tag_close, tag_name, _}
        ) do
-    {tag, context, %{state | tags: tags}}
+    {token, context, %{state | token_stack: tokens}}
   end
 
   defp pop_matching_tag(
-         %{tags: [{{:block_open, name, _, _} = tag, context} | tags]} = state,
+         %{token_stack: [{{:block_open, name, _, _} = token, context} | tokens]} = state,
          {:block_close, name, _}
        ) do
-    {tag, context, %{state | tags: tags}}
+    {token, context, %{state | token_stack: tokens}}
   end
 
-  defp pop_matching_tag(%{tags: [{{_, _, _, meta} = token_open, _ctx} | _]}, token_close) do
+  defp pop_matching_tag(%{token_stack: [{{_, _, _, meta} = token_open, _ctx} | _]}, token_close) do
     message = """
     expected closing node for #{format_node(token_open)} defined on line #{meta.line}, \
     got #{format_node(token_close)}\
