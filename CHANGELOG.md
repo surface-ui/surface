@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1 (2021-05-26)
+
+  * Fix warning on Phoenix Live View >= 1.15.6
+
 ## v0.4.0 (2021-05-01)
 
   * Call render when defined in slotable components (#283)
