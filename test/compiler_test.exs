@@ -516,27 +516,6 @@ defmodule Surface.CompilerTest do
                ]
              } = node
     end
-
-    test "#raw is treated as a Literal" do
-      code = """
-      <div>
-        <#raw>
-          I am a macro
-        </#raw>
-      </div>
-      """
-
-      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
-
-      assert %Surface.AST.Tag{
-               element: "div",
-               children: [
-                 %Surface.AST.Literal{value: "\n  "},
-                 %Surface.AST.Literal{value: "\n    I am a macro\n  "},
-                 %Surface.AST.Literal{value: "\n"}
-               ]
-             } = node
-    end
   end
 
   describe "constructs" do

@@ -260,16 +260,6 @@ defmodule Surface.Compiler.Tokenizer do
     handle_macro_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
   end
 
-  defp handle_macro_body("</#raw" <> rest, line, column, buffer, acc, state) do
-    handle_tag_close(
-      "#raw" <> rest,
-      line,
-      column + 2,
-      text_to_acc(buffer, acc),
-      state
-    )
-  end
-
   defp handle_macro_body("</#" <> <<first, rest::binary>>, line, column, buffer, acc, state)
        when first in ?A..?Z do
     handle_tag_close(
@@ -380,10 +370,10 @@ defmodule Surface.Compiler.Tokenizer do
          ">" <> rest,
          line,
          column,
-         [{:tag_open, "#" <> <<first, _::binary>> = name, _, _} | _] = acc,
+         [{:tag_open, "#" <> <<first, _::binary>>, _, _} | _] = acc,
          state
        )
-       when first in ?A..?Z or name == "#raw" do
+       when first in ?A..?Z do
     acc = reverse_attrs(acc)
     handle_macro_body(rest, line, column + 1, [], acc, state)
   end
