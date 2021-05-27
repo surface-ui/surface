@@ -12,20 +12,10 @@ defmodule Surface.Components.Raw do
 
   use Surface.MacroComponent
 
-  alias Surface.IOHelper
-
   @doc "The content that will not be translated by Surface"
   slot default
 
-  def expand(_attributes, children, meta) do
-    message = """
-    using <#Raw> has been deprecated and will be removed in future versions.
-
-    Hint: replace `<#Raw>` with `<#raw>`
-    """
-
-    IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
-
+  def expand(_attributes, children, _meta) do
     %Surface.AST.Literal{
       value: List.to_string(children)
     }

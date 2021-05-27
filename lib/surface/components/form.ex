@@ -68,7 +68,7 @@ defmodule Surface.Components.Form do
       <Context put={__MODULE__, form: form}>
         <#slot :props={form: form} />
       </Context>
-    <#raw></form></#raw>
+    <#Raw></form></#Raw>
     """
   end
 

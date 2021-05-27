@@ -45,7 +45,7 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       alias Surface.Constructs.Deprecated.{For, If}
-      alias Surface.Components.Context
+      alias Surface.Components.{Context, Raw}
 
       @doc "Built-in assign"
       data socket, :struct

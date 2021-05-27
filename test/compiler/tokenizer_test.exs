@@ -923,38 +923,6 @@ defmodule Surface.Compiler.TokenizerTest do
                {:text, "\n"}
              ] = tokens
     end
-
-    test "<#raw> multi lines is treated like a macro" do
-      tokens =
-        tokenize!("""
-        <#raw>
-          <div>
-            { @id }
-          </div>
-        </#raw>
-        """)
-
-      assert [
-               {:tag_open, "#raw", [], %{line: 1, column: 2}},
-               {:text, "\n  <div>\n    { @id }\n  </div>\n"},
-               {:tag_close, "#raw", %{line: 5, column: 3}},
-               {:text, "\n"}
-             ] = tokens
-    end
-
-    test "<#raw> single line is treated like a macro" do
-      tokens =
-        tokenize!("""
-        <#raw><div>{ @id }</div></#raw>
-        """)
-
-      assert [
-               {:tag_open, "#raw", [], %{line: 1, column: 2}},
-               {:text, "<div>{ @id }</div>"},
-               {:tag_close, "#raw", %{line: 1, column: 27}},
-               {:text, "\n"}
-             ] = tokens
-    end
   end
 
   defp tokenize_attrs(code) do

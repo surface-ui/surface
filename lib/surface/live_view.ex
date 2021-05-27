@@ -38,7 +38,7 @@ defmodule Surface.LiveView do
       import Phoenix.HTML
 
       alias Surface.Constructs.Deprecated.{For, If}
-      alias Surface.Components.Context
+      alias Surface.Components.{Context, Raw}
 
       @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)

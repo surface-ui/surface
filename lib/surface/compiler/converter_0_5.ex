@@ -65,10 +65,6 @@ defmodule Surface.Compiler.Converter_0_5 do
     "#slot"
   end
 
-  def convert(:tag_name, "#Raw", _state, _opts) do
-    "#raw"
-  end
-
   ## Planned changes. Uncomment as the related implementation gets merged
 
   # def convert(:attr_name, ":props", %{tag_name: "#slot"}, _opts) do

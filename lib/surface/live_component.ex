@@ -65,7 +65,7 @@ defmodule Surface.LiveComponent do
       import Phoenix.HTML
 
       alias Surface.Constructs.Deprecated.{For, If}
-      alias Surface.Components.Context
+      alias Surface.Components.{Context, Raw}
 
       @doc """
       The id of the live component (required by LiveView for stateful components).
