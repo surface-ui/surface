@@ -926,6 +926,27 @@ defmodule Surface.Compiler.TokenizerTest do
                {:text, "\n"}
              ] = tokens
     end
+
+    test "requires matching tag to close" do
+      tokens =
+        tokenize!("""
+        <#Macro>
+        text before
+        <div>
+          text
+        </#Bar>
+        </div>
+        text after
+        </#Macro>
+        """)
+
+      assert [
+               {:tag_open, "#Macro", [], %{line: 1, column: 2}},
+               {:text, "\ntext before\n<div>\n  text\n</#Bar>\n</div>\ntext after\n"},
+               {:tag_close, "#Macro", %{line: 8, column: 3}},
+               {:text, "\n"}
+             ] = tokens
+    end
   end
 
   defp tokenize_attrs(code) do

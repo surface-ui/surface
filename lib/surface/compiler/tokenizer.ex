@@ -307,8 +307,8 @@ defmodule Surface.Compiler.Tokenizer do
     handle_macro_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
   end
 
-  defp handle_macro_body("</" <> text, line, column, buffer, acc, state) do
-    handle_maybe_macro_close_tag(text, line, column + 2, buffer, acc, state)
+  defp handle_macro_body("</#" <> text, line, column, buffer, acc, state) do
+    handle_maybe_macro_close_tag("#" <> text, line, column + 2, buffer, acc, state)
   end
 
   defp handle_macro_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
