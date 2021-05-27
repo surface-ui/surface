@@ -68,6 +68,9 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
+  @project_deps_path Mix.Project.deps_path()
+  @project_deps_root Path.dirname(@project_deps_path)
+
   @default_syntax_version 5
   @syntax_versions Application.get_env(:surface, :syntax_compatibility_mode, [])
 
@@ -128,7 +131,12 @@ defmodule Surface.Compiler do
   end
 
   defp find_syntax_version(file) do
-    path = Path.relative_to_cwd(file)
+    path =
+      if String.starts_with?(file, @project_deps_path) do
+        Path.relative_to(file, @project_deps_root)
+      else
+        Path.relative_to_cwd(file)
+      end
 
     {_prefix, version} =
       @syntax_versions
