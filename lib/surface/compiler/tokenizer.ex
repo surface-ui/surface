@@ -7,6 +7,14 @@ defmodule Surface.Compiler.Tokenizer do
   @block_name_stop_chars @space_chars ++ '}'
   @markers ["=", "...", "~", "$"]
 
+  @compatibility_mode Application.get_env(:surface, :compatibility_mode, false)
+
+  @expression_begin if @compatibility_mode, do: "{{", else: "{"
+  @expression_end if @compatibility_mode, do: "}}", else: "}"
+
+  @expression_begin_length String.length(@expression_begin)
+  @expression_end_length String.length(@expression_end)
+
   @void_elements [
     "area",
     "base",
@@ -90,8 +98,8 @@ defmodule Surface.Compiler.Tokenizer do
     handle_block_close(rest, line, column + 2, text_to_acc(buffer, acc), state)
   end
 
-  defp handle_text("{" <> rest, line, column, buffer, acc, state) do
-    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
+  defp handle_text(@expression_begin <> rest, line, column, buffer, acc, state) do
+    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + @expression_begin_length, state)
     acc = [expr | text_to_acc(buffer, acc)]
     handle_text(rest, new_line, new_column, [], acc, state)
   end
@@ -155,12 +163,12 @@ defmodule Surface.Compiler.Tokenizer do
     end
   end
 
-  defp handle_block_close_end("}" <> rest, line, column, acc, state) do
-    handle_text(rest, line, column + 1, [], acc, state)
+  defp handle_block_close_end(@expression_end <> rest, line, column, acc, state) do
+    handle_text(rest, line, column + @expression_end_length, [], acc, state)
   end
 
   defp handle_block_close_end(_text, line, column, _acc, state) do
-    raise parse_error("expected closing `}`", line, column, state)
+    raise parse_error("expected closing `#{@expression_end}`", line, column, state)
   end
 
   ## handle_block_name
@@ -387,8 +395,8 @@ defmodule Surface.Compiler.Tokenizer do
     handle_text(rest, line, column + 1, [], acc, state)
   end
 
-  defp handle_maybe_tag_open_end("{" <> rest, line, column, acc, state) do
-    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
+  defp handle_maybe_tag_open_end(@expression_begin <> rest, line, column, acc, state) do
+    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + @expression_begin_length, state)
 
     meta = %{
       line: line,
@@ -495,8 +503,8 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_single_quote(rest, line, column + 1, [], acc, state)
   end
 
-  defp handle_attr_value_begin("{" <> rest, line, column, acc, state) do
-    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
+  defp handle_attr_value_begin(@expression_begin <> rest, line, column, acc, state) do
+    {expr, new_line, new_column, rest} = handle_expression(rest, line, column + @expression_begin_length, state)
     acc = put_attr_value(acc, expr)
     handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
   end
@@ -685,9 +693,15 @@ defmodule Surface.Compiler.Tokenizer do
     handle_expression_value_end(rest, line + 1, state.column_offset, ["\n" | buffer], state)
   end
 
-  defp handle_expression_value_end("}" <> rest, line, column, buffer, %{braces: []} = state) do
+  defp handle_expression_value_end(
+         @expression_end <> rest,
+         line,
+         column,
+         buffer,
+         %{braces: []} = state
+       ) do
     value = buffer_to_string(buffer)
-    {:ok, value, line, column + 1, rest, state}
+    {:ok, value, line, column + @expression_end_length, rest, state}
   end
 
   defp handle_expression_value_end(~S(\}) <> rest, line, column, buffer, state) do
@@ -698,14 +712,14 @@ defmodule Surface.Compiler.Tokenizer do
     handle_expression_value_end(rest, line, column + 2, [~S(\{) | buffer], state)
   end
 
-  defp handle_expression_value_end("}" <> rest, line, column, buffer, state) do
+  defp handle_expression_value_end(@expression_end <> rest, line, column, buffer, state) do
     {_pos, state} = pop_brace(state)
-    handle_expression_value_end(rest, line, column + 1, ["}" | buffer], state)
+    handle_expression_value_end(rest, line, column + @expression_end_length, [@expression_end | buffer], state)
   end
 
-  defp handle_expression_value_end("{" <> rest, line, column, buffer, state) do
+  defp handle_expression_value_end(@expression_begin <> rest, line, column, buffer, state) do
     state = push_brace(state, {line, column})
-    handle_expression_value_end(rest, line, column + 1, ["{" | buffer], state)
+    handle_expression_value_end(rest, line, column + @expression_begin_length, [@expression_begin | buffer], state)
   end
 
   defp handle_expression_value_end(<<c::utf8, rest::binary>>, line, column, buffer, state) do
