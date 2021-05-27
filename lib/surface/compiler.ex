@@ -69,7 +69,7 @@ defmodule Surface.Compiler do
   ]
 
   @default_syntax_version 5
-  @syntax_versions Application.get_env(:surface, :syntax_compability_mode, [])
+  @syntax_versions Application.get_env(:surface, :syntax_compatibility_mode, [])
 
   defmodule CompileMeta do
     defstruct [:line, :file, :caller, :checks]
