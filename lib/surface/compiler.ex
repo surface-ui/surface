@@ -128,11 +128,12 @@ defmodule Surface.Compiler do
   end
 
   defp find_syntax_version(file) do
-    @syntax_versions
-    |> Enum.filter(fn {prefix, _version} -> String.starts_with?(file, prefix) end)
-    |> Enum.sort_by(&String.length/1)
-    |> Enum.map(fn {_prefix, version} -> version end)
-    |> List.last(@default_syntax_version)
+    {_prefix, version} =
+      @syntax_versions
+      |> Enum.filter(fn {prefix, _version} -> String.starts_with?(file, prefix) end)
+      |> Enum.max_by(&String.length/1, fn -> {nil, @default_syntax_version} end)
+
+    version
   end
 
   defp is_stateful_component(module) do
