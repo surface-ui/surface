@@ -307,15 +307,8 @@ defmodule Surface.Compiler.Tokenizer do
     handle_macro_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
   end
 
-  defp handle_macro_body("</#" <> <<first, rest::binary>>, line, column, buffer, acc, state)
-       when first in ?A..?Z do
-    handle_tag_close(
-      "#" <> <<first::utf8>> <> rest,
-      line,
-      column + 2,
-      text_to_acc(buffer, acc),
-      state
-    )
+  defp handle_macro_body("</" <> text, line, column, buffer, acc, state) do
+    handle_maybe_macro_close_tag(text, line, column + 2, buffer, acc, state)
   end
 
   defp handle_macro_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
@@ -324,6 +317,36 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_macro_body(<<>>, _line, _column, buffer, acc, _state) do
     ok(text_to_acc(buffer, acc))
+  end
+
+  ## handle_maybe_macro_close_tag
+
+  defp handle_maybe_macro_close_tag(
+         text,
+         line,
+         column,
+         buffer,
+         [{:tag_open, macro_name, _, _} | _] = acc,
+         state
+       ) do
+    case handle_tag_name(text, column, []) do
+      {:ok, name, new_column, rest} when name == macro_name ->
+        meta = %{
+          line: line,
+          column: column,
+          line_end: line,
+          column_end: new_column,
+          file: state.file
+        }
+
+        acc = text_to_acc(buffer, acc)
+        acc = [{:tag_close, name, meta} | acc]
+
+        handle_tag_close_end(rest, line, new_column, acc, state)
+
+      _ ->
+        handle_macro_body(text, line, column, ["</" | buffer], acc, state)
+    end
   end
 
   ## handle_tag_open
