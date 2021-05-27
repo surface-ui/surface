@@ -1,5 +1,7 @@
 defmodule Surface.Compiler.Tokenizer do
   @moduledoc false
+  alias Surface.IOHelper
+
   @space_chars '\n\r\t\f\s'
   @name_stop_chars @space_chars ++ '>/='
   @unquoted_value_invalid_chars '"\'=<`'
@@ -31,9 +33,11 @@ defmodule Surface.Compiler.Tokenizer do
     column = Keyword.get(opts, :column, 1)
     indentation = Keyword.get(opts, :indentation, 0)
     syntax_version = Keyword.get(opts, :syntax_version, 5)
+    caller = Keyword.get(opts, :caller, __ENV__)
 
     state = %{
       file: file,
+      caller: caller,
       column_offset: indentation + 1,
       braces: [],
       syntax_version: syntax_version
@@ -101,19 +105,34 @@ defmodule Surface.Compiler.Tokenizer do
 
   defp handle_text("{!--" <> rest, line, column, buffer, acc, %{syntax_version: version} = state)
        when version < 5 do
-    # TODO: log warning
+    IOHelper.warn(
+      "`{!--` will be treated as a private comment when you update to the new syntax",
+      state.caller,
+      fn _ -> line end
+    )
+
     handle_text(rest, line, column + 4, ["{!--" | buffer], acc, state)
   end
 
   defp handle_text("{#" <> rest, line, column, buffer, acc, %{syntax_version: version} = state)
        when version < 5 do
-    # TODO: log warning
+    IOHelper.warn(
+      "`{#` will be treated as opening a block expression when you update to the new syntax",
+      state.caller,
+      fn _ -> line end
+    )
+
     handle_text(rest, line, column + 2, ["{#" | buffer], acc, state)
   end
 
   defp handle_text("{/" <> rest, line, column, buffer, acc, %{syntax_version: version} = state)
        when version < 5 do
-    # TODO: log warning
+    IOHelper.warn(
+      "`{/` will be treated as closing a block expression when you update to the new syntax",
+      state.caller,
+      fn _ -> line end
+    )
+
     handle_text(rest, line, column + 2, ["{/" | buffer], acc, state)
   end
 

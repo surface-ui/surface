@@ -941,3 +941,42 @@ defmodule Surface.Compiler.TokenizerTest do
     attrs
   end
 end
+
+defmodule Surface.Compiler.TokenizerSyncTest do
+  use ExUnit.Case
+
+  import Surface.Compiler.Tokenizer
+  import ExUnit.CaptureIO
+
+  describe "syntax warnings in 0.4 compatibility mode" do
+    test "block open" do
+      output =
+        capture_io(:standard_error, fn ->
+          tokenize!("{# some text", syntax_version: 4)
+        end)
+
+      assert output =~
+               ~r/`\{#` will be treated as opening a block expression when you update to the new syntax/
+    end
+
+
+    test "block close" do
+      output =
+        capture_io(:standard_error, fn ->
+          tokenize!("{/ some text", syntax_version: 4)
+        end)
+
+      assert output =~
+               ~r|`\{/` will be treated as closing a block expression when you update to the new syntax|
+    end
+    test "private comment" do
+      output =
+        capture_io(:standard_error, fn ->
+          tokenize!("{!-- some text", syntax_version: 4)
+        end)
+
+      assert output =~
+               ~r/`\{!--` will be treated as a private comment when you update to the new syntax/
+    end
+  end
+end
