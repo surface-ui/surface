@@ -959,7 +959,6 @@ defmodule Surface.Compiler.TokenizerSyncTest do
                ~r/`\{#` will be treated as opening a block expression when you update to the new syntax/
     end
 
-
     test "block close" do
       output =
         capture_io(:standard_error, fn ->
@@ -969,6 +968,7 @@ defmodule Surface.Compiler.TokenizerSyncTest do
       assert output =~
                ~r|`\{/` will be treated as closing a block expression when you update to the new syntax|
     end
+
     test "private comment" do
       output =
         capture_io(:standard_error, fn ->

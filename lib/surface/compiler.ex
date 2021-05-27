@@ -68,6 +68,7 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
+  @default_syntax_version 5
   @syntax_versions Application.get_env(:surface, :syntax_compability_mode, [])
 
   defmodule CompileMeta do
@@ -128,8 +129,10 @@ defmodule Surface.Compiler do
 
   defp find_syntax_version(file) do
     @syntax_versions
-    |> Enum.filter(&String.starts_with?(file, &1))
-    |> Enum.max_by(&String.length/1, fn -> 5 end)
+    |> Enum.filter(fn {prefix, _version} -> String.starts_with?(file, prefix) end)
+    |> Enum.sort_by(&String.length/1)
+    |> Enum.map(fn {_prefix, version} -> version end)
+    |> List.last(@default_syntax_version)
   end
 
   defp is_stateful_component(module) do
