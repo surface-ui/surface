@@ -1,7 +1,14 @@
 defmodule Surface.Compiler.NodeTranslator do
   @type parse_metadata :: %{line: non_neg_integer(), column: non_neg_integer(), file: binary()}
 
-  @type block_info :: {:block_open, nil | Macro.t(), list(), parse_metadata()}
+  @typedoc """
+  The token representing the open node for a block.
+
+  The second element is nil if the block does not have an expression (i.e. `{#else}`), or
+
+  {:block_open, expression, children, parse metadata}
+  """
+  @type block_info :: {:block_open, binary(), nil | binary(), parse_metadata()}
   @type tag_info :: {:tag_open, binary(), list(), parse_metadata()}
   @type context :: term()
 
@@ -11,6 +18,12 @@ defmodule Surface.Compiler.NodeTranslator do
           checks: keyword(boolean()),
           warnings: keyword(boolean())
         }
+
+  @typedoc """
+  A node translator can return anything to represent the node, or use `:ignore` to
+  indicate that this node should be removed entirely from the result
+  """
+  @type result :: term() | :ignore
 
   @callback context_for_node(name :: binary(), meta :: parse_metadata(), state :: state()) ::
               context()
@@ -41,9 +54,9 @@ defmodule Surface.Compiler.NodeTranslator do
 
   @callback handle_init(state :: state()) :: state()
 
-  @callback handle_text(value :: binary(), state :: state()) :: {any(), state()}
+  @callback handle_text(value :: binary(), state :: state()) :: {result(), state()}
   @callback handle_comment(comment :: binary(), meta :: parse_metadata(), state :: state()) ::
-              {any(), state()}
+              {result(), state()}
 
   @callback handle_node(
               name :: binary(),
@@ -52,7 +65,7 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata(),
               state :: state(),
               context :: context()
-            ) :: {any(), state()}
+            ) :: {result(), state()}
 
   @callback handle_block(
               name :: binary(),
@@ -61,7 +74,7 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata(),
               state :: state(),
               context :: context()
-            ) :: {any(), state()}
+            ) :: {result(), state()}
 
   @callback handle_subblock(
               name :: binary(),
@@ -70,11 +83,11 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: parse_metadata(),
               state :: state(),
               context :: context()
-            ) :: {any(), state()}
+            ) :: {result(), state()}
 
   @callback handle_expression(
               expression :: binary(),
               meta :: parse_metadata(),
               state :: state()
-            ) :: {any(), state()}
+            ) :: {result(), state()}
 end
