@@ -613,6 +613,21 @@ defmodule Surface.Compiler.Tokenizer do
     handle_maybe_tag_open_end(rest, line, column + 1, acc, state)
   end
 
+  defp handle_attr_value_double_quote(
+         "{{" <> rest,
+         line,
+         column,
+         buffer,
+         acc,
+         %{syntax_version: version} = state
+       )
+       when version < 5 do
+    {{:expr, value, _meta}, new_line, new_column, rest} =
+      handle_expression(rest, line, column + 2, state)
+
+    handle_text(rest, new_line, new_column, ["\#{#{value}}" | buffer], acc, state)
+  end
+
   defp handle_attr_value_double_quote(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
     handle_attr_value_double_quote(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
   end
