@@ -31,7 +31,25 @@ defmodule Surface.Compiler.Tokenizer do
           file: binary()
         }
 
+  @type text :: {:text, value :: binary()}
+
   @type comment_metadata :: metadata() | %{visibility: :public | :private}
+  @type comment :: {:comment, value :: binary(), comment_metadata()}
+
+  @type block_metadata :: metadata()
+  @type block_name :: binary() | :default
+  @type block_open ::
+          {:block_open, block_name, expression :: nil | binary(), block_metadata()}
+  @type block_close :: {:block_close, block_name, metadata()}
+
+  @type expression_metadata :: {:expr, value :: binary(), metadata()}
+  @type expression :: {:expr, value :: binary(), metadata()}
+
+  @type attribute_value :: {:string, value :: binary() | nil, metadata()} | expression()
+  @type attribute_name :: binary() | :root
+  @type attribute_metadata :: metadata()
+  @type attribute :: {attribute_name(), attribute_value(), metadata()}
+
   @type tag_metadata ::
           metadata()
           | %{
@@ -41,19 +59,7 @@ defmodule Surface.Compiler.Tokenizer do
               node_line_end: integer(),
               node_column_end: integer()
             }
-
-  @type expression :: {:expr, value :: binary(), metadata()}
-  @type attribute_value :: {:string, value :: binary() | nil, metadata()} | expression()
-
-  @type attribute :: {name :: binary() | :root, attribute_value(), metadata()}
-
-  @type text :: {:text, value :: binary()}
-  @type comment :: {:comment, value :: binary(), comment_metadata()}
-
-  @type block_open ::
-          {:block_open, name :: binary(), expression :: nil | binary(), metadata()}
-  @type block_close :: {:block_close, name :: binary(), metadata()}
-
+  @type tag_name :: binary()
   @type tag_open :: {:tag_open, name :: binary(), list(attribute()), tag_metadata()}
   @type tag_close :: {:tag_close, name :: binary(), metadata()}
 
