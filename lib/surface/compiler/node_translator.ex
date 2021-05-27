@@ -1,7 +1,5 @@
 defmodule Surface.Compiler.NodeTranslator do
-  @moduledoc """
-  Surface.Compiler.Parser uses a node translator to convert
-  """
+  @moduledoc false
   alias Surface.Compiler.Tokenizer
 
   @type context :: term()
