@@ -927,7 +927,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "0.4 syntax compatbility mode" do
     test "uses double brace for interpolation" do
-      assert [{:expr, "{{value}}", %{column: 3, line: 1, column_end: 9, line_end: 1, file: "nofile"}}] ==
+      assert [{:expr, "value", %{column: 3, line: 1, column_end: 9, line_end: 1, file: "nofile"}}] ==
                tokenize!("{{value}}", syntax_version: 4)
     end
 

@@ -68,6 +68,8 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
+  @syntax_versions Application.get_env(:surface, :syntax_compability_mode, [])
+
   defmodule CompileMeta do
     defstruct [:line, :file, :caller, :checks]
 
@@ -105,7 +107,8 @@ defmodule Surface.Compiler do
       checks: opts[:checks] || [],
       warnings: opts[:warnings] || [],
       column: Keyword.get(opts, :column, 1),
-      indentation: Keyword.get(opts, :indentation, 0)
+      indentation: Keyword.get(opts, :indentation, 0),
+      syntax_version: find_syntax_version(file)
     )
     |> to_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
@@ -121,6 +124,12 @@ defmodule Surface.Compiler do
     end
 
     ast
+  end
+
+  defp find_syntax_version(file) do
+    @syntax_versions
+    |> Enum.filter(&String.starts_with?(file, &1))
+    |> Enum.max_by(&String.length/1, fn -> 5 end)
   end
 
   defp is_stateful_component(module) do
