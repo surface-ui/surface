@@ -10,6 +10,8 @@ defmodule Surface.Compiler do
   alias Surface.AST
   alias Surface.Compiler.Helpers
 
+  require Logger
+
   @stateful_component_types [
     Surface.LiveComponent
   ]
@@ -132,6 +134,8 @@ defmodule Surface.Compiler do
       @syntax_versions
       |> Enum.filter(fn {prefix, _version} -> String.starts_with?(file, prefix) end)
       |> Enum.max_by(&String.length/1, fn -> {nil, @default_syntax_version} end)
+
+    Logger.info("using syntax v#{version} for #{file}")
 
     version
   end
