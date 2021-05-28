@@ -27,12 +27,11 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "public comment" do
     test "represented as {:comment, comment, meta}" do
-      assert tokenize!("Begin<!-- comment -->End") ==
-               [
-                 {:text, "Begin"},
-                 {:comment, "<!-- comment -->", %{visibility: :public}},
-                 {:text, "End"}
-               ]
+      assert [
+               {:text, "Begin"},
+               {:comment, "<!-- comment -->", %{visibility: :public}},
+               {:text, "End"}
+             ] = tokenize!("Begin<!-- comment -->End")
     end
 
     test "multiple lines and wrapped by tags" do
@@ -67,12 +66,11 @@ defmodule Surface.Compiler.TokenizerTest do
 
   describe "private comment" do
     test "represented as {:comment, comment, meta}" do
-      assert tokenize!("Begin{!-- comment --}End") ==
-               [
-                 {:text, "Begin"},
-                 {:comment, "{!-- comment --}", %{visibility: :private}},
-                 {:text, "End"}
-               ]
+      assert [
+               {:text, "Begin"},
+               {:comment, "{!-- comment --}", %{visibility: :private}},
+               {:text, "End"}
+             ] = tokenize!("Begin{!-- comment --}End")
     end
 
     test "multiple lines and wrapped by tags" do
@@ -238,22 +236,27 @@ defmodule Surface.Compiler.TokenizerTest do
   describe "opening tag" do
     test "represented as {:tag_open, name, attrs, meta}" do
       tokens = tokenize!("<div>")
-      assert [{:tag_open, "div", [], %{}}] = tokens
+      assert [{:tag_open, "div", [], %{self_close: false, macro?: false}}] = tokens
     end
 
     test "with space after name" do
       tokens = tokenize!("<div >")
-      assert [{:tag_open, "div", [], %{}}] = tokens
+      assert [{:tag_open, "div", [], %{self_close: false, macro?: false}}] = tokens
     end
 
     test "with line break after name" do
       tokens = tokenize!("<div\n>")
-      assert [{:tag_open, "div", [], %{}}] = tokens
+      assert [{:tag_open, "div", [], %{self_close: false, macro?: false}}] = tokens
     end
 
     test "self close" do
       tokens = tokenize!("<div/>")
-      assert [{:tag_open, "div", [], %{self_close: true}}] = tokens
+      assert [{:tag_open, "div", [], %{self_close: true, macro?: false}}] = tokens
+    end
+
+    test "self close macro" do
+      tokens = tokenize!("<#Macro/>")
+      assert [{:tag_open, "#Macro", [], %{self_close: true, macro?: true}}] = tokens
     end
 
     test "compute line and column" do

@@ -5,6 +5,18 @@ defmodule Surface.Compiler.Parser do
   alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
 
+  @type state :: %{
+          token_stack:
+            list(
+              {Tokenizer.block_open() | Tokenizer.tag_open(),
+               Surface.Compiler.NodeTranslator.context()}
+            ),
+          translator: module(),
+          caller: Macro.Env.t(),
+          checks: keyword(boolean()),
+          warnings: keyword(boolean())
+        }
+
   @blocks [
     "if",
     "unless",
