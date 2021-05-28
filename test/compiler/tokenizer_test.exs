@@ -934,6 +934,12 @@ defmodule Surface.Compiler.TokenizerTest do
     test "treats single braces as text" do
       assert [{:text, "{value}"}] = tokenize!("{value}", syntax_version: 4)
     end
+
+    test "allows interpolation within double quoted strings" do
+      assert [
+               {:tag_open, "div", [{"attr", {:string, "\#{interpolation}", _}, _}], _}
+             ] = tokenize!("<div attr=\"{{interpolation}}\">", syntax_version: 4)
+    end
   end
 
   defp tokenize_attrs(code) do
