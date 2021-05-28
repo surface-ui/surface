@@ -836,7 +836,6 @@ defmodule Surface.Compiler.Tokenizer do
     {pos, %{state | braces: braces}}
   end
 
-  defp macro_tag?("#raw"), do: true
   defp macro_tag?(<<"#", first, _rest::binary>>) when first in ?A..?Z, do: true
   defp macro_tag?(_name), do: false
 

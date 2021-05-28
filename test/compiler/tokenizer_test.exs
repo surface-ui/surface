@@ -259,11 +259,6 @@ defmodule Surface.Compiler.TokenizerTest do
       assert [{:tag_open, "#Macro", [], %{self_close: true, macro?: true}}] = tokens
     end
 
-    test "self close #raw" do
-      tokens = tokenize!("<#raw/>")
-      assert [{:tag_open, "#raw", [], %{self_close: true, macro?: true}}] = tokens
-    end
-
     test "compute line and column" do
       tokens =
         tokenize!("""
