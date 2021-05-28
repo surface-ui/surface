@@ -429,6 +429,12 @@ defmodule Surface.Compiler.TokenizerTest do
              ] = attrs
     end
 
+    test "shorthand class syntax" do
+      attrs = tokenize_attrs(~S(<div class={ "is-fullwidth": @expanded }>))
+
+      assert [{"class", {:expr, " \"is-fullwidth\": @expanded ", %{}}, %{}}] = attrs
+    end
+
     test "accepts space between the name and `=`" do
       attrs = tokenize_attrs(~S(<div class ="panel">))
 
@@ -931,6 +937,12 @@ defmodule Surface.Compiler.TokenizerTest do
                tokenize!("{{value}}", syntax_version: 4)
     end
 
+    test "shorthand class syntax" do
+      attrs = tokenize_attrs(~S(<div class={{ "is-fullwidth": @expanded }}>), syntax_version: 4)
+
+      assert [{"class", {:expr, " \"is-fullwidth\": @expanded ", %{}}, %{}}] = attrs
+    end
+
     test "treats single braces as text" do
       assert [{:text, "{value}"}] = tokenize!("{value}", syntax_version: 4)
     end
@@ -942,8 +954,8 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
-  defp tokenize_attrs(code) do
-    [{:tag_open, "div", attrs, %{}}] = tokenize!(code)
+  defp tokenize_attrs(code, opts \\ []) do
+    [{:tag_open, "div", attrs, %{}}] = tokenize!(code, opts)
     attrs
   end
 end
