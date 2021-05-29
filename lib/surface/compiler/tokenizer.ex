@@ -7,6 +7,8 @@ defmodule Surface.Compiler.Tokenizer do
   @block_name_stop_chars @space_chars ++ '}'
   @markers ["=", "...", "~", "$"]
 
+  @ignored_body_tags ["style", "script"]
+
   @void_elements [
     "area",
     "base",
@@ -55,6 +57,7 @@ defmodule Surface.Compiler.Tokenizer do
           | %{
               void_tag?: boolean(),
               macro?: boolean(),
+              ignored_body?: boolean(),
               self_close: boolean(),
               node_line_end: integer(),
               node_column_end: integer()
@@ -349,6 +352,36 @@ defmodule Surface.Compiler.Tokenizer do
     end
   end
 
+  ## handle_ignored_body
+
+  defp handle_ignored_body("\r\n" <> rest, line, _column, buffer, acc, state) do
+    handle_ignored_body(
+      rest,
+      line + 1,
+      state.column_offset,
+      ["\r\n" | buffer],
+      acc,
+      state
+    )
+  end
+
+  defp handle_ignored_body("\n" <> rest, line, _column, buffer, acc, state) do
+    handle_ignored_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
+  end
+
+  defp handle_ignored_body("</" <> rest, line, column, buffer, acc, state) do
+    acc = text_to_acc(buffer, acc)
+    handle_tag_close(rest, line, column + 2, acc, state)
+  end
+
+  defp handle_ignored_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
+    handle_ignored_body(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
+  end
+
+  defp handle_ignored_body(<<>>, _line, _column, buffer, acc, _state) do
+    ok(text_to_acc(buffer, acc))
+  end
+
   ## handle_tag_open
 
   defp handle_tag_open(text, line, column, acc, state) do
@@ -362,7 +395,8 @@ defmodule Surface.Compiler.Tokenizer do
           file: state.file,
           self_close: false,
           void_tag?: name in @void_elements,
-          macro?: macro_tag?(name)
+          macro?: macro_tag?(name),
+          ignored_body?: name in @ignored_body_tags
         }
 
         acc = [{:tag_open, name, [], meta} | acc]
@@ -455,6 +489,21 @@ defmodule Surface.Compiler.Tokenizer do
       |> update_meta(node_line_end: line, node_column_end: column)
 
     handle_macro_body(rest, line, column + 1, [], acc, state)
+  end
+
+  defp handle_maybe_tag_open_end(
+         ">" <> rest,
+         line,
+         column,
+         [{:tag_open, _name, _, %{ignored_body?: true}} | _] = acc,
+         state
+       ) do
+    acc =
+      acc
+      |> reverse_attrs()
+      |> update_meta(node_line_end: line, node_column_end: column)
+
+    handle_ignored_body(rest, line, column + 1, [], acc, state)
   end
 
   defp handle_maybe_tag_open_end(">" <> rest, line, column, acc, state) do

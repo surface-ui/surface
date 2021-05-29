@@ -906,6 +906,38 @@ defmodule Surface.Compiler.TokenizerTest do
            ] = tokens
   end
 
+  describe "ignored body tags" do
+    test "do not tokenize <style> contents" do
+      tokens =
+        tokenize!("""
+        <style>
+          .btn { color: red }
+        </style>\
+        """)
+
+      assert [
+               {:tag_open, "style", [], %{line: 1, column: 2}},
+               {:text, "\n  .btn { color: red }\n"},
+               {:tag_close, "style", %{line: 3, column: 3}}
+             ] = tokens
+    end
+
+    test "do not tokenize <script> contents" do
+      tokens =
+        tokenize!("""
+        <script>
+          x = {a: 1}
+        </script>\
+        """)
+
+      assert [
+               {:tag_open, "script", [], %{line: 1, column: 2}},
+               {:text, "\n  x = {a: 1}\n"},
+               {:tag_close, "script", %{line: 3, column: 3}}
+             ] = tokens
+    end
+  end
+
   describe "macro components" do
     test "do not tokenize its contents" do
       tokens =

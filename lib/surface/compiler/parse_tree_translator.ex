@@ -105,7 +105,8 @@ defmodule Surface.Compiler.ParseTreeTranslator do
       :column_end,
       :node_line_end,
       :node_column_end,
-      :macro?
+      :macro?,
+      :ignored_body?
     ])
   end
 end
