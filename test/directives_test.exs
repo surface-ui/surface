@@ -781,7 +781,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook="Button" :if={{ true }}></div>
+          <div :hook="Button" :if={true}></div>
           """
         end
 
@@ -792,7 +792,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook="Button" :for={{ _ <- [1] }}></div>
+          <div :hook="Button" :for={_ <- [1]}></div>
           """
         end
 
@@ -803,7 +803,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook="Button" :attrs={{id: "myid" }}></div>
+          <div :hook="Button" :attrs={id: "myid"}></div>
           """
         end
 
@@ -814,7 +814,7 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~H"""
-          <div :hook="Button" :show={{ false }}></div>
+          <div :hook="Button" :show={false}></div>
           """
         end
 
