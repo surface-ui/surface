@@ -22,7 +22,7 @@ defmodule Surface.Compiler.Converter_0_5 do
   end
 
   def convert(:double_quoted_string, value, _state, _opts) do
-    new_value = Regex.replace(~r/{{(.+?)}}/, value, "\#{\\1}")
+    new_value = Regex.replace(~r/{{(.+?)}}/s, value, "\#{\\1}")
 
     if new_value != value do
       "{#{new_value}}"
@@ -36,7 +36,7 @@ defmodule Surface.Compiler.Converter_0_5 do
   end
 
   def convert(:tag_open_end, text, %{tag_open_begin: "<If"}, _opts) do
-    [_, condition] = Regex.run(~r/condition={{(.+)}}/, text)
+    [_, condition] = Regex.run(~r/condition={{(.+)}}/s, text)
     " #{String.trim(condition)}}"
   end
 
@@ -49,7 +49,7 @@ defmodule Surface.Compiler.Converter_0_5 do
   end
 
   def convert(:tag_open_end, text, %{tag_open_begin: "<For"}, _opts) do
-    [_, each] = Regex.run(~r/each={{(.+)}}/, text)
+    [_, each] = Regex.run(~r/each={{(.+)}}/s, text)
     " #{String.trim(each)}}"
   end
 
