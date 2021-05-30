@@ -18,7 +18,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div class={ @class }>text</div>
+           <div class={@class}>text</div>
            <#Raw>
              <div class={{ @class }}>text</div>
            </#Raw>
@@ -41,12 +41,12 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
       assert expected == """
              <div
-               id={ @id }   class={@class}
-               phone = { @phone }
+               id={@id}   class={@class}
+               phone = {@phone}
              >
                <span title={123} />
-               1{ @name }2 3{@name}4
-                   5 { @value } 6
+               1{@name}2 3{@name}4
+                   5 {@value} 6
              7 </div>
              """
     end
@@ -101,7 +101,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
       assert expected == """
              <div class={@class}>
-               { @name }
+               {@name}
              </div>
              <div class={ {1, 2} }>
                { {3, 4} }
@@ -262,7 +262,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   test "convert literal strings with embedded interpolation" do
     expected =
       convert("""
-      <div id="id_{{@id}}">
+      <div id="id_{{@id1}}_{{ @id2 }}">
         <div id=
           "
           id_{{@id}}
@@ -272,7 +272,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div id={"id_\#{@id}"}>
+           <div id={"id_\#{@id1}_\#{@id2}"}>
              <div id=
                {"
                id_\#{@id}

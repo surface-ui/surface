@@ -11,7 +11,9 @@ defmodule Surface.Compiler.Converter_0_5 do
   @impl true
   def convert(:expr, text, _state, _opts) do
     if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
-      String.slice(text, 1..-2)
+      text
+      |> String.slice(1..-2)
+      |> trim_one()
     else
       text
     end
@@ -22,7 +24,7 @@ defmodule Surface.Compiler.Converter_0_5 do
   end
 
   def convert(:double_quoted_string, value, _state, _opts) do
-    new_value = Regex.replace(~r/{{(.+?)}}/s, value, "\#{\\1}")
+    new_value = Regex.replace(~r/{{(.+?)}}/s, value, fn _, x -> "\#{#{trim_one(x)}}" end)
 
     if new_value != value do
       "{#{new_value}}"
@@ -73,5 +75,11 @@ defmodule Surface.Compiler.Converter_0_5 do
 
   def convert(_type, text, _state, _opts) do
     text
+  end
+
+  defp trim_one(text) do
+    text
+    |> String.replace_prefix(" ", "")
+    |> String.replace_suffix(" ", "")
   end
 end
