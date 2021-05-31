@@ -68,9 +68,6 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
-  @project_deps_path Mix.Project.deps_path()
-  @project_deps_root Path.dirname(@project_deps_path)
-
   @default_syntax_version 5
   @syntax_versions Application.get_env(:surface, :syntax_compatibility_mode, [])
 
