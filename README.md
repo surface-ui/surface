@@ -107,11 +107,20 @@ guide.
 
 ## Migrating from `v0.4.x` to `v0.5.x`
 
-Surface v0.5.0 introduces a new syntax which requires migrating components written in previous versions.
+Surface `v0.5.0` introduces a new syntax which requires migrating components written in previous versions.
 In order to make the migration process as smooth as possible, Surface `v0.5.x` ships with a converter that
 can automatically translate the old syntax into the new one.
 
-Please follow the steps below to migrate your project.
+### Limitations of the converter
+
+1. By design, the converter doesn't touch Surface code inside documentation or macro components. If you have
+any code written inside `<!-- -->` or `<#Raw>...</#Raw>`, you need to convert it manually.
+
+2. The replacement of `~H` with `~F` happens globally in a `.ex` (or `.exs`) file, i.e., the converter will
+replace any occurrence of `~H` followed by `"""`, `"`, `[`, `(` or `{`, including occurrences found in comments.
+
+3. Running the converter on a project that has already been converted may generate invalid code. If anything goes
+wrong with the conversion, make sure you revert the changes before running it again.
 
 ### Before converting the project
 
@@ -120,23 +129,25 @@ a lot of files so it's recommended to have a safe way to rollback the changes in
 
 2. Check your dependencies. For a successful migration, all dependencies providing Surface components should also
 be converted before running the converter. Otherwise, you might not be able to compile your project in case any
-of those dependencies is using an invalid old syntax. If the dependency you need has not been updated yet,
-plaese consider running the converter against it and submitting a PR with those changes. The steps to convert a
-dependency are the same decribed here.
+of those dependencies is using the invalid old syntax. If the dependency you need has not been updated yet,
+please consider running the converter against it and submitting a PR with updated code. The steps to convert a
+dependency are the same decribed in this guide.
 
 ### Steps to run the converter
 
-Update your `.formatter` informing about `.sface` files and any additional folder you might have any component to be converted:
+Update your `.formatter` informing about `.sface` files and any additional folder where you might have any component
+to be converted:
 
 ```
 [
-  inputs: ["{mix,.formatter}.exs", "{config,lib,test,priv/catalogue}/**/*.{ex,exs,sface}"],
+  surface_inputs: ["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"],
   ...
 ]
 
 ```
 
 Update `mix.exs` to use the new version:
+
 ```
   defp deps do
     [
@@ -151,18 +162,18 @@ Compile the dependencies:
 ```
 mix clean && mix deps.get && mix deps.compile
 ```
+
 Run the converter:
+
 ```
 mix Surface.ConvertSyntax
 ```
 
-### Limitations of the converter
+Compile the converted project:
 
-1. By design, the converter doesn't touch Surface code inside documentation or macro components. If you have
-any code written inside `<!-- -->` or `<#Raw>...</#Raw>`, you need to convert it manually.
-
-2. The replacement of `~H` with `~F` happens globally in a `.ex` (or `.exs`) file, i.e. the converter will
-replace any occurrence of `~H` followed by `"""`, `"`, `[`, `(` and `{`, including occurrences found in comments.
+```
+mix compile
+```
 
 ## Static checking
 
