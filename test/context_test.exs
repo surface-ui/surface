@@ -9,7 +9,7 @@ defmodule ContextTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context put={__MODULE__, field: "field from Outer"}>
         <div><#slot/></div>
       </Context>
@@ -21,7 +21,7 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       Context: {inspect(@__context__)}
       """
     end
@@ -31,7 +31,7 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context
         get={ContextTest.Outer, field: field}
         get={ContextTest.InnerWrapper, field: other_field}>
@@ -46,7 +46,7 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context put={__MODULE__, field: "field from InnerWrapper"}>
         <Inner />
       </Context>
@@ -58,7 +58,7 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context get={ContextTest.Outer, field: my_field}>
         <span>{my_field}</span>
       </Context>
@@ -72,7 +72,7 @@ defmodule ContextTest do
     slot my_slot
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context put={field: "field from OuterWithNamedSlots"}>
         <span :for={{_slot, index} <- Enum.with_index(@my_slot)}>
           <#slot name="my_slot" index={index}/>
@@ -85,7 +85,7 @@ defmodule ContextTest do
   test "pass context to child component" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <Inner/>
         </Outer>
@@ -100,7 +100,7 @@ defmodule ContextTest do
   test "pass context to child component using :as option" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <InnerWithOptionAs/>
         </Outer>
@@ -117,7 +117,7 @@ defmodule ContextTest do
   test "pass context down the tree of components" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <InnerWrapper />
         </Outer>
@@ -132,7 +132,7 @@ defmodule ContextTest do
   test "context assingns are scoped by their parent components" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <InnerWrapper/>
         </Outer>
@@ -148,7 +148,7 @@ defmodule ContextTest do
   test "reset context after the component" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <Inner/>
         </Outer>
@@ -164,7 +164,7 @@ defmodule ContextTest do
   test "pass context to named slots" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlots>
           <#template slot="my_slot">
             <Context get={field: field}>
@@ -182,7 +182,7 @@ defmodule ContextTest do
     test "raise compile error when passing invalid bindings" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
             get={ContextTest.Outer, field: [field]}>
             {field}
@@ -205,7 +205,7 @@ defmodule ContextTest do
     test "raise compile error when passing no bindings" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
             get={ContextTest.Outer}>
             {field}
@@ -221,7 +221,7 @@ defmodule ContextTest do
     test "raise compile error when passing invalid scope" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
             get={123, field: field}>
             {field}
@@ -239,7 +239,7 @@ defmodule ContextTest do
     test "raise compile error when passing invalid values" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
             put={ContextTest.Outer, 123}>
             Inner Content
@@ -262,7 +262,7 @@ defmodule ContextTest do
     test "raise compile error when passing no values" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
             put={ContextTest.Outer}>
             Inner content
@@ -278,7 +278,7 @@ defmodule ContextTest do
     test "raise compile error when passing invalid scope" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
             put={123, field: field}>
             Inner content

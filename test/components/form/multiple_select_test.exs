@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "emtpy multiple select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "setting the options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} />
         """
       end
@@ -35,7 +35,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} class="select" />
         """
       end
@@ -46,7 +46,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} class="select primary" />
         """
       end
@@ -57,7 +57,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "passing selected" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} selected="admin"/>
         """
       end
@@ -73,7 +73,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} opts={disabled: "disabled"}/>
         """
       end
@@ -89,7 +89,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <MultipleSelect form="user" field="roles" options={["Admin": "admin", "User": "user"]} id="roles" name="roles[]"/>
         """
       end
@@ -112,7 +112,7 @@ defmodule Surface.Components.Form.MultipleSelectConfigTest do
     using_config MultipleSelect, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <MultipleSelect />
           """
         end

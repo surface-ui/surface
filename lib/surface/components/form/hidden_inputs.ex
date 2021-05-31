@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.HiddenInputs do
   prop for, :form
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <InputContext assigns={assigns} :let={form: form}>
       {hidden_inputs_for(form)}
     </InputContext>

@@ -28,34 +28,55 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   alias Surface.Compiler.Converter
   alias Surface.Compiler.Converter_0_5
 
+  @converter Converter_0_5
+
   defp format_string(string) do
-    Converter.convert(string, converter: Converter_0_5)
+    Converter.convert(string, converter: @converter)
   end
 
   #
   # Functions unique to surface.format (Everything else is taken from Mix.Tasks.Format)
   #
 
-  defp convert_file_contents!(file, input) do
-    case Path.extname(file) do
-      ".sface" ->
-        format_string(input)
+  @doc false
+  def convert_file_contents!(file, input) do
+    ext = Path.extname(file)
 
-      _ ->
-        convert_ex_string!(input)
-    end
+    content =
+      case ext do
+        ".sface" ->
+          format_string(input)
+
+        _ ->
+          convert_ex_string!(input)
+      end
+
+    @converter.after_convert_file(ext, content)
   end
 
   defp convert_ex_string!(input) do
-    converted_str =
-      ~r/( *)~H"\""(.*?)"""/s
-      |> Regex.replace(input, fn _match, indentation, surface_code ->
-        "#{indentation}~H\"\"\"#{format_string(surface_code)}\"\"\""
+    string =
+      Regex.replace(~r/( *)~H"\""(.*?)"""(\s)/s, input, fn _match, indent, code, space_after ->
+        "#{indent}~H\"\"\"#{format_string(code)}\"\"\"#{space_after}"
       end)
 
-    ~r/( *)~H\[(.*?)\]/s
-    |> Regex.replace(converted_str, fn _match, indentation, surface_code ->
-      "#{indentation}~H\[#{format_string(surface_code)}]"
+    string =
+      Regex.replace(~r/~H\"([^\"].*?)\"/s, string, fn _match, code ->
+        "~H\"#{format_string(code)}\""
+      end)
+
+    string =
+      Regex.replace(~r/~H\[(.*?)\]/s, string, fn _match, code ->
+        "~H[#{format_string(code)}]"
+      end)
+
+    string =
+      Regex.replace(~r/~H\((.*?)\)/s, string, fn _match, code ->
+        "~H(#{format_string(code)})"
+      end)
+
+    Regex.replace(~r/~H\{(.*?)\}/s, string, fn _match, code ->
+      "~H{#{format_string(code)}}"
     end)
   end
 

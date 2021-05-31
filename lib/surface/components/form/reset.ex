@@ -42,7 +42,7 @@ defmodule Surface.Components.Form.Reset do
     attr_opts = props_to_attr_opts(assigns, [:class])
     event_opts = events_to_opts(assigns)
 
-    ~H"""
+    ~F"""
     {reset(assigns[:value], helper_opts ++ attr_opts ++ @opts ++ event_opts)}
     """
   end

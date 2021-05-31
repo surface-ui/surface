@@ -78,7 +78,7 @@ defmodule Surface.Components.Form.TimeSelect do
       |> parse_css_class_for(:minute)
       |> parse_css_class_for(:second)
 
-    ~H"""
+    ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
       {time_select(form, field, helper_opts ++ @opts)}
     </InputContext>

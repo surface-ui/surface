@@ -147,13 +147,6 @@ Some experimental work on tooling around the library has been done. Here's a few
 - [x] Show documentation on hover for components
 - [ ] Show documentation on hover for properties
 
-### Other tools
-
-Having a standard way of defining components with typed properties allows us to
-enhance tools that introspect information from modules. One already discussed was
-the possibility to have `ex_doc` query that information to provide standard
-documentation for properties, events, slots, etc.
-
 ## License
 
 Copyright (c) 2020, Marlus Saraiva.

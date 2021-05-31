@@ -8,7 +8,7 @@ defmodule Surface.Components.RawTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <#Raw>
           <div>
             { @id }

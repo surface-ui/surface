@@ -46,7 +46,7 @@ defmodule Surface.Renderer do
         Make sure to either explicitly define a render/1 clause with a Surface template:
 
             def render(assigns) do
-              ~H"""
+              ~F"""
               ...
               """
             end

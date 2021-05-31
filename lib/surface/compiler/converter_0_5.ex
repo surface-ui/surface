@@ -9,6 +9,15 @@ defmodule Surface.Compiler.Converter_0_5 do
   end
 
   @impl true
+  def after_convert_file(ext, content) when ext in [".ex", ".exs"] do
+    Regex.replace(~r/~H("""|\"|\[|\(|\{)/s, content, "~F\\1")
+  end
+
+  def after_convert_file(_ext, content) do
+    content
+  end
+
+  @impl true
   def convert(:expr, text, _state, _opts) do
     if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
       text

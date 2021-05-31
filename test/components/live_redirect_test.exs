@@ -7,7 +7,7 @@ defmodule Surface.Components.LiveRedirectTest do
     use Surface.LiveComponent
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <LiveRedirect to="/users/1"/>
       </div>
@@ -22,7 +22,7 @@ defmodule Surface.Components.LiveRedirectTest do
   test "creates a link with label" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveRedirect label="user" to="/users/1" />
         """
       end
@@ -33,7 +33,7 @@ defmodule Surface.Components.LiveRedirectTest do
   test "creates a link without label" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveRedirect to="/users/1" />
         """
       end
@@ -44,7 +44,7 @@ defmodule Surface.Components.LiveRedirectTest do
   test "creates a link with default slot" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveRedirect to="/users/1"><span>user</span></LiveRedirect>
         """
       end
@@ -55,7 +55,7 @@ defmodule Surface.Components.LiveRedirectTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveRedirect label="user" to="/users/1" class="link" />
         """
       end
@@ -66,7 +66,7 @@ defmodule Surface.Components.LiveRedirectTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveRedirect label="user" to="/users/1" class="link primary" />
         """
       end
@@ -77,7 +77,7 @@ defmodule Surface.Components.LiveRedirectTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveRedirect
           label="user"
           to="/users/1"

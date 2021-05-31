@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field="percent" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field={:percent} />
         """
       end
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "setting min, max and step" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field="percent" min="0" max="100" step="50" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field="percent" min="0" max="100" value="25" />
         """
       end
@@ -58,7 +58,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field="percent" min="0" max="100" class="input" />
         """
       end
@@ -69,7 +69,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field="percent" min="0" max="100" class="input primary" />
         """
       end
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="volume" field="percent" min="0" max="100" opts={disabled: "disabled"} />
         """
       end
@@ -93,7 +93,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="user" field="color" value="25" click="my_click" />
         """
       end
@@ -104,7 +104,7 @@ defmodule Surface.Components.Form.RangeInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RangeInput form="user" field="percent" id="rate" name="rate" />
         """
       end
@@ -124,7 +124,7 @@ defmodule Surface.Components.Form.RangeInputConfigTest do
     using_config RangeInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <RangeInput/>
           """
         end

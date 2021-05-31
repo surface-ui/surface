@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="website" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field={:website} />
         """
       end
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="website" value="https://github.com/surface-ui/surface" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="website" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="website" class="input primary" />
         """
       end
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="website" opts={autofocus: "autofocus"} />
         """
       end
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="color" value="https://github.com/surface-ui/surface" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.UrlInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <UrlInput form="user" field="uri" id="website" name="website" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.UrlInputConfigTest do
     using_config UrlInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <UrlInput/>
           """
         end

@@ -6,7 +6,7 @@ defmodule HtmlTagTest do
   test "raise runtime error for invalid attributes values" do
     assert_raise(RuntimeError, ~r/invalid value for attribute "title"/, fn ->
       render_surface do
-        ~H"""
+        ~F"""
         <div title={{1, 2}}/>
         """
       end
@@ -19,7 +19,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div>
           {@value}
           </div>
@@ -38,7 +38,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div data-value={@value}/>
           """
         end
@@ -55,7 +55,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div>
           {{:safe, @value}}
           </div>
@@ -74,7 +74,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div data-value={{:safe, @value}}/>
           """
         end
@@ -89,7 +89,7 @@ defmodule HtmlTagTest do
     test "as literal string" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div title="My title"/>
           """
         end
@@ -102,7 +102,7 @@ defmodule HtmlTagTest do
     test "as literal string don't encode HTML entities" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div title="1 < 2"/>
           """
         end
@@ -115,7 +115,7 @@ defmodule HtmlTagTest do
     test "without a value" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div data-option-is-present />
           """
         end
@@ -130,7 +130,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div title={@title}/>
           """
         end
@@ -143,7 +143,7 @@ defmodule HtmlTagTest do
     test "with `@`, `:`, `_` as first char" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div click?="open = true" @click="open = true" :click="open = true" />
           """
         end
@@ -156,7 +156,7 @@ defmodule HtmlTagTest do
     test "with `@` and `.`" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div @click.away="open = false"/>
           """
         end
@@ -169,7 +169,7 @@ defmodule HtmlTagTest do
     test "with utf-8 attribute value" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div title="héllo"/>
           """
         end
@@ -182,7 +182,7 @@ defmodule HtmlTagTest do
     test "with utf-8 expression attribute value" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div title={"héllo"}/>
           """
         end
@@ -197,7 +197,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div nilvalue={@nilvalue}/>
           """
         end
@@ -210,7 +210,7 @@ defmodule HtmlTagTest do
     test "with nil value" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div nilvalue={nil}/>
           """
         end
@@ -225,7 +225,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div phx-click={@nilvalue}/>
           """
         end
@@ -242,7 +242,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class="myclass"/>
           """
         end
@@ -257,7 +257,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class={"default1", "default2", prop1: @value1, prop2: @value2, "is-#{@value3}": @value3, "is-#{@value4}": @value4}/>
           """
         end
@@ -272,7 +272,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class={"default.1", "default.2", "prop.1": @value1, prop2: @value2, prop3: @value3}/>
           """
         end
@@ -287,7 +287,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class={"default__1", "default__2", prop__1: @value1, prop2: @value2, prop3: @value3}/>
           """
         end
@@ -300,7 +300,7 @@ defmodule HtmlTagTest do
     test "css class defined with an atom" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class={:default}/>
           """
         end
@@ -315,7 +315,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class={"Default", Prop1: @value1}/>
           """
         end
@@ -330,7 +330,7 @@ defmodule HtmlTagTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div class={@value1}/>
           """
         end
@@ -346,7 +346,7 @@ defmodule HtmlTagTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <input
           disabled={false}
           checked={@checked}
@@ -367,7 +367,7 @@ defmodule HtmlTagTest do
     test "as string" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div style="height: 10px;"/>
           """
         end
@@ -380,7 +380,7 @@ defmodule HtmlTagTest do
     test "as string containing `:` in the value" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div style="background-image: url(https://example.com/breaks.jpg)"/>
           """
         end
@@ -393,7 +393,7 @@ defmodule HtmlTagTest do
     test "as expression" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div style={"height: 10px;"}/>
           """
         end
@@ -406,7 +406,7 @@ defmodule HtmlTagTest do
     test "raise runtime error for invalid style value" do
       assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
         render_surface do
-          ~H"""
+          ~F"""
           <div style={{1, 2}}/>
           """
         end

@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field={:color} />
         """
       end
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" value="mycolor" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" class="input"/>
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" class="input primary"/>
         """
       end
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" opts={autofocus: "autofocus"} />
         """
       end
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" value="mycolor" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.ColorInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ColorInput form="user" field="color" id="color" name="color" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.ColorInputConfigTest do
     using_config ColorInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ColorInput/>
           """
         end

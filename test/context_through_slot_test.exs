@@ -8,7 +8,7 @@ defmodule Surface.ContextThroughSlotTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context put={foo: @foo}>
         <#slot />
       </Context>
@@ -22,7 +22,7 @@ defmodule Surface.ContextThroughSlotTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <Parent.ContextProvider foo="bar">
           <#slot />
@@ -37,7 +37,7 @@ defmodule Surface.ContextThroughSlotTest do
 
     def render(assigns) do
       # @foo is nil here
-      ~H"""
+      ~F"""
       <Context get={foo: foo}>
         <div>{foo}</div>
       </Context>
@@ -49,7 +49,7 @@ defmodule Surface.ContextThroughSlotTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
         <Parent>
           <Child/>
         </Parent>

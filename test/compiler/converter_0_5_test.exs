@@ -3,6 +3,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
   alias Surface.Compiler.Converter
   alias Surface.Compiler.Converter_0_5
+  alias Mix.Tasks.Surface.ConvertSyntax
 
   defp convert(text) do
     Converter.convert(text, converter: Converter_0_5)
@@ -297,6 +298,84 @@ defmodule Surface.Compiler.Converter_0_5Test do
              "}>
              </div>
            </div>
+           """
+  end
+
+  test ~S(replace ~H""" with ~F""") do
+    code = """
+    ~H"\""
+    <Link label="elixir" to={{url}} />
+    "\""
+
+    ~H"\""
+    <Link label="elixir" to={{url}} />
+    "\""
+    """
+
+    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+           ~F"\""
+           <Link label="elixir" to={url} />
+           "\""
+
+           ~F"\""
+           <Link label="elixir" to={url} />
+           "\""
+           """
+  end
+
+  test ~S(replace ~H" with ~F") do
+    code = """
+    ~H"<Link label='elixir' to={{url}} />"
+
+    ~H"<Link label='elixir' to={{url}} />"
+    """
+
+    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+           ~F"<Link label='elixir' to={url} />"
+
+           ~F"<Link label='elixir' to={url} />"
+           """
+  end
+
+  test "replace ~H[ with ~F[" do
+    code = """
+    ~H[<Link label="elixir" to={{url}} />]
+
+    ~H[<Link label="elixir" to={{url}} />]
+    """
+
+    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+           ~F[<Link label="elixir" to={url} />]
+
+           ~F[<Link label="elixir" to={url} />]
+           """
+  end
+
+  test "replace ~H( with ~F(" do
+    code = """
+    ~H(<Link label="elixir" to={{url}} />)
+
+    ~H(<Link label="elixir" to={{url}} />)
+    """
+
+    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+           ~F(<Link label="elixir" to={url} />)
+
+           ~F(<Link label="elixir" to={url} />)
+           """
+  end
+
+  test "replace ~H{ with ~F{" do
+    code = """
+    ~H{<slot name="header" />}
+
+    ~H{<slot name="footer" />}
+    """
+
+    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+           ~F{<#slot name="header" />}
+
+           ~F{<#slot name="footer" />}
            """
   end
 
