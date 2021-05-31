@@ -131,16 +131,9 @@ defmodule Surface.Compiler do
   end
 
   defp find_syntax_version(file) do
-    path =
-      if String.starts_with?(file, @project_deps_path) do
-        Path.relative_to(file, @project_deps_root)
-      else
-        Path.relative_to_cwd(file)
-      end
-
     {_prefix, version} =
       @syntax_versions
-      |> Enum.filter(fn {prefix, _version} -> String.starts_with?(path, prefix) end)
+      |> Enum.filter(fn {prefix, _version} -> String.starts_with?(file, prefix) end)
       |> Enum.max_by(fn {prefix, _version} -> String.length(prefix) end, fn ->
         {nil, @default_syntax_version}
       end)
