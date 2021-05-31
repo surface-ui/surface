@@ -89,10 +89,24 @@ defmodule Surface.Compiler.ParseTreeTranslator do
   end
 
   def to_meta(%{void_tag?: true} = meta) do
-    Map.drop(meta, [:self_close, :line_end, :column_end])
+    drop_common_keys(meta)
   end
 
   def to_meta(meta) do
-    Map.drop(meta, [:self_close, :line_end, :column_end, :void_tag?])
+    meta
+    |> Map.drop([:void_tag?])
+    |> drop_common_keys()
+  end
+
+  defp drop_common_keys(meta) do
+    Map.drop(meta, [
+      :self_close,
+      :line_end,
+      :column_end,
+      :node_line_end,
+      :node_column_end,
+      :macro?,
+      :ignored_body?
+    ])
   end
 end

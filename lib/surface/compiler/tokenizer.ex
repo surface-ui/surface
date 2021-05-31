@@ -9,6 +9,8 @@ defmodule Surface.Compiler.Tokenizer do
   @block_name_stop_chars @space_chars ++ '}'
   @markers ["=", "...", "~", "$"]
 
+  @ignored_body_tags ["style", "script"]
+
   @void_elements [
     "area",
     "base",
@@ -25,8 +27,52 @@ defmodule Surface.Compiler.Tokenizer do
     "source"
   ]
 
+  @type metadata :: %{
+          line: integer(),
+          column: integer(),
+          line_end: integer(),
+          column_end: integer(),
+          file: binary()
+        }
+
+  @type text :: {:text, value :: binary()}
+
+  @type comment_metadata :: metadata() | %{visibility: :public | :private}
+  @type comment :: {:comment, value :: binary(), comment_metadata()}
+
+  @type block_metadata :: metadata()
+  @type block_name :: binary() | :default
+  @type block_open ::
+          {:block_open, block_name, expression :: nil | binary(), block_metadata()}
+  @type block_close :: {:block_close, block_name, metadata()}
+
+  @type expression_metadata :: {:expr, value :: binary(), metadata()}
+  @type expression :: {:expr, value :: binary(), metadata()}
+
+  @type attribute_value :: {:string, value :: binary() | nil, metadata()} | expression()
+  @type attribute_name :: binary() | :root
+  @type attribute_metadata :: metadata()
+  @type attribute :: {attribute_name(), attribute_value(), metadata()}
+
+  @type tag_metadata ::
+          metadata()
+          | %{
+              void_tag?: boolean(),
+              macro?: boolean(),
+              ignored_body?: boolean(),
+              self_close: boolean(),
+              node_line_end: integer(),
+              node_column_end: integer()
+            }
+  @type tag_name :: binary()
+  @type tag_open :: {:tag_open, name :: binary(), list(attribute()), tag_metadata()}
+  @type tag_close :: {:tag_close, name :: binary(), metadata()}
+
+  @type token :: text() | comment() | block_open() | block_close() | tag_open() | tag_close()
+
   alias Surface.Compiler.ParseError
 
+  @spec tokenize!(binary(), keyword()) :: list(token())
   def tokenize!(text, opts \\ []) do
     file = Keyword.get(opts, :file, "nofile")
     line = Keyword.get(opts, :line, 1)
@@ -64,14 +110,16 @@ defmodule Surface.Compiler.Tokenizer do
 
     comment = buffer_to_string(new_buffer)
 
-    handle_text(
-      new_rest,
-      new_line,
-      new_column,
-      [],
-      [{:comment, comment, %{visibility: :public}} | acc],
-      state
-    )
+    meta = %{
+      line: line,
+      column: column,
+      new_line: new_line,
+      new_column: new_column,
+      file: state.file,
+      visibility: :public
+    }
+
+    handle_text(new_rest, new_line, new_column, [], [{:comment, comment, meta} | acc], state)
   end
 
   defp handle_text("{!--" <> rest, line, column, buffer, acc, %{syntax_version: version} = state)
@@ -83,14 +131,16 @@ defmodule Surface.Compiler.Tokenizer do
 
     comment = buffer_to_string(new_buffer)
 
-    handle_text(
-      new_rest,
-      new_line,
-      new_column,
-      [],
-      [{:comment, comment, %{visibility: :private}} | acc],
-      state
-    )
+    meta = %{
+      line: line,
+      column: column,
+      new_line: new_line,
+      new_column: new_column,
+      file: state.file,
+      visibility: :private
+    }
+
+    handle_text(new_rest, new_line, new_column, [], [{:comment, comment, meta} | acc], state)
   end
 
   defp handle_text("{#" <> rest, line, column, buffer, acc, %{syntax_version: version} = state)
@@ -316,15 +366,8 @@ defmodule Surface.Compiler.Tokenizer do
     handle_macro_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
   end
 
-  defp handle_macro_body("</#" <> <<first, rest::binary>>, line, column, buffer, acc, state)
-       when first in ?A..?Z do
-    handle_tag_close(
-      "#" <> <<first::utf8>> <> rest,
-      line,
-      column + 2,
-      text_to_acc(buffer, acc),
-      state
-    )
+  defp handle_macro_body("</#" <> text, line, column, buffer, acc, state) do
+    handle_maybe_macro_close_tag("#" <> text, line, column + 2, buffer, acc, state)
   end
 
   defp handle_macro_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
@@ -332,6 +375,66 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_macro_body(<<>>, _line, _column, buffer, acc, _state) do
+    ok(text_to_acc(buffer, acc))
+  end
+
+  ## handle_maybe_macro_close_tag
+
+  defp handle_maybe_macro_close_tag(
+         text,
+         line,
+         column,
+         buffer,
+         [{:tag_open, macro_name, _, _} | _] = acc,
+         state
+       ) do
+    case handle_tag_name(text, column, []) do
+      {:ok, name, new_column, rest} when name == macro_name ->
+        meta = %{
+          line: line,
+          column: column,
+          line_end: line,
+          column_end: new_column,
+          file: state.file
+        }
+
+        acc = text_to_acc(buffer, acc)
+        acc = [{:tag_close, name, meta} | acc]
+
+        handle_tag_close_end(rest, line, new_column, acc, state)
+
+      _ ->
+        handle_macro_body(text, line, column, ["</" | buffer], acc, state)
+    end
+  end
+
+  ## handle_ignored_body
+
+  defp handle_ignored_body("\r\n" <> rest, line, _column, buffer, acc, state) do
+    handle_ignored_body(
+      rest,
+      line + 1,
+      state.column_offset,
+      ["\r\n" | buffer],
+      acc,
+      state
+    )
+  end
+
+  defp handle_ignored_body("\n" <> rest, line, _column, buffer, acc, state) do
+    handle_ignored_body(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
+  end
+
+  defp handle_ignored_body("</" <> rest, line, column, buffer, acc, state) do
+    acc = text_to_acc(buffer, acc)
+    handle_tag_close(rest, line, column + 2, acc, state)
+  end
+
+  defp handle_ignored_body(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
+    handle_ignored_body(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
+  end
+
+  defp handle_ignored_body(<<>>, _line, _column, buffer, acc, _state) do
     ok(text_to_acc(buffer, acc))
   end
 
@@ -346,7 +449,10 @@ defmodule Surface.Compiler.Tokenizer do
           line_end: line,
           column_end: new_column,
           file: state.file,
-          void_tag?: name in @void_elements
+          self_close: false,
+          void_tag?: name in @void_elements,
+          macro?: macro_tag?(name),
+          ignored_body?: name in @ignored_body_tags
         }
 
         acc = [{:tag_open, name, [], meta} | acc]
@@ -418,27 +524,49 @@ defmodule Surface.Compiler.Tokenizer do
   end
 
   defp handle_maybe_tag_open_end("/>" <> rest, line, column, acc, state) do
-    acc = reverse_attrs(acc)
-    handle_text(rest, line, column + 2, [], put_self_close(acc), state)
+    acc =
+      acc
+      |> reverse_attrs()
+      |> update_meta(self_close: true, node_line_end: line, node_column_end: column)
+
+    handle_text(rest, line, column + 2, [], acc, state)
   end
 
   defp handle_maybe_tag_open_end(
          ">" <> rest,
          line,
          column,
-         [{:tag_open, "#" <> <<first, _::binary>>, _, _} | _] = acc,
+         [{:tag_open, _name, _, %{macro?: true}} | _] = acc,
          state
-       )
-       when first in ?A..?Z do
-    acc = reverse_attrs(acc)
+       ) do
+    acc =
+      acc
+      |> reverse_attrs()
+      |> update_meta(node_line_end: line, node_column_end: column)
+
     handle_macro_body(rest, line, column + 1, [], acc, state)
+  end
+
+  defp handle_maybe_tag_open_end(
+         ">" <> rest,
+         line,
+         column,
+         [{:tag_open, _name, _, %{ignored_body?: true}} | _] = acc,
+         state
+       ) do
+    acc =
+      acc
+      |> reverse_attrs()
+      |> update_meta(node_line_end: line, node_column_end: column)
+
+    handle_ignored_body(rest, line, column + 1, [], acc, state)
   end
 
   defp handle_maybe_tag_open_end(">" <> rest, line, column, acc, state) do
     acc =
       acc
       |> reverse_attrs()
-      |> update_meta(&Map.merge(&1, %{node_line_end: line, node_column_end: column}))
+      |> update_meta(node_line_end: line, node_column_end: column)
 
     handle_text(rest, line, column + 1, [], acc, state)
   end
@@ -901,17 +1029,14 @@ defmodule Surface.Compiler.Tokenizer do
     [{:tag_open, name, attrs, meta} | acc]
   end
 
-  defp update_meta([{:tag_open, name, attrs, meta} | acc], fun) do
-    [{:tag_open, name, attrs, fun.(meta)} | acc]
+  defp update_meta([{:tag_open, name, attrs, meta} | acc], values) do
+    meta = Map.merge(meta, Map.new(values))
+
+    [{:tag_open, name, attrs, meta} | acc]
   end
 
   defp reverse_attrs([{:tag_open, name, attrs, meta} | acc]) do
     attrs = Enum.reverse(attrs)
-    [{:tag_open, name, attrs, meta} | acc]
-  end
-
-  defp put_self_close([{:tag_open, name, attrs, meta} | acc]) do
-    meta = Map.put(meta, :self_close, true)
     [{:tag_open, name, attrs, meta} | acc]
   end
 
@@ -922,6 +1047,9 @@ defmodule Surface.Compiler.Tokenizer do
   defp pop_brace(%{braces: [pos | braces]} = state) do
     {pos, %{state | braces: braces}}
   end
+
+  defp macro_tag?(<<"#", first, _rest::binary>>) when first in ?A..?Z, do: true
+  defp macro_tag?(_name), do: false
 
   defp parse_error(message, line, column, state) do
     %ParseError{message: message, file: state.file, line: line, column: column}

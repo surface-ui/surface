@@ -208,7 +208,35 @@ defmodule Surface.Compiler.Converter do
         _ -> {type, state}
       end
 
-    {[converter.convert(new_type, value, new_state, opts) | acc], new_state}
+    converted_text =
+      try do
+        converter.convert(new_type, value, new_state, opts)
+      rescue
+        exception ->
+          message = """
+          can't convert token of type #{inspect(new_type)}
+
+          Original type #{inspect(new_type)}
+
+          Value:
+
+          ---
+          #{value}
+          ---
+
+          Converter state:
+
+            #{inspect(state)}
+
+          Original error:
+
+            #{Exception.message(exception)}
+          """
+
+          reraise RuntimeError, [message: message], __STACKTRACE__
+      end
+
+    {[converted_text | acc], new_state}
   end
 
   defp buffer_to_string(buffer) do

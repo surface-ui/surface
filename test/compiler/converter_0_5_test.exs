@@ -18,7 +18,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div class={ @class }>text</div>
+           <div class={@class}>text</div>
            <#Raw>
              <div class={{ @class }}>text</div>
            </#Raw>
@@ -41,12 +41,12 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
       assert expected == """
              <div
-               id={ @id }   class={@class}
-               phone = { @phone }
+               id={@id}   class={@class}
+               phone = {@phone}
              >
                <span title={123} />
-               1{ @name }2 3{@name}4
-                   5 { @value } 6
+               1{@name}2 3{@name}4
+                   5 {@value} 6
              7 </div>
              """
     end
@@ -101,7 +101,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
       assert expected == """
              <div class={@class}>
-               { @name }
+               {@name}
              </div>
              <div class={ {1, 2} }>
                { {3, 4} }
@@ -192,6 +192,29 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert <If> multiline expression into {#if}" do
+    expected =
+      convert("""
+      <div>
+        <If condition={{ @var ==
+                         1 }}>
+          1
+          </If>
+        <If   condition={{@var}}>2</If>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             {#if @var ==
+                              1}
+               1
+               {/if}
+             {#if @var}2{/if}
+           </div>
+           """
+  end
+
   test "convert <For> into <#For>" do
     expected =
       convert("""
@@ -213,10 +236,33 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert <For> with multiline expression into <#For>" do
+    expected =
+      convert("""
+      <div>
+        <For each={{ i <- @var,
+                     i > 0 }}>
+          1
+          </For>
+        <For   each={{@var}}>2</For>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             {#for i <- @var,
+                          i > 0}
+               1
+               {/for}
+             {#for @var}2{/for}
+           </div>
+           """
+  end
+
   test "convert literal strings with embedded interpolation" do
     expected =
       convert("""
-      <div id="id_{{@id}}">
+      <div id="id_{{@id1}}_{{ @id2 }}">
         <div id=
           "
           id_{{@id}}
@@ -226,7 +272,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div id={"id_\#{@id}"}>
+           <div id={"id_\#{@id1}_\#{@id2}"}>
              <div id=
                {"
                id_\#{@id}
