@@ -259,7 +259,25 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
-  test "convert literal strings with embedded interpolation" do
+  test "convert strings with embedded interpolation" do
+    expected =
+      convert("""
+      <img src="{{ "/" }}">
+      """)
+
+    assert expected == """
+           <img src={"\#{"/"}"}>
+           """
+
+    expected =
+      convert("""
+      <img src="{{ String.upcase("abc") }}">
+      """)
+
+    assert expected == """
+           <img src={"\#{String.upcase("abc")}"}>
+           """
+
     expected =
       convert("""
       <div id="id_{{@id1}}_{{ @id2 }}">
