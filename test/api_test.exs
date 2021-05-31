@@ -376,7 +376,7 @@ defmodule Surface.APITest do
 
         slot default, props: [item: ^unknown]
 
-        def render(assigns), do: ~H()
+        def render(assigns), do: ~F()
       end
       """
 
@@ -405,7 +405,7 @@ defmodule Surface.APITest do
 
         slot default, props: [item: ^label]
 
-        def render(assigns), do: ~H()
+        def render(assigns), do: ~F()
       end
       """
 
@@ -537,7 +537,7 @@ defmodule Surface.APITest do
       #{code}
 
       def render(assigns) do
-        ~H(<div></div>)
+        ~F(<div></div>)
       end
     end
     """
@@ -569,7 +569,7 @@ defmodule Surface.APISyncTest do
     slot footer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot name="header"/>
         <#slot/>
@@ -587,7 +587,7 @@ defmodule Surface.APISyncTest do
     slot footer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot name="header"/>
         <#slot/>
@@ -607,7 +607,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot/>
           "\""
         end
@@ -635,7 +635,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot>
           </ComponentWithRequiredDefaultSlot>
           "\""
@@ -664,7 +664,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot>
             <#template slot="header">
               Header
@@ -696,7 +696,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredSlots>
           </ComponentWithRequiredSlots>
           "\""
@@ -725,7 +725,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot>
             <NonExisting>
               Don't validate me!

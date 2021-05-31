@@ -80,11 +80,11 @@ defmodule Surface.Compiler do
   end
 
   @doc """
-  This function compiles a string into the Surface AST.This is used by ~H and Surface.Renderer to parse and compile templates.
+  This function compiles a string into the Surface AST.This is used by ~F and Surface.Renderer to parse and compile templates.
 
   A special note for line: This is considered the line number for the first line in the string. If the first line of the
   string is also the first line of the file, then this should be 1. If this is being called within a macro (say to process a heredoc
-  passed to ~H), this should be __CALLER__.line + 1.
+  passed to ~F), this should be __CALLER__.line + 1.
   """
   @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary(), Keyword.t()) :: [
           Surface.AST.t()
@@ -188,7 +188,7 @@ defmodule Surface.Compiler do
       Hint: You can wrap the root `#{meta.node_alias}` node in another element. Example:
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <div>
             <#{meta.node_alias} ... >
               ...

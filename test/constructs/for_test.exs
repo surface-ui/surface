@@ -8,7 +8,7 @@ defmodule Surface.Constructs.ForTest do
     prop prop, :list
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       List?: {is_list(@prop)}
       <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
@@ -21,7 +21,7 @@ defmodule Surface.Constructs.ForTest do
     prop content, :any
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span>{@content}</span>
       """
     end
@@ -30,7 +30,7 @@ defmodule Surface.Constructs.ForTest do
   test "warn when using deprecated <For>" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <For each={fruit <- ["apples", "bananas", "oranges"]}>
           Warning {fruit}
         </For>
@@ -55,7 +55,7 @@ defmodule Surface.Constructs.ForTest do
   test "parser error message contains the correct line" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <For each={fruit <- ["apples", "bananas", "oranges"]}>
           <span>The inner content
         </For>
@@ -72,7 +72,7 @@ defmodule Surface.Constructs.ForTest do
   test "compile error message contains the correct line" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <For each={fruit <- ["apples", "bananas", "oranges"]}>
           <ListProp
             prop="some string" />
@@ -91,7 +91,7 @@ defmodule Surface.Constructs.ForTest do
     test "renders inner content with generator" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- ["apples", "bananas", "oranges"]}
             <span>The inner content {fruit}</span>
             <span>with multiple tags</span>
@@ -114,7 +114,7 @@ defmodule Surface.Constructs.ForTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for x <- @list1, y <- @list2, x in @range, y in @range}
             <span>x: {x}, y: {y}</span>
           {/for}
@@ -130,7 +130,7 @@ defmodule Surface.Constructs.ForTest do
     test "renders inner content with component" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- ["apples", "bananas", "oranges"]}
             <SomeComponent content={fruit} />
           {/for}
@@ -147,7 +147,7 @@ defmodule Surface.Constructs.ForTest do
     test "parser error message contains the correct line" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#for fruit <- ["apples", "bananas", "oranges"]}
             <span>The inner content
           {/for}
@@ -164,7 +164,7 @@ defmodule Surface.Constructs.ForTest do
     test "compile error message contains the correct line" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#for fruit <- ["apples", "bananas", "oranges"]}
             <ListProp
               prop="some string" />
@@ -185,7 +185,7 @@ defmodule Surface.Constructs.ForTest do
     test "renders inner `for` content if generator is not empty" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- ["apples", "bananas", "oranges"]}
             <span>The inner content {fruit}</span>
             <span>with multiple tags</span>
@@ -209,7 +209,7 @@ defmodule Surface.Constructs.ForTest do
     test "renders inner content with component" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- ["apples", "bananas", "oranges"]}
             <SomeComponent content={fruit} />
           {#else}
@@ -232,7 +232,7 @@ defmodule Surface.Constructs.ForTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- @fruits}
             <span>The inner content {fruit}</span>
             <span>with multiple tags</span>
@@ -258,7 +258,7 @@ defmodule Surface.Constructs.ForTest do
 
       code =
         quote do
-          ~H"""
+          ~F"""
           {#for x <- @list1, y <- @list2, x in @range, y in @range}
             <span>x: {x}, y: {y}</span>
           {#else}
@@ -279,7 +279,7 @@ defmodule Surface.Constructs.ForTest do
     test "renders inner `else` if generator is empty" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- []}
             <span>The inner content {fruit}</span>
             <span>with multiple tags</span>
@@ -299,7 +299,7 @@ defmodule Surface.Constructs.ForTest do
     test "renders inner `else` with component" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#for fruit <- []}
             <span>The inner content {fruit}</span>
             <span>with multiple tags</span>

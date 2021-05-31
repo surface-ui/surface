@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.FieldContext do
   slot default, required: true
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <Context put={Field, field: @name}>
       <#slot/>
     </Context>

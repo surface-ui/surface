@@ -12,7 +12,7 @@ defmodule Surface.SlotChangeTrackingTest do
     slot default, props: [:param]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div><#slot :props={param: "Param from Outer"}/></div>
       """
     end
@@ -30,7 +30,7 @@ defmodule Surface.SlotChangeTrackingTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Outer id="outer" :let={param: param}>
         Count: {@count}
         <CheckUpdated id="1" dest={@test_pid} content={param} />
@@ -52,7 +52,7 @@ defmodule Surface.SlotChangeTrackingTest do
     data value, :integer, default: 0
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         Value in the Counter: {@value}
         <#slot :props={value: @value}/>
@@ -70,7 +70,7 @@ defmodule Surface.SlotChangeTrackingTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Counter id="counter" :let={value: value}>
         Value in the View: {value}
       </Counter>

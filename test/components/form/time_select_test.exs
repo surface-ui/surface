@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "datetime select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "with form context" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:alarm}>
           <TimeSelect field={:time} />
         </Form>
@@ -34,7 +34,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the value as map" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" value={%{hour: 2, minute: 11, second: 13}} second={[]} />
         """
       end
@@ -47,7 +47,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the value as tuple" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" value={{2, 11, 13}} second={[]} />
         """
       end
@@ -60,7 +60,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the default value as map" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" default={%{hour: 2, minute: 11, second: 13}} second={[]} />
         """
       end
@@ -73,7 +73,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the default value as tuple" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" default={{2, 11, 13}} second={[]} />
         """
       end
@@ -86,7 +86,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" second={[]} />
         """
       end
@@ -99,7 +99,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing builder to select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
@@ -125,7 +125,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing options to hour, minute and second" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
@@ -144,7 +144,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "parsing class option in hour, minute and second" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
@@ -168,7 +168,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing extra options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"

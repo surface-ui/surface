@@ -79,7 +79,7 @@ defmodule Surface.Components.Form.DateSelect do
       |> parse_css_class_for(:month)
       |> parse_css_class_for(:day)
 
-    ~H"""
+    ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
       {date_select(form, field, helper_opts ++ @opts)}
     </InputContext>

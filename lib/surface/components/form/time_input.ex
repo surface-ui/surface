@@ -27,7 +27,7 @@ defmodule Surface.Components.Form.TimeInput do
     attr_opts = props_to_attr_opts(assigns, [:value, class: get_default_class()])
     event_opts = events_to_opts(assigns)
 
-    ~H"""
+    ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
       {time_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
     </InputContext>

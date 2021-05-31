@@ -6,6 +6,7 @@ defmodule Surface.Compiler.Converter do
   @callback opts() :: keyword()
   @callback convert(subject :: subject(), text :: binary(), state :: map(), opts :: keyword()) ::
               binary()
+  @callback after_convert_file(ext :: binary(), content :: binary()) :: binary()
 
   alias Surface.Compiler.Tokenizer
 

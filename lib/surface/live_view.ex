@@ -13,7 +13,7 @@ defmodule Surface.LiveView do
         use Surface.LiveView
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <Dialog title="Alert" id="dialog">
             This <b>Dialog</b> is a stateful component. Cool!
           </Dialog>
