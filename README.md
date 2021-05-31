@@ -156,10 +156,13 @@ Run the converter:
 mix Surface.ConvertSyntax
 ```
 
-### Limitations
+### Limitations of the converter
 
-By design, the converter doesn't touch code inside documentation nor macro components. If you have
+1. By design, the converter doesn't touch Surface code inside documentation or macro components. If you have
 any code written inside `<!-- -->` or `<#Raw>...</#Raw>`, you need to convert it manually.
+
+2. The replacement of `~H` with `~F` happens globally in a `.ex` (or `.exs`) file, i.e. the converter will
+replace any occurrence of `~H` followed by `"""`, `"`, `[`, `(` and `{`, including occurrences found in comments.
 
 ## Static checking
 
