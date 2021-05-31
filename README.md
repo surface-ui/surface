@@ -105,6 +105,62 @@ For further information regarding installation, including how to quickly get sta
 using a boilerplate, please visit the [Getting Started](https://surface-ui.org/getting_started)
 guide.
 
+## Migrating from `v0.4.x` to `v0.5.x`
+
+Surface v0.5.0 introduces a new syntax which requires migrating components written in previous versions.
+In order to make the migration process as smooth as possible, Surface `v0.5.x` ships with a converter that
+can automatically translate the old syntax into the new one.
+
+Please follow the steps below to migrate your project.
+
+### Before converting the project
+
+1. Make sure you have commited your work or have a proper backup before running the converter. It may touch
+a lot of files so it's recommended to have a safe way to rollback the changes in case anything goes wrong.
+
+2. Check your dependencies. For a successful migration, all dependencies providing Surface components should also
+be converted before running the converter. Otherwise, you might not be able to compile your project in case any
+of those dependencies is using an invalid old syntax. If the dependency you need has not been updated yet,
+plaese consider running the converter against it and submitting a PR with those changes. The steps to convert a
+dependency are the same decribed here.
+
+### Steps to run the converter
+
+Update your `.formatter` informing about `.sface` files and any additional folder you might have any component to be converted:
+
+```
+[
+  inputs: ["{mix,.formatter}.exs", "{config,lib,test,priv/catalogue}/**/*.{ex,exs,sface}"],
+  ...
+]
+
+```
+
+Update `mix.exs` to use the new version:
+```
+  defp deps do
+    [
+      {:surface, github: "surface-ui/surface"},
+      ...
+    ]
+  end
+```
+
+Compile the dependencies:
+
+```
+mix clean && mix deps.get && mix deps.compile
+```
+Run the converter:
+```
+mix Surface.ConvertSyntax
+```
+
+### Limitations
+
+By design, the converter doesn't touch code inside documentation nor macro components. If you have
+any code written inside `<!-- -->` or `<#Raw>...</#Raw>`, you need to convert it manually.
+
 ## Static checking
 
 Since components are ordinary Elixir modules, some static checking is already provided
