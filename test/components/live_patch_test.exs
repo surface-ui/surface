@@ -7,7 +7,7 @@ defmodule Surface.Components.LivePatchTest do
     use Surface.LiveComponent
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <LivePatch to="/users/1"/>
       </div>
@@ -23,7 +23,7 @@ defmodule Surface.Components.LivePatchTest do
     test "creates a link with label" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LivePatch label="user" to="/users/1" />
           """
         end
@@ -34,7 +34,7 @@ defmodule Surface.Components.LivePatchTest do
     test "creates a link without label" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LivePatch to="/users/1" />
           """
         end
@@ -45,7 +45,7 @@ defmodule Surface.Components.LivePatchTest do
     test "creates a link with default slot" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LivePatch to="/users/1"><span>user</span></LivePatch>
           """
         end
@@ -56,7 +56,7 @@ defmodule Surface.Components.LivePatchTest do
     test "setting the class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LivePatch label="user" to="/users/1" class="link" />
           """
         end
@@ -67,7 +67,7 @@ defmodule Surface.Components.LivePatchTest do
     test "setting multiple classes" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LivePatch label="user" to="/users/1" class="link primary" />
           """
         end
@@ -78,7 +78,7 @@ defmodule Surface.Components.LivePatchTest do
     test "passing other options" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LivePatch
             label="user"
             to="/users/1"

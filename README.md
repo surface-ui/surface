@@ -27,7 +27,7 @@ defmodule Hello do
   prop name, :string, required: true
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     Hello, {{ @name }}!
     """
   end
@@ -39,7 +39,7 @@ defmodule Example do
   use Surface.Component
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <Hello name="John Doe"/>
     """
   end
@@ -53,7 +53,7 @@ into Elixir's Abstract Syntax Tree (AST). It also translates standard HTML nodes
 extend their behaviour adding new features like syntactic sugar on attributes definition,
 directives, static validation and more.
 
-In order to have your code translated, you need to use the `~H` sigil when defining your templates.
+In order to have your code translated, you need to use the `~F` sigil when defining your templates.
 
 ## Features
 

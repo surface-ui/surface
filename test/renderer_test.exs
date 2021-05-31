@@ -9,7 +9,7 @@ defmodule Surface.RendererTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <ComponentWithExternalTemplate/>
       <LiveComponentWithExternalTemplate id="live_component"/>
       <LiveViewWithExternalTemplate id="live_view" />

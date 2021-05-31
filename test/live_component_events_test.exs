@@ -5,7 +5,7 @@ defmodule Surface.EventsTest do
     use Surface.LiveComponent
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>Live div</div>
       """
     end
@@ -17,7 +17,7 @@ defmodule Surface.EventsTest do
     prop click, :event, default: "click"
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <button :on-click={@click}>Click me!</button>
       """
     end
@@ -33,7 +33,7 @@ defmodule Surface.EventsTest do
     prop buttonClick, :event, default: "click"
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <Button id="button_id" click={@buttonClick}/>
       </div>
@@ -51,7 +51,7 @@ defmodule Surface.EventsTest do
     prop click, :event
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <button phx-click={@click}/>
       """
     end
@@ -65,7 +65,7 @@ defmodule Surface.EventsTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <Panel id="panel_id" buttonClick="click"/>
       </div>
@@ -88,7 +88,7 @@ defmodule Surface.EventsTest do
   test "handle event in parent component" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <div>
           <Panel id="panel_id"/>
         </div>
@@ -103,7 +103,7 @@ defmodule Surface.EventsTest do
   test "handle event locally" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <div>
           <Button id="button_id"/>
         </div>
@@ -118,7 +118,7 @@ defmodule Surface.EventsTest do
   test "override target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <div>
           <Button id="button_id" click={%{name: "ok", target: "#comp"}}/>
         </div>
@@ -138,7 +138,7 @@ defmodule Surface.EventsTest do
     # Event name as string
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <div>
           <Button id="button_id" click={"ok", target: "#comp"}/>
         </div>
@@ -150,7 +150,7 @@ defmodule Surface.EventsTest do
     # Event name as atom
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <div>
           <Button id="button_id" click={:ok, target: "#comp"}/>
         </div>
@@ -163,7 +163,7 @@ defmodule Surface.EventsTest do
   test "passing event as nil does not render phx-*" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <div>
           <Button id="button_id" click={nil}/>
         </div>
@@ -184,7 +184,7 @@ defmodule Surface.EventsTest do
 
     assert_raise(RuntimeError, message, fn ->
       render_surface do
-        ~H"""
+        ~F"""
         <ButtonWithInvalidEvent id="button_id" click={"ok"}/>
         """
       end

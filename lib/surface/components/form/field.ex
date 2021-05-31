@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.Field do
   slot default, required: true
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <div class={class_value(@class)}>
       <Context put={__MODULE__, field: @name}>
         <#slot/>

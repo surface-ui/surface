@@ -26,7 +26,7 @@ defmodule Surface.Components.Form.Submit do
     opts = prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns)
     attrs = opts_to_attrs(opts)
 
-    ~H"""
+    ~F"""
     <button type="submit" :attrs={attrs}><#slot>{@label}</#slot></button>
     """
   end

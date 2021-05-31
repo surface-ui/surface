@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "datetime select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect form="user" field="born_at" />
         """
       end
@@ -22,7 +22,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "with form context" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user}>
           <DateTimeSelect field={:born_at} />
         </Form>
@@ -40,7 +40,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "setting the value as map" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect form="user" field="born_at" value={%{year: 2020, month: 10, day: 9, hour: 2, minute: 11, second: 13}} second={[]} />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "setting the value as tuple" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect form="user" field="born_at" value={{ {2020, 10, 9}, {2, 11, 13} }} second={[]} />
         """
       end
@@ -72,7 +72,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "setting the default value as map" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect form="user" field="born_at" default={%{year: 2020, month: 10, day: 9, hour: 2, minute: 11, second: 13}} second={[]} />
         """
       end
@@ -88,7 +88,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "setting the default value as tuple" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect form="user" field="born_at" default={{ {2020, 10, 9}, {2, 11, 13} }} second={[]} />
         """
       end
@@ -104,7 +104,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "passing builder to select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect
           form="user"
           field="born_at"
@@ -139,7 +139,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "passing options to year, month, day, hour, minute and second" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect
           form="user"
           field="born_at"
@@ -164,7 +164,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "parsing class option in year, month, day, hour, minute and second" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect
           form="user"
           field="born_at"
@@ -200,7 +200,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
   test "passing id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateTimeSelect
           form="user"
           field="born_at"

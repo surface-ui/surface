@@ -7,7 +7,7 @@ defmodule Surface.TransformTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span><#slot /></span>
       """
     end
@@ -20,7 +20,7 @@ defmodule Surface.TransformTest do
 
     @impl true
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div><#slot /></div>
       """
     end
@@ -39,7 +39,7 @@ defmodule Surface.TransformTest do
 
     @impl true
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div><#slot /></div>
       """
     end
@@ -56,7 +56,7 @@ defmodule Surface.TransformTest do
 
     @impl true
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div></div>
       """
     end
@@ -96,7 +96,7 @@ defmodule Surface.TransformTest do
 
     @impl true
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span></span>
       """
     end

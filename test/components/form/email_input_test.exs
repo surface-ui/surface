@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="email" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field={:email} />
         """
       end
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="email" value="admin@gmail.com" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="email" value="admin@gmail.com" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="email" value="admin@gmail.com" class="input primary" />
         """
       end
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="email" opts={autofocus: "autofocus"} />
         """
       end
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="color" value="admin@gmail.com" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.EmailInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <EmailInput form="user" field="email" id="myemail" name="myemail" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.EmailInputConfigTest do
     using_config EmailInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <EmailInput/>
           """
         end

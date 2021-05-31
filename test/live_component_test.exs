@@ -7,7 +7,7 @@ defmodule LiveComponentTest do
     prop label, :string
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div phx-click="click">{@label}</div>
       """
     end
@@ -24,7 +24,7 @@ defmodule LiveComponentTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div :on-click="click" id="theDiv">{@label} - {@assigned_in_update}</div>
       """
     end
@@ -41,7 +41,7 @@ defmodule LiveComponentTest do
     data label, :string, default: "Initial stateless"
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <StatelessComponent label={@label} />
       <StatefulComponent id="comp" />
       """
@@ -60,7 +60,7 @@ defmodule LiveComponentTest do
     def render(assigns) do
       info = "Hi there!"
 
-      ~H"""
+      ~F"""
       <div>
         <#slot :props={info: info}/>
       </div>
@@ -74,7 +74,7 @@ defmodule LiveComponentTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot/>
       </div>
@@ -88,7 +88,7 @@ defmodule LiveComponentTest do
     prop event, :event
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <button :on-click={@event} />
       """
     end
@@ -100,7 +100,7 @@ defmodule LiveComponentTest do
     data count, :integer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>{Map.has_key?(assigns, :count)}</div>
       """
     end
@@ -109,7 +109,7 @@ defmodule LiveComponentTest do
   test "render content without slot props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <InfoProviderWithoutSlotProps>
           <span>Hi there!</span>
         </InfoProviderWithoutSlotProps>
@@ -126,7 +126,7 @@ defmodule LiveComponentTest do
   test "render content with slot props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <InfoProvider :let={info: my_info}>
           <span>{my_info}</span>
         </InfoProvider>
@@ -143,7 +143,7 @@ defmodule LiveComponentTest do
   test "render stateful component with event" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveComponentWithEvent event="click-event" id="button" />
         """
       end
@@ -156,7 +156,7 @@ defmodule LiveComponentTest do
   test "do not set assign for `data` without default value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveComponentDataWithoutDefault id="counter"/>
         """
       end

@@ -40,7 +40,7 @@ defmodule Surface.Components.LiveRedirect do
   slot default
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <a
       class={@class}
       data-phx-link="redirect"

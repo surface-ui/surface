@@ -15,7 +15,7 @@ defmodule Surface.Components.LiveFileInputTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
         <LiveFileInput upload={@uploads.avatar} class={"test_class", disabled_test: true} opts={"data-test": "test-data", name: "a name?"} />
       """
     end
@@ -33,7 +33,7 @@ defmodule Surface.Components.LiveFileInputTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
         <LiveFileInput upload={@uploads.avatar} />
       """
     end
@@ -42,7 +42,7 @@ defmodule Surface.Components.LiveFileInputTest do
   test "correctly renders live_file_input/2 with `class` and `opts`" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveFileInputWithProps id="test" />
         """
       end
@@ -60,7 +60,7 @@ defmodule Surface.Components.LiveFileInputTest do
     using_config LiveFileInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <LiveFileInputWithoutProps id="test" />
           """
         end

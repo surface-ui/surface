@@ -8,7 +8,7 @@ defmodule Surface.Constructs.IfTest do
     prop prop, :list
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       List?: {is_list(@prop)}
       <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
@@ -21,7 +21,7 @@ defmodule Surface.Constructs.IfTest do
     prop content, :any
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span>{@content}</span>
       """
     end
@@ -30,7 +30,7 @@ defmodule Surface.Constructs.IfTest do
   test "warn when using deprecated <If>" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <If condition={true}>
           Warning
         </If>
@@ -55,7 +55,7 @@ defmodule Surface.Constructs.IfTest do
   test "parser error message contains the correct line" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <If condition={true}>
           <span>The inner content
         </If>
@@ -74,7 +74,7 @@ defmodule Surface.Constructs.IfTest do
   test "compile error message contains the correct line" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <If condition={true}>
           <ListProp prop="some string" />
         </If>
@@ -92,7 +92,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner if condition is truthy" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if true}
           <span>The inner content</span>
           <span>with multiple tags</span>
@@ -109,7 +109,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner if condition with component" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if true}
             <SomeComponent content="The inner content" />
           {/if}
@@ -124,7 +124,7 @@ defmodule Surface.Constructs.IfTest do
     test "parser error message contains the correct line" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#if true}
             <span>The inner content
           {/if}
@@ -141,7 +141,7 @@ defmodule Surface.Constructs.IfTest do
     test "compile error message contains the correct line" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#if false}
             <ListProp prop="some string" />
           {/if}
@@ -161,7 +161,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `if` condition, if condition is truthy" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if true}
             <span>The inner content</span>
             <span>with multiple tags</span>
@@ -181,7 +181,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `else` condition if condition is falsy" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             <span>The inner content</span>
             <span>with multiple tags</span>
@@ -201,7 +201,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `else` condition with component" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             <span>The inner content</span>
             <span>with multiple tags</span>
@@ -221,7 +221,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `elseif` condition if condition is truthy" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             IF
           {#elseif true}
@@ -240,7 +240,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `elseif` condition if condition is truthy even without an else clause" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             IF
           {#elseif true}
@@ -257,7 +257,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders nothing if all conditions are fasly" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             IF
           {#elseif false}
@@ -274,7 +274,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `else` condition if all `elseif` conditions are fasly" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             <span>The inner content</span>
             <span>with multiple tags</span>
@@ -297,7 +297,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders only first truthy condition" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if true}
             <span>The inner content</span>
             <span>with multiple tags</span>
@@ -322,7 +322,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner `elseif` condition if condition is truthy" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#if false}
             IF
           {#elseif false}
@@ -353,7 +353,7 @@ defmodule Surface.Constructs.IfTest do
     test "compile error message contains the correct line with nested struct" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#if false}
             IF
           {#elseif false}
@@ -385,7 +385,7 @@ defmodule Surface.Constructs.IfTest do
     test "parser error message contains the correct line with nested struct" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#if false}
             IF
           {#elseif false}
@@ -419,7 +419,7 @@ defmodule Surface.Constructs.IfTest do
     test "renders inner unless condition is falsy" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           {#unless false}
             <span>The inner content</span>
             <span>with multiple tags</span>
@@ -436,7 +436,7 @@ defmodule Surface.Constructs.IfTest do
     test "parser error message contains the correct line" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#unless false}
             <span>The inner content
           {/unless}
@@ -453,7 +453,7 @@ defmodule Surface.Constructs.IfTest do
     test "compile error message contains the correct line" do
       code =
         quote do
-          ~H"""
+          ~F"""
           {#unless false}
             <ListProp prop="some string" />
           {/unless}

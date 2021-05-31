@@ -10,7 +10,7 @@ defmodule Surface.Component do
         prop click, :event
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <button class="button" phx-click={{ @click }}>
             <#slot/>
           </button>
@@ -89,7 +89,7 @@ defmodule Surface.Component do
         end
 
         def render(var!(assigns)) do
-          ~H()
+          ~F()
         end
       end
     end

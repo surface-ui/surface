@@ -103,7 +103,7 @@ defmodule Surface.Components.Form.ErrorTag do
     translate_error = assigns.translator || translator_from_config() || (&translate_error/1)
     class = assigns.class || get_config(:default_class)
 
-    ~H"""
+    ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
       <span
         :for={error <- Keyword.get_values(form.errors, field)}

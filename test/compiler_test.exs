@@ -21,7 +21,7 @@ defmodule Surface.CompilerTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div><#slot /></div>
       """
     end
@@ -36,7 +36,7 @@ defmodule Surface.CompilerTest do
     prop disabled, :boolean
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <button />
       """
     end
@@ -60,7 +60,7 @@ defmodule Surface.CompilerTest do
     slot cols, props: [item: ^items]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       """
     end
   end
@@ -73,7 +73,7 @@ defmodule Surface.CompilerTest do
     slot cols
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div></div>
       """
     end
@@ -83,7 +83,7 @@ defmodule Surface.CompilerTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       """
     end
   end
@@ -911,7 +911,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>1</div><div>2</div>
         "\""
       end
@@ -936,7 +936,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.Component
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>
           {{ sum(assigns) }}
         </div>
@@ -944,7 +944,7 @@ defmodule Surface.CompilerSyncTest do
       end
 
       def sum(assigns) do
-        ~H"\""
+        ~F"\""
         {{ @a + @b }}
         "\""
       end
@@ -968,7 +968,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>
           {{ sum(assigns) }}
         </div>
@@ -976,7 +976,7 @@ defmodule Surface.CompilerSyncTest do
       end
 
       def sum(assigns) do
-        ~H"\""
+        ~F"\""
         {{ @a + @b }}
         "\""
       end
@@ -1000,7 +1000,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         just text
         "\""
       end
@@ -1026,7 +1026,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>Foo</div>
         "\""
       end
@@ -1035,7 +1035,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
           <TestLiveComponent_#{id_1} id="#{id_1}" />
         "\""
       end
@@ -1054,7 +1054,7 @@ defmodule Surface.CompilerSyncTest do
            Hint: You can wrap the root `TestLiveComponent_#{id_1}` node in another element. Example:
 
              def render(assigns) do
-               ~H"\""
+               ~F"\""
                <div>
                  <TestLiveComponent_#{id_1} ... >
                    ...
@@ -1076,7 +1076,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         {{ 1 }}
         "\""
       end
@@ -1105,7 +1105,7 @@ defmodule Surface.CompilerSyncTest do
       slot footer
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>
           <#slot>Default Content</#slot>
           <#slot name="header">Default Header</#slot>
@@ -1172,7 +1172,7 @@ defmodule Surface.CompilerSyncTest do
     defmodule CompilerTestComponent_#{id} do; \
       use Surface.Component; \
       def render(assigns) do; \
-        ~H"#{code}" \
+        ~F"#{code}" \
       end; \
     end\
     """

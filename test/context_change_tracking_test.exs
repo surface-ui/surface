@@ -12,7 +12,7 @@ defmodule Surface.ContextChangeTrackingTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context put={field: "field value"}>
         <div><#slot/></div>
       </Context>
@@ -30,7 +30,7 @@ defmodule Surface.ContextChangeTrackingTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context get={field: field}>
         <CheckUpdated id="1" dest={@test_pid} content={field}/>
         <CheckUpdated id="2" dest={@test_pid}/>
@@ -52,7 +52,7 @@ defmodule Surface.ContextChangeTrackingTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <ContextSetter>
           Count: {@count}

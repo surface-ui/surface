@@ -9,7 +9,7 @@ defmodule Surface.Catalogue.FakePlayground do
     }
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     {#for {prop, value} <- @props}
       {prop}: {value}
     {/for}
