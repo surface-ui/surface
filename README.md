@@ -27,8 +27,8 @@ defmodule Hello do
   prop name, :string, required: true
 
   def render(assigns) do
-    ~H"""
-    Hello, {{ @name }}!
+    ~F"""
+    Hello, {@name}!
     """
   end
 end
@@ -39,7 +39,7 @@ defmodule Example do
   use Surface.Component
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <Hello name="John Doe"/>
     """
   end
@@ -53,7 +53,7 @@ into Elixir's Abstract Syntax Tree (AST). It also translates standard HTML nodes
 extend their behaviour adding new features like syntactic sugar on attributes definition,
 directives, static validation and more.
 
-In order to have your code translated, you need to use the `~H` sigil when defining your templates.
+In order to have your code translated, you need to use the `~F` sigil when defining your templates.
 
 ## Features
 
@@ -111,69 +111,7 @@ Surface `v0.5.0` introduces a new syntax which requires migrating components wri
 In order to make the migration process as smooth as possible, Surface `v0.5.x` ships with a converter that
 can automatically translate the old syntax into the new one.
 
-### Limitations of the converter
-
-1. By design, the converter doesn't touch Surface code inside documentation or macro components. If you have
-any code written inside `<!-- -->` or `<#Raw>...</#Raw>`, you need to convert it manually.
-
-2. The replacement of `~H` with `~F` happens globally in a `.ex` (or `.exs`) file, i.e., the converter will
-replace any occurrence of `~H` followed by `"""`, `"`, `[`, `(` or `{`, including occurrences found in comments.
-
-3. Running the converter on a project that has already been converted may generate invalid code. If anything goes
-wrong with the conversion, make sure you revert the changes before running it again.
-
-### Before converting the project
-
-1. Make sure you have commited your work or have a proper backup before running the converter. It may touch
-a lot of files so it's recommended to have a safe way to rollback the changes in case anything goes wrong.
-
-2. Check your dependencies. For a successful migration, all dependencies providing Surface components should also
-be converted before running the converter. Otherwise, you might not be able to compile your project in case any
-of those dependencies is using the invalid old syntax. If the dependency you need has not been updated yet,
-please consider running the converter against it and submitting a PR with updated code. The steps to convert a
-dependency are the same decribed in this guide.
-
-### Steps to run the converter
-
-Update your `.formatter` informing about `.sface` files and any additional folder where you might have any component
-to be converted:
-
-```
-[
-  surface_inputs: ["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"],
-  ...
-]
-
-```
-
-Update `mix.exs` to use the new version:
-
-```
-  defp deps do
-    [
-      {:surface, github: "surface-ui/surface"},
-      ...
-    ]
-  end
-```
-
-Compile the dependencies:
-
-```
-mix clean && mix deps.get && mix deps.compile
-```
-
-Run the converter:
-
-```
-mix Surface.ConvertSyntax
-```
-
-Compile the converted project:
-
-```
-mix compile
-```
+Please see the [Migration Guide](MIGRATING.md) for details.
 
 ## Static checking
 
