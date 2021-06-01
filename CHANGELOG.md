@@ -10,6 +10,7 @@
   * Introduce `{#unless}` block expression
   * Introduce new shorthand notation for dynamic attributes/props using the `{... }` tagged expression
   * Introduce new shorthand notation for attribute assignment using the `{= }` tagged expression
+  * Support private comments using `{!--  --}` for comments that are not supposed to hit the browser
   * Introduce `s-` prefix as an alternative to `:` for directives (i.e. `s-if` and `:if` are now equivalent)
   * Introduce `:values` directive for generating multiple `phx-value-` attributes
   * Added a convert task to aid migrating to the new syntax
