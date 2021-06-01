@@ -32,7 +32,7 @@ to be converted:
 
 ```
 [
-  surface_inputs: ["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"],
+  surface_inputs: ["{lib,test}/**/*.{ex,exs,sface}", "priv/catalogue/**/*.{ex,exs,sface}"],
   ...
 ]
 
