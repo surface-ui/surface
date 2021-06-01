@@ -740,6 +740,81 @@ defmodule Surface.Compiler.ParserTest do
       assert parse!(code) ==
                [{"li", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
     end
+
+    test "shorthand notation for assigning attributes" do
+      code = """
+      <li
+        {=id}
+        {=@class}
+        {=@phx_capture_click}
+      />
+      """
+
+      [{"li", attributes, [], _} | _] = parse!(code)
+
+      assert [
+               {"id", {:attribute_expr, "id", %{column: 5, line: 2}}, %{column: 4, line: 2}},
+               {"class", {:attribute_expr, "@class", %{column: 5, line: 3}},
+                %{column: 4, line: 3}},
+               {"phx-capture-click",
+                {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
+                %{column: 4, line: 4}}
+             ] = attributes
+    end
+
+    test "shorthand notation for assigning props" do
+      code = """
+      <Component
+        {=id}
+        {=@class}
+        {=@phx_capture_click}
+      />
+      """
+
+      [{"Component", attributes, [], _} | _] = parse!(code)
+
+      assert [
+               {"id", {:attribute_expr, "id", %{column: 5, line: 2}}, %{column: 4, line: 2}},
+               {"class", {:attribute_expr, "@class", %{column: 5, line: 3}},
+                %{column: 4, line: 3}},
+               {"phx_capture_click",
+                {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
+                %{column: 4, line: 4}}
+             ] = attributes
+    end
+
+    test "raise on shorthand notation for assigning attributes with invalid expression " do
+      code = """
+      <li
+        {=1}
+      />
+      """
+
+      message = """
+      nofile:2: invalid value for tagged expression `{=1}`. The expression must be either an assign or a variable.
+
+      Examples: `<div {=@class}>` or `<div {=class}>`
+      """
+
+      assert_raise CompileError, message, fn -> parse!(code) end
+    end
+
+    test "raise on assigning {= ...} to an attribute" do
+      code = """
+      <li
+        class={=@class}
+      />
+      """
+
+      message = """
+      nofile:2: cannot assign `{=@class}` to attribute `class`. \
+      Tagged expression `{= }` can only be defined as root attribute/property.
+
+      Example: <div {=@class}>
+      """
+
+      assert_raise CompileError, message, fn -> parse!(code) end
+    end
   end
 
   describe "blocks" do
