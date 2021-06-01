@@ -28,7 +28,7 @@ defmodule Hello do
 
   def render(assigns) do
     ~F"""
-    Hello, {{ @name }}!
+    Hello, {@name}!
     """
   end
 end
@@ -105,6 +105,14 @@ For further information regarding installation, including how to quickly get sta
 using a boilerplate, please visit the [Getting Started](https://surface-ui.org/getting_started)
 guide.
 
+## Migrating from `v0.4.x` to `v0.5.x`
+
+Surface `v0.5.0` introduces a new syntax which requires migrating components written in previous versions.
+In order to make the migration process as smooth as possible, Surface `v0.5.x` ships with a converter that
+can automatically translate the old syntax into the new one.
+
+Please see the [Migration Guide](MIGRATING.md) for details.
+
 ## Static checking
 
 Since components are ordinary Elixir modules, some static checking is already provided
@@ -138,13 +146,6 @@ Some experimental work on tooling around the library has been done. Here's a few
 - [ ] Auto-complete/suggestions for properties (WIP)
 - [x] Show documentation on hover for components
 - [ ] Show documentation on hover for properties
-
-### Other tools
-
-Having a standard way of defining components with typed properties allows us to
-enhance tools that introspect information from modules. One already discussed was
-the possibility to have `ex_doc` query that information to provide standard
-documentation for properties, events, slots, etc.
 
 ## License
 
