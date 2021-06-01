@@ -101,7 +101,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
     message = """
     cannot assign `{...#{value}}` to attribute `#{name}`. \
-    Tagged expression `{... }` can only be defined as root attribute/property.
+    The tagged expression `{... }` can only be used on a root attribute/property.
 
     Example: <div {...@attrs}>
     """
@@ -144,7 +144,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
     message = """
     cannot assign `{=#{value}}` to attribute `#{name}`. \
-    Tagged expression `{= }` can only be defined as root attribute/property.
+    The tagged expression `{= }` can only be used on a root attribute/property.
 
     Example: <div {=@class}>
     """
