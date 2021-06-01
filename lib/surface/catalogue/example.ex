@@ -43,7 +43,7 @@ defmodule Surface.Catalogue.Example do
 
       import Surface, except: [sigil_F: 2]
 
-      defmacrop sigil_F({:<<>>, meta, [string]} = ast, opts) do
+      defmacrop sigil_F({:<<>>, _meta, [string]} = ast, opts) do
         Module.put_attribute(__CALLER__.module, :code, string)
 
         quote do
