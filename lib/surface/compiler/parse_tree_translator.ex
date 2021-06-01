@@ -68,6 +68,90 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     [{:root, {:attribute_expr, expr, meta}, meta}]
   end
 
+  def handle_attribute(
+        :root,
+        {:tagged_expr, "...", expr, _marker_meta},
+        attr_meta,
+        _state,
+        context
+      ) do
+    {:expr, value, expr_meta} = expr
+    %{tag_name: tag_name} = context
+
+    directive =
+      case tag_name do
+        <<first, _::binary>> when first in ?A..?Z ->
+          ":props"
+
+        _ ->
+          ":attrs"
+      end
+
+    {directive, {:attribute_expr, value, to_meta(expr_meta)}, to_meta(attr_meta)}
+  end
+
+  def handle_attribute(
+        name,
+        {:tagged_expr, "...", expr, marker_meta},
+        _attr_meta,
+        _state,
+        _context
+      ) do
+    {:expr, value, _expr_meta} = expr
+
+    message = """
+    cannot assign `{...#{value}}` to attribute `#{name}`. \
+    The tagged expression `{... }` can only be used on a root attribute/property.
+
+    Example: <div {...@attrs}>
+    """
+
+    IOHelper.compile_error(message, marker_meta.file, marker_meta.line)
+  end
+
+  def handle_attribute(
+        :root,
+        {:tagged_expr, "=", expr, _marker_meta},
+        attr_meta,
+        _state,
+        context
+      ) do
+    {:expr, value, expr_meta} = expr
+    %{tag_name: tag_name} = context
+
+    original_name = strip_name_from_tagged_expr_equals!(value, expr_meta)
+
+    name =
+      case tag_name do
+        <<first, _::binary>> when first in ?A..?Z ->
+          original_name
+
+        _ ->
+          String.replace(original_name, "_", "-")
+      end
+
+    {name, {:attribute_expr, value, to_meta(expr_meta)}, to_meta(attr_meta)}
+  end
+
+  def handle_attribute(
+        name,
+        {:tagged_expr, "=", expr, marker_meta},
+        _attr_meta,
+        _state,
+        _context
+      ) do
+    {:expr, value, _expr_meta} = expr
+
+    message = """
+    cannot assign `{=#{value}}` to attribute `#{name}`. \
+    The tagged expression `{= }` can only be used on a root attribute/property.
+
+    Example: <div {=@class}>
+    """
+
+    IOHelper.compile_error(message, marker_meta.file, marker_meta.line)
+  end
+
   def handle_attribute(name, {:expr, expr, expr_meta}, attr_meta, _state, _context) do
     {name, {:attribute_expr, expr, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
@@ -76,8 +160,8 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {name, value, to_meta(attr_meta)}
   end
 
-  def context_for_node(_name, _meta, _state) do
-    nil
+  def context_for_node(name, _meta, _state) do
+    %{tag_name: name}
   end
 
   def context_for_subblock(_name, _meta, _state, _parent_context) do
@@ -108,5 +192,25 @@ defmodule Surface.Compiler.ParseTreeTranslator do
       :macro?,
       :ignored_body?
     ])
+  end
+
+  defp strip_name_from_tagged_expr_equals!(value, expr_meta) do
+    case Code.string_to_quoted(value) do
+      {:ok, {:@, _, [{name, _, _}]}} when is_atom(name) ->
+        to_string(name)
+
+      {:ok, {name, _, _}} when is_atom(name) ->
+        to_string(name)
+
+      _ ->
+        message = """
+        invalid value for tagged expression `{=#{value}}`. \
+        The expression must be either an assign or a variable.
+
+        Examples: `<div {=@class}>` or `<div {=class}>`
+        """
+
+        IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
+    end
   end
 end
