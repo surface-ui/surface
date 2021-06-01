@@ -808,7 +808,7 @@ defmodule Surface.Compiler.ParserTest do
 
       message = """
       nofile:2: cannot assign `{=@class}` to attribute `class`. \
-      Tagged expression `{= }` can only be defined as root attribute/property.
+      The tagged expression `{= }` can only be used on a root attribute/property.
 
       Example: <div {=@class}>
       """

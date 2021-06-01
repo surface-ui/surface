@@ -169,7 +169,7 @@ defmodule Surface.DirectivesTest do
 
       message = """
       code:3: cannot assign `{...@props}` to attribute `class`. \
-      Tagged expression `{... }` can only be defined as root attribute/property.
+      The tagged expression `{... }` can only be used on a root attribute/property.
 
       Example: <div {...@attrs}>
       """
@@ -295,7 +295,7 @@ defmodule Surface.DirectivesTest do
 
       message = """
       code:3: cannot assign `{...@attrs}` to attribute `class`. \
-      Tagged expression `{... }` can only be defined as root attribute/property.
+      The tagged expression `{... }` can only be used on a root attribute/property.
 
       Example: <div {...@attrs}>
       """
