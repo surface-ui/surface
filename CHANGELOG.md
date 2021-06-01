@@ -2,7 +2,6 @@
 
 ## v0.5.0 (WIP)
 
-  * [components] ErrorTag: Renamed prop `phx_trigger_action` to `trigger_action`
   * Introduce new notation for template and slot nodes (`<#template>` and `<#slot>` respectively)
   * Add `<:slotname>` shorthand for `<#template slot="slotname">`
   * Introduce block expressions for surface templates (`{#if}..{/if}`, `{#for}...{/for}`, etc.)
@@ -10,6 +9,7 @@
   * Introduce `{#unless}` block expression
   * Introduce `{#for}` block expression with support for `{#else}` sub block
   * Introduce `s-` prefix as an alternative to `:` for directives (i.e. `s-if` and `:if` are now equivalent)
+  * Introduce `values` directive for generating `phx-value-` attributes
   * Added a convert task to aid migrating to the new syntax
 
 ### Deprecations
@@ -21,6 +21,7 @@
   * Replace interpolation delimiters `{{` and `}}` with `{` and `}`
   * Remove support for interpolation inside `<style>...</style>` and `<script>...</script>` nodes
   * Remove support for passing non-string attribute values as literals (i.e. `attr=true` or `attr=3`). Any non-string value should be passed as an expression (i.e. `selected={true}`)
+  * ErrorTag: Renamed prop `phx_trigger_action` to `trigger_action`
 
 ## v0.4.1 (2021-05-26)
 
