@@ -349,8 +349,24 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(:root, expr, expr_meta, state, context)
   end
 
+  defp translate_attr(
+         state,
+         context,
+         {:root, {:tagged_expr, _marker, _expr, marker_meta} = expr, _attr_meta}
+       ) do
+    state.translator.handle_attribute(:root, expr, marker_meta, state, context)
+  end
+
   defp translate_attr(state, context, {name, {:expr, _value, _expr_meta} = expr, attr_meta}) do
     state.translator.handle_attribute(name, expr, attr_meta, state, context)
+  end
+
+  defp translate_attr(
+         state,
+         context,
+         {name, {:tagged_expr, _marker, _expr, marker_meta} = expr, _attr_meta}
+       ) do
+    state.translator.handle_attribute(name, expr, marker_meta, state, context)
   end
 
   defp translate_attr(state, context, {name, nil, meta}) do

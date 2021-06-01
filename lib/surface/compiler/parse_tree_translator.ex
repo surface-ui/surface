@@ -68,6 +68,47 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     [{:root, {:attribute_expr, expr, meta}, meta}]
   end
 
+  def handle_attribute(
+        :root,
+        {:tagged_expr, "...", expr, _marker_meta},
+        attr_meta,
+        _state,
+        context
+      ) do
+    {:expr, value, expr_meta} = expr
+    %{tag_name: tag_name} = context
+
+    directive =
+      case tag_name do
+        <<first, _::binary>> when first in ?A..?Z ->
+          ":props"
+
+        _ ->
+          ":attrs"
+      end
+
+    {directive, {:attribute_expr, value, to_meta(expr_meta)}, to_meta(attr_meta)}
+  end
+
+  def handle_attribute(
+        name,
+        {:tagged_expr, "...", expr, marker_meta},
+        _attr_meta,
+        _state,
+        _context
+      ) do
+    {:expr, value, _expr_meta} = expr
+
+    message = """
+    cannot assign `{...#{value}}` to attribute `#{name}`. \
+    Tagged expression `{... }` can only be defined as root attribute/property.
+
+    Example: <div {...@attrs}>
+    """
+
+    IOHelper.compile_error(message, marker_meta.file, marker_meta.line)
+  end
+
   def handle_attribute(name, {:expr, expr, expr_meta}, attr_meta, _state, _context) do
     {name, {:attribute_expr, expr, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
@@ -76,8 +117,8 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {name, value, to_meta(attr_meta)}
   end
 
-  def context_for_node(_name, _meta, _state) do
-    nil
+  def context_for_node(name, _meta, _state) do
+    %{tag_name: name}
   end
 
   def context_for_subblock(_name, _meta, _state, _parent_context) do

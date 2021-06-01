@@ -137,6 +137,47 @@ defmodule Surface.DirectivesTest do
              </div>
              """
     end
+
+    test "shorthand notation `{...@props}`" do
+      assigns = %{props: %{class: "text-xs", hidden: false, content: "dynamic props content"}}
+
+      html =
+        render_surface do
+          ~F"""
+          <DivWithProps {...@props} />
+          """
+        end
+
+      assert html =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
+
+    test "raise if trying to assisn `{... }` to a property" do
+      assigns = %{props: %{}}
+
+      code =
+        quote do
+          ~F"""
+          <DivWithProps
+            class=
+              {...@props} />
+          """
+        end
+
+      message = """
+      code:3: cannot assign `{...@props}` to attribute `class`. \
+      Tagged expression `{... }` can only be defined as root attribute/property.
+
+      Example: <div {...@attrs}>
+      """
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code, assigns)
+      end)
+    end
   end
 
   describe ":attrs in html tags" do
@@ -225,6 +266,43 @@ defmodule Surface.DirectivesTest do
                Some Text
              </div>
              """
+    end
+
+    test "shorthand notation `{...@attrs}`" do
+      assigns = %{attrs: [class: "text-xs", style: "color: black;"]}
+
+      html =
+        render_surface do
+          ~F"""
+          <div {...@attrs}/>
+          """
+        end
+
+      assert html =~ ~s(<div class="text-xs" style="color: black;"></div>)
+    end
+
+    test "raise if trying to assisn `{... }` to an attribute" do
+      assigns = %{attrs: %{}}
+
+      code =
+        quote do
+          ~F"""
+          <div
+            class=
+              {...@attrs} />
+          """
+        end
+
+      message = """
+      code:3: cannot assign `{...@attrs}` to attribute `class`. \
+      Tagged expression `{... }` can only be defined as root attribute/property.
+
+      Example: <div {...@attrs}>
+      """
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code, assigns)
+      end)
     end
   end
 
