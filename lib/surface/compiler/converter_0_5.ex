@@ -22,7 +22,7 @@ defmodule Surface.Compiler.Converter_0_5 do
     if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
       text
       |> String.slice(1..-2)
-      |> trim_one()
+      |> maybe_trim_one()
     else
       text
     end
@@ -33,7 +33,7 @@ defmodule Surface.Compiler.Converter_0_5 do
   end
 
   def convert(:double_quoted_string, value, _state, _opts) do
-    new_value = Regex.replace(~r/{{(.+?)}}/s, value, fn _, x -> "\#{#{trim_one(x)}}" end)
+    new_value = Regex.replace(~r/{{(.+?)}}/s, value, fn _, x -> "\#{#{maybe_trim_one(x)}}" end)
 
     if new_value != value do
       "{#{new_value}}"
@@ -86,9 +86,15 @@ defmodule Surface.Compiler.Converter_0_5 do
     text
   end
 
-  defp trim_one(text) do
-    text
-    |> String.replace_prefix(" ", "")
-    |> String.replace_suffix(" ", "")
+  defp maybe_trim_one(original_text) do
+    text = String.replace_prefix(original_text, " ", "")
+
+    # don't remove the last space if the closing `}` is at a new line
+    # containing only spaces (indentation)
+    if Regex.match?(~r/\n\s*$/, text) do
+      text
+    else
+      String.replace_suffix(text, " ", "")
+    end
   end
 end

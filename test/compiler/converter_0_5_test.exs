@@ -85,6 +85,25 @@ defmodule Surface.Compiler.Converter_0_5Test do
              """
     end
 
+    test "keep indentation before closing `}}` " do
+      expected =
+        convert("""
+        <div>
+          <div class={{
+            "my_class"
+          }}>
+        </div>
+        """)
+
+      assert expected == """
+             <div>
+               <div class={
+                 "my_class"
+               }>
+             </div>
+             """
+    end
+
     test "only convert {{ }} into { } if the first and last chars are `{` and `}` respectively" do
       expected =
         convert("""
