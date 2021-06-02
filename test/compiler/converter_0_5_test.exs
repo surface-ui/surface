@@ -3,7 +3,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
   alias Surface.Compiler.Converter
   alias Surface.Compiler.Converter_0_5
-  alias Mix.Tasks.Surface.ConvertSyntax
+  alias Mix.Tasks.Surface.Convert
 
   defp convert(text) do
     Converter.convert(text, converter: Converter_0_5)
@@ -331,7 +331,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     "\""
     """
 
-    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
            ~F"\""
            <Link label="elixir" to={url} />
            "\""
@@ -349,7 +349,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H"<Link label='elixir' to={{url}} />"
     """
 
-    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
            ~F"<Link label='elixir' to={url} />"
 
            ~F"<Link label='elixir' to={url} />"
@@ -363,7 +363,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H[<Link label="elixir" to={{url}} />]
     """
 
-    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
            ~F[<Link label="elixir" to={url} />]
 
            ~F[<Link label="elixir" to={url} />]
@@ -377,7 +377,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H(<Link label="elixir" to={{url}} />)
     """
 
-    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
            ~F(<Link label="elixir" to={url} />)
 
            ~F(<Link label="elixir" to={url} />)
@@ -391,7 +391,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H{<slot name="footer" />}
     """
 
-    assert ConvertSyntax.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
            ~F{<#slot name="header" />}
 
            ~F{<#slot name="footer" />}

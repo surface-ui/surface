@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.ConvertSyntax do
+defmodule Mix.Tasks.Surface.Convert do
   @shortdoc "Converts .sface files and ~H sigils from pre-v0.5 to v0.5 syntax"
 
   @moduledoc """

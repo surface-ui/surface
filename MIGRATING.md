@@ -1,7 +1,7 @@
 # Migrating from `v0.4.x` to `v0.5.x`
 
 This guide provides detailed instructions on how to run the built-in converter to
-translate Surface `v0.4` code into the new `v0.5`syntax.
+translate Surface `v0.4` code into the new `v0.5` syntax.
 
 ## Limitations of the converter
 
@@ -19,11 +19,11 @@ translate Surface `v0.4` code into the new `v0.5`syntax.
   1. Make sure you have commited your work or have a proper backup before running the converter. It may touch
   a lot of files so it's recommended to have a safe way to rollback the changes in case anything goes wrong.
 
-  2. Check your dependencies. For a successful migration, all dependencies providing Surface components should also
-  be converted before running the converter. Otherwise, you might not be able to compile your project in case any
-  of those dependencies is using the invalid old syntax. If the dependency you need has not been updated yet,
-  please consider running the converter against it and submitting a PR with updated code. The steps to convert a
-  dependency are the same decribed in this guide.
+  2. Check your dependencies. For a safer migration, all dependencies providing Surface components should
+  be converted before running the converter on the main project. Otherwise, you might not be able to compile your
+  project in case any of those dependencies is using the invalid old syntax. If the dependency you need has not been
+  updated yet, please consider running the converter against it and submitting a PR with the updated code. The steps
+  to convert a dependency are the same decribed in this guide.
 
 ## Steps to run the converter
 
@@ -58,7 +58,7 @@ mix clean && mix deps.get && mix deps.compile
 Run the converter:
 
 ```
-mix Surface.ConvertSyntax
+mix surface.convert
 ```
 
 Compile the converted project:
@@ -83,5 +83,5 @@ mix compile
 ## Reporting issues
 
 In case you run into any trouble while running the converter, please open an issue at https://github.com/surface-ui/surface/issues/
-providing detailed information about the problem, including the error message (if any) and a snippet of the code
-that couldn't be converted properly.
+providing detailed information about the problem, including the error message (if any) and a snippet of the
+related code.
