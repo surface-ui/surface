@@ -26,8 +26,8 @@ defmodule Surface.Compiler.Helpers do
     @builtin_assigns_by_type[type]
   end
 
-  def interpolation_to_quoted!(text, meta) do
-    case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
+  def expression_to_quoted!(text, meta) do
+    case Code.string_to_quoted(text, file: meta.file, line: meta.line, column: meta.column) do
       {:ok, expr} ->
         expr
 
@@ -102,11 +102,11 @@ defmodule Surface.Compiler.Helpers do
     assigns
   end
 
-  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks}) do
+  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks} = compile_meta) do
     %AST.Meta{
-      line: tree_meta.line,
-      column: tree_meta.column,
-      file: tree_meta.file,
+      line: tree_meta[:line] || compile_meta.line,
+      column: tree_meta[:column],
+      file: tree_meta[:file] || compile_meta.file,
       caller: caller,
       checks: checks
     }
