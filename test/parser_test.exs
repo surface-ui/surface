@@ -860,7 +860,7 @@ defmodule Surface.Compiler.ParserTest do
                      %{line: 1, file: "nofile", column: 6}}
                   ],
                   [
-                    {:block, :default, [], ["\n  1\n"], %{}},
+                    {:block, :default, [], ["\n  1\n"], %{column: 3, file: "nofile", line: 1}},
                     {:block, "else", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 3}}
                   ], %{line: 1, file: "nofile", column: 3, has_sub_blocks?: true}}
                ]
@@ -887,7 +887,7 @@ defmodule Surface.Compiler.ParserTest do
                      %{line: 1, file: "nofile", column: 6}}
                   ],
                   [
-                    {:block, :default, [], ["\n  1\n"], %{}},
+                    {:block, :default, [], ["\n  1\n"], %{column: 3, file: "nofile", line: 1}},
                     {:block, "elseif", [], ["\n  2\n"], %{line: 3, file: "nofile", column: 3}},
                     {:block, "elseif", [], ["\n  3\n"], %{line: 5, file: "nofile", column: 3}},
                     {:block, "else", [], ["\n  4\n"], %{line: 7, file: "nofile", column: 3}}
@@ -919,7 +919,7 @@ defmodule Surface.Compiler.ParserTest do
                      %{line: 1, file: "nofile", column: 6}}
                   ],
                   [
-                    {:block, :default, [], ["\n  111\n"], %{}},
+                    {:block, :default, [], ["\n  111\n"], %{column: 3, file: "nofile", line: 1}},
                     {:block, "elseif",
                      [
                        {:root, {:attribute_expr, "2", %{line: 3, file: "nofile", column: 10}},
@@ -933,7 +933,8 @@ defmodule Surface.Compiler.ParserTest do
                            %{line: 5, file: "nofile", column: 8}}
                         ],
                         [
-                          {:block, :default, [], ["\n    333\n  "], %{}},
+                          {:block, :default, [], ["\n    333\n  "],
+                           %{column: 5, file: "nofile", line: 5}},
                           {:block, "else", [], ["\n    444\n  "],
                            %{line: 7, file: "nofile", column: 5}}
                         ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 5}},

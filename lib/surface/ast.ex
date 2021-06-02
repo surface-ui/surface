@@ -54,7 +54,7 @@ defmodule Surface.AST.Block do
   @type t :: %__MODULE__{
           name: binary(),
           expression: Surface.AST.AttributeExpr.t(),
-          sub_blocks: [{:default | binary(), Surface.AST.t()}],
+          sub_blocks: list(Surface.AST.SubBlock.t()),
           debug: list(atom()),
           meta: Surface.AST.Meta.t()
         }
@@ -74,7 +74,7 @@ defmodule Surface.AST.SubBlock do
   defstruct [:name, :expression, :children, :meta, debug: []]
 
   @type t :: %__MODULE__{
-          name: binary(),
+          name: :default | binary(),
           expression: Surface.AST.AttributeExpr.t(),
           children: list(Surface.AST.t()),
           debug: list(atom()),

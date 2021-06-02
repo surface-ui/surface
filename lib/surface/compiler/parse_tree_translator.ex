@@ -53,11 +53,11 @@ defmodule Surface.Compiler.ParseTreeTranslator do
       IOHelper.compile_error(message, meta.file, meta.line)
     end
 
-    {{:block, :default, expr, [], %{}}, state}
+    {{:block, :default, expr, [], to_meta(meta)}, state}
   end
 
-  def handle_subblock(:default, expr, children, _meta, state, _context) do
-    {{:block, :default, expr, children, %{}}, state}
+  def handle_subblock(:default, expr, children, meta, state, _context) do
+    {{:block, :default, expr, children, to_meta(meta)}, state}
   end
 
   def handle_subblock(name, expr, children, meta, state, _context) do
@@ -174,12 +174,12 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     %{tag_name: name}
   end
 
-  def context_for_subblock(_name, _meta, _state, parent_context) do
-    parent_context
+  def context_for_subblock(name, _meta, _state, parent_context) do
+    %{sub_block: name, parent_block: Map.get(parent_context, :block_name)}
   end
 
   def context_for_block(name, _meta, _state) do
-    %{parent_block: name}
+    %{block_name: name}
   end
 
   def to_meta(%{void_tag?: true} = meta) do
