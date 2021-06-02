@@ -41,6 +41,31 @@ defmodule Surface.Constructs.CaseTest do
            """
   end
 
+  test "nested case/match" do
+    assigns = %{value: [{1, 2}]}
+
+    html =
+      render_surface do
+        ~F"""
+        {#case @value}
+          {#match [tuple | _]}
+            {#case tuple}
+              {#match {_, var}}
+                <span>Nested. Var: {var}</span>
+              {#match _}
+                <span>Last nested match</span>
+            {/case}
+          {#match _}
+            <span>Last match</span>
+        {/case}
+        """
+      end
+
+    assert html =~ """
+           <span>Nested. Var: 2</span>
+           """
+  end
+
   test "raise error if default sub-block has content" do
     code =
       quote do
