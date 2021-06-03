@@ -89,6 +89,7 @@ defmodule Surface.Components.Utils do
         :phx_keyup -> {:"phx-keyup", value}
         :phx_keydown -> {:"phx-keydown", value}
         :phx_target -> {:"phx-target", value}
+        :phx_disable_with -> {:"phx-disable-with", value}
         :data -> data_to_attrs(value)
         :values -> values_to_attrs(value)
         _ -> {key, value}
