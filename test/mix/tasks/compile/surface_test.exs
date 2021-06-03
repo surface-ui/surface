@@ -167,6 +167,6 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     old_contents = Enum.map(files, &File.read!/1)
     fun.()
     new_contents = Enum.map(files, &File.read!/1)
-    Enum.zip_with(old_contents, new_contents, fn old, new -> old != new end)
+    old_contents |> Enum.zip(new_contents) |> Enum.map(fn {old, new} -> old != new end)
   end
 end
