@@ -237,6 +237,11 @@ defmodule Surface.Compiler do
   # For
   defp node_type({:block, "for", _, _, _}), do: :for_else
 
+  # case/match
+  defp node_type({:block, "case", _, _, _}), do: :block
+  defp node_type({:block, "match", _, _, _}), do: :sub_block
+  defp node_type({:block, :default, _, _, _}), do: :sub_block
+
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
@@ -266,7 +271,7 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    expr = Helpers.interpolation_to_quoted!(text, meta)
+    expr = Helpers.expression_to_quoted!(text, meta)
 
     Helpers.perform_assigns_checks(expr, compile_meta)
 
@@ -323,6 +328,30 @@ defmodule Surface.Compiler do
        children: to_ast(if_children, compile_meta),
        else: to_ast(else_children, compile_meta),
        meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(:sub_block, {:block, :default, _attrs, [], _meta}, _compile_meta) do
+    :ignore
+  end
+
+  defp convert_node_to_ast(:sub_block, {:block, name, attrs, children, meta}, compile_meta) do
+    {:ok,
+     %AST.SubBlock{
+       name: name,
+       expression: quoted_block_expression(attrs),
+       children: to_ast(children, compile_meta),
+       meta: Helpers.to_meta(meta, compile_meta)
+     }}
+  end
+
+  defp convert_node_to_ast(:block, {:block, name, attrs, children, meta}, compile_meta) do
+    {:ok,
+     %AST.Block{
+       name: name,
+       expression: quoted_block_expression(attrs),
+       sub_blocks: to_ast(children, compile_meta),
+       meta: Helpers.to_meta(meta, compile_meta)
      }}
   end
 
@@ -658,6 +687,14 @@ defmodule Surface.Compiler do
       _ ->
         nil
     end)
+  end
+
+  defp quoted_block_expression([{:root, {:attribute_expr, value, expr_meta}, _attr_meta}]) do
+    Helpers.expression_to_quoted!(value, expr_meta)
+  end
+
+  defp quoted_block_expression([]) do
+    nil
   end
 
   defp get_slot_name("#template", attributes), do: attribute_value(attributes, "slot", :default)

@@ -2,6 +2,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
   @behaviour Surface.Compiler.NodeTranslator
 
   alias Surface.IOHelper
+  alias Surface.Compiler.Helpers
 
   def handle_init(state), do: state
 
@@ -46,8 +47,17 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {{:block, name, expr, body, to_meta(meta)}, state}
   end
 
-  def handle_subblock(:default, expr, children, _meta, state, _context) do
-    {{:block, :default, expr, children, %{}}, state}
+  def handle_subblock(:default, expr, children, meta, state, %{parent_block: "case"}) do
+    if !Helpers.blank?(children) do
+      message = "cannot have content between {#case ...} and {#match ...}"
+      IOHelper.compile_error(message, meta.file, meta.line)
+    end
+
+    {{:block, :default, expr, [], to_meta(meta)}, state}
+  end
+
+  def handle_subblock(:default, expr, children, meta, state, _context) do
+    {{:block, :default, expr, children, to_meta(meta)}, state}
   end
 
   def handle_subblock(name, expr, children, meta, state, _context) do
@@ -164,12 +174,12 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     %{tag_name: name}
   end
 
-  def context_for_subblock(_name, _meta, _state, _parent_context) do
-    nil
+  def context_for_subblock(name, _meta, _state, parent_context) do
+    %{sub_block: name, parent_block: Map.get(parent_context, :block_name)}
   end
 
-  def context_for_block(_name, _meta, _state) do
-    nil
+  def context_for_block(name, _meta, _state) do
+    %{block_name: name}
   end
 
   def to_meta(%{void_tag?: true} = meta) do

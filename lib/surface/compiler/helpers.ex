@@ -26,8 +26,8 @@ defmodule Surface.Compiler.Helpers do
     @builtin_assigns_by_type[type]
   end
 
-  def interpolation_to_quoted!(text, meta) do
-    case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
+  def expression_to_quoted!(text, meta) do
+    case Code.string_to_quoted(text, file: meta.file, line: meta.line, column: meta.column) do
       {:ok, expr} ->
         expr
 

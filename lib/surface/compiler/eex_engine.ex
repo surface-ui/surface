@@ -129,6 +129,28 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(conditional)
   end
 
+  defp to_expression(%AST.Block{name: "case"} = block, buffer, state) do
+    %AST.Block{expression: case_expr, sub_blocks: sub_blocks} = block
+
+    state = %{state | depth: state.depth + 1, context: [:case | state.context]}
+
+    match_blocks =
+      Enum.flat_map(sub_blocks, fn %AST.SubBlock{children: children, expression: expr} ->
+        match_body = handle_nested_block(children, buffer, state)
+
+        quote do
+          unquote(expr) -> unquote(match_body)
+        end
+      end)
+
+    quote do
+      case unquote(case_expr) do
+        unquote(match_blocks)
+      end
+    end
+    |> maybe_print_expression(block)
+  end
+
   defp to_expression(
          %AST.Slot{
            name: slot_name,
@@ -614,6 +636,14 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_dynamic_nested_html([%AST.For{children: children} = comprehension | nodes]) do
     [%{comprehension | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.Block{sub_blocks: sub_blocks} = block | nodes]) do
+    [%{block | sub_blocks: to_token_sequence(sub_blocks)} | to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.SubBlock{children: children} = sub_block | nodes]) do
+    [%{sub_block | children: to_token_sequence(children)} | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([

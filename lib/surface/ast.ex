@@ -38,6 +38,50 @@ defmodule Surface.AST.Container do
         }
 end
 
+defmodule Surface.AST.Block do
+  @moduledoc """
+  An AST node representing a generic block.
+
+  ## Properties
+      * `:name` - name of the block
+      * `:expression` - the expression passed to block
+      * `:sub_blocks` - a list containing each sub-block's {name, children_ast}
+      * `:meta` - compile meta
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:name, :expression, :sub_blocks, :meta, debug: []]
+
+  @type t :: %__MODULE__{
+          name: binary(),
+          expression: Surface.AST.AttributeExpr.t(),
+          sub_blocks: list(Surface.AST.SubBlock.t()),
+          debug: list(atom()),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.SubBlock do
+  @moduledoc """
+  An AST node representing a generic sub-block.
+
+  ## Properties
+      * `:name` - name of the block
+      * `:expression` - the expression passed to block
+      * `:children` - children AST nodes
+      * `:meta` - compile meta
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:name, :expression, :children, :meta, debug: []]
+
+  @type t :: %__MODULE__{
+          name: :default | binary(),
+          expression: Surface.AST.AttributeExpr.t(),
+          children: list(Surface.AST.t()),
+          debug: list(atom()),
+          meta: Surface.AST.Meta.t()
+        }
+end
+
 defmodule Surface.AST.Expr do
   @moduledoc """
   An AST node representing an expression which does not resolve to a value printed out to the final DOM.
