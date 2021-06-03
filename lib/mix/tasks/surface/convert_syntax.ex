@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Surface.Convert do
   @moduledoc """
   Converts .sface files and ~H sigils from pre-v0.5 to v0.5 syntax.
 
-      mix surface.convert_syntax "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+      mix surface.convert "lib/**/*.{ex,exs,sface}" "test/**/*.{ex,exs}"
 
   ## Task-specific options
 
@@ -12,14 +12,14 @@ defmodule Mix.Tasks.Surface.Convert do
   Here are some examples of using these options:
 
   ```bash
-  $ mix surface.convert_syntax --dot-formatter path/to/.formatter.exs
+  $ mix surface.convert --dot-formatter path/to/.formatter.exs
   ```
 
-  You can also use the same syntax as `mix convert_syntax` for specifying which files to
+  You can also use the same syntax as `mix format` for specifying which files to
   convert:
 
   ```bash
-  $ mix surface.convert_syntax path/to/file.ex "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+  $ mix surface.convert path/to/file.ex "lib/**/*.{ex,exs,sface}" "test/**/*.{ex,exs}"
   ```
   """
 
@@ -221,12 +221,12 @@ defmodule Mix.Tasks.Surface.Convert do
   end
 
   defp check!([{:exit, :stdin, exception, stacktrace} | _]) do
-    Mix.shell().error("mix surface.convert_syntax failed for stdin")
+    Mix.shell().error("mix surface.convert failed for stdin")
     reraise exception, stacktrace
   end
 
   defp check!([{:exit, file, exception, stacktrace} | _]) do
-    Mix.shell().error("mix surface.convert_syntax failed for file: #{Path.relative_to_cwd(file)}")
+    Mix.shell().error("mix surface.convert failed for file: #{Path.relative_to_cwd(file)}")
     reraise exception, stacktrace
   end
 end
