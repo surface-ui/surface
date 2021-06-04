@@ -37,7 +37,7 @@ defmodule Surface.Components.Form.ErrorTag do
   ```
 
   ```surface
-  <ErrorTag phx_feedback_for="confirm_password_for_reset" />
+  <ErrorTag feedback_for="confirm_password_for_reset" />
   ```
 
   ```surface
@@ -97,19 +97,19 @@ defmodule Surface.Components.Form.ErrorTag do
   with an input of the same name. LiveView will exhibit buggy behavior
   without assigning separate id's to each.)
   """
-  prop phx_feedback_for, :string
+  prop feedback_for, :string
 
   def render(assigns) do
     translate_error = assigns.translator || translator_from_config() || (&translate_error/1)
     class = assigns.class || get_config(:default_class)
 
-    ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
+    ~F"""
+    <InputContext assigns={assigns} :let={form: form, field: field}>
       <span
-        :for={{ error <- Keyword.get_values(form.errors, field) }}
-        class={{ class }}
-        phx-feedback-for={{ @phx_feedback_for || input_id(form, field) }}
-      >{{ translate_error.(error) }}</span>
+        :for={error <- Keyword.get_values(form.errors, field)}
+        class={class}
+        phx-feedback-for={@feedback_for || input_id(form, field)}
+      >{translate_error.(error)}</span>
     </InputContext>
     """
   end

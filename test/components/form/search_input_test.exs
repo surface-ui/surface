@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <SearchInput form="song" field="title" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <SearchInput form="song" field={{ :title }} />
+        ~F"""
+        <SearchInput form="song" field={:title} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <SearchInput form="song" field="title" value="mytitle" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <SearchInput form="song" field="title" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <SearchInput form="song" field="title" class="input primary" />
         """
       end
@@ -67,8 +67,8 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <SearchInput form="song" field="title" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <SearchInput form="song" field="title" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <SearchInput form="user" field="color" value="mytitle" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.SearchInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <SearchInput form="user" field="title" id="mytitle" name="mytitle" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.SearchInputConfigTest do
     using_config SearchInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <SearchInput/>
           """
         end

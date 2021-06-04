@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "radio" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RadioButton form="user" field="role" value="admin"/>
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "radio with atom field" do
     html =
       render_surface do
-        ~H"""
-        <RadioButton form="user" field={{ :role }} value="admin"/>
+        ~F"""
+        <RadioButton form="user" field={:role} value="admin"/>
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RadioButton form="user" field="role" value="admin" class="radio" />
         """
       end
@@ -43,7 +43,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RadioButton form="user" field="role" value="admin" class="radio primary" />
         """
       end
@@ -54,8 +54,8 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <RadioButton form="user" field="role" value="admin" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <RadioButton form="user" field="role" value="admin" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RadioButton form="user" field="role" value="admin" click="my_click" />
         """
       end
@@ -78,7 +78,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <RadioButton form="user" field="role" id="role" name="role" />
         """
       end
@@ -98,7 +98,7 @@ defmodule Surface.Components.Form.RadioButtonConfigTest do
     using_config RadioButton, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <RadioButton/>
           """
         end

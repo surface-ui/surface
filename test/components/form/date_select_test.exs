@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "datetime select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateSelect form="user" field="born_at" />
         """
       end
@@ -20,9 +20,9 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "with form context" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :user }}>
-          <DateSelect field={{ :born_at }} />
+        ~F"""
+        <Form for={:user}>
+          <DateSelect field={:born_at} />
         </Form>
         """
       end
@@ -36,8 +36,8 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "setting the value as map" do
     html =
       render_surface do
-        ~H"""
-        <DateSelect form="user" field="born_at" value={{ %{year: 2020, month: 10, day: 9} }} />
+        ~F"""
+        <DateSelect form="user" field="born_at" value={%{year: 2020, month: 10, day: 9}} />
         """
       end
 
@@ -49,8 +49,8 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "setting the value as tuple" do
     html =
       render_surface do
-        ~H"""
-        <DateSelect form="user" field="born_at" value={{ {2020, 10, 9} }} />
+        ~F"""
+        <DateSelect form="user" field="born_at" value={{2020, 10, 9}} />
         """
       end
 
@@ -62,8 +62,8 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "setting the default value as map" do
     html =
       render_surface do
-        ~H"""
-        <DateSelect form="user" field="born_at" default={{ %{year: 2020, month: 10, day: 9} }} />
+        ~F"""
+        <DateSelect form="user" field="born_at" default={%{year: 2020, month: 10, day: 9}} />
         """
       end
 
@@ -75,8 +75,8 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "setting the default value as tuple" do
     html =
       render_surface do
-        ~H"""
-        <DateSelect form="user" field="born_at" default={{ {2020, 10, 9} }} />
+        ~F"""
+        <DateSelect form="user" field="born_at" default={{2020, 10, 9}} />
         """
       end
 
@@ -88,13 +88,13 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "passing options to year, month and day" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateSelect
           form="user"
           field="born_at"
-          year={{ prompt: "Year" }}
-          month={{ prompt: "Month" }}
-          day={{ prompt: "Day" }}
+          year={prompt: "Year"}
+          month={prompt: "Month"}
+          day={prompt: "Day"}
         />
         """
       end
@@ -107,11 +107,11 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "passing builder to select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateSelect
           form="user"
           field="born_at"
-          builder={{ fn b ->
+          builder={fn b ->
             [
               "Year: ",
               b.(:year, class: "year"),
@@ -120,7 +120,7 @@ defmodule Surface.Components.Form.DateSelectTest do
               "Day: ",
               b.(:day, class: "day"),
             ]
-          end }}
+          end}
         />
         """
       end
@@ -133,13 +133,13 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "parsing class option in year, month and day" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateSelect
           form="user"
           field="born_at"
-          year={{ class: ["true-class": true, "false-class": false] }}
-          month={{ class: ["true-class": true, "false-class": false] }}
-          day={{ class: "day-class" }}
+          year={class: ["true-class": true, "false-class": false]}
+          month={class: ["true-class": true, "false-class": false]}
+          day={class: "day-class"}
         />
         """
       end
@@ -156,7 +156,7 @@ defmodule Surface.Components.Form.DateSelectTest do
   test "passing id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateSelect
           form="user"
           field="born_at"

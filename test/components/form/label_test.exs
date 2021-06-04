@@ -7,8 +7,8 @@ defmodule Surface.Components.Form.LabelTest do
   test "generates a <label> passing any opts to the underlying html element" do
     html =
       render_surface do
-        ~H"""
-        <Label opts={{ id: "my_id" }}/>
+        ~F"""
+        <Label opts={id: "my_id"}/>
         """
       end
 
@@ -18,8 +18,8 @@ defmodule Surface.Components.Form.LabelTest do
   test "property class" do
     html =
       render_surface do
-        ~H"""
-        <Label class={{ :label }}/>
+        ~F"""
+        <Label class={:label}/>
         """
       end
 
@@ -29,8 +29,8 @@ defmodule Surface.Components.Form.LabelTest do
   test "property multiple classes" do
     html =
       render_surface do
-        ~H"""
-        <Label class={{ :label, :primary }}/>
+        ~F"""
+        <Label class={:label, :primary}/>
         """
       end
 
@@ -40,7 +40,7 @@ defmodule Surface.Components.Form.LabelTest do
   test "properties form and field as :string" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Label form="user" field="name"/>
         """
       end
@@ -51,8 +51,8 @@ defmodule Surface.Components.Form.LabelTest do
   test "properties form and field as :atom" do
     html =
       render_surface do
-        ~H"""
-        <Label form={{ :user }} field={{ :name }}/>
+        ~F"""
+        <Label form={:user} field={:name}/>
         """
       end
 
@@ -62,8 +62,8 @@ defmodule Surface.Components.Form.LabelTest do
   test "use context's form and field by default" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :user }}>
+        ~F"""
+        <Form for={:user}>
           <Field name="name">
             <Label/>
           </Field>
@@ -77,7 +77,7 @@ defmodule Surface.Components.Form.LabelTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Label form="user" field="name" click="my_click" />
         """
       end
@@ -87,49 +87,44 @@ defmodule Surface.Components.Form.LabelTest do
 
   describe "is compatible with phoenix label/2" do
     test "with block" do
-      html = render_surface(do: ~H[<Label>Block</Label>])
+      html = render_surface(do: ~F[<Label>Block</Label>])
       assert html =~ ~r[<label>(.*)Block(.*)</label>]s
 
-      html = render_surface(do: ~H[<Label class="foo">Block</Label>])
+      html = render_surface(do: ~F[<Label class="foo">Block</Label>])
       assert html =~ ~r[<label class="foo">(.*)Block(.*)</label>]s
     end
 
     test "with field but no content" do
-      html = render_surface(do: ~H[<Label form={{ :search }} field={{ :key }} />])
+      html = render_surface(do: ~F[<Label form={:search} field={:key} />])
       assert html =~ ~r[<label for="search_key">(.*)Key(.*)</label>]s
 
-      html =
-        render_surface(
-          do: ~H[<Label form={{ :search }} field={{ :key }} opts={{ for: "test_key" }} />]
-        )
+      html = render_surface(do: ~F[<Label form={:search} field={:key} opts={for: "test_key"} />])
 
       assert html =~ ~r[<label for="test_key">(.*)Key(.*)</label>]s
 
       html =
         render_surface(
-          do:
-            ~H[<Label form={{ :search }} field={{ :key }} class="foo" opts={{ for: "test_key" }} />]
+          do: ~F[<Label form={:search} field={:key} class="foo" opts={for: "test_key"} />]
         )
 
       assert html =~ ~r[<label class="foo" for="test_key">(.*)Key(.*)</label>]s
     end
 
     test "with field and inline content" do
-      html = render_surface(do: ~H[<Label text="Search" form={{ :search }} field={{ :key }} />])
+      html = render_surface(do: ~F[<Label text="Search" form={:search} field={:key} />])
       assert html =~ ~r[<label for="search_key">(.*)Search(.*)</label>]s
 
       html =
         render_surface(
-          do:
-            ~H[<Label text="Search" form={{ :search }} field={{ :key }} opts={{ for: "test_key" }} />]
+          do: ~F[<Label text="Search" form={:search} field={:key} opts={for: "test_key"} />]
         )
 
       assert html =~ ~r[<label for="test_key">(.*)Search(.*)</label>]s
 
       html =
         render_surface do
-          ~H"""
-          <Form for={{ :search }}>
+          ~F"""
+          <Form for={:search}>
             <Field name="key">
               <Label text="Search" />
             </Field>
@@ -141,10 +136,10 @@ defmodule Surface.Components.Form.LabelTest do
 
       html =
         render_surface do
-          ~H"""
-          <Form for={{ :search }}>
+          ~F"""
+          <Form for={:search}>
             <Field name="key">
-              <Label text="Search" opts={{ for: "test_key" }} />
+              <Label text="Search" opts={for: "test_key"} />
             </Field>
           </Form>
           """
@@ -154,10 +149,10 @@ defmodule Surface.Components.Form.LabelTest do
 
       html =
         render_surface do
-          ~H"""
-          <Form for={{ :search }}>
+          ~F"""
+          <Form for={:search}>
             <Field name="key">
-              <Label text="Search" class="foo" opts={{ for: "test_key" }} />
+              <Label text="Search" class="foo" opts={for: "test_key"} />
             </Field>
           </Form>
           """
@@ -169,8 +164,7 @@ defmodule Surface.Components.Form.LabelTest do
     test "with field and inline safe content" do
       html =
         render_surface(
-          do:
-            ~H[<Label text={{ {:safe, "<em>Search</em>"} }} form={{ :search }} field={{ :key }} />]
+          do: ~F[<Label text={{:safe, "<em>Search</em>"}} form={:search} field={:key} />]
         )
 
       assert html =~ ~r[<label for="search_key">(.*)<em>Search</em>(.*)</label>]s
@@ -179,8 +173,8 @@ defmodule Surface.Components.Form.LabelTest do
     test "with field and block content" do
       html =
         render_surface do
-          ~H"""
-          <Form for={{ :search }}>
+          ~F"""
+          <Form for={:search}>
             <Field name="key">
               <Label>Hello</Label>
             </Field>
@@ -192,8 +186,8 @@ defmodule Surface.Components.Form.LabelTest do
 
       html =
         render_surface do
-          ~H"""
-          <Form for={{ :search }}>
+          ~F"""
+          <Form for={:search}>
             <Field name="key">
               <Label class="test-label">Hello</Label>
             </Field>
@@ -215,7 +209,7 @@ defmodule Surface.Components.Form.LabelConfigTest do
     using_config Label, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Label/>
           """
         end

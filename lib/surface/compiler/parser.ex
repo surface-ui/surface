@@ -1,435 +1,423 @@
 defmodule Surface.Compiler.Parser do
   @moduledoc false
 
-  import NimbleParsec
+  alias Surface.Compiler.Tokenizer
+  alias Surface.Compiler.ParseError
+  alias Surface.Compiler.Helpers
 
-  @doc """
-  Parses a surface HTML document.
-  """
-  def parse(content) do
-    case root(content, context: [macro: nil]) do
-      {:ok, tree, "", %{macro: nil}, _, _} ->
-        {:ok, tree}
+  @type state :: %{
+          token_stack:
+            list(
+              {Tokenizer.block_open() | Tokenizer.tag_open(),
+               Surface.Compiler.NodeTranslator.context()}
+            ),
+          translator: module(),
+          caller: Macro.Env.t(),
+          checks: keyword(boolean()),
+          warnings: keyword(boolean())
+        }
 
-      {:ok, _, rest, context, {line, _}, byte_offset} ->
-        # Something went wrong then it has to be an error parsing the HTML tag.
-        # However, because of repeat, the error is discarded, so we call node
-        # again to get the proper error message.
-        {:error, message, _rest, _context, {line, _col}, _byte_offset} =
-          node(rest, context: context, line: line, byte_offset: byte_offset)
+  @blocks [
+    "if",
+    "unless",
+    "for",
+    "case"
+  ]
 
-        {:error, message, line}
+  @sub_blocks [
+    "else",
+    "elseif",
+    "match"
+  ]
 
-      {:error, message, _rest, _context, {line, _col}, _byte_offset} ->
-        {:error, message, line}
+  @sub_blocks_valid_parents %{
+    "else" => ["if", "for"],
+    "elseif" => ["if"],
+    "match" => ["case"]
+  }
+
+  def parse!(code, opts \\ []) do
+    code
+    |> Tokenizer.tokenize!(opts)
+    |> handle_token(opts)
+  end
+
+  defp handle_token(tokens, opts) do
+    state = %{
+      translator: opts[:translator] || Surface.Compiler.ParseTreeTranslator,
+      token_stack: [],
+      caller: opts[:caller] || __ENV__,
+      checks: opts[:checks] || [],
+      warnings: opts[:warnings] || []
+    }
+
+    handle_token(tokens, [[]], state.translator.handle_init(state))
+  end
+
+  defp handle_token([], [buffer], _state) do
+    Enum.reverse(buffer)
+  end
+
+  defp handle_token([], _buffers, %{token_stack: [{{_, _name, _attrs, meta} = node, _ctx} | _]}) do
+    raise parse_error(
+            "expected closing node for #{format_node(node)} defined on line #{meta.line}, got EOF",
+            meta
+          )
+  end
+
+  defp handle_token([{:text, text} | rest], buffers, state) do
+    {node, state} = state.translator.handle_text(text, state)
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:comment, comment, meta} | rest], buffers, state) do
+    {node, state} = state.translator.handle_comment(comment, meta, state)
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:expr, expr, meta} | rest], buffers, state) do
+    {node, state} = state.translator.handle_expression(expr, meta, state)
+
+    buffers = push_node_to_current_buffer(node, buffers)
+
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
+    context = state.translator.context_for_node(name, meta, state)
+
+    {node, state} =
+      state.translator.handle_node(
+        name,
+        translate_attrs(state, context, attrs),
+        [],
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
+    context = state.translator.context_for_node(name, meta, state)
+
+    {node, state} =
+      state.translator.handle_node(
+        name,
+        translate_attrs(state, context, attrs),
+        [],
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_open, name, _attrs, meta} = token | rest], buffers, state) do
+    context = state.translator.context_for_node(name, meta, state)
+    state = push_tag(state, token, context)
+    # create a new buffer for the node
+    buffers = [[] | buffers]
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_close, name, _meta} = token | rest], buffers, state) do
+    {{:tag_open, _name, attrs, meta}, context, state} = pop_matching_tag(state, token)
+
+    # pop the current buffer and use it as children for the node
+    [buffer | buffers] = buffers
+
+    {node, state} =
+      state.translator.handle_node(
+        name,
+        translate_attrs(state, context, attrs),
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, expr, meta} = token | rest], buffers, state)
+       when name in @sub_blocks do
+    {buffers, state} = close_sub_block(token, buffers, state)
+
+    context =
+      state.translator.context_for_subblock(name, parent_context(state.token_stack), meta, state)
+
+    # push the current sub-block token to state
+    state = push_tag(state, {:block_open, name, expr, meta}, context)
+
+    # create a new buffer for the current sub-block
+    buffers = [[] | buffers]
+
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, _expr, meta} = token | rest], buffers, state)
+       when name in @blocks do
+    context = state.translator.context_for_block(name, meta, state)
+
+    state = push_tag(state, token, context)
+    # create a new buffer for the node
+    buffers = [[] | buffers]
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, _expr, meta} | _], _buffers, _state) do
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks ++ @sub_blocks)
+    raise parse_error("unknown `{##{name}}` block. Available #{blocks}", meta)
+  end
+
+  defp handle_token(
+         [{:block_close, _name, _meta} = token | _] = tokens,
+         buffers,
+         %{token_stack: [{{:block_open, name, _, _}, _} | _]} = state
+       )
+       when name in @sub_blocks do
+    {buffers, state} = close_sub_block(token, buffers, state)
+    handle_token(tokens, buffers, state)
+  end
+
+  defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state)
+       when name in @blocks do
+    {{:block_open, name, expr, meta}, context, state} = pop_matching_tag(state, token)
+
+    # pop the current buffer and use it as children for the node
+    [buffer | buffers] = buffers
+
+    expression = state.translator.handle_block_expression(name, expr, state, context)
+
+    {node, state} =
+      state.translator.handle_block(
+        name,
+        expression,
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_close, name, meta} | _], _buffers, _state) do
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks)
+    raise parse_error("unknown `{/#{name}}` block. Available #{blocks}", meta)
+  end
+
+  # If there's a previous sub-block defined. Close it.
+  defp close_sub_block(
+         _token,
+         buffers,
+         %{token_stack: [{{:block_open, name, expr, meta}, context} | tokens]} = state
+       )
+       when name in @sub_blocks do
+    # pop the current buffer and use it as children for the sub-block node
+    [buffer | buffers] = buffers
+
+    expression = state.translator.handle_block_expression(name, expr, state, context)
+
+    {node, state} =
+      state.translator.handle_subblock(
+        name,
+        expression,
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
+    state = %{state | token_stack: tokens}
+    buffers = push_node_to_current_buffer(node, buffers)
+
+    {buffers, state}
+  end
+
+  # If there's no previous sub-block defined. Create a :default sub-block,
+  # move the buffer there and close it.
+  defp close_sub_block(
+         token,
+         buffers,
+         %{token_stack: [{{:block_open, name, expr, meta}, ctx} | tokens]} = state
+       ) do
+    validate_sub_block!(token, name)
+
+    # pop the current buffer and use it as children for the :default sub-block node
+    [buffer | buffers] = buffers
+
+    context = state.translator.context_for_subblock(:default, meta, state, ctx)
+    expression = state.translator.handle_block_expression(:default, nil, state, context)
+
+    {node, state} =
+      state.translator.handle_subblock(
+        :default,
+        expression,
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
+    # create a new buffer for the parent node to replace the one that was popped
+    buffers = [[] | buffers]
+    buffers = push_node_to_current_buffer(node, buffers)
+
+    # push back the parent token to state
+    meta = Map.put(meta, :has_sub_blocks?, true)
+    state = %{state | token_stack: [{{:block_open, name, expr, meta}, ctx} | tokens]}
+
+    {buffers, state}
+  end
+
+  # If there's no parent node
+  defp close_sub_block({:block_open, name, _expr, meta}, _buffers, _state) do
+    message = message_for_invalid_sub_block_parent(name)
+    raise parse_error(message, meta)
+  end
+
+  defp validate_sub_block!({:block_open, name, _expr, meta}, parent_name) do
+    if parent_name not in @sub_blocks_valid_parents[name] do
+      message = message_for_invalid_sub_block_parent(name)
+      raise parse_error(message, meta)
     end
   end
 
-  ## Common helpers
-  defparsecp(
-    :binary,
-    string("\"")
-    |> repeat(
-      choice([
-        string("\\\""),
-        utf8_char(not: ?")
-      ])
-    )
-    |> string("\"")
-  )
+  defp message_for_invalid_sub_block_parent(name) do
+    valid_parents = @sub_blocks_valid_parents[name]
+    valid_parents_tokens = Enum.map(valid_parents, &"{##{&1}}")
 
-  defparsecp(
-    :charlist,
-    string("\'")
-    |> repeat(
-      choice([
-        string("\\'"),
-        utf8_char(not: ?')
-      ])
-    )
-    |> string("\'")
-  )
-
-  defparsecp(
-    :tuple,
-    string("{")
-    |> repeat(
-      choice([
-        parsec(:tuple),
-        parsec(:binary),
-        parsec(:charlist),
-        utf8_char(not: ?})
-      ])
-    )
-    |> string("}")
-  )
-
-  expression =
-    ignore(string("{{"))
-    |> line()
-    |> repeat(
-      choice([
-        parsec(:tuple),
-        parsec(:binary),
-        parsec(:charlist),
-        lookahead_not(string("}}")) |> utf8_char([])
-      ])
-    )
-    |> optional(string("}}"))
-
-  tag =
-    ascii_char([?a..?z, ?A..?Z, ?:])
-    |> ascii_string([?a..?z, ?A..?Z, ?0..?9, ?-, ?., ?_], min: 0)
-    |> reduce({List, :to_string, []})
-
-  boolean =
-    choice([
-      string("true") |> replace(true),
-      string("false") |> replace(false)
-    ])
-
-  attribute_expr =
-    expression
-    |> post_traverse(:attribute_expr)
-
-  attribute_value =
-    ignore(ascii_char([?"]))
-    |> repeat(
-      lookahead_not(ignore(ascii_char([?"])))
-      |> choice([
-        ~S(\") |> string() |> replace(?"),
-        attribute_expr,
-        utf8_char([])
-      ])
-    )
-    |> ignore(ascii_char([?"]))
-    |> wrap()
-    |> post_traverse(:attribute_value)
-
-  # Follow the rules of XML Names and Tokens plus "@" as a first char
-  # https://www.w3.org/TR/2008/REC-xml-20081126/#NT-Name
-  attr_start_char = ascii_string([?a..?z, ?A..?Z, ?_, ?:, ?@], 1)
-  attr_name_char = ascii_string([?a..?z, ?A..?Z, ?0..?9, ?_, ?:, ?-, ?., ??], min: 0)
-  attr_name = attr_start_char |> concat(attr_name_char) |> reduce({Enum, :join, [""]})
-
-  whitespace = ascii_string(' \n\r\t\v\b\f\e\d\a', min: 0)
-
-  attribute =
-    whitespace
-    |> concat(attr_name |> line())
-    |> concat(whitespace)
-    |> optional(
-      choice([
-        ignore(string("=")) |> concat(whitespace) |> concat(attribute_expr),
-        ignore(string("=")) |> concat(whitespace) |> concat(attribute_value),
-        ignore(string("=")) |> concat(whitespace) |> concat(integer(min: 1)),
-        ignore(string("=")) |> concat(whitespace) |> concat(boolean)
-      ])
-    )
-    |> wrap()
-
-  comment =
-    string("<!--")
-    |> repeat(lookahead_not(string("-->")) |> utf8_char([]))
-    |> string("-->")
-    |> post_traverse(:comment)
-
-  ## Void element node
-
-  void_element =
-    choice([
-      string("area"),
-      string("base"),
-      string("br"),
-      string("col"),
-      string("command"),
-      string("embed"),
-      string("hr"),
-      string("img"),
-      string("input"),
-      string("keygen"),
-      string("link"),
-      string("meta"),
-      string("param"),
-      string("source"),
-      string("track"),
-      string("wbr")
-    ])
-
-  void_element_node =
-    ignore(string("<"))
-    |> concat(void_element)
-    |> line()
-    |> concat(repeat(attribute) |> wrap())
-    |> concat(whitespace)
-    |> ignore(string(">"))
-    |> wrap()
-    |> post_traverse(:void_element_tags)
-
-  defp void_element_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
-    {[tag], {line, _}} = tag_node
-    attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, [], %{line: line, space: space}}], context}
+    "no valid parent node defined for {##{name}}. " <>
+      Helpers.list_to_string(
+        "The {##{name}} construct can only be used inside a",
+        "Possible parents are",
+        valid_parents_tokens
+      )
   end
 
-  ## Self-closing node
-
-  self_closing_node =
-    ignore(string("<"))
-    |> concat(tag)
-    |> line()
-    |> concat(repeat(attribute) |> wrap())
-    |> concat(whitespace)
-    |> ignore(string("/>"))
-    |> wrap()
-    |> post_traverse(:self_closing_tags)
-
-  defp self_closing_tags(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
-    {[tag], {line, _}} = tag_node
-    attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, [], %{line: line, space: space}}], context}
+  defp push_node_to_current_buffer(:ignore, buffers) do
+    buffers
   end
 
-  ## Regular node
-  interpolation =
-    expression
-    |> post_traverse(:interpolation)
-
-  text_with_interpolation = utf8_string([not: ?<, not: ?{], min: 1)
-
-  opening_tag =
-    ignore(string("<"))
-    |> concat(tag)
-    |> line()
-    |> concat(repeat(attribute) |> wrap())
-    |> concat(whitespace)
-    |> ignore(string(">"))
-    |> wrap()
-
-  closing_tag = ignore(string("</")) |> concat(tag) |> ignore(string(">"))
-
-  regular_node =
-    opening_tag
-    |> repeat(
-      lookahead_not(string("</"))
-      |> choice([
-        parsec(:node),
-        interpolation,
-        string("{"),
-        text_with_interpolation
-      ])
-    )
-    |> wrap()
-    |> optional(closing_tag)
-    |> post_traverse(:match_tags)
-
-  defp comment(_rest, ["-->" | _] = nodes, context, _line, _offset) do
-    comment = nodes |> Enum.reverse() |> IO.chardata_to_string()
-    {[{:comment, comment}], context}
+  defp push_node_to_current_buffer(node, buffers) do
+    [buffer | buffers] = buffers
+    buffer = [node | buffer]
+    [buffer | buffers]
   end
 
-  defp match_tags(
-         _rest,
-         [tag, [[{[tag], {opening_line, _}}, attr_nodes, space] | nodes]],
-         context,
-         _line,
-         _offset
-       ) do
-    attributes = build_attributes(attr_nodes)
-    {[{tag, attributes, nodes, %{line: opening_line, space: space}}], context}
+  defp translate_attrs(state, context, attrs),
+    do: Enum.map(attrs, &translate_attr(state, context, &1))
+
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: ?"}}, meta}) do
+    state.translator.handle_attribute(name, value, meta, state, context)
   end
 
-  defp match_tags(_rest, [closing, [[tag_node | _] | _]], _context, _line, _offset) do
-    {[opening], {_opening_line, _}} = tag_node
-    {:error, "closing tag #{inspect(closing)} did not match opening tag #{inspect(opening)}"}
+  defp translate_attr(state, context, {name, {:string, "true", %{delimiter: nil}}, meta}) do
+    meta = Map.put(meta, :unquoted_string?, true)
+    state.translator.handle_attribute(name, true, meta, state, context)
   end
 
-  defp match_tags(rest, [[[tag_node | _] | _]], _context, _line, _offset) do
-    opening =
-      case Regex.run(~r/^<(#?[a-zA-Z][a-zA-Z0-9_\-\.]+)/, rest) do
-        [_, tag] ->
-          tag
-
-        _ ->
-          {[tag], {_opening_line, _}} = tag_node
-          tag
-      end
-
-    {:error, "expected closing tag for #{inspect(opening)}"}
+  defp translate_attr(state, context, {name, {:string, "false", %{delimiter: nil}}, meta}) do
+    meta = Map.put(meta, :unquoted_string?, true)
+    state.translator.handle_attribute(name, false, meta, state, context)
   end
 
-  defp interpolation(_rest, ["}}" | nodes], context, _line, _offset) do
-    [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
-    {[{:interpolation, IO.chardata_to_string(rest), %{line: opening_line}}], context}
-  end
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
+    meta = Map.put(meta, :unquoted_string?, true)
 
-  defp interpolation(_rest, _, _context, _line, _offset),
-    do: {:error, "expected closing for interpolation"}
-
-  defp attribute_expr(_rest, ["}}" | nodes], context, _line, _offset) do
-    [{[], {opening_line, _}} | rest] = Enum.reverse(nodes)
-    {[{:attribute_expr, IO.chardata_to_string(rest), %{line: opening_line}}], context}
-  end
-
-  defp attribute_expr(_rest, _, _context, _line, _offset),
-    do: {:error, "expected closing for attribute expression"}
-
-  defp attribute_value(_rest, [nodes], context, _line, _offset) do
-    value =
-      case reduce_attribute_value(nodes, {[], []}) do
-        [node] when not is_tuple(node) ->
-          node
-
-        [] ->
-          ""
-
-        nodes ->
-          nodes
-      end
-
-    {[value], context}
-  end
-
-  defp reduce_attribute_value([], {[], result}) do
-    Enum.reverse(result)
-  end
-
-  defp reduce_attribute_value([], {chars, result}) do
-    new_node = chars |> Enum.reverse() |> IO.chardata_to_string()
-    reduce_attribute_value([], {[], [new_node | result]})
-  end
-
-  defp reduce_attribute_value([{_, _, _} = node | nodes], {[] = chars, result}) do
-    reduce_attribute_value(nodes, {chars, [node | result]})
-  end
-
-  defp reduce_attribute_value([{_, _, _} = node | nodes], {chars, result}) do
-    new_node = chars |> Enum.reverse() |> IO.chardata_to_string()
-    reduce_attribute_value(nodes, {[], [node, new_node | result]})
-  end
-
-  defp reduce_attribute_value([node | nodes], {chars, result}) do
-    reduce_attribute_value(nodes, {[node | chars], result})
-  end
-
-  defp build_attributes(attr_nodes) do
-    Enum.map(attr_nodes, fn
-      # attribute without value (e.g. disabled)
-      [space1, {[attr], {line, _}}, space2] ->
-        {attr, true, %{line: line, spaces: [space1, space2]}}
-
-      # attribute with value
-      [space1, {[attr], {line, _}}, space2, space3, value] ->
-        {attr, value, %{line: line, spaces: [space1, space2, space3]}}
-    end)
-  end
-
-  ## Self-closing macro node
-
-  self_closing_macro_node =
-    ignore(string("<#"))
-    |> concat(tag)
-    |> line()
-    |> concat(repeat(attribute) |> wrap())
-    |> concat(whitespace)
-    |> ignore(string("/>"))
-    |> wrap()
-    |> post_traverse(:prepend_hashtag)
-    |> post_traverse(:self_closing_tags)
-
-  defp prepend_hashtag(_rest, [[tag_node, attr_nodes, space]], context, _line, _offset) do
-    {[tag], meta} = tag_node
-    {[[{["#" <> tag], meta}, attr_nodes, space]], context}
-  end
-
-  ## Macro node
-
-  text_without_interpolation = utf8_string([not: ?<], min: 1)
-
-  opening_macro_tag =
-    ignore(string("<#"))
-    |> concat(tag)
-    |> line()
-    |> concat(repeat(attribute) |> wrap())
-    |> concat(whitespace)
-    |> ignore(string(">"))
-    |> wrap()
-
-  closing_macro_tag = ignore(string("</#")) |> concat(tag) |> ignore(string(">"))
-
-  macro_node =
-    opening_macro_tag
-    |> post_traverse(:opening_macro_tag)
-    |> repeat_while(choice([string("<"), text_without_interpolation]), :lookahead_macro_tag)
-    |> wrap()
-    |> optional(closing_macro_tag)
-    |> post_traverse(:closing_macro_tag)
-
-  defp opening_macro_tag(_rest, [macro], context, _, _) do
-    {[], %{context | macro: macro}}
-  end
-
-  defp closing_macro_tag(
-         _,
-         [macro, rest],
-         %{macro: [{[macro], {line, _}}, attr_nodes, space]} = context,
-         _,
-         _
-       ) do
-    tag = "#" <> macro
-    attributes = build_attributes(attr_nodes)
-    text = IO.iodata_to_binary(rest)
-    {[{tag, attributes, [text], %{line: line, space: space}}], %{context | macro: nil}}
-  end
-
-  defp closing_macro_tag(
-         _rest,
-         _nodes,
-         %{macro: [{[macro], {_line, _}}, _attr_nodes, _space]},
-         _,
-         _
-       ) do
-    {:error, "expected closing tag for #{inspect("#" <> macro)}"}
-  end
-
-  defp lookahead_macro_tag(rest, %{macro: macro} = context, _, _) do
-    [{[macro], {_line, _}}, _attr_nodes, _space] = macro
-    size = byte_size(macro)
-
-    case rest do
-      <<"</#", macro_match::binary-size(size), ">", _::binary>> when macro_match == macro ->
-        {:halt, context}
+    case Integer.parse(value) do
+      {int_value, ""} ->
+        state.translator.handle_attribute(name, int_value, meta, state, context)
 
       _ ->
-        {:cont, context}
+        raise parse_error("unexpected value for attribute \"#{name}\"", meta)
     end
   end
 
-  defparsecp(
-    :node,
-    [
-      void_element_node,
-      macro_node,
-      self_closing_macro_node,
-      regular_node,
-      self_closing_node,
-      comment
-    ]
-    |> choice()
-    |> label("opening HTML tag"),
-    inline: true
-  )
+  defp translate_attr(state, context, {:root, {:expr, _value, expr_meta} = expr, _attr_meta}) do
+    state.translator.handle_attribute(:root, expr, expr_meta, state, context)
+  end
 
-  defparsecp(
-    :root,
-    repeat(
-      choice([
-        interpolation,
-        string("{"),
-        text_with_interpolation,
-        ascii_string([not: ?<], min: 1),
-        parsec(:node)
-      ])
-    )
-  )
+  defp translate_attr(
+         state,
+         context,
+         {:root, {:tagged_expr, _marker, _expr, marker_meta} = expr, _attr_meta}
+       ) do
+    state.translator.handle_attribute(:root, expr, marker_meta, state, context)
+  end
+
+  defp translate_attr(state, context, {name, {:expr, _value, _expr_meta} = expr, attr_meta}) do
+    state.translator.handle_attribute(name, expr, attr_meta, state, context)
+  end
+
+  defp translate_attr(
+         state,
+         context,
+         {name, {:tagged_expr, _marker, _expr, marker_meta} = expr, _attr_meta}
+       ) do
+    state.translator.handle_attribute(name, expr, marker_meta, state, context)
+  end
+
+  defp translate_attr(state, context, {name, nil, meta}) do
+    state.translator.handle_attribute(name, true, meta, state, context)
+  end
+
+  defp push_tag(state, {:tag_open, _tag, _attrs, %{void_tag?: true}}, _context) do
+    state
+  end
+
+  defp push_tag(state, token, context) do
+    %{state | token_stack: [{token, context} | state.token_stack]}
+  end
+
+  defp pop_matching_tag(
+         %{token_stack: [{{:tag_open, tag_name, _, _} = token, context} | tokens]} = state,
+         {:tag_close, tag_name, _}
+       ) do
+    {token, context, %{state | token_stack: tokens}}
+  end
+
+  defp pop_matching_tag(
+         %{token_stack: [{{:block_open, name, _, _} = token, context} | tokens]} = state,
+         {:block_close, name, _}
+       ) do
+    {token, context, %{state | token_stack: tokens}}
+  end
+
+  defp pop_matching_tag(%{token_stack: [{{_, _, _, meta} = token_open, _ctx} | _]}, token_close) do
+    message = """
+    expected closing node for #{format_node(token_open)} defined on line #{meta.line}, \
+    got #{format_node(token_close)}\
+    """
+
+    raise parse_error(message, meta)
+  end
+
+  defp parent_context([{_tag, context} | _]), do: context
+  defp parent_context([]), do: nil
+
+  def parse_error(message, meta) do
+    %ParseError{
+      message: message,
+      file: meta.file,
+      line: meta.line,
+      column: meta.column
+    }
+  end
+
+  defp format_node({:tag_open, name, _attrs, _meta}), do: "<#{name}>"
+  defp format_node({:tag_close, name, _meta}), do: "</#{name}>"
+  defp format_node({:block_open, name, _attrs, _meta}), do: "{##{name}}"
+  defp format_node({:block_close, name, _meta}), do: "{/#{name}}"
 end

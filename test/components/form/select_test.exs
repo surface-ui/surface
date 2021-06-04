@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.SelectTest do
   test "empty select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Select form="user" field="role" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "select with atom field" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field={{ :role }} />
+        ~F"""
+        <Select form="user" field={:role} />
         """
       end
 
@@ -32,8 +32,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "setting the options" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} />
+        ~F"""
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} />
         """
       end
 
@@ -48,8 +48,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select" />
+        ~F"""
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} class="select" />
         """
       end
 
@@ -59,8 +59,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} class="select primary" />
+        ~F"""
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} class="select primary" />
         """
       end
 
@@ -70,8 +70,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "setting the prompt" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} prompt="Pick a role"/>
+        ~F"""
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} prompt="Pick a role"/>
         """
       end
 
@@ -87,8 +87,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "setting the default selected element" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} selected="user"/>
+        ~F"""
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} selected="user"/>
         """
       end
 
@@ -103,8 +103,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" options={{ ["Admin": "admin", "User": "user"] }} opts={{ disabled: true }}/>
+        ~F"""
+        <Select form="user" field="role" options={["Admin": "admin", "User": "user"]} opts={disabled: true}/>
         """
       end
 
@@ -119,8 +119,8 @@ defmodule Surface.Components.Form.SelectTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
-        <Select form="user" field="role" id="role" name="role" options={{ ["Admin": "admin", "User": "user"] }}/>
+        ~F"""
+        <Select form="user" field="role" id="role" name="role" options={["Admin": "admin", "User": "user"]}/>
         """
       end
 
@@ -142,7 +142,7 @@ defmodule Surface.Components.Form.SelectConfigTest do
     using_config Select, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Select />
           """
         end

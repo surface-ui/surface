@@ -18,8 +18,8 @@ defmodule Surface.Components.Form.OptionsForSelect do
   prop selected, :any, default: nil
 
   def render(assigns) do
-    ~H"""
-    {{ options_for_select(@options, @selected) }}
+    ~F"""
+    {options_for_select(@options, @selected)}
     """
   end
 end

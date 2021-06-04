@@ -7,8 +7,8 @@ defmodule Surface.DirectivesTest do
     slot default
 
     def render(assigns) do
-      ~H"""
-      <div><slot/></div>
+      ~F"""
+      <div><#slot/></div>
       """
     end
   end
@@ -21,9 +21,9 @@ defmodule Surface.DirectivesTest do
     prop content, :string
 
     def render(assigns) do
-      ~H"""
-      <div class={{ @class, hidden: @hidden, block: !@hidden }}>
-        {{ @content }}
+      ~F"""
+      <div class={@class, hidden: @hidden, block: !@hidden}>
+        {@content}
       </div>
       """
     end
@@ -36,8 +36,8 @@ defmodule Surface.DirectivesTest do
     slot default
 
     def render(assigns) do
-      ~H"""
-      <div><slot :if={{ @show }}/></div>
+      ~F"""
+      <div><#slot :if={@show}/></div>
       """
     end
   end
@@ -49,8 +49,8 @@ defmodule Surface.DirectivesTest do
     slot default, props: [:data]
 
     def render(assigns) do
-      ~H"""
-      <div><slot :if={{ @show }} :props={{ data: "data" }}/></div>
+      ~F"""
+      <div><#slot :if={@show} :props={data: "data"}/></div>
       """
     end
   end
@@ -62,18 +62,40 @@ defmodule Surface.DirectivesTest do
     slot default
 
     def render(assigns) do
-      ~H"""
-      <div><slot :for={{ _i <- 1..@repeat }}/></div>
+      ~F"""
+      <div><#slot :for={_i <- 1..@repeat}/></div>
       """
     end
+  end
+
+  test "directive with \":\" prefix" do
+    html =
+      render_surface do
+        ~F"""
+        <div :attrs={class: "text-xs"} />
+        """
+      end
+
+    assert html =~ ~s(<div class="text-xs"></div>)
+  end
+
+  test "directive with \"s-\" prefix" do
+    html =
+      render_surface do
+        ~F"""
+        <div s-attrs={class: "text-xs"} />
+        """
+      end
+
+    assert html =~ ~s(<div class="text-xs"></div>)
   end
 
   describe ":props for a component" do
     test "passing keyword list of props" do
       html =
         render_surface do
-          ~H"""
-          <DivWithProps :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+          ~F"""
+          <DivWithProps :props={class: "text-xs", hidden: false, content: "dynamic props content"} />
           """
         end
 
@@ -87,8 +109,8 @@ defmodule Surface.DirectivesTest do
     test "static props override dynamic props" do
       html =
         render_surface do
-          ~H"""
-          <DivWithProps content="static content" :props={{ class: "text-xs", hidden: false, content: "dynamic props content" }} />
+          ~F"""
+          <DivWithProps content="static content" :props={class: "text-xs", hidden: false, content: "dynamic props content"} />
           """
         end
 
@@ -104,8 +126,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <DivWithProps :props={{ @opts }} />
+          ~F"""
+          <DivWithProps :props={@opts} />
           """
         end
 
@@ -115,14 +137,55 @@ defmodule Surface.DirectivesTest do
              </div>
              """
     end
+
+    test "shorthand notation `{...@props}`" do
+      assigns = %{props: %{class: "text-xs", hidden: false, content: "dynamic props content"}}
+
+      html =
+        render_surface do
+          ~F"""
+          <DivWithProps {...@props} />
+          """
+        end
+
+      assert html =~ """
+             <div class="text-xs block">
+               dynamic props content
+             </div>
+             """
+    end
+
+    test "raise if trying to assisn `{... }` to a property" do
+      assigns = %{props: %{}}
+
+      code =
+        quote do
+          ~F"""
+          <DivWithProps
+            class=
+              {...@props} />
+          """
+        end
+
+      message = """
+      code:3: cannot assign `{...@props}` to attribute `class`. \
+      The tagged expression `{... }` can only be used on a root attribute/property.
+
+      Example: <div {...@attrs}>
+      """
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code, assigns)
+      end)
+    end
   end
 
   describe ":attrs in html tags" do
     test "passing a keyword list" do
       html =
         render_surface do
-          ~H"""
-          <div class="myclass" :attrs={{ id: "myid" }}>
+          ~F"""
+          <div class="myclass" :attrs={id: "myid"}>
             Some Text
           </div>
           """
@@ -138,8 +201,8 @@ defmodule Surface.DirectivesTest do
     test "passing a map" do
       html =
         render_surface do
-          ~H"""
-          <div class="myclass" :attrs={{ %{id: "myid"} }}>
+          ~F"""
+          <div class="myclass" :attrs={%{id: "myid"}}>
             Some Text
           </div>
           """
@@ -157,8 +220,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div class="myclass" :attrs={{ @div_props }}>
+          ~F"""
+          <div class="myclass" :attrs={@div_props}>
             Some Text
           </div>
           """
@@ -174,8 +237,8 @@ defmodule Surface.DirectivesTest do
     test "with boolean properties" do
       html =
         render_surface do
-          ~H"""
-          <div class="myclass" :attrs={{ disabled: true }}>
+          ~F"""
+          <div class="myclass" :attrs={disabled: true}>
             Some Text
           </div>
           """
@@ -188,11 +251,11 @@ defmodule Surface.DirectivesTest do
              """
     end
 
-    test "static properties override dyanmic properties" do
+    test "static properties override dynamic properties" do
       html =
         render_surface do
-          ~H"""
-          <div class="myclass" id="static-id" :attrs={{ id: "dynamic-id" }}>
+          ~F"""
+          <div class="myclass" id="static-id" :attrs={id: "dynamic-id"}>
             Some Text
           </div>
           """
@@ -204,6 +267,43 @@ defmodule Surface.DirectivesTest do
              </div>
              """
     end
+
+    test "shorthand notation `{...@attrs}`" do
+      assigns = %{attrs: [class: "text-xs", style: "color: black;"]}
+
+      html =
+        render_surface do
+          ~F"""
+          <div {...@attrs}/>
+          """
+        end
+
+      assert html =~ ~s(<div class="text-xs" style="color: black;"></div>)
+    end
+
+    test "raise if trying to assisn `{... }` to an attribute" do
+      assigns = %{attrs: %{}}
+
+      code =
+        quote do
+          ~F"""
+          <div
+            class=
+              {...@attrs} />
+          """
+        end
+
+      message = """
+      code:3: cannot assign `{...@attrs}` to attribute `class`. \
+      The tagged expression `{... }` can only be used on a root attribute/property.
+
+      Example: <div {...@attrs}>
+      """
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code, assigns)
+      end)
+    end
   end
 
   describe "modifiers" do
@@ -212,9 +312,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :for.index.with_index={{ {i, j} <- @items }}>
-            i: {{ i }}, j: {{ j }}
+          ~F"""
+          <div :for.index.with_index={{i, j} <- @items}>
+            i: {i}, j: {j}
           </div>
           """
         end
@@ -233,9 +333,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <Div :for.with_index={{ {iii, index} <- @items }}>
-            Item: {{ iii }}, Index: {{ index }}
+          ~F"""
+          <Div :for.with_index={{iii, index} <- @items}>
+            Item: {iii}, Index: {index}
           </Div>
           """
         end
@@ -255,10 +355,10 @@ defmodule Surface.DirectivesTest do
 
       code =
         quote do
-          ~H"""
+          ~F"""
           <br/>
-          <div :for.unknown={{ @items }}>
-            Index: {{ index }}
+          <div :for.unknown={@items}>
+            Index: {index}
           </div>
           """
         end
@@ -277,10 +377,10 @@ defmodule Surface.DirectivesTest do
 
       code =
         quote do
-          ~H"""
+          ~F"""
           <br/>
-          <div :for.with_index={{ i <- a, j <- b }}>
-            Index: {{ index }}
+          <div :for.with_index={i <- a, j <- b}>
+            Index: {index}
           </div>
           """
         end
@@ -301,9 +401,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <Div :for={{ i <- @items }}>
-            Item: {{i}}
+          ~F"""
+          <Div :for={i <- @items}>
+            Item: {i}
           </Div>
           """
         end
@@ -323,9 +423,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :for={{ i <- @items }}>
-            Item: {{i}}
+          ~F"""
+          <div :for={i <- @items}>
+            Item: {i}
           </div>
           """
         end
@@ -342,8 +442,8 @@ defmodule Surface.DirectivesTest do
     test "in void html elements" do
       html =
         render_surface do
-          ~H"""
-          <br :for={{ _ <- [1,2] }}>
+          ~F"""
+          <br :for={_ <- [1,2]}>
           """
         end
 
@@ -355,8 +455,8 @@ defmodule Surface.DirectivesTest do
     test "in slots" do
       html =
         render_surface do
-          ~H"""
-          <DivWithSlotUsingFor repeat=3>
+          ~F"""
+          <DivWithSlotUsingFor repeat={3}>
             <span>surface</span>
           </DivWithSlotUsingFor>
           """
@@ -376,10 +476,10 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :for={{ i1 <- @items1, i2 <- @items2, i1 < 4 }}>
-            Item1: {{i1}}
-            Item2: {{i2}}
+          ~F"""
+          <div :for={i1 <- @items1, i2 <- @items2, i1 < 4}>
+            Item1: {i1}
+            Item2: {i2}
           </div>
           """
         end
@@ -409,9 +509,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :for.with_index={{ {item, index} <- @items }}>
-            Item: {{ item }}, Index: {{ index }}
+          ~F"""
+          <div :for.with_index={{item, index} <- @items}>
+            Item: {item}, Index: {index}
           </div>
           """
         end
@@ -430,9 +530,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :for.index={{ index <- @items }}>
-            Index: {{ index }}
+          ~F"""
+          <div :for.index={index <- @items}>
+            Index: {index}
           </div>
           """
         end
@@ -451,9 +551,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :for.index={{ @items }}>
-            Index: {{ index }}
+          ~F"""
+          <div :for.index={@items}>
+            Index: {index}
           </div>
           """
         end
@@ -474,11 +574,11 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <Div :if={{ @show }}>
+          ~F"""
+          <Div :if={@show}>
             Show
           </Div>
-          <Div :if={{ @dont_show }}>
+          <Div :if={@dont_show}>
             Dont's show
           </Div>
           """
@@ -496,11 +596,11 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :if={{ @show }}>
+          ~F"""
+          <div :if={@show}>
             Show
           </div>
-          <div :if={{ @dont_show }}>
+          <div :if={@dont_show}>
             Dont's show
           </div>
           """
@@ -518,9 +618,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <col class="show" :if={{ @show }}>
-          <col class="dont_show" :if={{ @dont_show }}>
+          ~F"""
+          <col class="show" :if={@show}>
+          <col class="dont_show" :if={@dont_show}>
           """
         end
 
@@ -532,10 +632,10 @@ defmodule Surface.DirectivesTest do
     test "in slots" do
       html =
         render_surface do
-          ~H"""
-          <DivWithSlotUsingIf show=true>1</DivWithSlotUsingIf>
-          <DivWithSlotUsingIf show=false>2</DivWithSlotUsingIf>
-          <DivWithSlotUsingIf show=true>3</DivWithSlotUsingIf>
+          ~F"""
+          <DivWithSlotUsingIf show={true}>1</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show={false}>2</DivWithSlotUsingIf>
+          <DivWithSlotUsingIf show={true}>3</DivWithSlotUsingIf>
           """
         end
 
@@ -549,10 +649,10 @@ defmodule Surface.DirectivesTest do
     test "in slots with props" do
       html =
         render_surface do
-          ~H"""
-          <DivWithSlotUsingIfAndProps show=true :let={{ data: d }}>1 - {{ d }}</DivWithSlotUsingIfAndProps>
-          <DivWithSlotUsingIfAndProps show=false :let={{ data: d }}>2 - {{ d }}</DivWithSlotUsingIfAndProps>
-          <DivWithSlotUsingIfAndProps show=true :let={{ data: d }}>3 - {{ d }}</DivWithSlotUsingIfAndProps>
+          ~F"""
+          <DivWithSlotUsingIfAndProps show={true} :let={data: d}>1 - {d}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show={false} :let={data: d}>2 - {d}</DivWithSlotUsingIfAndProps>
+          <DivWithSlotUsingIfAndProps show={true} :let={data: d}>3 - {d}</DivWithSlotUsingIfAndProps>
           """
         end
 
@@ -570,9 +670,9 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <col :show={{ @show }}>
-          <col :show=true>
+          ~F"""
+          <col :show={@show}>
+          <col :show={true}>
           """
         end
 
@@ -587,8 +687,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <col :show={{ @show }}>
+          ~F"""
+          <col :show={@show}>
           """
         end
 
@@ -600,8 +700,8 @@ defmodule Surface.DirectivesTest do
     test "when false literal, add hidden attribute" do
       html =
         render_surface do
-          ~H"""
-          <col :show=false>
+          ~F"""
+          <col :show={false}>
           """
         end
 
@@ -617,8 +717,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <button :on-click={{ @click }}>OK</button>
+          ~F"""
+          <button :on-click={@click}>OK</button>
           """
         end
 
@@ -632,8 +732,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <button :on-click={{ @click }}>OK</button>
+          ~F"""
+          <button :on-click={@click}>OK</button>
           """
         end
 
@@ -645,7 +745,7 @@ defmodule Surface.DirectivesTest do
     test "as a literal string" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <button :on-click="ok">OK</button>
           """
         end
@@ -658,8 +758,8 @@ defmodule Surface.DirectivesTest do
     test "as event name + target option" do
       html =
         render_surface do
-          ~H"""
-          <button :on-click={{ "ok", target: "#comp" }}>OK</button>
+          ~F"""
+          <button :on-click={"ok", target: "#comp"}>OK</button>
           """
         end
 
@@ -671,7 +771,7 @@ defmodule Surface.DirectivesTest do
     test "do not translate invalid events" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <button :on-invalid="ok">OK</button>
           """
         end
@@ -686,7 +786,7 @@ defmodule Surface.DirectivesTest do
     test "generate phx-hook with __MODULE__ as default namespace" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div :hook="Button"></div>
           """
         end
@@ -699,8 +799,8 @@ defmodule Surface.DirectivesTest do
     test "generate phx-hook with custom namespace" do
       html =
         render_surface do
-          ~H"""
-          <div :hook={{ "Button", from: Some.Fake.Comp }}></div>
+          ~F"""
+          <div :hook={"Button", from: Some.Fake.Comp}></div>
           """
         end
 
@@ -712,8 +812,8 @@ defmodule Surface.DirectivesTest do
     test "don't generate anything if the value is nil or false" do
       html =
         render_surface do
-          ~H"""
-          <div :hook={{ nil }}></div>
+          ~F"""
+          <div :hook={nil}></div>
           """
         end
 
@@ -723,8 +823,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :hook={{ nil, from: Some.Fake.Comp }}></div>
+          ~F"""
+          <div :hook={nil, from: Some.Fake.Comp}></div>
           """
         end
 
@@ -734,8 +834,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :hook={{ false }}></div>
+          ~F"""
+          <div :hook={false}></div>
           """
         end
 
@@ -745,8 +845,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :hook={{ false, from: Some.Fake.Comp }}></div>
+          ~F"""
+          <div :hook={false, from: Some.Fake.Comp}></div>
           """
         end
 
@@ -758,8 +858,8 @@ defmodule Surface.DirectivesTest do
     test "is compatible with other directives" do
       html =
         render_surface do
-          ~H"""
-          <div :hook="Button" :if={{ true }}></div>
+          ~F"""
+          <div :hook="Button" :if={true}></div>
           """
         end
 
@@ -769,8 +869,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :hook="Button" :for={{ _ <- [1] }}></div>
+          ~F"""
+          <div :hook="Button" :for={_ <- [1]}></div>
           """
         end
 
@@ -780,8 +880,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :hook="Button" :attrs={{id: "myid" }}></div>
+          ~F"""
+          <div :hook="Button" :attrs={id: "myid"}></div>
           """
         end
 
@@ -791,8 +891,8 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
-          <div :hook="Button" :show={{ false }}></div>
+          ~F"""
+          <div :hook="Button" :show={false}></div>
           """
         end
 
@@ -802,13 +902,97 @@ defmodule Surface.DirectivesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <div :hook="Button" :on-click="click"></div>
           """
         end
 
       assert html =~ """
              <div phx-hook="Surface.DirectivesTest#Button" phx-click="click"></div>
+             """
+    end
+  end
+
+  describe ":values" do
+    test "passing a keyword list" do
+      html =
+        render_surface do
+          ~F"""
+          <div :values={hello: :world, foo: "bar", one: 2, yes: true}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
+               Some Text
+             </div>
+             """
+    end
+
+    test "passing a map" do
+      html =
+        render_surface do
+          ~F"""
+          <div :values={%{hello: :world, foo: "bar", one: 2, yes: true}}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
+               Some Text
+             </div>
+             """
+    end
+
+    test "passing unsupported types" do
+      assert_raise(RuntimeError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
+        render_surface do
+          ~F"""
+          <div :values={map: %{}, tuple: {}}>
+            Some Text
+          </div>
+          """
+        end
+      end)
+    end
+
+    test "using an assign" do
+      assigns = %{values: [hello: :world, foo: "bar", one: 2, yes: true]}
+
+      html =
+        render_surface do
+          ~F"""
+          <div :values={@values}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
+               Some Text
+             </div>
+             """
+    end
+
+    test "static properties override dynamic properties" do
+      html =
+        render_surface do
+          ~F"""
+          <div phx-value-hello="static-world" :values={hello: "dynamic-world"}>
+            Some Text
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-hello="static-world">
+               Some Text
+             </div>
              """
     end
   end
@@ -835,8 +1019,8 @@ defmodule Surface.DirectivesSyncTest do
       message =
         capture_io(:standard_error, fn ->
           render_surface do
-            ~H"""
-            <DivWithProps :props={{ @opts }} />
+            ~F"""
+            <DivWithProps :props={@opts} />
             """
           end
         end)

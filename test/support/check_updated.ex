@@ -16,8 +16,8 @@ defmodule Surface.CheckUpdated do
   end
 
   def render(assigns) do
-    ~H"""
-    <div>{{ inspect(@content) }}</div>
+    ~F"""
+    <div>{inspect(@content)}</div>
     """
   end
 end

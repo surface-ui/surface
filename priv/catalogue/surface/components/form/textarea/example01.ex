@@ -5,11 +5,11 @@ defmodule Surface.Components.Form.TextArea.Example01 do
     height: "170px"
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <TextArea
       rows="4"
       class="textarea"
-      opts={{ placeholder: "4 lines of textarea" }}
+      opts={placeholder: "4 lines of textarea"}
     />
     """
   end

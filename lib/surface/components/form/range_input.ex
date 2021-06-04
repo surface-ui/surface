@@ -39,9 +39,9 @@ defmodule Surface.Components.Form.RangeInput do
 
     event_opts = events_to_opts(assigns)
 
-    ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      {{ range_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts) }}
+    ~F"""
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+      {range_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
     </InputContext>
     """
   end

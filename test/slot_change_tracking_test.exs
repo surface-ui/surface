@@ -12,8 +12,8 @@ defmodule Surface.SlotChangeTrackingTest do
     slot default, props: [:param]
 
     def render(assigns) do
-      ~H"""
-      <div><slot :props={{ param: "Param from Outer" }}/></div>
+      ~F"""
+      <div><#slot :props={param: "Param from Outer"}/></div>
       """
     end
   end
@@ -30,11 +30,11 @@ defmodule Surface.SlotChangeTrackingTest do
     end
 
     def render(assigns) do
-      ~H"""
-      <Outer id="outer" :let={{ param: param }}>
-        Count: {{ @count }}
-        <CheckUpdated id="1" dest={{ @test_pid }} content={{ param }} />
-        <CheckUpdated id="2" dest={{ @test_pid }} />
+      ~F"""
+      <Outer id="outer" :let={param: param}>
+        Count: {@count}
+        <CheckUpdated id="1" dest={@test_pid} content={param} />
+        <CheckUpdated id="2" dest={@test_pid} />
       </Outer>
       """
     end
@@ -52,10 +52,10 @@ defmodule Surface.SlotChangeTrackingTest do
     data value, :integer, default: 0
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
-        Value in the Counter: {{ @value }}
-        <slot :props={{ value: @value }}/>
+        Value in the Counter: {@value}
+        <#slot :props={value: @value}/>
         <button id="incButton" :on-click="inc">+</button>
       </div>
       """
@@ -70,9 +70,9 @@ defmodule Surface.SlotChangeTrackingTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
-      <Counter id="counter" :let={{ value: value }}>
-        Value in the View: {{ value }}
+      ~F"""
+      <Counter id="counter" :let={value: value}>
+        Value in the View: {value}
       </Counter>
       """
     end

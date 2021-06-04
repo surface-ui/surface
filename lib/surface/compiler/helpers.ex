@@ -26,8 +26,8 @@ defmodule Surface.Compiler.Helpers do
     @builtin_assigns_by_type[type]
   end
 
-  def interpolation_to_quoted!(text, meta) do
-    case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
+  def expression_to_quoted!(text, meta) do
+    case Code.string_to_quoted(text, file: meta.file, line: meta.line, column: meta.column) do
       {:ok, expr} ->
         expr
 
@@ -56,7 +56,11 @@ defmodule Surface.Compiler.Helpers do
          component_type
        )
        when component_type in [Surface.Component, Surface.LiveComponent] do
-    defined_assigns = Keyword.keys(Surface.API.get_assigns(caller.module))
+    defined_assigns =
+      caller.module
+      |> Surface.API.get_assigns()
+      |> Enum.map(& &1.name)
+
     builtin_assigns = builtin_assigns_by_type(component_type)
     undefined_assigns = Keyword.drop(used_assigns, builtin_assigns ++ defined_assigns)
 
@@ -98,27 +102,18 @@ defmodule Surface.Compiler.Helpers do
     assigns
   end
 
-  def to_meta(%{line: line} = tree_meta, %CompileMeta{
-        line_offset: offset,
-        file: file,
-        caller: caller,
-        checks: checks
-      }) do
-    AST.Meta
-    |> Kernel.struct(tree_meta)
-    # The rational here is that offset is the offset from the start of the file to the first line in the
-    # surface expression.
-    |> Map.put(:line, line + offset - 1)
-    |> Map.put(:line_offset, offset)
-    |> Map.put(:file, file)
-    |> Map.put(:caller, caller)
-    |> Map.put(:checks, checks)
+  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks}) do
+    %AST.Meta{
+      line: tree_meta.line,
+      column: tree_meta.column,
+      file: tree_meta.file,
+      caller: caller,
+      checks: checks
+    }
   end
 
-  def to_meta(%{line: line} = tree_meta, %AST.Meta{line_offset: offset} = parent_meta) do
-    parent_meta
-    |> Map.merge(tree_meta)
-    |> Map.put(:line, line + offset - 1)
+  def to_meta(tree_meta, %AST.Meta{} = parent_meta) do
+    %{parent_meta | line: tree_meta.line, column: tree_meta.column}
   end
 
   def did_you_mean(target, list) do

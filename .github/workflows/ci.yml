@@ -14,31 +14,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.8.2
-            otp: 21.3.8.17
-          - elixir: 1.9.4
-            otp: 21.3.8.17
-            warnings_as_errors: true # not 1.10 as its --warnigs-as-errors has bugs https://github.com/elixir-lang/elixir/issues/10073
-          - elixir: 1.10.4
-            otp: 21.3.8.17
-          - elixir: 1.10.4
-            otp: 23.1.1
           - elixir: 1.11.1
             otp: 21.3.8.17
+            warnings-as-errors: true
           - elixir: 1.11.4
-            otp: 23.2
+            otp: 23.3.4
+            warnings-as-errors: true
+          - elixir: 1.12.0
+            otp: 24.0
             check_formatted: true
-          - elixir: 1.12.0-rc.0
-            otp: 24.0-rc3
+            warnings-as-errors: true
     env:
       MIX_ENV: test
     steps:
-      - uses: actions/checkout@v2.3.2
-      - uses: actions/setup-elixir@v1.5.0
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
-          experimental-otp: true
       - name: Install packages
         run: |
           sudo apt-get install -y -qq inotify-tools

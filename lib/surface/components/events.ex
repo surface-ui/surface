@@ -32,6 +32,9 @@ defmodule Surface.Components.Events do
 
       @doc "Triggered when a key on the keyboard is pressed"
       prop keydown, :event
+
+      @doc "List values that will be sent as part of the payload triggered by an event"
+      prop values, :keyword, default: []
     end
   end
 end

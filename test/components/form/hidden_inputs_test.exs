@@ -8,10 +8,10 @@ defmodule Surface.Components.Form.HiddenInputsTest do
   test "using generated form received as slot props" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} :let={{ form: f }}>
-            <HiddenInputs for={{ f }} />
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={form: f}>
+            <HiddenInputs for={f} />
           </Inputs>
         </Form>
         """
@@ -27,9 +27,9 @@ defmodule Surface.Components.Form.HiddenInputsTest do
   test "using generated form stored in the Form context" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }}>
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children}>
             <HiddenInputs />
           </Inputs>
         </Form>

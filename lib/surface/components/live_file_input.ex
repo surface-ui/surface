@@ -34,6 +34,6 @@ defmodule Surface.Components.LiveFileInput do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
     event_opts = events_to_opts(assigns)
 
-    ~H"{{ live_file_input(@upload, attr_opts ++ @opts ++ event_opts) }}"
+    ~F"{live_file_input(@upload, attr_opts ++ @opts ++ event_opts)}"
   end
 end

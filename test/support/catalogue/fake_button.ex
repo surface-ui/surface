@@ -17,7 +17,7 @@ defmodule Surface.Components.FakeButton do
   prop color, :string, default: "white"
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     Fake render
     """
   end

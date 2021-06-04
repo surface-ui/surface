@@ -13,8 +13,8 @@ defmodule Surface.Components.EventsTest do
         |> events_to_opts()
         |> opts_to_attrs()
 
-      ~H"""
-      <div :attrs={{ attrs }} />
+      ~F"""
+      <div :attrs={attrs} />
       """
     end
 
@@ -27,7 +27,7 @@ defmodule Surface.Components.EventsTest do
     use Surface.LiveComponent
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <ComponentWithEvents click="my_click" />
       </div>
@@ -42,7 +42,7 @@ defmodule Surface.Components.EventsTest do
   test "capture click event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents capture_click="my_click" />
         """
       end
@@ -55,7 +55,7 @@ defmodule Surface.Components.EventsTest do
   test "click event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents click="my_click" />
         """
       end
@@ -68,7 +68,7 @@ defmodule Surface.Components.EventsTest do
   test "window focus event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents window_focus="my_focus" />
         """
       end
@@ -81,7 +81,7 @@ defmodule Surface.Components.EventsTest do
   test "window blur event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents window_blur="my_blur" />
         """
       end
@@ -94,7 +94,7 @@ defmodule Surface.Components.EventsTest do
   test "focus event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents focus="my_focus" />
         """
       end
@@ -107,7 +107,7 @@ defmodule Surface.Components.EventsTest do
   test "blur event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents blur="my_blur" />
         """
       end
@@ -120,7 +120,7 @@ defmodule Surface.Components.EventsTest do
   test "window keyup event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents window_keyup="my_keyup" />
         """
       end
@@ -133,7 +133,7 @@ defmodule Surface.Components.EventsTest do
   test "window keydown event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents window_keydown="my_keydown" />
         """
       end
@@ -146,7 +146,7 @@ defmodule Surface.Components.EventsTest do
   test "keyup event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents keyup="my_keyup" />
         """
       end
@@ -159,7 +159,7 @@ defmodule Surface.Components.EventsTest do
   test "keydown event with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <ComponentWithEvents keydown="my_keydown" />
         """
       end
@@ -172,7 +172,7 @@ defmodule Surface.Components.EventsTest do
   test "click event with @myself as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Parent id="comp" />
         """
       end
@@ -181,6 +181,19 @@ defmodule Surface.Components.EventsTest do
            <div>
              <div phx-click="my_click" phx-target="1"></div>
            </div>
+           """
+  end
+
+  test "event with values" do
+    html =
+      render_surface do
+        ~F"""
+        <ComponentWithEvents click="my_click" values={ hello: :world, foo: "bar", one: 2 } />
+        """
+      end
+
+    assert html =~ """
+           <div phx-click="my_click" phx-value-foo="bar" phx-value-hello="world" phx-value-one="2"></div>
            """
   end
 end

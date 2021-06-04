@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeInput form="user" field="time" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <TimeInput form="user" field={{ :time }} />
+        ~F"""
+        <TimeInput form="user" field={:time} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeInput form="user" field="time" value="23:59:59" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeInput form="user" field="time" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeInput form="user" field="time" class="input primary" />
         """
       end
@@ -67,8 +67,8 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <TimeInput form="user" field="time" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <TimeInput form="user" field="time" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeInput form="user" field="color" value="23:59:59" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.TimeInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeInput form="user" field="time" id="start_at" name="start_at" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.TimeInputConfigTest do
     using_config TimeInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <TimeInput/>
           """
         end

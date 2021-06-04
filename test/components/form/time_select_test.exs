@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "datetime select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect form="alarm" field="time" />
         """
       end
@@ -19,9 +19,9 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "with form context" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :alarm }}>
-          <TimeSelect field={{ :time }} />
+        ~F"""
+        <Form for={:alarm}>
+          <TimeSelect field={:time} />
         </Form>
         """
       end
@@ -34,8 +34,8 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the value as map" do
     html =
       render_surface do
-        ~H"""
-        <TimeSelect form="alarm" field="time" value={{ %{hour: 2, minute: 11, second: 13} }} second={{ [] }} />
+        ~F"""
+        <TimeSelect form="alarm" field="time" value={%{hour: 2, minute: 11, second: 13}} second={[]} />
         """
       end
 
@@ -47,8 +47,8 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the value as tuple" do
     html =
       render_surface do
-        ~H"""
-        <TimeSelect form="alarm" field="time" value={{ {2, 11, 13} }} second={{ [] }} />
+        ~F"""
+        <TimeSelect form="alarm" field="time" value={{2, 11, 13}} second={[]} />
         """
       end
 
@@ -60,8 +60,8 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the default value as map" do
     html =
       render_surface do
-        ~H"""
-        <TimeSelect form="alarm" field="time" default={{ %{hour: 2, minute: 11, second: 13} }} second={{ [] }} />
+        ~F"""
+        <TimeSelect form="alarm" field="time" default={%{hour: 2, minute: 11, second: 13}} second={[]} />
         """
       end
 
@@ -73,8 +73,8 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "setting the default value as tuple" do
     html =
       render_surface do
-        ~H"""
-        <TimeSelect form="alarm" field="time" default={{ {2, 11, 13} }} second={{ [] }} />
+        ~F"""
+        <TimeSelect form="alarm" field="time" default={{2, 11, 13}} second={[]} />
         """
       end
 
@@ -86,8 +86,8 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <TimeSelect form="alarm" field="time" second={{ [] }} />
+        ~F"""
+        <TimeSelect form="alarm" field="time" second={[]} />
         """
       end
 
@@ -99,11 +99,11 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing builder to select" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
-          builder={{ fn b ->
+          builder={fn b ->
             [
               "Hour: ",
               b.(:hour, class: "hour"),
@@ -112,7 +112,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
               "Second: ",
               b.(:second, class: "second"),
             ]
-          end }}
+          end}
         />
         """
       end
@@ -125,13 +125,13 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing options to hour, minute and second" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
-          hour={{ prompt: "Hour" }}
-          minute={{ prompt: "Minute" }}
-          second={{ prompt: "Second" }}
+          hour={prompt: "Hour"}
+          minute={prompt: "Minute"}
+          second={prompt: "Second"}
         />
         """
       end
@@ -144,13 +144,13 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "parsing class option in hour, minute and second" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
-          hour={{ class: ["true-class": true, "false-class": false] }}
-          minute={{ class: ["true-class": true, "false-class": false] }}
-          second={{ class: "second-class" }}
+          hour={class: ["true-class": true, "false-class": false]}
+          minute={class: ["true-class": true, "false-class": false]}
+          second={class: "second-class"}
         />
         """
       end
@@ -168,11 +168,11 @@ defmodule Surface.Components.Form.TimeSelectTest do
   test "passing extra options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TimeSelect
           form="user"
           field="born_at"
-          second={{ [] }}
+          second={[]}
           id="born_at"
           name="born_at"
         />

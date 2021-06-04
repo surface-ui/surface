@@ -21,9 +21,9 @@ defmodule Surface.PropertiesTest.Components do
     slot header, required: true
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
-        <slot name="default" />
+        <#slot name="default" />
       </div>
       """
     end
@@ -55,9 +55,9 @@ defmodule Surface.PropertiesTest.Components do
     slot header, required: true
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
-        <slot name="default" />
+        <#slot name="default" />
       </div>
       """
     end
@@ -75,7 +75,7 @@ defmodule Surface.PropertiesTest.Components do
     prop class, :css_class
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div />
       """
     end
@@ -89,7 +89,7 @@ defmodule Surface.PropertiesTest.Components do
     """
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div />
       """
     end

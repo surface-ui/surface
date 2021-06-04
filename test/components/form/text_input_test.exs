@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.TextInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextInput form="user" field="name" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.TextInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <TextInput form="user" field={{ :name }} />
+        ~F"""
+        <TextInput form="user" field={:name} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.TextInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextInput form="user" field="name" value="Max" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.TextInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextInput form="user" field="name" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.TextInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextInput form="user" field="name" class="input primary" />
         """
       end
@@ -67,8 +67,8 @@ defmodule Surface.Components.Form.TextInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <TextInput form="user" field="name" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <TextInput form="user" field="name" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.TextInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextInput form="user" field="color" value="Max" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.TextInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextInput form="user" field="name" id="username" name="username" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.TextInputConfigTest do
     using_config TextInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <TextInput/>
           """
         end

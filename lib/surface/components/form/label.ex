@@ -46,10 +46,10 @@ defmodule Surface.Components.Form.Label do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
     event_opts = assigns |> events_to_opts() |> opts_to_attrs()
 
-    ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-      <label :attrs={{ helper_opts ++ attr_opts ++ input_id(form, field) ++ @opts ++ event_opts }}>
-        <slot>{{ @text || Phoenix.Naming.humanize(field) }}</slot>
+    ~F"""
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+      <label :attrs={helper_opts ++ attr_opts ++ input_id(form, field) ++ @opts ++ event_opts}>
+        <#slot>{@text || Phoenix.Naming.humanize(field)}</#slot>
       </label>
     </InputContext>
     """

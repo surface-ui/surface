@@ -100,12 +100,10 @@ defmodule Surface.Components.Context do
   end
 
   def render(assigns) do
-    ~H"""
-    {{
-      case context_map(@__context__, @put, @get) do
+    ~F"""
+    {case context_map(@__context__, @put, @get) do
         {ctx, props} -> render_block(@inner_block, {:default, 0, props, ctx})
-      end
-    }}
+      end}
     """
   end
 

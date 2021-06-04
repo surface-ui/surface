@@ -42,9 +42,9 @@ defmodule Surface.Components.Form.Checkbox do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
     event_opts = events_to_opts(assigns)
 
-    ~H"""
-    <InputContext assigns={{ assigns }} :let={{ form: form, field: field }}>
-    {{ checkbox(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts) }}
+    ~F"""
+    <InputContext assigns={assigns} :let={form: form, field: field}>
+    {checkbox(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
     </InputContext>
     """
   end

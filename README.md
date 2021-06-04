@@ -27,8 +27,8 @@ defmodule Hello do
   prop name, :string, required: true
 
   def render(assigns) do
-    ~H"""
-    Hello, {{ @name }}!
+    ~F"""
+    Hello, {@name}!
     """
   end
 end
@@ -39,7 +39,7 @@ defmodule Example do
   use Surface.Component
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <Hello name="John Doe"/>
     """
   end
@@ -53,7 +53,7 @@ into Elixir's Abstract Syntax Tree (AST). It also translates standard HTML nodes
 extend their behaviour adding new features like syntactic sugar on attributes definition,
 directives, static validation and more.
 
-In order to have your code translated, you need to use the `~H` sigil when defining your templates.
+In order to have your code translated, you need to use the `~F` sigil when defining your templates.
 
 ## Features
 
@@ -105,6 +105,14 @@ For further information regarding installation, including how to quickly get sta
 using a boilerplate, please visit the [Getting Started](https://surface-ui.org/getting_started)
 guide.
 
+## Migrating from `v0.4.x` to `v0.5.x`
+
+Surface `v0.5.0` introduces a new syntax which requires migrating components written in previous versions.
+In order to make the migration process as smooth as possible, Surface `v0.5.x` ships with a converter that
+can automatically translate the old syntax into the new one.
+
+Please see the [Migration Guide](MIGRATING.md) for details.
+
 ## Static checking
 
 Since components are ordinary Elixir modules, some static checking is already provided
@@ -138,13 +146,6 @@ Some experimental work on tooling around the library has been done. Here's a few
 - [ ] Auto-complete/suggestions for properties (WIP)
 - [x] Show documentation on hover for components
 - [ ] Show documentation on hover for properties
-
-### Other tools
-
-Having a standard way of defining components with typed properties allows us to
-enhance tools that introspect information from modules. One already discussed was
-the possibility to have `ex_doc` query that information to provide standard
-documentation for properties, events, slots, etc.
 
 ## License
 

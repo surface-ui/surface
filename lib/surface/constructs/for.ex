@@ -1,4 +1,4 @@
-defmodule Surface.Constructs.For do
+defmodule Surface.Constructs.Deprecated.For do
   @moduledoc """
   Provides an alternative to the `:for` directive for wrapping multiple elements in a for loop.
 
@@ -13,6 +13,7 @@ defmodule Surface.Constructs.For do
   use Surface.Component
 
   alias Surface.AST
+  alias Surface.IOHelper
 
   @doc "The generator for the for expression"
   prop each, :generator, required: true
@@ -21,6 +22,8 @@ defmodule Surface.Constructs.For do
   def render(_), do: ""
 
   def transform(node) do
+    warn_on_deprecated_for_notation(node)
+
     generator =
       Enum.find_value(
         node.props,
@@ -42,5 +45,16 @@ defmodule Surface.Constructs.For do
       children: children,
       meta: node.meta
     }
+  end
+
+  defp warn_on_deprecated_for_notation(node) do
+    message = """
+    using <For> to wrap elements in a for expression has been deprecated and will be removed in \
+    future versions.
+
+    Hint: replace `<For>` with `{#for}`
+    """
+
+    IOHelper.warn(message, node.meta.caller, fn _ -> node.meta.line end)
   end
 end

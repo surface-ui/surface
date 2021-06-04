@@ -40,14 +40,14 @@ defmodule Surface.Components.LiveRedirect do
   slot default
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <a
-      class={{ @class }}
+      class={@class}
       data-phx-link="redirect"
-      data-phx-link-state={{ if @replace, do: "replace", else: "push" }}
-      href={{ @to }}
-      :attrs={{ @opts }}
-    ><slot>{{ @label }}</slot></a>
+      data-phx-link-state={if @replace, do: "replace", else: "push"}
+      href={@to}
+      :attrs={@opts}
+    ><#slot>{@label}</#slot></a>
     """
   end
 end

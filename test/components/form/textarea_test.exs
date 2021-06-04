@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "empty textarea" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextArea form="user" field="summary" />
         """
       end
@@ -20,8 +20,8 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "textarea with atom field" do
     html =
       render_surface do
-        ~H"""
-        <TextArea form="user" field={{ :summary }} />
+        ~F"""
+        <TextArea form="user" field={:summary} />
         """
       end
 
@@ -34,7 +34,7 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextArea form="user" field="summary" value="some content" />
         """
       end
@@ -48,7 +48,7 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextArea form="user" field="summary" class="input" />
         """
       end
@@ -59,7 +59,7 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextArea form="user" field="summary" class="input primary" />
         """
       end
@@ -70,8 +70,8 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <TextArea form="user" field="summary" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <TextArea form="user" field="summary" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -84,7 +84,7 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextArea form="user" field="summary" click="my_click" />
         """
       end
@@ -95,7 +95,7 @@ defmodule Surface.Components.Form.TextAreaTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TextArea form="user" field="summary" id="blog_summary" name="blog_summary" />
         """
       end
@@ -116,7 +116,7 @@ defmodule Surface.Components.Form.TextAreaConfigTest do
     using_config TextArea, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <TextArea/>
           """
         end

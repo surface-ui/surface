@@ -9,9 +9,9 @@ defmodule Surface.ComponentTest do
     prop class, :css_class
 
     def render(assigns) do
-      ~H"""
-      <div class={{ @class }}>
-        <span>{{ @label }}</span>
+      ~F"""
+      <div class={@class}>
+        <span>{@label}</span>
       </div>
       """
     end
@@ -23,8 +23,8 @@ defmodule Surface.ComponentTest do
     slot default
 
     def render(assigns) do
-      ~H"""
-      <div><slot/></div>
+      ~F"""
+      <div><#slot/></div>
       """
     end
   end
@@ -33,7 +33,7 @@ defmodule Surface.ComponentTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span>Inner</span>
       """
     end
@@ -47,8 +47,8 @@ defmodule Surface.ComponentTest do
     def render(assigns) do
       info = "My info"
 
-      ~H"""
-      <div><slot :props={{ info: info }}/></div>
+      ~F"""
+      <div><#slot :props={info: info}/></div>
       """
     end
   end
@@ -57,7 +57,7 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Stateless label="My label" class="myclass"/>
       """
     end
@@ -67,7 +67,7 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Outer>
         <Inner/>
       </Outer>
@@ -79,9 +79,9 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
-      <OuterWithSlotProps :let={{ info: my_info }}>
-        {{ my_info }}
+      ~F"""
+      <OuterWithSlotProps :let={info: my_info}>
+        {my_info}
       </OuterWithSlotProps>
       """
     end
@@ -93,8 +93,8 @@ defmodule Surface.ComponentTest do
     prop id, :string
 
     def render(assigns) do
-      ~H"""
-      <div>{{ @id }}</div>
+      ~F"""
+      <div>{@id}</div>
       """
     end
   end
@@ -117,8 +117,8 @@ defmodule Surface.ComponentTest do
 
     @impl true
     def render(assigns) do
-      ~H"""
-      <div>{{ @id }} - {{ @id_copy }}</div>
+      ~F"""
+      <div>{@id} - {@id_copy}</div>
       """
     end
   end
@@ -127,7 +127,7 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <StatelessWithId id="my_id" />
       """
     end
@@ -137,7 +137,7 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <StatelessWithIdAndUpdate id="my_id" />
       """
     end
@@ -212,7 +212,7 @@ defmodule Surface.ComponentTest do
     test "render stateless component" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Stateless label="My label" class="myclass"/>
           """
         end
@@ -227,7 +227,7 @@ defmodule Surface.ComponentTest do
     test "render nested component's content" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Outer>
             <Inner/>
           </Outer>
@@ -244,9 +244,9 @@ defmodule Surface.ComponentTest do
     test "render content with slot props" do
       html =
         render_surface do
-          ~H"""
-          <OuterWithSlotProps :let={{ info: my_info }}>
-            {{ my_info }}
+          ~F"""
+          <OuterWithSlotProps :let={info: my_info}>
+            {my_info}
           </OuterWithSlotProps>
           """
         end
@@ -261,7 +261,7 @@ defmodule Surface.ComponentTest do
     test "render stateless component without named slots with render_component/2" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Stateless label="My label" class="myclass"/>
           """
         end
@@ -278,7 +278,7 @@ defmodule Surface.ComponentTest do
 
       code =
         quote do
-          ~H"""
+          ~F"""
           <div>
             <Enum/>
           </div>

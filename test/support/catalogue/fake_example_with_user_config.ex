@@ -5,7 +5,7 @@ defmodule Surface.Catalogue.FakeExampleWithUserConfig do
     head_js: "User's fake js"
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     The code
     """
   end

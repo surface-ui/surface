@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "checkbox" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Checkbox form="user" field="admin" />
         """
       end
@@ -20,8 +20,8 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "checkbox with atom field" do
     html =
       render_surface do
-        ~H"""
-        <Checkbox form="user" field={{ :admin }} />
+        ~F"""
+        <Checkbox form="user" field={:admin} />
         """
       end
 
@@ -33,9 +33,9 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "with form context" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :user }} csrf_token="test">
-          <Checkbox field={{ :admin }} />
+        ~F"""
+        <Form for={:user} csrf_token="test">
+          <Checkbox field={:admin} />
         </Form>
         """
       end
@@ -52,7 +52,7 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Checkbox form="user" field="admin" class="checkbox" />
         """
       end
@@ -63,7 +63,7 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Checkbox form="user" field="admin" class="checkbox primary" />
         """
       end
@@ -74,7 +74,7 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "passing checked value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Checkbox form="user" field="admin" checked_value="admin"/>
         """
       end
@@ -87,8 +87,8 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
-        <Checkbox value={{ true }}/>
+        ~F"""
+        <Checkbox value={true}/>
         """
       end
 
@@ -96,8 +96,8 @@ defmodule Surface.Components.Form.CheckboxTest do
 
     html =
       render_surface do
-        ~H"""
-        <Checkbox value={{ false }}/>
+        ~F"""
+        <Checkbox value={false}/>
         """
       end
 
@@ -107,8 +107,8 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "setting the hidden_input" do
     html =
       render_surface do
-        ~H"""
-        <Checkbox hidden_input={{ true }}/>
+        ~F"""
+        <Checkbox hidden_input={true}/>
         """
       end
 
@@ -116,8 +116,8 @@ defmodule Surface.Components.Form.CheckboxTest do
 
     html =
       render_surface do
-        ~H"""
-        <Checkbox hidden_input={{ false }}/>
+        ~F"""
+        <Checkbox hidden_input={false}/>
         """
       end
 
@@ -127,7 +127,7 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Checkbox form="user" field="admin" click="my_click" />
         """
       end
@@ -138,8 +138,8 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <Checkbox form="user" field="admin" opts={{ disabled: "disabled" }} />
+        ~F"""
+        <Checkbox form="user" field="admin" opts={disabled: "disabled"} />
         """
       end
 
@@ -151,7 +151,7 @@ defmodule Surface.Components.Form.CheckboxTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Checkbox form="user" field="admin" id="is_admin" name="is_admin" />
         """
       end
@@ -171,7 +171,7 @@ defmodule Surface.Components.Form.CheckboxConfigTest do
     using_config Checkbox, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Checkbox />
           """
         end

@@ -7,7 +7,7 @@ defmodule Surface.Components.Form.FileInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FileInput form="user" field="picture" />
         """
       end
@@ -20,8 +20,8 @@ defmodule Surface.Components.Form.FileInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <FileInput form="user" field={{ :picture }} />
+        ~F"""
+        <FileInput form="user" field={:picture} />
         """
       end
 
@@ -33,9 +33,9 @@ defmodule Surface.Components.Form.FileInputTest do
   test "with form context" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :user }} csrf_token="test" multipart={{true}} >
-          <FileInput field={{ :picture }} />
+        ~F"""
+        <Form for={:user} csrf_token="test" multipart={true} >
+          <FileInput field={:picture} />
         </Form>
         """
       end
@@ -51,7 +51,7 @@ defmodule Surface.Components.Form.FileInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FileInput form="user" field="picture" value="path/to/file" />
         """
       end
@@ -64,7 +64,7 @@ defmodule Surface.Components.Form.FileInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FileInput form="user" field="picture" class="input" />
         """
       end
@@ -75,7 +75,7 @@ defmodule Surface.Components.Form.FileInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FileInput form="user" field="picture" class="input primary" />
         """
       end
@@ -86,8 +86,8 @@ defmodule Surface.Components.Form.FileInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <FileInput form="user" field="picture" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <FileInput form="user" field="picture" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -99,7 +99,7 @@ defmodule Surface.Components.Form.FileInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FileInput form="user" field="picture" click="my_click" />
         """
       end
@@ -110,7 +110,7 @@ defmodule Surface.Components.Form.FileInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FileInput form="user" field="picture" id="image" name="image" />
         """
       end
@@ -130,7 +130,7 @@ defmodule Surface.Components.Form.FileInputConfigTest do
     using_config FileInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <FileInput />
           """
         end

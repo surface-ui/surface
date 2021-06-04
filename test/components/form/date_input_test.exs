@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.DateInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateInput form="user" field="birthday" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.DateInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <DateInput form="user" field={{ :birthday }} />
+        ~F"""
+        <DateInput form="user" field={:birthday} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.DateInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateInput form="user" field="birthday" value="mybirthday" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.DateInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateInput form="user" field="birthday" class="input"/>
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.DateInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateInput form="user" field="birthday" class="input primary"/>
         """
       end
@@ -67,8 +67,8 @@ defmodule Surface.Components.Form.DateInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <DateInput form="user" field="birthday" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <DateInput form="user" field="birthday" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.DateInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateInput form="user" field="color" value="mybirthday" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.DateInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <DateInput form="user" field="birth" id="birthday" name="birthday" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.DateInputConfigTest do
     using_config DateInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <DateInput/>
           """
         end

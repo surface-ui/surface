@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.SubmitTest do
   test "label only" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit label="Submit" />
         """
       end
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.SubmitTest do
   test "with class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit label="Submit" class="button" />
         """
       end
@@ -28,7 +28,7 @@ defmodule Surface.Components.Form.SubmitTest do
   test "with multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit label="Submit" class="button primary" />
         """
       end
@@ -39,8 +39,8 @@ defmodule Surface.Components.Form.SubmitTest do
   test "with options" do
     html =
       render_surface do
-        ~H"""
-        <Submit label="Submit" class="btn" opts={{ id: "submit-btn" }} />
+        ~F"""
+        <Submit label="Submit" class="btn" opts={id: "submit-btn"} />
         """
       end
 
@@ -50,7 +50,7 @@ defmodule Surface.Components.Form.SubmitTest do
   test "with children" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit class="btn">
           <span>Submit</span>
         </Submit>
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.SubmitTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit label="Submit" click="my_click" />
         """
       end
@@ -78,7 +78,7 @@ defmodule Surface.Components.Form.SubmitTest do
   test "is compatible with phoenix submit/2" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit label="<Submit>" />
         """
       end
@@ -87,9 +87,9 @@ defmodule Surface.Components.Form.SubmitTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Submit>
-          {{ "<Submit>" }}
+          {"<Submit>"}
         </Submit>
         """
       end

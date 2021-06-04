@@ -52,11 +52,11 @@ defmodule Surface.Components.Form.Input do
     slot default, props: [:form, :field]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context
-        get={{ Surface.Components.Form, form: form }}
-        get={{ Surface.Components.Form.Field, field: field }}>
-        <slot :props={{ form: @assigns[:form] || form, field: @assigns[:field] || field }}/>
+        get={Surface.Components.Form, form: form}
+        get={Surface.Components.Form.Field, field: field}>
+        <#slot :props={form: @assigns[:form] || form, field: @assigns[:field] || field}/>
       </Context>
       """
     end

@@ -14,7 +14,7 @@ defmodule Surface.LiveComponent do
         end
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <div class={{ "modal", "is-active": @show }}>
             <div class="modal-background"></div>
             <div class="modal-card">
@@ -22,7 +22,7 @@ defmodule Surface.LiveComponent do
                 <p class="modal-card-title">{{ @title }}</p>
               </header>
               <section class="modal-card-body">
-                <slot/>
+                <#slot/>
               </section>
               <footer class="modal-card-foot" style="justify-content: flex-end">
                 <Button click="hide">Ok</Button>
@@ -64,8 +64,8 @@ defmodule Surface.LiveComponent do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.{For, If}
-      alias Surface.Components.Context
+      alias Surface.Constructs.Deprecated.{For, If}
+      alias Surface.Components.{Context, Raw}
 
       @doc """
       The id of the live component (required by LiveView for stateful components).

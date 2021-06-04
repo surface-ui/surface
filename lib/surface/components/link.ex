@@ -69,8 +69,8 @@ defmodule Surface.Components.Link do
     opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
     attrs = opts_to_attrs(opts)
 
-    ~H"""
-    <a id={{ @id }} class={{ @class }} href={{ to }} :attrs={{ attrs }}><slot>{{ @label }}</slot></a>
+    ~F"""
+    <a id={@id} class={@class} href={to} :attrs={attrs}><#slot>{@label}</#slot></a>
     """
   end
 

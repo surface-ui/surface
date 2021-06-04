@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.ResetTest do
   test "empty reset" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Reset />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.ResetTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Reset value="ResetTheForm" />
         """
       end
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.ResetTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Reset class="button" />
         """
       end
@@ -43,7 +43,7 @@ defmodule Surface.Components.Form.ResetTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Reset class="button primary" />
         """
       end
@@ -54,8 +54,8 @@ defmodule Surface.Components.Form.ResetTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <Reset opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <Reset opts={autofocus: "autofocus"} />
         """
       end
 
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.ResetTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Reset value="ResetTheForm" click="my_click" />
         """
       end
@@ -78,7 +78,7 @@ defmodule Surface.Components.Form.ResetTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Reset id="countdown" name="countdown" />
         """
       end

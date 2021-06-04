@@ -21,6 +21,7 @@ defmodule Surface.Compiler do
     Surface.Directive.Hook,
     Surface.Directive.If,
     Surface.Directive.For,
+    Surface.Directive.Values,
     Surface.Directive.Debug
   ]
 
@@ -46,6 +47,8 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
+  @directive_prefixes [":", "s-"]
+
   @void_elements [
     "area",
     "base",
@@ -65,20 +68,11 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
-  defmodule ParseError do
-    defexception file: "", line: 0, message: "error parsing HTML/Surface"
-
-    @impl true
-    def message(exception) do
-      "#{Path.relative_to_cwd(exception.file)}:#{exception.line}: #{exception.message}"
-    end
-  end
-
   defmodule CompileMeta do
-    defstruct [:line_offset, :file, :caller, :checks]
+    defstruct [:line, :file, :caller, :checks]
 
     @type t :: %__MODULE__{
-            line_offset: non_neg_integer(),
+            line: non_neg_integer(),
             file: binary(),
             caller: Macro.Env.t(),
             checks: Keyword.t(boolean())
@@ -86,32 +80,33 @@ defmodule Surface.Compiler do
   end
 
   @doc """
-  This function compiles a string into the Surface AST.This is used by ~H and Surface.Renderer to parse and compile templates.
+  This function compiles a string into the Surface AST.This is used by ~F and Surface.Renderer to parse and compile templates.
 
-  A special note for line_offset: This is considered the line number for the first line in the string. If the first line of the
+  A special note for line: This is considered the line number for the first line in the string. If the first line of the
   string is also the first line of the file, then this should be 1. If this is being called within a macro (say to process a heredoc
-  passed to ~H), this should be __CALLER__.line + 1.
+  passed to ~F), this should be __CALLER__.line + 1.
   """
   @spec compile(binary, non_neg_integer(), Macro.Env.t(), binary(), Keyword.t()) :: [
           Surface.AST.t()
         ]
-  def compile(string, line_offset, caller, file \\ "nofile", opts \\ []) do
+  def compile(string, line, caller, file \\ "nofile", opts \\ []) do
     compile_meta = %CompileMeta{
-      line_offset: line_offset,
+      line: line,
       file: file,
       caller: caller,
       checks: opts[:checks] || []
     }
 
     string
-    |> Parser.parse()
-    |> case do
-      {:ok, nodes} ->
-        nodes
-
-      {:error, message, line} ->
-        raise %ParseError{line: line + line_offset - 1, file: file, message: message}
-    end
+    |> Parser.parse!(
+      file: file,
+      line: line,
+      caller: caller,
+      checks: opts[:checks] || [],
+      warnings: opts[:warnings] || [],
+      column: Keyword.get(opts, :column, 1),
+      indentation: Keyword.get(opts, :indentation, 0)
+    )
     |> to_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
   end
@@ -137,10 +132,10 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_stateful_component(ast, %CompileMeta{
-         line_offset: offset,
-         caller: %{function: {:render, _}} = caller
-       }) do
+  defp validate_stateful_component(
+         ast,
+         %CompileMeta{caller: %{function: {:render, _}}} = compile_meta
+       ) do
     num_tags =
       ast
       |> Enum.filter(fn
@@ -151,7 +146,7 @@ defmodule Surface.Compiler do
           true
 
         %AST.Component{type: Surface.LiveComponent, meta: meta} ->
-          warn_live_component_as_root_node_of_another_live_component(meta, caller, offset)
+          warn_live_component_as_root_node_of_another_live_component(meta, compile_meta.caller)
 
           true
 
@@ -167,15 +162,15 @@ defmodule Surface.Compiler do
       num_tags == 0 ->
         IOHelper.warn(
           "stateful live components must have a HTML root element",
-          caller,
-          fn _ -> offset end
+          compile_meta.caller,
+          fn _ -> compile_meta.line end
         )
 
       num_tags > 1 ->
         IOHelper.warn(
           "stateful live components must have a single HTML root element",
-          caller,
-          fn _ -> offset end
+          compile_meta.caller,
+          fn _ -> compile_meta.line end
         )
 
       true ->
@@ -185,7 +180,7 @@ defmodule Surface.Compiler do
 
   defp validate_stateful_component(_ast, %CompileMeta{}), do: nil
 
-  defp warn_live_component_as_root_node_of_another_live_component(meta, caller, offset) do
+  defp warn_live_component_as_root_node_of_another_live_component(meta, caller) do
     IOHelper.warn(
       """
       cannot have a LiveComponent as root node of another LiveComponent.
@@ -193,7 +188,7 @@ defmodule Surface.Compiler do
       Hint: You can wrap the root `#{meta.node_alias}` node in another element. Example:
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <div>
             <#{meta.node_alias} ... >
               ...
@@ -203,7 +198,7 @@ defmodule Surface.Compiler do
         end
       """,
       caller,
-      fn _ -> offset end
+      fn _ -> meta.line end
     )
   end
 
@@ -227,17 +222,35 @@ defmodule Surface.Compiler do
     end
   end
 
+  # Slots
+  defp node_type({"#template", _, _, _}), do: :template
+  defp node_type({"#slot", _, _, _}), do: :slot
+  defp node_type({":" <> _, _, _, _}), do: :template
+  defp node_type({"slot", _, _, _}), do: :slot
+
+  # Conditional blocks
+  defp node_type({:block, "if", _, _, _}), do: :if_elseif_else
+  defp node_type({:block, "elseif", _, _, _}), do: :if_elseif_else
+  defp node_type({:block, "else", _, _, _}), do: :else
+  defp node_type({:block, "unless", _, _, _}), do: :unless
+
+  # For
+  defp node_type({:block, "for", _, _, _}), do: :for_else
+
+  # case/match
+  defp node_type({:block, "case", _, _, _}), do: :block
+  defp node_type({:block, "match", _, _, _}), do: :sub_block
+  defp node_type({:block, :default, _, _, _}), do: :sub_block
+
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
-  defp node_type({"template", _, _, _}), do: :template
-  defp node_type({"slot", _, _, _}), do: :slot
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
-  defp node_type({:interpolation, _, _}), do: :interpolation
-  defp node_type({:comment, _}), do: :comment
+  defp node_type({:expr, _, _}), do: :interpolation
+  defp node_type({:comment, _, _}), do: :comment
   defp node_type(_), do: :text
 
-  defp process_directives(%{directives: directives} = node) do
+  defp process_directives(%{directives: directives} = node) when is_list(directives) do
     directives
     |> Enum.filter(fn %AST.Directive{module: mod} -> function_exported?(mod, :process, 2) end)
     |> Enum.reduce(node, fn %AST.Directive{module: mod} = directive, node ->
@@ -247,7 +260,10 @@ defmodule Surface.Compiler do
 
   defp process_directives(node), do: node
 
-  defp convert_node_to_ast(:comment, _, _), do: :ignore
+  defp convert_node_to_ast(:comment, {_, _comment, %{visibility: :private}}, _), do: :ignore
+
+  defp convert_node_to_ast(:comment, {_, comment, %{visibility: :public}}, _),
+    do: {:ok, %AST.Literal{value: comment}}
 
   defp convert_node_to_ast(:text, text, _),
     do: {:ok, %AST.Literal{value: text}}
@@ -255,7 +271,7 @@ defmodule Surface.Compiler do
   defp convert_node_to_ast(:interpolation, {_, text, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
-    expr = Helpers.interpolation_to_quoted!(text, meta)
+    expr = Helpers.expression_to_quoted!(text, meta)
 
     Helpers.perform_assigns_checks(expr, compile_meta)
 
@@ -267,12 +283,161 @@ defmodule Surface.Compiler do
      }}
   end
 
-  defp convert_node_to_ast(:template, {_, attributes, children, node_meta}, compile_meta) do
+  defp convert_node_to_ast(
+         :else,
+         {:block, _name, _expr, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    {:ok,
+     %AST.Container{
+       children: to_ast(children, compile_meta),
+       meta: meta,
+       directives: []
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :if_elseif_else,
+         {:block, _name, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
+    condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
+
+    [if_children, else_children] =
+      case children do
+        [{:block, :default, [], default, _}, {:block, "else", _, _, _} = else_block] ->
+          [default, [else_block]]
+
+        [{:block, :default, [], default, _}, {:block, "elseif", a, c, m} | rest] ->
+          [default, [{:block, "elseif", a, [{:block, :default, [], c, %{}} | rest], m}]]
+
+        [{:block, :default, [], default, _}] ->
+          [default, []]
+
+        children ->
+          [children, []]
+      end
+
+    {:ok,
+     %AST.If{
+       condition: condition,
+       children: to_ast(if_children, compile_meta),
+       else: to_ast(else_children, compile_meta),
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(:sub_block, {:block, :default, _attrs, [], _meta}, _compile_meta) do
+    :ignore
+  end
+
+  defp convert_node_to_ast(:sub_block, {:block, name, attrs, children, meta}, compile_meta) do
+    {:ok,
+     %AST.SubBlock{
+       name: name,
+       expression: quoted_block_expression(attrs),
+       children: to_ast(children, compile_meta),
+       meta: Helpers.to_meta(meta, compile_meta)
+     }}
+  end
+
+  defp convert_node_to_ast(:block, {:block, name, attrs, children, meta}, compile_meta) do
+    {:ok,
+     %AST.Block{
+       name: name,
+       expression: quoted_block_expression(attrs),
+       sub_blocks: to_ast(children, compile_meta),
+       meta: Helpers.to_meta(meta, compile_meta)
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :unless,
+         {:block, _name, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
+
+    {:ok,
+     %AST.If{
+       condition: condition,
+       children: [],
+       else: to_ast(children, compile_meta),
+       meta: meta
+     }}
+  end
+
+  defp convert_node_to_ast(
+         :for_else,
+         {:block, _name, attributes, children, node_meta},
+         compile_meta
+       ) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    generator = attribute_value_as_ast(attributes, :root, :generator, default, compile_meta)
+
+    [for_children, else_children] =
+      case children do
+        [{:block, :default, [], default, _}, {:block, "else", _, _, _} = else_block] ->
+          [default, [else_block]]
+
+        children ->
+          [children, []]
+      end
+
+    for_ast = %AST.For{
+      generator: generator,
+      children: to_ast(for_children, compile_meta),
+      else: to_ast(else_children, compile_meta),
+      meta: meta
+    }
+
+    if else_children == [] do
+      {:ok, for_ast}
+    else
+      [else_ast | _] = to_ast(else_children, compile_meta)
+
+      value =
+        case generator.value do
+          [{:<-, _, [_, value]}] -> value
+          _ -> raise_complex_generator(else_ast.meta)
+        end
+
+      condition = %AST.AttributeExpr{
+        original: "",
+        value:
+          quote do
+            unquote(value) != []
+          end,
+        meta: compile_meta
+      }
+
+      {:ok,
+       %AST.If{
+         condition: condition,
+         children: [for_ast],
+         else: [else_ast],
+         meta: meta
+       }}
+    end
+  end
+
+  defp convert_node_to_ast(
+         :template,
+         {name, attributes, children, node_meta},
+         compile_meta
+       ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, directives, attributes} <-
            collect_directives(@template_directive_handlers, attributes, meta),
-         slot <- attribute_value(attributes, "slot", :default) do
+         slot <- get_slot_name(name, attributes) do
       {:ok,
        %AST.Template{
          name: slot,
@@ -452,9 +617,17 @@ defmodule Surface.Compiler do
          :ok <- validate_properties(mod, attributes, directives, meta) do
       expanded = mod.expand(attributes, children, meta)
 
+      compile_dep_expr = %AST.Expr{
+        value:
+          quote generated: true, line: meta.line do
+            require(unquote(mod)).__compile_dep__()
+          end,
+        meta: meta
+      }
+
       {:ok,
        %AST.Container{
-         children: List.wrap(expanded),
+         children: [compile_dep_expr, expanded],
          directives: directives,
          meta: meta
        }}
@@ -496,25 +669,36 @@ defmodule Surface.Compiler do
   defp has_attribute?(attributes, attr_name),
     do: Enum.any?(attributes, &match?({^attr_name, _, _}, &1))
 
-  defp attribute_value_as_ast(attributes, attr_name, default, meta) do
+  defp attribute_value_as_ast(attributes, attr_name, type \\ :integer, default, meta) do
     Enum.find_value(attributes, default, fn
       {^attr_name, {:attribute_expr, value, expr_meta}, _attr_meta} ->
         expr_meta = Helpers.to_meta(expr_meta, meta)
 
         %AST.AttributeExpr{
           original: value,
-          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, :integer, expr_meta),
+          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta),
           meta: expr_meta
         }
 
       {^attr_name, value, attr_meta} ->
         attr_meta = Helpers.to_meta(attr_meta, meta)
-        Surface.TypeHandler.literal_to_ast_node!(:integer, attr_name, value, attr_meta)
+        Surface.TypeHandler.literal_to_ast_node!(type, attr_name, value, attr_meta)
 
       _ ->
         nil
     end)
   end
+
+  defp quoted_block_expression([{:root, {:attribute_expr, value, expr_meta}, _attr_meta}]) do
+    Helpers.expression_to_quoted!(value, expr_meta)
+  end
+
+  defp quoted_block_expression([]) do
+    nil
+  end
+
+  defp get_slot_name("#template", attributes), do: attribute_value(attributes, "slot", :default)
+  defp get_slot_name(":" <> name, _), do: String.to_atom(name)
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 
@@ -528,17 +712,49 @@ defmodule Surface.Compiler do
     |> Enum.reverse()
   end
 
+  defp process_attributes(mod, [{:root, value, attr_meta} | attrs], meta, acc) do
+    with true <- function_exported?(mod, :__props__, 0),
+         prop when not is_nil(prop) <- Enum.find(mod.__props__(), & &1.opts[:root]) do
+      name = Atom.to_string(prop.name)
+      process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc)
+    else
+      _ ->
+        message = """
+        no root property defined for component <#{meta.node_alias}>
+
+        Hint: you can declare a root property using option `root: true`
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        process_attributes(mod, attrs, meta, acc)
+    end
+  end
+
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc) do
+    unquoted_string? = attr_meta[:unquoted_string?]
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
 
-    accumulate? = Keyword.get(type_opts, :accumulate, false)
+    duplicated_attr? = Keyword.has_key?(acc, name)
+    duplicated_prop? = mod && (!Keyword.get(type_opts, :accumulate, false) and duplicated_attr?)
+    duplicated_html_attr? = !mod && duplicated_attr?
+    root_prop? = Keyword.get(type_opts, :root, false)
 
-    if not accumulate? and Keyword.has_key?(acc, name) do
-      IOHelper.warn(
+    cond do
+      duplicated_prop? && root_prop? ->
+        message = """
+        the prop `#{name}` has been passed multiple times. Considering only the last value.
+
+        Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
+        explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
         """
-        The prop `#{name}` has been passed multiple times. Considering only the last value.
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      duplicated_prop? && not root_prop? ->
+        message = """
+        the prop `#{name}` has been passed multiple times. Considering only the last value.
 
         Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
@@ -547,10 +763,32 @@ defmodule Surface.Compiler do
         ```
 
         This way the values will be accumulated in a list.
-        """,
-        meta.caller,
-        fn _ -> attr_meta.line end
-      )
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      duplicated_html_attr? ->
+        message = """
+        the attribute `#{name}` has been passed multiple times on line #{meta.line}. \
+        Considering only the last value.
+
+        Hint: remove all redundant definitions
+        """
+
+        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+
+      true ->
+        nil
+    end
+
+    if unquoted_string? do
+      message = """
+      passing unquoted attribute values has been deprecated and will be removed in future versions.
+
+      Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
+      """
+
+      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
     end
 
     node = %AST.Attribute{
@@ -562,28 +800,6 @@ defmodule Surface.Compiler do
     }
 
     process_attributes(mod, attrs, meta, [{name, node} | acc])
-  end
-
-  defp attr_value(name, type, values, attr_meta) when is_list(values) do
-    {originals, quoted_values} =
-      Enum.reduce(values, {[], []}, fn
-        {:attribute_expr, value, expr_meta}, {originals, quoted_values} ->
-          expr_meta = Helpers.to_meta(expr_meta, attr_meta)
-          {["{{#{value}}}" | originals], [quote_embedded_expr(value, expr_meta) | quoted_values]}
-
-        value, {originals, quoted_values} ->
-          {[value | originals], [value | quoted_values]}
-      end)
-
-    original = originals |> Enum.reverse() |> Enum.join()
-    quoted_values = Enum.reverse(quoted_values)
-    expr_value = {:<<>>, [line: attr_meta.line], quoted_values}
-
-    %AST.AttributeExpr{
-      original: original,
-      value: Surface.TypeHandler.expr_to_quoted!(expr_value, name, type, attr_meta, original),
-      meta: attr_meta
-    }
   end
 
   defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
@@ -598,17 +814,6 @@ defmodule Surface.Compiler do
 
   defp attr_value(name, type, value, meta) do
     Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
-  end
-
-  defp quote_embedded_expr(value, expr_meta) do
-    meta = [line: expr_meta.line]
-    quoted_value = Code.string_to_quoted!(value, meta)
-
-    {:"::", meta,
-     [
-       {{:., meta, [Kernel, :to_string]}, meta, [quoted_value]},
-       {:binary, meta, Elixir}
-     ]}
   end
 
   defp validate_tag_children([]), do: :ok
@@ -662,11 +867,28 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp collect_directives(handlers, attributes, meta)
-  defp collect_directives(_, [], _), do: {:ok, [], []}
+  defp collect_directives(handlers, attributes, meta) do
+    attributes =
+      for attr <- attributes,
+          attr_name = elem(attr, 0),
+          normalized_name = normalize_directive_prefix(attr_name) do
+        put_elem(attr, 0, normalized_name)
+      end
 
-  defp collect_directives(handlers, [attr | attributes], meta) do
-    {:ok, dirs, attrs} = collect_directives(handlers, attributes, meta)
+    do_collect_directives(handlers, attributes, meta)
+  end
+
+  for prefix <- @directive_prefixes do
+    defp normalize_directive_prefix(unquote(prefix) <> name), do: ":#{name}"
+  end
+
+  defp normalize_directive_prefix(name), do: name
+
+  defp do_collect_directives(handlers, attributes, meta)
+  defp do_collect_directives(_, [], _), do: {:ok, [], []}
+
+  defp do_collect_directives(handlers, [attr | attributes], meta) do
+    {:ok, dirs, attrs} = do_collect_directives(handlers, attributes, meta)
 
     attr = extract_modifiers(attr)
 
@@ -813,7 +1035,7 @@ defmodule Surface.Compiler do
     message = """
     no slot `#{slot_name}` defined in the component `#{inspect(module)}`
 
-    Please declare the default slot using `slot default` in order to use the `<slot />` notation.
+    Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
     """
 
     IOHelper.compile_error(message, meta.file, meta.line)
@@ -875,6 +1097,22 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, template_meta.file, template_meta.line)
   end
 
+  defp raise_complex_generator(meta) do
+    message = """
+    using `{#else}` is only supported when the expression in `{#for}` has a single generator and no filters.
+
+    Example:
+
+      {#for i <- [1, 2, 3]}
+        ...
+      {#else}
+        ...
+      {/for}
+    """
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
   defp similar_slot_message(slot_name, list_of_slot_names, opts \\ []) do
     threshold = opts[:threshold] || 0.8
 
@@ -908,13 +1146,13 @@ defmodule Surface.Compiler do
 
         slot #{slot.name}
         ...
-        <slot#{slot_name_tag}>Fallback content</slot>
+        <#slot#{slot_name_tag}>Fallback content</#slot>
 
       or keep the slot as required and remove the fallback content:
 
         slot #{slot.name}, required: true`
         ...
-        <slot#{slot_name_tag} />
+        <#slot#{slot_name_tag} />
 
       but not both.
       """

@@ -71,8 +71,8 @@ defmodule Surface.Components.Link.Button do
     opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
     attrs = opts_to_attrs(opts)
 
-    ~H"""
-    <button id={{ @id }} class={{ @class }} :attrs={{ attrs }}><slot>{{ @label }}</slot></button>
+    ~F"""
+    <button id={@id} class={@class} :attrs={attrs}><#slot>{@label}</#slot></button>
     """
   end
 

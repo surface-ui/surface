@@ -103,20 +103,52 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_expression(
-         %AST.If{condition: %AST.AttributeExpr{value: condition}, children: children} =
-           conditional,
+         %AST.If{
+           condition: %AST.AttributeExpr{value: condition},
+           children: if_children,
+           else: else_children
+         } = conditional,
          buffer,
          state
        ) do
-    buffer =
-      handle_nested_block(children, buffer, %{
+    if_buffer =
+      handle_nested_block(if_children, buffer, %{
         state
         | depth: state.depth + 1,
           context: [:if | state.context]
       })
 
-    {:if, [generated: true], [condition, [do: buffer]]}
+    else_buffer =
+      handle_nested_block(else_children, buffer, %{
+        state
+        | depth: state.depth + 1,
+          context: [:if | state.context]
+      })
+
+    {:if, [generated: true], [condition, [do: if_buffer, else: else_buffer]]}
     |> maybe_print_expression(conditional)
+  end
+
+  defp to_expression(%AST.Block{name: "case"} = block, buffer, state) do
+    %AST.Block{expression: case_expr, sub_blocks: sub_blocks} = block
+
+    state = %{state | depth: state.depth + 1, context: [:case | state.context]}
+
+    match_blocks =
+      Enum.flat_map(sub_blocks, fn %AST.SubBlock{children: children, expression: expr} ->
+        match_body = handle_nested_block(children, buffer, state)
+
+        quote do
+          unquote(expr) -> unquote(match_body)
+        end
+      end)
+
+    quote do
+      case unquote(case_expr) do
+        unquote(match_blocks)
+      end
+    end
+    |> maybe_print_expression(block)
   end
 
   defp to_expression(
@@ -589,12 +621,29 @@ defmodule Surface.Compiler.EExEngine do
     [%{slot | default: to_token_sequence(default)} | to_dynamic_nested_html(nodes)]
   end
 
-  defp to_dynamic_nested_html([%AST.If{children: children} = conditional | nodes]) do
-    [%{conditional | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
+  defp to_dynamic_nested_html([
+         %AST.If{children: if_children, else: else_children} = conditional | nodes
+       ]) do
+    [
+      %{
+        conditional
+        | children: to_token_sequence(if_children),
+          else: to_token_sequence(else_children)
+      },
+      to_dynamic_nested_html(nodes)
+    ]
   end
 
   defp to_dynamic_nested_html([%AST.For{children: children} = comprehension | nodes]) do
     [%{comprehension | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.Block{sub_blocks: sub_blocks} = block | nodes]) do
+    [%{block | sub_blocks: to_token_sequence(sub_blocks)} | to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.SubBlock{children: children} = sub_block | nodes]) do
+    [%{sub_block | children: to_token_sequence(children)} | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([

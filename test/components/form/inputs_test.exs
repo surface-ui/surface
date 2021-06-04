@@ -31,11 +31,11 @@ defmodule Surface.Components.Form.InputsTest do
   test "using generated form received as slot props" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} :let={{ form: f }}>
-            <TextInput form={{ f }} field="name" />
-            <TextInput form={{ f }} field="email" />
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={form: f}>
+            <TextInput form={f} field="name" />
+            <TextInput form={f} field="email" />
           </Inputs>
         </Form>
         """
@@ -55,10 +55,10 @@ defmodule Surface.Components.Form.InputsTest do
 
     html =
       render_surface do
-        ~H"""
-        <Form for={{ cs }} as={{ :cs }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} :let={{ index: idx }}>
-            <div>index: <span>{{ idx }}</span></div>
+        ~F"""
+        <Form for={cs} as={:cs} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={index: idx}>
+            <div>index: <span>{idx}</span></div>
           </Inputs>
         </Form>
         """
@@ -76,9 +76,9 @@ defmodule Surface.Components.Form.InputsTest do
   test "using generated form stored in the Form context" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }}>
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children}>
             <TextInput field="name" />
             <TextInput field="email" />
           </Inputs>
@@ -98,9 +98,9 @@ defmodule Surface.Components.Form.InputsTest do
   test "passing extra opts" do
     html =
       render_surface do
-        ~H"""
-        <Form for={{ :parent }} opts={{ csrf_token: "test" }}>
-          <Inputs for={{ :children }} opts={{ as: "custom_name"}}>
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} opts={as: "custom_name"}>
             <TextInput field="name" />
             <TextInput field="email" />
           </Inputs>

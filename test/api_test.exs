@@ -8,9 +8,20 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
-  test "validate type" do
+  test "validate ast type" do
     code = "prop label, {:a, :b}"
-    message = ~r/invalid type {:a, :b} for prop label.\nExpected one of \[:any/
+
+    message = ~r"""
+    invalid type for prop label. \
+    Expected an atom, got: {:a, :b}
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate type in list of available types" do
+    code = "prop label, :foo"
+    message = ~r/invalid type :foo for prop label.\nExpected one of \[:any/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -45,14 +56,30 @@ defmodule Surface.APITest do
 
   test "validate :values" do
     code = "prop label, :string, values: 1"
-    message = ~r/invalid value for option :values. Expected a list of values, got: 1/
+    message = ~r/invalid value for option :values. Expected a list of values or a Range, got: 1/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate :values when using a range" do
+    code = """
+    prop age, :integer, values: 1..100
+    data items, :integer, values: 1..3
+    """
+
+    {:ok, _module} = eval(code)
   end
 
   test "validate :as in slot" do
     code = "slot label, as: \"default_label\""
     message = ~r/invalid value for option :as in slot. Expected an atom, got: \"default_label\"/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate :root in prop" do
+    code = "prop label, :string, root: 1"
+    message = ~r/invalid value for option :root. Expected a boolean, got: 1/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -238,6 +265,22 @@ defmodule Surface.APITest do
     {:ok, _module} = eval(code, "LiveView")
   end
 
+  test "raise compile error for component with multiple root properties" do
+    code = """
+    prop title, :string, root: true
+    prop label, :string, root: true
+    """
+
+    message = ~r"""
+    cannot define multiple properties as `root: true`. \
+    Property `title` at line 4 was already defined as root.
+
+    Hint: choose a single property to be the root prop.
+    """
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "accept invalid quoted expressions like literal maps as default value" do
     code = """
     prop map, :map, default: %{a: 1, b: 2}
@@ -280,7 +323,7 @@ defmodule Surface.APITest do
       code = "prop label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :accumulate\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -333,7 +376,7 @@ defmodule Surface.APITest do
 
         slot default, props: [item: ^unknown]
 
-        def render(assigns), do: ~H()
+        def render(assigns), do: ~F()
       end
       """
 
@@ -362,7 +405,7 @@ defmodule Surface.APITest do
 
         slot default, props: [item: ^label]
 
-        def render(assigns), do: ~H()
+        def render(assigns), do: ~F()
       end
       """
 
@@ -395,7 +438,7 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "data label, :string, a: 1"
-      message = ~r/unknown option :a. Available options: \[:default, :values\]/
+      message = ~r/unknown option :a. Available options: \[:default, :values, :values!\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -494,7 +537,7 @@ defmodule Surface.APITest do
       #{code}
 
       def render(assigns) do
-        ~H(<div></div>)
+        ~F(<div></div>)
       end
     end
     """
@@ -526,11 +569,11 @@ defmodule Surface.APISyncTest do
     slot footer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <#slot name="header"/>
+        <#slot/>
+        <#slot name="footer"/>
       </div>
       """
     end
@@ -544,11 +587,11 @@ defmodule Surface.APISyncTest do
     slot footer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
-        <slot name="header"/>
-        <slot/>
-        <slot name="footer"/>
+        <#slot name="header"/>
+        <#slot/>
+        <#slot name="footer"/>
       </div>
       """
     end
@@ -564,7 +607,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot/>
           "\""
         end
@@ -592,7 +635,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot>
           </ComponentWithRequiredDefaultSlot>
           "\""
@@ -621,11 +664,11 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot>
-            <template slot="header">
+            <#template slot="header">
               Header
-            </template>
+            </#template>
           </ComponentWithRequiredDefaultSlot>
           "\""
         end
@@ -653,7 +696,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredSlots>
           </ComponentWithRequiredSlots>
           "\""
@@ -682,7 +725,7 @@ defmodule Surface.APISyncTest do
         use Surface.Component
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <ComponentWithRequiredDefaultSlot>
             <NonExisting>
               Don't validate me!

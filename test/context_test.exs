@@ -9,9 +9,9 @@ defmodule ContextTest do
     slot default
 
     def render(assigns) do
-      ~H"""
-      <Context put={{ __MODULE__, field: "field from Outer" }}>
-        <div><slot/></div>
+      ~F"""
+      <Context put={__MODULE__, field: "field from Outer"}>
+        <div><#slot/></div>
       </Context>
       """
     end
@@ -21,8 +21,8 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
-      Context: {{ inspect(@__context__) }}
+      ~F"""
+      Context: {inspect(@__context__)}
       """
     end
   end
@@ -31,12 +31,12 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Context
-        get={{ ContextTest.Outer, field: field }}
-        get={{ ContextTest.InnerWrapper, field: other_field }}>
-        <span id="field">{{ field }}</span>
-        <span id="other_field">{{ other_field }}</span>
+        get={ContextTest.Outer, field: field}
+        get={ContextTest.InnerWrapper, field: other_field}>
+        <span id="field">{field}</span>
+        <span id="other_field">{other_field}</span>
       </Context>
       """
     end
@@ -46,8 +46,8 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
-      <Context put={{ __MODULE__, field: "field from InnerWrapper" }}>
+      ~F"""
+      <Context put={__MODULE__, field: "field from InnerWrapper"}>
         <Inner />
       </Context>
       """
@@ -58,9 +58,9 @@ defmodule ContextTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
-      <Context get={{ ContextTest.Outer, field: my_field }}>
-        <span>{{ my_field }}</span>
+      ~F"""
+      <Context get={ContextTest.Outer, field: my_field}>
+        <span>{my_field}</span>
       </Context>
       """
     end
@@ -72,10 +72,10 @@ defmodule ContextTest do
     slot my_slot
 
     def render(assigns) do
-      ~H"""
-      <Context put={{ field: "field from OuterWithNamedSlots" }}>
-        <span :for={{ {_slot, index} <- Enum.with_index(@my_slot) }}>
-          <slot name="my_slot" index={{ index }}/>
+      ~F"""
+      <Context put={field: "field from OuterWithNamedSlots"}>
+        <span :for={{_slot, index} <- Enum.with_index(@my_slot)}>
+          <#slot name="my_slot" index={index}/>
         </span>
       </Context>
       """
@@ -85,7 +85,7 @@ defmodule ContextTest do
   test "pass context to child component" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <Inner/>
         </Outer>
@@ -100,7 +100,7 @@ defmodule ContextTest do
   test "pass context to child component using :as option" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <InnerWithOptionAs/>
         </Outer>
@@ -117,7 +117,7 @@ defmodule ContextTest do
   test "pass context down the tree of components" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <InnerWrapper />
         </Outer>
@@ -132,7 +132,7 @@ defmodule ContextTest do
   test "context assingns are scoped by their parent components" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <InnerWrapper/>
         </Outer>
@@ -148,7 +148,7 @@ defmodule ContextTest do
   test "reset context after the component" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Outer>
           <Inner/>
         </Outer>
@@ -164,13 +164,13 @@ defmodule ContextTest do
   test "pass context to named slots" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlots>
-          <template slot="my_slot">
-            <Context get={{ field: field }}>
-              {{ field }}
+          <#template slot="my_slot">
+            <Context get={field: field}>
+              {field}
             </Context>
-          </template>
+          </#template>
         </OuterWithNamedSlots>
         """
       end
@@ -182,10 +182,10 @@ defmodule ContextTest do
     test "raise compile error when passing invalid bindings" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
-            get={{ ContextTest.Outer, field: [field] }}>
-            {{ field }}
+            get={ContextTest.Outer, field: [field]}>
+            {field}
           </Context>
           """
         end
@@ -193,8 +193,8 @@ defmodule ContextTest do
       message = """
       code:2: invalid value for property "get". expected a scope \
       module (optional) along with a keyword list of bindings, \
-      e.g. {{ Form, form: form }} or {{ field: my_field }}, \
-      got: {{ ContextTest.Outer, field: [field] }}.\
+      e.g. {Form, form: form} or {field: my_field}, \
+      got: {ContextTest.Outer, field: [field]}.\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -205,10 +205,10 @@ defmodule ContextTest do
     test "raise compile error when passing no bindings" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
-            get={{ ContextTest.Outer }}>
-            {{ field }}
+            get={ContextTest.Outer}>
+            {field}
           </Context>
           """
         end
@@ -221,10 +221,10 @@ defmodule ContextTest do
     test "raise compile error when passing invalid scope" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
-            get={{ 123, field: field }}>
-            {{ field }}
+            get={123, field: field}>
+            {field}
           </Context>
           """
         end
@@ -239,9 +239,9 @@ defmodule ContextTest do
     test "raise compile error when passing invalid values" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
-            put={{ ContextTest.Outer, 123 }}>
+            put={ContextTest.Outer, 123}>
             Inner Content
           </Context>
           """
@@ -250,8 +250,8 @@ defmodule ContextTest do
       message = """
       code:2: invalid value for property "put". expected a scope \
       module (optional) along with a keyword list of values, \
-      e.g. {{ MyModule, field: @value, other: "other" }} or {{ field: @value }}, \
-      got: {{ ContextTest.Outer, 123 }}.\
+      e.g. {MyModule, field: @value, other: "other"} or {field: @value}, \
+      got: {ContextTest.Outer, 123}.\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -262,9 +262,9 @@ defmodule ContextTest do
     test "raise compile error when passing no values" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
-            put={{ ContextTest.Outer }}>
+            put={ContextTest.Outer}>
             Inner content
           </Context>
           """
@@ -278,9 +278,9 @@ defmodule ContextTest do
     test "raise compile error when passing invalid scope" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <Context
-            put={{ 123, field: field }}>
+            put={123, field: field}>
             Inner content
           </Context>
           """

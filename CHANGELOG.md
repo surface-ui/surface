@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.5.0 (WIP)
+
+  * Introduce new notation for template and slot nodes (`<#template>` and `<#slot>` respectively)
+  * Add `<:slotname>` shorthand for `<#template slot="slotname">`
+  * Introduce block expressions for surface templates (e.g., `{#if}..{/if}`)
+  * Introduce `{#if}` block expression with support for `{#elseif}` and `{#else}` sub blocks
+  * Introduce `{#for}` block expression with support for `{#else}` sub block
+  * Introduce `{#unless}` block expression
+  * Introduce new shorthand notation for dynamic attributes/props using the `{... }` tagged expression
+  * Introduce new shorthand notation for attribute assignment using the `{= }` tagged expression
+  * Support private comments using `{!--  --}` for comments that are not supposed to hit the browser
+  * Introduce `s-` prefix as an alternative to `:` for directives (i.e. `s-if` and `:if` are now equivalent)
+  * Introduce `:values` directive for generating multiple `phx-value-` attributes
+  * Added a convert task to aid migrating to the new syntax
+
+### Deprecations
+
+  * `<If>` has been deprecated in favor of `{#if}...{/if}`
+  * `<For>` has been deprecated in favor of `{#for}...{/for}`
+  * `<template>` has been deprecated in favor of `<#template>`
+  * `<slot>` has been deprecated in favor of `<#slot>`
+  * Passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been deprecated.
+    Any non-string value should be passed as an expression (i.e. `selected={true}`)
+
+### Breaking Changes
+
+  * Replace the sigil `~H` with `~F` to avoid conflict with `HEEx`
+  * Replace interpolation delimiters `{{` and `}}` with `{` and `}`
+  * Remove support for interpolation inside `<style>...</style>` and `<script>...</script>` nodes
+  * ErrorTag: Renamed prop `phx_trigger_action` to `trigger_action`
+
 ## v0.4.1 (2021-05-26)
 
   * Fix warning on Phoenix Live View >= 1.15.6

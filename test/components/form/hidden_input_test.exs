@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <HiddenInput form="user" field="token" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <HiddenInput form="user" field={{ :token }} />
+        ~F"""
+        <HiddenInput form="user" field={:token} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <HiddenInput form="user" field="token" value="token" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <HiddenInput form="user" field="token" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <HiddenInput form="user" field="token" class="input primary" />
         """
       end
@@ -67,8 +67,8 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <HiddenInput form="user" field="token" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <HiddenInput form="user" field="token" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <HiddenInput form="user" field="color" value="token" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.HiddenInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <HiddenInput form="user" field="pass" id="token" name="token" />
         """
       end

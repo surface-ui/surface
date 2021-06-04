@@ -7,8 +7,8 @@ defmodule LiveComponentTest do
     prop label, :string
 
     def render(assigns) do
-      ~H"""
-      <div phx-click="click">{{ @label }}</div>
+      ~F"""
+      <div phx-click="click">{@label}</div>
       """
     end
   end
@@ -24,8 +24,8 @@ defmodule LiveComponentTest do
     end
 
     def render(assigns) do
-      ~H"""
-      <div :on-click="click" id="theDiv">{{ @label }} - {{ @assigned_in_update }}</div>
+      ~F"""
+      <div :on-click="click" id="theDiv">{@label} - {@assigned_in_update}</div>
       """
     end
 
@@ -41,8 +41,8 @@ defmodule LiveComponentTest do
     data label, :string, default: "Initial stateless"
 
     def render(assigns) do
-      ~H"""
-      <StatelessComponent label={{ @label }} />
+      ~F"""
+      <StatelessComponent label={@label} />
       <StatefulComponent id="comp" />
       """
     end
@@ -60,9 +60,9 @@ defmodule LiveComponentTest do
     def render(assigns) do
       info = "Hi there!"
 
-      ~H"""
+      ~F"""
       <div>
-        <slot :props={{ info: info }}/>
+        <#slot :props={info: info}/>
       </div>
       """
     end
@@ -74,9 +74,9 @@ defmodule LiveComponentTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
-        <slot/>
+        <#slot/>
       </div>
       """
     end
@@ -88,8 +88,8 @@ defmodule LiveComponentTest do
     prop event, :event
 
     def render(assigns) do
-      ~H"""
-      <button :on-click={{ @event }} />
+      ~F"""
+      <button :on-click={@event} />
       """
     end
   end
@@ -100,8 +100,8 @@ defmodule LiveComponentTest do
     data count, :integer
 
     def render(assigns) do
-      ~H"""
-      <div>{{ Map.has_key?(assigns, :count) }}</div>
+      ~F"""
+      <div>{Map.has_key?(assigns, :count)}</div>
       """
     end
   end
@@ -109,7 +109,7 @@ defmodule LiveComponentTest do
   test "render content without slot props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <InfoProviderWithoutSlotProps>
           <span>Hi there!</span>
         </InfoProviderWithoutSlotProps>
@@ -126,9 +126,9 @@ defmodule LiveComponentTest do
   test "render content with slot props" do
     html =
       render_surface do
-        ~H"""
-        <InfoProvider :let={{ info: my_info }}>
-          <span>{{ my_info }}</span>
+        ~F"""
+        <InfoProvider :let={info: my_info}>
+          <span>{my_info}</span>
         </InfoProvider>
         """
       end
@@ -143,7 +143,7 @@ defmodule LiveComponentTest do
   test "render stateful component with event" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveComponentWithEvent event="click-event" id="button" />
         """
       end
@@ -156,7 +156,7 @@ defmodule LiveComponentTest do
   test "do not set assign for `data` without default value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <LiveComponentDataWithoutDefault id="counter"/>
         """
       end

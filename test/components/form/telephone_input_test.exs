@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TelephoneInput form="user" field="phone" />
         """
       end
@@ -19,8 +19,8 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
-        <TelephoneInput form="user" field={{ :phone }} />
+        ~F"""
+        <TelephoneInput form="user" field={:phone} />
         """
       end
 
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TelephoneInput form="user" field="phone" value="phone_no" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TelephoneInput form="user" field="phone" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TelephoneInput form="user" field="phone" class="input primary" />
         """
       end
@@ -67,8 +67,8 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
-        <TelephoneInput form="user" field="phone" opts={{ autofocus: "autofocus" }} />
+        ~F"""
+        <TelephoneInput form="user" field="phone" opts={autofocus: "autofocus"} />
         """
       end
 
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TelephoneInput form="user" field="color" value="phone_no" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.TelephoneInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <TelephoneInput form="user" field="phone" id="telephone" name="telephone" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.TelephoneInputConfigTest do
     using_config TelephoneInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <TelephoneInput/>
           """
         end
