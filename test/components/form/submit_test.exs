@@ -3,6 +3,22 @@ defmodule Surface.Components.Form.SubmitTest do
 
   alias Surface.Components.Form.Submit
 
+  defmodule ViewWithSubmit do
+    use Surface.LiveView
+
+    data disabled, :boolean, default: false
+
+    def handle_event("toggle_disable", _, socket) do
+      {:noreply, assign(socket, :disabled, !socket.assigns.disabled)}
+    end
+
+    def render(assigns) do
+      ~F"""
+      <Submit label="Submit" opts={disabled: @disabled} />
+      """
+    end
+  end
+
   test "label only" do
     html =
       render_surface do
@@ -73,6 +89,18 @@ defmodule Surface.Components.Form.SubmitTest do
       end
 
     assert html =~ ~s(phx-click="my_click")
+  end
+
+  test "updates on new props", %{conn: conn} do
+    {:ok, view, html} = live_isolated(conn, ViewWithSubmit)
+
+    assert html =~ ~s(<button type="submit">Submit</button>)
+
+    assert render_click(view, :toggle_disable) =~
+             ~s(<button disabled="disabled" type="submit">Submit</button>)
+
+    assert render_click(view, :toggle_disable) =~
+             ~s(<button type="submit">Submit</button>)
   end
 
   test "is compatible with phoenix submit/2" do
