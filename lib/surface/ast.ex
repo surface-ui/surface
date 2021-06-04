@@ -88,14 +88,16 @@ defmodule Surface.AST.Expr do
 
   ## Properties
       * `:value` - a quoted expression
+      * `:constant?` - true if the expression can be evaluated at compile time
       * `:meta` - compile meta
       * `:directives` - directives associated with this expression node
   """
-  defstruct [:value, :meta, directives: []]
+  defstruct [:value, :meta, constant?: false, directives: []]
 
   @type t :: %__MODULE__{
           # quoted expression
           value: any(),
+          constant?: boolean(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -215,14 +217,16 @@ defmodule Surface.AST.Attribute do
       * `:type_opts` - a keyword list of options for the type
       * `:name` - the name of the attribute (e.g. `:class`)
       * `:value` - a list of nodes that can be concatenated to form the value for this attribute. Potentially contains dynamic data
+      * `:constant?` - true if the attribute can be evaluated at compile time
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :type, :type_opts, :value, :meta]
+  defstruct [:name, :type, :type_opts, :value, :meta, constant?: false]
 
   @type t :: %__MODULE__{
           type: atom(),
           type_opts: keyword(),
           name: atom(),
+          constant?: boolean(),
           value: Surface.AST.Literal.t() | Surface.AST.AttributeExpr.t(),
           meta: Surface.AST.Meta.t()
         }
@@ -251,14 +255,16 @@ defmodule Surface.AST.AttributeExpr do
   ## Properties
       * `:original` - the original text, useful for debugging and error messages
       * `:value` - a quoted expression
+      * `:constant?` - true if the expression can be evaluated at compile time
       * `:meta` - compilation meta data
   """
-  defstruct [:original, :value, :meta]
+  defstruct [:original, :value, :meta, constant?: false]
 
   @type t :: %__MODULE__{
           # quoted
           value: any(),
           original: binary(),
+          constant?: boolean(),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -270,15 +276,17 @@ defmodule Surface.AST.Interpolation do
   ## Properties
       * `:original` - the original text, useful for debugging and error messages
       * `:value` - a quoted expression
+      * `:constant?` - true if the expression can be evaluated at compile time
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this interpolation
   """
-  defstruct [:original, :value, :meta, directives: []]
+  defstruct [:original, :value, :meta, constant?: false, directives: []]
 
   @type t :: %__MODULE__{
           original: binary(),
           # quoted
           value: any(),
+          constant?: boolean(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
