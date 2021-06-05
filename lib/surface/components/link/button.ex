@@ -61,18 +61,12 @@ defmodule Surface.Components.Link.Button do
   """
   slot default
 
-  def update(assigns, socket) do
-    valid_label!(assigns)
-    {:ok, assign(socket, assigns)}
-  end
-
   def render(assigns) do
+    valid_label!(assigns)
     to = valid_destination!(assigns.to, "<Button />")
-    opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
-    attrs = opts_to_attrs(opts)
 
     ~F"""
-    <button id={@id} class={@class} :attrs={attrs}><#slot>{@label}</#slot></button>
+    <button id={@id} class={@class} :attrs={to_attrs(assigns, to)}><#slot>{@label}</#slot></button>
     """
   end
 
@@ -90,5 +84,10 @@ defmodule Surface.Components.Link.Button do
       {csrf_data, opts} = csrf_data(to, opts)
       [data: [method: method, to: to] ++ csrf_data] ++ opts
     end
+  end
+
+  def to_attrs(assigns, to) do
+    (apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns))
+    |> opts_to_attrs()
   end
 end
