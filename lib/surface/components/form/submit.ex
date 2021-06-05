@@ -29,7 +29,7 @@ defmodule Surface.Components.Form.Submit do
   end
 
   def to_attrs(assigns) do
-    opts = prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns)
-    opts_to_attrs(opts)
+    (prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns))
+    |> opts_to_attrs()
   end
 end
