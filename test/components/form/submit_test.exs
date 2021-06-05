@@ -91,16 +91,11 @@ defmodule Surface.Components.Form.SubmitTest do
     assert html =~ ~s(phx-click="my_click")
   end
 
-  test "updates on new props", %{conn: conn} do
+  test "updates when opts change", %{conn: conn} do
     {:ok, view, html} = live_isolated(conn, ViewWithSubmit)
-
-    assert html =~ ~s(<button type="submit">Submit</button>)
-
-    assert render_click(view, :toggle_disable) =~
-             ~s(<button disabled="disabled" type="submit">Submit</button>)
-
-    assert render_click(view, :toggle_disable) =~
-             ~s(<button type="submit">Submit</button>)
+    refute html =~ ~s(disabled="disabled")
+    assert render_click(view, :toggle_disable) =~ ~s(disabled="disabled")
+    refute render_click(view, :toggle_disable) =~ ~s(disabled="disabled")
   end
 
   test "is compatible with phoenix submit/2" do
