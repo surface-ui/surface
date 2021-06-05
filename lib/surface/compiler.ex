@@ -69,12 +69,13 @@ defmodule Surface.Compiler do
   ]
 
   defmodule CompileMeta do
-    defstruct [:line, :file, :caller, :checks]
+    defstruct [:line, :file, :caller, :checks, :variables]
 
     @type t :: %__MODULE__{
             line: non_neg_integer(),
             file: binary(),
             caller: Macro.Env.t(),
+            variables: keyword(),
             checks: Keyword.t(boolean())
           }
   end
@@ -94,7 +95,8 @@ defmodule Surface.Compiler do
       line: line,
       file: file,
       caller: caller,
-      checks: opts[:checks] || []
+      checks: opts[:checks] || [],
+      variables: opts[:variables] || []
     }
 
     string
@@ -202,8 +204,8 @@ defmodule Surface.Compiler do
     )
   end
 
-  defp to_ast(nodes, compile_meta) do
-    for node <- nodes,
+  def to_ast(nodes, compile_meta) do
+    for node <- List.wrap(nodes),
         result = convert_node_to_ast(node_type(node), node, compile_meta),
         result != :ignore do
       case result do
@@ -241,6 +243,8 @@ defmodule Surface.Compiler do
   defp node_type({:block, "case", _, _, _}), do: :block
   defp node_type({:block, "match", _, _, _}), do: :sub_block
   defp node_type({:block, :default, _, _, _}), do: :sub_block
+
+  defp node_type({:ast, _, _}), do: :ast
 
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
   defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
@@ -282,6 +286,11 @@ defmodule Surface.Compiler do
        meta: meta,
        constant?: Macro.quoted_literal?(expr)
      }}
+  end
+
+  defp convert_node_to_ast(:ast, {_, variable, expr_meta}, compile_meta) do
+    ast = fetch_quoted_value!(compile_meta, variable, expr_meta)
+    {:ok, ast}
   end
 
   defp convert_node_to_ast(
@@ -496,7 +505,7 @@ defmodule Surface.Compiler do
 
     with {:ok, directives, attributes} <-
            collect_directives(@tag_directive_handlers, attributes, meta),
-         attributes <- process_attributes(nil, attributes, meta),
+         attributes <- process_attributes(nil, attributes, meta, compile_meta),
          children <- to_ast(children, compile_meta),
          :ok <- validate_tag_children(children) do
       {:ok,
@@ -522,7 +531,7 @@ defmodule Surface.Compiler do
 
     with {:ok, directives, attributes} <-
            collect_directives(@tag_directive_handlers, attributes, meta),
-         attributes <- process_attributes(nil, attributes, meta),
+         attributes <- process_attributes(nil, attributes, meta, compile_meta),
          # a void element containing content is an error
          [] <- to_ast(children, compile_meta) do
       {:ok,
@@ -560,7 +569,7 @@ defmodule Surface.Compiler do
          :ok <- validate_templates(mod, templates, meta),
          {:ok, directives, attributes} <-
            collect_directives(@component_directive_handlers, attributes, meta),
-         attributes <- process_attributes(mod, attributes, meta),
+         attributes <- process_attributes(mod, attributes, meta, compile_meta),
          :ok <- validate_properties(mod, attributes, directives, meta) do
       result =
         if component_slotable?(mod) do
@@ -612,7 +621,7 @@ defmodule Surface.Compiler do
          true <- function_exported?(mod, :expand, 3),
          {:ok, directives, attributes} <-
            collect_directives(@meta_component_directive_handlers, attributes, meta),
-         attributes <- process_attributes(mod, attributes, meta),
+         attributes <- process_attributes(mod, attributes, meta, compile_meta),
          :ok <- validate_properties(mod, attributes, directives, meta) do
       expanded = mod.expand(attributes, children, meta)
 
@@ -626,7 +635,7 @@ defmodule Surface.Compiler do
 
       {:ok,
        %AST.Container{
-         children: [compile_dep_expr, expanded],
+         children: [compile_dep_expr | List.wrap(expanded)],
          directives: directives,
          meta: meta
        }}
@@ -698,21 +707,22 @@ defmodule Surface.Compiler do
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
 
-  defp process_attributes(_module, [], _meta), do: []
+  defp process_attributes(_module, [], _meta, _compile_meta), do: []
 
-  defp process_attributes(mod, attrs, meta), do: process_attributes(mod, attrs, meta, [])
+  defp process_attributes(mod, attrs, meta, compile_meta),
+    do: process_attributes(mod, attrs, meta, compile_meta, [])
 
-  defp process_attributes(_module, [], _meta, acc) do
+  defp process_attributes(_module, [], _meta, _compile_meta, acc) do
     acc
     |> Keyword.values()
     |> Enum.reverse()
   end
 
-  defp process_attributes(mod, [{:root, value, attr_meta} | attrs], meta, acc) do
+  defp process_attributes(mod, [{:root, value, attr_meta} | attrs], meta, compile_meta, acc) do
     with true <- function_exported?(mod, :__props__, 0),
          prop when not is_nil(prop) <- Enum.find(mod.__props__(), & &1.opts[:root]) do
       name = Atom.to_string(prop.name)
-      process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc)
+      process_attributes(mod, [{name, value, attr_meta} | attrs], meta, compile_meta, acc)
     else
       _ ->
         message = """
@@ -722,11 +732,11 @@ defmodule Surface.Compiler do
         """
 
         IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
-        process_attributes(mod, attrs, meta, acc)
+        process_attributes(mod, attrs, meta, compile_meta, acc)
     end
   end
 
-  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, acc) do
+  defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, compile_meta, acc) do
     unquoted_string? = attr_meta[:unquoted_string?]
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
@@ -791,21 +801,25 @@ defmodule Surface.Compiler do
       type: type,
       type_opts: type_opts,
       name: name,
-      value: attr_value(name, type, value, attr_meta),
+      value: attr_value(name, type, value, attr_meta, compile_meta),
       meta: attr_meta
     }
 
-    process_attributes(mod, attrs, meta, [{name, node} | acc])
+    process_attributes(mod, attrs, meta, compile_meta, [{name, node} | acc])
   end
 
-  defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
+  defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta, _compile_meta) do
     expr_meta = Helpers.to_meta(expr_meta, attr_meta)
     expr = Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta)
 
     AST.AttributeExpr.new(expr, value, expr_meta)
   end
 
-  defp attr_value(name, type, value, meta) do
+  defp attr_value(_name, _type, {:ast, variable, expr_meta}, _attr_meta, compile_meta) do
+    fetch_quoted_value!(compile_meta, variable, expr_meta)
+  end
+
+  defp attr_value(name, type, value, meta, _compile_meta) do
     Surface.TypeHandler.literal_to_ast_node!(type, name, value, meta)
   end
 
@@ -1151,6 +1165,60 @@ defmodule Surface.Compiler do
       """
 
       IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+    end
+  end
+
+  defp fetch_quoted_value!(compile_meta, variable, expr_meta) do
+    variable =
+      if Regex.match?(~r/^[a-z][a-zA-Z_\d]*$/, variable) do
+        variable
+      else
+        message = """
+        cannot unquote `#{variable}`.
+
+        The expression to be unquoted must be written as `^var`, where `var` is an existing variable.
+        """
+
+        IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
+      end
+
+    case Keyword.fetch(compile_meta.variables, String.to_atom(variable)) do
+      :error ->
+        defined_variables = compile_meta.variables |> Keyword.keys() |> Enum.map(&to_string/1)
+
+        similar_variable_message =
+          case Helpers.did_you_mean(variable, defined_variables) do
+            {similar, score} when score > 0.8 ->
+              "\n\nDid you mean #{inspect(to_string(similar))}?"
+
+            _ ->
+              ""
+          end
+
+        available_variables =
+          Helpers.list_to_string(
+            "\n\nAvailable variable:",
+            "\n\nAvailable variables:",
+            defined_variables
+          )
+
+        message = """
+        undefined variable "#{variable}".#{similar_variable_message}#{available_variables}
+        """
+
+        IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
+
+      {:ok, value} when is_binary(value) or is_boolean(value) or is_integer(value) ->
+        %Surface.AST.Literal{value: value}
+
+      {:ok, [value]} ->
+        value
+
+      {:ok, value} when is_list(value) ->
+        %AST.Container{children: value, meta: expr_meta}
+
+      {:ok, ast} ->
+        ast
     end
   end
 end

@@ -10,6 +10,10 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {{:expr, expression, to_meta(meta)}, state}
   end
 
+  def handle_tagged_expression("^", expression, meta, state) do
+    {{:ast, expression, to_meta(meta)}, state}
+  end
+
   def handle_comment(comment, meta, state) do
     {{:comment, comment, meta}, state}
   end
@@ -160,6 +164,16 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     """
 
     IOHelper.compile_error(message, marker_meta.file, marker_meta.line)
+  end
+
+  def handle_attribute(
+        name,
+        {:tagged_expr, "^", {:expr, value, expr_meta}, _marker_meta},
+        attr_meta,
+        _state,
+        _context
+      ) do
+    {name, {:ast, value, to_meta(expr_meta)}, to_meta(attr_meta)}
   end
 
   def handle_attribute(name, {:expr, expr, expr_meta}, attr_meta, _state, _context) do

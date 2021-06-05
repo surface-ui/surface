@@ -1,21 +1,3 @@
-defmodule Surface.AST do
-  @type t ::
-          Surface.AST.Literal.t()
-          | Surface.AST.Interpolation.t()
-          | Surface.AST.Expr.t()
-          | Surface.AST.Tag.t()
-          | Surface.AST.VoidTag.t()
-          | Surface.AST.Template.t()
-          | Surface.AST.Slot.t()
-          | Surface.AST.If.t()
-          | Surface.AST.For.t()
-          | Surface.AST.Container.t()
-          | Surface.AST.Component.t()
-          | Surface.AST.MacroComponent.t()
-          | Surface.AST.SlotableComponent.t()
-          | Surface.AST.Error.t()
-end
-
 defmodule Surface.AST.Container do
   @moduledoc """
   An AST node representing a container of other nodes. This does not
@@ -539,4 +521,29 @@ defmodule Surface.AST.SlotableComponent do
           },
           meta: Surface.AST.Meta.t()
         }
+end
+
+defmodule Surface.AST do
+  @type t ::
+          Surface.AST.Literal.t()
+          | Surface.AST.Interpolation.t()
+          | Surface.AST.Expr.t()
+          | Surface.AST.Tag.t()
+          | Surface.AST.VoidTag.t()
+          | Surface.AST.Template.t()
+          | Surface.AST.Slot.t()
+          | Surface.AST.If.t()
+          | Surface.AST.For.t()
+          | Surface.AST.Container.t()
+          | Surface.AST.Component.t()
+          | Surface.AST.MacroComponent.t()
+          | Surface.AST.SlotableComponent.t()
+          | Surface.AST.Error.t()
+
+  def find_attribute_value(attributes, name) do
+    Enum.find_value(attributes, fn
+      %Surface.AST.Attribute{name: ^name, value: value} -> value
+      _ -> nil
+    end)
+  end
 end

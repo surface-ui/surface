@@ -86,6 +86,18 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
+  defp handle_token(
+         [{:tagged_expr, marker, {:expr, value, meta}, _marker_meta} | rest],
+         buffers,
+         state
+       ) do
+    {node, state} = state.translator.handle_tagged_expression(marker, value, meta, state)
+
+    buffers = push_node_to_current_buffer(node, buffers)
+
+    handle_token(rest, buffers, state)
+  end
+
   defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
     context = state.translator.context_for_node(name, meta, state)
 
