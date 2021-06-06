@@ -438,11 +438,33 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "data label, :string, a: 1"
-      message = ~r/unknown option :a. Available options: \[:default, :values, :values!\]/
+
+      message =
+        ~r/unknown option :a. Available options: \[:default, :values, :values!, :temporary\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
       end)
+    end
+  end
+
+  describe "plugin" do
+    test "validate name" do
+      code = "plugin {a, b}, :string"
+      message = ~r/invalid plugin name. Expected a module, got: {a, b}/
+
+      assert_raise(CompileError, message, fn ->
+        eval(code)
+      end)
+    end
+
+    test "validate unknown type options" do
+      code = "plugin Surface.Plugins.IdentityPlugin, {:a, :b}"
+
+      message =
+        ~r/invalid options for the plugin Elixir.Surface.Plugins.IdentityPlugin. Expected a keyword list of options, got: {:a, :b}/
+
+      assert_raise(CompileError, message, fn -> eval(code) end)
     end
   end
 

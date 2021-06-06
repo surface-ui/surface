@@ -50,8 +50,6 @@ defmodule Surface.LiveComponent do
       end
   """
 
-  alias Surface.BaseComponent
-
   defmacro __using__(_) do
     quote do
       @before_compile Surface.Renderer
@@ -61,11 +59,16 @@ defmodule Surface.LiveComponent do
 
       @before_compile unquote(__MODULE__)
 
-      use Surface.API, include: [:prop, :slot, :data]
+      use Surface.API, include: [:prop, :slot, :data, :plugin]
       import Phoenix.HTML
 
       alias Surface.Constructs.Deprecated.{For, If}
       alias Surface.Components.{Context, Raw}
+
+      plugin Surface.Plugins.InitializeSurfacePlugin
+      plugin Surface.Plugins.DefaultAssignsPlugin
+      plugin Surface.Plugins.TemporaryAssignsPlugin
+      plugin Surface.Plugins.RestorePrivateAssignsPlugin
 
       @doc """
       The id of the live component (required by LiveView for stateful components).
@@ -85,40 +88,115 @@ defmodule Surface.LiveComponent do
   end
 
   defp quoted_update(env) do
+    plugins =
+      env.module
+      |> Surface.API.get_plugins()
+      |> Enum.map(fn {module, _opts} -> module end)
+
     if Module.defines?(env.module, {:update, 2}) do
       quote do
         defoverridable update: 2
 
         def update(assigns, socket) do
+          {assigns, socket} =
+            Surface.Plugin.before_update_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {assigns, socket}
+            )
+
           {:ok, socket} = super(assigns, socket)
-          {:ok, BaseComponent.restore_private_assigns(socket, assigns)}
+
+          socket =
+            Surface.Plugin.after_update_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {assigns, socket}
+            )
+
+          {:ok, socket}
+        end
+      end
+    else
+      quote do
+        def update(assigns, socket) do
+          {assigns, socket} =
+            Surface.Plugin.before_update_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {assigns, socket}
+            )
+
+          socket = assign(socket, assigns)
+
+          socket =
+            Surface.Plugin.after_update_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {assigns, socket}
+            )
+
+          {:ok, socket}
         end
       end
     end
   end
 
   defp quoted_mount(env) do
-    defaults = env.module |> Surface.API.get_defaults() |> Macro.escape()
+    plugins =
+      env.module
+      |> Surface.API.get_plugins()
+      |> Enum.map(fn {module, _opts} -> module end)
 
     if Module.defines?(env.module, {:mount, 1}) do
       quote do
         defoverridable mount: 1
 
         def mount(socket) do
-          super(
-            socket
-            |> Surface.init()
-            |> assign(unquote(defaults))
-          )
+          {socket, opts} =
+            Surface.Plugin.before_mount_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {socket, []}
+            )
+
+          {:ok, socket, opts} =
+            case super(socket) do
+              {:ok, socket} ->
+                {:ok, socket, opts}
+
+              {:ok, socket, mount_opts} when is_list(mount_opts) ->
+                {:ok, socket, Surface.Plugin.merge_mount_opts(mount_opts, opts)}
+            end
+
+          {socket, opts} =
+            Surface.Plugin.after_mount_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {socket, opts}
+            )
+
+          {:ok, socket, opts}
         end
       end
     else
       quote do
         def mount(socket) do
-          {:ok,
-           socket
-           |> Surface.init()
-           |> assign(unquote(defaults))}
+          {socket, opts} =
+            Surface.Plugin.before_mount_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {socket, []}
+            )
+
+          {socket, opts} =
+            Surface.Plugin.after_mount_live_component(
+              unquote(env.module),
+              unquote(plugins),
+              {socket, opts}
+            )
+
+          {:ok, socket, opts}
         end
       end
     end

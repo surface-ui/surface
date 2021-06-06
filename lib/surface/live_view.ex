@@ -34,8 +34,12 @@ defmodule Surface.LiveView do
     quote do
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
-      use Surface.API, include: [:prop, :data]
+      use Surface.API, include: [:prop, :data, :plugin]
       import Phoenix.HTML
+
+      plugin Surface.Plugins.InitializeSurfacePlugin
+      plugin Surface.Plugins.DefaultAssignsPlugin
+      plugin Surface.Plugins.TemporaryAssignsPlugin
 
       alias Surface.Constructs.Deprecated.{For, If}
       alias Surface.Components.{Context, Raw}
@@ -74,28 +78,60 @@ defmodule Surface.LiveView do
   end
 
   defp quoted_mount(env) do
-    defaults = env.module |> Surface.API.get_defaults() |> Macro.escape()
+    plugins =
+      env.module
+      |> Surface.API.get_plugins()
+      |> Enum.map(fn {module, _opts} -> module end)
 
     if Module.defines?(env.module, {:mount, 3}) do
       quote do
         defoverridable mount: 3
 
         def mount(params, session, socket) do
-          socket =
-            socket
-            |> Surface.init()
-            |> assign(unquote(defaults))
+          {params, session, socket, opts} =
+            Surface.Plugin.before_mount_live_view(
+              unquote(env.module),
+              unquote(plugins),
+              {params, session, socket, []}
+            )
 
-          super(params, session, socket)
+          {:ok, socket, opts} =
+            case super(params, session, socket) do
+              {:ok, socket} ->
+                {:ok, socket, opts}
+
+              {:ok, socket, mount_opts} when is_list(mount_opts) ->
+                {:ok, socket, Surface.Plugin.merge_mount_opts(mount_opts, opts)}
+            end
+
+          {_params, _session, socket, opts} =
+            Surface.Plugin.after_mount_live_view(
+              unquote(env.module),
+              unquote(plugins),
+              {params, session, socket, opts}
+            )
+
+          {:ok, socket, opts}
         end
       end
     else
       quote do
-        def mount(_params, _session, socket) do
-          {:ok,
-           socket
-           |> Surface.init()
-           |> assign(unquote(defaults))}
+        def mount(params, session, socket) do
+          {params, session, socket, opts} =
+            Surface.Plugin.before_mount_live_view(
+              unquote(env.module),
+              unquote(plugins),
+              {params, session, socket, []}
+            )
+
+          {_params, _session, socket, opts} =
+            Surface.Plugin.after_mount_live_view(
+              unquote(env.module),
+              unquote(plugins),
+              {params, session, socket, opts}
+            )
+
+          {:ok, socket, opts}
         end
       end
     end

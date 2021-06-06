@@ -45,7 +45,8 @@ defmodule Surface.API do
     arities = %{
       prop: [2, 3],
       slot: [1, 2],
-      data: [2, 3]
+      data: [2, 3],
+      plugin: [1, 2]
     }
 
     functions = for func <- include, arity <- arities[func], into: [], do: {func, arity}
@@ -56,6 +57,7 @@ defmodule Surface.API do
       @after_compile unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :assigns, accumulate: true)
+      Module.register_attribute(__MODULE__, :plugins, accumulate: true)
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
@@ -74,6 +76,7 @@ defmodule Surface.API do
       quoted_prop_funcs(env),
       quoted_slot_funcs(env),
       quoted_data_funcs(env),
+      quoted_plugins_funcs(env),
       quoted_context_funcs(env)
     ]
   end
@@ -100,6 +103,11 @@ defmodule Surface.API do
     build_assign_ast(:data, name_ast, type_ast, opts_ast, __CALLER__)
   end
 
+  @doc "Defines plugins for the component"
+  defmacro plugin(name_ast, opts_ast \\ []) do
+    build_plugin_ast(name_ast, opts_ast, __CALLER__)
+  end
+
   @doc false
   def get_assigns(module) do
     Module.get_attribute(module, :assigns, [])
@@ -121,10 +129,10 @@ defmodule Surface.API do
   end
 
   @doc false
-  def get_defaults(module) do
-    for %{name: name, opts: opts} <- get_data(module), Keyword.has_key?(opts, :default) do
-      {name, opts[:default]}
-    end
+  def get_plugins(module) do
+    module
+    |> Module.get_attribute(:plugins, [])
+    |> Enum.reverse()
   end
 
   @doc false
@@ -141,6 +149,12 @@ defmodule Surface.API do
 
     Module.put_attribute(caller.module, :assigns, assign)
     Module.put_attribute(caller.module, assign.func, assign)
+  end
+
+  @doc false
+  def put_plugin(caller, module, opts, _opts_ast, _line) do
+    plugin = {module, opts}
+    Module.put_attribute(caller.module, :plugins, plugin)
   end
 
   @doc false
@@ -216,6 +230,17 @@ defmodule Surface.API do
       @doc false
       def __data__() do
         unquote(Macro.escape(data))
+      end
+    end
+  end
+
+  defp quoted_plugins_funcs(env) do
+    plugins = get_plugins(env.module)
+
+    quote do
+      @doc false
+      def __plugins__() do
+        unquote(Macro.escape(plugins))
       end
     end
   end
@@ -408,7 +433,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:data, _type, _opts) do
-    [:default, :values, :values!]
+    [:default, :values, :values!, :temporary]
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
@@ -722,6 +747,45 @@ defmodule Surface.API do
             line: caller.line
           ] do
       Surface.API.put_assign(__ENV__, func, name, type, opts, opts_ast, line)
+    end
+  end
+
+  defp validate_plugin_name_ast!({:__aliases__, _, _} = name, caller) do
+    Macro.expand(name, caller)
+  end
+
+  defp validate_plugin_name_ast!(name_ast, caller) do
+    message = """
+    invalid plugin name. Expected a module, got: #{Macro.to_string(name_ast)}\
+    """
+
+    IOHelper.compile_error(message, caller.file, caller.line)
+  end
+
+  defp validate_plugin_opts_ast!(_name, opts, _caller) when is_list(opts) do
+    opts
+  end
+
+  defp validate_plugin_opts_ast!(name, opts, caller) do
+    message = """
+    invalid options for the plugin #{name}. \
+    Expected a keyword list of options, got: #{Macro.to_string(opts)}
+    """
+
+    IOHelper.compile_error(message, caller.file, caller.line)
+  end
+
+  defp build_plugin_ast(name_ast, opts_ast, caller) do
+    name = validate_plugin_name_ast!(name_ast, caller)
+    opts = validate_plugin_opts_ast!(name, opts_ast, caller)
+
+    quote bind_quoted: [
+            name: name,
+            opts: opts,
+            opts_ast: Macro.escape(opts_ast),
+            line: caller.line
+          ] do
+      Surface.API.put_plugin(__ENV__, name, opts, opts_ast, line)
     end
   end
 end
