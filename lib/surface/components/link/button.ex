@@ -86,7 +86,7 @@ defmodule Surface.Components.Link.Button do
     end
   end
 
-  def to_attrs(assigns, to) do
+  defp to_attrs(assigns, to) do
     (apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns))
     |> opts_to_attrs()
   end

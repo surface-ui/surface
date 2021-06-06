@@ -28,7 +28,7 @@ defmodule Surface.Components.Form.Submit do
     """
   end
 
-  def to_attrs(assigns) do
+  defp to_attrs(assigns) do
     (prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns))
     |> opts_to_attrs()
   end
