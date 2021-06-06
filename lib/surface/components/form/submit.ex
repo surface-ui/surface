@@ -23,11 +23,13 @@ defmodule Surface.Components.Form.Submit do
   slot default
 
   def render(assigns) do
-    opts = prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns)
-    attrs = opts_to_attrs(opts)
-
     ~F"""
-    <button type="submit" :attrs={attrs}><#slot>{@label}</#slot></button>
+    <button type="submit" :attrs={to_attrs(assigns)}><#slot>{@label}</#slot></button>
     """
+  end
+
+  defp to_attrs(assigns) do
+    (prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns))
+    |> opts_to_attrs()
   end
 end

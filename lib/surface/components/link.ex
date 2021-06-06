@@ -59,18 +59,12 @@ defmodule Surface.Components.Link do
   """
   slot default
 
-  def update(assigns, socket) do
-    valid_label!(assigns)
-    {:ok, assign(socket, assigns)}
-  end
-
   def render(assigns) do
+    valid_label!(assigns)
     to = valid_destination!(assigns.to, "<Link />")
-    opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
-    attrs = opts_to_attrs(opts)
 
     ~F"""
-    <a id={@id} class={@class} href={to} :attrs={attrs}><#slot>{@label}</#slot></a>
+    <a id={@id} class={@class} href={to} :attrs={to_attrs(assigns, to)}><#slot>{@label}</#slot></a>
     """
   end
 
@@ -88,5 +82,10 @@ defmodule Surface.Components.Link do
       opts = Keyword.put_new(opts, :rel, "nofollow")
       [data: [method: method, to: to] ++ csrf_data] ++ opts
     end
+  end
+
+  defp to_attrs(assigns, to) do
+    (apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns))
+    |> opts_to_attrs()
   end
 end

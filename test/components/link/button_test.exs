@@ -3,6 +3,22 @@ defmodule Surface.Components.Link.ButtonTest do
 
   alias Surface.Components.Link.Button
 
+  defmodule ViewWithButton do
+    use Surface.LiveView
+
+    data disabled, :boolean, default: false
+
+    def handle_event("toggle_disable", _, socket) do
+      {:noreply, assign(socket, :disabled, !socket.assigns.disabled)}
+    end
+
+    def render(assigns) do
+      ~F"""
+      <Button label="user" to="/users/1" opts={disabled: @disabled} />
+      """
+    end
+  end
+
   defmodule ComponentWithButton do
     use Surface.LiveComponent
 
@@ -120,6 +136,13 @@ defmodule Surface.Components.Link.ButtonTest do
              <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-capture-click="my_click" phx-target=".+">user</button>
            </div>
            """
+  end
+
+  test "updates when opts change", %{conn: conn} do
+    {:ok, view, html} = live_isolated(conn, ViewWithButton)
+    refute html =~ ~s(disabled="disabled")
+    assert render_click(view, :toggle_disable) =~ ~s(disabled="disabled")
+    refute render_click(view, :toggle_disable) =~ ~s(disabled="disabled")
   end
 
   describe "is compatible with phoenix button/2" do
