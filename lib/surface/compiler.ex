@@ -279,7 +279,8 @@ defmodule Surface.Compiler do
      %AST.Interpolation{
        original: text,
        value: expr,
-       meta: meta
+       meta: meta,
+       constant?: Macro.quoted_literal?(expr)
      }}
   end
 
@@ -304,7 +305,7 @@ defmodule Surface.Compiler do
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
-    default = %AST.AttributeExpr{value: false, original: "", meta: node_meta}
+    default = AST.AttributeExpr.new(false, "", node_meta)
     condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
 
     [if_children, else_children] =
@@ -361,7 +362,7 @@ defmodule Surface.Compiler do
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
-    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    default = AST.AttributeExpr.new(false, "", meta)
     condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
 
     {:ok,
@@ -379,7 +380,7 @@ defmodule Surface.Compiler do
          compile_meta
        ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
-    default = %AST.AttributeExpr{value: false, original: "", meta: meta}
+    default = AST.AttributeExpr.new(false, "", meta)
     generator = attribute_value_as_ast(attributes, :root, :generator, default, compile_meta)
 
     [for_children, else_children] =
@@ -409,14 +410,12 @@ defmodule Surface.Compiler do
           _ -> raise_complex_generator(else_ast.meta)
         end
 
-      condition = %AST.AttributeExpr{
-        original: "",
-        value:
-          quote do
-            unquote(value) != []
-          end,
-        meta: compile_meta
-      }
+      condition_expr =
+        quote do
+          unquote(value) != []
+        end
+
+      condition = AST.AttributeExpr.new(condition_expr, "", meta)
 
       {:ok,
        %AST.If{
@@ -673,12 +672,9 @@ defmodule Surface.Compiler do
     Enum.find_value(attributes, default, fn
       {^attr_name, {:attribute_expr, value, expr_meta}, _attr_meta} ->
         expr_meta = Helpers.to_meta(expr_meta, meta)
+        expr = Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta)
 
-        %AST.AttributeExpr{
-          original: value,
-          value: Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta),
-          meta: expr_meta
-        }
+        AST.AttributeExpr.new(expr, value, expr_meta)
 
       {^attr_name, value, attr_meta} ->
         attr_meta = Helpers.to_meta(attr_meta, meta)
@@ -804,12 +800,9 @@ defmodule Surface.Compiler do
 
   defp attr_value(name, type, {:attribute_expr, value, expr_meta}, attr_meta) do
     expr_meta = Helpers.to_meta(expr_meta, attr_meta)
+    expr = Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta)
 
-    %AST.AttributeExpr{
-      original: value,
-      value: Surface.TypeHandler.expr_to_quoted!(value, name, type, expr_meta),
-      meta: expr_meta
-    }
+    AST.AttributeExpr.new(expr, value, expr_meta)
   end
 
   defp attr_value(name, type, value, meta) do

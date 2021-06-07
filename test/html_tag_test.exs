@@ -403,11 +403,23 @@ defmodule HtmlTagTest do
              """
     end
 
-    test "raise runtime error for invalid style value" do
+    test "raise compile error for invalid style value that can be evaluated at compile time" do
       assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
         render_surface do
           ~F"""
           <div style={{1, 2}}/>
+          """
+        end
+      end)
+    end
+
+    test "raise runtime error for invalid style value" do
+      assert_raise(RuntimeError, ~r/invalid value for attribute "style"/, fn ->
+        assigns = %{style: {1, 2}}
+
+        render_surface do
+          ~F"""
+          <div style={@style}/>
           """
         end
       end)

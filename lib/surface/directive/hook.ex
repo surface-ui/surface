@@ -43,11 +43,11 @@ defmodule Surface.Directive.Hook do
   defp directive_value({:attribute_expr, value, expr_meta}, _attr_meta, meta) do
     new_meta = Helpers.to_meta(expr_meta, meta)
 
-    %AST.AttributeExpr{
-      original: value,
-      value: Surface.TypeHandler.expr_to_quoted!(value, ":hook", :hook, new_meta),
-      meta: meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(value, ":hook", :hook, new_meta),
+      value,
+      meta
+    )
   end
 
   defp directive_value(value, attr_meta, meta) do

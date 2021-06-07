@@ -217,16 +217,14 @@ defmodule Surface.AST.Attribute do
       * `:type_opts` - a keyword list of options for the type
       * `:name` - the name of the attribute (e.g. `:class`)
       * `:value` - a list of nodes that can be concatenated to form the value for this attribute. Potentially contains dynamic data
-      * `:constant?` - true if the attribute can be evaluated at compile time
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :type, :type_opts, :value, :meta, constant?: false]
+  defstruct [:name, :type, :type_opts, :value, :meta]
 
   @type t :: %__MODULE__{
           type: atom(),
           type_opts: keyword(),
           name: atom(),
-          constant?: boolean(),
           value: Surface.AST.Literal.t() | Surface.AST.AttributeExpr.t(),
           meta: Surface.AST.Meta.t()
         }
@@ -267,6 +265,27 @@ defmodule Surface.AST.AttributeExpr do
           constant?: boolean(),
           meta: Surface.AST.Meta.t()
         }
+
+  def new(expr, original, meta) do
+    %__MODULE__{
+      value: expr,
+      original: original,
+      constant?: constant?(expr),
+      meta: meta
+    }
+  end
+
+  defp constant?(
+         {{:., _, [{:__aliases__, _, [:Surface, :TypeHandler]}, :expr_to_value!]}, _,
+          [_type, _name, clauses, opts, _module, _original]}
+       ) do
+    Macro.quoted_literal?(clauses) and
+      Macro.quoted_literal?(opts)
+  end
+
+  defp constant?(expr) do
+    Macro.quoted_literal?(expr)
+  end
 end
 
 defmodule Surface.AST.Interpolation do

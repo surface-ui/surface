@@ -30,10 +30,10 @@ defmodule Surface.Directive.Let do
   def process(_, node), do: node
 
   defp directive_value(value, meta) do
-    %AST.AttributeExpr{
-      value: Surface.TypeHandler.expr_to_quoted!(value, ":let", :bindings, meta),
-      original: value,
-      meta: meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(value, ":let", :bindings, meta),
+      value,
+      meta
+    )
   end
 end

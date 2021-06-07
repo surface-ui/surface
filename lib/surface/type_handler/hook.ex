@@ -6,11 +6,11 @@ defmodule Surface.TypeHandler.Hook do
   @impl true
   def literal_to_ast_node(type, name, value, meta) when is_binary(value) do
     {:ok,
-     %Surface.AST.AttributeExpr{
-       original: value,
-       value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
-       meta: meta
-     }}
+     Surface.AST.AttributeExpr.new(
+       Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
+       value,
+       meta
+     )}
   end
 
   def literal_to_ast_node(_type, _name, _value, _meta) do

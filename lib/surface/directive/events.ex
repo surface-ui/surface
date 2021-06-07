@@ -64,11 +64,7 @@ defmodule Surface.Directive.Events do
   end
 
   defp to_quoted_expr(_name, [], meta) do
-    %AST.AttributeExpr{
-      original: "",
-      value: nil,
-      meta: meta
-    }
+    AST.AttributeExpr.new(nil, "", meta)
   end
 
   defp to_quoted_expr(name, value, meta) when is_list(value) do
@@ -76,11 +72,11 @@ defmodule Surface.Directive.Events do
   end
 
   defp to_quoted_expr(name, event, meta) when is_binary(event) or is_bitstring(event) do
-    %AST.AttributeExpr{
-      original: event,
-      value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(event), name, :event, meta),
-      meta: meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(Macro.to_string(event), name, :event, meta),
+      event,
+      meta
+    )
   end
 
   defp to_quoted_expr(name, {:attribute_expr, original, expr_meta}, meta) do
@@ -95,11 +91,7 @@ defmodule Surface.Directive.Events do
         value -> value
       end
 
-    %AST.AttributeExpr{
-      original: original,
-      value: value,
-      meta: expr_meta
-    }
+    AST.AttributeExpr.new(value, original, expr_meta)
   end
 
   def event_name(%{name: name}) do
