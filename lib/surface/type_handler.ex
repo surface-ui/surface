@@ -165,18 +165,25 @@ defmodule Surface.TypeHandler do
   end
 
   def attr_to_html!(type, name, value) do
+    case attr_to_html(type, name, value) do
+      {:ok, value} -> value
+      {:error, message} -> IOHelper.runtime_error(message)
+    end
+  end
+
+  def attr_to_html(type, name, value) do
     case handler(type).value_to_html(name, value) do
       {:ok, val} when val in ["", nil, false] ->
-        ""
+        {:ok, ""}
 
       {:ok, true} ->
-        [~S( ), to_string(name)]
+        {:ok, [~S( ), to_string(name)]}
 
       {:ok, val} ->
-        [" ", to_string(name), "=", ~S("), Phoenix.HTML.Safe.to_iodata(val), ~S(")]
+        {:ok, [" ", to_string(name), "=", ~S("), Phoenix.HTML.Safe.to_iodata(val), ~S(")]}
 
       {:error, message} ->
-        IOHelper.runtime_error(message)
+        {:error, message}
     end
   end
 

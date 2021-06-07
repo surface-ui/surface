@@ -436,6 +436,31 @@ defmodule Surface.CompilerTest do
            } = node
   end
 
+  test "attribute values that are runtime constants" do
+    code = """
+    <div number={1} string={"string"} bool={true} class={"c1", "c2", "c3", "c4"}></div>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             attributes: [
+               %Surface.AST.Attribute{
+                 value: %Surface.AST.AttributeExpr{constant?: true}
+               },
+               %Surface.AST.Attribute{
+                 value: %Surface.AST.AttributeExpr{constant?: true}
+               },
+               %Surface.AST.Attribute{
+                 value: %Surface.AST.AttributeExpr{constant?: true}
+               },
+               %Surface.AST.Attribute{
+                 value: %Surface.AST.AttributeExpr{constant?: true}
+               }
+             ]
+           } = node
+  end
+
   describe "macro components" do
     test "inject a __compile_dep__/0 macro call to force compile-time dependency" do
       code = """

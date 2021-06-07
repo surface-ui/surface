@@ -16,11 +16,7 @@ defmodule Surface.Directive.Debug do
     %AST.Directive{
       module: __MODULE__,
       name: :debug,
-      value: %AST.AttributeExpr{
-        original: "",
-        value: [:code],
-        meta: attr_meta
-      },
+      value: AST.AttributeExpr.new([:code], "", attr_meta),
       meta: attr_meta
     }
   end
@@ -38,11 +34,7 @@ defmodule Surface.Directive.Debug do
 
     if type in [AST.VoidTag, AST.Tag, AST.Container] and Enum.member?(node.debug, :code) do
       %AST.If{
-        condition: %AST.AttributeExpr{
-          original: "generated from :debug",
-          value: true,
-          meta: node.meta
-        },
+        condition: AST.AttributeExpr.new(true, "generated from :debug", node.meta),
         debug: node.debug,
         meta: node.meta,
         children: [node]
@@ -61,11 +53,7 @@ defmodule Surface.Directive.Debug do
       end
     end
 
-    %AST.AttributeExpr{
-      value: expr,
-      original: value,
-      meta: meta
-    }
+    AST.AttributeExpr.new(expr, value, meta)
   end
 
   @spec invalid_debug_value!(any(), Surface.AST.Meta.t()) :: no_return()

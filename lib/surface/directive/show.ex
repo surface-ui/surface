@@ -64,7 +64,8 @@ defmodule Surface.Directive.Show do
           | value:
               quote generated: true do
                 not unquote(value)
-              end
+              end,
+            constant?: false
         },
         meta: show_meta
       }
@@ -95,22 +96,19 @@ defmodule Surface.Directive.Show do
   end
 
   defp directive_value(value, meta) do
-    expr = Surface.TypeHandler.expr_to_quoted!(value, ":show", :boolean, meta)
-
-    %AST.AttributeExpr{
-      original: value,
-      value: expr,
-      meta: meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(value, ":show", :boolean, meta),
+      value,
+      meta
+    )
   end
 
   defp style_value_to_expr(%AST.Literal{value: value}, attr_meta) do
-    %AST.AttributeExpr{
-      original: value,
-      value:
-        Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), ":style", :style, attr_meta),
-      meta: attr_meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), ":style", :style, attr_meta),
+      value,
+      attr_meta
+    )
   end
 
   defp style_value_to_expr(attr_value, _attr_meta) do

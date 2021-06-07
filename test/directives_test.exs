@@ -949,14 +949,14 @@ defmodule Surface.DirectivesTest do
     end
 
     test "passing unsupported types" do
-      assert_raise(RuntimeError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
-        render_surface do
-          ~F"""
-          <div :values={map: %{}, tuple: {}}>
-            Some Text
-          </div>
-          """
-        end
+      assert_raise(CompileError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
+        """
+        <div :values={map: %{}, tuple: {}}>
+          Some Text
+        </div>
+        """
+        |> Surface.Compiler.compile(1, __ENV__)
+        |> Surface.Compiler.to_live_struct()
       end)
     end
 

@@ -21,11 +21,7 @@ defmodule Surface.Directive.For do
       |> Surface.TypeHandler.expr_to_quoted!(":for", :generator, meta)
       |> handle_modifiers(attr_meta.modifiers, %{line: attr_meta.line, file: meta.file})
 
-    %AST.AttributeExpr{
-      original: value,
-      value: quoted_value,
-      meta: meta
-    }
+    AST.AttributeExpr.new(quoted_value, value, meta)
   end
 
   defp handle_modifiers([{:<-, clause_meta, [var, list]}], ["with_index" | modifiers], meta) do

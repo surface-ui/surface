@@ -16,10 +16,10 @@ defmodule Surface.Directive.If do
     do: %AST.If{condition: expr, children: [node], meta: meta}
 
   defp directive_value(value, meta) do
-    %AST.AttributeExpr{
-      original: value,
-      value: Surface.TypeHandler.expr_to_quoted!(value, ":if", :boolean, meta),
-      meta: meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(value, ":if", :boolean, meta),
+      value,
+      meta
+    )
   end
 end

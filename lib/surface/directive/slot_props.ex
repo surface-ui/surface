@@ -19,11 +19,11 @@ defmodule Surface.Directive.SlotProps do
   end
 
   defp directive_value(value, meta) do
-    %AST.AttributeExpr{
-      value: Surface.TypeHandler.expr_to_quoted!(value, ":props", :explict_keyword, meta),
-      original: value,
-      meta: meta
-    }
+    AST.AttributeExpr.new(
+      Surface.TypeHandler.expr_to_quoted!(value, ":props", :explict_keyword, meta),
+      value,
+      meta
+    )
   end
 
   defp validate_keys!(slot, value, meta) do

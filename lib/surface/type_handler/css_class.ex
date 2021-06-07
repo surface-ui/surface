@@ -10,11 +10,11 @@ defmodule Surface.TypeHandler.CssClass do
 
   def literal_to_ast_node(type, name, value, meta) do
     {:ok,
-     %Surface.AST.AttributeExpr{
-       original: value,
-       value: Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
-       meta: meta
-     }}
+     Surface.AST.AttributeExpr.new(
+       Surface.TypeHandler.expr_to_quoted!(Macro.to_string(value), name, type, meta),
+       value,
+       meta
+     )}
   end
 
   @impl true

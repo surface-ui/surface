@@ -88,14 +88,16 @@ defmodule Surface.AST.Expr do
 
   ## Properties
       * `:value` - a quoted expression
+      * `:constant?` - true if the expression can be evaluated at compile time
       * `:meta` - compile meta
       * `:directives` - directives associated with this expression node
   """
-  defstruct [:value, :meta, directives: []]
+  defstruct [:value, :meta, constant?: false, directives: []]
 
   @type t :: %__MODULE__{
           # quoted expression
           value: any(),
+          constant?: boolean(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
@@ -251,16 +253,39 @@ defmodule Surface.AST.AttributeExpr do
   ## Properties
       * `:original` - the original text, useful for debugging and error messages
       * `:value` - a quoted expression
+      * `:constant?` - true if the expression can be evaluated at compile time
       * `:meta` - compilation meta data
   """
-  defstruct [:original, :value, :meta]
+  defstruct [:original, :value, :meta, constant?: false]
 
   @type t :: %__MODULE__{
           # quoted
           value: any(),
           original: binary(),
+          constant?: boolean(),
           meta: Surface.AST.Meta.t()
         }
+
+  def new(expr, original, meta) do
+    %__MODULE__{
+      value: expr,
+      original: original,
+      constant?: constant?(expr),
+      meta: meta
+    }
+  end
+
+  defp constant?(
+         {{:., _, [{:__aliases__, _, [:Surface, :TypeHandler]}, :expr_to_value!]}, _,
+          [_type, _name, clauses, opts, _module, _original]}
+       ) do
+    Macro.quoted_literal?(clauses) and
+      Macro.quoted_literal?(opts)
+  end
+
+  defp constant?(expr) do
+    Macro.quoted_literal?(expr)
+  end
 end
 
 defmodule Surface.AST.Interpolation do
@@ -270,15 +295,17 @@ defmodule Surface.AST.Interpolation do
   ## Properties
       * `:original` - the original text, useful for debugging and error messages
       * `:value` - a quoted expression
+      * `:constant?` - true if the expression can be evaluated at compile time
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this interpolation
   """
-  defstruct [:original, :value, :meta, directives: []]
+  defstruct [:original, :value, :meta, constant?: false, directives: []]
 
   @type t :: %__MODULE__{
           original: binary(),
           # quoted
           value: any(),
+          constant?: boolean(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
