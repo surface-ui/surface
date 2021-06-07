@@ -8,6 +8,7 @@ defmodule Surface.Compiler.EExEngine do
   manner as EEx.Compiler.compile/2
   """
   alias Surface.AST
+  alias Surface.IOHelper
 
   # while this should technically work with other engines, the main use case is integration with Phoenix.LiveView.Engine
   @default_engine Phoenix.LiveView.Engine
@@ -753,6 +754,27 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_html_attributes([
+         %AST.DynamicAttribute{
+           expr: %AST.AttributeExpr{constant?: true} = expr
+         }
+         | attributes
+       ]) do
+    try do
+      {expr_value, _} = Code.eval_quoted(expr.value)
+
+      new_attrs =
+        Enum.map(expr_value, fn {name, {type, value}} ->
+          evaluate_literal_attribute(name, type, value, expr.meta)
+        end)
+
+      [new_attrs | to_html_attributes(attributes)]
+    rescue
+      e in RuntimeError ->
+        IOHelper.compile_error(e.message, expr.meta.file, expr.meta.line)
+    end
+  end
+
+  defp to_html_attributes([
          %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr_value} = expr} | attributes
        ]) do
     value =
@@ -763,6 +785,22 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]
+  end
+
+  defp to_html_attributes([
+         %AST.Attribute{value: %AST.AttributeExpr{constant?: true} = expr} = attr
+         | attributes
+       ]) do
+    try do
+      {expr_value, _} = Code.eval_quoted(expr.value)
+
+      value = evaluate_literal_attribute(attr.name, attr.type, expr_value, attr.meta)
+
+      [value | to_html_attributes(attributes)]
+    rescue
+      e in RuntimeError ->
+        IOHelper.compile_error(e.message, expr.meta.file, expr.meta.line)
+    end
   end
 
   defp to_html_attributes([
@@ -790,6 +828,13 @@ defmodule Surface.Compiler.EExEngine do
       node.meta.file,
       node.meta.line
     )
+  end
+
+  defp evaluate_literal_attribute(name, type, value, meta) do
+    case Surface.TypeHandler.attr_to_html(type, name, value) do
+      {:ok, attr} -> attr
+      {:error, message} -> IOHelper.compile_error(message, meta.file, meta.line)
+    end
   end
 
   defp maybe_print_expression(expr, print?, file, line) do
