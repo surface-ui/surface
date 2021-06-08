@@ -1,5 +1,6 @@
 defmodule SurfaceTest do
-  use ExUnit.Case
+  use Surface.ConnCase, async: true
+
   doctest Surface, import: true
 
   import Surface
@@ -85,6 +86,23 @@ defmodule SurfaceTest do
 
     assert_raise(CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
+  end
+
+  test "raise error when using {^...} outside `surface_quote`" do
+    message = "code:2: cannot use tagged expression {^var} outside `surface_quote`"
+
+    code =
+      quote do
+        ~F"""
+        <div>
+          {^content}
+        </div>
+        """
+      end
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
     end)
   end
 end

@@ -96,7 +96,7 @@ defmodule Surface.Compiler do
       file: file,
       caller: caller,
       checks: opts[:checks] || [],
-      variables: opts[:variables] || []
+      variables: opts[:variables]
     }
 
     string
@@ -289,7 +289,8 @@ defmodule Surface.Compiler do
   end
 
   defp convert_node_to_ast(:ast, {_, variable, expr_meta}, compile_meta) do
-    ast = fetch_quoted_value!(compile_meta, variable, expr_meta)
+    meta = Helpers.to_meta(expr_meta, compile_meta)
+    ast = unquote_variable!(variable, compile_meta, meta)
     {:ok, ast}
   end
 
@@ -816,7 +817,8 @@ defmodule Surface.Compiler do
   end
 
   defp attr_value(_name, _type, {:ast, variable, expr_meta}, _attr_meta, compile_meta) do
-    fetch_quoted_value!(compile_meta, variable, expr_meta)
+    meta = Helpers.to_meta(expr_meta, compile_meta)
+    unquote_variable!(variable, compile_meta, meta)
   end
 
   defp attr_value(name, type, value, meta, _compile_meta) do
@@ -1168,20 +1170,45 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp fetch_quoted_value!(compile_meta, variable, expr_meta) do
-    variable =
-      if Regex.match?(~r/^[a-z][a-zA-Z_\d]*$/, variable) do
-        variable
-      else
-        message = """
-        cannot unquote `#{variable}`.
+  defp unquote_variable!(variable, compile_meta, expr_meta) do
+    validate_inside_quote_surface!(compile_meta, expr_meta)
+    validate_variable!(variable, expr_meta)
 
-        The expression to be unquoted must be written as `^var`, where `var` is an existing variable.
-        """
+    case fetch_variable_value!(variable, compile_meta, expr_meta) do
+      value when is_binary(value) or is_boolean(value) or is_integer(value) ->
+        %Surface.AST.Literal{value: value}
 
-        IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
-      end
+      [value] ->
+        value
 
+      value when is_list(value) ->
+        %AST.Container{children: value, meta: expr_meta}
+
+      ast ->
+        ast
+    end
+  end
+
+  defp validate_inside_quote_surface!(compile_meta, expr_meta) do
+    if !compile_meta.variables do
+      message = "cannot use tagged expression {^var} outside `surface_quote`"
+      IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
+    end
+  end
+
+  defp validate_variable!(variable, expr_meta) do
+    if !Regex.match?(~r/^[a-z][a-zA-Z_\d]*$/, variable) do
+      message = """
+      cannot unquote `#{variable}`.
+
+      The expression to be unquoted must be written as `^var`, where `var` is an existing variable.
+      """
+
+      IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
+    end
+  end
+
+  defp fetch_variable_value!(variable, compile_meta, expr_meta) do
     case Keyword.fetch(compile_meta.variables, String.to_atom(variable)) do
       :error ->
         defined_variables = compile_meta.variables |> Keyword.keys() |> Enum.map(&to_string/1)
@@ -1208,17 +1235,8 @@ defmodule Surface.Compiler do
 
         IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
 
-      {:ok, value} when is_binary(value) or is_boolean(value) or is_integer(value) ->
-        %Surface.AST.Literal{value: value}
-
-      {:ok, [value]} ->
+      {:ok, value} ->
         value
-
-      {:ok, value} when is_list(value) ->
-        %AST.Container{children: value, meta: expr_meta}
-
-      {:ok, ast} ->
-        ast
     end
   end
 end
