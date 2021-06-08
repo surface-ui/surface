@@ -79,4 +79,11 @@ defmodule Surface.Compiler.NodeTranslator do
               meta :: Tokenizer.metadata(),
               Parser.state()
             ) :: {result(), Parser.state()}
+
+  @callback handle_tagged_expression(
+              marker :: binary(),
+              expression :: binary(),
+              meta :: Tokenizer.metadata(),
+              Parser.state()
+            ) :: {result(), Parser.state()}
 end

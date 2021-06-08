@@ -5,7 +5,7 @@ defmodule Surface.Compiler.Tokenizer do
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
   @block_name_stop_chars @space_chars ++ '}'
-  @markers ["=", "...", "~", "$"]
+  @markers ["=", "...", "~", "$", "^"]
 
   @ignored_body_tags ["style", "script"]
 

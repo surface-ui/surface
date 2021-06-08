@@ -126,6 +126,53 @@ defmodule Surface do
     )
   end
 
+  @doc """
+  Converts the given code into Surface's AST.
+
+  The code must be passed with the `do` block using the `~F` sigil.
+
+  Optional `line` and `file` metadata can be passed using `opts`.
+
+  ## Example
+
+      iex> [tag] =
+      ...>   quote_surface do
+      ...>     ~F"<div>content</div>"
+      ...>   end
+      ...>
+      ...> tag.children
+      [%Surface.AST.Literal{directives: [], value: "content"}]
+
+  """
+  defmacro quote_surface(opts \\ [], do: block) do
+    {code, sigil_meta, string_meta} =
+      case block do
+        {:sigil_F, sigil_meta, [{:<<>>, string_meta, [code]}, _]} ->
+          {code, sigil_meta, string_meta}
+
+        _ ->
+          message = "the code to be quoted must be wrapped in a `~F` sigil."
+          IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
+      end
+
+    delimiter = Keyword.fetch!(sigil_meta, :delimiter)
+    line_offset = if delimiter == ~S("""), do: 1, else: 0
+    default_line = Keyword.get(sigil_meta, :line) + line_offset
+
+    line = Keyword.get(opts, :line, default_line)
+    file = Keyword.get(opts, :file, __CALLER__.file)
+    indentation = Keyword.get(string_meta, :indentation, 0)
+
+    quote do
+      Surface.Compiler.compile(unquote(code), unquote(line), __ENV__, unquote(file),
+        checks: [no_undefined_assigns: false],
+        indentation: unquote(indentation),
+        column: 1,
+        variables: binding()
+      )
+    end
+  end
+
   @doc "Retrieve a component's config based on the `key`"
   def get_config(component, key) do
     config = get_components_config()
