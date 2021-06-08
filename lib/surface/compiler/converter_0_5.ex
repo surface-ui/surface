@@ -20,9 +20,10 @@ defmodule Surface.Compiler.Converter_0_5 do
   @impl true
   def convert(:expr, text, _state, _opts) do
     if String.starts_with?(text, "{") and String.ends_with?(text, "}") do
-      text
-      |> String.slice(1..-2)
-      |> maybe_trim_one()
+      case Regex.run(~r/^{\s*#\s*(.*?)\s*}$/, text) do
+        [_, comment] -> "!-- #{comment} --"
+        _ -> text |> String.slice(1..-2) |> maybe_trim_one()
+      end
     else
       text
     end

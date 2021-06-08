@@ -398,6 +398,21 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "convert {{# comment }} into {!-- comment --}" do
+    expected =
+      convert("""
+      {{#comment}}
+      {{# comment}}
+      {{ # comment }}
+      """)
+
+    assert expected == """
+           {!-- comment --}
+           {!-- comment --}
+           {!-- comment --}
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
 
   # test "convert slot's :props into :args" do
