@@ -136,7 +136,7 @@ defmodule Surface do
   ## Example
 
       iex> [tag] =
-      ...>   surface_quote do
+      ...>   quote_surface do
       ...>     ~F"<div>content</div>"
       ...>   end
       ...>
@@ -144,7 +144,7 @@ defmodule Surface do
       [%Surface.AST.Literal{directives: [], value: "content"}]
 
   """
-  defmacro surface_quote(opts \\ [], do: block) do
+  defmacro quote_surface(opts \\ [], do: block) do
     {code, sigil_meta, string_meta} =
       case block do
         {:sigil_F, sigil_meta, [{:<<>>, string_meta, [code]}, _]} ->

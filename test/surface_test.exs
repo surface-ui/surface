@@ -5,10 +5,10 @@ defmodule SurfaceTest do
 
   import Surface
 
-  describe "surface_quote" do
+  describe "quote_surface" do
     test "generate AST" do
       [tag] =
-        surface_quote line: 1 do
+        quote_surface line: 1 do
           ~F"<div>content</div>"
         end
 
@@ -21,7 +21,7 @@ defmodule SurfaceTest do
 
     test "using heredocs" do
       [tag | _] =
-        surface_quote line: 1 do
+        quote_surface line: 1 do
           ~F"""
           <div>content</div>
           """
@@ -43,7 +43,7 @@ defmodule SurfaceTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      surface_quote line: 1, file: "code.ex" do
+      quote_surface line: 1, file: "code.ex" do
         ~F"""
         <div>
           {^content}
@@ -61,7 +61,7 @@ defmodule SurfaceTest do
     """
 
     assert_raise(CompileError, message, fn ->
-      surface_quote line: 1, file: "code.ex" do
+      quote_surface line: 1, file: "code.ex" do
         ~F"""
         <div>
           {^to_string(:abc)}
@@ -73,7 +73,7 @@ defmodule SurfaceTest do
 
   test "raise error when not using the ~F sigil" do
     code = """
-    surface_quote do
+    quote_surface do
       "\""
       <div>
         {^to_string(:abc)}
@@ -89,8 +89,8 @@ defmodule SurfaceTest do
     end)
   end
 
-  test "raise error when using {^...} outside `surface_quote`" do
-    message = "code:2: cannot use tagged expression {^var} outside `surface_quote`"
+  test "raise error when using {^...} outside `quote_surface`" do
+    message = "code:2: cannot use tagged expression {^var} outside `quote_surface`"
 
     code =
       quote do

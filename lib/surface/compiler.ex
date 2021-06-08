@@ -1191,7 +1191,7 @@ defmodule Surface.Compiler do
 
   defp validate_inside_quote_surface!(compile_meta, expr_meta) do
     if !compile_meta.variables do
-      message = "cannot use tagged expression {^var} outside `surface_quote`"
+      message = "cannot use tagged expression {^var} outside `quote_surface`"
       IOHelper.compile_error(message, expr_meta.file, expr_meta.line)
     end
   end
