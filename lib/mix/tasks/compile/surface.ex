@@ -68,11 +68,9 @@ defmodule Mix.Tasks.Compile.Surface do
         css_file = "#{base_file}.css"
         dest_css_file = "#{base_name}.css"
 
-        js_files =
-          if File.exists?(js_file), do: [{js_file, dest_js_file} | js_files], else: js_files
+        js_files = if File.exists?(js_file), do: [{js_file, dest_js_file} | js_files], else: js_files
 
-        css_files =
-          if File.exists?(css_file), do: [{css_file, dest_css_file} | css_files], else: css_files
+        css_files = if File.exists?(css_file), do: [{css_file, dest_css_file} | css_files], else: css_files
 
         {js_files, css_files}
     end

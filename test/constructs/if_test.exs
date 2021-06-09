@@ -148,8 +148,7 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message =
-        ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
+      message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -374,8 +373,7 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message =
-        ~S(code:12: invalid value for property "prop". Expected a :list, got: "some string".)
+      message = ~S(code:12: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -460,8 +458,7 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message =
-        ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
+      message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)

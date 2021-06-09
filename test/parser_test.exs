@@ -111,8 +111,7 @@ defmodule Surface.Compiler.ParserTest do
     </div>
     """
 
-    [{"div", _, [_, {:comment, comment, %{visibility: :public}}, _, {"span", _, _, _}, _], _}, _] =
-      parse!(code)
+    [{"div", _, [_, {:comment, comment, %{visibility: :public}}, _, {"span", _, _, _}, _], _}, _] = parse!(code)
 
     assert comment == """
            <!--
@@ -133,8 +132,7 @@ defmodule Surface.Compiler.ParserTest do
     </div>
     """
 
-    [{"div", _, [_, {:comment, comment, %{visibility: :private}}, _, {"span", _, _, _}, _], _}, _] =
-      parse!(code)
+    [{"div", _, [_, {:comment, comment, %{visibility: :private}}, _, {"span", _, _, _}, _], _}, _] = parse!(code)
 
     assert comment == """
            {!--
@@ -178,19 +176,16 @@ defmodule Surface.Compiler.ParserTest do
 
   describe "HTML only" do
     test "single node" do
-      assert [{"foo", [], ["bar"], %{line: 1, file: "nofile", column: 2}}] =
-               parse!("<foo>bar</foo>")
+      assert [{"foo", [], ["bar"], %{line: 1, file: "nofile", column: 2}}] = parse!("<foo>bar</foo>")
     end
 
     test "Elixir node" do
-      assert [{"Foo.Bar", [], ["bar"], %{line: 1, file: "nofile", column: 2}}] =
-               parse!("<Foo.Bar>bar</Foo.Bar>")
+      assert [{"Foo.Bar", [], ["bar"], %{line: 1, file: "nofile", column: 2}}] = parse!("<Foo.Bar>bar</Foo.Bar>")
     end
 
     test "mixed nodes" do
       assert [
-               {"foo", [],
-                ["one", {"bar", [], ["two"], %{line: 1, file: "nofile", column: 10}}, "three"],
+               {"foo", [], ["one", {"bar", [], ["two"], %{line: 1, file: "nofile", column: 10}}, "three"],
                 %{line: 1, file: "nofile", column: 2}}
              ] = parse!("<foo>one<bar>two</bar>three</foo>")
     end
@@ -311,8 +306,7 @@ defmodule Surface.Compiler.ParserTest do
              { {a, {b, c}} <- [{"a", {"b", "c"}}]}
              """) ==
                [
-                 {:expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
-                  %{line: 1, file: "nofile", column: 2}},
+                 {:expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]", %{line: 1, file: "nofile", column: 2}},
                  "\n"
                ]
     end
@@ -525,8 +519,7 @@ defmodule Surface.Compiler.ParserTest do
       </foo>
       """
 
-      assert [{"foo", attributes, children, %{line: 1, file: "nofile", column: 2}}, "\n"] =
-               parse!(code)
+      assert [{"foo", attributes, children, %{line: 1, file: "nofile", column: 2}}, "\n"] = parse!(code)
 
       assert [
                {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
@@ -568,8 +561,7 @@ defmodule Surface.Compiler.ParserTest do
       </#foo>
       """
 
-      assert [{"#foo", attributes, ["\n  bar\n"], %{line: 1, file: "nofile", column: 2}}, "\n"] =
-               parse!(code)
+      assert [{"#foo", attributes, ["\n  bar\n"], %{line: 1, file: "nofile", column: 2}}, "\n"] = parse!(code)
 
       assert attributes == [
                {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
@@ -730,8 +722,7 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       attr_value =
-        {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]",
-         %{line: 1, file: "nofile", column: 11}}
+        {:attribute_expr, " {a, {b, c}} <- [{\"a\", {\"b\", \"c\"}}]", %{line: 1, file: "nofile", column: 11}}
 
       attributes = [
         {":for", attr_value, %{line: 1, file: "nofile", column: 5}}
@@ -754,10 +745,8 @@ defmodule Surface.Compiler.ParserTest do
 
       assert [
                {"id", {:attribute_expr, "id", %{column: 5, line: 2}}, %{column: 4, line: 2}},
-               {"class", {:attribute_expr, "@class", %{column: 5, line: 3}},
-                %{column: 4, line: 3}},
-               {"phx-capture-click",
-                {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
+               {"class", {:attribute_expr, "@class", %{column: 5, line: 3}}, %{column: 4, line: 3}},
+               {"phx-capture-click", {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
                 %{column: 4, line: 4}}
              ] = attributes
     end
@@ -775,10 +764,8 @@ defmodule Surface.Compiler.ParserTest do
 
       assert [
                {"id", {:attribute_expr, "id", %{column: 5, line: 2}}, %{column: 4, line: 2}},
-               {"class", {:attribute_expr, "@class", %{column: 5, line: 3}},
-                %{column: 4, line: 3}},
-               {"phx_capture_click",
-                {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
+               {"class", {:attribute_expr, "@class", %{column: 5, line: 3}}, %{column: 4, line: 3}},
+               {"phx_capture_click", {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
                 %{column: 4, line: 4}}
              ] = attributes
     end
@@ -933,10 +920,8 @@ defmodule Surface.Compiler.ParserTest do
                            %{line: 5, file: "nofile", column: 8}}
                         ],
                         [
-                          {:block, :default, [], ["\n    333\n  "],
-                           %{column: 5, file: "nofile", line: 5}},
-                          {:block, "else", [], ["\n    444\n  "],
-                           %{line: 7, file: "nofile", column: 5}}
+                          {:block, :default, [], ["\n    333\n  "], %{column: 5, file: "nofile", line: 5}},
+                          {:block, "else", [], ["\n    444\n  "], %{line: 7, file: "nofile", column: 5}}
                         ], %{has_sub_blocks?: true, line: 5, file: "nofile", column: 5}},
                        "\n"
                      ], %{line: 3, file: "nofile", column: 3}},
@@ -954,8 +939,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message =
-        "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
+      message = "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
 
       assert %ParseError{message: ^message, line: 2} = exception
     end
@@ -999,8 +983,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message =
-        "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
+      message = "no valid parent node defined for {#else}. Possible parents are \"{#if}\" and \"{#for}\""
 
       assert %ParseError{message: ^message, line: 2} = exception
     end

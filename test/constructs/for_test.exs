@@ -172,8 +172,7 @@ defmodule Surface.Constructs.ForTest do
           """
         end
 
-      message =
-        ~S(code:3: invalid value for property "prop". Expected a :list, got: "some string".)
+      message = ~S(code:3: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)

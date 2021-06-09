@@ -236,8 +236,7 @@ defmodule Surface.PropertiesTest do
           """
         end
 
-      message =
-        ~S(code:1: invalid value for property "prop". Expected a :keyword, got: "some string".)
+      message = ~S(code:1: invalid value for property "prop". Expected a :keyword, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -351,8 +350,7 @@ defmodule Surface.PropertiesTest do
           """
         end
 
-      message =
-        ~S(code:1: invalid value for property "prop". Expected a :map, got: "some string".)
+      message = ~S(code:1: invalid value for property "prop". Expected a :map, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -504,8 +502,7 @@ defmodule Surface.PropertiesTest do
           """
         end
 
-      message =
-        ~S(code:1: invalid value for property "prop". Expected a :list, got: "some string".)
+      message = ~S(code:1: invalid value for property "prop". Expected a :list, got: "some string".)
 
       assert_raise(CompileError, message, fn ->
         compile_surface(code)
@@ -691,8 +688,7 @@ defmodule Surface.PropertiesSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~r"""
@@ -722,8 +718,7 @@ defmodule Surface.PropertiesSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~r"""
@@ -762,8 +757,7 @@ defmodule Surface.PropertiesSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~r"""
@@ -804,8 +798,7 @@ defmodule Surface.PropertiesSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~S"""

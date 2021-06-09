@@ -945,8 +945,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ "stateful live components must have a single HTML root element"
@@ -978,8 +977,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output == ""
@@ -1010,8 +1008,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output == ""
@@ -1034,8 +1031,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ "stateful live components must have a HTML root element"
@@ -1069,8 +1065,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ """
@@ -1110,8 +1105,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ "stateful live components must have a HTML root element"
@@ -1143,8 +1137,7 @@ defmodule Surface.CompilerSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ """

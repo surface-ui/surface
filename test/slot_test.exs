@@ -1113,8 +1113,7 @@ defmodule Surface.SlotSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~r"""
@@ -1167,8 +1166,7 @@ defmodule Surface.SlotSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~r"""
@@ -1230,8 +1228,7 @@ defmodule Surface.SlotSyncTest do
 
     output =
       capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
 
     assert output =~ ~r"""

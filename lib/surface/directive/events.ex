@@ -48,8 +48,7 @@ defmodule Surface.Directive.Events do
     value =
       quote generated: true do
         [
-          {unquote("phx-#{event_name}"),
-           {:string, unquote(__MODULE__).event_name(unquote(value))}},
+          {unquote("phx-#{event_name}"), {:string, unquote(__MODULE__).event_name(unquote(value))}},
           "phx-target": {:string, unquote(__MODULE__).event_target(unquote(value), unquote(cid))}
         ]
       end

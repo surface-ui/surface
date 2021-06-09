@@ -29,8 +29,7 @@ defmodule Surface.APITest do
   test "validate options" do
     code = "prop label, :string, {:a, :b}"
 
-    message =
-      ~r/invalid options for prop label. Expected a keyword list of options, got: {:a, :b}/
+    message = ~r/invalid options for prop label. Expected a keyword list of options, got: {:a, :b}/
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
@@ -313,8 +312,7 @@ defmodule Surface.APITest do
     end
 
     test "common type options" do
-      code =
-        "prop count, :integer, required: false, default: [], values: [0, 1, 2], accumulate: true"
+      code = "prop count, :integer, required: false, default: [], values: [0, 1, 2], accumulate: true"
 
       assert {:ok, _} = eval(code)
     end
@@ -388,8 +386,7 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
 
@@ -415,8 +412,7 @@ defmodule Surface.APITest do
       """
 
       assert_raise(CompileError, message, fn ->
-        {{:module, _, _, _}, _} =
-          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
   end
@@ -616,8 +612,7 @@ defmodule Surface.APISyncTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
       assert output =~ ~r"""
@@ -645,8 +640,7 @@ defmodule Surface.APISyncTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
       assert output =~ ~r"""
@@ -677,8 +671,7 @@ defmodule Surface.APISyncTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
       assert output =~ ~r"""
@@ -706,8 +699,7 @@ defmodule Surface.APISyncTest do
 
       output =
         capture_io(:standard_error, fn ->
-          {{:module, _, _, _}, _} =
-            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+          {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
       assert output =~ ~r"""
@@ -741,8 +733,7 @@ defmodule Surface.APISyncTest do
       output =
         capture_io(:standard_error, fn ->
           assert_raise(CompileError, error_message, fn ->
-            {{:module, _, _, _}, _} =
-              Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+            {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
           end)
         end)
 

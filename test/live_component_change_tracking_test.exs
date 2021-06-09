@@ -58,8 +58,7 @@ defmodule LiveComponentChangeTrackingTest do
   end
 
   test "passing the `assigns` map directly disables per-assign change tracking" do
-    {:ok, view, html} =
-      live_isolated(build_conn(), ViewPassingAssignsMap, session: %{"test_pid" => self()})
+    {:ok, view, html} = live_isolated(build_conn(), ViewPassingAssignsMap, session: %{"test_pid" => self()})
 
     assert_receive {:updated, _}
     assert html =~ "Count: 0"
@@ -70,8 +69,7 @@ defmodule LiveComponentChangeTrackingTest do
   end
 
   test "passing data as props works with change tracking" do
-    {:ok, view, html} =
-      live_isolated(build_conn(), ViewPassingDataAsProp, session: %{"test_pid" => self()})
+    {:ok, view, html} = live_isolated(build_conn(), ViewPassingDataAsProp, session: %{"test_pid" => self()})
 
     assert_receive {:updated, _}
     assert html =~ "Count: 0"

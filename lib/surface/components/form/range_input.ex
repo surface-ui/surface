@@ -34,8 +34,7 @@ defmodule Surface.Components.Form.RangeInput do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
 
-    attr_opts =
-      props_to_attr_opts(assigns, [:value, :min, :max, :step, class: get_config(:default_class)])
+    attr_opts = props_to_attr_opts(assigns, [:value, :min, :max, :step, class: get_config(:default_class)])
 
     event_opts = events_to_opts(assigns)
 

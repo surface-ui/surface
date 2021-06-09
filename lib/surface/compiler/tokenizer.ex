@@ -96,8 +96,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_text("<!--" <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
 
-    {new_rest, new_line, new_column, new_buffer} =
-      handle_comment(rest, line, column + 4, ["<!--"], state)
+    {new_rest, new_line, new_column, new_buffer} = handle_comment(rest, line, column + 4, ["<!--"], state)
 
     comment = buffer_to_string(new_buffer)
 
@@ -116,8 +115,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_text("{!--" <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
 
-    {new_rest, new_line, new_column, new_buffer} =
-      handle_private_comment(rest, line, column + 4, ["{!--"], state)
+    {new_rest, new_line, new_column, new_buffer} = handle_private_comment(rest, line, column + 4, ["{!--"], state)
 
     comment = buffer_to_string(new_buffer)
 
@@ -168,13 +166,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_block_open(text, line, column, acc, state) do
     case handle_block_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+        meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
 
         {new_rest, new_line, new_column} = ignore_spaces(rest, line, new_column, state)
         acc = [{:block_open, name, nil, meta} | acc]
@@ -190,13 +182,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_block_close(text, line, column, acc, state) do
     case handle_block_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+        meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
 
         acc = [{:block_close, name, meta} | acc]
         handle_block_close_end(rest, line, new_column, acc, state)
@@ -216,13 +202,11 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_block_name
 
-  defp handle_block_name(<<c::utf8, _rest::binary>>, _column, [])
-       when c in @block_name_stop_chars do
+  defp handle_block_name(<<c::utf8, _rest::binary>>, _column, []) when c in @block_name_stop_chars do
     {:error, "expected block name"}
   end
 
-  defp handle_block_name(<<c::utf8, _rest::binary>> = text, column, buffer)
-       when c in @block_name_stop_chars do
+  defp handle_block_name(<<c::utf8, _rest::binary>> = text, column, buffer) when c in @block_name_stop_chars do
     {:ok, buffer_to_string(buffer), column, text}
   end
 
@@ -325,23 +309,10 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_maybe_macro_close_tag
 
-  defp handle_maybe_macro_close_tag(
-         text,
-         line,
-         column,
-         buffer,
-         [{:tag_open, macro_name, _, _} | _] = acc,
-         state
-       ) do
+  defp handle_maybe_macro_close_tag(text, line, column, buffer, [{:tag_open, tag_name, _, _} | _] = acc, state) do
     case handle_tag_name(text, column, []) do
-      {:ok, name, new_column, rest} when name == macro_name ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+      {:ok, name, new_column, rest} when name == tag_name ->
+        meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
 
         acc = text_to_acc(buffer, acc)
         acc = [{:tag_close, name, meta} | acc]
@@ -356,14 +327,7 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_ignored_body
 
   defp handle_ignored_body("\r\n" <> rest, line, _column, buffer, acc, state) do
-    handle_ignored_body(
-      rest,
-      line + 1,
-      state.column_offset,
-      ["\r\n" | buffer],
-      acc,
-      state
-    )
+    handle_ignored_body(rest, line + 1, state.column_offset, ["\r\n" | buffer], acc, state)
   end
 
   defp handle_ignored_body("\n" <> rest, line, _column, buffer, acc, state) do
@@ -413,13 +377,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_tag_close(text, line, column, acc, state) do
     case handle_tag_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+        meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
 
         acc = [{:tag_close, name, meta} | acc]
         handle_tag_close_end(rest, line, new_column, acc, state)
@@ -439,13 +397,11 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_tag_name
 
-  defp handle_tag_name(<<c::utf8, _rest::binary>>, _column, _buffer = [])
-       when c in @name_stop_chars do
+  defp handle_tag_name(<<c::utf8, _rest::binary>>, _column, _buffer = []) when c in @name_stop_chars do
     {:error, "expected tag name"}
   end
 
-  defp handle_tag_name(<<c::utf8, _rest::binary>> = text, column, buffer)
-       when c in @name_stop_chars do
+  defp handle_tag_name(<<c::utf8, _rest::binary>> = text, column, buffer) when c in @name_stop_chars do
     {:ok, buffer_to_string(buffer), column, text}
   end
 
@@ -463,8 +419,7 @@ defmodule Surface.Compiler.Tokenizer do
     handle_maybe_tag_open_end(rest, line + 1, state.column_offset, acc, state)
   end
 
-  defp handle_maybe_tag_open_end(<<c::utf8, rest::binary>>, line, column, acc, state)
-       when c in @space_chars do
+  defp handle_maybe_tag_open_end(<<c::utf8, rest::binary>>, line, column, acc, state) when c in @space_chars do
     handle_maybe_tag_open_end(rest, line, column + 1, acc, state)
   end
 
@@ -519,13 +474,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_maybe_tag_open_end("{" <> rest, line, column, acc, state) do
     {expr, new_line, new_column, rest} = handle_expression(rest, line, column + 1, state)
 
-    meta = %{
-      line: line,
-      column: column,
-      line_end: new_line,
-      column_end: new_column,
-      file: state.file
-    }
+    meta = %{line: line, column: column, line_end: new_line, column_end: new_column, file: state.file}
 
     acc = put_attr(acc, :root, expr, meta)
     handle_maybe_tag_open_end(rest, new_line, new_column, acc, state)
@@ -544,13 +493,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_attribute(text, line, column, acc, state) do
     case handle_attr_name(text, column, []) do
       {:ok, name, new_column, rest} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: line,
-          column_end: new_column,
-          file: state.file
-        }
+        meta = %{line: line, column: column, line_end: line, column_end: new_column, file: state.file}
 
         acc = put_attr(acc, name, nil, meta)
         handle_maybe_attr_value(rest, line, new_column, acc, state)
@@ -562,13 +505,11 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_attr_name
 
-  defp handle_attr_name(<<c::utf8, _rest::binary>>, _column, [])
-       when c in @name_stop_chars do
+  defp handle_attr_name(<<c::utf8, _rest::binary>>, _column, []) when c in @name_stop_chars do
     {:error, "expected attribute name"}
   end
 
-  defp handle_attr_name(<<c::utf8, _rest::binary>> = text, column, buffer)
-       when c in @name_stop_chars do
+  defp handle_attr_name(<<c::utf8, _rest::binary>> = text, column, buffer) when c in @name_stop_chars do
     {:ok, buffer_to_string(buffer), column, text}
   end
 
@@ -586,8 +527,7 @@ defmodule Surface.Compiler.Tokenizer do
     handle_maybe_attr_value(rest, line + 1, state.column_offset, acc, state)
   end
 
-  defp handle_maybe_attr_value(<<c::utf8, rest::binary>>, line, column, acc, state)
-       when c in @space_chars do
+  defp handle_maybe_attr_value(<<c::utf8, rest::binary>>, line, column, acc, state) when c in @space_chars do
     handle_maybe_attr_value(rest, line, column + 1, acc, state)
   end
 
@@ -609,8 +549,7 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_begin(rest, line + 1, state.column_offset, acc, state)
   end
 
-  defp handle_attr_value_begin(<<c::utf8, rest::binary>>, line, column, acc, state)
-       when c in @space_chars do
+  defp handle_attr_value_begin(<<c::utf8, rest::binary>>, line, column, acc, state) when c in @space_chars do
     handle_attr_value_begin(rest, line, column + 1, acc, state)
   end
 
@@ -663,14 +602,7 @@ defmodule Surface.Compiler.Tokenizer do
     handle_attr_value_double_quote(rest, line, column + 2, ["{{" | buffer], acc, state)
   end
 
-  defp handle_attr_value_double_quote(
-         "\"" <> rest,
-         line,
-         column,
-         buffer,
-         acc,
-         %{embedded_expr?: true} = state
-       ) do
+  defp handle_attr_value_double_quote("\"" <> rest, line, column, buffer, acc, %{embedded_expr?: true} = state) do
     handle_attr_value_double_quote(rest, line, column + 1, ["\"" | buffer], acc, state)
   end
 
@@ -762,16 +694,9 @@ defmodule Surface.Compiler.Tokenizer do
       marker = unquote(marker)
       marker_column_end = column + String.length(marker)
 
-      meta = %{
-        line: line,
-        column: column,
-        line_end: line,
-        column_end: marker_column_end,
-        file: state.file
-      }
+      meta = %{line: line, column: column, line_end: line, column_end: marker_column_end, file: state.file}
 
-      {rest, line_after_spaces, column_after_spaces} =
-        ignore_spaces(rest, line, marker_column_end, state)
+      {rest, line_after_spaces, column_after_spaces} = ignore_spaces(rest, line, marker_column_end, state)
 
       case handle_expression_value(rest, line_after_spaces, column_after_spaces, state) do
         {:ok, {:expr, value, expr_meta}, new_line, new_column, rest, _state} ->
@@ -815,14 +740,7 @@ defmodule Surface.Compiler.Tokenizer do
   defp handle_expression_value(text, line, column, state) do
     case handle_expression_value_end(text, line, column, [], state) do
       {:ok, value, new_line, new_column, rest, state} ->
-        meta = %{
-          line: line,
-          column: column,
-          line_end: new_line,
-          column_end: new_column - 1,
-          file: state.file
-        }
-
+        meta = %{line: line, column: column, line_end: new_line, column_end: new_column - 1, file: state.file}
         {:ok, {:expr, value, meta}, new_line, new_column, rest, state}
 
       error ->
@@ -879,8 +797,7 @@ defmodule Surface.Compiler.Tokenizer do
     ignore_spaces(rest, line + 1, state.column_offset, state)
   end
 
-  defp ignore_spaces(<<c::utf8, rest::binary>>, line, column, state)
-       when c in @space_chars do
+  defp ignore_spaces(<<c::utf8, rest::binary>>, line, column, state) when c in @space_chars do
     ignore_spaces(rest, line, column + 1, state)
   end
 

@@ -102,10 +102,7 @@ defmodule Surface.Components.Form.LabelTest do
 
       assert html =~ ~r[<label for="test_key">(.*)Key(.*)</label>]s
 
-      html =
-        render_surface(
-          do: ~F[<Label form={:search} field={:key} class="foo" opts={for: "test_key"} />]
-        )
+      html = render_surface(do: ~F[<Label form={:search} field={:key} class="foo" opts={for: "test_key"} />])
 
       assert html =~ ~r[<label class="foo" for="test_key">(.*)Key(.*)</label>]s
     end
@@ -114,10 +111,7 @@ defmodule Surface.Components.Form.LabelTest do
       html = render_surface(do: ~F[<Label text="Search" form={:search} field={:key} />])
       assert html =~ ~r[<label for="search_key">(.*)Search(.*)</label>]s
 
-      html =
-        render_surface(
-          do: ~F[<Label text="Search" form={:search} field={:key} opts={for: "test_key"} />]
-        )
+      html = render_surface(do: ~F[<Label text="Search" form={:search} field={:key} opts={for: "test_key"} />])
 
       assert html =~ ~r[<label for="test_key">(.*)Search(.*)</label>]s
 
@@ -162,10 +156,7 @@ defmodule Surface.Components.Form.LabelTest do
     end
 
     test "with field and inline safe content" do
-      html =
-        render_surface(
-          do: ~F[<Label text={{:safe, "<em>Search</em>"}} form={:search} field={:key} />]
-        )
+      html = render_surface(do: ~F[<Label text={{:safe, "<em>Search</em>"}} form={:search} field={:key} />])
 
       assert html =~ ~r[<label for="search_key">(.*)<em>Search</em>(.*)</label>]s
     end

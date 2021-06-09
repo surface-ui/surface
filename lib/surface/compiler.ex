@@ -134,10 +134,7 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_stateful_component(
-         ast,
-         %CompileMeta{caller: %{function: {:render, _}}} = compile_meta
-       ) do
+  defp validate_stateful_component(ast, %CompileMeta{caller: %{function: {:render, _}}} = compile_meta) do
     num_tags =
       ast
       |> Enum.filter(fn
@@ -294,26 +291,12 @@ defmodule Surface.Compiler do
     {:ok, ast}
   end
 
-  defp convert_node_to_ast(
-         :else,
-         {:block, _name, _expr, children, node_meta},
-         compile_meta
-       ) do
+  defp convert_node_to_ast(:else, {:block, _name, _expr, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
-
-    {:ok,
-     %AST.Container{
-       children: to_ast(children, compile_meta),
-       meta: meta,
-       directives: []
-     }}
+    {:ok, %AST.Container{children: to_ast(children, compile_meta), meta: meta, directives: []}}
   end
 
-  defp convert_node_to_ast(
-         :if_elseif_else,
-         {:block, _name, attributes, children, node_meta},
-         compile_meta
-       ) do
+  defp convert_node_to_ast(:if_elseif_else, {:block, _name, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = AST.AttributeExpr.new(false, "", node_meta)
     condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
@@ -366,11 +349,7 @@ defmodule Surface.Compiler do
      }}
   end
 
-  defp convert_node_to_ast(
-         :unless,
-         {:block, _name, attributes, children, node_meta},
-         compile_meta
-       ) do
+  defp convert_node_to_ast(:unless, {:block, _name, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = AST.AttributeExpr.new(false, "", meta)
     condition = attribute_value_as_ast(attributes, :root, default, compile_meta)
@@ -384,11 +363,7 @@ defmodule Surface.Compiler do
      }}
   end
 
-  defp convert_node_to_ast(
-         :for_else,
-         {:block, _name, attributes, children, node_meta},
-         compile_meta
-       ) do
+  defp convert_node_to_ast(:for_else, {:block, _name, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     default = AST.AttributeExpr.new(false, "", meta)
     generator = attribute_value_as_ast(attributes, :root, :generator, default, compile_meta)
@@ -437,11 +412,7 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(
-         :template,
-         {name, attributes, children, node_meta},
-         compile_meta
-       ) do
+  defp convert_node_to_ast(:template, {name, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, directives, attributes} <-
@@ -471,8 +442,7 @@ defmodule Surface.Compiler do
     name = attribute_value(attributes, "name", :default)
     short_slot_syntax? = not has_attribute?(attributes, "name")
 
-    index =
-      attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
+    index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
     with {:ok, directives, _attrs} <-
            collect_directives(@slot_directive_handlers, attributes, meta),
@@ -608,11 +578,7 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(
-         :macro_component,
-         {"#" <> name, attributes, children, node_meta},
-         compile_meta
-       ) do
+  defp convert_node_to_ast(:macro_component, {"#" <> name, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     mod = Helpers.actual_component_module!(name, meta.caller)
     meta = Map.merge(meta, %{module: mod, node_alias: name})
@@ -624,8 +590,6 @@ defmodule Surface.Compiler do
            collect_directives(@meta_component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta, compile_meta),
          :ok <- validate_properties(mod, attributes, directives, meta) do
-      expanded = mod.expand(attributes, children, meta)
-
       compile_dep_expr = %AST.Expr{
         value:
           quote generated: true, line: meta.line do
@@ -634,17 +598,13 @@ defmodule Surface.Compiler do
         meta: meta
       }
 
-      {:ok,
-       %AST.Container{
-         children: [compile_dep_expr | List.wrap(expanded)],
-         directives: directives,
-         meta: meta
-       }}
+      expanded_children = mod.expand(attributes, children, meta)
+      children_with_dep = [compile_dep_expr | List.wrap(expanded_children)]
+
+      {:ok, %AST.Container{children: children_with_dep, directives: directives, meta: meta}}
     else
       false ->
-        {:error,
-         {"cannot render <#{name}> (MacroComponents must export an expand/3 function)",
-          meta.line}, meta}
+        {:error, {"cannot render <#{name}> (MacroComponents must export an expand/3 function)", meta.line}, meta}
 
       {:error, message, details} ->
         {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
@@ -828,8 +788,7 @@ defmodule Surface.Compiler do
   defp validate_tag_children([]), do: :ok
 
   defp validate_tag_children([%AST.Template{name: name} | _]) do
-    {:error,
-     "templates are only allowed as children elements of components, but found template for #{name}"}
+    {:error, "templates are only allowed as children elements of components, but found template for #{name}"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
@@ -1034,13 +993,7 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp raise_missing_slot_error!(
-         module,
-         slot_name,
-         meta,
-         _defined_slots,
-         true = _short_syntax?
-       ) do
+  defp raise_missing_slot_error!(module, slot_name, meta, _defined_slots, true = _short_syntax?) do
     message = """
     no slot `#{slot_name}` defined in the component `#{inspect(module)}`
 
@@ -1050,13 +1003,7 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, meta.file, meta.line)
   end
 
-  defp raise_missing_slot_error!(
-         module,
-         slot_name,
-         meta,
-         defined_slots,
-         false = _short_syntax?
-       ) do
+  defp raise_missing_slot_error!(module, slot_name, meta, defined_slots, false = _short_syntax?) do
     defined_slot_names = Enum.map(defined_slots, & &1.name)
     similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
     existing_slots_message = existing_slots_message(defined_slot_names)

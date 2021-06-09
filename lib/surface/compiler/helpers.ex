@@ -64,8 +64,7 @@ defmodule Surface.Compiler.Helpers do
     builtin_assigns = builtin_assigns_by_type(component_type)
     undefined_assigns = Keyword.drop(used_assigns, builtin_assigns ++ defined_assigns)
 
-    available_assigns =
-      Enum.map_join(defined_assigns, ", ", fn name -> "@" <> to_string(name) end)
+    available_assigns = Enum.map_join(defined_assigns, ", ", fn name -> "@" <> to_string(name) end)
 
     assign_message =
       if Enum.empty?(defined_assigns),

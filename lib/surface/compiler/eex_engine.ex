@@ -85,8 +85,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Expr{value: expr}, _buffer, _state), do: {:__block__, [], [expr]}
 
   defp to_expression(
-         %AST.For{generator: %AST.AttributeExpr{value: generator}, children: children} =
-           comprehension,
+         %AST.For{generator: %AST.AttributeExpr{value: generator}, children: children} = comprehension,
          buffer,
          state
        ) do
@@ -813,9 +812,7 @@ defmodule Surface.Compiler.EExEngine do
        ]) do
     value =
       quote generated: true do
-        Phoenix.HTML.raw(
-          Surface.TypeHandler.attr_to_html!(unquote(type), unquote(name), unquote(expr_value))
-        )
+        Phoenix.HTML.raw(Surface.TypeHandler.attr_to_html!(unquote(type), unquote(name), unquote(expr_value)))
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]

@@ -120,8 +120,7 @@ defmodule Surface.Compiler.TokenizerTest do
 
       assert tokens == [
                {:text, "before"},
-               {:expr, "func({1, 3})",
-                %{column: 8, line: 1, column_end: 20, line_end: 1, file: "nofile"}},
+               {:expr, "func({1, 3})", %{column: 8, line: 1, column_end: 20, line_end: 1, file: "nofile"}},
                {:text, "after"}
              ]
     end
@@ -154,8 +153,7 @@ defmodule Surface.Compiler.TokenizerTest do
       tokens = tokenize!("{#if x > 0}")
 
       assert [
-               {:block_open, "if",
-                {:expr, "x > 0", %{line: 1, column: 6, line_end: 1, column_end: 11}},
+               {:block_open, "if", {:expr, "x > 0", %{line: 1, column: 6, line_end: 1, column_end: 11}},
                 %{line: 1, column: 3, line_end: 1, column_end: 5}}
              ] = tokens
     end
@@ -169,8 +167,7 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:block_open, "if",
-                {:expr, "x >\n    0  ", %{line: 2, column: 3, line_end: 3, column_end: 8}},
+               {:block_open, "if", {:expr, "x >\n    0  ", %{line: 2, column: 3, line_end: 3, column_end: 8}},
                 %{line: 1, column: 3, line_end: 1, column_end: 5}}
              ] = tokens
     end
@@ -343,32 +340,28 @@ defmodule Surface.Compiler.TokenizerTest do
       tokens = tokenize!("{=@class}")
 
       assert [
-               {:tagged_expr, "=",
-                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+               {:tagged_expr, "=", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
                 %{line: 1, column: 2, line_end: 1, column_end: 3}}
              ] = tokens
 
       tokens = tokenize!("{~@class}")
 
       assert [
-               {:tagged_expr, "~",
-                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+               {:tagged_expr, "~", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
                 %{line: 1, column: 2, line_end: 1, column_end: 3}}
              ] = tokens
 
       tokens = tokenize!("{$@class}")
 
       assert [
-               {:tagged_expr, "$",
-                {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
+               {:tagged_expr, "$", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
                 %{line: 1, column: 2, line_end: 1, column_end: 3}}
              ] = tokens
 
       tokens = tokenize!("{...@attrs}")
 
       assert [
-               {:tagged_expr, "...",
-                {:expr, "@attrs", %{line: 1, column: 5, line_end: 1, column_end: 11}},
+               {:tagged_expr, "...", {:expr, "@attrs", %{line: 1, column: 5, line_end: 1, column_end: 11}},
                 %{line: 1, column: 2, line_end: 1, column_end: 5}}
              ] = tokens
     end
@@ -382,8 +375,7 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tagged_expr, "=",
-                {:expr, "@class\n", %{line: 2, column: 3, line_end: 3, column_end: 1}},
+               {:tagged_expr, "=", {:expr, "@class\n", %{line: 2, column: 3, line_end: 3, column_end: 1}},
                 %{line: 1, column: 2, line_end: 1, column_end: 3}}
              ] = tokens
     end
@@ -424,10 +416,8 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {"class", {:string, "panel", %{}},
-                %{line: 2, column: 3, line_end: 2, column_end: 8}},
-               {"style", {:expr, "@style", %{}},
-                %{line: 3, column: 3, line_end: 3, column_end: 8}},
+               {"class", {:string, "panel", %{}}, %{line: 2, column: 3, line_end: 2, column_end: 8}},
+               {"style", {:expr, "@style", %{}}, %{line: 3, column: 3, line_end: 3, column_end: 8}},
                {"hidden", nil, %{line: 3, column: 18, line_end: 3, column_end: 24}}
              ] = attrs
     end
@@ -568,8 +558,7 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}],
-                %{}},
+               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}], %{}},
                {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
     end
@@ -629,8 +618,7 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}],
-                %{}},
+               {:tag_open, "div", [{"title", {:string, "first\n  second\nthird", _meta}, %{}}], %{}},
                {:tag_open, "span", [], %{line: 3, column: 9}}
              ] = tokens
     end
@@ -675,10 +663,8 @@ defmodule Surface.Compiler.TokenizerTest do
         """)
 
       assert [
-               {"disabled",
-                {_, _, %{delimiter: nil, column: 12, column_end: 16, line: 2, line_end: 2}}, %{}},
-               {"hidden",
-                {_, _, %{delimiter: nil, column: 10, column_end: 15, line: 3, line_end: 3}}, %{}}
+               {"disabled", {_, _, %{delimiter: nil, column: 12, column_end: 16, line: 2, line_end: 2}}, %{}},
+               {"hidden", {_, _, %{delimiter: nil, column: 10, column_end: 15, line: 3, line_end: 3}}, %{}}
              ] = attrs
     end
   end
@@ -760,8 +746,7 @@ defmodule Surface.Compiler.TokenizerTest do
       assert [
                {
                  "title",
-                 {:tagged_expr, "~",
-                  {:expr, "\"My title\"", %{column: 14, line: 1, column_end: 24, line_end: 1}},
+                 {:tagged_expr, "~", {:expr, "\"My title\"", %{column: 14, line: 1, column_end: 24, line_end: 1}},
                   %{column: 13, line: 1, column_end: 14, line_end: 1}},
                  %{column: 6, column_end: 11, line: 1, line_end: 1}
                }
@@ -837,8 +822,7 @@ defmodule Surface.Compiler.TokenizerTest do
                {:root, {:expr, "\n      @root2\n    ", %{line: 3, column: 6}}, %{}},
                {:root, {:expr, "@root3", %{line: 6, column: 4}}, %{}},
                {:root,
-                {:tagged_expr, "...",
-                 {:expr, "@attrs", %{line: 7, column: 7, line_end: 7, column_end: 13}},
+                {:tagged_expr, "...", {:expr, "@attrs", %{line: 7, column: 7, line_end: 7, column_end: 13}},
                  %{line: 7, column: 4, line_end: 7, column_end: 7}}, %{}}
              ] = attrs
     end
