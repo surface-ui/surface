@@ -1,4 +1,4 @@
-defmodule LiveComponentTest do
+defmodule Surface.LiveComponentTest do
   use Surface.ConnCase, async: true
 
   defmodule StatelessComponent do
@@ -36,7 +36,6 @@ defmodule LiveComponentTest do
 
   defmodule View do
     use Surface.LiveView
-    alias LiveComponentTest.StatelessComponent
 
     data label, :string, default: "Initial stateless"
 

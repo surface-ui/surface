@@ -1,4 +1,5 @@
-defmodule LiveViewTest do
+# Naming it as Surface.LiveView.LiveViewTest to avoid conflict with existing Surface.LiveViewTest
+defmodule Surface.LiveView.LiveViewTest do
   use Surface.ConnCase, async: true
 
   defmodule LiveViewDataWithoutDefault do
