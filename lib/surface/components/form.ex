@@ -14,6 +14,7 @@ defmodule Surface.Components.Form do
   use Surface.Component
 
   import Phoenix.HTML.Form
+  import Surface.Components.Utils, only: [opts_to_phx_opts: 1]
   import Surface.Components.Form.Utils, only: [props_to_opts: 2, props_to_attr_opts: 2]
 
   @doc "Atom or changeset to inform the form data"
@@ -36,6 +37,14 @@ defmodule Surface.Components.Form do
   tag with name _csrf_token. When set to false, this is disabled.
   """
   prop csrf_token, :any
+
+  @doc """
+  Trigger a standard form submit on DOM patch to the URL specified in the form's standard action
+  attribute.
+  This is useful to perform pre-final validation of a LiveView form submit before posting to a
+  controller route for operations that require Plug session mutation.
+  """
+  prop trigger_action, :boolean
 
   @doc "Keyword list of errors for the form."
   prop errors, :keyword
@@ -74,7 +83,11 @@ defmodule Surface.Components.Form do
 
   defp get_opts(assigns) do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
-    form_opts = props_to_opts(assigns, [:as, :method, :multipart, :csrf_token, :errors])
+
+    form_opts =
+      assigns
+      |> props_to_opts([:as, :method, :multipart, :csrf_token, :errors, :trigger_action])
+      |> opts_to_phx_opts()
 
     form_opts ++
       attr_opts ++

@@ -192,6 +192,14 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ ~r/class="form form-user"/
   end
+
+  test "setting the trigger_action" do
+    html = render_surface(do: ~F[<Form for={:user} />])
+    refute html =~ ~r/phx-trigger-action/
+
+    html = render_surface(do: ~F[<Form for={:user} trigger_action={true} />])
+    assert html =~ ~r/phx-trigger-action/
+  end
 end
 
 defmodule Surface.Components.Form.FormTestConfigTest do
