@@ -21,7 +21,7 @@ defmodule Surface.CompilerTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div><#slot /></div>
       """
     end
@@ -30,13 +30,13 @@ defmodule Surface.CompilerTest do
   defmodule Button do
     use Surface.Component
 
-    prop label, :string, default: ""
+    prop label, :string, default: "", root: true
     prop click, :event
     prop class, :css_class
     prop disabled, :boolean
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <button />
       """
     end
@@ -60,7 +60,7 @@ defmodule Surface.CompilerTest do
     slot cols, props: [item: ^items]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       """
     end
   end
@@ -73,7 +73,7 @@ defmodule Surface.CompilerTest do
     slot cols
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div></div>
       """
     end
@@ -83,15 +83,34 @@ defmodule Surface.CompilerTest do
     use Surface.LiveView
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       """
     end
   end
 
-  test "ignore comments" do
+  test "show public comments" do
     code = """
     <br>
     <!-- comment -->
+    <hr>
+    """
+
+    nodes = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert [
+             %Surface.AST.VoidTag{element: "br"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.Literal{value: "<!-- comment -->"},
+             %Surface.AST.Literal{value: "\n"},
+             %Surface.AST.VoidTag{element: "hr"},
+             %Surface.AST.Literal{value: "\n"}
+           ] = nodes
+  end
+
+  test "hide private comments" do
+    code = """
+    <br>
+    {!-- comment --}
     <hr>
     """
 
@@ -200,6 +219,27 @@ defmodule Surface.CompilerTest do
                  name: :label,
                  type: :string,
                  value: %Surface.AST.Literal{value: ""}
+               }
+             ]
+           } = node
+  end
+
+  test "component with root property" do
+    code = """
+    <Button {"click"} />
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Component{
+             module: Surface.CompilerTest.Button,
+             props: [
+               %Surface.AST.Attribute{
+                 name: :label,
+                 type: :string,
+                 value: %Surface.AST.AttributeExpr{
+                   original: "\"click\""
+                 }
                }
              ]
            } = node
@@ -476,50 +516,29 @@ defmodule Surface.CompilerTest do
                ]
              } = node
     end
-
-    test "#raw is treated as a Literal" do
-      code = """
-      <div>
-        <#raw>
-          I am a macro
-        </#raw>
-      </div>
-      """
-
-      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
-
-      assert %Surface.AST.Tag{
-               element: "div",
-               children: [
-                 %Surface.AST.Literal{value: "\n  "},
-                 %Surface.AST.Literal{value: "\n    I am a macro\n  "},
-                 %Surface.AST.Literal{value: "\n"}
-               ]
-             } = node
-    end
   end
 
   describe "constructs" do
     test "#if/#elseif/#else" do
       code = """
       <div>
-        <#if condition={false}>
+        {#if false}
           IF
-        <#elseif condition={false}>
+        {#elseif false}
           ELSEIF FALSE
-        <#elseif condition={true}>
+        {#elseif true}
           BEFORE
-          <#if condition={false}>
+          {#if false}
             NESTED IF
-          <#elseif condition={true}>
+          {#elseif true}
             NESTED ELSEIF TRUE
-          <#else>
+          {#else}
             NESTED ELSE
-          </#if>
+          {/if}
           AFTER
-        <#else>
+        {#else}
           ELSE
-        </#if>
+        {/if}
       </div>
       """
 
@@ -580,6 +599,33 @@ defmodule Surface.CompilerTest do
                ]
              } = node
     end
+  end
+
+  test "#unless" do
+    code = """
+    <div>
+      {#unless false}
+        UNLESS
+      {/unless}
+    </div>
+    """
+
+    [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+
+    assert %Surface.AST.Tag{
+             element: "div",
+             children: [
+               %Surface.AST.Literal{value: "\n  "},
+               %Surface.AST.If{
+                 children: [],
+                 condition: %Surface.AST.AttributeExpr{original: "false"},
+                 else: [
+                   %Surface.AST.Literal{value: "\n    UNLESS\n  "}
+                 ]
+               },
+               %Surface.AST.Literal{value: "\n"}
+             ]
+           } = node
   end
 
   describe "errors/warnings" do
@@ -693,9 +739,9 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-            passing unquoted attribute values has been deprecated and will be removed in future versions.
+           passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `tabindex=1` with `tabindex={1}`
+           Hint: replace `tabindex=1` with `tabindex={1}`
            """
 
     assert line == 2
@@ -711,15 +757,15 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-            passing unquoted attribute values has been deprecated and will be removed in future versions.
+           passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `selected=true` with `selected={true}`
+           Hint: replace `selected=true` with `selected={true}`
            """
 
     assert message =~ """
-            passing unquoted attribute values has been deprecated and will be removed in future versions.
+           passing unquoted attribute values has been deprecated and will be removed in future versions.
 
-             Hint: replace `checked=false` with `checked={false}`
+           Hint: replace `checked=false` with `checked={false}`
            """
 
     assert line == 2
@@ -865,7 +911,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>1</div><div>2</div>
         "\""
       end
@@ -890,7 +936,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.Component
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>
           {{ sum(assigns) }}
         </div>
@@ -898,7 +944,7 @@ defmodule Surface.CompilerSyncTest do
       end
 
       def sum(assigns) do
-        ~H"\""
+        ~F"\""
         {{ @a + @b }}
         "\""
       end
@@ -922,7 +968,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>
           {{ sum(assigns) }}
         </div>
@@ -930,7 +976,7 @@ defmodule Surface.CompilerSyncTest do
       end
 
       def sum(assigns) do
-        ~H"\""
+        ~F"\""
         {{ @a + @b }}
         "\""
       end
@@ -954,7 +1000,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         just text
         "\""
       end
@@ -980,7 +1026,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>Foo</div>
         "\""
       end
@@ -989,7 +1035,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
           <TestLiveComponent_#{id_1} id="#{id_1}" />
         "\""
       end
@@ -1008,7 +1054,7 @@ defmodule Surface.CompilerSyncTest do
            Hint: You can wrap the root `TestLiveComponent_#{id_1}` node in another element. Example:
 
              def render(assigns) do
-               ~H"\""
+               ~F"\""
                <div>
                  <TestLiveComponent_#{id_1} ... >
                    ...
@@ -1030,7 +1076,7 @@ defmodule Surface.CompilerSyncTest do
       use Surface.LiveComponent
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         {{ 1 }}
         "\""
       end
@@ -1059,7 +1105,7 @@ defmodule Surface.CompilerSyncTest do
       slot footer
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <div>
           <#slot>Default Content</#slot>
           <#slot name="header">Default Header</#slot>
@@ -1126,18 +1172,14 @@ defmodule Surface.CompilerSyncTest do
     defmodule CompilerTestComponent_#{id} do; \
       use Surface.Component; \
       def render(assigns) do; \
-        ~H"#{code}" \
+        ~F"#{code}" \
       end; \
     end\
     """
 
-    # See Surface.compute_line_offset/1 for more information
-    line_offset = if Version.match?(System.version(), "~> 1.11"), do: 1, else: 0
-
     output =
       capture_io(:standard_error, fn ->
-        {{:module, module, _, _}, _} =
-          Code.eval_string(component_code, [], %{__ENV__ | line: line_offset})
+        {{:module, module, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | line: 1})
 
         send(self(), {:result, module})
       end)

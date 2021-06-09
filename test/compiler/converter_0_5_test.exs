@@ -3,24 +3,10 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
   alias Surface.Compiler.Converter
   alias Surface.Compiler.Converter_0_5
+  alias Mix.Tasks.Surface.Convert
 
   defp convert(text) do
     Converter.convert(text, converter: Converter_0_5)
-  end
-
-  test "convert <#Raw> to <#raw>" do
-    expected =
-      convert("""
-      <#Raw>
-        <div>Raw content</div>
-      </#Raw>
-      """)
-
-    assert expected == """
-           <#raw>
-             <div>Raw content</div>
-           </#raw>
-           """
   end
 
   test "don't convert code inside macros" do
@@ -33,10 +19,10 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div class={ @class }>text</div>
-           <#raw>
+           <div class={@class}>text</div>
+           <#Raw>
              <div class={{ @class }}>text</div>
-           </#raw>
+           </#Raw>
            """
   end
 
@@ -56,12 +42,12 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
       assert expected == """
              <div
-               id={ @id }   class={@class}
-               phone = { @phone }
+               id={@id}   class={@class}
+               phone = {@phone}
              >
                <span title={123} />
-               1{ @name }2 3{@name}4
-                   5 { @value } 6
+               1{@name}2 3{@name}4
+                   5 {@value} 6
              7 </div>
              """
     end
@@ -99,6 +85,25 @@ defmodule Surface.Compiler.Converter_0_5Test do
              """
     end
 
+    test "keep indentation before closing `}}` " do
+      expected =
+        convert("""
+        <div>
+          <div class={{
+            "my_class"
+          }}>
+        </div>
+        """)
+
+      assert expected == """
+             <div>
+               <div class={
+                 "my_class"
+               }>
+             </div>
+             """
+    end
+
     test "only convert {{ }} into { } if the first and last chars are `{` and `}` respectively" do
       expected =
         convert("""
@@ -116,7 +121,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
       assert expected == """
              <div class={@class}>
-               { @name }
+               {@name}
              </div>
              <div class={ {1, 2} }>
                { {3, 4} }
@@ -186,7 +191,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
-  test "convert <If> into <#if>" do
+  test "convert <If> into {#if}" do
     expected =
       convert("""
       <div>
@@ -199,18 +204,103 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
     assert expected == """
            <div>
-             <#if condition={ @var }>
+             {#if @var}
                1
-               </#if>
-             <#if   condition={@var}>2</#if>
+               {/if}
+             {#if @var}2{/if}
            </div>
            """
   end
 
-  test "convert literal strings with embedded interpolation" do
+  test "convert <If> multiline expression into {#if}" do
     expected =
       convert("""
-      <div id="id_{{@id}}">
+      <div>
+        <If condition={{ @var ==
+                         1 }}>
+          1
+          </If>
+        <If   condition={{@var}}>2</If>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             {#if @var ==
+                              1}
+               1
+               {/if}
+             {#if @var}2{/if}
+           </div>
+           """
+  end
+
+  test "convert <For> into <#For>" do
+    expected =
+      convert("""
+      <div>
+        <For each={{ _i <- @var }}>
+          1
+          </For>
+        <For   each={{@var}}>2</For>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             {#for _i <- @var}
+               1
+               {/for}
+             {#for @var}2{/for}
+           </div>
+           """
+  end
+
+  test "convert <For> with multiline expression into <#For>" do
+    expected =
+      convert("""
+      <div>
+        <For each={{ i <- @var,
+                     i > 0 }}>
+          1
+          </For>
+        <For   each={{@var}}>2</For>
+      </div>
+      """)
+
+    assert expected == """
+           <div>
+             {#for i <- @var,
+                          i > 0}
+               1
+               {/for}
+             {#for @var}2{/for}
+           </div>
+           """
+  end
+
+  test "convert strings with embedded interpolation" do
+    expected =
+      convert("""
+      <img src="{{ "/" }}">
+      """)
+
+    assert expected == """
+           <img src={"\#{"/"}"}>
+           """
+
+    expected =
+      convert("""
+      <img src="{{ String.upcase("abc") }}">
+      """)
+
+    assert expected == """
+           <img src={"\#{String.upcase("abc")}"}>
+           """
+
+    expected =
+      convert("""
+      <div id="id_{{@id1}}_{{ @id2 }}">
         <div id=
           "
           id_{{@id}}
@@ -220,7 +310,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       """)
 
     assert expected == """
-           <div id={"id_\#{@id}"}>
+           <div id={"id_\#{@id1}_\#{@id2}"}>
              <div id=
                {"
                id_\#{@id}
@@ -230,28 +320,85 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test ~S(replace ~H""" with ~F""") do
+    code = """
+    ~H"\""
+    <Link label="elixir" to={{url}} />
+    "\""
+
+    ~H"\""
+    <Link label="elixir" to={{url}} />
+    "\""
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           ~F"\""
+           <Link label="elixir" to={url} />
+           "\""
+
+           ~F"\""
+           <Link label="elixir" to={url} />
+           "\""
+           """
+  end
+
+  test ~S(replace ~H" with ~F") do
+    code = """
+    ~H"<Link label='elixir' to={{url}} />"
+
+    ~H"<Link label='elixir' to={{url}} />"
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           ~F"<Link label='elixir' to={url} />"
+
+           ~F"<Link label='elixir' to={url} />"
+           """
+  end
+
+  test "replace ~H[ with ~F[" do
+    code = """
+    ~H[<Link label="elixir" to={{url}} />]
+
+    ~H[<Link label="elixir" to={{url}} />]
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           ~F[<Link label="elixir" to={url} />]
+
+           ~F[<Link label="elixir" to={url} />]
+           """
+  end
+
+  test "replace ~H( with ~F(" do
+    code = """
+    ~H(<Link label="elixir" to={{url}} />)
+
+    ~H(<Link label="elixir" to={{url}} />)
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           ~F(<Link label="elixir" to={url} />)
+
+           ~F(<Link label="elixir" to={url} />)
+           """
+  end
+
+  test "replace ~H{ with ~F{" do
+    code = """
+    ~H{<slot name="header" />}
+
+    ~H{<slot name="footer" />}
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           ~F{<#slot name="header" />}
+
+           ~F{<#slot name="footer" />}
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
-
-  # test "convert <For> into <#For>" do
-  #   expected =
-  #     convert("""
-  #     <div>
-  #       <For each={{ _i <- @var }}>
-  #         1
-  #         </For>
-  #       <For   each={{@var}}>2</For>
-  #     </div>
-  #     """)
-
-  #   assert expected == """
-  #          <div>
-  #            <#for each={_i <- @var}>
-  #              1
-  #              </#for>
-  #            <#for   each={@var}>2</#for>
-  #          </div>
-  #          """
-  # end
 
   # test "convert slot's :props into :args" do
   #   expected =

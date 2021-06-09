@@ -18,7 +18,7 @@ defmodule Surface.Components.FormTest do
     data changeset, :any
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <Form for={@changeset} action="#" csrf_token="test" as={:user} :let={form: f}>
         <TextInput field={:name} />
         {Enum.map(Keyword.get_values(f.source.errors, :name), fn {msg, _opts} -> ["Name ", msg] end)}
@@ -34,7 +34,7 @@ defmodule Surface.Components.FormTest do
   test "form as an atom" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" csrf_token="test">
         </Form>
         """
@@ -50,7 +50,7 @@ defmodule Surface.Components.FormTest do
   test "form with a text input using context" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
@@ -68,7 +68,7 @@ defmodule Surface.Components.FormTest do
   test "form with form_for/4 opts as props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
@@ -106,7 +106,7 @@ defmodule Surface.Components.FormTest do
   test "form with events" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" change="change" submit="submit" auto_recover="recover">
         </Form>
         """
@@ -135,7 +135,7 @@ defmodule Surface.Components.FormTest do
   test "form generates method input for prop" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" method="put" csrf_token="test">
         </Form>
         """
@@ -160,7 +160,7 @@ defmodule Surface.Components.FormTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" class="form">
         </Form>
         """
@@ -172,7 +172,7 @@ defmodule Surface.Components.FormTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" class="form form-user">
         </Form>
         """
@@ -184,7 +184,7 @@ defmodule Surface.Components.FormTest do
   test "setting multiple classes as css_class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user} action="#" class={"form", "form-user": true}>
         </Form>
         """
@@ -211,7 +211,7 @@ defmodule Surface.Components.Form.FormTestConfigTest do
     using_config Form, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Form for={:user} action="#" />
           """
         end

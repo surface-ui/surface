@@ -5,7 +5,7 @@ defmodule Surface.SlotTest do
     use Surface.LiveComponent
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>Stateful</div>
       """
     end
@@ -28,7 +28,7 @@ defmodule Surface.SlotTest do
     slot inner
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <div :for={{data, index} <- Enum.with_index(@inner)}>
           {data.label}: <#slot name="inner" index={index} />
@@ -49,7 +49,7 @@ defmodule Surface.SlotTest do
     slot footer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot name="header"/>
         <#slot>
@@ -69,7 +69,7 @@ defmodule Surface.SlotTest do
     slot body, props: [:info]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot name="body" :props={info: "Info from slot"}/>
       </div>
@@ -83,7 +83,7 @@ defmodule Surface.SlotTest do
     slot default, props: [:info]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot :props={info: "Info from slot"}/>
       </div>
@@ -95,7 +95,7 @@ defmodule Surface.SlotTest do
     use Surface.Component
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div></div>
       """
     end
@@ -109,7 +109,7 @@ defmodule Surface.SlotTest do
     slot footer
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <header :if={slot_assigned?(:header)}>
           <#slot name="header"/>
@@ -137,7 +137,7 @@ defmodule Surface.SlotTest do
     prop header, :string
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot name="header" />
         {@header}
@@ -154,7 +154,7 @@ defmodule Surface.SlotTest do
     prop default, :string
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div>
         <#slot />
         {@default}
@@ -183,7 +183,7 @@ defmodule Surface.SlotTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span class="fancy-column">
         <#slot>
           {@title}
@@ -201,7 +201,7 @@ defmodule Surface.SlotTest do
     slot default
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span class="fancy-column">
         <#slot>
           {@title}
@@ -221,7 +221,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       info = "Some info from Grid"
 
-      ~H"""
+      ~F"""
       <table>
         <tr>
           <th :for={col <- @cols}>
@@ -241,7 +241,7 @@ defmodule Surface.SlotTest do
   test "render slot without slot props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithMultipleSlotableEntries>
           Content 1
           <InnerData label="label 1">
@@ -285,7 +285,7 @@ defmodule Surface.SlotTest do
   test "assign named slots with props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlotAndProps>
           <#template slot="body" :let={info: my_info}>
             Info: {my_info}
@@ -304,7 +304,7 @@ defmodule Surface.SlotTest do
   test "assign default slot with props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithDefaultSlotAndProps :let={info: my_info}>
           Info: {my_info}
         </OuterWithDefaultSlotAndProps>
@@ -321,7 +321,7 @@ defmodule Surface.SlotTest do
   test "assign default slot ignoring all props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithDefaultSlotAndProps>
           Info
         </OuterWithDefaultSlotAndProps>
@@ -338,7 +338,7 @@ defmodule Surface.SlotTest do
   test "assign named slots without props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlot>
           <#template slot="header">
             My header
@@ -363,7 +363,7 @@ defmodule Surface.SlotTest do
   test "fallback content" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlot/>
         """
       end
@@ -381,7 +381,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Grid items={user <- @items}>
           <ColumnWithDefaultTitle>
             <b>Id: {user.id}</b>
@@ -415,7 +415,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Grid items={user <- @items}>
           <ColumnWithRender title="column title">
             <b>Id: {user.id}</b>
@@ -453,7 +453,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Grid items={_user <- @items}>
           <ColumnWithRenderAndDefaultTitle />
         </Grid>
@@ -489,7 +489,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Grid items={user <- @items}>
           <Column title="ID">
             <b>Id: {user.id}</b>
@@ -530,7 +530,7 @@ defmodule Surface.SlotTest do
   test "rename slot with :as do not override other assigns with same name" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithRenamedSlot header="My Header Prop">
           <#template slot="header">
             My Header Slot
@@ -550,7 +550,7 @@ defmodule Surface.SlotTest do
   test "default prop name with a default slot" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
           Default Slot
         </OuterWithDefaultPropAndSlot>
@@ -566,7 +566,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
           <#template name="default">
             Default Slot
@@ -588,7 +588,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Grid items={user <- @items}>
           <Column title="ID" :let={item: my_user}>
             <b>Id: {my_user.id}</b>
@@ -627,7 +627,7 @@ defmodule Surface.SlotTest do
 
     code =
       quote do
-        ~H"""
+        ~F"""
         <Grid items={user <- @items}>
           <Column title="ID"
             :let={item: my_user, non_existing: value}>
@@ -656,7 +656,7 @@ defmodule Surface.SlotTest do
 
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlotAndProps>
           <#template slot="body"
             :let={"a_string"}>
@@ -679,7 +679,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when using :let and there's no default slot defined" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithoutDefaultSlot :let={info: my_info}>
           Info: {my_info}
         </OuterWithoutDefaultSlot>
@@ -698,7 +698,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when using :let with undefined props for default slot" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithDefaultSlotAndProps :let={info: my_info, non_existing: value}>
           Info: {my_info}
         </OuterWithDefaultSlotAndProps>
@@ -723,7 +723,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when using :let with undefined slot props" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlotAndProps>
           <#template slot="body" :let={non_existing: my_info}>
             Info: {my_info}
@@ -750,7 +750,7 @@ defmodule Surface.SlotTest do
   test "raise compile error when passing invalid bindings to :let " do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithDefaultSlotAndProps
           :let={info: [my_info]}>
           Info: {my_info}
@@ -778,7 +778,7 @@ defmodule Surface.SlotTest do
       slot default, props: [:item]
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
           <span>
             <#slot
               :props={id: 1, name: "Joe"}/>
@@ -807,7 +807,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithOptionalNamedSlot />
         """
       end
@@ -822,7 +822,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithOptionalNamedSlot>
           <#template slot="header">
             My Header
@@ -844,7 +844,7 @@ defmodule Surface.SlotTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OuterWithOptionalNamedSlot>
           My Content
         </OuterWithOptionalNamedSlot>
@@ -867,7 +867,7 @@ defmodule Surface.SlotTest do
     test "assign named slots without props" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <OuterWithNamedSlot>
             <:header>
               My header
@@ -892,7 +892,7 @@ defmodule Surface.SlotTest do
     test "does not render slot if slot_assigned? returns false" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <OuterWithOptionalNamedSlot>
             <:header>
               My Header
@@ -916,7 +916,7 @@ defmodule Surface.SlotTest do
     test "assign named slots with props" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <OuterWithNamedSlotAndProps>
             <:body :let={info: my_info}>
               Info: {my_info}
@@ -948,7 +948,7 @@ defmodule Surface.SlotSyncTest do
   test "raises compile error if parent component does not define any slots" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <StatefulComponent id="stateful">
           <InnerData/>
         </StatefulComponent>
@@ -971,7 +971,7 @@ defmodule Surface.SlotSyncTest do
   test "raise compile error if parent component does not define the slot" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <Grid items={[]}>
           <InnerData/>
           <Column title="ID"/>
@@ -997,7 +997,7 @@ defmodule Surface.SlotSyncTest do
   test "raise compile error and suggest similiar slot if parent component does not define the slot" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlot>
           <div>
           </div>
@@ -1030,7 +1030,7 @@ defmodule Surface.SlotSyncTest do
       slot default
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
           <div>
             <#slot name="header"/>
             <#slot />
@@ -1064,7 +1064,7 @@ defmodule Surface.SlotSyncTest do
       use Surface.Component
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
           <div>
             <#slot />
           </div>
@@ -1096,7 +1096,7 @@ defmodule Surface.SlotSyncTest do
       slot footer
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
           <div>
             <header :if={{ slot_assigned?(:heade) }}>
               <#slot name="header"/>
@@ -1130,7 +1130,7 @@ defmodule Surface.SlotSyncTest do
   test "raise compile error when using :let and there's no default slot defined" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithoutDefaultSlot :let={info: my_info}>
           Info: {my_info}
         </OuterWithoutDefaultSlot>
@@ -1156,7 +1156,7 @@ defmodule Surface.SlotSyncTest do
       slot default, props: [:info]
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <span class="fancy-column">
           <#slot props={{ info: "this is a test" }} />
         </span>
@@ -1188,7 +1188,7 @@ defmodule Surface.SlotSyncTest do
   test "warn when using deprecated <template>" do
     code =
       quote do
-        ~H"""
+        ~F"""
         <OuterWithNamedSlot>
           <template slot="footer">
             My footer
@@ -1219,7 +1219,7 @@ defmodule Surface.SlotSyncTest do
       slot default
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <span>
           <slot/>
         </span>

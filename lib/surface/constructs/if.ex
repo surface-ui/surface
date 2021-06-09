@@ -1,4 +1,4 @@
-defmodule Surface.Constructs.If do
+defmodule Surface.Constructs.Deprecated.If do
   @moduledoc """
   Provides an alternative to the `:if` directive for wrapping multiple elements in an if expression.
 
@@ -49,10 +49,10 @@ defmodule Surface.Constructs.If do
 
   defp warn_on_deprecated_if_notation(node) do
     message = """
-    using <If> to wrap elements in an if experssion has been depreacated and will be removed in \
+    using <If> to wrap elements in an if expression has been deprecated and will be removed in \
     future versions.
 
-    Hint: replace `<If>` with `<#if>`
+    Hint: replace `<If>` with `{#if}`
     """
 
     IOHelper.warn(message, node.meta.caller, fn _ -> node.meta.line end)

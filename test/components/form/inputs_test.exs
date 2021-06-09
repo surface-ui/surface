@@ -31,7 +31,7 @@ defmodule Surface.Components.Form.InputsTest do
   test "using generated form received as slot props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children} :let={form: f}>
             <TextInput form={f} field="name" />
@@ -55,7 +55,7 @@ defmodule Surface.Components.Form.InputsTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={cs} as={:cs} opts={csrf_token: "test"}>
           <Inputs for={:children} :let={index: idx}>
             <div>index: <span>{idx}</span></div>
@@ -76,7 +76,7 @@ defmodule Surface.Components.Form.InputsTest do
   test "using generated form stored in the Form context" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children}>
             <TextInput field="name" />
@@ -98,7 +98,7 @@ defmodule Surface.Components.Form.InputsTest do
   test "passing extra opts" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children} opts={as: "custom_name"}>
             <TextInput field="name" />

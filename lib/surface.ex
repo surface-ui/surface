@@ -7,10 +7,10 @@ defmodule Surface do
 
   Full documentation and live examples can be found at [surface-ui.org](https://surface-ui.org)
 
-  This module defines the `~H` sigil that should be used to translate Surface
+  This module defines the `~F` sigil that should be used to translate Surface
   code into Phoenix templates.
 
-  In order to have `~H` available for any Phoenix view, add the following import to your web
+  In order to have `~F` available for any Phoenix view, add the following import to your web
   file in `lib/my_app_web.ex`:
 
       # lib/my_app_web.ex
@@ -39,7 +39,7 @@ defmodule Surface do
         end
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           ...
           "\""
         end
@@ -58,7 +58,7 @@ defmodule Surface do
         end
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           ...
           "\""
         end
@@ -84,7 +84,7 @@ defmodule Surface do
         prop kind, :string, default: "is-info"
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <button class="button {{ @kind }}" phx-click={{ @click }}>
             <#slot/>
           </button>
@@ -103,8 +103,9 @@ defmodule Surface do
   @doc """
   Translates Surface code into Phoenix templates.
   """
-  defmacro sigil_H({:<<>>, meta, [string]}, opts) do
-    line = __CALLER__.line + compute_line_offset(meta)
+  defmacro sigil_F({:<<>>, meta, [string]}, opts) do
+    line_offset = if Keyword.has_key?(meta, :indentation), do: 1, else: 0
+    line = __CALLER__.line + line_offset
     indentation = meta[:indentation] || 0
     column = meta[:column] || 1
 
@@ -123,18 +124,6 @@ defmodule Surface do
       file: __CALLER__.file,
       line: line
     )
-  end
-
-  defp compute_line_offset(meta) do
-    # Since `v1.11` this will create accurate line numbers for heredoc usages
-    # of the `~H` sigil. For version below `v1.11` single-line ~H will return
-    # an incorrect line number because there was no way to retrieve the information
-    # about the delimiter. See https://github.com/surface-ui/surface/issues/240
-    cond do
-      Keyword.has_key?(meta, :indentation) -> 1
-      not Version.match?(System.version(), "~> 1.11") -> 1
-      true -> 0
-    end
   end
 
   @doc "Retrieve a component's config based on the `key`"

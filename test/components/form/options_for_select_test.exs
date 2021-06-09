@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   test "empty options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OptionsForSelect />
         """
       end
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   test "setting the options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OptionsForSelect options={["Admin": "admin", "User": "user"]} />
         """
       end
@@ -31,7 +31,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   test "passing selected value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OptionsForSelect options={["Admin": "admin", "User": "user"]} selected={"admin"} />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.OptionsForSelectTest do
   test "passing multiple selected values" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <OptionsForSelect options={["Admin": "admin", "User": "user"]} selected={["admin", "user"]} />
         """
       end

@@ -19,7 +19,7 @@ defmodule LiveComponentChangeTrackingTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       Count: {@count}
       <CheckUpdated id="1" dest={@test_pid} content={assigns} />
       """
@@ -42,7 +42,7 @@ defmodule LiveComponentChangeTrackingTest do
     end
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       Count: {@count}
       <CheckUpdated id="1" dest={@test_pid} content={@passing_count} />
       """

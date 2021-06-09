@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest.FakeButton do
   use Surface.Component
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     FAKE BUTTON
     """
   end

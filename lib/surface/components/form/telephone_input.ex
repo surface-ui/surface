@@ -29,7 +29,7 @@ defmodule Surface.Components.Form.TelephoneInput do
     attr_opts = props_to_attr_opts(assigns, [:value, :pattern, class: get_default_class()])
     event_opts = events_to_opts(assigns)
 
-    ~H"""
+    ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
       {telephone_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
     </InputContext>

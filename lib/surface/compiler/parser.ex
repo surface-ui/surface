@@ -5,76 +5,158 @@ defmodule Surface.Compiler.Parser do
   alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
 
-  @void_elements [
-    "area",
-    "base",
-    "br",
-    "col",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "param",
-    "command",
-    "keygen",
-    "source"
+  @type state :: %{
+          token_stack:
+            list(
+              {Tokenizer.block_open() | Tokenizer.tag_open(),
+               Surface.Compiler.NodeTranslator.context()}
+            ),
+          translator: module(),
+          caller: Macro.Env.t(),
+          checks: keyword(boolean()),
+          warnings: keyword(boolean())
+        }
+
+  @blocks [
+    "if",
+    "unless",
+    "for",
+    "case"
   ]
 
   @sub_blocks [
-    "#else",
-    "#elseif",
-    "#match"
+    "else",
+    "elseif",
+    "match"
   ]
 
   @sub_blocks_valid_parents %{
-    "#else" => ["#if", "#for"],
-    "#elseif" => ["#if"],
-    "#match" => ["#case"]
+    "else" => ["if", "for"],
+    "elseif" => ["if"],
+    "match" => ["case"]
   }
 
   def parse!(code, opts \\ []) do
     code
     |> Tokenizer.tokenize!(opts)
-    |> handle_token()
+    |> handle_token(opts)
   end
 
-  defp handle_token(tokens) do
-    handle_token(tokens, [[]], %{tags: []})
+  defp handle_token(tokens, opts) do
+    state = %{
+      translator: opts[:translator] || Surface.Compiler.ParseTreeTranslator,
+      token_stack: [],
+      caller: opts[:caller] || __ENV__,
+      checks: opts[:checks] || [],
+      warnings: opts[:warnings] || []
+    }
+
+    handle_token(tokens, [[]], state.translator.handle_init(state))
   end
 
   defp handle_token([], [buffer], _state) do
     Enum.reverse(buffer)
   end
 
-  defp handle_token([], _buffers, %{tags: [{:tag_open, tag_name, _attrs, meta} | _]}) do
+  defp handle_token([], _buffers, %{token_stack: [{{_, _name, _attrs, meta} = node, _ctx} | _]}) do
     raise parse_error(
-            "expected closing tag for <#{tag_name}> defined on line #{meta.line}, got EOF",
+            "expected closing node for #{format_node(node)} defined on line #{meta.line}, got EOF",
             meta
           )
   end
 
   defp handle_token([{:text, text} | rest], buffers, state) do
-    buffers = push_node_to_current_buffer(text, buffers)
+    {node, state} = state.translator.handle_text(text, state)
+    buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:comment, comment} | rest], buffers, state) do
-    buffers = push_node_to_current_buffer({:comment, comment}, buffers)
+  defp handle_token([{:comment, comment, meta} | rest], buffers, state) do
+    {node, state} = state.translator.handle_comment(comment, meta, state)
+
+    buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:interpolation, expr, meta} | rest], buffers, state) do
-    buffers = push_node_to_current_buffer({:interpolation, expr, to_meta(meta)}, buffers)
+  defp handle_token([{:expr, expr, meta} | rest], buffers, state) do
+    {node, state} = state.translator.handle_expression(expr, meta, state)
+
+    buffers = push_node_to_current_buffer(node, buffers)
+
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_open, name, attrs, meta} = token | rest], buffers, state)
+  defp handle_token([{:tag_open, name, attrs, %{void_tag?: true} = meta} | rest], buffers, state) do
+    context = state.translator.context_for_node(name, meta, state)
+
+    {node, state} =
+      state.translator.handle_node(
+        name,
+        translate_attrs(state, context, attrs),
+        [],
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
+    context = state.translator.context_for_node(name, meta, state)
+
+    {node, state} =
+      state.translator.handle_node(
+        name,
+        translate_attrs(state, context, attrs),
+        [],
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_open, name, _attrs, meta} = token | rest], buffers, state) do
+    context = state.translator.context_for_node(name, meta, state)
+    state = push_tag(state, token, context)
+    # create a new buffer for the node
+    buffers = [[] | buffers]
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:tag_close, name, _meta} = token | rest], buffers, state) do
+    {{:tag_open, _name, attrs, meta}, context, state} = pop_matching_tag(state, token)
+
+    # pop the current buffer and use it as children for the node
+    [buffer | buffers] = buffers
+
+    {node, state} =
+      state.translator.handle_node(
+        name,
+        translate_attrs(state, context, attrs),
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
+    buffers = push_node_to_current_buffer(node, buffers)
+    handle_token(rest, buffers, state)
+  end
+
+  defp handle_token([{:block_open, name, expr, meta} = token | rest], buffers, state)
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
 
+    context =
+      state.translator.context_for_subblock(name, parent_context(state.token_stack), meta, state)
+
     # push the current sub-block token to state
-    state = push_tag(state, {:tag_open, name, attrs, meta})
+    state = push_tag(state, {:block_open, name, expr, meta}, context)
 
     # create a new buffer for the current sub-block
     buffers = [[] | buffers]
@@ -82,66 +164,111 @@ defmodule Surface.Compiler.Parser do
     handle_token(rest, buffers, state)
   end
 
-  defp handle_token([{:tag_open, name, attrs, meta} | rest], buffers, state)
-       when name in @void_elements do
-    node = {name, transtate_attrs(attrs), [], to_meta(meta)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    handle_token(rest, buffers, state)
-  end
+  defp handle_token([{:block_open, name, _expr, meta} = token | rest], buffers, state)
+       when name in @blocks do
+    context = state.translator.context_for_block(name, meta, state)
 
-  defp handle_token([{:tag_open, name, attrs, %{self_close: true} = meta} | rest], buffers, state) do
-    node = {name, transtate_attrs(attrs), [], to_meta(meta)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    handle_token(rest, buffers, state)
-  end
-
-  defp handle_token([{:tag_open, _name, _attrs, _meta} = token | rest], buffers, state) do
-    state = push_tag(state, token)
+    state = push_tag(state, token, context)
     # create a new buffer for the node
     buffers = [[] | buffers]
     handle_token(rest, buffers, state)
   end
 
+  defp handle_token([{:block_open, name, _expr, meta} | _], _buffers, _state) do
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks ++ @sub_blocks)
+    raise parse_error("unknown `{##{name}}` block. Available #{blocks}", meta)
+  end
+
   defp handle_token(
-         [{:tag_close, _name, _meta} = token | _] = tokens,
+         [{:block_close, _name, _meta} = token | _] = tokens,
          buffers,
-         %{tags: [{:tag_open, name, _, _} | _]} = state
+         %{token_stack: [{{:block_open, name, _, _}, _} | _]} = state
        )
        when name in @sub_blocks do
     {buffers, state} = close_sub_block(token, buffers, state)
     handle_token(tokens, buffers, state)
   end
 
-  defp handle_token([{:tag_close, name, _meta} | rest], buffers, state) do
-    {{:tag_open, _name, attrs, meta}, state} = pop_matching_tag(state, name)
+  defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state)
+       when name in @blocks do
+    {{:block_open, name, expr, meta}, context, state} = pop_matching_tag(state, token)
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
-    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
+
+    expression = state.translator.handle_block_expression(name, expr, state, context)
+
+    {node, state} =
+      state.translator.handle_block(
+        name,
+        expression,
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
 
-  # IF there's a previous sub-block defined. Close it.
-  defp close_sub_block(_token, buffers, %{tags: [{:tag_open, name, attrs, meta} | tags]} = state)
+  defp handle_token([{:block_close, name, meta} | _], _buffers, _state) do
+    blocks = Helpers.list_to_string("block is", "blocks are", @blocks)
+    raise parse_error("unknown `{/#{name}}` block. Available #{blocks}", meta)
+  end
+
+  # If there's a previous sub-block defined. Close it.
+  defp close_sub_block(
+         _token,
+         buffers,
+         %{token_stack: [{{:block_open, name, expr, meta}, context} | tokens]} = state
+       )
        when name in @sub_blocks do
     # pop the current buffer and use it as children for the sub-block node
     [buffer | buffers] = buffers
-    node = {name, transtate_attrs(attrs), Enum.reverse(buffer), to_meta(meta)}
+
+    expression = state.translator.handle_block_expression(name, expr, state, context)
+
+    {node, state} =
+      state.translator.handle_subblock(
+        name,
+        expression,
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
+
+    state = %{state | token_stack: tokens}
     buffers = push_node_to_current_buffer(node, buffers)
-    state = %{state | tags: tags}
 
     {buffers, state}
   end
 
   # If there's no previous sub-block defined. Create a :default sub-block,
   # move the buffer there and close it.
-  defp close_sub_block(token, buffers, %{tags: [{:tag_open, name, attrs, meta} | tags]} = state) do
+  defp close_sub_block(
+         token,
+         buffers,
+         %{token_stack: [{{:block_open, name, expr, meta}, ctx} | tokens]} = state
+       ) do
     validate_sub_block!(token, name)
 
     # pop the current buffer and use it as children for the :default sub-block node
     [buffer | buffers] = buffers
-    node = {:default, [], Enum.reverse(buffer), %{}}
+
+    context = state.translator.context_for_subblock(:default, meta, state, ctx)
+    expression = state.translator.handle_block_expression(:default, nil, state, context)
+
+    {node, state} =
+      state.translator.handle_subblock(
+        :default,
+        expression,
+        Enum.reverse(buffer),
+        meta,
+        state,
+        context
+      )
 
     # create a new buffer for the parent node to replace the one that was popped
     buffers = [[] | buffers]
@@ -149,41 +276,38 @@ defmodule Surface.Compiler.Parser do
 
     # push back the parent token to state
     meta = Map.put(meta, :has_sub_blocks?, true)
-    state = %{state | tags: [{:tag_open, name, attrs, meta} | tags]}
+    state = %{state | token_stack: [{{:block_open, name, expr, meta}, ctx} | tokens]}
 
     {buffers, state}
   end
 
-  defp close_sub_block({:tag_open, name, _attrs, meta}, _buffers, _state) do
-    valid_parents_str = message_for_invalid_sub_block_parent(name)
-
-    raise parse_error("no valid parent node defined for <#{name}>. #{valid_parents_str}", meta)
+  # If there's no parent node
+  defp close_sub_block({:block_open, name, _expr, meta}, _buffers, _state) do
+    message = message_for_invalid_sub_block_parent(name)
+    raise parse_error(message, meta)
   end
 
-  defp validate_sub_block!({:tag_open, name, _attrs, meta}, parent_name) do
-    valid_parents_str = message_for_invalid_sub_block_parent(name)
-
+  defp validate_sub_block!({:block_open, name, _expr, meta}, parent_name) do
     if parent_name not in @sub_blocks_valid_parents[name] do
-      raise parse_error(
-              "cannot use <#{name}> inside <#{parent_name}>. #{valid_parents_str}",
-              meta
-            )
+      message = message_for_invalid_sub_block_parent(name)
+      raise parse_error(message, meta)
     end
   end
 
   defp message_for_invalid_sub_block_parent(name) do
     valid_parents = @sub_blocks_valid_parents[name]
-    valid_parents_tags = Enum.map(valid_parents, &"<#{&1}>")
+    valid_parents_tokens = Enum.map(valid_parents, &"{##{&1}}")
 
-    Helpers.list_to_string(
-      "The <#{name}> construct can only be used inside a",
-      "Possible parents are",
-      valid_parents_tags
-    )
+    "no valid parent node defined for {##{name}}. " <>
+      Helpers.list_to_string(
+        "The {##{name}} construct can only be used inside a",
+        "Possible parents are",
+        valid_parents_tokens
+      )
   end
 
-  defp to_meta(meta) do
-    Map.drop(meta, [:self_close, :line_end, :column_end])
+  defp push_node_to_current_buffer(:ignore, buffers) do
+    buffers
   end
 
   defp push_node_to_current_buffer(node, buffers) do
@@ -192,68 +316,98 @@ defmodule Surface.Compiler.Parser do
     [buffer | buffers]
   end
 
-  defp transtate_attrs(attrs),
-    do: Enum.map(attrs, &translate_attr/1)
+  defp translate_attrs(state, context, attrs),
+    do: Enum.map(attrs, &translate_attr(state, context, &1))
 
-  defp translate_attr({name, {:string, value, %{delimiter: ?"}}, meta}) do
-    {name, value, to_meta(meta)}
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: ?"}}, meta}) do
+    state.translator.handle_attribute(name, value, meta, state, context)
   end
 
-  defp translate_attr({name, {:string, "true", %{delimiter: nil}}, meta}) do
+  defp translate_attr(state, context, {name, {:string, "true", %{delimiter: nil}}, meta}) do
     meta = Map.put(meta, :unquoted_string?, true)
-    {name, true, to_meta(meta)}
+    state.translator.handle_attribute(name, true, meta, state, context)
   end
 
-  defp translate_attr({name, {:string, "false", %{delimiter: nil}}, meta}) do
+  defp translate_attr(state, context, {name, {:string, "false", %{delimiter: nil}}, meta}) do
     meta = Map.put(meta, :unquoted_string?, true)
-    {name, false, to_meta(meta)}
+    state.translator.handle_attribute(name, false, meta, state, context)
   end
 
-  defp translate_attr({name, {:string, value, %{delimiter: nil}}, meta}) do
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
+    meta = Map.put(meta, :unquoted_string?, true)
+
     case Integer.parse(value) do
       {int_value, ""} ->
-        meta = Map.put(meta, :unquoted_string?, true)
-        {name, int_value, to_meta(meta)}
+        state.translator.handle_attribute(name, int_value, meta, state, context)
 
       _ ->
         raise parse_error("unexpected value for attribute \"#{name}\"", meta)
     end
   end
 
-  defp translate_attr({:root, {:expr, value, expr_meta}, _attr_meta}) do
-    meta = to_meta(expr_meta)
-    {:root, {:attribute_expr, value, meta}, meta}
+  defp translate_attr(state, context, {:root, {:expr, _value, expr_meta} = expr, _attr_meta}) do
+    state.translator.handle_attribute(:root, expr, expr_meta, state, context)
   end
 
-  defp translate_attr({name, {:expr, value, expr_meta}, attr_meta}) do
-    {name, {:attribute_expr, value, to_meta(expr_meta)}, to_meta(attr_meta)}
+  defp translate_attr(
+         state,
+         context,
+         {:root, {:tagged_expr, _marker, _expr, marker_meta} = expr, _attr_meta}
+       ) do
+    state.translator.handle_attribute(:root, expr, marker_meta, state, context)
   end
 
-  defp translate_attr({name, nil, meta}) do
-    {name, true, to_meta(meta)}
+  defp translate_attr(state, context, {name, {:expr, _value, _expr_meta} = expr, attr_meta}) do
+    state.translator.handle_attribute(name, expr, attr_meta, state, context)
   end
 
-  defp push_tag(state, {:tag_open, tag, _attrs, _meta}) when tag in @void_elements do
+  defp translate_attr(
+         state,
+         context,
+         {name, {:tagged_expr, _marker, _expr, marker_meta} = expr, _attr_meta}
+       ) do
+    state.translator.handle_attribute(name, expr, marker_meta, state, context)
+  end
+
+  defp translate_attr(state, context, {name, nil, meta}) do
+    state.translator.handle_attribute(name, true, meta, state, context)
+  end
+
+  defp push_tag(state, {:tag_open, _tag, _attrs, %{void_tag?: true}}, _context) do
     state
   end
 
-  defp push_tag(state, token) do
-    %{state | tags: [token | state.tags]}
+  defp push_tag(state, token, context) do
+    %{state | token_stack: [{token, context} | state.token_stack]}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _, _} = tag | tags]} = state, tag_name) do
-    {tag, %{state | tags: tags}}
+  defp pop_matching_tag(
+         %{token_stack: [{{:tag_open, tag_name, _, _} = token, context} | tokens]} = state,
+         {:tag_close, tag_name, _}
+       ) do
+    {token, context, %{state | token_stack: tokens}}
   end
 
-  defp pop_matching_tag(%{tags: [{:tag_open, tag_name, _attrs, meta} | _]}, closed_node_name) do
+  defp pop_matching_tag(
+         %{token_stack: [{{:block_open, name, _, _} = token, context} | tokens]} = state,
+         {:block_close, name, _}
+       ) do
+    {token, context, %{state | token_stack: tokens}}
+  end
+
+  defp pop_matching_tag(%{token_stack: [{{_, _, _, meta} = token_open, _ctx} | _]}, token_close) do
     message = """
-    expected closing tag for <#{tag_name}> defined on line #{meta.line}, got </#{closed_node_name}>\
+    expected closing node for #{format_node(token_open)} defined on line #{meta.line}, \
+    got #{format_node(token_close)}\
     """
 
     raise parse_error(message, meta)
   end
 
-  defp parse_error(message, meta) do
+  defp parent_context([{_tag, context} | _]), do: context
+  defp parent_context([]), do: nil
+
+  def parse_error(message, meta) do
     %ParseError{
       message: message,
       file: meta.file,
@@ -261,4 +415,9 @@ defmodule Surface.Compiler.Parser do
       column: meta.column
     }
   end
+
+  defp format_node({:tag_open, name, _attrs, _meta}), do: "<#{name}>"
+  defp format_node({:tag_close, name, _meta}), do: "</#{name}>"
+  defp format_node({:block_open, name, _attrs, _meta}), do: "{##{name}}"
+  defp format_node({:block_close, name, _meta}), do: "{/#{name}}"
 end

@@ -6,7 +6,7 @@ defmodule Surface.Components.FieldContextTest do
   test "sets the provided field into the context as :string" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FieldContext name="my_field">
           <TextInput form="my_form"/>
         </FieldContext>
@@ -19,7 +19,7 @@ defmodule Surface.Components.FieldContextTest do
   test "sets the provided field into the context as :atom" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <FieldContext name={:my_field}>
           <TextInput form="my_form"/>
         </FieldContext>

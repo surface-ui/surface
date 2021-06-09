@@ -30,7 +30,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={@changeset} opts={as: :user}>
           <Field name={:name}>
             <ErrorTag />
@@ -53,7 +53,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={@changeset} opts={as: :user}>
           <Field name={:name}>
             <ErrorTag />
@@ -66,15 +66,15 @@ defmodule Surface.Components.Form.ErrorTagTest do
     refute html =~ "another test error"
   end
 
-  test "prop phx_feedback_for", %{changeset: changeset} do
+  test "prop feedback_for", %{changeset: changeset} do
     assigns = %{changeset: changeset}
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={@changeset} opts={as: :user}>
           <Field name={:name}>
-            <ErrorTag phx_feedback_for="test-id" />
+            <ErrorTag feedback_for="test-id" />
           </Field>
         </Form>
         """
@@ -89,7 +89,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={@changeset} opts={as: :user}>
           <Field name={:name}>
             <ErrorTag class="test-class" />
@@ -105,7 +105,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
   test "no changeset shows no errors" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <Form for={:user}>
           <Field name={:name}>
             <ErrorTag />
@@ -138,7 +138,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Form for={@changeset} opts={as: :user}>
             <Field name={:name}>
               <ErrorTag />
@@ -159,7 +159,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Form for={@changeset} opts={as: :user}>
             <Field name={:name}>
               <ErrorTag translator={fn _ -> "translated by prop translator" end} />
@@ -182,7 +182,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Form for={@changeset} opts={as: :user}>
             <Field name={:name}>
               <ErrorTag />
@@ -202,7 +202,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <Form for={@changeset} opts={as: :user}>
             <Field name={:name}>
               <ErrorTag class="class-from-prop" />

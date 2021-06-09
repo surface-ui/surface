@@ -72,12 +72,12 @@ defmodule Surface.Components.Form do
   slot default, props: [:form]
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     {form = form_for(@for, @action, get_opts(assigns))}
       <Context put={__MODULE__, form: form}>
         <#slot :props={form: form} />
       </Context>
-    <#raw></form></#raw>
+    <#Raw></form></#Raw>
     """
   end
 

@@ -13,7 +13,7 @@ defmodule Surface.LiveView do
         use Surface.LiveView
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <Dialog title="Alert" id="dialog">
             This <b>Dialog</b> is a stateful component. Cool!
           </Dialog>
@@ -37,8 +37,8 @@ defmodule Surface.LiveView do
       use Surface.API, include: [:prop, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.{For, If}
-      alias Surface.Components.Context
+      alias Surface.Constructs.Deprecated.{For, If}
+      alias Surface.Components.{Context, Raw}
 
       @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)

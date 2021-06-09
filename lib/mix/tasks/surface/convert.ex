@@ -1,10 +1,13 @@
-defmodule Mix.Tasks.Surface.ConvertSyntax do
+defmodule Mix.Tasks.Surface.Convert do
   @shortdoc "Converts .sface files and ~H sigils from pre-v0.5 to v0.5 syntax"
 
   @moduledoc """
   Converts .sface files and ~H sigils from pre-v0.5 to v0.5 syntax.
 
-      mix surface.convert_syntax "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+      mix surface.convert "lib/**/*.{ex,exs,sface}" "test/**/*.{ex,exs}"
+
+  Please read the [Migration Guide](https://github.com/surface-ui/surface/blob/master/MIGRATING.md)
+  before running the converter and make sure you follow all required steps for a successful migration.
 
   ## Task-specific options
 
@@ -12,14 +15,14 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   Here are some examples of using these options:
 
   ```bash
-  $ mix surface.convert_syntax --dot-formatter path/to/.formatter.exs
+  $ mix surface.convert --dot-formatter path/to/.formatter.exs
   ```
 
-  You can also use the same syntax as `mix convert_syntax` for specifying which files to
+  You can also use the same syntax as `mix format` for specifying which files to
   convert:
 
   ```bash
-  $ mix surface.convert_syntax path/to/file.ex "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+  $ mix surface.convert path/to/file.ex "lib/**/*.{ex,exs,sface}" "test/**/*.{ex,exs}"
   ```
   """
 
@@ -28,34 +31,55 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   alias Surface.Compiler.Converter
   alias Surface.Compiler.Converter_0_5
 
+  @converter Converter_0_5
+
   defp format_string(string) do
-    Converter.convert(string, converter: Converter_0_5)
+    Converter.convert(string, converter: @converter)
   end
 
   #
   # Functions unique to surface.format (Everything else is taken from Mix.Tasks.Format)
   #
 
-  defp convert_file_contents!(file, input) do
-    case Path.extname(file) do
-      ".sface" ->
-        format_string(input)
+  @doc false
+  def convert_file_contents!(file, input) do
+    ext = Path.extname(file)
 
-      _ ->
-        convert_ex_string!(input)
-    end
+    content =
+      case ext do
+        ".sface" ->
+          format_string(input)
+
+        _ ->
+          convert_ex_string!(input)
+      end
+
+    @converter.after_convert_file(ext, content)
   end
 
   defp convert_ex_string!(input) do
-    converted_str =
-      ~r/( *)~H"\""(.*?)"""/s
-      |> Regex.replace(input, fn _match, indentation, surface_code ->
-        "#{indentation}~H\"\"\"#{format_string(surface_code)}\"\"\""
+    string =
+      Regex.replace(~r/( *)~H"\""(.*?)"""(\s)/s, input, fn _match, indent, code, space_after ->
+        "#{indent}~H\"\"\"#{format_string(code)}\"\"\"#{space_after}"
       end)
 
-    ~r/( *)~H\[(.*?)\]/s
-    |> Regex.replace(converted_str, fn _match, indentation, surface_code ->
-      "#{indentation}~H\[#{format_string(surface_code)}]"
+    string =
+      Regex.replace(~r/~H\"([^\"].*?)\"/s, string, fn _match, code ->
+        "~H\"#{format_string(code)}\""
+      end)
+
+    string =
+      Regex.replace(~r/~H\[(.*?)\]/s, string, fn _match, code ->
+        "~H[#{format_string(code)}]"
+      end)
+
+    string =
+      Regex.replace(~r/~H\((.*?)\)/s, string, fn _match, code ->
+        "~H(#{format_string(code)})"
+      end)
+
+    Regex.replace(~r/~H\{(.*?)\}/s, string, fn _match, code ->
+      "~H{#{format_string(code)}}"
     end)
   end
 
@@ -200,12 +224,12 @@ defmodule Mix.Tasks.Surface.ConvertSyntax do
   end
 
   defp check!([{:exit, :stdin, exception, stacktrace} | _]) do
-    Mix.shell().error("mix surface.convert_syntax failed for stdin")
+    Mix.shell().error("mix surface.convert failed for stdin")
     reraise exception, stacktrace
   end
 
   defp check!([{:exit, file, exception, stacktrace} | _]) do
-    Mix.shell().error("mix surface.convert_syntax failed for file: #{Path.relative_to_cwd(file)}")
+    Mix.shell().error("mix surface.convert failed for file: #{Path.relative_to_cwd(file)}")
     reraise exception, stacktrace
   end
 end

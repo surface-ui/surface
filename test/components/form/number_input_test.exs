@@ -6,7 +6,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "empty input" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="age" />
         """
       end
@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "input with atom field" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field={:age} />
         """
       end
@@ -32,7 +32,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "setting the value" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="age" value="33" />
         """
       end
@@ -45,7 +45,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "setting the class" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="age" class="input" />
         """
       end
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "setting multiple classes" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="age" class="input primary" />
         """
       end
@@ -67,7 +67,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "passing other options" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="age" opts={autofocus: "autofocus"} />
         """
       end
@@ -80,7 +80,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "events with parent live view as target" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="color" value="33" click="my_click" />
         """
       end
@@ -91,7 +91,7 @@ defmodule Surface.Components.Form.NumberInputTest do
   test "setting id and name through props" do
     html =
       render_surface do
-        ~H"""
+        ~F"""
         <NumberInput form="user" field="age" id="old" name="old" />
         """
       end
@@ -111,7 +111,7 @@ defmodule Surface.Components.Form.NumberInputConfigTest do
     using_config NumberInput, default_class: "default_class" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <NumberInput/>
           """
         end

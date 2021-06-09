@@ -12,9 +12,22 @@ defmodule Surface.Directive.Let do
 
   def extract(_, _), do: []
 
-  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, node) do
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %AST.Component{} = node) do
+    update_in(node.templates, fn
+      %{default: [first | others]} = tpls ->
+        Map.put(tpls, :default, [%{first | let: value} | others])
+
+      tpls ->
+        tpls
+    end)
+  end
+
+  def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %type{} = node)
+      when type in [AST.Template, AST.SlotableComponent] do
     %{node | let: value}
   end
+
+  def process(_, node), do: node
 
   defp directive_value(value, meta) do
     %AST.AttributeExpr{

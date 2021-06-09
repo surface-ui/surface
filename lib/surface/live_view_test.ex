@@ -13,7 +13,7 @@ defmodule Surface.LiveViewTest do
     slot default, required: true
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <#slot/>
       """
     end
@@ -24,7 +24,7 @@ defmodule Surface.LiveViewTest do
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
       import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4]
-      import Surface, only: [sigil_H: 2]
+      import Surface, only: [sigil_F: 2]
       import Surface.LiveViewTest
     end
   end
@@ -43,7 +43,7 @@ defmodule Surface.LiveViewTest do
 
       html =
         render_surface do
-          ~H"\""
+          ~F"\""
           <Link label="user" to="/users/1" />
           "\""
         end
@@ -88,7 +88,7 @@ defmodule Surface.LiveViewTest do
 
       code =
         quote do
-          ~H"\""
+          ~F"\""
           <KeywordProp prop="some string"/>
           "\""
         end
@@ -129,7 +129,7 @@ defmodule Surface.LiveViewTest do
       using_config TextInput, default_class: "default_class" do
         html =
           render_surface do
-            ~H"\""
+            ~F"\""
             <TextInput/>
             "\""
           end

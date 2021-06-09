@@ -129,6 +129,28 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(conditional)
   end
 
+  defp to_expression(%AST.Block{name: "case"} = block, buffer, state) do
+    %AST.Block{expression: case_expr, sub_blocks: sub_blocks} = block
+
+    state = %{state | depth: state.depth + 1, context: [:case | state.context]}
+
+    match_blocks =
+      Enum.flat_map(sub_blocks, fn %AST.SubBlock{children: children, expression: expr} ->
+        match_body = handle_nested_block(children, buffer, state)
+
+        quote do
+          unquote(expr) -> unquote(match_body)
+        end
+      end)
+
+    quote do
+      case unquote(case_expr) do
+        unquote(match_blocks)
+      end
+    end
+    |> maybe_print_expression(block)
+  end
+
   defp to_expression(
          %AST.Slot{
            name: slot_name,
@@ -251,23 +273,87 @@ defmodule Surface.Compiler.EExEngine do
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
-    quote generated: true do
-      live_component(
-        @socket,
-        unquote(module),
-        Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module),
-          unquote(meta.node_alias)
-        ),
-        unquote(do_block)
-      )
-    end
+    module
+    |> live_component_ast(
+      context_expr,
+      props_expr,
+      dynamic_props_expr,
+      slot_props,
+      slot_meta,
+      module,
+      meta.node_alias,
+      do_block
+    )
     |> maybe_print_expression(component)
+  end
+
+  # Detect Phoenix Live View Version to determine if `live_component` takes
+  # the `socket` as first argument
+
+  Application.load(:phoenix_live_view)
+
+  :phoenix_live_view
+  |> Application.spec(:vsn)
+  |> List.to_string()
+  |> Version.match?(">= 0.15.6")
+  |> if do
+    defp live_component_ast(
+           module,
+           context_expr,
+           props_expr,
+           dynamic_props_expr,
+           slot_props,
+           slot_meta,
+           module,
+           node_alias,
+           do_block
+         ) do
+      quote generated: true do
+        live_component(
+          unquote(module),
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(node_alias)
+          ),
+          unquote(do_block)
+        )
+      end
+    end
+  else
+    # TODO: Remove when support for phoenix_live_view <= 0.15.5 is dropped
+    defp live_component_ast(
+           module,
+           context_expr,
+           props_expr,
+           dynamic_props_expr,
+           slot_props,
+           slot_meta,
+           module,
+           node_alias,
+           do_block
+         ) do
+      quote generated: true do
+        live_component(
+          @socket,
+          unquote(module),
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(node_alias)
+          ),
+          unquote(do_block)
+        )
+      end
+    end
   end
 
   defp handle_dynamic_props(nil), do: []
@@ -550,6 +636,14 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_dynamic_nested_html([%AST.For{children: children} = comprehension | nodes]) do
     [%{comprehension | children: to_token_sequence(children)}, to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.Block{sub_blocks: sub_blocks} = block | nodes]) do
+    [%{block | sub_blocks: to_token_sequence(sub_blocks)} | to_dynamic_nested_html(nodes)]
+  end
+
+  defp to_dynamic_nested_html([%AST.SubBlock{children: children} = sub_block | nodes]) do
+    [%{sub_block | children: to_token_sequence(children)} | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([

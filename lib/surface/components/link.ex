@@ -13,7 +13,8 @@ defmodule Surface.Components.Link do
     label="user"
     to="/users/1"
     class="is-danger"
-    opts={{ method: :delete, data: [confirm: "Really?"] }}
+    method={{ :delete }}
+    opts={{ data: [confirm: "Really?"] }}
   />
 
   <Link
@@ -68,7 +69,7 @@ defmodule Surface.Components.Link do
     opts = apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns)
     attrs = opts_to_attrs(opts)
 
-    ~H"""
+    ~F"""
     <a id={@id} class={@class} href={to} :attrs={attrs}><#slot>{@label}</#slot></a>
     """
   end

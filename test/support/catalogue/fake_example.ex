@@ -4,7 +4,7 @@ defmodule Surface.Catalogue.FakeExample do
     title: "A fake example"
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     The code
     """
   end

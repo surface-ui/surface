@@ -41,13 +41,13 @@ defmodule Surface.Catalogue.Example do
       @config unquote(opts)
       @before_compile unquote(__MODULE__)
 
-      import Surface, except: [sigil_H: 2]
+      import Surface, except: [sigil_F: 2]
 
-      defmacrop sigil_H({:<<>>, meta, [string]} = ast, opts) do
+      defmacrop sigil_F({:<<>>, _meta, [string]} = ast, opts) do
         Module.put_attribute(__CALLER__.module, :code, string)
 
         quote do
-          Surface.sigil_H(unquote(ast), unquote(opts))
+          Surface.sigil_F(unquote(ast), unquote(opts))
         end
       end
     end

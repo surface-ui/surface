@@ -10,7 +10,7 @@ defmodule Surface.Components.Form.Example01 do
   data user, :map, default: %{"name" => "", "email" => ""}
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <Form for={:user} change="change" submit="submit" opts={autocomplete: "off"}>
       <Field class="field" name="name">
         <Label class="label"/>

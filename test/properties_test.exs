@@ -7,7 +7,7 @@ defmodule Surface.PropertiesTest do
     prop label, :string
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       {@label}
       """
     end
@@ -19,8 +19,8 @@ defmodule Surface.PropertiesTest do
     prop as, :atom
 
     def render(assigns) do
-      ~H"""
-      {{ @as }}
+      ~F"""
+      {inspect(@as)}
       """
     end
   end
@@ -31,7 +31,7 @@ defmodule Surface.PropertiesTest do
     prop prop, :map
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       Map?: {is_map(@prop)}
       <span :for={{k, v} <- @prop}>key: {k}, value: {v}</span>
       """
@@ -44,7 +44,7 @@ defmodule Surface.PropertiesTest do
     prop prop, :list
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       List?: {is_list(@prop)}
       <span :for={v <- @prop}>value: {inspect(v)}</span>
       """
@@ -57,7 +57,7 @@ defmodule Surface.PropertiesTest do
     prop prop, :keyword
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       Keyword?: {Keyword.keyword?(@prop)}
       <span :for={{k, v} <- @prop}>key: {k}, value: {v}</span>
       """
@@ -70,7 +70,7 @@ defmodule Surface.PropertiesTest do
     prop prop, :css_class
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <span class={@prop}/>
       """
     end
@@ -82,7 +82,7 @@ defmodule Surface.PropertiesTest do
     prop prop, :css_class
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       <div :for={c <- @prop}>{c}</div>
       """
     end
@@ -94,20 +94,71 @@ defmodule Surface.PropertiesTest do
     prop prop, :string, accumulate: true, default: ["default"]
 
     def render(assigns) do
-      ~H"""
+      ~F"""
       List?: {is_list(@prop)}
       <span :for={v <- @prop}>value: {v}</span>
       """
     end
   end
 
-  describe "string" do
-    test "passing a string literal" do
-      assigns = %{text: "text"}
+  defmodule RootProp do
+    use Surface.Component
+
+    prop label, :string, root: true
+
+    def render(assigns) do
+      ~F"""
+      { @label }
+      """
+    end
+  end
+
+  describe "atom" do
+    test "passing an atom" do
+      html =
+        render_surface do
+          ~F"""
+          <AtomProp as={:some_atom}/>
+          """
+        end
+
+      assert html =~ ":some_atom"
+    end
+
+    test "passing an atom as expression" do
+      assigns = %{atom: :some_atom}
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
+          <AtomProp as={@atom}/>
+          """
+        end
+
+      assert html =~ ":some_atom"
+    end
+
+    test "validate invalid atom at compile time" do
+      code =
+        quote do
+          ~F"""
+          <AtomProp as="some string"/>
+          """
+        end
+
+      message = ~S(code:1: invalid value for property "as". Expected a :atom, got: "some string".)
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
+      end)
+    end
+  end
+
+  describe "string" do
+    test "passing a string literal" do
+      html =
+        render_surface do
+          ~F"""
           <StringProp label="text"/>
           """
         end
@@ -120,7 +171,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <StringProp label={@text}/>
           """
         end
@@ -133,7 +184,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <KeywordProp prop={[option1: 1, option2: 2]}/>
           """
         end
@@ -148,7 +199,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list without brackets" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <KeywordProp prop={option1: 1, option2: 2}/>
           """
         end
@@ -165,7 +216,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <KeywordProp prop={@submit}/>
           """
         end
@@ -180,7 +231,7 @@ defmodule Surface.PropertiesTest do
     test "validate invalid literals at compile-time" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <KeywordProp prop="some string"/>
           """
         end
@@ -204,7 +255,7 @@ defmodule Surface.PropertiesTest do
         assigns = %{var: 1}
 
         render_surface do
-          ~H"""
+          ~F"""
           <KeywordProp prop={@var}/>
           """
         end
@@ -216,7 +267,7 @@ defmodule Surface.PropertiesTest do
     test "passing a map" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <MapProp prop={%{option1: 1, option2: 2}}/>
           """
         end
@@ -231,7 +282,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <MapProp prop={[option1: 1, option2: 2]}/>
           """
         end
@@ -246,7 +297,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list without brackets" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <MapProp prop={option1: 1, option2: 2}/>
           """
         end
@@ -263,7 +314,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <MapProp prop={@submit}/>
           """
         end
@@ -280,7 +331,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <MapProp prop={@submit}/>
           """
         end
@@ -295,7 +346,7 @@ defmodule Surface.PropertiesTest do
     test "validate invalid literals at compile-time" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <MapProp prop="some string"/>
           """
         end
@@ -319,7 +370,7 @@ defmodule Surface.PropertiesTest do
         assigns = %{var: 1}
 
         render_surface do
-          ~H"""
+          ~F"""
           <MapProp prop={@var}/>
           """
         end
@@ -331,7 +382,7 @@ defmodule Surface.PropertiesTest do
     test "passing a list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={[1, 2]}/>
           """
         end
@@ -348,7 +399,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={@submit}/>
           """
         end
@@ -365,7 +416,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={@submit}/>
           """
         end
@@ -379,7 +430,7 @@ defmodule Surface.PropertiesTest do
     test "passing a list without brackets is invalid" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <ListProp prop={1, 2}/>
           """
         end
@@ -396,7 +447,7 @@ defmodule Surface.PropertiesTest do
 
       assert_raise(RuntimeError, message, fn ->
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={1}/>
           """
         end
@@ -406,7 +457,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={[a: 1, b: 2]}/>
           """
         end
@@ -420,7 +471,7 @@ defmodule Surface.PropertiesTest do
     test "passing a range" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={1..3}/>
           """
         end
@@ -434,7 +485,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keyword list without brackets" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={a: 1, b: 2}/>
           """
         end
@@ -448,7 +499,7 @@ defmodule Surface.PropertiesTest do
     test "validate invalid literals at compile-time" do
       code =
         quote do
-          ~H"""
+          ~F"""
           <ListProp prop="some string"/>
           """
         end
@@ -466,7 +517,7 @@ defmodule Surface.PropertiesTest do
 
       assert_raise(RuntimeError, message, fn ->
         render_surface do
-          ~H"""
+          ~F"""
           <ListProp prop={%{test: 1}}/>
           """
         end
@@ -478,7 +529,7 @@ defmodule Surface.PropertiesTest do
     test "passing a string" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <CSSClassProp prop="class1 class2"/>
           """
         end
@@ -491,7 +542,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keywod list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <CSSClassProp prop={[class1: true, class2: false, class3: "truthy"]}/>
           """
         end
@@ -504,7 +555,7 @@ defmodule Surface.PropertiesTest do
     test "passing a keywod list without brackets" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <CSSClassProp prop={class1: true, class2: false, class3: "truthy"}/>
           """
         end
@@ -517,7 +568,7 @@ defmodule Surface.PropertiesTest do
     test "trim class items" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <CSSClassProp prop={"", " class1 " , "", " ", "  ", " class2 class3 ", ""}/>
           """
         end
@@ -530,7 +581,7 @@ defmodule Surface.PropertiesTest do
     test "values are always converted to a list of strings" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <CSSClassPropInspect prop="class1 class2   class3"/>
           """
         end
@@ -541,7 +592,7 @@ defmodule Surface.PropertiesTest do
 
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <CSSClassPropInspect prop={["class1"] ++ ["class2 class3", :class4, class5: true]}/>
           """
         end
@@ -556,7 +607,7 @@ defmodule Surface.PropertiesTest do
     test "if true, groups all props with the same name in a single list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <AccumulateProp prop="str_1" prop={"str_2"}/>
           """
         end
@@ -571,7 +622,7 @@ defmodule Surface.PropertiesTest do
     test "if true and there's a single prop, it stills creates a list" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <AccumulateProp prop="str_1"/>
           """
         end
@@ -585,7 +636,7 @@ defmodule Surface.PropertiesTest do
     test "without any props, takes the default value" do
       html =
         render_surface do
-          ~H"""
+          ~F"""
           <AccumulateProp/>
           """
         end
@@ -596,6 +647,23 @@ defmodule Surface.PropertiesTest do
              """
     end
   end
+
+  describe "root property" do
+    test "component accepts root property" do
+      assigns = %{label: "Label"}
+
+      html =
+        render_surface do
+          ~F"""
+          <RootProp {@label} />
+          """
+        end
+
+      assert html =~ """
+             Label
+             """
+    end
+  end
 end
 
 defmodule Surface.PropertiesSyncTest do
@@ -603,6 +671,7 @@ defmodule Surface.PropertiesSyncTest do
 
   import ExUnit.CaptureIO
   alias Surface.PropertiesTest.StringProp, warn: false
+  alias Surface.PropertiesTest.RootProp, warn: false
 
   test "warn if prop is required and has default value" do
     id = :erlang.unique_integer([:positive]) |> to_string()
@@ -615,7 +684,7 @@ defmodule Surface.PropertiesSyncTest do
       prop label, :string, default: "My Label", required: true
 
       def render(assigns) do
-        ~H""
+        ~F""
       end
     end
     """
@@ -641,7 +710,7 @@ defmodule Surface.PropertiesSyncTest do
       use Surface.Component
 
       def render(assigns) do
-        ~H"\""
+        ~F"\""
         <StringProp
           label="first
           label" label="second label"
@@ -658,7 +727,7 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           The prop `label` has been passed multiple times. Considering only the last value.
+           the prop `label` has been passed multiple times. Considering only the last value.
 
            Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
 
@@ -672,20 +741,19 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
-  test "warn if prop of type :atom is passed as literal string" do
+  test "warn if attrs are specified multiple times for html tag" do
     id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestComponentWithAtomPropPassedAsString_#{id}"
-
-    alias Surface.PropertiesTest.AtomProp, warn: false
+    module = "TestComponentWithAttrsSpecifiedMultipleTimes_#{id}"
 
     code = """
     defmodule #{module} do
       use Surface.Component
 
       def render(assigns) do
-        ~H"\""
-        <AtomProp
-          as="first"
+        ~F"\""
+        <div
+          class="foo"
+          class="bar"
         />
         "\""
       end
@@ -699,11 +767,123 @@ defmodule Surface.PropertiesSyncTest do
       end)
 
     assert output =~ ~r"""
-           automatic conversion of string literals into atoms is deprecated and will be removed in v0.5.0.
+           the attribute `class` has been passed multiple times on line 6. \
+           Considering only the last value.
 
-           Hint: replace `as="first"` with `as={{ :first }}`
+           Hint: remove all redundant definitions
 
-             code.exs:7:\
+             code.exs:8:\
+           """
+  end
+
+  test "warn if given default value doesn't exist in values list" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithDefaultValueThatDoesntExistInValues_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      prop type, :string, values!: ["small", "medium", "large"], default: "x-large"
+
+      data data_type, :string, values!: ["small", "medium", "large"], default: "x-large"
+
+      prop invalid_type, :integer, default: [], values!: [0, 1, 2]
+
+      prop valid_acc, :integer, default: [1], values!: [0, 1, 2], accumulate: true
+
+      prop invalid_acc1, :integer, default: [3], values!: [0, 1, 2], accumulate: true
+
+      prop invalid_acc2, :string, values!: [1, 2, 3], default: 3, accumulate: true
+
+      def render(assigns) do
+        ~F""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} =
+          Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~S"""
+           prop `type` default value `"x-large"` does not exist in `:values!`
+           """
+
+    assert output =~ ~S"""
+           data `data_type` default value `"x-large"` does not exist in `:values!`
+           """
+
+    assert output =~ ~S"""
+           prop `invalid_type` default value `[]` does not exist in `:values!`
+           """
+
+    refute output =~ ~S"""
+           prop `valid_acc`
+           """
+
+    assert output =~ ~S"""
+           prop `invalid_acc1` default value `[3]` does not exist in `:values!`
+           """
+
+    assert output =~ ~S"""
+           prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
+           """
+  end
+
+  test "warn if component does not accept a root property" do
+    assigns = %{label: "root"}
+
+    code =
+      quote do
+        ~F"""
+        <StringProp
+          {@label}
+        />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, assigns)
+      end)
+
+    assert output =~ ~r"""
+           no root property defined for component <StringProp>
+
+           Hint: you can declare a root property using option `root: true`
+
+             code:2:\
+           """
+  end
+
+  test "warn if tag has a root property and the property assigned normally" do
+    assigns = %{label: "root"}
+
+    code =
+      quote do
+        ~F"""
+        <RootProp
+          {@label}
+          label="toor"
+        />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, assigns)
+      end)
+
+    assert output =~ ~r"""
+           the prop `label` has been passed multiple times. Considering only the last value.
+
+           Hint: Either specify the `label` via the root property \(`<RootProp { ... }>`\) or \
+           explicitly via the label property \(`<RootProp label="...">`\), but not both.
+
+             code:3:\
            """
   end
 end

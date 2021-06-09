@@ -26,8 +26,8 @@ defmodule Surface.Compiler.Helpers do
     @builtin_assigns_by_type[type]
   end
 
-  def interpolation_to_quoted!(text, meta) do
-    case Code.string_to_quoted(text, file: meta.file, line: meta.line) do
+  def expression_to_quoted!(text, meta) do
+    case Code.string_to_quoted(text, file: meta.file, line: meta.line, column: meta.column) do
       {:ok, expr} ->
         expr
 
@@ -56,7 +56,11 @@ defmodule Surface.Compiler.Helpers do
          component_type
        )
        when component_type in [Surface.Component, Surface.LiveComponent] do
-    defined_assigns = Keyword.keys(Surface.API.get_assigns(caller.module))
+    defined_assigns =
+      caller.module
+      |> Surface.API.get_assigns()
+      |> Enum.map(& &1.name)
+
     builtin_assigns = builtin_assigns_by_type(component_type)
     undefined_assigns = Keyword.drop(used_assigns, builtin_assigns ++ defined_assigns)
 

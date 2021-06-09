@@ -10,7 +10,7 @@ defmodule Surface.Component do
         prop click, :event
 
         def render(assigns) do
-          ~H"\""
+          ~F"\""
           <button class="button" phx-click={{ @click }}>
             <#slot/>
           </button>
@@ -44,8 +44,8 @@ defmodule Surface.Component do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.{For, If}
-      alias Surface.Components.Context
+      alias Surface.Constructs.Deprecated.{For, If}
+      alias Surface.Components.{Context, Raw}
 
       @doc "Built-in assign"
       data socket, :struct
@@ -89,7 +89,7 @@ defmodule Surface.Component do
         end
 
         def render(var!(assigns)) do
-          ~H()
+          ~F()
         end
       end
     end

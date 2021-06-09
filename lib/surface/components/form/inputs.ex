@@ -33,7 +33,7 @@ defmodule Surface.Components.Form.Inputs do
   slot default, props: [:form, :index]
 
   def render(assigns) do
-    ~H"""
+    ~F"""
     <Context get={Surface.Components.Form, form: form}>
       <Context
         :for={{f, index}  <- Enum.with_index(inputs_for(@form || form, @for, @opts))}
