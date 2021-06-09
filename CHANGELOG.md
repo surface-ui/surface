@@ -30,7 +30,6 @@
   * Replace the sigil `~H` with `~F` to avoid conflict with `HEEx`
   * Replace interpolation delimiters `{{` and `}}` with `{` and `}`
   * Remove support for interpolation inside `<style>...</style>` and `<script>...</script>` nodes
-  * ErrorTag: Renamed prop `phx_trigger_action` to `trigger_action`
   * ErrorTag: Renamed prop `phx_feedback_for` to `feedback_for`
 
 ## v0.4.1 (2021-05-26)
