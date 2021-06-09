@@ -1,4 +1,4 @@
-defmodule ContextTest do
+defmodule Surface.Components.ContextTest do
   use Surface.ConnCase, async: true
 
   alias Surface.Components.Context
@@ -30,6 +30,8 @@ defmodule ContextTest do
   defmodule Inner do
     use Surface.Component
 
+    alias Surface.Components.ContextTest
+
     def render(assigns) do
       ~F"""
       <Context
@@ -56,6 +58,8 @@ defmodule ContextTest do
 
   defmodule InnerWithOptionAs do
     use Surface.Component
+
+    alias Surface.Components.ContextTest
 
     def render(assigns) do
       ~F"""
