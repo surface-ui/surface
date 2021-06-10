@@ -4,6 +4,7 @@ defmodule Surface.Compiler.Parser do
   alias Surface.Compiler.Tokenizer
   alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
+  alias Surface.IOHelper
 
   @type state :: %{
           token_stack:
@@ -288,16 +289,21 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(name, value, meta, state, context)
   end
 
-  defp translate_attr(_state, _context, {name, {:string, value, %{delimiter: nil}}, meta}) do
-    raise parse_error(
-            """
-            Surface does not support passing non-string attribute values as literals \
-            (i.e. `selected=true` or `tabindex=3`).
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
+    IOHelper.warn(
+      """
+      Using unquoted attribute values is not recommended as they will always be converted to strings.
 
-            Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
-            """,
-            meta
-          )
+      For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+
+      Hint: if you want to pass a literal boolean or integer, replace `#{name}=#{value}` with `#{name}={#{value}}`
+      """,
+      state.caller,
+      meta.file,
+      meta.line
+    )
+
+    state.translator.handle_attribute(name, value, meta, state, context)
   end
 
   defp translate_attr(state, context, {:root, {:expr, _value, expr_meta} = expr, _attr_meta}) do

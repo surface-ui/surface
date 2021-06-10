@@ -16,6 +16,11 @@
   * Added a convert task to aid migrating to the new syntax
   * Evaluate literal attribute values at compile time instead of runtime
 
+### Deprecations
+
+  * Support for passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been removed.
+    Any non-string value should be passed as an expression (i.e. `selected={true}`)
+
 ### Breaking Changes
 
   * Replace the sigil `~H` with `~F` to avoid conflict with `HEEx`
@@ -26,8 +31,6 @@
   * `<slot>` has been removed in favor of `<#slot>`
   * `<If>` has been removed in favor of `{#if}...{/if}`
   * `<For>` has been removed in favor of `{#for}...{/for}`
-  * Support for passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been removed.
-    Any non-string value should be passed as an expression (i.e. `selected={true}`)
 
 ## v0.4.1 (2021-05-26)
 
