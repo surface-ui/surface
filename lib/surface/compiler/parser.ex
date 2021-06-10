@@ -288,6 +288,10 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(name, value, meta, state, context)
   end
 
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: ?'}}, meta}) do
+    state.translator.handle_attribute(name, value, meta, state, context)
+  end
+
   defp translate_attr(state, context, {name, {:string, "true", %{delimiter: nil}}, meta}) do
     meta = Map.put(meta, :unquoted_string?, true)
     state.translator.handle_attribute(name, true, meta, state, context)
