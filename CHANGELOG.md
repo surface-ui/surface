@@ -15,6 +15,7 @@
   * Introduce `:values` directive for generating multiple `phx-value-` attributes
   * Added a convert task to aid migrating to the new syntax
   * Evaluate literal attribute values at compile time instead of runtime
+  * Fix compile error when using single quotes as attribute value delimiters
 
 ### Deprecations
 

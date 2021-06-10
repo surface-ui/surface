@@ -289,6 +289,10 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(name, value, meta, state, context)
   end
 
+  defp translate_attr(state, context, {name, {:string, value, %{delimiter: ?'}}, meta}) do
+    state.translator.handle_attribute(name, value, meta, state, context)
+  end
+
   defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
     IOHelper.warn(
       """
