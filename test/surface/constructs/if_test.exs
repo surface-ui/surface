@@ -27,67 +27,6 @@ defmodule Surface.Constructs.IfTest do
     end
   end
 
-  test "warn when using deprecated <If>" do
-    code =
-      quote do
-        ~F"""
-        <If condition={true}>
-          Warning
-        </If>
-        """
-      end
-
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code)
-      end)
-
-    assert output =~ ~r"""
-           using <If> to wrap elements in an if expression has been deprecated and will be removed in \
-           future versions.
-
-           Hint: replace `<If>` with `{#if}`
-
-             code:1:\
-           """
-  end
-
-  test "parser error message contains the correct line" do
-    code =
-      quote do
-        ~F"""
-        <If condition={true}>
-          <span>The inner content
-        </If>
-        """
-      end
-
-    message = ~S(code:2:12: expected closing node for <span> defined on line 2, got </If>)
-
-    assert_raise(Surface.Compiler.ParseError, message, fn ->
-      capture_io(:standard_error, fn ->
-        compile_surface(code)
-      end)
-    end)
-  end
-
-  test "compile error message contains the correct line" do
-    code =
-      quote do
-        ~F"""
-        <If condition={true}>
-          <ListProp prop="some string" />
-        </If>
-        """
-      end
-
-    message = ~S(code:2: invalid value for property "prop". Expected a :list, got: "some string".)
-
-    assert_raise(CompileError, message, fn ->
-      compile_surface(code)
-    end)
-  end
-
   describe "#if language structure" do
     test "renders inner if condition is truthy" do
       html =
