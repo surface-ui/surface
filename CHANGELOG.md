@@ -20,7 +20,6 @@
 
   * `<If>` has been deprecated in favor of `{#if}...{/if}`
   * `<For>` has been deprecated in favor of `{#for}...{/for}`
-  * `<slot>` has been deprecated in favor of `<#slot>`
   * Passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been deprecated.
     Any non-string value should be passed as an expression (i.e. `selected={true}`)
 
@@ -31,6 +30,7 @@
   * Remove support for interpolation inside `<style>...</style>` and `<script>...</script>` nodes
   * ErrorTag: Renamed prop `phx_feedback_for` to `feedback_for`
   * `<template>` has been removed in favor of `<#template>`
+  * `<slot>` has been deprecated in favor of `<#slot>`
 
 ## v0.4.1 (2021-05-26)
 
