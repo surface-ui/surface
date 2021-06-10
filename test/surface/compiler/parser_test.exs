@@ -508,6 +508,25 @@ defmodule Surface.Compiler.ParserTest do
              ]
     end
 
+    test "attribute values with single quote delimiter" do
+      code = """
+      <foo
+        prop1='value1'
+        prop2='value2'
+      >
+      </foo>
+      """
+
+      assert [{"foo", attributes, children, %{line: 1, file: "nofile", column: 2}}, "\n"] = parse!(code)
+
+      assert [
+               {"prop1", "value1", %{line: 2, file: "nofile", column: 3}},
+               {"prop2", "value2", %{line: 3, file: "nofile", column: 3}}
+             ] = attributes
+
+      assert ["\n"] = children
+    end
+
     test "regular nodes" do
       code = """
       <foo
