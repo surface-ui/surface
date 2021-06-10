@@ -1,14 +1,23 @@
 defmodule Surface.MacroComponentTest do
   use Surface.ConnCase
 
+  import ExUnit.CaptureIO
+
   defmodule Upcase do
     use Surface.MacroComponent
 
+    alias Surface.MacroComponent
+
     prop class, :css_class
+    prop align, :string, static: true
 
     slot default
 
     def expand(attributes, children, meta) do
+      # Static prop
+      static_props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
+      align = static_props[:align] || false
+
       # String
       content = children |> List.to_string() |> String.trim() |> String.upcase()
       title = "Some title"
@@ -29,6 +38,7 @@ defmodule Surface.MacroComponentTest do
         quote_surface do
           ~F"""
           <span
+            align={^align}
             title={^title}
             disabled={^disabled}
             hidden={^hidden}
@@ -95,6 +105,25 @@ defmodule Surface.MacroComponentTest do
            """
   end
 
+  test "accept attributes values passed as static values" do
+    html =
+      render_surface do
+        ~F"""
+        <#Upcase align="center">
+          content
+        </#Upcase>
+        """
+      end
+
+    assert html =~ ~r"""
+           <div>
+           <span align="center"(.+)>
+             CONTENT
+           </span>
+           </div>
+           """
+  end
+
   test "accept attributes values passed as dynamic expressions" do
     assigns = %{class: "some_class"}
 
@@ -130,6 +159,34 @@ defmodule Surface.MacroComponentTest do
 
     assert_raise(SyntaxError, ~r/code:2: syntax error before: ','/, fn ->
       compile_surface(code)
+    end)
+  end
+
+  test "static properties do not accept runtime expressions" do
+    code =
+      quote do
+        ~F"""
+        <#Upcase
+          align={@align}>
+          content
+        </#Upcase>
+        """
+      end
+
+    message = """
+    code:2: invalid value for property "align"
+
+    Expected a string while evaluating {@align}, got: nil
+
+    Hint: static properties of macro components can only accept static values like module attributes,
+    literals or compile-time expressions. Runtime variables and expressions, including component
+    assigns, cannot be evaluated as they are not available during compilation.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        compile_surface(code, %{class: "markdown"})
+      end)
     end)
   end
 end

@@ -404,7 +404,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate, :root]
+    [:required, :default, :values, :values!, :accumulate, :root, :static]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
@@ -439,6 +439,11 @@ defmodule Surface.API do
   defp validate_opt(:prop, _name, _type, _opts, :root, value, _line, _env)
        when not is_boolean(value) do
     {:error, "invalid value for option :root. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(:prop, _name, _type, _opts, :static, value, _line, _env)
+       when not is_boolean(value) do
+    {:error, "invalid value for option :static. Expected a boolean, got: #{inspect(value)}"}
   end
 
   defp validate_opt(_func, _name, _type, _opts, :required, value, _line, _env)
