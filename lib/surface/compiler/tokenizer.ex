@@ -660,7 +660,6 @@ defmodule Surface.Compiler.Tokenizer do
 
   ## handle_attr_value_unquoted
 
-  # TODO: remove after 0.5 release
   defp handle_attr_value_unquoted(<<c::utf8, _::binary>> = text, line, column, buffer, acc, state)
        when c in @unquoted_value_stop_chars do
     value = buffer_to_string(buffer)
