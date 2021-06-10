@@ -18,8 +18,6 @@
 
 ### Deprecations
 
-  * Passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been deprecated.
-    Any non-string value should be passed as an expression (i.e. `selected={true}`)
 
 ### Breaking Changes
 
@@ -31,6 +29,8 @@
   * `<slot>` has been removed in favor of `<#slot>`
   * `<If>` has been removed in favor of `{#if}...{/if}`
   * `<For>` has been removed in favor of `{#for}...{/for}`
+  * Support for passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been removed.
+    Any non-string value should be passed as an expression (i.e. `selected={true}`)
 
 ## v0.4.1 (2021-05-26)
 
