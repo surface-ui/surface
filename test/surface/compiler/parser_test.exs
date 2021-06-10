@@ -637,34 +637,49 @@ defmodule Surface.Compiler.ParserTest do
       code = """
       <foo
         prop1=1
-        prop2=2
       />
       """
 
-      attributes = [
-        {"prop1", 1, %{line: 2, file: "nofile", column: 3, unquoted_string?: true}},
-        {"prop2", 2, %{line: 3, file: "nofile", column: 3, unquoted_string?: true}}
-      ]
+      exception = assert_raise ParseError, fn -> parse!(code) end
 
-      assert parse!(code) ==
-               [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
+      message = """
+      Surface does not support passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`).
+
+      Hint: replace `prop1=1` with `prop1={1}`
+      """
+
+      assert %ParseError{message: ^message, line: 2} = exception
     end
 
-    test "boolean values" do
+    test "boolean literals" do
+      code = """
+      <foo
+        prop1=true
+      />
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message = """
+      Surface does not support passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`).
+
+      Hint: replace `prop1=true` with `prop1={true}`
+      """
+
+      assert %ParseError{message: ^message, line: 2} = exception
+    end
+
+    test "no value is treated as true" do
       code = """
       <foo
         prop1
-        prop2=true
-        prop3=false
-        prop4
+        prop2
       />
       """
 
       attributes = [
         {"prop1", true, %{line: 2, file: "nofile", column: 3}},
-        {"prop2", true, %{line: 3, file: "nofile", column: 3, unquoted_string?: true}},
-        {"prop3", false, %{line: 4, file: "nofile", column: 3, unquoted_string?: true}},
-        {"prop4", true, %{line: 5, file: "nofile", column: 3}}
+        {"prop2", true, %{line: 3, file: "nofile", column: 3}}
       ]
 
       assert parse!(code) ==

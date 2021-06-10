@@ -288,26 +288,16 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(name, value, meta, state, context)
   end
 
-  defp translate_attr(state, context, {name, {:string, "true", %{delimiter: nil}}, meta}) do
-    meta = Map.put(meta, :unquoted_string?, true)
-    state.translator.handle_attribute(name, true, meta, state, context)
-  end
+  defp translate_attr(_state, _context, {name, {:string, value, %{delimiter: nil}}, meta}) do
+    raise parse_error(
+            """
+            Surface does not support passing non-string attribute values as literals \
+            (i.e. `selected=true` or `tabindex=3`).
 
-  defp translate_attr(state, context, {name, {:string, "false", %{delimiter: nil}}, meta}) do
-    meta = Map.put(meta, :unquoted_string?, true)
-    state.translator.handle_attribute(name, false, meta, state, context)
-  end
-
-  defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
-    meta = Map.put(meta, :unquoted_string?, true)
-
-    case Integer.parse(value) do
-      {int_value, ""} ->
-        state.translator.handle_attribute(name, int_value, meta, state, context)
-
-      _ ->
-        raise parse_error("unexpected value for attribute \"#{name}\"", meta)
-    end
+            Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
+            """,
+            meta
+          )
   end
 
   defp translate_attr(state, context, {:root, {:expr, _value, expr_meta} = expr, _attr_meta}) do
