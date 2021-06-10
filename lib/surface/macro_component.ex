@@ -4,17 +4,18 @@ defmodule Surface.MacroComponent do
   content at compile time.
   """
 
+  alias Surface.IOHelper
+  alias Surface.AST
+
   @doc """
   This function is called to expand a macro component into a
   set of Surface.AST nodes.
   """
   @callback expand(
-              attributes :: [Surface.AST.Attribute.t()],
+              attributes :: [AST.Attribute.t()],
               children :: iodata(),
-              meta :: Surface.AST.Meta.t()
-            ) :: Surface.AST.t() | [Surface.AST.t()]
-
-  alias Surface.IOHelper
+              meta :: AST.Meta.t()
+            ) :: AST.t() | [AST.t()]
 
   defmacro __using__(_) do
     quote do
@@ -29,48 +30,33 @@ defmodule Surface.MacroComponent do
   end
 
   @doc """
-  Evaluates the values of the properties of a macro component.
+  Evaluates the values of the static properties of a macro component.
 
   Usually called inside `translate/2` in order to retrieve the
-  properties at compile-time.
+  properties' values at compile-time.
   """
   def eval_static_props!(component, attributes, caller) do
-    for attr <- attributes, into: %{} do
-      eval_value(component, attr, caller)
+    for %AST.Attribute{name: name} = attr <- attributes,
+        prop = component.__get_prop__(name),
+        prop.opts[:static],
+        into: %{} do
+      eval_value(attr, prop, caller)
     end
   end
 
-  defp eval_value(
-         _component,
-         %Surface.AST.Attribute{name: name, value: %Surface.AST.Literal{value: value}},
-         _caller
-       )
+  defp eval_value(%AST.Attribute{name: name, value: %AST.Literal{value: value}}, _prop, _caller)
        when is_list(value) do
     {name, to_string(value)}
   end
 
-  defp eval_value(
-         _component,
-         %Surface.AST.Attribute{name: name, value: %Surface.AST.Literal{value: value}},
-         _caller
-       ) do
+  defp eval_value(%AST.Attribute{name: name, value: %AST.Literal{value: value}}, _prop, _caller) do
     {name, value}
   end
 
-  defp eval_value(
-         component,
-         %Surface.AST.Attribute{
-           name: name,
-           value: %Surface.AST.AttributeExpr{
-             original: value,
-             value: expr,
-             meta: %{line: line, file: file}
-           }
-         },
-         caller
-       ) do
+  defp eval_value(%AST.Attribute{value: value_ast}, prop, caller) do
+    %AST.AttributeExpr{original: value, value: expr, meta: %{line: line, file: file}} = value_ast
+
     env = %Macro.Env{caller | line: line}
-    prop_info = component.__get_prop__(name)
 
     {evaluated_value, _} =
       try do
@@ -89,10 +75,10 @@ defmodule Surface.MacroComponent do
           reraise(error, __STACKTRACE__)
       end
 
-    if valid_value?(prop_info.type, evaluated_value) do
-      {prop_info.name, evaluated_value}
+    if valid_value?(prop.type, evaluated_value) do
+      {prop.name, evaluated_value}
     else
-      message = invalid_value_error(prop_info.name, prop_info.type, evaluated_value, value)
+      message = invalid_value_error(prop.name, prop.type, evaluated_value, value)
       IOHelper.compile_error(message, file, line)
     end
   end
@@ -119,7 +105,7 @@ defmodule Surface.MacroComponent do
 
     Expected a #{prop_type} while evaluating {#{String.trim(expr)}}, got: #{inspect(value)}
 
-    Hint: properties of macro components can only accept static values like module attributes,
+    Hint: static properties of macro components can only accept static values like module attributes,
     literals or compile-time expressions. Runtime variables and expressions, including component
     assigns, cannot be evaluated as they are not available during compilation.
     """

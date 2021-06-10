@@ -83,6 +83,13 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :static in prop" do
+    code = "prop label, :string, static: 1"
+    message = ~r/invalid value for option :static. Expected a boolean, got: 1/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
@@ -321,7 +328,7 @@ defmodule Surface.APITest do
       code = "prop label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
