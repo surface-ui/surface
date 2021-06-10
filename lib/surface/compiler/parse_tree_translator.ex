@@ -18,19 +18,6 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {{:comment, comment, meta}, state}
   end
 
-  def handle_node("template", attributes, body, meta, state, context) do
-    message = """
-    using <template> to fill slots has been deprecated and will be removed in \
-    future versions.
-
-    Hint: replace `<template>` with `<#template>`
-    """
-
-    IOHelper.warn(message, state.caller, fn _ -> meta.line end)
-
-    handle_node("#template", attributes, body, meta, state, context)
-  end
-
   def handle_node("slot", attributes, body, meta, state, context) do
     message = """
     using <slot> to define component slots has been deprecated and will be removed in \
