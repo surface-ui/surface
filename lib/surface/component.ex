@@ -44,7 +44,6 @@ defmodule Surface.Component do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.Deprecated.{For, If}
       alias Surface.Components.{Context, Raw}
 
       @doc "Built-in assign"

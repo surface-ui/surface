@@ -652,38 +652,17 @@ defmodule Surface.Compiler.ParserTest do
                [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
     end
 
-    test "integer values" do
-      code = """
-      <foo
-        prop1=1
-        prop2=2
-      />
-      """
-
-      attributes = [
-        {"prop1", 1, %{line: 2, file: "nofile", column: 3, unquoted_string?: true}},
-        {"prop2", 2, %{line: 3, file: "nofile", column: 3, unquoted_string?: true}}
-      ]
-
-      assert parse!(code) ==
-               [{"foo", attributes, [], %{line: 1, file: "nofile", column: 2}}, "\n"]
-    end
-
-    test "boolean values" do
+    test "no value is treated as true" do
       code = """
       <foo
         prop1
-        prop2=true
-        prop3=false
-        prop4
+        prop2
       />
       """
 
       attributes = [
         {"prop1", true, %{line: 2, file: "nofile", column: 3}},
-        {"prop2", true, %{line: 3, file: "nofile", column: 3, unquoted_string?: true}},
-        {"prop3", false, %{line: 4, file: "nofile", column: 3, unquoted_string?: true}},
-        {"prop4", true, %{line: 5, file: "nofile", column: 3}}
+        {"prop2", true, %{line: 3, file: "nofile", column: 3}}
       ]
 
       assert parse!(code) ==
@@ -1039,6 +1018,94 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       assert %ParseError{message: ^message, line: 3} = exception
+    end
+  end
+end
+
+defmodule Surface.Compiler.ParserSyncTest do
+  use ExUnit.Case
+
+  import ExUnit.CaptureIO
+
+  test "warning on unquoted integer values" do
+    code = """
+    <foo
+      prop1=1
+    />
+    """
+
+    {:warn, line, message} = run_parse(code, __ENV__)
+
+    assert message =~ """
+           Using unquoted attribute values is not recommended as they will always be converted to strings.
+
+           For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+
+           Hint: if you want to pass a literal boolean or integer, replace `prop1=1` with `prop1={1}`
+           """
+
+    assert line == 2
+  end
+
+  test "warning on unquoted boolean literals" do
+    code = """
+    <foo
+      prop1=true
+      prop2=false
+    />
+    """
+
+    {:warn, line, message} = run_parse(code, __ENV__)
+
+    assert message =~ """
+           Using unquoted attribute values is not recommended as they will always be converted to strings.
+
+           For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+
+           Hint: if you want to pass a literal boolean or integer, replace `prop1=true` with `prop1={true}`
+           """
+
+    assert message =~ """
+           Using unquoted attribute values is not recommended as they will always be converted to strings.
+
+           For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+
+           Hint: if you want to pass a literal boolean or integer, replace `prop2=false` with `prop2={false}`
+           """
+
+    assert line == 2
+  end
+
+  defp run_parse(code, env) do
+    env = %{env | line: 1}
+
+    output =
+      capture_io(:standard_error, fn ->
+        result = Surface.Compiler.Parser.parse!(code, line: 1, caller: env)
+        send(self(), {:result, result})
+      end)
+
+    result =
+      receive do
+        {:result, result} -> result
+      end
+
+    case output do
+      "" ->
+        {:ok, result}
+
+      message ->
+        {:warn, extract_line(output), message}
+    end
+  end
+
+  defp extract_line(message) do
+    case Regex.run(~r/(?:nofile|.exs):(\d+)/, message) do
+      [_, line] ->
+        String.to_integer(line)
+
+      _ ->
+        :not_found
     end
   end
 end

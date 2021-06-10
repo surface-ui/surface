@@ -1,6 +1,12 @@
 defmodule Surface.IOHelper do
   @moduledoc false
 
+  def warn(message, caller, file, line) do
+    stacktrace = Macro.Env.stacktrace(%{caller | file: file, line: line})
+
+    IO.warn(message, stacktrace)
+  end
+
   def warn(message, caller, update_line_fun) do
     stacktrace =
       caller

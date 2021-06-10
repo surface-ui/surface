@@ -4,6 +4,7 @@ defmodule Surface.Compiler.Parser do
   alias Surface.Compiler.Tokenizer
   alias Surface.Compiler.ParseError
   alias Surface.Compiler.Helpers
+  alias Surface.IOHelper
 
   @type state :: %{
           token_stack:
@@ -292,26 +293,21 @@ defmodule Surface.Compiler.Parser do
     state.translator.handle_attribute(name, value, meta, state, context)
   end
 
-  defp translate_attr(state, context, {name, {:string, "true", %{delimiter: nil}}, meta}) do
-    meta = Map.put(meta, :unquoted_string?, true)
-    state.translator.handle_attribute(name, true, meta, state, context)
-  end
-
-  defp translate_attr(state, context, {name, {:string, "false", %{delimiter: nil}}, meta}) do
-    meta = Map.put(meta, :unquoted_string?, true)
-    state.translator.handle_attribute(name, false, meta, state, context)
-  end
-
   defp translate_attr(state, context, {name, {:string, value, %{delimiter: nil}}, meta}) do
-    meta = Map.put(meta, :unquoted_string?, true)
+    IOHelper.warn(
+      """
+      Using unquoted attribute values is not recommended as they will always be converted to strings.
 
-    case Integer.parse(value) do
-      {int_value, ""} ->
-        state.translator.handle_attribute(name, int_value, meta, state, context)
+      For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
 
-      _ ->
-        raise parse_error("unexpected value for attribute \"#{name}\"", meta)
-    end
+      Hint: if you want to pass a literal boolean or integer, replace `#{name}=#{value}` with `#{name}={#{value}}`
+      """,
+      state.caller,
+      meta.file,
+      meta.line
+    )
+
+    state.translator.handle_attribute(name, value, meta, state, context)
   end
 
   defp translate_attr(state, context, {:root, {:expr, _value, expr_meta} = expr, _attr_meta}) do

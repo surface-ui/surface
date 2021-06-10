@@ -698,7 +698,6 @@ defmodule Surface.Compiler do
   end
 
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, compile_meta, acc) do
-    unquoted_string? = attr_meta[:unquoted_string?]
     name = String.to_atom(name)
     attr_meta = Helpers.to_meta(attr_meta, meta)
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
@@ -746,16 +745,6 @@ defmodule Surface.Compiler do
 
       true ->
         nil
-    end
-
-    if unquoted_string? do
-      message = """
-      passing unquoted attribute values has been deprecated and will be removed in future versions.
-
-      Hint: replace `#{name}=#{value}` with `#{name}={#{value}}`
-      """
-
-      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
     end
 
     node = %AST.Attribute{
