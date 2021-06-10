@@ -16,9 +16,6 @@
   * Added a convert task to aid migrating to the new syntax
   * Evaluate literal attribute values at compile time instead of runtime
 
-### Deprecations
-
-
 ### Breaking Changes
 
   * Replace the sigil `~H` with `~F` to avoid conflict with `HEEx`
