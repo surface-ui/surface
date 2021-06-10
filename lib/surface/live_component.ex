@@ -64,7 +64,6 @@ defmodule Surface.LiveComponent do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Constructs.Deprecated.{For, If}
       alias Surface.Components.{Context, Raw}
 
       @doc """
