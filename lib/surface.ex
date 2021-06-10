@@ -366,7 +366,7 @@ defmodule Surface do
     #{existing_slots_message}\
     """
 
-    IOHelper.warn(message, caller, & &1)
+    IOHelper.warn(message, caller)
   end
 
   defp rename_id_if_stateless(props, Surface.Component) do

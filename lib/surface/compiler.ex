@@ -162,14 +162,16 @@ defmodule Surface.Compiler do
         IOHelper.warn(
           "stateful live components must have a HTML root element",
           compile_meta.caller,
-          fn _ -> compile_meta.line end
+          compile_meta.file,
+          compile_meta.line
         )
 
       num_tags > 1 ->
         IOHelper.warn(
           "stateful live components must have a single HTML root element",
           compile_meta.caller,
-          fn _ -> compile_meta.line end
+          compile_meta.file,
+          compile_meta.line
         )
 
       true ->
@@ -197,7 +199,8 @@ defmodule Surface.Compiler do
         end
       """,
       caller,
-      fn _ -> meta.line end
+      meta.file,
+      meta.line
     )
   end
 
@@ -210,12 +213,12 @@ defmodule Surface.Compiler do
           process_directives(ast)
 
         {:error, {message, line}, meta} ->
-          IOHelper.warn(message, compile_meta.caller, fn _ -> line end)
+          IOHelper.warn(message, compile_meta.caller, meta.file, line)
           %AST.Error{message: message, meta: meta}
 
         {:error, {message, details, line}, meta} ->
           details = if details, do: "\n\n" <> details, else: ""
-          IOHelper.warn(message <> details, compile_meta.caller, fn _ -> line end)
+          IOHelper.warn(message <> details, compile_meta.caller, meta.file, line)
           %AST.Error{message: message, meta: meta}
       end
     end
@@ -692,7 +695,7 @@ defmodule Surface.Compiler do
         Hint: you can declare a root property using option `root: true`
         """
 
-        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
         process_attributes(mod, attrs, meta, compile_meta, acc)
     end
   end
@@ -716,7 +719,7 @@ defmodule Surface.Compiler do
         explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
         """
 
-        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
 
       duplicated_prop? && not root_prop? ->
         message = """
@@ -731,7 +734,7 @@ defmodule Surface.Compiler do
         This way the values will be accumulated in a list.
         """
 
-        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
 
       duplicated_html_attr? ->
         message = """
@@ -741,7 +744,7 @@ defmodule Surface.Compiler do
         Hint: remove all redundant definitions
         """
 
-        IOHelper.warn(message, meta.caller, fn _ -> attr_meta.line end)
+        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
 
       true ->
         nil
@@ -908,7 +911,7 @@ defmodule Surface.Compiler do
             message
           end
 
-        IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+        IOHelper.warn(message, meta.caller, meta.file, meta.line)
       end
     end
 
@@ -931,7 +934,7 @@ defmodule Surface.Compiler do
         !Map.has_key?(templates, name) or
           Enum.all?(Map.get(templates, name, []), &Helpers.is_blank_or_empty/1) do
       message = "missing required slot \"#{name}\" for component <#{meta.node_alias}>"
-      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+      IOHelper.warn(message, meta.caller, meta.file, meta.line)
     end
 
     for {slot_name, template_instances} <- templates,
@@ -1102,7 +1105,7 @@ defmodule Surface.Compiler do
       but not both.
       """
 
-      IOHelper.warn(message, meta.caller, fn _ -> meta.line end)
+      IOHelper.warn(message, meta.caller, meta.file, meta.line)
     end
   end
 

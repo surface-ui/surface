@@ -146,7 +146,7 @@ defmodule Surface.LiveViewTest do
       Please set `async: false` on the test module.
       """
 
-      Surface.IOHelper.warn(message, __CALLER__, & &1)
+      Surface.IOHelper.warn(message, __CALLER__)
     end
 
     quote do

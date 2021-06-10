@@ -209,6 +209,7 @@ defmodule Surface.TypeHandler do
       attribute_type_and_opts(module, name, %{
         node_alias: node_alias || module,
         caller: __ENV__,
+        file: __ENV__.file,
         line: __ENV__.line
       })
 
@@ -240,9 +241,8 @@ defmodule Surface.TypeHandler do
         IOHelper.warn(
           "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
           meta.caller,
-          fn _ ->
-            meta.line
-          end
+          meta.file,
+          meta.line
         )
 
         {:string, []}

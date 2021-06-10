@@ -456,7 +456,7 @@ defmodule Surface.API do
       IOHelper.warn(
         "setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.",
         env,
-        fn _ -> line end
+        line
       )
     end
 
@@ -512,7 +512,7 @@ defmodule Surface.API do
       ```
       """
 
-      IOHelper.warn(message, env, fn _ -> line end)
+      IOHelper.warn(message, env, line)
     end
 
     :ok
@@ -531,7 +531,7 @@ defmodule Surface.API do
         IOHelper.warn(
           "#{type} `#{name}` default value `#{inspect(default)}` must be a list when `accumulate: true`",
           env,
-          fn _ -> line end
+          line
         )
 
       accumulate? and not is_nil(values!) and
@@ -543,7 +543,7 @@ defmodule Surface.API do
           Hint: Either choose an existing value or replace `:values!` with `:values` to skip validation.
           """,
           env,
-          fn _ -> line end
+          line
         )
 
       not accumulate? and not is_nil(values!) and default not in values! ->
@@ -554,7 +554,7 @@ defmodule Surface.API do
           Hint: Either choose an existing value or replace `:values!` with `:values` to skip validation.
           """,
           env,
-          fn _ -> line end
+          line
         )
 
       true ->
