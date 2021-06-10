@@ -1,6 +1,5 @@
 defmodule Surface.Constructs.IfTest do
   use Surface.ConnCase, async: true
-  import ExUnit.CaptureIO
 
   defmodule ListProp do
     use Surface.Component
