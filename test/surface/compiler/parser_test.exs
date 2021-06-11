@@ -252,45 +252,6 @@ defmodule Surface.Compiler.ParserTest do
              ] = parse!("<foo>bar{baz}bat</foo>")
     end
 
-    #  test "single-closing curly bracket" do
-    #    assert parse!("<foo>bar{ 'a}b' }bat</foo>") ==
-    #
-    #              [
-    #                {"foo", [], ["bar", {:interpolation, " 'a}b' ", %{line: 1}}, "bat"],
-    #                 %{line: 1}}
-    #              ]
-    #  end
-
-    #  test "charlist with closing curly in tuple" do
-    #    assert parse!("{{ 'a}}b' }}") ==
-    #              [{:interpolation, " 'a}}b' ", %{line: 1}}]
-    #  end
-
-    #   test "binary with closing curly in tuple" do
-    #     assert parse!("{{ {{'a}}b'}} }}") ==
-    #               [{:interpolation, " {{'a}}b'}} ", %{line: 1}}]
-    #   end
-
-    #   test "double closing curly brace inside charlist" do
-    #     assert parse!("{{ {{\"a}}b\"}} }}") ==
-    #               [{:interpolation, " {{\"a}}b\"}} ", %{line: 1}}]
-    #   end
-
-    #   test "double closing curly brace inside binary" do
-    #     assert parse!("{{ \"a}}b\" }}") ==
-    #               [{:interpolation, " \"a}}b\" ", %{line: 1}}]
-    #   end
-
-    #   test "single-opening curly bracket inside single quotes" do
-    #     assert parse!("{{ 'a{b' }}") ==
-    #               [{:interpolation, " 'a{b' ", %{line: 1}}]
-    #   end
-
-    #   test "single-opening curly bracket inside double quotes" do
-    #     assert parse!("{{ \"a{b\" }}") ==
-    #               [{:interpolation, " \"a{b\" ", %{line: 1}}]
-    #   end
-
     test "containing a charlist with escaped single quote" do
       assert parse!("{ 'a\\'b' }") ==
                [{:expr, " 'a\\'b' ", %{line: 1, file: "nofile", column: 2}}]

@@ -125,6 +125,16 @@ defmodule Surface.Compiler.TokenizerTest do
              ]
     end
 
+    test "ignore escaped curly braces inside elixir strings" do
+      tokens = tokenize!(~S(before{"\{hi"}after))
+
+      assert tokens == [
+               {:text, "before"},
+               {:expr, ~S["\{hi"], %{line: 1, column: 8, line_end: 1, column_end: 14, file: "nofile"}},
+               {:text, "after"}
+             ]
+    end
+
     test "raise on incomplete root expression (EOF)" do
       message = "nofile:5:7: expected closing `}` for expression begining at line: 2, column: 4"
 
