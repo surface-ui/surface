@@ -49,14 +49,14 @@ defmodule Surface.Components.Form.Input do
     @doc "The assigns of the host component"
     prop assigns, :map
 
-    slot default, props: [:form, :field]
+    slot default, args: [:form, :field]
 
     def render(assigns) do
       ~F"""
       <Context
         get={Surface.Components.Form, form: form}
         get={Surface.Components.Form.Field, field: field}>
-        <#slot :props={form: @assigns[:form] || form, field: @assigns[:field] || field}/>
+        <#slot :args={form: @assigns[:form] || form, field: @assigns[:field] || field}/>
       </Context>
       """
     end

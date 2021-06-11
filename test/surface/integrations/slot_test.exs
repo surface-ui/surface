@@ -63,29 +63,29 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule OuterWithNamedSlotAndProps do
+  defmodule OuterWithNamedSlotAndArgs do
     use Surface.Component
 
-    slot body, props: [:info]
+    slot body, args: [:info]
 
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="body" :props={info: "Info from slot"}/>
+        <#slot name="body" :args={info: "Info from slot"}/>
       </div>
       """
     end
   end
 
-  defmodule OuterWithDefaultSlotAndProps do
+  defmodule OuterWithDefaultSlotAndArgs do
     use Surface.Component
 
-    slot default, props: [:info]
+    slot default, args: [:info]
 
     def render(assigns) do
       ~F"""
       <div>
-        <#slot :props={info: "Info from slot"}/>
+        <#slot :args={info: "Info from slot"}/>
       </div>
       """
     end
@@ -216,7 +216,7 @@ defmodule Surface.SlotTest do
 
     prop items, :list, required: true
 
-    slot cols, props: [:info, item: ^items]
+    slot cols, args: [:info, item: ^items]
 
     def render(assigns) do
       info = "Some info from Grid"
@@ -230,7 +230,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={{_col, index} <- Enum.with_index(@cols)}>
-            <#slot name="cols" index={index} :props={item: item, info: info}/>
+            <#slot name="cols" index={index} :args={item: item, info: info}/>
           </td>
         </tr>
       </table>
@@ -238,7 +238,7 @@ defmodule Surface.SlotTest do
     end
   end
 
-  test "render slot without slot props" do
+  test "render slot without slot args" do
     html =
       render_surface do
         ~F"""
@@ -282,15 +282,15 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign named slots with props" do
+  test "assign named slots with args" do
     html =
       render_surface do
         ~F"""
-        <OuterWithNamedSlotAndProps>
+        <OuterWithNamedSlotAndArgs>
           <#template slot="body" :let={info: my_info}>
             Info: {my_info}
           </#template>
-        </OuterWithNamedSlotAndProps>
+        </OuterWithNamedSlotAndArgs>
         """
       end
 
@@ -301,13 +301,13 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign default slot with props" do
+  test "assign default slot with args" do
     html =
       render_surface do
         ~F"""
-        <OuterWithDefaultSlotAndProps :let={info: my_info}>
+        <OuterWithDefaultSlotAndArgs :let={info: my_info}>
           Info: {my_info}
-        </OuterWithDefaultSlotAndProps>
+        </OuterWithDefaultSlotAndArgs>
         """
       end
 
@@ -318,13 +318,13 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign default slot ignoring all props" do
+  test "assign default slot ignoring all args" do
     html =
       render_surface do
         ~F"""
-        <OuterWithDefaultSlotAndProps>
+        <OuterWithDefaultSlotAndArgs>
           Info
-        </OuterWithDefaultSlotAndProps>
+        </OuterWithDefaultSlotAndArgs>
         """
       end
 
@@ -335,7 +335,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign named slots without props" do
+  test "assign named slots without args" do
     html =
       render_surface do
         ~F"""
@@ -376,7 +376,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "slotable component with default value for prop" do
+  test "slotable component with default value for arg" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
     html =
@@ -484,7 +484,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "render slot with slot props containing parent bindings" do
+  test "render slot with slot args containing parent bindings" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
     html =
@@ -583,7 +583,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "render slot renaming slot props" do
+  test "render slot renaming slot args" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
     html =
@@ -622,7 +622,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "raise compile error for undefined slot props" do
+  test "raise compile error for undefined slot args" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
     code =
@@ -638,12 +638,12 @@ defmodule Surface.SlotTest do
       end
 
     message = """
-    code:3: undefined prop `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
+    code:3: undefined argument `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
 
-    Available props: [:info, :item].
+    Available arguments: [:info, :item].
 
-    Hint: You can define a new slot prop using the `props` option: \
-    `slot cols, props: [..., :non_existing]`\
+    Hint: You can define a new slot argument using the `args` option: \
+    `slot cols, args: [..., :non_existing]`\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -657,11 +657,11 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~F"""
-        <OuterWithNamedSlotAndProps>
+        <OuterWithNamedSlotAndArgs>
           <#template slot="body"
             :let={"a_string"}>
           </#template>
-        </OuterWithNamedSlotAndProps>
+        </OuterWithNamedSlotAndArgs>
         """
       end
 
@@ -695,24 +695,24 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when using :let with undefined props for default slot" do
+  test "raise compile error when using :let with undefined args for default slot" do
     code =
       quote do
         ~F"""
-        <OuterWithDefaultSlotAndProps :let={info: my_info, non_existing: value}>
+        <OuterWithDefaultSlotAndArgs :let={info: my_info, non_existing: value}>
           Info: {my_info}
-        </OuterWithDefaultSlotAndProps>
+        </OuterWithDefaultSlotAndArgs>
         """
       end
 
     message = """
-    code:1: undefined prop `:non_existing` for slot `default` in \
-    `Surface.SlotTest.OuterWithDefaultSlotAndProps`.
+    code:1: undefined argument `:non_existing` for slot `default` in \
+    `Surface.SlotTest.OuterWithDefaultSlotAndArgs`.
 
-    Available props: [:info].
+    Available arguments: [:info].
 
-    Hint: You can define a new slot prop using the `props` option: \
-    `slot default, props: [..., :non_existing]`\
+    Hint: You can define a new slot argument using the `args` option: \
+    `slot default, args: [..., :non_existing]`\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -720,26 +720,26 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when using :let with undefined slot props" do
+  test "raise compile error when using :let with undefined slot args" do
     code =
       quote do
         ~F"""
-        <OuterWithNamedSlotAndProps>
+        <OuterWithNamedSlotAndArgs>
           <#template slot="body" :let={non_existing: my_info}>
             Info: {my_info}
           </#template>
-        </OuterWithNamedSlotAndProps>
+        </OuterWithNamedSlotAndArgs>
         """
       end
 
     message = """
-    code:2: undefined prop `:non_existing` for slot `body` in \
-    `Surface.SlotTest.OuterWithNamedSlotAndProps`.
+    code:2: undefined argument `:non_existing` for slot `body` in \
+    `Surface.SlotTest.OuterWithNamedSlotAndArgs`.
 
-    Available props: [:info].
+    Available arguments: [:info].
 
-    Hint: You can define a new slot prop using the `props` option: \
-    `slot body, props: [..., :non_existing]`\
+    Hint: You can define a new slot argument using the `args` option: \
+    `slot body, args: [..., :non_existing]`\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -751,10 +751,10 @@ defmodule Surface.SlotTest do
     code =
       quote do
         ~F"""
-        <OuterWithDefaultSlotAndProps
+        <OuterWithDefaultSlotAndArgs
           :let={info: [my_info]}>
           Info: {my_info}
-        </OuterWithDefaultSlotAndProps>
+        </OuterWithDefaultSlotAndArgs>
         """
       end
 
@@ -768,20 +768,20 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when passing an undefined prop to :props" do
+  test "raise compile error when passing an undefined arg to :args" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
     code = """
-    defmodule TestSlotPassingUndefinedProp_#{id} do
+    defmodule TestSlotPassingUndefinedArg_#{id} do
       use Surface.Component
 
-      slot default, props: [:item]
+      slot default, args: [:item]
 
       def render(assigns) do
         ~F"\""
           <span>
             <#slot
-              :props={id: 1, name: "Joe"}/>
+              :args={id: 1, name: "Joe"}/>
             </span>
         "\""
       end
@@ -789,12 +789,12 @@ defmodule Surface.SlotTest do
     """
 
     message = """
-    code.exs:10: undefined props :id and :name for slot `default`.
+    code.exs:10: undefined arguments :id and :name for slot `default`.
 
-    Defined prop: :item.
+    Defined argument: :item.
 
-    Hint: You can define a new slot prop using the `props` option: \
-    `slot default, props: [..., :some_prop]`\
+    Hint: You can define a new slot argument using the `args` option: \
+    `slot default, args: [..., :some_arg]`\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -864,7 +864,7 @@ defmodule Surface.SlotTest do
   end
 
   describe "Shorthand notatation for assigning slots" do
-    test "assign named slots without props" do
+    test "assign named slots without args" do
       html =
         render_surface do
           ~F"""
@@ -913,15 +913,15 @@ defmodule Surface.SlotTest do
              """
     end
 
-    test "assign named slots with props" do
+    test "assign named slots with args" do
       html =
         render_surface do
           ~F"""
-          <OuterWithNamedSlotAndProps>
+          <OuterWithNamedSlotAndArgs>
             <:body :let={info: my_info}>
               Info: {my_info}
             </:body>
-          </OuterWithNamedSlotAndProps>
+          </OuterWithNamedSlotAndArgs>
           """
         end
 
@@ -1145,19 +1145,19 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
-  test "outputs compile warning when adding slot props to the default slot in a slotable component" do
+  test "outputs compile warning when adding slot args to the default slot in a slotable component" do
     component_code = """
-    defmodule ColumnWithRenderAndSlotProps do
+    defmodule ColumnWithRenderAndSlotArgs do
       use Surface.Component, slot: "cols"
 
       prop title, :string, required: true
 
-      slot default, props: [:info]
+      slot default, args: [:info]
 
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot props={{ info: "this is a test" }} />
+          <#slot args={{ info: "this is a test" }} />
         </span>
         "\""
       end
@@ -1170,14 +1170,14 @@ defmodule Surface.SlotSyncTest do
       end)
 
     assert output =~ ~r"""
-           props for the default slot in a slotable component are not accessible - instead the props from the parent's cols slot will be exposed via `:let={{ ... }}`.
+           arguments for the default slot in a slotable component are not accessible - instead the arguments from the parent's cols slot will be exposed via `:let={{ ... }}`.
 
-           Hint: You can remove these props, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
+           Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
            ```
            <#template name="cols">
-             <Surface.SlotSyncTest.ColumnWithRenderAndSlotProps :let={{ info: info }}>
+             <Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs :let={{ info: info }}>
                ...
-             </Surface.SlotSyncTest.ColumnWithRenderAndSlotProps>
+             </Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs>
            </#template>
            ```
            """

@@ -413,20 +413,18 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
-  ## Planned changes. Uncomment as the related implementation gets merged
+  test "convert slot's :props into :args" do
+    expected =
+      convert("""
+      <div :props=""/>
+      <slot :props=""/>
+      <div :props=""/>
+      """)
 
-  # test "convert slot's :props into :args" do
-  #   expected =
-  #     convert("""
-  #     <div :props=""/>
-  #     <#slot :props=""/>
-  #     <div :props=""/>
-  #     """)
-
-  #   assert expected == """
-  #          <div :props=""/>
-  #          <#slot args=""/>
-  #          <div :props=""/>
-  #          """
-  # end
+    assert expected == """
+           <div :props=""/>
+           <#slot :args=""/>
+           <div :props=""/>
+           """
+  end
 end

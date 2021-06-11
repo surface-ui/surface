@@ -1,10 +1,10 @@
 defmodule Surface.Directive.SlotProps do
   use Surface.Directive
 
-  def extract({":props", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
+  def extract({":args", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do
     %AST.Directive{
       module: __MODULE__,
-      name: :props,
+      name: :args,
       value: directive_value(value, Helpers.to_meta(expr_meta, meta)),
       meta: Helpers.to_meta(attr_meta, meta)
     }
@@ -15,12 +15,12 @@ defmodule Surface.Directive.SlotProps do
   def process(directive, %AST.Slot{} = slot) do
     %AST.Directive{value: %AST.AttributeExpr{value: value}, meta: meta} = directive
     validate_keys!(slot, value, meta)
-    %{slot | props: value}
+    %{slot | args: value}
   end
 
   defp directive_value(value, meta) do
     AST.AttributeExpr.new(
-      Surface.TypeHandler.expr_to_quoted!(value, ":props", :explict_keyword, meta),
+      Surface.TypeHandler.expr_to_quoted!(value, ":args", :explict_keyword, meta),
       value,
       meta
     )
@@ -29,20 +29,20 @@ defmodule Surface.Directive.SlotProps do
   defp validate_keys!(slot, value, meta) do
     module = slot.meta.caller.module
     slot_definition = Surface.API.get_slots(module) |> Enum.find(&(&1.name == slot.name))
-    defined_keys = (slot_definition[:opts][:props] || []) |> Enum.map(& &1.name)
+    defined_keys = (slot_definition[:opts][:args] || []) |> Enum.map(& &1.name)
     undefined_keys = Keyword.keys(value) -- defined_keys
 
     if undefined_keys != [] do
-      undefined_text = Helpers.list_to_string("prop", "props", undefined_keys)
-      defined_text = Helpers.list_to_string("prop:", "props:", defined_keys)
+      undefined_text = Helpers.list_to_string("argument", "arguments", undefined_keys)
+      defined_text = Helpers.list_to_string("argument:", "arguments:", defined_keys)
 
       message = """
       undefined #{undefined_text} for slot `#{slot.name}`.
 
       Defined #{defined_text}.
 
-      Hint: You can define a new slot prop using the `props` option: \
-      `slot default, props: [..., :some_prop]`\
+      Hint: You can define a new slot argument using the `args` option: \
+      `slot default, args: [..., :some_arg]`\
       """
 
       IOHelper.compile_error(message, meta.file, meta.line)

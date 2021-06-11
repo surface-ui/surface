@@ -46,11 +46,11 @@ defmodule Surface.DirectivesTest do
     use Surface.Component
 
     prop show, :boolean
-    slot default, props: [:data]
+    slot default, args: [:data]
 
     def render(assigns) do
       ~F"""
-      <div><#slot :if={@show} :props={data: "data"}/></div>
+      <div><#slot :if={@show} :args={data: "data"}/></div>
       """
     end
   end

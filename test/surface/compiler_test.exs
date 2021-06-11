@@ -57,7 +57,7 @@ defmodule Surface.CompilerTest do
 
     prop items, :list
 
-    slot cols, props: [item: ^items]
+    slot cols, args: [item: ^items]
 
     def render(assigns) do
       ~F"""

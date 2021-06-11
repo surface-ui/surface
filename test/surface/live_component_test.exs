@@ -54,20 +54,20 @@ defmodule Surface.LiveComponentTest do
   defmodule InfoProvider do
     use Surface.Component
 
-    slot default, props: [:info]
+    slot default, args: [:info]
 
     def render(assigns) do
       info = "Hi there!"
 
       ~F"""
       <div>
-        <#slot :props={info: info}/>
+        <#slot :args={info: info}/>
       </div>
       """
     end
   end
 
-  defmodule InfoProviderWithoutSlotProps do
+  defmodule InfoProviderWithoutSlotArgs do
     use Surface.Component
 
     slot default
@@ -105,13 +105,13 @@ defmodule Surface.LiveComponentTest do
     end
   end
 
-  test "render content without slot props" do
+  test "render content without slot args" do
     html =
       render_surface do
         ~F"""
-        <InfoProviderWithoutSlotProps>
+        <InfoProviderWithoutSlotArgs>
           <span>Hi there!</span>
-        </InfoProviderWithoutSlotProps>
+        </InfoProviderWithoutSlotArgs>
         """
       end
 
@@ -122,7 +122,7 @@ defmodule Surface.LiveComponentTest do
            """
   end
 
-  test "render content with slot props" do
+  test "render content with slot args" do
     html =
       render_surface do
         ~F"""

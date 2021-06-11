@@ -459,7 +459,7 @@ defmodule Surface.Compiler do
          index: index,
          directives: directives,
          default: to_ast(children, compile_meta),
-         props: [],
+         args: [],
          meta: meta
        }}
     else
@@ -947,9 +947,9 @@ defmodule Surface.Compiler do
     for slot_name <- Map.keys(templates),
         template <- Map.get(templates, slot_name) do
       slot = mod.__get_slot__(slot_name)
-      props = Keyword.keys(template.let)
+      args = Keyword.keys(template.let)
 
-      prop_meta =
+      arg_meta =
         Enum.find_value(template.directives, meta, fn directive ->
           if directive.module == Surface.Directive.Let do
             directive.meta
@@ -958,23 +958,23 @@ defmodule Surface.Compiler do
 
       case slot do
         %{opts: opts} ->
-          non_generator_args = Enum.map(opts[:props] || [], &Map.get(&1, :name))
+          non_generator_args = Enum.map(opts[:args] || [], &Map.get(&1, :name))
 
-          undefined_keys = props -- non_generator_args
+          undefined_keys = args -- non_generator_args
 
           if not Enum.empty?(undefined_keys) do
-            [prop | _] = undefined_keys
+            [arg | _] = undefined_keys
 
             message = """
-            undefined prop `#{inspect(prop)}` for slot `#{slot_name}` in `#{inspect(mod)}`.
+            undefined argument `#{inspect(arg)}` for slot `#{slot_name}` in `#{inspect(mod)}`.
 
-            Available props: #{inspect(non_generator_args)}.
+            Available arguments: #{inspect(non_generator_args)}.
 
-            Hint: You can define a new slot prop using the `props` option: \
-            `slot #{slot_name}, props: [..., #{inspect(prop)}]`\
+            Hint: You can define a new slot argument using the `args` option: \
+            `slot #{slot_name}, args: [..., #{inspect(arg)}]`\
             """
 
-            IOHelper.compile_error(message, prop_meta.file, prop_meta.line)
+            IOHelper.compile_error(message, arg_meta.file, arg_meta.line)
           end
 
         _ ->
