@@ -1,17 +1,20 @@
 defmodule Surface.IOHelper do
   @moduledoc false
 
-  def warn(message, caller, file, line) do
-    stacktrace = Macro.Env.stacktrace(%{caller | file: file, line: line})
+  def warn(message, caller) do
+    stacktrace = Macro.Env.stacktrace(caller)
 
     IO.warn(message, stacktrace)
   end
 
-  def warn(message, caller, update_line_fun) do
-    stacktrace =
-      caller
-      |> Macro.Env.stacktrace()
-      |> update_line(update_line_fun)
+  def warn(message, caller, line) do
+    stacktrace = Macro.Env.stacktrace(%{caller | line: line})
+
+    IO.warn(message, stacktrace)
+  end
+
+  def warn(message, caller, file, line) do
+    stacktrace = Macro.Env.stacktrace(%{caller | file: file, line: line})
 
     IO.warn(message, stacktrace)
   end
@@ -35,9 +38,5 @@ defmodule Surface.IOHelper do
       |> Enum.drop(2)
 
     reraise(message, stacktrace)
-  end
-
-  defp update_line([{a, b, c, [d, {:line, line}]}], fun) do
-    [{a, b, c, [d, {:line, fun.(line)}]}]
   end
 end

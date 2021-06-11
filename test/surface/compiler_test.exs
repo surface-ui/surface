@@ -1198,7 +1198,7 @@ defmodule Surface.CompilerSyncTest do
   end
 
   defp extract_line(message) do
-    case Regex.run(~r/.exs:(\d+)/, message) do
+    case Regex.run(~r/(?:nofile|.exs|.sface):(\d+)/, message) do
       [_, line] ->
         String.to_integer(line)
 

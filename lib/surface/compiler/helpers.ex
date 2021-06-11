@@ -83,8 +83,9 @@ defmodule Surface.Compiler.Helpers do
       """
 
       assign_line = assign_meta[:line] || caller.line
+      assign_file = assign_meta[:file] || caller.file
 
-      IOHelper.warn(message, caller, fn _ -> assign_line end)
+      IOHelper.warn(message, caller, assign_file, assign_line)
     end
   end
 
