@@ -28,6 +28,8 @@
   * Replace interpolation delimiters `{{` and `}}` with `{` and `}`
   * Remove support for interpolation inside `<style>...</style>` and `<script>...</script>` nodes
   * ErrorTag: Renamed prop `phx_feedback_for` to `feedback_for`
+  * Slot directive `:props` has been renamed to `:args`
+  * Option `:props` for the `slot/2` macro has been renamed to `:args`
   * `<template>` has been removed in favor of `<#template>`
   * `<slot>` has been removed in favor of `<#slot>`
   * `<If>` has been removed in favor of `{#if}...{/if}`
