@@ -155,7 +155,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Slot{
            name: slot_name,
            index: index_ast,
-           props: props_expr,
+           args: args_expr,
            default: default
          },
          buffer,
@@ -187,7 +187,7 @@ defmodule Surface.Compiler.EExEngine do
             {
               unquote(slot_name),
               unquote(slot_index),
-              Map.new(unquote(props_expr)),
+              Map.new(unquote(args_expr)),
               unquote(context_expr)
             }
           )
@@ -528,7 +528,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp add_default_bindings(%{module: module, props: props}, name, let) do
-    (module.__get_slot__(name)[:opts][:props] || [])
+    (module.__get_slot__(name)[:opts][:args] || [])
     |> Enum.reject(fn
       %{generator: nil} -> true
       %{name: name} -> Keyword.has_key?(let, name)

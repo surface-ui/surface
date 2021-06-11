@@ -346,11 +346,11 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "validate slot props" do
-      code = "slot cols, props: [:info, {a, b}]"
+    test "validate slot args" do
+      code = "slot cols, args: [:info, {a, b}]"
 
       message = ~r"""
-      invalid slot prop {a, b}. Expected an atom or a \
+      invalid slot argument {a, b}. Expected an atom or a \
       binding to a generator as `key: \^property_name`\
       """
 
@@ -361,14 +361,14 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :props, :as\]/
+      message = ~r/unknown option :a. Available options: \[:required, :args, :as\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
       end)
     end
 
-    test "raise compile error when a slot prop is bound to a non-existing property" do
+    test "raise compile error when a slot arg is bound to a non-existing property" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestSlotWithoutSlotName_#{id}"
 
@@ -379,14 +379,14 @@ defmodule Surface.APITest do
         prop label, :string
         prop items, :list
 
-        slot default, props: [item: ^unknown]
+        slot default, args: [item: ^unknown]
 
         def render(assigns), do: ~F()
       end
       """
 
       message = """
-      code.exs:7: cannot bind slot prop `item` to property `unknown`. \
+      code.exs:7: cannot bind slot argument `item` to property `unknown`. \
       Expected an existing property after `^`, got: an undefined property `unknown`.
 
       Hint: Available properties are [:label, :items]\
@@ -397,7 +397,7 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "raise compile error when a slot prop is bound to a property of type other than :list" do
+    test "raise compile error when a slot arg is bound to a property of type other than :list" do
       id = :erlang.unique_integer([:positive]) |> to_string()
       module = "TestSlotWithoutSlotName_#{id}"
 
@@ -407,14 +407,14 @@ defmodule Surface.APITest do
 
         prop label, :string
 
-        slot default, props: [item: ^label]
+        slot default, args: [item: ^label]
 
         def render(assigns), do: ~F()
       end
       """
 
       message = """
-      code.exs:6: cannot bind slot prop `item` to property `label`. \
+      code.exs:6: cannot bind slot argument `item` to property `label`. \
       Expected a property of type :list after `^`, got: a property of type :string\
       """
 

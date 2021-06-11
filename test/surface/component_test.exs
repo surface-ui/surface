@@ -39,16 +39,16 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  defmodule OuterWithSlotProps do
+  defmodule OuterWithSlotArgs do
     use Surface.Component
 
-    slot default, props: [:info]
+    slot default, args: [:info]
 
     def render(assigns) do
       info = "My info"
 
       ~F"""
-      <div><#slot :props={info: info}/></div>
+      <div><#slot :args={info: info}/></div>
       """
     end
   end
@@ -75,14 +75,14 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  defmodule ViewWithSlotProps do
+  defmodule ViewWithSlotArgs do
     use Surface.LiveView
 
     def render(assigns) do
       ~F"""
-      <OuterWithSlotProps :let={info: my_info}>
+      <OuterWithSlotArgs :let={info: my_info}>
         {my_info}
-      </OuterWithSlotProps>
+      </OuterWithSlotArgs>
       """
     end
   end
@@ -197,8 +197,8 @@ defmodule Surface.ComponentTest do
              """
     end
 
-    test "render content with slot props" do
-      {:ok, _view, html} = live_isolated(build_conn(), ViewWithSlotProps)
+    test "render content with slot args" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithSlotArgs)
 
       assert html =~ """
              <div>
@@ -241,13 +241,13 @@ defmodule Surface.ComponentTest do
              """
     end
 
-    test "render content with slot props" do
+    test "render content with slot args" do
       html =
         render_surface do
           ~F"""
-          <OuterWithSlotProps :let={info: my_info}>
+          <OuterWithSlotArgs :let={info: my_info}>
             {my_info}
-          </OuterWithSlotProps>
+          </OuterWithSlotArgs>
           """
         end
 

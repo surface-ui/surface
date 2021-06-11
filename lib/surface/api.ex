@@ -412,10 +412,10 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :props, :as]
+    [:required, :args, :as]
   end
 
-  defp validate_opt_ast!(:slot, :props, args_ast, caller) do
+  defp validate_opt_ast!(:slot, :args, args_ast, caller) do
     Enum.map(args_ast, fn
       {name, {:^, _, [{generator, _, context}]}} when context in [Elixir, nil] ->
         Macro.escape(%{name: name, generator: generator})
@@ -425,7 +425,7 @@ defmodule Surface.API do
 
       ast ->
         message =
-          "invalid slot prop #{Macro.to_string(ast)}. " <>
+          "invalid slot argument #{Macro.to_string(ast)}. " <>
             "Expected an atom or a binding to a generator as `key: ^property_name`"
 
         IOHelper.compile_error(message, caller.file, caller.line)
@@ -486,7 +486,7 @@ defmodule Surface.API do
     {:error, "invalid value for option :as in slot. Expected an atom, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(:slot, :default, _type, _opts, :props, value, line, env) do
+  defp validate_opt(:slot, :default, _type, _opts, :args, value, line, env) do
     if Module.defines?(env.module, {:__slot_name__, 0}) do
       slot_name = Module.get_attribute(env.module, :__slot_name__)
 
@@ -498,10 +498,10 @@ defmodule Surface.API do
       component_name = Macro.to_string(env.module)
 
       message = """
-      props for the default slot in a slotable component are not accessible - instead the props \
+      arguments for the default slot in a slotable component are not accessible - instead the arguments \
       from the parent's #{slot_name} slot will be exposed via `:let={{ ... }}`.
 
-      Hint: You can remove these props, pull them up to the parent component, or make this component not slotable \
+      Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
       and use it inside an explicit template element:
       ```
       <#template name="#{slot_name}">
@@ -669,7 +669,7 @@ defmodule Surface.API do
 
   defp validate_slot_props_bindings!(env) do
     for slot <- env.module.__slots__(),
-        slot_props = Keyword.get(slot.opts, :props, []),
+        slot_props = Keyword.get(slot.opts, :args, []),
         %{name: name, generator: generator} <- slot_props,
         generator != nil do
       case env.module.__get_prop__(generator) do
@@ -677,7 +677,7 @@ defmodule Surface.API do
           existing_properties_names = env.module.__props__() |> Enum.map(& &1.name)
 
           message = """
-          cannot bind slot prop `#{name}` to property `#{generator}`. \
+          cannot bind slot argument `#{name}` to property `#{generator}`. \
           Expected an existing property after `^`, \
           got: an undefined property `#{generator}`.
 
@@ -688,7 +688,7 @@ defmodule Surface.API do
 
         %{type: type} when type != :list ->
           message = """
-          cannot bind slot prop `#{name}` to property `#{generator}`. \
+          cannot bind slot argument `#{name}` to property `#{generator}`. \
           Expected a property of type :list after `^`, \
           got: a property of type #{inspect(type)}\
           """

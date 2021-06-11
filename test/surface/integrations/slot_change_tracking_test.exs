@@ -9,11 +9,11 @@ defmodule Surface.SlotChangeTrackingTest do
   defmodule Outer do
     use Surface.LiveComponent
 
-    slot default, props: [:param]
+    slot default, args: [:param]
 
     def render(assigns) do
       ~F"""
-      <div><#slot :props={param: "Param from Outer"}/></div>
+      <div><#slot :args={param: "Param from Outer"}/></div>
       """
     end
   end
@@ -47,7 +47,7 @@ defmodule Surface.SlotChangeTrackingTest do
   defmodule Counter do
     use Surface.LiveComponent
 
-    slot default, props: [:value]
+    slot default, args: [:value]
 
     data value, :integer, default: 0
 
@@ -55,7 +55,7 @@ defmodule Surface.SlotChangeTrackingTest do
       ~F"""
       <div>
         Value in the Counter: {@value}
-        <#slot :props={value: @value}/>
+        <#slot :args={value: @value}/>
         <button id="incButton" :on-click="inc">+</button>
       </div>
       """
@@ -78,7 +78,7 @@ defmodule Surface.SlotChangeTrackingTest do
     end
   end
 
-  test "changing a slot prop updates any view/component using it" do
+  test "changing a slot arg updates any view/component using it" do
     {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
 
     assert html =~ "Value in the Counter: 0"
@@ -93,7 +93,7 @@ defmodule Surface.SlotChangeTrackingTest do
     assert html =~ "Value in the View: 1"
   end
 
-  test "change tracking is disabled if a child component uses a passed slot prop" do
+  test "change tracking is disabled if a child component uses a passed slot arg" do
     {:ok, view, html} =
       live_isolated(build_conn(), ViewComponentWithInnerContent, session: %{"test_pid" => self()})
 
@@ -106,10 +106,10 @@ defmodule Surface.SlotChangeTrackingTest do
 
     assert html =~ "Count: 1"
 
-    # Component using slot props should be updated
+    # Component using slot args should be updated
     assert_receive {:updated, "1"}
 
-    # Component not using the slot props should not be updated
+    # Component not using the slot arg should not be updated
     refute_receive {:updated, "2"}
   end
 end

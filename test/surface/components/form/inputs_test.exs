@@ -28,7 +28,7 @@ defmodule Surface.Components.Form.InputsTest do
         |> Ecto.Changeset.cast_embed(:children)
   end
 
-  test "using generated form received as slot props" do
+  test "using generated form received as slot args" do
     html =
       render_surface do
         ~F"""
@@ -50,7 +50,7 @@ defmodule Surface.Components.Form.InputsTest do
            """
   end
 
-  test "if the index is received as a slot prop" do
+  test "if the index is received as a slot arg" do
     cs = Parent.changeset(%{children: [%{name: "first"}, %{name: "second"}]})
 
     html =
