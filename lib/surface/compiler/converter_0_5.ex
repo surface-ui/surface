@@ -81,6 +81,10 @@ defmodule Surface.Compiler.Converter_0_5 do
     ":args"
   end
 
+  def convert(:attr_name, "phx_feedback_for", %{tag_name: "ErrorTag"}, _opts) do
+    "feedback_for"
+  end
+
   def convert(_type, text, _state, _opts) do
     text
   end

@@ -10,7 +10,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "don't convert code inside macros" do
-    expected =
+    code =
       convert("""
       <div class={{ @class }}>text</div>
       <#Raw>
@@ -18,7 +18,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </#Raw>
       """)
 
-    assert expected == """
+    assert code == """
            <div class={@class}>text</div>
            <#Raw>
              <div class={{ @class }}>text</div>
@@ -28,7 +28,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
 
   describe "convert interpolation (expressions)" do
     test "convert {{ }} into { }" do
-      expected =
+      code =
         convert("""
         <div
           id={{ @id }}   class={{@class}}
@@ -40,7 +40,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
         7 </div>
         """)
 
-      assert expected == """
+      assert code == """
              <div
                id={@id}   class={@class}
                phone = {@phone}
@@ -53,7 +53,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     end
 
     test "convert {{ }} into { } even when expressions start with line breaks" do
-      expected =
+      code =
         convert("""
         {{
           Enum.join(
@@ -69,7 +69,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
         }
         """)
 
-      assert expected == """
+      assert code == """
              {
                Enum.join(
                  @list1,
@@ -86,7 +86,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     end
 
     test "keep indentation before closing `}}` " do
-      expected =
+      code =
         convert("""
         <div>
           <div class={{
@@ -95,7 +95,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
         </div>
         """)
 
-      assert expected == """
+      assert code == """
              <div>
                <div class={
                  "my_class"
@@ -105,7 +105,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     end
 
     test "only convert {{ }} into { } if the first and last chars are `{` and `}` respectively" do
-      expected =
+      code =
         convert("""
         <div class={{@class}}>
           {{ @name }}
@@ -119,7 +119,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
         </Comp>
         """)
 
-      assert expected == """
+      assert code == """
              <div class={@class}>
                {@name}
              </div>
@@ -135,7 +135,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert unquoted string" do
-    expected =
+    code =
       convert("""
       <div disabled=true>
         1
@@ -144,7 +144,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
         tabindex=2>2</div>
       """)
 
-    assert expected == """
+    assert code == """
            <div disabled={true}>
              1
            </div>
@@ -154,7 +154,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert <template> into <#template>" do
-    expected =
+    code =
       convert("""
       <div>
         <template slot="footer">
@@ -163,7 +163,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div>
              <#template slot="footer">
                Footer
@@ -173,7 +173,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert <slot> into <#slot>" do
-    expected =
+    code =
       convert("""
       <div>
         <slot name="footer">
@@ -182,7 +182,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div>
              <#slot name="footer">
                Footer
@@ -192,7 +192,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert <If> into {#if}" do
-    expected =
+    code =
       convert("""
       <div>
         <If condition={{ @var }}>
@@ -202,7 +202,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div>
              {#if @var}
                1
@@ -213,7 +213,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert <If> multiline expression into {#if}" do
-    expected =
+    code =
       convert("""
       <div>
         <If condition={{ @var ==
@@ -224,7 +224,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div>
              {#if @var ==
                               1}
@@ -236,7 +236,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert <For> into <#For>" do
-    expected =
+    code =
       convert("""
       <div>
         <For each={{ _i <- @var }}>
@@ -246,7 +246,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div>
              {#for _i <- @var}
                1
@@ -257,7 +257,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert <For> with multiline expression into <#For>" do
-    expected =
+    code =
       convert("""
       <div>
         <For each={{ i <- @var,
@@ -268,7 +268,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div>
              {#for i <- @var,
                           i > 0}
@@ -280,25 +280,25 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert strings with embedded interpolation" do
-    expected =
+    code =
       convert("""
       <img src="{{ "/" }}">
       """)
 
-    assert expected == """
+    assert code == """
            <img src={"\#{"/"}"}>
            """
 
-    expected =
+    code =
       convert("""
       <img src="{{ String.upcase("abc") }}">
       """)
 
-    assert expected == """
+    assert code == """
            <img src={"\#{String.upcase("abc")}"}>
            """
 
-    expected =
+    code =
       convert("""
       <div id="id_{{@id1}}_{{ @id2 }}">
         <div id=
@@ -309,7 +309,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       </div>
       """)
 
-    assert expected == """
+    assert code == """
            <div id={"id_\#{@id1}_\#{@id2}"}>
              <div id=
                {"
@@ -399,14 +399,14 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert {{# comment }} into {!-- comment --}" do
-    expected =
+    code =
       convert("""
       {{#comment}}
       {{# comment}}
       {{ # comment }}
       """)
 
-    assert expected == """
+    assert code == """
            {!-- comment --}
            {!-- comment --}
            {!-- comment --}
@@ -414,17 +414,28 @@ defmodule Surface.Compiler.Converter_0_5Test do
   end
 
   test "convert slot's :props into :args" do
-    expected =
+    code =
       convert("""
       <div :props=""/>
       <slot :props=""/>
       <div :props=""/>
       """)
 
-    assert expected == """
+    assert code == """
            <div :props=""/>
            <#slot :args=""/>
            <div :props=""/>
+           """
+  end
+
+  test "ErrorTag phx_feedback_for into feedback_for" do
+    code =
+      convert("""
+      <ErrorTag phx_feedback_for="hello" />
+      """)
+
+    assert code == """
+           <ErrorTag feedback_for="hello" />
            """
   end
 end
