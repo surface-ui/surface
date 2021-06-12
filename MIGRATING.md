@@ -16,14 +16,21 @@ translate Surface `v0.4` code into the new `v0.5` syntax.
 
 ## Before converting the project
 
-  1. Make sure you have commited your work or have a proper backup before running the converter. It may touch
+  1. Make sure you have committed your work or have a proper backup before running the converter. It may touch
   a lot of files so it's recommended to have a safe way to rollback the changes in case anything goes wrong.
 
-  2. Check your dependencies. For a safer migration, all dependencies providing Surface components should
+  2. If you're using an earlier version of Surface, make sure you update it to `v0.4.1` and fix any deprecation
+  warning that might be emitted. If you have too many warnings regarding
+  `automatic conversion of string literals into atoms is deprecated and will be removed in v0.5.0` and you
+  don't want to fix them manually, you can try @paulstatezny's
+  [surface_atom_shorthand_converter](https://github.com/paulstatezny/surface_atom_shorthand_converter) to fix
+  them all for you.
+
+  3. Check your dependencies. For a safer migration, all dependencies providing Surface components should
   be converted before running the converter on the main project. Otherwise, you might not be able to compile your
   project in case any of those dependencies is using the invalid old syntax. If the dependency you need has not been
   updated yet, please consider running the converter against it and submitting a PR with the updated code. The steps
-  to convert a dependency are the same decribed in this guide.
+  to convert a dependency are the same described in this guide.
 
 ## Steps to run the converter
 
@@ -72,9 +79,9 @@ mix compile
 | Subject                      | Examples (Old syntax -> New syntax)                                      |
 | ---------------------------- | ------------------------------------------------------------------------ |
 | Sigil                        | `~H"""` -> `~F"""`                                                       |
-| Interpolation                | `{{@value}}` -> `{@value}`                                             |
+| Interpolation                | `{{@value}}` -> `{@value}`                                               |
 | Templates                    | `<template>` -> `<#template>`                                            |
-| Slots                        | `<slot>` -> `<#slot>`                                                    |
+| Slots                        | `<slot :props={{ item: item }}>` -> `<#slot :args={item: item}>`         |
 | If                           | `<If condition={{ expr }}>` -> `{#if expr}`                              |
 | For                          | `<For each={{ expr }}>` -> `{#for expr}`                                 |
 | Interpolation in attr values | `id="id_{{@id}}"` -> `id={"id_#{@id}"}`                                  |
