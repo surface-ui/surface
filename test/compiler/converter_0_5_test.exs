@@ -413,6 +413,16 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
+  test "ErrorTag phx_feedback_for into feedback_for" do
+    code = """
+    ~H(<ErrorTag phx_feedback_for="hello" />)
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           ~F(<ErrorTag feedback_for="hello" />)
+           """
+  end
+
   ## Planned changes. Uncomment as the related implementation gets merged
 
   # test "convert slot's :props into :args" do
