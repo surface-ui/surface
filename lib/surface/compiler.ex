@@ -601,7 +601,7 @@ defmodule Surface.Compiler do
         meta: meta
       }
 
-      expanded_children = mod.expand(attributes, children, meta)
+      expanded_children = mod.expand(attributes, List.to_string(children), meta)
       children_with_dep = [compile_dep_expr | List.wrap(expanded_children)]
 
       {:ok, %AST.Container{children: children_with_dep, directives: directives, meta: meta}}

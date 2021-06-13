@@ -13,9 +13,7 @@ defmodule Surface.LiveViewTest do
     slot default, required: true
 
     def render(assigns) do
-      ~F"""
-      <#slot/>
-      """
+      ~F[<#slot/>]
     end
   end
 

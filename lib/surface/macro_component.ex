@@ -13,7 +13,7 @@ defmodule Surface.MacroComponent do
   """
   @callback expand(
               attributes :: [AST.Attribute.t()],
-              children :: iodata(),
+              content :: binary(),
               meta :: AST.Meta.t()
             ) :: AST.t() | [AST.t()]
 

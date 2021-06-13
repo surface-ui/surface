@@ -15,9 +15,7 @@ defmodule Surface.Components.Raw do
   @doc "The content that will not be translated by Surface"
   slot default
 
-  def expand(_attributes, children, _meta) do
-    %Surface.AST.Literal{
-      value: List.to_string(children)
-    }
+  def expand(_attributes, content, _meta) do
+    %Surface.AST.Literal{value: content}
   end
 end

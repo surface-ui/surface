@@ -3,6 +3,20 @@ defmodule Surface.MacroComponentTest do
 
   import ExUnit.CaptureIO
 
+  defmodule RenderContent do
+    use Surface.MacroComponent
+
+    alias Surface.MacroComponent
+
+    slot default
+
+    def expand(_attributes, content, _meta) do
+      quote_surface do
+        ~F[{^content}]
+      end
+    end
+  end
+
   defmodule Upcase do
     use Surface.MacroComponent
 
@@ -13,13 +27,13 @@ defmodule Surface.MacroComponentTest do
 
     slot default
 
-    def expand(attributes, children, meta) do
+    def expand(attributes, content, meta) do
       # Static prop
       static_props = MacroComponent.eval_static_props!(__MODULE__, attributes, meta.caller)
       align = static_props[:align] || false
 
       # String
-      content = children |> List.to_string() |> String.trim() |> String.upcase()
+      upcase_content = content |> String.trim() |> String.upcase()
       title = "Some title"
 
       # Boolean
@@ -46,7 +60,7 @@ defmodule Surface.MacroComponentTest do
             id={^id}
             class={^class}
           >
-            {^content}
+            {^upcase_content}
           </span>
           """
         end
@@ -59,6 +73,11 @@ defmodule Surface.MacroComponentTest do
         """
       end
     end
+  end
+
+  test "empty content is translated to empty string" do
+    assert render_surface(do: ~F[<#RenderContent />] == "")
+    assert render_surface(do: ~F[<#RenderContent></#RenderContent>] == "")
   end
 
   test "parses its own content" do
