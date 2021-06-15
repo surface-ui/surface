@@ -10,7 +10,8 @@ defmodule Surface.Compiler.Converter_0_5 do
 
   @impl true
   def after_convert_file(ext, content) when ext in [".ex", ".exs"] do
-    Regex.replace(~r/~H("""|\"|\[|\(|\{)/s, content, "~F\\1")
+    content = Regex.replace(~r/~H("""|\"|\[|\(|\{)/s, content, "~F\\1")
+    Regex.replace(~r/^(\s*slot[\s|\(].+?,\s*)props:(.+)/m, content, "\\1args:\\2")
   end
 
   def after_convert_file(_ext, content) do
