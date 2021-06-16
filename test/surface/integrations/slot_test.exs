@@ -643,7 +643,7 @@ defmodule Surface.SlotTest do
     Available arguments: [:info, :item].
 
     Hint: You can define a new slot argument using the `args` option: \
-    `slot cols, args: [..., :non_existing]`\
+    `slot cols, args: [..., :non_existing]`
     """
 
     assert_raise(CompileError, message, fn ->
@@ -712,7 +712,7 @@ defmodule Surface.SlotTest do
     Available arguments: [:info].
 
     Hint: You can define a new slot argument using the `args` option: \
-    `slot default, args: [..., :non_existing]`\
+    `slot default, args: [..., :non_existing]`
     """
 
     assert_raise(CompileError, message, fn ->
@@ -739,7 +739,7 @@ defmodule Surface.SlotTest do
     Available arguments: [:info].
 
     Hint: You can define a new slot argument using the `args` option: \
-    `slot body, args: [..., :non_existing]`\
+    `slot body, args: [..., :non_existing]`
     """
 
     assert_raise(CompileError, message, fn ->
@@ -791,10 +791,42 @@ defmodule Surface.SlotTest do
     message = """
     code.exs:10: undefined arguments :id and :name for slot `default`.
 
-    Defined argument: :item.
+    Defined argument: :item
 
     Hint: You can define a new slot argument using the `args` option: \
-    `slot default, args: [..., :some_arg]`\
+    `slot default, args: [..., :some_arg]`
+    """
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
+  end
+
+  test "raise compile error when passing :args but no arg is defined in `slot`" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    code = """
+    defmodule TestSlotPassingUndefinedArg_#{id} do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+          <span>
+            <#slot
+              :args={id: 1}/>
+            </span>
+        "\""
+      end
+    end
+    """
+
+    message = """
+    code.exs:10: undefined argument :id for slot `default`.
+
+    Hint: You can define a new slot argument using the `args` option: \
+    `slot default, args: [..., :some_arg]`
     """
 
     assert_raise(CompileError, message, fn ->

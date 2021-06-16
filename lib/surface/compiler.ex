@@ -971,7 +971,7 @@ defmodule Surface.Compiler do
             Available arguments: #{inspect(non_generator_args)}.
 
             Hint: You can define a new slot argument using the `args` option: \
-            `slot #{slot_name}, args: [..., #{inspect(arg)}]`\
+            `slot #{slot_name}, args: [..., #{inspect(arg)}]`
             """
 
             IOHelper.compile_error(message, arg_meta.file, arg_meta.line)
