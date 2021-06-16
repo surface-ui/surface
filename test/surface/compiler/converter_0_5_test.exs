@@ -413,7 +413,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
            """
   end
 
-  test "convert slot's :props into :args" do
+  test "replace slot directive :props with :args" do
     code =
       convert("""
       <div :props=""/>
@@ -425,6 +425,28 @@ defmodule Surface.Compiler.Converter_0_5Test do
            <div :props=""/>
            <#slot :args=""/>
            <div :props=""/>
+           """
+  end
+
+  test "replace slot option :props with :args" do
+    code = """
+    # slot commented, props: [:item]
+
+    slot default, required: true, props: [:item]
+    slot cols, props: [:item]
+      slot cols, props: [item: ^items]
+
+      slot(cols, props: [item: ^items])
+    """
+
+    assert Convert.convert_file_contents!("nofile.ex", code) === """
+           # slot commented, props: [:item]
+
+           slot default, required: true, args: [:item]
+           slot cols, args: [:item]
+             slot cols, args: [item: ^items]
+
+             slot(cols, args: [item: ^items])
            """
   end
 

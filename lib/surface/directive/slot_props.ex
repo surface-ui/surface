@@ -34,15 +34,13 @@ defmodule Surface.Directive.SlotProps do
 
     if undefined_keys != [] do
       undefined_text = Helpers.list_to_string("argument", "arguments", undefined_keys)
-      defined_text = Helpers.list_to_string("argument:", "arguments:", defined_keys)
+      defined_text = Helpers.list_to_string("\n\nDefined argument:", "\n\nDefined arguments:", defined_keys)
 
       message = """
-      undefined #{undefined_text} for slot `#{slot.name}`.
-
-      Defined #{defined_text}.
+      undefined #{undefined_text} for slot `#{slot.name}`.#{defined_text}
 
       Hint: You can define a new slot argument using the `args` option: \
-      `slot default, args: [..., :some_arg]`\
+      `slot default, args: [..., :some_arg]`
       """
 
       IOHelper.compile_error(message, meta.file, meta.line)
