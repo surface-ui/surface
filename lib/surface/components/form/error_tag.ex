@@ -124,7 +124,14 @@ defmodule Surface.Components.Form.ErrorTag do
     # Because the error messages we show in our forms and APIs
     # are defined inside Ecto, we need to translate them dynamically.
     Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
+      # Since this just interpolates opts into the error message,
+      # we can just skip doing so in cases where this doesn't make
+      # sense (the opt value is not convertable to a string).
+      try do
+        String.replace(acc, "%{#{key}}", to_string(value))
+      rescue
+        _e -> acc
+      end
     end)
   end
 
