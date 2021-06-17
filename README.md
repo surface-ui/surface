@@ -12,9 +12,6 @@ modern web applications.
 
 Full documentation and live examples can be found at [surface-ui.org](https://surface-ui.org).
 
-A VS Code extension that adds support for syntax highlighting is available at
-[marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=msaraiva.surface).
-
 ### Example
 
 ```elixir
@@ -46,19 +43,9 @@ defmodule Example do
 end
 ```
 
-## How does it work?
-
-Surface's custom compiler translates components defined in an extended HTML-like syntax
-into Elixir's Abstract Syntax Tree (AST). It also translates standard HTML nodes, allowing to
-extend their behaviour adding new features like syntactic sugar on attributes definition,
-directives, static validation and more.
-
-In order to have your code translated, you need to use the `~F` sigil when defining your templates.
-
 ## Features
 
-  * **An HTML-centric** templating language with built-in directives (`:for`, `:if`, ...) and
-    syntactic sugar for attributes (inspired by Vue.js).
+  * **An HTML-centric** templating language, designed specifically to improve development experience.
 
   * **Components as modules** - they can be stateless, stateful, renderless or compile-time.
 
@@ -68,7 +55,7 @@ In order to have your code translated, you need to use the `~F` sigil when defin
 
   * **Contexts** - allows a parent component to share data with its children without passing them as properties..
 
-  * **Compile-time checking** of components and their properties.
+  * **Compile-time checking** of the template structure, components' properties, slots, events and more.
 
   * **Integration with editor/tools** for warnings/errors, syntax highlighting, jump-to-definition,
     auto-completion (soon!) and more.
@@ -86,7 +73,7 @@ Then add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.4.1"}
+    {:surface, "~> 0.5.0"}
   ]
 end
 ```
@@ -113,39 +100,10 @@ can automatically translate the old syntax into the new one.
 
 Please see the [Migration Guide](MIGRATING.md) for details.
 
-## Static checking
-
-Since components are ordinary Elixir modules, some static checking is already provided
-by the compiler. Additionally, we added a few extra warnings to improve user experience.
-Here are some examples:
-
-### Module not available
-
-![Example](images/module_not_available.png?raw=true)
-
-### Missing required property
-
-![Example](images/required_property.png?raw=true)
-
-### Unknown property
-
-![Example](images/unknown_property.png?raw=true)
-
 ## Tooling
 
-Some experimental work on tooling around the library has been done. Here's a few of them:
-
-### VS Code
-
-- [x] Syntax highlighting
-
-### ElixirSense
-
-- [x] Jump to definition of modules (components)
-- [ ] Jump to definition of properties
-- [ ] Auto-complete/suggestions for properties (WIP)
-- [x] Show documentation on hover for components
-- [ ] Show documentation on hover for properties
+  * [Surface Formatter](https://github.com/surface-ui/surface_formatter) - A code formatter for Surface.
+  * [Surface package for VS Code](https://marketplace.visualstudio.com/items?itemName=msaraiva.surface) - Syntax highlighting support for Surface/Elixir.
 
 ## License
 

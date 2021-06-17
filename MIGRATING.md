@@ -79,16 +79,17 @@ mix compile
 
 ## Expected changes
 
-| Subject                      | Examples (Old syntax -> New syntax)                                                                                                      |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Sigil                        | `~H"""` -> `~F"""`                                                                                                                       |
-| Interpolation                | `{{@value}}` -> `{@value}`                                                                                                               |
-| Templates                    | `<template>` -> `<#template>`                                                                                                            |
-| If                           | `<If condition={{ expr }}>` -> `{#if expr}`                                                                                              |
-| For                          | `<For each={{ expr }}>` -> `{#for expr}`                                                                                                 |
-| Interpolation in attr values | `id="id_{{@id}}"` -> `id={"id_#{@id}"}`                                                                                                  |
-| Non-string attr values       | &bull; `selected=true` -> `selected={true}` <br> &bull; `tabindex=1` -> `tabindex={1}`                                                   |
-| Slots                        | &bull; `<slot :props={{ item: item }}>` -> `<#slot :args={item: item}>` <br> &bull; `slot name, props: [...]` -> `slot name, args: [...]`|
+| Subject                       | Examples (Old syntax -> New syntax)                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Sigil                         | `~H"""` -> `~F"""`                                                                                                                       |
+| Interpolation                 | `{{@value}}` -> `{@value}`                                                                                                               |
+| Templates                     | `<template>` -> `<#template>`                                                                                                            |
+| If                            | `<If condition={{ expr }}>` -> `{#if expr}`                                                                                              |
+| For                           | `<For each={{ expr }}>` -> `{#for expr}`                                                                                                 |
+| Interpolation in attr values  | `id="id_{{@id}}"` -> `id={"id_#{@id}"}`                                                                                                  |
+| ErrorTag's `phx_feedback_for` | `<ErrorTag phx_feedback_for="..." />` -> `<ErrorTag feedback_for="..." />`                                                               |
+| Non-string attr values        | &bull; `selected=true` -> `selected={true}` <br> &bull; `tabindex=1` -> `tabindex={1}`                                                   |
+| Slots                         | &bull; `<slot :props={{ item: item }}>` -> `<#slot :args={item: item}>` <br> &bull; `slot name, props: [...]` -> `slot name, args: [...]`|
 
 ## Reporting issues
 

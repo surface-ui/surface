@@ -1,8 +1,7 @@
 # Changelog
 
-## v0.5.0 (WIP)
+## v0.5.0 (2021-06-17)
 
-  * Introduce new notation for template and slot nodes (`<#template>` and `<#slot>` respectively)
   * Add `<:slotname>` shorthand for `<#template slot="slotname">`
   * Introduce block expressions for surface templates (e.g., `{#if}..{/if}`)
   * Introduce `{#if}` block expression with support for `{#elseif}` and `{#else}` sub blocks
@@ -16,11 +15,7 @@
   * Added a convert task to aid migrating to the new syntax
   * Evaluate literal attribute values at compile time instead of runtime
   * Fix compile error when using single quotes as attribute value delimiters
-
-### Deprecations
-
-  * Support for passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been removed.
-    Any non-string value should be passed as an expression (i.e. `selected={true}`)
+  * Add `quote_surface/2` macro to generate Surface AST from template snippets.
 
 ### Breaking Changes
 
@@ -30,10 +25,16 @@
   * ErrorTag: Renamed prop `phx_feedback_for` to `feedback_for`
   * Slot directive `:props` has been renamed to `:args`
   * Option `:props` for the `slot/2` macro has been renamed to `:args`
-  * `<template>` has been removed in favor of `<#template>`
-  * `<slot>` has been removed in favor of `<#slot>`
-  * `<If>` has been removed in favor of `{#if}...{/if}`
-  * `<For>` has been removed in favor of `{#for}...{/for}`
+  * The use of `<template>` has been removed in favor of `<#template>`
+  * The use of `<slot>` has been removed in favor of `<#slot>`
+  * The use of `<If>` has been removed in favor of `{#if}...{/if}`
+  * The use of `<For>` has been removed in favor of `{#for}...{/for}`
+  * `MacroComponent.eval_static_props!/3` evaluates and returns only props with option `static: true`
+
+### Deprecations
+
+  * Support for passing non-string attribute values as literals (i.e. `selected=true` or `tabindex=3`) has been removed.
+    Any non-string value should be passed as an expression (i.e. `selected={true}`)
 
 ## v0.4.1 (2021-05-26)
 
