@@ -20,7 +20,7 @@ jobs:
           - elixir: 1.11.4
             otp: 23.3.4
             warnings-as-errors: true
-          - elixir: 1.12.0
+          - elixir: 1.12.1
             otp: 24.0
             check_formatted: true
             warnings-as-errors: true
@@ -32,16 +32,13 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
-      - name: Install packages
-        run: |
-          sudo apt-get install -y -qq inotify-tools
-      - run: mix format --check-formatted
-        if: matrix.check_formatted
       - name: Install Dependencies
         run: |
           mix local.hex --force
           mix local.rebar --force
           mix deps.get --only test
+      - run: mix format --check-formatted
+        if: matrix.check_formatted
       - run: mix compile --warnings-as-errors
         if: matrix.warnings_as_errors
       - run: mix test
