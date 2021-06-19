@@ -342,6 +342,14 @@ defmodule Surface.Compiler do
      }}
   end
 
+  defp convert_node_to_ast(:block, {:block, "case", _, _, %{has_sub_blocks?: false} = node_meta}, compile_meta) do
+    meta = Helpers.to_meta(node_meta, compile_meta)
+
+    message = "no {#match} sub-block defined. A {#case} block must include at least one {#match ...} sub-block."
+
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
   defp convert_node_to_ast(:block, {:block, name, attrs, children, meta}, compile_meta) do
     {:ok,
      %AST.Block{

@@ -173,6 +173,7 @@ defmodule Surface.Compiler.Parser do
 
   defp handle_token([{:block_close, name, _meta} = token | rest], buffers, state) when name in @blocks do
     {{:block_open, name, expr, meta}, context, state} = pop_matching_tag(state, token)
+    meta = Map.put_new(meta, :has_sub_blocks?, false)
 
     # pop the current buffer and use it as children for the node
     [buffer | buffers] = buffers
