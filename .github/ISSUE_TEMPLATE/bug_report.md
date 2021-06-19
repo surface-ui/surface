@@ -9,12 +9,12 @@ assignees: ''
 
 ## Describe the bug
 
-## How to reproduce
+## How to reproduce it
 1. ...
 
-## Expected behavior
+## The behavior you expected
 
-## Versions
+## Your Environment
 Surface: v0.X.X
 LiveView: v0.X.X
 Elixir: v1.X.X
