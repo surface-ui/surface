@@ -1,16 +1,20 @@
 ---
 name: Bug report
-about: Report an issue with surface
+about: Report an issue with Surface
 title: 'Bug: <Description>'
 labels: 'bug'
 assignees: ''
 
 ---
 
-**Describe the bug**
+## Describe the bug
 
-**To Reproduce**
-Steps to reproduce the behavior:
+## How to reproduce
 1. ...
 
-**Expected behavior**
+## Expected behavior
+
+## Versions
+Surface: v0.X.X
+LiveView: v0.X.X
+Elixir: v1.X.X
