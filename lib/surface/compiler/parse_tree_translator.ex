@@ -22,6 +22,11 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {{name, attributes, body, to_meta(meta)}, state}
   end
 
+  def handle_block(name, [], _body, meta, _state, _context) do
+    message = "missing expression for block {\##{name} ...}"
+    IOHelper.compile_error(message, meta.file, meta.line)
+  end
+
   def handle_block(name, expr, body, meta, state, _context) do
     {{:block, name, expr, body, to_meta(meta)}, state}
   end

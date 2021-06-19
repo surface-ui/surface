@@ -980,6 +980,30 @@ defmodule Surface.Compiler.ParserTest do
 
       assert %ParseError{message: ^message, line: 3} = exception
     end
+
+    test "raise error on blocks without expression" do
+      code = """
+      1
+      {#if}
+        2
+      {/if}
+      """
+
+      message = "nofile:2: missing expression for block {#if ...}"
+
+      assert_raise CompileError, message, fn -> parse!(code) end
+
+      code = """
+      1
+      {#case}
+        ...
+      {/case}
+      """
+
+      message = "nofile:2: missing expression for block {#case ...}"
+
+      assert_raise CompileError, message, fn -> parse!(code) end
+    end
   end
 end
 
