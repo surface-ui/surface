@@ -86,6 +86,25 @@ defmodule Surface.Constructs.CaseTest do
     end)
   end
 
+  test "raise error if there's no {#match} sub-blocks" do
+    code =
+      quote do
+        ~F"""
+        <br>
+        {#case @value}
+
+        {/case}
+        """
+      end
+
+    message =
+      ~S(code:2: no {#match} sub-block defined. A {#case} block must include at least one {#match ...} sub-block.)
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
+    end)
+  end
+
   test "raise syntax error message at the correct line" do
     code =
       quote do
