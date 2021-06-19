@@ -53,7 +53,7 @@ Update `mix.exs` to use the new version:
 ```
   defp deps do
     [
-      {:surface, github: "surface-ui/surface"},
+      {:surface, "~> 0.5.0"},
       ...
     ]
   end
