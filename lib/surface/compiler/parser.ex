@@ -57,7 +57,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp handle_token([], _buffers, %{token_stack: [{{_, _name, _attrs, meta} = node, _ctx} | _]}) do
-    message = "expected closing node for #{format_node(node)} defined on line #{meta.line}, got EOF"
+    message = "end of file reached without closing #{node_type(node)} for #{format_node(node)}"
     raise parse_error(message, meta)
   end
 
@@ -362,12 +362,14 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp pop_matching_tag(%{token_stack: [{{_, _, _, meta} = token_open, _ctx} | _]}, token_close) do
+    {_, _, meta_close} = token_close
+
     message = """
-    expected closing node for #{format_node(token_open)} defined on line #{meta.line}, \
+    expected closing #{node_type(token_open)} for #{format_node(token_open)} defined on line #{meta.line}, \
     got #{format_node(token_close)}\
     """
 
-    raise parse_error(message, meta)
+    raise parse_error(message, meta_close)
   end
 
   defp parent_context([{_tag, context} | _]), do: context
@@ -381,6 +383,11 @@ defmodule Surface.Compiler.Parser do
       column: meta.column
     }
   end
+
+  defp node_type({:tag_open, _, _, _}), do: "tag"
+  defp node_type({:tag_close, _, _}), do: "tag"
+  defp node_type({:block_open, _, _, _}), do: "block"
+  defp node_type({:block_close, _, _}), do: "block"
 
   defp format_node({:tag_open, name, _attrs, _meta}), do: "<#{name}>"
   defp format_node({:tag_close, name, _meta}), do: "</#{name}>"

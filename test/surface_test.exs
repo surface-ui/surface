@@ -1,5 +1,5 @@
 defmodule SurfaceTest do
-  use Surface.ConnCase, async: true
+  use Surface.ConnCase
 
   doctest Surface, import: true
 

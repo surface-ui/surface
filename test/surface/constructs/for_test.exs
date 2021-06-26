@@ -93,7 +93,7 @@ defmodule Surface.Constructs.ForTest do
           """
         end
 
-      message = ~S(code:2:14: expected closing node for <span> defined on line 2, got {/for})
+      message = ~S(code:3:13: expected closing tag for <span> defined on line 2, got {/for})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)

@@ -138,7 +138,7 @@ defmodule Surface.Constructs.CaseTest do
         """
       end
 
-    message = ~S(code:5:14: expected closing node for <span> defined on line 5, got {/case})
+    message = ~S(code:6:11: expected closing tag for <span> defined on line 5, got {/case})
 
     assert_raise(Surface.Compiler.ParseError, message, fn ->
       compile_surface(code)

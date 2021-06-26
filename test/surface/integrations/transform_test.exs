@@ -164,12 +164,13 @@ defmodule Surface.TransformTest do
 
   test "transform is not run on parse errors" do
     code = """
+    <br>
     <DivToSpan>Invalid syntax (missing end tag)
     """
 
     assert_raise(
       Surface.Compiler.ParseError,
-      "nofile:1:2: expected closing node for <DivToSpan> defined on line 1, got EOF",
+      "nofile:2:2: end of file reached without closing tag for <DivToSpan>",
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

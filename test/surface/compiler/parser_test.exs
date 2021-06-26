@@ -344,7 +344,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <foo> defined on line 1, got </a>"
+      message = "expected closing tag for <foo> defined on line 1, got </a>"
 
       assert %ParseError{message: ^message, line: 1} = exception
     end
@@ -354,7 +354,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <bar> defined on line 1, got </foo>"
+      message = "expected closing tag for <bar> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -363,7 +363,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <Bar> defined on line 1, got </foo>"
+      message = "expected closing tag for <Bar> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -372,7 +372,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <Bar.Baz> defined on line 1, got </foo>"
+      message = "expected closing tag for <Bar.Baz> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -381,7 +381,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <Bar1> defined on line 1, got </foo>"
+      message = "expected closing tag for <Bar1> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -390,7 +390,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <Bar_1> defined on line 1, got </foo>"
+      message = "expected closing tag for <Bar_1> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
@@ -399,17 +399,20 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <bar-baz> defined on line 1, got </foo>"
+      message = "expected closing tag for <bar-baz> defined on line 1, got </foo>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
     test "missing closing tag for macro component node" do
-      code = "<foo><#Bar></foo>"
+      code = """
+      <br>
+      <foo><#Bar></foo>
+      """
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <#Bar> defined on line 1, got EOF"
-      assert %ParseError{message: ^message, line: 1} = exception
+      message = "end of file reached without closing tag for <#Bar>"
+      assert %ParseError{message: ^message, line: 2} = exception
     end
 
     test "missing closing tag for html node with surrounding text" do
@@ -423,8 +426,8 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <div> defined on line 3, got </foo>"
-      assert %ParseError{message: ^message, line: 3} = exception
+      message = "expected closing tag for <div> defined on line 3, got </foo>"
+      assert %ParseError{message: ^message, line: 5} = exception
     end
 
     test "tag mismatch" do
@@ -432,17 +435,20 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <foo> defined on line 1, got </baz>"
+      message = "expected closing tag for <foo> defined on line 1, got </baz>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
 
     test "incomplete tag content" do
-      code = "<foo>bar"
+      code = """
+      <br>
+      <foo>bar
+      """
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <foo> defined on line 1, got EOF"
-      assert %ParseError{message: ^message, line: 1} = exception
+      message = "end of file reached without closing tag for <foo>"
+      assert %ParseError{message: ^message, line: 2} = exception
     end
 
     test "incomplete macro content" do
@@ -450,7 +456,7 @@ defmodule Surface.Compiler.ParserTest do
 
       exception = assert_raise ParseError, fn -> parse!(code) end
 
-      message = "expected closing node for <#foo> defined on line 1, got </#bar>"
+      message = "expected closing tag for <#foo> defined on line 1, got </#bar>"
       assert %ParseError{message: ^message, line: 1} = exception
     end
   end
@@ -1003,6 +1009,22 @@ defmodule Surface.Compiler.ParserTest do
       message = "nofile:2: missing expression for block {#case ...}"
 
       assert_raise CompileError, message, fn -> parse!(code) end
+    end
+
+    test "raise error on missing closing block" do
+      code = """
+      <br>
+      {#if true}
+        {#if true}
+          1
+        {/if}
+      """
+
+      exception = assert_raise ParseError, fn -> parse!(code) end
+
+      message = "end of file reached without closing block for {#if}"
+
+      assert %ParseError{message: ^message, line: 2} = exception
     end
   end
 end

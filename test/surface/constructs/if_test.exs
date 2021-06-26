@@ -69,7 +69,7 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message = ~S(code:2:14: expected closing node for <span> defined on line 2, got {/if})
+      message = ~S(code:3:13: expected closing tag for <span> defined on line 2, got {/if})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
@@ -343,7 +343,7 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message = ~S(code:13:16: expected closing node for <span> defined on line 13, got {/if})
+      message = ~S(code:14:15: expected closing tag for <span> defined on line 13, got {/if})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
@@ -379,7 +379,7 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message = ~S(code:2:14: expected closing node for <span> defined on line 2, got {/unless})
+      message = ~S(code:3:13: expected closing tag for <span> defined on line 2, got {/unless})
 
       assert_raise(Surface.Compiler.ParseError, message, fn ->
         compile_surface(code)
