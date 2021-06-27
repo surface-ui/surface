@@ -273,87 +273,22 @@ defmodule Surface.Compiler.EExEngine do
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
-    module
-    |> live_component_ast(
-      context_expr,
-      props_expr,
-      dynamic_props_expr,
-      slot_props,
-      slot_meta,
-      module,
-      meta.node_alias,
-      do_block
-    )
+    quote generated: true do
+      live_component(
+        unquote(module),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
     |> maybe_print_expression(component)
-  end
-
-  # Detect Phoenix Live View Version to determine if `live_component` takes
-  # the `socket` as first argument
-
-  Application.load(:phoenix_live_view)
-
-  :phoenix_live_view
-  |> Application.spec(:vsn)
-  |> List.to_string()
-  |> Version.match?(">= 0.15.6")
-  |> if do
-    defp live_component_ast(
-           module,
-           context_expr,
-           props_expr,
-           dynamic_props_expr,
-           slot_props,
-           slot_meta,
-           module,
-           node_alias,
-           do_block
-         ) do
-      quote generated: true do
-        live_component(
-          unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
-    end
-  else
-    # TODO: Remove when support for phoenix_live_view <= 0.15.5 is dropped
-    defp live_component_ast(
-           module,
-           context_expr,
-           props_expr,
-           dynamic_props_expr,
-           slot_props,
-           slot_meta,
-           module,
-           node_alias,
-           do_block
-         ) do
-      quote generated: true do
-        live_component(
-          @socket,
-          unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
-    end
   end
 
   defp handle_dynamic_props(nil), do: []
