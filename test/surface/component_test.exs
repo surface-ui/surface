@@ -105,18 +105,14 @@ defmodule Surface.ComponentTest do
     prop id, :string
     data id_copy, :string
 
-    @impl true
-    def update(assigns, socket) do
-      socket =
-        socket
-        |> assign(assigns)
-        |> assign(:id_copy, assigns.id)
-
-      {:ok, socket}
+    def update(assigns) do
+      assign(assigns, :id_copy, assigns.id)
     end
 
     @impl true
     def render(assigns) do
+      assigns = update(assigns)
+
       ~F"""
       <div>{@id} - {@id_copy}</div>
       """

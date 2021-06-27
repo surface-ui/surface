@@ -15,13 +15,15 @@ defmodule Surface.LiveViewTest do
     def render(assigns) do
       ~F[<#slot/>]
     end
+
+    def __live__, do: %{kind: :component, module: __MODULE__}
   end
 
   defmacro __using__(_opts) do
     quote do
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
-      import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4]
+      import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4, component: 2, component: 3]
       import Surface, only: [sigil_F: 2]
       import Surface.LiveViewTest
     end

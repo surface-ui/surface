@@ -229,7 +229,6 @@ defmodule Surface do
       |> default_props()
       |> Keyword.merge(dynamic_props)
       |> Keyword.merge(static_props)
-      |> rename_id_if_stateless(module.component_type())
 
     slot_assigns =
       module
@@ -367,16 +366,5 @@ defmodule Surface do
     """
 
     IOHelper.warn(message, caller)
-  end
-
-  defp rename_id_if_stateless(props, Surface.Component) do
-    case Keyword.pop(props, :id) do
-      {nil, rest} -> rest
-      {id, rest} -> Keyword.put(rest, :__id__, id)
-    end
-  end
-
-  defp rename_id_if_stateless(props, _type) do
-    props
   end
 end

@@ -236,6 +236,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(
          %ast_type{
            module: module,
+           type: component_type,
            props: props,
            dynamic_props: dynamic_props,
            templates: templates,
@@ -273,20 +274,38 @@ defmodule Surface.Compiler.EExEngine do
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
-    quote generated: true do
-      live_component(
-        unquote(module),
-        Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
+    if component_type == Surface.LiveComponent do
+      quote generated: true do
+        live_component(
           unquote(module),
-          unquote(meta.node_alias)
-        ),
-        unquote(do_block)
-      )
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(do_block)
+        )
+      end
+    else
+      quote generated: true do
+        component(
+          &unquote(module).render/1,
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(do_block)
+        )
+      end
     end
     |> maybe_print_expression(component)
   end
