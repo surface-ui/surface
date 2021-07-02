@@ -21,7 +21,6 @@ defmodule Surface.Components.Form.TextInput do
   import Surface.Components.Utils, only: [events_to_opts: 1, opts_to_attrs: 1]
   import Surface.Components.Form.Utils
 
-
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:value, class: get_default_class()])
