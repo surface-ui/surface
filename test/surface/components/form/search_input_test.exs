@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.SearchInputTest do
            <input id="mytitle" name="mytitle" type="search">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <SearchInput form="user" field="title" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_title" name="user[title]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="search">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.SearchInputConfigTest do

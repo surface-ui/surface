@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.ColorInputTest do
            <input id="color" name="color" type="color">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <ColorInput form="user" field="color" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_color" name="user[color]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="color">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.ColorInputConfigTest do

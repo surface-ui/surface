@@ -119,6 +119,19 @@ defmodule Surface.Components.Form.FileInputTest do
            <input id="image" name="image" type="file">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <FileInput form="user" field="picture" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_picture" name="user[picture]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="file">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.FileInputConfigTest do

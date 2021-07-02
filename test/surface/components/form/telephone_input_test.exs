@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.TelephoneInputTest do
            <input id="telephone" name="telephone" type="tel">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <TelephoneInput form="user" field="phone" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_phone" name="user[phone]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="tel">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.TelephoneInputConfigTest do

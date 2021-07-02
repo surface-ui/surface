@@ -160,6 +160,19 @@ defmodule Surface.Components.Form.CheckboxTest do
            <input id="is_admin" name="is_admin" type="checkbox" value="true">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <Checkbox form="user" field="admin" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_admin" name="user[admin]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="checkbox" value="true">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.CheckboxConfigTest do
