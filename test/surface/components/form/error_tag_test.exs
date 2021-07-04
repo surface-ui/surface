@@ -11,6 +11,13 @@ defmodule Surface.Components.Form.ErrorTagTest.Common do
     # Simulate that form submission already occurred so that error message will display
     |> Map.put(:action, :insert)
   end
+
+  def unsafe_unique_changeset do
+    {%{}, %{name: :string}}
+    |> Ecto.Changeset.cast(%{name: "myname"}, [:name])
+    |> Ecto.Changeset.add_error(:name, "has already been taken", validation: :unsafe_unique, fields: [:name])
+    |> Map.put(:action, :insert)
+  end
 end
 
 defmodule Surface.Components.Form.ErrorTagTest do
@@ -116,6 +123,31 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     # The error tags are displayed as spans, so this demonstrates that none were rendered
     refute html =~ "<span"
+  end
+
+  test "hint if translate_error returns an ArgumentError with a list" do
+    assigns = %{changeset: Common.unsafe_unique_changeset()}
+
+    message = """
+    Hint: In Surface, this error often happens because no `default_translator` has been set
+    for the `ErrorTag` component. You can point the default translator to your application helpers:
+
+      config :surface, :components, [
+        {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
+      ]
+    """
+
+    assert_raise ArgumentError, ~r/#{Regex.escape(message)}$/, fn ->
+      render_surface do
+        ~F"""
+        <Form for={@changeset} opts={as: :user}>
+          <Field name={:name}>
+            <ErrorTag />
+          </Field>
+        </Form>
+        """
+      end
+    end
   end
 end
 

@@ -124,7 +124,25 @@ defmodule Surface.Components.Form.ErrorTag do
     # Because the error messages we show in our forms and APIs
     # are defined inside Ecto, we need to translate them dynamically.
     Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
+      try do
+        String.replace(acc, "%{#{key}}", to_string(value))
+      rescue
+        e in ArgumentError ->
+          if e.message =~ "cannot convert the given list to a string" do
+            message = """
+            Hint: In Surface, this error often happens because no `default_translator` has been set
+            for the `ErrorTag` component. You can point the default translator to your application helpers:
+
+              config :surface, :components, [
+                {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
+              ]
+            """
+
+            reraise %{e | message: e.message <> message}, __STACKTRACE__
+          else
+            reraise e, __STACKTRACE__
+          end
+      end
     end)
   end
 
