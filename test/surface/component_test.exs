@@ -299,4 +299,27 @@ defmodule Surface.ComponentTest do
              """
     end
   end
+
+  describe "components in dead views" do
+    defmodule DeadView do
+      use Phoenix.View, root: "support/dead_views"
+      import Surface
+
+      def render("index.html", assigns) do
+        ~F"""
+        <Outer><Stateless label="My label" class="myclass"/></Outer>
+        """
+      end
+    end
+
+    test "renders the component" do
+      assert Phoenix.View.render_to_string(DeadView, "index.html", []) =~
+               """
+               <div><div class="myclass">
+                 <span>My label</span>
+               </div>
+               </div>
+               """
+    end
+  end
 end

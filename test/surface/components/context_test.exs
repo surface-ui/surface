@@ -295,4 +295,47 @@ defmodule Surface.Components.ContextTest do
       end)
     end
   end
+
+  describe "dead views" do
+    defmodule DeadView do
+      use Phoenix.View, root: "support/dead_views"
+      import Surface
+
+      def render("index.html", assigns) do
+        ~F"""
+        <Outer>
+          <InnerWrapper />
+        </Outer>
+        """
+      end
+    end
+
+    defmodule DeadViewNamedSlots do
+      use Phoenix.View, root: "support/dead_views"
+      import Surface
+
+      def render("index.html", assigns) do
+        ~F"""
+        <OuterWithNamedSlots>
+          <#template slot="my_slot">
+            <Context get={field: field}>
+              {field}
+            </Context>
+          </#template>
+        </OuterWithNamedSlots>
+        """
+      end
+    end
+
+    test "pass context down the tree of components" do
+      assert Phoenix.View.render_to_string(DeadView, "index.html", []) =~ """
+             <span id="field">field from Outer</span>\
+             """
+    end
+
+    test "pass context to named slots" do
+      assert Phoenix.View.render_to_string(DeadViewNamedSlots, "index.html", []) =~
+               "field from OuterWithNamedSlots"
+    end
+  end
 end

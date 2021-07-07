@@ -250,26 +250,29 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
+    parent_component_type = Module.get_attribute(meta.caller.module, :component_type)
+
     if module.__use_context__?() do
       Module.put_attribute(meta.caller.module, :use_context?, true)
     end
 
+    initial_context =
+      if parent_component_type do
+        quote do: @__context__
+      else
+        quote do: %{}
+      end
+
     context_expr =
       cond do
         module.__slots__() == [] and not module.__use_context__?() ->
-          quote generated: true do
-            %{}
-          end
+          quote do: %{}
 
         is_child_component?(state) ->
-          quote generated: true do
-            Map.merge(@__context__ || %{}, the_context)
-          end
+          quote do: Map.merge(unquote(initial_context), the_context)
 
         true ->
-          quote generated: true do
-            @__context__ || %{}
-          end
+          initial_context
       end
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
