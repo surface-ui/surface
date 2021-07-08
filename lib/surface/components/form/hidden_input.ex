@@ -18,17 +18,17 @@ defmodule Surface.Components.Form.HiddenInput do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [hidden_input: 3]
-  import Surface.Components.Utils, only: [events_to_opts: 1]
+  import Surface.Components.Utils, only: [events_to_attrs: 1]
   import Surface.Components.Form.Utils
 
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:value, :class])
-    event_opts = events_to_opts(assigns)
+    event_attrs = events_to_attrs(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {hidden_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
+      {hidden_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
     </InputContext>
     """
   end

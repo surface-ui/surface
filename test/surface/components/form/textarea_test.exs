@@ -105,6 +105,20 @@ defmodule Surface.Components.Form.TextAreaTest do
            </textarea>
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <TextArea form="user" field="summary" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <textarea id="user_summary" name="user[summary]" phx-value-a="one" phx-value-b="two" phx-value-c="3">
+           </textarea>
+           """
+  end
 end
 
 defmodule Surface.Components.Form.TextAreaConfigTest do

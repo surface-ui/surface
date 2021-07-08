@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.Checkbox do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [checkbox: 3]
-  import Surface.Components.Utils, only: [events_to_opts: 1, opts_to_attrs: 1]
+  import Surface.Components.Utils, only: [events_to_attrs: 1]
   import Surface.Components.Form.Utils
 
   @doc "The value to be sent when the checkbox is checked. Defaults to \"true\""
@@ -40,11 +40,11 @@ defmodule Surface.Components.Form.Checkbox do
       ])
 
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
-    event_opts = assigns |> events_to_opts() |> opts_to_attrs()
+    event_attrs = events_to_attrs(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-    {checkbox(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
+    {checkbox(form, field, helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
     </InputContext>
     """
   end

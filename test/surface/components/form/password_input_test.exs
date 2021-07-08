@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.PasswordInputTest do
            <input id="secret" name="secret" type="password">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <PasswordInput form="user" field="password" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_password" name="user[password]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="password">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.PasswordInputConfigTest do

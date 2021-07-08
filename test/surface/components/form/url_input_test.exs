@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.UrlInputTest do
            <input id="website" name="website" type="url">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <UrlInput form="user" field="website" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_website" name="user[website]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="url">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.UrlInputConfigTest do

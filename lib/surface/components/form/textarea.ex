@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.TextArea do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [textarea: 3]
-  import Surface.Components.Utils, only: [events_to_opts: 1]
+  import Surface.Components.Utils, only: [events_to_attrs: 1]
   import Surface.Components.Form.Utils
 
   @doc "Specifies the visible number of lines in a text area"
@@ -30,11 +30,11 @@ defmodule Surface.Components.Form.TextArea do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:value, :rows, :cols, class: get_default_class()])
-    event_opts = events_to_opts(assigns)
+    event_attrs = events_to_attrs(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {textarea(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
+      {textarea(form, field, helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
     </InputContext>
     """
   end

@@ -87,4 +87,17 @@ defmodule Surface.Components.Form.ResetTest do
            <input id="countdown" name="countdown" type="reset" value="Reset">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <Reset values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input phx-value-a="one" phx-value-b="two" phx-value-c="3" type="reset" value="Reset">
+           """
+  end
 end

@@ -16,7 +16,7 @@ defmodule Surface.Components.LiveFileInputTest do
 
     def render(assigns) do
       ~F"""
-        <LiveFileInput upload={@uploads.avatar} class={"test_class", disabled_test: true} opts={"data-test": "test-data", name: "a name?"} />
+        <LiveFileInput upload={@uploads.avatar} class={"test_class", disabled_test: true} opts={"data-test": "test-data", name: "a name?"} values={a: "one", b: :two, c: 3} />
       """
     end
   end
@@ -54,6 +54,10 @@ defmodule Surface.Components.LiveFileInputTest do
     # expected passed through attrs
     assert html =~ "class=\"test_class disabled_test\""
     assert html =~ "data-test=\"test-data\""
+    # expected phx-value-*s
+    assert html =~ "phx-value-a=\"one\""
+    assert html =~ "phx-value-b=\"two\""
+    assert html =~ "phx-value-c=\"3\""
   end
 
   test "correctly renders live_file_input/2 with `:default_class` config" do
