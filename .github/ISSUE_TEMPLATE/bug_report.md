@@ -2,7 +2,7 @@
 name: Bug report
 about: Report an issue with Surface
 title: 'Bug: <Description>'
-labels: 'bug'
+labels: ''
 assignees: ''
 
 ---
