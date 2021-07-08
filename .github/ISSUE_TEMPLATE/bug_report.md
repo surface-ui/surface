@@ -1,8 +1,8 @@
 ---
 name: Bug report
 about: Report an issue with Surface
-title: 'Bug: <Description>'
-labels: 'bug'
+title: '<Description>'
+labels: ''
 assignees: ''
 
 ---
