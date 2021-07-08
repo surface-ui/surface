@@ -1235,6 +1235,36 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
+  test "raise on passing dynamic attributes" do
+    code = """
+    defmodule ComponentWithDynamicAttrs do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <br>
+        <#slot
+          {...@attrs}/>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:10: cannot pass dynamic attributes to <#slot>.
+
+    Slots only accept `name`, `:args`, `:if` and `:for`.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
+  end
+
   test "outputs compile warning when adding slot args to the default slot in a slotable component" do
     component_code = """
     defmodule ColumnWithRenderAndSlotArgs do
