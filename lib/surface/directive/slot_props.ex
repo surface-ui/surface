@@ -1,4 +1,4 @@
-defmodule Surface.Directive.SlotProps do
+defmodule Surface.Directive.SlotArgs do
   use Surface.Directive
 
   def extract({":args", {:attribute_expr, value, expr_meta}, attr_meta}, meta) do

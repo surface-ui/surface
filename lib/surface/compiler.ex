@@ -42,7 +42,7 @@ defmodule Surface.Compiler do
   @template_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
-    Surface.Directive.SlotProps,
+    Surface.Directive.SlotArgs,
     Surface.Directive.If,
     Surface.Directive.For
   ]
