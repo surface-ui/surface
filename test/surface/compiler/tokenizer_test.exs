@@ -64,6 +64,26 @@ defmodule Surface.Compiler.TokenizerTest do
     end
   end
 
+  describe "doctype" do
+    test "generated as text" do
+      assert tokenize!("<!doctype html>") == [{:text, "<!doctype html>"}]
+    end
+
+    test "multiple lines" do
+      tokens =
+        tokenize!("""
+        <!DOCTYPE
+        html
+        >  <br />\
+        """)
+
+      assert [
+               {:text, "<!DOCTYPE\nhtml\n>  "},
+               {:tag_open, "br", [], %{column: 5, line: 3}}
+             ] = tokens
+    end
+  end
+
   describe "private comment" do
     test "represented as {:comment, comment, meta}" do
       assert [
