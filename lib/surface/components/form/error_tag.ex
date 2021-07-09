@@ -21,9 +21,10 @@ defmodule Surface.Components.Form.ErrorTag do
   ]
   ```
 
-  Surface provides a fallback error message if the error cannot be converted to a string. If it
-  happens, Surface will raise a warning to invite you to configure a `default_translator` that
-  handles such a case.
+  > **Note:** If you don't configure a `default_translator`, Surface will try to translate errors using 
+  a built-in message translator which may not cover all types of errors. If the error cannot
+  be translated, a generic `"invalid value"` will be returned and a warning will be emitted,
+  reminding the user to set up a proper `default_translator` that can handle such cases.
 
   There is also a `translator` prop which can be used on a case-by-case basis.
   It overrides the configuration.
