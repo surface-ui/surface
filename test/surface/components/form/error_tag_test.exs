@@ -16,6 +16,8 @@ end
 defmodule Surface.Components.Form.ErrorTagTest do
   use Surface.ConnCase, async: true
 
+  import ExUnit.CaptureIO
+
   alias Surface.Components.Form.ErrorTagTest.Common
   alias Surface.Components.Form
   alias Surface.Components.Form.Field
@@ -116,6 +118,29 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
     # The error tags are displayed as spans, so this demonstrates that none were rendered
     refute html =~ "<span"
+  end
+
+  test "warn if translate_error returns cannot convert the error message to a string" do
+    message = """
+    the fallback message translator for the `ErrorTag` component cannot handle the given value.
+
+    Hint: you can set up the `default_translator` to route all errors to your application helpers:
+
+      config :surface, :components, [
+        {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
+      ]
+
+    Given value: [:name]
+
+    Exception:\
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        Surface.Components.Form.ErrorTag.translate_error({"invalid :field", [{:field, [:name]}]})
+      end)
+
+    assert output =~ message
   end
 end
 

@@ -21,6 +21,11 @@ defmodule Surface.Components.Form.ErrorTag do
   ]
   ```
 
+  > **Note:** If you don't configure a `default_translator`, Surface will try to translate errors using 
+  a built-in message translator which may not cover all types of errors. If the error cannot
+  be translated, a generic `"invalid value"` will be returned and a warning will be emitted,
+  reminding the user to set up a proper `default_translator` that can handle such cases.
+
   There is also a `translator` prop which can be used on a case-by-case basis.
   It overrides the configuration.
 
@@ -45,7 +50,7 @@ defmodule Surface.Components.Form.ErrorTag do
   ```
 
   ```surface
-  <ErrorTag translator={{ &CustomTranslationLib.translate_error/1 }} />
+  <ErrorTag translator={&CustomTranslationLib.translate_error/1} />
   ```
   """
 
@@ -124,7 +129,29 @@ defmodule Surface.Components.Form.ErrorTag do
     # Because the error messages we show in our forms and APIs
     # are defined inside Ecto, we need to translate them dynamically.
     Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
+      try do
+        String.replace(acc, "%{#{key}}", to_string(value))
+      rescue
+        e ->
+          IO.warn(
+            """
+            the fallback message translator for the `ErrorTag` component cannot handle the given value.
+
+            Hint: you can set up the `default_translator` to route all errors to your application helpers:
+
+              config :surface, :components, [
+                {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
+              ]
+
+            Given value: #{inspect(value)}
+
+            Exception: #{Exception.message(e)}
+            """,
+            __STACKTRACE__
+          )
+
+          "invalid value"
+      end
     end)
   end
 
