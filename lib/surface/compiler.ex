@@ -126,11 +126,15 @@ defmodule Surface.Compiler do
   end
 
   defp is_stateful_component(module) do
-    if Module.open?(module) do
-      Module.get_attribute(module, :component_type) in @stateful_component_types
-    else
-      function_exported?(module, :component_type, 0) and
+    cond do
+      function_exported?(module, :component_type, 0) ->
         module.component_type() in @stateful_component_types
+
+      Module.open?(module) ->
+        Module.get_attribute(module, :component_type) in @stateful_component_types
+
+      true ->
+        false
     end
   end
 
