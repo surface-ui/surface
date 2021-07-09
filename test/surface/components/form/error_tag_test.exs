@@ -11,13 +11,6 @@ defmodule Surface.Components.Form.ErrorTagTest.Common do
     # Simulate that form submission already occurred so that error message will display
     |> Map.put(:action, :insert)
   end
-
-  def unsafe_unique_changeset do
-    {%{}, %{name: :string}}
-    |> Ecto.Changeset.cast(%{name: "myname"}, [:name])
-    |> Ecto.Changeset.add_error(:name, "has already been taken", validation: :unsafe_unique, fields: [:name])
-    |> Map.put(:action, :insert)
-  end
 end
 
 defmodule Surface.Components.Form.ErrorTagTest do
