@@ -135,7 +135,7 @@ defmodule Surface.Components.Form.ErrorTag do
         e ->
           IO.warn(
             """
-            the fallback message translator for the `ErrorTag` component cannot handle the given message.
+            the fallback message translator for the `ErrorTag` component cannot handle the given value.
 
             Hint: you can set up the `default_translator` to route all errors to your application helpers:
 
