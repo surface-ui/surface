@@ -144,7 +144,7 @@ defmodule Surface.Components.Form.ErrorTag do
               ]
 
             Given value: #{inspect(value)}
-            
+
             Exception: #{Exception.message(e)}
             """,
             __STACKTRACE__
