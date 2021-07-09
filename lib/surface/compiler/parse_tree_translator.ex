@@ -74,6 +74,15 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
     directive =
       case tag_name do
+        "#slot" ->
+          message = """
+          cannot pass dynamic attributes to <#slot>.
+
+          Slots only accept `name`, `:args`, `:if` and `:for`.
+          """
+
+          IOHelper.compile_error(message, attr_meta.file, attr_meta.line)
+
         <<first, _::binary>> when first in ?A..?Z ->
           ":props"
 

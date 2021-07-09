@@ -1177,6 +1177,94 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
+  test "raise on invalid attrs/directives" do
+    code = """
+    defmodule ComponentWithInvalidDirective do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <br>
+        <#slot
+          :attrs={info: "info"}/>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:10: invalid directive `:attrs` for <#slot>.
+
+    Slots only accept `name`, `:args`, `:if` and `:for`.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
+
+    code = """
+    defmodule ComponentWithInvalidAttr do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <br>
+        <#slot
+          let={info: info}/>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:10: invalid attribute `let` for <#slot>.
+
+    Slots only accept `name`, `:args`, `:if` and `:for`.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
+  end
+
+  test "raise on passing dynamic attributes" do
+    code = """
+    defmodule ComponentWithDynamicAttrs do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <br>
+        <#slot
+          {...@attrs}/>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:10: cannot pass dynamic attributes to <#slot>.
+
+    Slots only accept `name`, `:args`, `:if` and `:for`.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
+  end
+
   test "outputs compile warning when adding slot args to the default slot in a slotable component" do
     component_code = """
     defmodule ColumnWithRenderAndSlotArgs do
@@ -1189,7 +1277,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot args={{ info: "this is a test" }} />
+          <#slot :args={info: "this is a test"} />
         </span>
         "\""
       end

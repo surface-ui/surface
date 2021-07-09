@@ -42,7 +42,7 @@ defmodule Surface.Compiler do
   @template_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
-    Surface.Directive.SlotProps,
+    Surface.Directive.SlotArgs,
     Surface.Directive.If,
     Surface.Directive.For
   ]
@@ -459,11 +459,12 @@ defmodule Surface.Compiler do
 
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
-    with {:ok, directives, _attrs} <-
+    with {:ok, directives, attrs} <-
            collect_directives(@slot_directive_handlers, attributes, meta),
          slot <- Enum.find(defined_slots, fn slot -> slot.name == name end),
          slot when not is_nil(slot) <- slot do
       maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
+      validate_slot_attrs!(attrs)
 
       {:ok,
        %AST.Slot{
@@ -1189,5 +1190,25 @@ defmodule Surface.Compiler do
       {:ok, value} ->
         value
     end
+  end
+
+  defp validate_slot_attrs!([{name, _, %{file: file, line: line}} | _]) when name != "name" do
+    type =
+      case name do
+        ":" <> _ -> "directive"
+        _ -> "attribute"
+      end
+
+    message = """
+    invalid #{type} `#{name}` for <#slot>.
+
+    Slots only accept `name`, `:args`, `:if` and `:for`.
+    """
+
+    IOHelper.compile_error(message, file, line)
+  end
+
+  defp validate_slot_attrs!(_) do
+    :ok
   end
 end
