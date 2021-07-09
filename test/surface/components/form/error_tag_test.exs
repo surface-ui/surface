@@ -122,7 +122,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
 
   test "warn if translate_error returns cannot convert the error message to a string" do
     message = """
-    the fallback message translator for the `ErrorTag` component cannot handle the given message.
+    the fallback message translator for the `ErrorTag` component cannot handle the given value.
 
     Hint: you can set up the `default_translator` to route all errors to your application helpers:
 
@@ -130,7 +130,9 @@ defmodule Surface.Components.Form.ErrorTagTest do
         {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
       ]
 
-    Original error:\
+    Given value: [:name]
+
+    Exception:\
     """
 
     output =
