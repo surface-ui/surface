@@ -143,7 +143,9 @@ defmodule Surface.Components.Form.ErrorTag do
                 {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
               ]
 
-            Original error: #{Exception.message(e)}
+            Given value: #{inspect(value)}
+            
+            Exception: #{Exception.message(e)}
             """,
             __STACKTRACE__
           )
