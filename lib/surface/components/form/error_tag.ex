@@ -21,6 +21,10 @@ defmodule Surface.Components.Form.ErrorTag do
   ]
   ```
 
+  Surface provides a fallback error message if the error cannot be converted to a string. If it
+  happens, Surface will raise a warning to invite you to configure a `default_translator` that
+  handles such a case.
+
   There is also a `translator` prop which can be used on a case-by-case basis.
   It overrides the configuration.
 
@@ -45,7 +49,7 @@ defmodule Surface.Components.Form.ErrorTag do
   ```
 
   ```surface
-  <ErrorTag translator={{ &CustomTranslationLib.translate_error/1 }} />
+  <ErrorTag translator={&CustomTranslationLib.translate_error/1} />
   ```
   """
 
@@ -127,21 +131,23 @@ defmodule Surface.Components.Form.ErrorTag do
       try do
         String.replace(acc, "%{#{key}}", to_string(value))
       rescue
-        e in ArgumentError ->
-          if e.message =~ "cannot convert the given list to a string" do
-            message = """
-            Hint: In Surface, this error often happens because no `default_translator` has been set
-            for the `ErrorTag` component. You can point the default translator to your application helpers:
+        e ->
+          IO.warn(
+            """
+            the fallback message translator for the `ErrorTag` component cannot handle the given message.
+
+            Hint: you can set up the `default_translator` to route all errors to your application helpers:
 
               config :surface, :components, [
                 {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
               ]
-            """
 
-            reraise %{e | message: e.message <> message}, __STACKTRACE__
-          else
-            reraise e, __STACKTRACE__
-          end
+            Original error: #{Exception.message(e)}
+            """,
+            __STACKTRACE__
+          )
+
+          "invalid value"
       end
     end)
   end

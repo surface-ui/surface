@@ -23,6 +23,8 @@ end
 defmodule Surface.Components.Form.ErrorTagTest do
   use Surface.ConnCase, async: true
 
+  import ExUnit.CaptureIO
+
   alias Surface.Components.Form.ErrorTagTest.Common
   alias Surface.Components.Form
   alias Surface.Components.Form.Field
@@ -125,29 +127,25 @@ defmodule Surface.Components.Form.ErrorTagTest do
     refute html =~ "<span"
   end
 
-  test "hint if translate_error returns an ArgumentError with a list" do
-    assigns = %{changeset: Common.unsafe_unique_changeset()}
-
+  test "warn if translate_error returns cannot convert the error message to a string" do
     message = """
-    Hint: In Surface, this error often happens because no `default_translator` has been set
-    for the `ErrorTag` component. You can point the default translator to your application helpers:
+    the fallback message translator for the `ErrorTag` component cannot handle the given message.
+
+    Hint: you can set up the `default_translator` to route all errors to your application helpers:
 
       config :surface, :components, [
         {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
       ]
+
+    Original error:\
     """
 
-    assert_raise ArgumentError, ~r/#{Regex.escape(message)}$/, fn ->
-      render_surface do
-        ~F"""
-        <Form for={@changeset} opts={as: :user}>
-          <Field name={:name}>
-            <ErrorTag />
-          </Field>
-        </Form>
-        """
-      end
-    end
+    output =
+      capture_io(:standard_error, fn ->
+        Surface.Components.Form.ErrorTag.translate_error({"invalid :field", [{:field, [:name]}]})
+      end)
+
+    assert output =~ message
   end
 end
 
