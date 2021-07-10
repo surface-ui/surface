@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.TextInputTest do
            <input id="username" name="username" type="text">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <TextInput form="user" field="name" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_name" name="user[name]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="text">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.TextInputConfigTest do

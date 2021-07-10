@@ -5,13 +5,10 @@ defmodule Surface.Components.EventsTest do
     use Surface.Component
     use Surface.Components.Events
 
-    import Surface.Components.Utils, only: [events_to_opts: 1, opts_to_attrs: 1]
+    import Surface.Components.Utils, only: [events_to_attrs: 1]
 
     def render(assigns) do
-      attrs =
-        assigns
-        |> events_to_opts()
-        |> opts_to_attrs()
+      attrs = events_to_attrs(assigns)
 
       ~F"""
       <div :attrs={attrs} />

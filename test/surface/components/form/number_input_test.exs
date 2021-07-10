@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.NumberInputTest do
            <input id="old" name="old" type="number">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <NumberInput form="user" field="age" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_age" name="user[age]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="number">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.NumberInputConfigTest do

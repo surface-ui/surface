@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.RangeInput do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [range_input: 3]
-  import Surface.Components.Utils, only: [events_to_opts: 1]
+  import Surface.Components.Utils, only: [events_to_attrs: 1]
   import Surface.Components.Form.Utils
 
   @doc "Minimum value for the input"
@@ -36,11 +36,11 @@ defmodule Surface.Components.Form.RangeInput do
 
     attr_opts = props_to_attr_opts(assigns, [:value, :min, :max, :step, class: get_config(:default_class)])
 
-    event_opts = events_to_opts(assigns)
+    event_attrs = events_to_attrs(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {range_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_opts)}
+      {range_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
     </InputContext>
     """
   end

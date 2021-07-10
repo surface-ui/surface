@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.EmailInputTest do
            <input id="myemail" name="myemail" type="email">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <EmailInput form="user" field="email" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_email" name="user[email]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="email">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.EmailInputConfigTest do

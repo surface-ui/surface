@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.DateInputTest do
            <input id="birthday" name="birthday" type="date">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <DateInput form="user" field="birthday" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_birthday" name="user[birthday]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="date">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.DateInputConfigTest do

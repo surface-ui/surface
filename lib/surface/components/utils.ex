@@ -136,6 +136,12 @@ defmodule Surface.Components.Utils do
     |> List.flatten()
   end
 
+  def events_to_attrs(assigns) do
+    assigns
+    |> events_to_opts()
+    |> opts_to_attrs()
+  end
+
   defp values_to_opts([]) do
     []
   end

@@ -87,6 +87,19 @@ defmodule Surface.Components.Form.DateTimeLocalInputTest do
            <input id="birthday" name="birthday" type="datetime-local">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <DateTimeLocalInput form="user" field="birth" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_birth" name="user[birth]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="datetime-local">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.DateTimeLocalInputConfigTest do

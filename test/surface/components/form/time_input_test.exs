@@ -100,6 +100,19 @@ defmodule Surface.Components.Form.TimeInputTest do
            <input id="start_at" name="start_at" type="time">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <TimeInput form="user" field="time" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_time" name="user[time]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="time">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.TimeInputConfigTest do

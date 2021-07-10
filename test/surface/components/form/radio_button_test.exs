@@ -87,6 +87,19 @@ defmodule Surface.Components.Form.RadioButtonTest do
            <input id="role" name="role" type="radio" value="" checked>
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <RadioButton form="user" field="role" value="admin" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="user_role_admin" name="user[role]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="radio" value="admin">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.RadioButtonConfigTest do

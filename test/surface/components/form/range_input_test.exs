@@ -113,6 +113,19 @@ defmodule Surface.Components.Form.RangeInputTest do
            <input id="rate" name="rate" type="range">
            """
   end
+
+  test "setting the phx-value-* values" do
+    html =
+      render_surface do
+        ~F"""
+        <RangeInput form="volume" field="percent" values={a: "one", b: :two, c: 3} />
+        """
+      end
+
+    assert html =~ """
+           <input id="volume_percent" name="volume[percent]" phx-value-a="one" phx-value-b="two" phx-value-c="3" type="range">
+           """
+  end
 end
 
 defmodule Surface.Components.Form.RangeInputConfigTest do
