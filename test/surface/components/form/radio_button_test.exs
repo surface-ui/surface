@@ -105,6 +105,7 @@ end
 defmodule Surface.Components.Form.RadioButtonConfigTest do
   use Surface.ConnCase
 
+  alias Surface.Components.Form.Input
   alias Surface.Components.Form.RadioButton
 
   test ":default_class config" do
@@ -117,6 +118,34 @@ defmodule Surface.Components.Form.RadioButtonConfigTest do
         end
 
       assert html =~ ~r/class="default_class"/
+    end
+  end
+
+  test "component inherits :default_class from Form.Input" do
+    using_config Input, default_class: "inherited_default_class" do
+      html =
+        render_surface do
+          ~F"""
+          <RadioButton/>
+          """
+        end
+
+      assert html =~ ~r/class="inherited_default_class"/
+    end
+  end
+
+  test ":default_class config overrides inherited :default_class from Form.Input" do
+    using_config Input, default_class: "inherited_default_class" do
+      using_config RadioButton, default_class: "default_class" do
+        html =
+          render_surface do
+            ~F"""
+            <RadioButton/>
+            """
+          end
+
+        assert html =~ ~r/class="default_class"/
+      end
     end
   end
 end

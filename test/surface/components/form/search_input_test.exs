@@ -118,6 +118,7 @@ end
 defmodule Surface.Components.Form.SearchInputConfigTest do
   use Surface.ConnCase
 
+  alias Surface.Components.Form.Input
   alias Surface.Components.Form.SearchInput
 
   test ":default_class config" do
@@ -130,6 +131,34 @@ defmodule Surface.Components.Form.SearchInputConfigTest do
         end
 
       assert html =~ ~r/class="default_class"/
+    end
+  end
+
+  test "component inherits :default_class from Form.Input" do
+    using_config Input, default_class: "inherited_default_class" do
+      html =
+        render_surface do
+          ~F"""
+          <SearchInput/>
+          """
+        end
+
+      assert html =~ ~r/class="inherited_default_class"/
+    end
+  end
+
+  test ":default_class config overrides inherited :default_class from Form.Input" do
+    using_config Input, default_class: "inherited_default_class" do
+      using_config SearchInput, default_class: "default_class" do
+        html =
+          render_surface do
+            ~F"""
+            <SearchInput/>
+            """
+          end
+
+        assert html =~ ~r/class="default_class"/
+      end
     end
   end
 end
