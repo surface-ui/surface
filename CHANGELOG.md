@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.1 (2021-07-13)
+
+  * Add property `values` to form inputs
+  * Handle doctype as text
+  * Improve error message when `default_translator` is not configured for `ErrorTag` (#449)
+  * Raise on invalid attribute/directive in `<#slot>` (#456)
+  * Raise error on `{#case}` without `{#match}` (#443)
+  * Raise on blocks without expression
+  * Fix error line on missing closing tag
+
 ## v0.5.0 (2021-06-17)
 
   * Add `<:slotname>` shorthand for `<#template slot="slotname">`
