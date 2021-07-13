@@ -105,7 +105,7 @@ defmodule Surface.ComponentTest do
     prop id, :string
     data id_copy, :string
 
-    def update(assigns) do
+    defp update(assigns) do
       assign(assigns, :id_copy, assigns.id)
     end
 
