@@ -46,7 +46,7 @@ defmodule Surface.ComponentChangeTrackingTest do
     assert result_1["comp_1"].value == 0
     assert result_1["comp_2"].value == 0
 
-    # Don't rerender components if their props haven't change
+    # Don't rerender components if their props haven't changed
 
     html = render_click(view, :update_count, %{comp: "1", value: 0})
     assert parse_result(html) == result_1
