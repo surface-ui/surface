@@ -105,18 +105,14 @@ defmodule Surface.ComponentTest do
     prop id, :string
     data id_copy, :string
 
-    @impl true
-    def update(assigns, socket) do
-      socket =
-        socket
-        |> assign(assigns)
-        |> assign(:id_copy, assigns.id)
-
-      {:ok, socket}
+    defp update(assigns) do
+      assign(assigns, :id_copy, assigns.id)
     end
 
     @impl true
     def render(assigns) do
+      assigns = update(assigns)
+
       ~F"""
       <div>{@id} - {@id_copy}</div>
       """
@@ -301,6 +297,29 @@ defmodule Surface.ComponentTest do
              cannot render <Enum> \(module Enum is not a component\)
                code:2:\
              """
+    end
+  end
+
+  describe "components in dead views" do
+    defmodule DeadView do
+      use Phoenix.View, root: "support/dead_views"
+      import Surface
+
+      def render("index.html", assigns) do
+        ~F"""
+        <Outer><Stateless label="My label" class="myclass"/></Outer>
+        """
+      end
+    end
+
+    test "renders the component" do
+      assert Phoenix.View.render_to_string(DeadView, "index.html", []) =~
+               """
+               <div><div class="myclass">
+                 <span>My label</span>
+               </div>
+               </div>
+               """
     end
   end
 end

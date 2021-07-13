@@ -236,6 +236,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(
          %ast_type{
            module: module,
+           type: component_type,
            props: props,
            dynamic_props: dynamic_props,
            templates: templates,
@@ -249,111 +250,67 @@ defmodule Surface.Compiler.EExEngine do
 
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
+    parent_component_type = Module.get_attribute(meta.caller.module, :component_type)
+
     if module.__use_context__?() do
       Module.put_attribute(meta.caller.module, :use_context?, true)
     end
 
+    initial_context =
+      if parent_component_type do
+        quote do: @__context__
+      else
+        quote do: %{}
+      end
+
     context_expr =
       cond do
         module.__slots__() == [] and not module.__use_context__?() ->
-          quote generated: true do
-            %{}
-          end
+          quote do: %{}
 
         is_child_component?(state) ->
-          quote generated: true do
-            Map.merge(@__context__ || %{}, the_context)
-          end
+          quote do: Map.merge(unquote(initial_context), the_context)
 
         true ->
-          quote generated: true do
-            @__context__ || %{}
-          end
+          initial_context
       end
 
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
 
-    module
-    |> live_component_ast(
-      context_expr,
-      props_expr,
-      dynamic_props_expr,
-      slot_props,
-      slot_meta,
-      module,
-      meta.node_alias,
-      do_block
-    )
+    if component_type == Surface.LiveComponent do
+      quote generated: true do
+        live_component(
+          unquote(module),
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(do_block)
+        )
+      end
+    else
+      quote generated: true do
+        component(
+          &unquote(module).render/1,
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(do_block)
+        )
+      end
+    end
     |> maybe_print_expression(component)
-  end
-
-  # Detect Phoenix Live View Version to determine if `live_component` takes
-  # the `socket` as first argument
-
-  Application.load(:phoenix_live_view)
-
-  :phoenix_live_view
-  |> Application.spec(:vsn)
-  |> List.to_string()
-  |> Version.match?(">= 0.15.6")
-  |> if do
-    defp live_component_ast(
-           module,
-           context_expr,
-           props_expr,
-           dynamic_props_expr,
-           slot_props,
-           slot_meta,
-           module,
-           node_alias,
-           do_block
-         ) do
-      quote generated: true do
-        live_component(
-          unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
-    end
-  else
-    # TODO: Remove when support for phoenix_live_view <= 0.15.5 is dropped
-    defp live_component_ast(
-           module,
-           context_expr,
-           props_expr,
-           dynamic_props_expr,
-           slot_props,
-           slot_meta,
-           module,
-           node_alias,
-           do_block
-         ) do
-      quote generated: true do
-        live_component(
-          @socket,
-          unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
-    end
   end
 
   defp handle_dynamic_props(nil), do: []
