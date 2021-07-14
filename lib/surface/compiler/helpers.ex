@@ -4,16 +4,15 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.IOHelper
 
   @builtin_common_assigns [
-    :socket,
     :__context__,
     :__surface__
   ]
 
   @builtin_component_assigns [:inner_block] ++ @builtin_common_assigns
 
-  @builtin_live_component_assigns [:id, :myself] ++ @builtin_component_assigns
+  @builtin_live_component_assigns [:id, :socket, :myself] ++ @builtin_component_assigns
 
-  @builtin_live_view_assigns [:id, :session, :live_action, :uploads, :flash] ++
+  @builtin_live_view_assigns [:id, :socket, :session, :live_action, :uploads, :flash] ++
                                @builtin_common_assigns
 
   @builtin_assigns_by_type %{

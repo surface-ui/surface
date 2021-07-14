@@ -218,10 +218,11 @@ defmodule Surface.APITest do
     There's already a built-in data assign with the same name.\
     """
 
-    assert_raise(CompileError, message, fn -> eval(code, "Component") end)
+    assert_raise(CompileError, message, fn -> eval(code, "LiveComponent") end)
 
     # Ignore built-in assigns from other component types
     code = """
+    data socket, :any  # LiveComponent
     data myself, :any  # LiveComponent
     data uploads, :any # LiveView
     """

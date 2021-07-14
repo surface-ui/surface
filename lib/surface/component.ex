@@ -51,9 +51,6 @@ defmodule Surface.Component do
       alias Surface.Components.{Context, Raw}
 
       @doc "Built-in assign"
-      data socket, :struct
-
-      @doc "Built-in assign"
       data inner_block, :fun
 
       if unquote(slot_name) != nil do
