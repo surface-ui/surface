@@ -39,7 +39,7 @@ defmodule Surface.Components.Form.Checkbox do
         :value
       ])
 
-    attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
+    attr_opts = props_to_attr_opts(assigns, class: get_default_class())
     event_attrs = events_to_attrs(assigns)
 
     ~F"""
