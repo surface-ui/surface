@@ -60,32 +60,27 @@ defmodule Surface.Components.Link do
   slot default
 
   def render(assigns) do
-    valid_label!(assigns)
-    to = valid_destination!(assigns.to, "<Link />")
-
-    ~F"""
-    <a id={@id} class={@class} href={to} :attrs={to_attrs(assigns, to)}><#slot>{@label}</#slot></a>
-    """
-  end
-
-  defp valid_label!(assigns) do
     unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
       raise ArgumentError, "<Link /> requires a label prop or contents in the default slot"
     end
+
+    to = valid_destination!(assigns.to, "<Link />")
+    events = events_to_opts(assigns)
+    opts = link_method(assigns.method, to, assigns.opts)
+    assigns = assign(assigns, to: to, opts: events ++ opts)
+
+    ~F"""
+    <a id={@id} class={@class} href={@to} :attrs={@opts}><#slot>{@label}</#slot></a>
+    """
   end
 
-  defp apply_method(to, method, opts) do
+  defp link_method(method, to, opts) do
     if method == :get do
       skip_csrf(opts)
     else
+      {data, opts} = Keyword.pop(opts, :data, [])
       {csrf_data, opts} = csrf_data(to, opts)
-      opts = Keyword.put_new(opts, :rel, "nofollow")
-      [data: [method: method, to: to] ++ csrf_data] ++ opts
+      [data: data ++ csrf_data ++ [method: method, to: to], rel: "nofollow"] ++ opts
     end
-  end
-
-  defp to_attrs(assigns, to) do
-    (apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns))
-    |> opts_to_attrs()
   end
 end
