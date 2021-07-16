@@ -21,6 +21,7 @@ defmodule Surface.Compiler.EExEngine do
     state = %{
       engine: opts[:engine] || @default_engine,
       depth: 0,
+      scope: %{count: 0},
       context: []
     }
 
@@ -156,7 +157,8 @@ defmodule Surface.Compiler.EExEngine do
            name: slot_name,
            index: index_ast,
            args: args_expr,
-           default: default
+           default: default,
+           meta: meta
          },
          buffer,
          state
@@ -167,10 +169,12 @@ defmodule Surface.Compiler.EExEngine do
         %AST.Literal{value: value} -> value
       end
 
+    parent_context_var = context_name(state.scope.count - 1, meta)
+
     context_expr =
       if is_child_component?(state) do
         quote generated: true do
-          Map.merge(@__context__, the_context)
+          Map.merge(@__context__, unquote(parent_context_var))
         end
       else
         quote do
@@ -263,19 +267,22 @@ defmodule Surface.Compiler.EExEngine do
         quote do: %{}
       end
 
+    parent_context_var = context_name(state.scope.count - 1, meta)
+    context_var = context_name(state.scope.count, meta)
+
     context_expr =
       cond do
         module.__slots__() == [] and not module.__use_context__?() ->
           quote do: %{}
 
         is_child_component?(state) ->
-          quote do: Map.merge(unquote(initial_context), the_context)
+          quote do: Map.merge(unquote(initial_context), unquote(parent_context_var))
 
         true ->
           initial_context
       end
 
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state, context_var)
 
     if component_type == Surface.LiveComponent do
       quote generated: true do
@@ -341,7 +348,7 @@ defmodule Surface.Compiler.EExEngine do
     Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
   end
 
-  defp collect_slot_meta(component, templates, buffer, state) do
+  defp collect_slot_meta(component, templates, buffer, state, context_var) do
     slot_info =
       templates
       |> Enum.map(fn {name, templates_for_slot} ->
@@ -363,7 +370,7 @@ defmodule Surface.Compiler.EExEngine do
               unquote(name),
               unquote(index),
               unquote({:%{}, [generated: true], let}),
-              the_context
+              unquote(context_var)
             } ->
               unquote(body)
           end
@@ -434,9 +441,14 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
+    state = %{state |
+      depth: state.depth + 1,
+      scope: %{state.scope | count: state.scope.count + 1}
+    }
+
     [
       {add_default_bindings(component, name, let), [],
-       handle_nested_block(children, buffer, %{state | depth: state.depth + 1})}
+       handle_nested_block(children, buffer, state)}
       | handle_templates(component, tail, buffer, state)
     ]
   end
@@ -477,9 +489,14 @@ defmodule Surface.Compiler.EExEngine do
     props = collect_component_props(module, props)
     default_props = Surface.default_props(module)
 
+    state = %{state |
+      depth: state.depth + 1,
+      scope: %{state.scope | count: state.scope.count + 1}
+    }
+
     [
       {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
-       handle_nested_block(template, buffer, %{state | depth: state.depth + 1})}
+       handle_nested_block(template, buffer, state)}
       | handle_templates(component, tail, buffer, state)
     ]
   end
@@ -818,5 +835,11 @@ defmodule Surface.Compiler.EExEngine do
   defp escape_message(message) do
     {:safe, message_iodata} = Phoenix.HTML.html_escape(message)
     IO.iodata_to_binary(message_iodata)
+  end
+
+  defp context_name(scope_count, meta) do
+    "context_#{scope_count}"
+    |> String.to_atom()
+    |> Macro.var(meta.caller.module)
   end
 end
