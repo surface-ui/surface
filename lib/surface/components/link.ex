@@ -78,9 +78,15 @@ defmodule Surface.Components.Link do
     if method == :get do
       skip_csrf(opts)
     else
-      {data, opts} = Keyword.pop(opts, :data, [])
       {csrf_data, opts} = csrf_data(to, opts)
-      [data: data ++ csrf_data ++ [method: method, to: to], rel: "nofollow"] ++ opts
+
+      data =
+        opts
+        |> Keyword.get(:data, [])
+        |> Keyword.merge(csrf_data)
+        |> Keyword.merge(method: method, to: to)
+
+      Keyword.merge(opts, data: data, rel: "nofollow")
     end
   end
 end

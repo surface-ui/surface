@@ -77,14 +77,25 @@ defmodule Surface.Components.Link.Button do
   end
 
   defp link_method(method, to, opts) do
+    data =
+      opts
+      |> Keyword.get(:data, [])
+      |> Keyword.merge(method: method, to: to)
+
     if method == :get do
-      opts = skip_csrf(opts)
-      {data, opts} = Keyword.pop(opts, :data, [])
-      [data: data ++ [method: method, to: to]] ++ opts
+      opts
+      |> skip_csrf()
+      |> Keyword.merge(data: data)
     else
-      {data, opts} = Keyword.pop(opts, :data, [])
       {csrf_data, opts} = csrf_data(to, opts)
-      [data: data ++ csrf_data ++ [method: method, to: to]] ++ opts
+
+      data =
+        opts
+        |> Keyword.get(:data, [])
+        |> Keyword.merge(csrf_data)
+        |> Keyword.merge(method: method, to: to)
+
+      Keyword.merge(opts, data: data)
     end
   end
 end
