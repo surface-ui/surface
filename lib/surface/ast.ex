@@ -546,4 +546,8 @@ defmodule Surface.AST do
       _ -> nil
     end)
   end
+
+  def has_attribute?(attributes, name) do
+    Enum.any?(attributes, fn %{name: attr_name} -> attr_name == name end)
+  end
 end
