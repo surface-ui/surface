@@ -59,7 +59,6 @@ defmodule Surface.API do
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
-      Module.put_attribute(__MODULE__, :use_context?, false)
       Module.put_attribute(__MODULE__, :changes_context?, false)
       Module.put_attribute(__MODULE__, :gets_context?, false)
 

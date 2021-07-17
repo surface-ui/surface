@@ -458,14 +458,14 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    state = %{
+    nested_block_state = %{
       state
       | depth: state.depth + 1,
         context_vars: %{state.context_vars | count: state.context_vars.count + 1}
     }
 
     [
-      {add_default_bindings(component, name, let), [], handle_nested_block(children, buffer, state)}
+      {add_default_bindings(component, name, let), [], handle_nested_block(children, buffer, nested_block_state)}
       | handle_templates(component, tail, buffer, state)
     ]
   end
@@ -506,7 +506,7 @@ defmodule Surface.Compiler.EExEngine do
     props = collect_component_props(module, props)
     default_props = Surface.default_props(module)
 
-    state = %{
+    nested_block_state = %{
       state
       | depth: state.depth + 1,
         context_vars: %{state.context_vars | count: state.context_vars.count + 1}
@@ -514,7 +514,7 @@ defmodule Surface.Compiler.EExEngine do
 
     [
       {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
-       handle_nested_block(template, buffer, state)}
+       handle_nested_block(template, buffer, nested_block_state)}
       | handle_templates(component, tail, buffer, state)
     ]
   end
