@@ -11,7 +11,7 @@ defmodule Surface.Components.Context do
   ## Usage
 
   ```
-  <Context put={{ scope, values }}>
+  <Context put={scope, values}>
     ...
   </Context>
   ```
@@ -30,7 +30,7 @@ defmodule Surface.Components.Context do
   With scope:
 
   ```
-  <Context put={{ __MODULE__, form: @form }}>
+  <Context put={__MODULE__, form: @form}>
     ...
   </Context>
   ```
@@ -38,7 +38,7 @@ defmodule Surface.Components.Context do
   Without scope:
 
   ```
-  <Context put={{ key1: @value1, key2: "some other value" }}>
+  <Context put={key1: @value1, key2: "some other value"}>
     ...
   </Context>
   ```
@@ -52,7 +52,7 @@ defmodule Surface.Components.Context do
   ## Usage
 
   ```
-  <Context get={{ scope, bindings }}>
+  <Context get={scope, bindings}>
     ...
   </Context>
   ```
@@ -70,9 +70,9 @@ defmodule Surface.Components.Context do
 
   ```
   <Context
-    get={{ Form, form: form }}
-    get={{ Field, field: my_field }}>
-    <MyTextInput form={{ form }} field={{ my_field }} />
+    get={Form, form: form}
+    get={Field, field: my_field}>
+    <MyTextInput form={form} field={my_field} />
   </Context>
   ```
   """
@@ -82,8 +82,6 @@ defmodule Surface.Components.Context do
   slot default, required: true
 
   def transform(node) do
-    Module.put_attribute(node.meta.caller.module, :use_context?, true)
-
     let =
       node.props
       |> Enum.filter(fn %{name: name} -> name == :get end)
