@@ -519,7 +519,7 @@ defmodule Surface.Compiler.TokenizerTest do
         tokenize!(~S(<div = >))
       end
 
-      assert_raise ParseError, "nofile:1:6: expected attribute name", fn ->
+      assert_raise ParseError, "nofile:1:6: unexpected closing tag delimiter `/`", fn ->
         tokenize!(~S(<div / >))
       end
     end
