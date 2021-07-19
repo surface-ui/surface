@@ -47,6 +47,8 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
+  @valid_slot_props ["name", "index"]
+
   @directive_prefixes [":", "s-"]
 
   @void_elements [
@@ -1192,7 +1194,15 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_slot_attrs!([{name, _, %{file: file, line: line}} | _]) when name != "name" do
+  defp validate_slot_attrs!(attrs) do
+    Enum.each(attrs, &validate_slot_attr!/1)
+  end
+
+  defp validate_slot_attr!({name, _, _meta}) when name in @valid_slot_props do
+    :ok
+  end
+
+  defp validate_slot_attr!({name, _, %{file: file, line: line}}) do
     type =
       case name do
         ":" <> _ -> "directive"
@@ -1202,13 +1212,9 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `name`, `:args`, `:if` and `:for`.
+    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)
-  end
-
-  defp validate_slot_attrs!(_) do
-    :ok
   end
 end

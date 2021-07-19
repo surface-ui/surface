@@ -1197,7 +1197,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `name`, `:args`, `:if` and `:for`.
+    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1216,16 +1216,19 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
         <br>
         <#slot
-          let={info: info}/>
+          name="default"
+          let={info: info}
+          :show={true}
+          />
         "\""
       end
     end
     """
 
     message = ~r"""
-    code:10: invalid attribute `let` for <#slot>.
+    code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `name`, `:args`, `:if` and `:for`.
+    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1255,7 +1258,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `name`, `:args`, `:if` and `:for`.
+    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
