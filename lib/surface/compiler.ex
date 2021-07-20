@@ -131,7 +131,13 @@ defmodule Surface.Compiler do
         module.component_type() in @stateful_component_types
 
       Module.open?(module) ->
-        Module.get_attribute(module, :component_type) in @stateful_component_types
+        # If the template is compiled directly in a test module, get_attribute might fail,
+        # breaking some of the tests once in a while.
+        try do
+          Module.get_attribute(module, :component_type) in @stateful_component_types
+        rescue
+          _e in ArgumentError -> false
+        end
 
       true ->
         false
