@@ -75,28 +75,12 @@ defmodule Surface.Components.Utils do
     Keyword.delete(opts, :csrf_token)
   end
 
-  def opts_to_attrs(opts) do
-    for {key, value} <- opts do
-      case key do
-        :values -> values_to_attrs(value)
-        _ -> {key, value}
-      end
-    end
-    |> List.flatten()
-  end
-
   def opts_to_phx_opts(opts) do
     for {key, value} <- opts do
       case key do
         :trigger_action -> {:phx_trigger_action, value}
         _ -> {key, value}
       end
-    end
-  end
-
-  defp values_to_attrs(values) when is_list(values) do
-    for {key, value} <- values do
-      {:"phx-value-#{key}", value}
     end
   end
 
@@ -117,21 +101,21 @@ defmodule Surface.Components.Utils do
     |> List.flatten()
   end
 
-  def events_to_attrs(assigns) do
-    assigns
-    |> events_to_opts()
-    |> opts_to_attrs()
-  end
-
   defp values_to_opts([]) do
     []
   end
 
   defp values_to_opts(values) when is_list(values) do
-    {:values, values}
+    values_to_attrs(values)
   end
 
   defp values_to_opts(_values) do
     []
+  end
+
+  defp values_to_attrs(values) when is_list(values) do
+    for {key, value} <- values do
+      {:"phx-value-#{key}", value}
+    end
   end
 end

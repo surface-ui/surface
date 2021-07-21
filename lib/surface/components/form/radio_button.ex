@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.RadioButton do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [radio_button: 4]
-  import Surface.Components.Utils, only: [events_to_attrs: 1]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   @doc "Indicates whether or not the radio button is the selected item in the group"
@@ -27,7 +27,7 @@ defmodule Surface.Components.Form.RadioButton do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:checked, class: get_default_class()])
-    event_attrs = events_to_attrs(assigns)
+    event_attrs = events_to_opts(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>

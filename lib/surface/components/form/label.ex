@@ -15,7 +15,7 @@ defmodule Surface.Components.Form.Label do
   use Surface.Component
   use Surface.Components.Events
 
-  import Surface.Components.Utils, only: [events_to_attrs: 1]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
   alias Surface.Components.Form.Input.InputContext
 
@@ -44,7 +44,7 @@ defmodule Surface.Components.Form.Label do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
-    event_attrs = events_to_attrs(assigns)
+    event_attrs = events_to_opts(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
