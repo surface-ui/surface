@@ -8,7 +8,7 @@ defmodule Surface.Components.Form.Submit do
   use Surface.Component
   use Surface.Components.Events
 
-  import Surface.Components.Utils, only: [events_to_opts: 1, opts_to_attrs: 1]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
 
   @doc "The label to be used in the button"
   prop label, :string
@@ -23,13 +23,18 @@ defmodule Surface.Components.Form.Submit do
   slot default
 
   def render(assigns) do
-    ~F"""
-    <button type="submit" :attrs={to_attrs(assigns)}><#slot>{@label}</#slot></button>
-    """
-  end
+    props = prop_to_attr_opts(assigns.class, :class)
+    events = events_to_opts(assigns)
 
-  defp to_attrs(assigns) do
-    (prop_to_attr_opts(assigns.class, :class) ++ assigns.opts ++ events_to_opts(assigns))
-    |> opts_to_attrs()
+    opts =
+      assigns.opts
+      |> Keyword.merge(props)
+      |> Keyword.merge(events)
+
+    assigns = assign(assigns, opts: opts)
+
+    ~F"""
+    <button type="submit" :attrs={@opts}><#slot>{@label}</#slot></button>
+    """
   end
 end
