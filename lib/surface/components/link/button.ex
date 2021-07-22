@@ -62,32 +62,40 @@ defmodule Surface.Components.Link.Button do
   slot default
 
   def render(assigns) do
-    valid_label!(assigns)
-    to = valid_destination!(assigns.to, "<Button />")
-
-    ~F"""
-    <button id={@id} class={@class} :attrs={to_attrs(assigns, to)}><#slot>{@label}</#slot></button>
-    """
-  end
-
-  defp valid_label!(assigns) do
     unless assigns[:default] || assigns[:label] || Keyword.get(assigns.opts, :label) do
       raise ArgumentError, "<Button /> requires a label prop or contents in the default slot"
     end
+
+    to = valid_destination!(assigns.to, "<Button />")
+    events = events_to_opts(assigns)
+    opts = link_method(assigns.method, to, assigns.opts)
+    assigns = assign(assigns, to: to, opts: events ++ opts)
+
+    ~F"""
+    <button id={@id} class={@class} :attrs={@opts}><#slot>{@label}</#slot></button>
+    """
   end
 
-  defp apply_method(to, method, opts) do
+  defp link_method(method, to, opts) do
+    data =
+      opts
+      |> Keyword.get(:data, [])
+      |> Keyword.merge(method: method, to: to)
+
     if method == :get do
-      opts = skip_csrf(opts)
-      [data: [method: method, to: to]] ++ opts
+      opts
+      |> skip_csrf()
+      |> Keyword.merge(data: data)
     else
       {csrf_data, opts} = csrf_data(to, opts)
-      [data: [method: method, to: to] ++ csrf_data] ++ opts
-    end
-  end
 
-  defp to_attrs(assigns, to) do
-    (apply_method(to, assigns.method, assigns.opts) ++ events_to_opts(assigns))
-    |> opts_to_attrs()
+      data =
+        opts
+        |> Keyword.get(:data, [])
+        |> Keyword.merge(csrf_data)
+        |> Keyword.merge(method: method, to: to)
+
+      Keyword.merge(opts, data: data)
+    end
   end
 end

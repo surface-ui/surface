@@ -75,47 +75,12 @@ defmodule Surface.Components.Utils do
     Keyword.delete(opts, :csrf_token)
   end
 
-  def opts_to_attrs(opts) do
-    for {key, value} <- opts do
-      case key do
-        :phx_capture_click -> {:"phx-capture-click", value}
-        :phx_click -> {:"phx-click", value}
-        :phx_window_focus -> {:"phx-window-focus", value}
-        :phx_window_blur -> {:"phx-window-blur", value}
-        :phx_focus -> {:"phx-focus", value}
-        :phx_blur -> {:"phx-blur", value}
-        :phx_window_keyup -> {:"phx-window-keyup", value}
-        :phx_window_keydown -> {:"phx-window-keydown", value}
-        :phx_keyup -> {:"phx-keyup", value}
-        :phx_keydown -> {:"phx-keydown", value}
-        :phx_target -> {:"phx-target", value}
-        :phx_disable_with -> {:"phx-disable-with", value}
-        :data -> data_to_attrs(value)
-        :values -> values_to_attrs(value)
-        _ -> {key, value}
-      end
-    end
-    |> List.flatten()
-  end
-
   def opts_to_phx_opts(opts) do
     for {key, value} <- opts do
       case key do
         :trigger_action -> {:phx_trigger_action, value}
         _ -> {key, value}
       end
-    end
-  end
-
-  defp data_to_attrs(data) when is_list(data) do
-    for {key, value} <- data do
-      {:"data-#{key}", value}
-    end
-  end
-
-  defp values_to_attrs(values) when is_list(values) do
-    for {key, value} <- values do
-      {:"phx-value-#{key}", value}
     end
   end
 
@@ -136,21 +101,21 @@ defmodule Surface.Components.Utils do
     |> List.flatten()
   end
 
-  def events_to_attrs(assigns) do
-    assigns
-    |> events_to_opts()
-    |> opts_to_attrs()
-  end
-
   defp values_to_opts([]) do
     []
   end
 
   defp values_to_opts(values) when is_list(values) do
-    {:values, values}
+    values_to_attrs(values)
   end
 
   defp values_to_opts(_values) do
     []
+  end
+
+  defp values_to_attrs(values) when is_list(values) do
+    for {key, value} <- values do
+      {:"phx-value-#{key}", value}
+    end
   end
 end

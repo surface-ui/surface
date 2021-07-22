@@ -75,6 +75,7 @@ defmodule Surface.Compiler.EExEngine do
     {:__block__, [], children}
   end
 
+  defp to_expression({:safe, value}, _buffer, _state), do: {:safe, value}
   defp to_expression({:text, value}, _buffer, _state), do: {:safe, value}
 
   defp to_expression(%AST.AttributeExpr{value: expr}, _buffer, _state), do: expr

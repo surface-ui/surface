@@ -18,13 +18,13 @@ defmodule Surface.Components.Form.TextInput do
   use Surface.Components.Form.Input
 
   import Phoenix.HTML.Form, only: [text_input: 3]
-  import Surface.Components.Utils, only: [events_to_attrs: 1]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:value, class: get_default_class()])
-    event_attrs = events_to_attrs(assigns)
+    event_attrs = events_to_opts(assigns)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>

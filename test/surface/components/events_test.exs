@@ -5,10 +5,10 @@ defmodule Surface.Components.EventsTest do
     use Surface.Component
     use Surface.Components.Events
 
-    import Surface.Components.Utils, only: [events_to_attrs: 1]
+    import Surface.Components.Utils, only: [events_to_opts: 1]
 
     def render(assigns) do
-      attrs = events_to_attrs(assigns)
+      attrs = events_to_opts(assigns)
 
       ~F"""
       <div :attrs={attrs} />
@@ -190,7 +190,7 @@ defmodule Surface.Components.EventsTest do
       end
 
     assert html =~ """
-           <div phx-click="my_click" phx-value-foo="bar" phx-value-hello="world" phx-value-one="2"></div>
+           <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-click="my_click"></div>
            """
   end
 end

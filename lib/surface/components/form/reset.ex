@@ -19,7 +19,7 @@ defmodule Surface.Components.Form.Reset do
   use Surface.Components.Events
 
   import Phoenix.HTML.Form, only: [reset: 2]
-  import Surface.Components.Utils, only: [events_to_attrs: 1]
+  import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
   @doc "The id of the corresponding input field"
@@ -40,7 +40,7 @@ defmodule Surface.Components.Form.Reset do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:class])
-    event_attrs = events_to_attrs(assigns)
+    event_attrs = events_to_opts(assigns)
 
     ~F"""
     {reset(assigns[:value], helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
