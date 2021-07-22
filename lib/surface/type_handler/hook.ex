@@ -55,7 +55,7 @@ defmodule Surface.TypeHandler.Hook do
 
         Example with options:
 
-          <div :hook={{ "Card", from: CardList }}>
+          <div :hook={"Card", from: CardList}>
         """
 
         {:error, clauses ++ opts, message}

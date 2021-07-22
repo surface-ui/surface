@@ -13,8 +13,8 @@ defmodule Surface.Components.Form.DateTimeSelect do
   ```
   <DateTimeSelect form="user" field="born_at" />
 
-  <Form for={{ :user }}>
-    <DateTimeSelect field={{ :born_at }} />
+  <Form for={:user}>
+    <DateTimeSelect field={:born_at} />
   </Form>
   ```
   """

@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.DateTimeLocalInput do
   ## Examples
 
   ```
-  <DateTimeLocalInput form="order" field="completed_at" opts={{ autofocus: "autofocus" }} />
+  <DateTimeLocalInput form="order" field="completed_at" opts={autofocus: "autofocus"} />
   ```
   """
 

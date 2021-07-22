@@ -66,7 +66,7 @@ defmodule Surface.MacroComponent do
           %exception_mod{} = exception
 
           message = """
-          could not evaluate expression {{#{value}}}. Reason:
+          could not evaluate expression {#{value}}. Reason:
 
           (#{inspect(exception_mod)}) #{Exception.message(exception)}
           """

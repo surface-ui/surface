@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.RangeInput do
   ## Examples
 
   ```
-  <RangeInput form="volume" field="percent" min="0" max="100" step="5" value="40" opts={{ autofocus: "autofocus" }} />
+  <RangeInput form="volume" field="percent" min="0" max="100" step="5" value="40" opts={autofocus: "autofocus"} />
   ```
   """
 

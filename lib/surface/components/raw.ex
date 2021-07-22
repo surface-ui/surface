@@ -6,7 +6,7 @@ defmodule Surface.Components.Raw do
   template engine.
 
   > **Note**: By skipping translation, all Surface specific features
-  are automatically disabled, including code interpolation with `{{...}}`,
+  are automatically disabled, including code interpolation with `{...}`,
   syntactic sugar for attributes and markup validation.
   """
 

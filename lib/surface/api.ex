@@ -506,13 +506,13 @@ defmodule Surface.API do
 
       message = """
       arguments for the default slot in a slotable component are not accessible - instead the arguments \
-      from the parent's #{slot_name} slot will be exposed via `:let={{ ... }}`.
+      from the parent's #{slot_name} slot will be exposed via `:let={...}`.
 
       Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
       and use it inside an explicit template element:
       ```
       <#template name="#{slot_name}">
-        <#{component_name} :let={{ #{prop_example} }}>
+        <#{component_name} :let={#{prop_example}}>
           ...
         </#{component_name}>
       </#template>

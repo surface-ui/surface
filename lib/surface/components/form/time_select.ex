@@ -13,8 +13,8 @@ defmodule Surface.Components.Form.TimeSelect do
   ```
   <TimeSelect form="alarm" field="time" />
 
-  <Form for={{ :alarm }}>
-    <TimeSelect field={{ :time }} />
+  <Form for={:alarm}>
+    <TimeSelect field={:time} />
   </Form>
   ```
   """
