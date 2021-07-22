@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.EmailInput do
   ## Examples
 
   ```
-  <EmailInput form="user" field="email" opts={autofocus: "autofocus"}>
+  <EmailInput form="user" field="email" opts={autofocus: "autofocus"} />
   ```
   """
 

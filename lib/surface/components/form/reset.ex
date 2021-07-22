@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.Reset do
   ## Examples
 
   ```
-  <Reset value="Reset" opts={autofocus: "autofocus"}>
+  <Reset value="Reset" opts={autofocus: "autofocus"} />
   ```
   """
 
