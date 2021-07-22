@@ -508,14 +508,14 @@ defmodule Surface.Compiler.TokenizerTest do
     end
 
     test "raise on missing attribure name" do
-      assert_raise ParseError, "nofile:2:8: expected attribute name", fn ->
+      assert_raise ParseError, "nofile:2:8: expected attribute name, got: `=\"panel\">`", fn ->
         tokenize!("""
         <div>
           <div ="panel">\
         """)
       end
 
-      assert_raise ParseError, "nofile:1:6: expected attribute name", fn ->
+      assert_raise ParseError, "nofile:1:6: expected attribute name, got: `= >`", fn ->
         tokenize!(~S(<div = >))
       end
 
