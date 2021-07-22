@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.TimeInput do
   ## Examples
 
   ```
-  <TimeInput form="user" field="name" opts={{ autofocus: "autofocus" }} />
+  <TimeInput form="user" field="name" opts={autofocus: "autofocus"} />
   ```
   """
 

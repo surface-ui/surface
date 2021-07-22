@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.PasswordInput do
   ## Examples
 
   ```
-  <PasswordInput form="user" field="password" opts={{ autofocus: "autofocus" }} />
+  <PasswordInput form="user" field="password" opts={autofocus: "autofocus"} />
   ```
   """
 

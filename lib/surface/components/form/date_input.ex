@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.DateInput do
   ## Examples
 
   ```
-  <DateInput form="user" field="birthday" opts={{ autofocus: "autofocus" }}>
+  <DateInput form="user" field="birthday" opts={autofocus: "autofocus"} />
   ```
   """
 

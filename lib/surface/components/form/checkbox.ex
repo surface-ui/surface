@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.Checkbox do
   ## Examples
 
   ```
-  <Checkbox form="user" field="color" opts={{ autofocus: "autofocus" }}>
+  <Checkbox form="user" field="color" opts={autofocus: "autofocus"} />
   ```
   """
 

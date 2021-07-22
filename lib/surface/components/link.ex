@@ -13,8 +13,8 @@ defmodule Surface.Components.Link do
     label="user"
     to="/users/1"
     class="is-danger"
-    method={{ :delete }}
-    opts={{ data: [confirm: "Really?"] }}
+    method={:delete}
+    opts={data: [confirm: "Really?"]}
   />
 
   <Link

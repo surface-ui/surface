@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.RadioButton do
   ## Examples
 
   ```
-  <RadioButton form="user" field="color" opts={{ autofocus: "autofocus" }}>
+  <RadioButton form="user" field="color" opts={autofocus: "autofocus"} />
   ```
   """
 

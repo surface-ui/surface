@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.NumberInput do
   ## Examples
 
   ```
-  <NumberInput form="user" field="age" opts={{ autofocus: "autofocus" }}>
+  <NumberInput form="user" field="age" opts={autofocus: "autofocus"} />
   ```
   """
 

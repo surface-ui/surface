@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.TextArea do
   ## Examples
 
   ```
-  <TextArea form="user" field="summary" cols="5" rows="10" opts={{ autofocus: "autofocus" }}>
+  <TextArea form="user" field="summary" cols="5" rows="10" opts={autofocus: "autofocus"} />
   ```
   """
 

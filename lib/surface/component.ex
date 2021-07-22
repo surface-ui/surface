@@ -11,7 +11,7 @@ defmodule Surface.Component do
 
         def render(assigns) do
           ~F"\""
-          <button class="button" phx-click={{ @click }}>
+          <button class="button" :on-click={@click}>
             <#slot/>
           </button>
           "\""
