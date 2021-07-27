@@ -31,14 +31,7 @@ defmodule Surface.Components.Form.Checkbox do
   prop unchecked_value, :any, default: false
 
   def render(assigns) do
-    helper_opts =
-      props_to_opts(assigns, [
-        :checked_value,
-        :hidden_input,
-        :unchecked_value,
-        :value
-      ])
-
+    helper_opts = props_to_opts(assigns, [:checked_value, :hidden_input, :unchecked_value, :value])
     attr_opts = props_to_attr_opts(assigns, class: get_default_class())
     event_opts = events_to_opts(assigns)
 

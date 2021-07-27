@@ -40,10 +40,18 @@ defmodule Surface.Components.Form.Reset do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:class])
-    event_attrs = events_to_opts(assigns)
+    event_opts = events_to_opts(assigns)
+
+    opts =
+      assigns.opts
+      |> Keyword.merge(helper_opts)
+      |> Keyword.merge(attr_opts)
+      |> Keyword.merge(event_opts)
+
+    assigns = assign(assigns, opts: opts)
 
     ~F"""
-    {reset(assigns[:value], helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
+    {reset(assigns[:value], @opts)}
     """
   end
 end

@@ -32,8 +32,15 @@ defmodule Surface.Components.LiveFileInput do
 
   def render(assigns) do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
-    event_attrs = events_to_opts(assigns)
+    event_opts = events_to_opts(assigns)
 
-    ~F"{live_file_input(@upload, attr_opts ++ @opts ++ event_attrs)}"
+    opts =
+      assigns.opts
+      |> Keyword.merge(attr_opts)
+      |> Keyword.merge(event_opts)
+
+    assigns = assign(assigns, opts: opts)
+
+    ~F"{live_file_input(@upload, @opts)}"
   end
 end

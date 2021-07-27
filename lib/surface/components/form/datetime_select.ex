@@ -72,20 +72,8 @@ defmodule Surface.Components.Form.DateTimeSelect do
 
   def render(assigns) do
     helper_opts =
-      props_to_opts(assigns, [
-        :value,
-        :default,
-        :year,
-        :month,
-        :day,
-        :hour,
-        :minute,
-        :second,
-        :builder
-      ])
-
-    helper_opts =
-      helper_opts
+      assigns
+      |> props_to_opts([:value, :default, :year, :month, :day, :hour, :minute, :second, :builder])
       |> parse_css_class_for(:year)
       |> parse_css_class_for(:month)
       |> parse_css_class_for(:day)
@@ -93,9 +81,15 @@ defmodule Surface.Components.Form.DateTimeSelect do
       |> parse_css_class_for(:minute)
       |> parse_css_class_for(:second)
 
+    opts =
+      assigns.opts
+      |> Keyword.merge(helper_opts)
+
+    assigns = assign(assigns, opts: opts)
+
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {datetime_select(form, field, helper_opts ++ @opts)}
+      {datetime_select(form, field, @opts)}
     </InputContext>
     """
   end

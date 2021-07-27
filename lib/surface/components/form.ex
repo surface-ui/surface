@@ -72,16 +72,6 @@ defmodule Surface.Components.Form do
   slot default, args: [:form]
 
   def render(assigns) do
-    ~F"""
-    {form = form_for(@for, @action, get_opts(assigns))}
-      <Context put={__MODULE__, form: form}>
-        <#slot :args={form: form} />
-      </Context>
-    <#Raw></form></#Raw>
-    """
-  end
-
-  defp get_opts(assigns) do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
     form_opts =
@@ -89,11 +79,25 @@ defmodule Surface.Components.Form do
       |> props_to_opts([:as, :method, :multipart, :csrf_token, :errors, :trigger_action])
       |> opts_to_phx_opts()
 
-    form_opts ++
-      attr_opts ++
-      assigns.opts ++
+    event_opts =
       event_to_opts(assigns.change, :phx_change) ++
-      event_to_opts(assigns.submit, :phx_submit) ++
-      event_to_opts(assigns.auto_recover, :phx_auto_recover)
+        event_to_opts(assigns.submit, :phx_submit) ++
+        event_to_opts(assigns.auto_recover, :phx_auto_recover)
+
+    opts =
+      assigns.opts
+      |> Keyword.merge(attr_opts)
+      |> Keyword.merge(form_opts)
+      |> Keyword.merge(event_opts)
+
+    assigns = assign(assigns, opts: opts)
+
+    ~F"""
+    {form = form_for(@for, @action, @opts)}
+      <Context put={__MODULE__, form: form}>
+        <#slot :args={form: form} />
+      </Context>
+    <#Raw></form></#Raw>
+    """
   end
 end
