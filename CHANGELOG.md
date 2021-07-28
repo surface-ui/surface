@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.2 (2021-07-28)
+
+  * Fix slot attribute validation (#463)
+  * Improve change tracking when not using contexts
+
 ## v0.5.1 (2021-07-13)
 
   * Add property `values` to form inputs
