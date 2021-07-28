@@ -24,11 +24,19 @@ defmodule Surface.Components.Form.SearchInput do
   def render(assigns) do
     helper_opts = props_to_opts(assigns)
     attr_opts = props_to_attr_opts(assigns, [:value, class: get_default_class()])
-    event_attrs = events_to_opts(assigns)
+    event_opts = events_to_opts(assigns)
+
+    opts =
+      assigns.opts
+      |> Keyword.merge(helper_opts)
+      |> Keyword.merge(attr_opts)
+      |> Keyword.merge(event_opts)
+
+    assigns = assign(assigns, opts: opts)
 
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {search_input(form, field, helper_opts ++ attr_opts ++ @opts ++ event_attrs)}
+      {search_input(form, field, @opts)}
     </InputContext>
     """
   end

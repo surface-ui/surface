@@ -42,9 +42,16 @@ defmodule Surface.Components.Form.MultipleSelect do
     helper_opts = props_to_opts(assigns, [:selected])
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
 
+    opts =
+      assigns.opts
+      |> Keyword.merge(helper_opts)
+      |> Keyword.merge(attr_opts)
+
+    assigns = assign(assigns, opts: opts)
+
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {multiple_select(form, field, @options, helper_opts ++ attr_opts ++ @opts)}
+      {multiple_select(form, field, @options,  @opts)}
     </InputContext>
     """
   end

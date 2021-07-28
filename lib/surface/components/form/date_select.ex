@@ -64,24 +64,21 @@ defmodule Surface.Components.Form.DateSelect do
 
   def render(assigns) do
     helper_opts =
-      props_to_opts(assigns, [
-        :value,
-        :default,
-        :year,
-        :month,
-        :day,
-        :builder
-      ])
-
-    helper_opts =
-      helper_opts
+      assigns
+      |> props_to_opts([:value, :default, :year, :month, :day, :builder])
       |> parse_css_class_for(:year)
       |> parse_css_class_for(:month)
       |> parse_css_class_for(:day)
 
+    opts =
+      assigns.opts
+      |> Keyword.merge(helper_opts)
+
+    assigns = assign(assigns, opts: opts)
+
     ~F"""
     <InputContext assigns={assigns} :let={form: form, field: field}>
-      {date_select(form, field, helper_opts ++ @opts)}
+      {date_select(form, field, @opts)}
     </InputContext>
     """
   end
