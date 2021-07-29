@@ -59,6 +59,10 @@ defmodule Surface.MixProject do
         Surface.Compiler,
         Surface.Components,
         Surface.Directive
+      ],
+      extras: [
+        "CHANGELOG.md",
+        "LICENSE.md"
       ]
     ]
   end
