@@ -258,18 +258,19 @@ defmodule Surface.Compiler.EExEngine do
 
     caller_component_type = Module.get_attribute(meta.caller.module, :component_type)
 
-    gets_context? = module.__gets_context__?() or (module == Context and AST.has_attribute?(props, :get))
+    gets_context? =
+      module.__gets_context__?({:render, 1}) or (module == Context and AST.has_attribute?(props, :get))
 
     changes_context? =
-      (module.__changes_context__?() and module.__slots__() != []) or
+      (module.__changes_context__?({:render, 1}) and module.__slots__() != []) or
         (module == Context and AST.has_attribute?(props, :put))
 
     if gets_context? do
-      Module.put_attribute(meta.caller.module, :gets_context?, true)
+      Module.put_attribute(meta.caller.module, :gets_context?, meta.caller.function)
     end
 
     if changes_context? do
-      Module.put_attribute(meta.caller.module, :changes_context?, true)
+      Module.put_attribute(meta.caller.module, :changes_context?, meta.caller.function)
     end
 
     initial_context =
