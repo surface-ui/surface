@@ -620,7 +620,7 @@ defmodule Surface.API do
     # Events are special properties we treat in a separate doc section
     docs =
       for prop <- get_props(module), prop.type != :event do
-        doc = if prop.doc, do: " - #{prop.doc}.", else: ""
+        doc = if prop.doc, do: " - #{prop.doc}", else: ""
         opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
         "* **#{prop.name}** *#{inspect(prop.type)}#{opts}*#{doc}"
       end
@@ -639,7 +639,7 @@ defmodule Surface.API do
   defp generate_slots_docs(module) do
     docs =
       for slot <- get_slots(module) do
-        doc = if slot.doc, do: " - #{slot.doc}.", else: ""
+        doc = if slot.doc, do: " - #{slot.doc}", else: ""
         opts = if slot.opts == [], do: "", else: ", #{format_opts(slot.opts_ast)}"
         "* **#{slot.name}#{opts}**#{doc}"
       end
@@ -658,7 +658,7 @@ defmodule Surface.API do
   defp generate_events_docs(module) do
     docs =
       for prop <- get_props(module), prop.type == :event do
-        doc = if prop.doc, do: " - #{prop.doc}.", else: ""
+        doc = if prop.doc, do: " - #{prop.doc}", else: ""
         opts = if prop.opts == [], do: "", else: ", #{format_opts(prop.opts_ast)}"
         "* **#{prop.name}#{opts}**#{doc}"
       end
