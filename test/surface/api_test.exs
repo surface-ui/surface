@@ -483,18 +483,18 @@ defmodule Surface.APITest do
     assert get_docs(Surface.PropertiesTest.Components.MyComponent) == """
            ## Properties
 
-           * **label** *:string, required: true* - The label.
-           * **class** *:css_class* - The class.
+           * **label** *:string, required: true* - The label
+           * **class** *:css_class* - The class
 
            ## Slots
 
-           * **default** - The default slot.
-           * **header, required: true** - The required header slot.
+           * **default** - The default slot
+           * **header, required: true** - The required header slot
 
            ## Events
 
-           * **click, required: true** - The click event.
-           * **cancel** - The cancel event.
+           * **click, required: true** - The click event
+           * **cancel** - The cancel event
            """
   end
 
@@ -504,18 +504,18 @@ defmodule Surface.APITest do
 
            ## Properties
 
-           * **label** *:string, required: true* - The label.
-           * **class** *:css_class* - The class.
+           * **label** *:string, required: true* - The label
+           * **class** *:css_class* - The class
 
            ## Slots
 
-           * **default** - The default slot.
-           * **header, required: true** - The required header slot.
+           * **default** - The default slot
+           * **header, required: true** - The required header slot
 
            ## Events
 
-           * **click, required: true** - The click event.
-           * **cancel** - The cancel event.
+           * **click, required: true** - The click event
+           * **cancel** - The cancel event
            """
   end
 
