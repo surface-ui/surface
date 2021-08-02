@@ -18,6 +18,14 @@ defmodule Surface.Compiler.ParseTreeTranslator do
     {{:comment, comment, meta}, state}
   end
 
+  def handle_node(<<first, _::binary>> = name, attributes, body, meta, state, _context)
+      when first == ?. or first in ?A..?Z do
+    decomposed_tag = Helpers.decompose_component_tag(name, state.caller)
+    meta = Map.put(meta, :decomposed_tag, decomposed_tag)
+
+    {{name, attributes, body, to_meta(meta)}, state}
+  end
+
   def handle_node(name, attributes, body, meta, state, _context) do
     {{name, attributes, body, to_meta(meta)}, state}
   end
@@ -83,7 +91,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
           IOHelper.compile_error(message, attr_meta.file, attr_meta.line)
 
-        <<first, _::binary>> when first in ?A..?Z ->
+        <<first, _::binary>> when first == ?. or first in ?A..?Z ->
           ":props"
 
         _ ->
@@ -126,7 +134,7 @@ defmodule Surface.Compiler.ParseTreeTranslator do
 
     name =
       case tag_name do
-        <<first, _::binary>> when first in ?A..?Z ->
+        <<first, _::binary>> when first == ?. or first in ?A..?Z ->
           original_name
 
         _ ->

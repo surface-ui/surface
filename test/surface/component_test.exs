@@ -139,6 +139,37 @@ defmodule Surface.ComponentTest do
     end
   end
 
+  defmodule Recursive do
+    use Surface.Component
+
+    prop list, :list
+    prop count, :integer, default: 1
+
+    def render(%{list: [item | rest]} = assigns) do
+      ~F"""
+      {@count}. {item}
+      <Recursive list={rest} count={@count + 1}/>
+      """
+    end
+
+    def render(assigns), do: ~F""
+  end
+
+  test "render recursive components" do
+    html =
+      render_surface do
+        ~F"""
+        <Recursive list={["a", "b", "c"]}/>
+        """
+      end
+
+    assert html =~ """
+           1. a
+           2. b
+           3. c
+           """
+  end
+
   test "raise compile error if option :slot is not a string" do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module = "TestSlotWithoutSlotName_#{id}"

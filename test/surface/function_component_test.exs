@@ -1,0 +1,326 @@
+defmodule Surface.FunctionComponentTest do
+  use Surface.ConnCase, async: true
+
+  defmodule NotAComponent do
+    def func(assigns) do
+      ~F"""
+      Label: {@label}
+      <#slot/>
+      """
+    end
+  end
+
+  defmodule Stateless do
+    use Surface.Component
+
+    prop label, :string, default: ""
+
+    def render(assigns) do
+      ~F"""
+      <span>Stateless label: {@label}</span>
+      """
+    end
+  end
+
+  defmodule Stateful do
+    use Surface.LiveComponent
+
+    prop label, :string, default: ""
+
+    def render(assigns) do
+      ~F"""
+      <span>Stateful label: {@label}</span>
+      """
+    end
+  end
+
+  defp priv_func_with_assigns(assigns) do
+    ~F"""
+    <div>
+      Private function with assigns
+      Label: {@label}
+      Title: {@title}
+    </div>
+    """
+  end
+
+  defp priv_func_containing_other_components(assigns) do
+    ~F"""
+    <div>
+      Private function containing other components
+      <Stateless label="stateless"/>
+      <Stateful id="stateful" label="stateful"/>
+    </div>
+    """
+  end
+
+  defp priv_func_with_slot(assigns) do
+    ~F"""
+    <div>
+      <#slot/>
+    </div>
+    """
+  end
+
+  defp priv_func_with_slot_and_args(assigns) do
+    ~F"""
+    <div>
+      <#slot :args={item: "my_item"}/>
+    </div>
+    """
+  end
+
+  def public_func_with_assigns(assigns) do
+    ~F"""
+    <div>
+      Public function with assigns
+      Label: {@label}
+      Title: {@title}
+    </div>
+    """
+  end
+
+  def public_func_containing_other_components(assigns) do
+    ~F"""
+    <div>
+      Public function containing other components
+      <Stateless label="stateless"/>
+      <Stateful id="stateful" label="stateful"/>
+    </div>
+    """
+  end
+
+  def public_func_with_slot(assigns) do
+    ~F"""
+    <div>
+      <#slot/>
+    </div>
+    """
+  end
+
+  def public_func_with_slot_and_args(assigns) do
+    ~F"""
+    <div>
+      <#slot :args={item: "my_item"}/>
+    </div>
+    """
+  end
+
+  test "dynamic props" do
+    expected = """
+    <div>
+      Private function with assigns
+      Label: my label
+      Title: my title
+    </div>
+    """
+
+    html =
+      render_surface do
+        ~F"""
+        <.priv_func_with_assigns :props={label: "my label", title: "my title"}/>
+        """
+      end
+
+    assert html =~ expected
+
+    html =
+      render_surface do
+        ~F"""
+        <.priv_func_with_assigns {...[label: "my label", title: "my title"]}/>
+        """
+      end
+
+    assert html =~ expected
+  end
+
+  test "assigning props with {= }" do
+    assigns = %{label: "my label", title: "my title"}
+
+    html =
+      render_surface do
+        ~F"""
+        <.priv_func_with_assigns {=@label} {=@title}/>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Private function with assigns
+             Label: my label
+             Title: my title
+           </div>
+           """
+  end
+
+  test "render private function component containing other components" do
+    html =
+      render_surface do
+        ~F"""
+        <.priv_func_containing_other_components/>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Private function containing other components
+             <span>Stateless label: stateless</span>
+             <span>Stateful label: stateful</span>
+           </div>
+           """
+  end
+
+  test "render private function component with slot" do
+    html =
+      render_surface do
+        ~F"""
+        <.priv_func_with_slot>
+          <Stateless label="stateless"/>
+          <Stateful id="stateful" label="stateful"/>
+        </.priv_func_with_slot>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             <span>Stateless label: stateless</span>
+             <span>Stateful label: stateful</span>
+           </div>
+           """
+  end
+
+  test "render private function component with slot args" do
+    html =
+      render_surface do
+        ~F"""
+        <.priv_func_with_slot_and_args :let={item: item}>
+          Arg: {item}
+        </.priv_func_with_slot_and_args>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Arg: my_item
+           </div>
+           """
+  end
+
+  test "render public function components with dynamic props" do
+    expected = """
+    <div>
+      Public function with assigns
+      Label: my label
+      Title: my title
+    </div>
+    """
+
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_with_assigns :props={label: "my label", title: "my title"}/>
+        """
+      end
+
+    assert html =~ expected
+
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_with_assigns {...[label: "my label", title: "my title"]}/>
+        """
+      end
+
+    assert html =~ expected
+  end
+
+  test "render public function components assigning props with {= }" do
+    assigns = %{label: "my label", title: "my title"}
+
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_with_assigns {=@label} {=@title}/>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Public function with assigns
+             Label: my label
+             Title: my title
+           </div>
+           """
+  end
+
+  test "render public function component containing other components" do
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_containing_other_components/>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Public function containing other components
+             <span>Stateless label: stateless</span>
+             <span>Stateful label: stateful</span>
+           </div>
+           """
+  end
+
+  test "render public function component with slot" do
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_with_slot>
+          <Stateless label="stateless"/>
+          <Stateful id="stateful" label="stateful"/>
+        </Surface.FunctionComponentTest.public_func_with_slot>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             <span>Stateless label: stateless</span>
+             <span>Stateful label: stateful</span>
+           </div>
+           """
+  end
+
+  test "render public function component with slot args" do
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_with_slot_and_args :let={item: item}>
+          Arg: {item}
+        </Surface.FunctionComponentTest.public_func_with_slot_and_args>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Arg: my_item
+           </div>
+           """
+  end
+
+  test "render imported public function component" do
+    import NotAComponent, only: [func: 1]
+
+    html =
+      render_surface do
+        ~F"""
+        <.func label="my label">
+        my content
+        </.func>
+        """
+      end
+
+    assert html =~ """
+           Label: my label
+           my content
+           """
+  end
+end

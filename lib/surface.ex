@@ -201,6 +201,10 @@ defmodule Surface do
   end
 
   @doc false
+  def default_props(nil) do
+    []
+  end
+
   def default_props(module) do
     Enum.map(module.__props__(), fn %{name: name, opts: opts} -> {name, opts[:default]} end)
   end
@@ -245,6 +249,10 @@ defmodule Surface do
           __context__: context
         ]
     )
+  end
+
+  defp map_slots_to_assigns(nil, _slot_props) do
+    []
   end
 
   defp map_slots_to_assigns(module, slot_props) do

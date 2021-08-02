@@ -258,10 +258,18 @@ defmodule Surface.Compiler do
 
   defp node_type({:ast, _, _}), do: :ast
 
+  # Components
   defp node_type({"#" <> _, _, _, _}), do: :macro_component
-  defp node_type({<<first, _::binary>>, _, _, _}) when first in ?A..?Z, do: :component
+  defp node_type({_, _, _, %{decomposed_tag: {:component, _, _}}}), do: :component
+  defp node_type({_, _, _, %{decomposed_tag: {:recursive_component, _, _}}}), do: :recursive_component
+  defp node_type({_, _, _, %{decomposed_tag: {:remote, _, _}}}), do: :function_component
+  defp node_type({_, _, _, %{decomposed_tag: {:local, _, _}}}), do: :function_component
+
+  # HTML elements
   defp node_type({name, _, _, _}) when name in @void_elements, do: :void_tag
   defp node_type({_, _, _, _}), do: :tag
+
+  # Other
   defp node_type({:expr, _, _}), do: :interpolation
   defp node_type({:comment, _, _}), do: :comment
   defp node_type(_), do: :text
@@ -458,8 +466,22 @@ defmodule Surface.Compiler do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     defined_slots =
-      meta.caller.module
-      |> Surface.API.get_slots()
+      if Module.get_attribute(meta.caller.module, :component_type) do
+        meta.caller.module
+        |> Surface.API.get_slots()
+      else
+        [
+          %{
+            doc: "The default slot",
+            func: :slot,
+            line: node_meta.line,
+            name: :default,
+            opts: [],
+            opts_ast: [],
+            type: :any
+          }
+        ]
+      end
 
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
@@ -512,12 +534,7 @@ defmodule Surface.Compiler do
          meta: meta
        }}
     else
-      {:error, message} ->
-        message = "cannot render <#{name}> (#{message})"
-        {:error, message}
-
-      _ ->
-        {:error, {"cannot render <#{name}>", meta.line}, meta}
+      error -> handle_convert_node_to_ast_error(name, error, meta)
     end
   end
 
@@ -537,20 +554,81 @@ defmodule Surface.Compiler do
          meta: meta
        }}
     else
-      {:error, message} ->
-        message = "cannot render <#{name}> (#{message})"
-        {:error, message}
+      error -> handle_convert_node_to_ast_error(name, error, meta)
+    end
+  end
 
-      _ ->
-        {:error, {"cannot render <#{name}>", meta.line}, meta}
+  defp convert_node_to_ast(:function_component, node, compile_meta) do
+    {name, attributes, children, %{decomposed_tag: {type, mod, fun}} = node_meta} = node
+
+    meta =
+      node_meta
+      |> Helpers.to_meta(compile_meta)
+      |> Map.merge(%{module: mod, node_alias: name})
+
+    with {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
+         {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
+         attributes <- process_attributes(nil, attributes, meta, compile_meta) do
+      ast = %AST.FunctionComponent{
+        module: mod,
+        fun: fun,
+        type: type,
+        props: attributes,
+        directives: directives,
+        templates: templates,
+        meta: meta
+      }
+
+      {:ok, ast}
+    else
+      error -> handle_convert_node_to_ast_error(name, error, meta)
+    end
+  end
+
+  # Recursive components must be represented as function components
+  # until we can validate templates and properties of open modules
+  defp convert_node_to_ast(:recursive_component, node, compile_meta) do
+    {name, attributes, children, %{decomposed_tag: {_, mod, _}} = node_meta} = node
+
+    meta =
+      node_meta
+      |> Helpers.to_meta(compile_meta)
+      |> Map.merge(%{module: mod, node_alias: name})
+
+    # TODO: we should call validate_templates/3 and validate_properties/4 validate
+    # based on the module attributes since the module is still open
+    with component_type <- Module.get_attribute(mod, :component_type),
+         true <- component_type != nil,
+         # This is a little bit hacky. :let will only be extracted for the default
+         # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
+         # we pass in and modify the attributes so that non-slotable components are not
+         # processed by the :let directive
+         {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
+         {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
+         attributes <- process_attributes(nil, attributes, meta, compile_meta) do
+      ast = %AST.FunctionComponent{
+        module: mod,
+        fun: :render,
+        type: :remote,
+        props: attributes,
+        directives: directives,
+        templates: templates,
+        meta: meta
+      }
+
+      {:ok, maybe_call_transform(ast)}
+    else
+      error -> handle_convert_node_to_ast_error(name, error, meta)
     end
   end
 
   defp convert_node_to_ast(:component, {name, attributes, children, node_meta}, compile_meta) do
-    # TODO: validate live views vs live components ?
-    meta = Helpers.to_meta(node_meta, compile_meta)
-    mod = Helpers.actual_component_module!(name, meta.caller)
-    meta = Map.merge(meta, %{module: mod, node_alias: name})
+    {_type, mod, _fun} = node_meta.decomposed_tag
+
+    meta =
+      node_meta
+      |> Helpers.to_meta(compile_meta)
+      |> Map.merge(%{module: mod, node_alias: name})
 
     with :ok <- Helpers.validate_component_module(mod, name),
          true <- function_exported?(mod, :component_type, 0),
@@ -559,11 +637,9 @@ defmodule Surface.Compiler do
          # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
          # we pass in and modify the attributes so that non-slotable components are not
          # processed by the :let directive
-         {:ok, templates, attributes} <-
-           collect_templates(mod, attributes, children, meta),
+         {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
          :ok <- validate_templates(mod, templates, meta),
-         {:ok, directives, attributes} <-
-           collect_directives(@component_directive_handlers, attributes, meta),
+         {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta, compile_meta),
          :ok <- validate_properties(mod, attributes, directives, meta) do
       result =
@@ -591,14 +667,7 @@ defmodule Surface.Compiler do
 
       {:ok, maybe_call_transform(result)}
     else
-      {:error, message, details} ->
-        {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
-
-      {:error, message} ->
-        {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
-
-      _ ->
-        {:error, {"cannot render <#{name}>", meta.line}, meta}
+      error -> handle_convert_node_to_ast_error(name, error, meta)
     end
   end
 
@@ -630,14 +699,8 @@ defmodule Surface.Compiler do
       false ->
         {:error, {"cannot render <#{name}> (MacroComponents must export an expand/3 function)", meta.line}, meta}
 
-      {:error, message, details} ->
-        {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
-
-      {:error, message} ->
-        {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
-
-      _ ->
-        {:error, {"cannot render <#{name}>", meta.line}, meta}
+      error ->
+        handle_convert_node_to_ast_error(name, error, meta)
     end
   end
 
@@ -806,6 +869,10 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
 
+  # This is a little bit hacky. :let will only be extracted for the default
+  # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
+  # we pass in and modify the attributes so that non-slotable components are not
+  # processed by the :let directive
   defp collect_templates(mod, attributes, nodes, meta) do
     # Don't extract the template directives if this module is slotable
     {:ok, directives, attributes} =
@@ -1222,5 +1289,18 @@ defmodule Surface.Compiler do
     """
 
     IOHelper.compile_error(message, file, line)
+  end
+
+  defp handle_convert_node_to_ast_error(name, error, meta) do
+    case error do
+      {:error, message, details} ->
+        {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
+
+      {:error, message} ->
+        {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
+
+      _ ->
+        {:error, {"cannot render <#{name}>", meta.line}, meta}
+    end
   end
 end

@@ -14,7 +14,11 @@ defmodule Surface.Directive.SlotArgs do
 
   def process(directive, %AST.Slot{} = slot) do
     %AST.Directive{value: %AST.AttributeExpr{value: value}, meta: meta} = directive
-    validate_keys!(slot, value, meta)
+
+    if Module.get_attribute(meta.caller.module, :component_type) do
+      validate_keys!(slot, value, meta)
+    end
+
     %{slot | args: value}
   end
 

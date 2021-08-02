@@ -166,6 +166,54 @@ defmodule Surface.Compiler.Helpers do
     Macro.expand(ast, env)
   end
 
+  def decompose_component_tag("." <> fun_name, env) do
+    fun = String.to_atom(fun_name)
+
+    module =
+      cond do
+        Module.defines?(env.module, {fun, 1}) ->
+          env.module
+
+        mod = get_imported_module({fun, 1}, env) ->
+          mod
+
+        true ->
+          env.module
+      end
+
+    {:local, module, fun}
+  end
+
+  def decompose_component_tag(tag_name, env) do
+    case String.split(tag_name, ".") |> Enum.reverse() do
+      [<<first, _::binary>> = fun_name | rest] when first in ?a..?z ->
+        aliases = rest |> Enum.reverse() |> Enum.map(&String.to_atom/1)
+        fun = String.to_atom(fun_name)
+        {:remote, Macro.expand({:__aliases__, [], aliases}, env), fun}
+
+      _ ->
+        {:ok, ast} = Code.string_to_quoted(tag_name)
+        mod = Macro.expand(ast, env)
+
+        if mod == env.module do
+          {:recursive_component, mod, nil}
+        else
+          {:component, mod, nil}
+        end
+    end
+  end
+
+  defp get_imported_module(func, env) do
+    Enum.find_value(env.functions, fn {mod, funcs} ->
+      if mod not in [Application, IEx.Helpers, Kernel, Kernel.Typespec] do
+        Enum.find_value(funcs, fn
+          ^func -> mod
+          _ -> nil
+        end)
+      end
+    end)
+  end
+
   def check_module_loaded(module, node_alias) do
     case Code.ensure_compiled(module) do
       {:module, mod} ->

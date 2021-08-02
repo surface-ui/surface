@@ -171,7 +171,7 @@ defmodule Surface.Compiler.EExEngine do
         %AST.Literal{value: value} -> value
       end
 
-    parent_context_var = context_name(state.context_vars.count - 1, meta)
+    parent_context_var = context_name(state.context_vars.count - 1, meta.caller)
 
     context_expr =
       if is_child_component?(state) do
@@ -188,7 +188,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_content_expr =
       quote generated: true do
         if @inner_block do
-          render_block(
+          Phoenix.LiveView.Helpers.render_block(
             @inner_block,
             {
               unquote(slot_name),
@@ -216,125 +216,146 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp to_expression(
-         %AST.Component{
-           module: module,
-           type: Surface.LiveView,
-           props: props
-         } = component,
-         _buffer,
-         _state
-       ) do
-    props_expr =
-      collect_component_props(module, props)
-      |> Enum.reject(fn {_, value} -> is_nil(value) end)
+  # Local function component
+  defp to_expression(%AST.FunctionComponent{type: :local} = component, buffer, state) do
+    %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
 
     quote generated: true do
-      live_render(
-        @socket,
-        unquote(module),
-        unquote(props_expr)
+      component(
+        &(unquote(Macro.var(fun, __MODULE__)) / 1),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(nil),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
       )
     end
     |> maybe_print_expression(component)
   end
 
-  defp to_expression(
-         %ast_type{
-           module: module,
-           type: component_type,
-           props: props,
-           dynamic_props: dynamic_props,
-           templates: templates,
-           meta: meta
-         } = component,
-         buffer,
-         state
-       )
-       when ast_type in [AST.Component, AST.SlotableComponent] do
-    props_expr = collect_component_props(module, props)
+  # Remote function component
+  defp to_expression(%AST.FunctionComponent{type: :remote} = component, buffer, state) do
+    %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
-    dynamic_props_expr = handle_dynamic_props(dynamic_props)
+    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
 
-    caller_component_type = Module.get_attribute(meta.caller.module, :component_type)
-
-    gets_context? =
-      module.__gets_context__?({:render, 1}) or (module == Context and AST.has_attribute?(props, :get))
-
-    changes_context? =
-      (module.__changes_context__?({:render, 1}) and module.__slots__() != []) or
-        (module == Context and AST.has_attribute?(props, :put))
-
-    if gets_context? do
-      Module.put_attribute(meta.caller.module, :gets_context?, meta.caller.function)
+    quote generated: true do
+      component(
+        &(unquote(module).unquote(fun) / 1),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(nil),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
     end
+    |> maybe_print_expression(component)
+  end
 
-    if changes_context? do
-      Module.put_attribute(meta.caller.module, :changes_context?, meta.caller.function)
+  # LiveView
+  defp to_expression(%AST.Component{type: Surface.LiveView} = component, _buffer, _state) do
+    %AST.Component{module: module, props: props} = component
+
+    props_expr =
+      collect_component_props(module, props)
+      |> Enum.reject(fn {_, value} -> is_nil(value) end)
+
+    quote generated: true do
+      live_render(@socket, unquote(module), unquote(props_expr))
     end
+    |> maybe_print_expression(component)
+  end
 
-    initial_context =
-      if caller_component_type do
-        quote do: @__context__
-      else
-        quote do: %{}
-      end
+  # Live component
+  defp to_expression(%AST.Component{type: Surface.LiveComponent} = component, buffer, state) do
+    %AST.Component{module: module, props: props, meta: meta} = component
 
-    context_var = context_name(state.context_vars.count, meta)
+    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
 
-    context_expr =
-      cond do
-        module.__slots__() == [] and not gets_context? ->
-          quote do: %{}
-
-        state.context_vars.changed != [] && gets_context? ->
-          quote do: Enum.reduce([unquote_splicing(state.context_vars.changed)], &Map.merge/2)
-
-        true ->
-          initial_context
-      end
-
-    state =
-      if changes_context? do
-        %{state | context_vars: %{state.context_vars | changed: [context_var | state.context_vars.changed]}}
-      else
-        state
-      end
-
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, templates, buffer, state, context_var)
-
-    if component_type == Surface.LiveComponent do
-      quote generated: true do
-        live_component(
+    quote generated: true do
+      live_component(
+        unquote(module),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
           unquote(module),
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(meta.node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
-    else
-      quote generated: true do
-        component(
-          &unquote(module).render/1,
-          Surface.build_assigns(
-            unquote(context_expr),
-            unquote(props_expr),
-            unquote(dynamic_props_expr),
-            unquote(slot_props),
-            unquote(slot_meta),
-            unquote(module),
-            unquote(meta.node_alias)
-          ),
-          unquote(do_block)
-        )
-      end
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
+    |> maybe_print_expression(component)
+  end
+
+  # Component
+  defp to_expression(%AST.Component{type: Surface.Component} = component, buffer, state) do
+    %AST.Component{module: module, props: props, meta: meta} = component
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
+
+    quote generated: true do
+      component(
+        &unquote(module).render/1,
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
+    |> maybe_print_expression(component)
+  end
+
+  # Slotable component
+  defp to_expression(%AST.SlotableComponent{} = component, buffer, state) do
+    %AST.SlotableComponent{module: module, props: props, meta: meta} = component
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
+
+    quote generated: true do
+      component(
+        &unquote(module).render/1,
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
     end
     |> maybe_print_expression(component)
   end
@@ -351,7 +372,7 @@ defmodule Surface.Compiler.EExEngine do
         %AST.Attribute{name: prop_name, type: type, type_opts: type_opts, value: expr} = attr
 
         cond do
-          !module.__validate_prop__(prop_name) ->
+          module && !module.__validate_prop__(prop_name) ->
             {props, props_acc}
 
           type_opts[:accumulate] ->
@@ -367,9 +388,9 @@ defmodule Surface.Compiler.EExEngine do
     Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
   end
 
-  defp collect_slot_meta(component, templates, buffer, state, context_var) do
+  defp collect_slot_meta(component, buffer, state, context_var) do
     slot_info =
-      templates
+      component.templates
       |> Enum.map(fn {name, templates_for_slot} ->
         state = %{state | scope: [:template | state.scope]}
 
@@ -519,6 +540,10 @@ defmodule Surface.Compiler.EExEngine do
        handle_nested_block(template, buffer, nested_block_state)}
       | handle_templates(component, tail, buffer, state)
     ]
+  end
+
+  defp add_default_bindings(%AST.FunctionComponent{}, _name, let) do
+    let
   end
 
   defp add_default_bindings(%{module: module, props: props}, name, let) do
@@ -680,7 +705,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_dynamic_nested_html([
          %type{module: mod, templates: templates_by_name} = component | nodes
        ])
-       when type in [AST.Component, AST.SlotableComponent] do
+       when type in [AST.Component, AST.FunctionComponent, AST.SlotableComponent] do
     {requires, templates_by_name} =
       Enum.reduce(templates_by_name, {[], %{}}, fn {name, templates}, {requires_acc, by_name} ->
         {requires, templates} =
@@ -697,23 +722,19 @@ defmodule Surface.Compiler.EExEngine do
         {requires, Map.put(by_name, name, Enum.reverse(templates))}
       end)
 
-    [
-      require_expr(mod, component.meta.line),
-      requires,
-      %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)
-    ]
+    [requires, %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
+    |> maybe_prepend_require(mod, component.meta)
   end
 
-  defp to_dynamic_nested_html([
-         %AST.Error{message: message, meta: %AST.Meta{module: mod, line: line}} | nodes
-       ])
-       when not is_nil(mod),
-       do: [
-         require_expr(mod, line),
-         ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
-         escape_message(message),
-         ~S(</span>) | to_dynamic_nested_html(nodes)
-       ]
+  defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: module} = meta} | nodes])
+       when not is_nil(module) do
+    [
+      ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
+      escape_message(message),
+      ~S(</span>) | to_dynamic_nested_html(nodes)
+    ]
+    |> maybe_prepend_require(module, meta)
+  end
 
   defp to_dynamic_nested_html([%AST.Error{message: message} | nodes]),
     do: [
@@ -821,13 +842,6 @@ defmodule Surface.Compiler.EExEngine do
     )
   end
 
-  defp evaluate_literal_attribute(name, type, value, meta) do
-    case Surface.TypeHandler.attr_to_html(type, name, value) do
-      {:ok, attr} -> attr
-      {:error, message} -> IOHelper.compile_error(message, meta.file, meta.line)
-    end
-  end
-
   defp maybe_print_expression(expr, print?, file, line) do
     if print? do
       IO.puts(">>> DEBUG(EXPRESSION): #{file}:#{line}")
@@ -836,6 +850,13 @@ defmodule Surface.Compiler.EExEngine do
     end
 
     expr
+  end
+
+  defp evaluate_literal_attribute(name, type, value, meta) do
+    case Surface.TypeHandler.attr_to_html(type, name, value) do
+      {:ok, attr} -> attr
+      {:error, message} -> IOHelper.compile_error(message, meta.file, meta.line)
+    end
   end
 
   defp require_expr(module, line) do
@@ -857,9 +878,74 @@ defmodule Surface.Compiler.EExEngine do
     IO.iodata_to_binary(message_iodata)
   end
 
-  defp context_name(count, meta) do
+  defp context_name(count, caller) do
     "context_#{count}"
     |> String.to_atom()
-    |> Macro.var(meta.caller.module)
+    |> Macro.var(caller.module)
+  end
+
+  defp maybe_prepend_require(ast, module, meta) do
+    # A module can't require itself
+    if module == meta.caller.module do
+      ast
+    else
+      [require_expr(module, meta.line) | ast]
+    end
+  end
+
+  defp process_context(module, fun, props, caller, state) do
+    gets_context? =
+      (function_exported?(module, :__gets_context__?, 1) and module.__gets_context__?({fun, 1})) or
+        (module == Context and AST.has_attribute?(props, :get))
+
+    changes_context? =
+      (function_exported?(module, :__changes_context__?, 1) and module.__changes_context__?({fun, 1}) and
+         module.__slots__() != []) or
+        (module == Context and AST.has_attribute?(props, :put))
+
+    if gets_context? do
+      Module.put_attribute(caller.module, :gets_context?, caller.function)
+    end
+
+    if changes_context? do
+      Module.put_attribute(caller.module, :changes_context?, caller.function)
+    end
+
+    initial_context =
+      if Module.get_attribute(caller.module, :component_type) do
+        quote do: @__context__
+      else
+        quote do: %{}
+      end
+
+    context_expr =
+      cond do
+        function_exported?(module, :__slots__?, 0) and module.__slots__() == [] and not gets_context? ->
+          quote do: %{}
+
+        state.context_vars.changed != [] && gets_context? ->
+          quote do: Enum.reduce([unquote_splicing(state.context_vars.changed)], &Map.merge/2)
+
+        true ->
+          initial_context
+      end
+
+    context_var = context_name(state.context_vars.count, caller)
+
+    state =
+      if changes_context? do
+        %{state | context_vars: %{state.context_vars | changed: [context_var | state.context_vars.changed]}}
+      else
+        state
+      end
+
+    {context_expr, context_var, state}
+  end
+
+  defp build_props_expressions(module, %{props: props, dynamic_props: dynamic_props}) do
+    props_expr = collect_component_props(module, props)
+    dynamic_props_expr = handle_dynamic_props(dynamic_props)
+
+    {props_expr, dynamic_props_expr}
   end
 end
