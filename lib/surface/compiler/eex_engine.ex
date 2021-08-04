@@ -233,7 +233,38 @@ defmodule Surface.Compiler.EExEngine do
           unquote(dynamic_props_expr),
           unquote(slot_props),
           unquote(slot_meta),
-          unquote(nil),
+          nil,
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
+    |> maybe_print_expression(component)
+  end
+
+  # Dynamic component
+  defp to_expression(%AST.FunctionComponent{module: %AST.AttributeExpr{}} = component, buffer, state) do
+    %AST.FunctionComponent{
+      module: %AST.AttributeExpr{value: module_expr},
+      fun: fun,
+      props: props,
+      meta: meta
+    } = component
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {context_expr, context_var, state} = process_context(nil, fun, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
+
+    quote generated: true do
+      component(
+        &(unquote(module_expr).unquote(fun) / 1),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module_expr),
           unquote(meta.node_alias)
         ),
         unquote(do_block)
@@ -250,6 +281,11 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
     {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
 
+    # For now, we can only retrieve props and slots informaton from module components,
+    # not function components, so if we're dealing with dynamic or recursive module components,
+    # we pass the module, otherwise, we pass `nil`.
+    module_for_build_assigns = if fun == :render, do: module
+
     quote generated: true do
       component(
         &(unquote(module).unquote(fun) / 1),
@@ -259,7 +295,7 @@ defmodule Surface.Compiler.EExEngine do
           unquote(dynamic_props_expr),
           unquote(slot_props),
           unquote(slot_meta),
-          unquote(nil),
+          unquote(module_for_build_assigns),
           unquote(meta.node_alias)
         ),
         unquote(do_block)
@@ -308,7 +344,7 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(component)
   end
 
-  # Component
+  # Module component
   defp to_expression(%AST.Component{type: Surface.Component} = component, buffer, state) do
     %AST.Component{module: module, props: props, meta: meta} = component
 
@@ -665,13 +701,7 @@ defmodule Surface.Compiler.EExEngine do
     [%{sub_block | children: to_token_sequence(children)} | to_dynamic_nested_html(nodes)]
   end
 
-  defp to_dynamic_nested_html([
-         %AST.VoidTag{
-           element: element,
-           attributes: attributes
-         }
-         | nodes
-       ]) do
+  defp to_dynamic_nested_html([%AST.VoidTag{element: element, attributes: attributes} | nodes]) do
     [
       "<",
       element,
@@ -681,14 +711,7 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([
-         %AST.Tag{
-           element: element,
-           attributes: attributes,
-           children: children
-         }
-         | nodes
-       ]) do
+  defp to_dynamic_nested_html([%AST.Tag{element: element, attributes: attributes, children: children} | nodes]) do
     [
       "<",
       element,
@@ -702,9 +725,7 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([
-         %type{module: mod, templates: templates_by_name} = component | nodes
-       ])
+  defp to_dynamic_nested_html([%type{module: mod, templates: templates_by_name} = component | nodes])
        when type in [AST.Component, AST.FunctionComponent, AST.SlotableComponent] do
     {requires, templates_by_name} =
       Enum.reduce(templates_by_name, {[], %{}}, fn {name, templates}, {requires_acc, by_name} ->
@@ -886,7 +907,7 @@ defmodule Surface.Compiler.EExEngine do
 
   defp maybe_prepend_require(ast, module, meta) do
     # A module can't require itself
-    if module == meta.caller.module do
+    if module == meta.caller.module || match?(%Surface.AST.AttributeExpr{}, module) do
       ast
     else
       [require_expr(module, meta.line) | ast]

@@ -232,6 +232,12 @@ defmodule Surface.TypeHandler do
 
   def attribute_type_and_opts(nil, _name, _meta), do: {:string, []}
 
+  def attribute_type_and_opts(Surface.Components.Component, _name, _meta) do
+    # TODO: If we add a property to define the list of available modules
+    # we could go through the list and validate/retrieve the types and opts
+    {:any, []}
+  end
+
   def attribute_type_and_opts(module, name, meta) do
     with true <- function_exported?(module, :__get_prop__, 1),
          prop when not is_nil(prop) <- module.__get_prop__(name) do

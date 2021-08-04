@@ -1006,6 +1006,10 @@ defmodule Surface.Compiler do
     :ok
   end
 
+  defp validate_templates(Surface.Components.Component, _templates, _meta) do
+    :ok
+  end
+
   defp validate_templates(mod, templates, meta) do
     names = Map.keys(templates)
 
