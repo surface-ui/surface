@@ -425,7 +425,7 @@ end
 
 defmodule Surface.AST.Component do
   @moduledoc """
-  An AST node representing a standard HTML tag
+  An AST node representing a component
 
   ## Properties
       * `:module` - the component module
@@ -442,6 +442,38 @@ defmodule Surface.AST.Component do
           module: module(),
           debug: list(atom()),
           type: module(),
+          props: list(Surface.AST.Attribute.t()),
+          dynamic_props: Surface.AST.DynamicAttribute.t(),
+          directives: list(Surface.AST.Directive.t()),
+          templates: %{
+            :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
+            optional(atom()) => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t())
+          },
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.FunctionComponent do
+  @moduledoc """
+  An AST node representing a function component
+
+  ## Properties
+      * `:module` - the component module
+      * `:fun` - the render function
+      * `:type` - the type of function (:local or :remote)
+      * `:props` - the props for this component
+      * `:directives` - any directives to be applied to this tag
+      * `:children` - the tag children
+      * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:module, :fun, :type, :props, :dynamic_props, :templates, :meta, debug: [], directives: []]
+
+  @type t :: %__MODULE__{
+          module: module(),
+          fun: atom(),
+          debug: list(atom()),
+          type: :local | :remote,
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),

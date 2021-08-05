@@ -61,7 +61,7 @@ defmodule Surface.Compiler.ParserTest do
              {"MyComponent",
               [
                 {"label", "My label", %{line: 1, file: "nofile", column: 14}}
-              ], [], %{line: 1, file: "nofile", column: 2}}
+              ], [], %{line: 1, file: "nofile", column: 2, decomposed_tag: {:component, MyComponent, nil}}}
   end
 
   test "slot shorthand" do

@@ -14,6 +14,14 @@ defmodule Surface.ContextThroughSlotTest do
       </Context>
       """
     end
+
+    def func(assigns) do
+      ~F"""
+      <Context put={foo: @foo}>
+        <#slot />
+      </Context>
+      """
+    end
   end
 
   defmodule Parent do
@@ -30,12 +38,31 @@ defmodule Surface.ContextThroughSlotTest do
       </div>
       """
     end
+
+    def func(assigns) do
+      ~F"""
+      <div>
+        <Parent.ContextProvider.func foo="bar">
+          <#slot />
+        </Parent.ContextProvider.func>
+      </div>
+      """
+    end
   end
 
   defmodule Child do
     use Surface.Component
 
     def render(assigns) do
+      # @foo is nil here
+      ~F"""
+      <Context get={foo: foo}>
+        <div>{foo}</div>
+      </Context>
+      """
+    end
+
+    def func(assigns) do
       # @foo is nil here
       ~F"""
       <Context get={foo: foo}>
@@ -50,15 +77,32 @@ defmodule Surface.ContextThroughSlotTest do
 
     def render(assigns) do
       ~F"""
-        <Parent>
-          <Child/>
-        </Parent>
+      <Parent>
+        <Child/>
+      </Parent>
+      """
+    end
+  end
+
+  defmodule ExampleWeb.ContextWithFunctionComponentsLive do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~F"""
+      <Parent.func>
+        <Child.func/>
+      </Parent.func>
       """
     end
   end
 
   test "child should take context from parent when rendered in slot", %{conn: conn} do
+    expected = "<div><div>bar</div></div>"
+
     {:ok, _view, html} = live_isolated(conn, ExampleWeb.ContextLive)
-    assert html =~ "<div><div>bar</div></div>"
+    assert html =~ expected
+
+    {:ok, _view, html} = live_isolated(conn, ExampleWeb.ContextWithFunctionComponentsLive)
+    assert html =~ expected
   end
 end
