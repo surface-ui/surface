@@ -15,14 +15,6 @@ defmodule Surface.Components.ContextTest do
       </Context>
       """
     end
-
-    def outer(assigns) do
-      ~F"""
-      <Context put={__MODULE__, field: "field from Outer"}>
-        <div><#slot/></div>
-      </Context>
-      """
-    end
   end
 
   defmodule RenderContext do
@@ -219,106 +211,6 @@ defmodule Surface.Components.ContextTest do
     end
   end
 
-  describe "in function components" do
-    test "pass context to child component" do
-      html =
-        render_surface do
-          ~F"""
-          <Outer.outer>
-            <Inner.inner/>
-          </Outer.outer>
-          """
-        end
-
-      assert html =~ """
-             <span id="field">field from Outer</span>\
-             """
-    end
-
-    test "pass context to child component using :as option" do
-      html =
-        render_surface do
-          ~F"""
-          <Outer.outer>
-            <InnerWithOptionAs.inner_with_option_as/>
-          </Outer.outer>
-          """
-        end
-
-      assert html =~ """
-             <div>
-               <span>field from Outer</span>
-             </div>
-             """
-    end
-
-    test "pass context down the tree of components" do
-      html =
-        render_surface do
-          ~F"""
-          <Outer.outer>
-            <InnerWrapper.inner_wrapper/>
-          </Outer.outer>
-          """
-        end
-
-      assert html =~ """
-             <span id="field">field from Outer</span>\
-             """
-    end
-
-    test "context assigns are scoped by their parent components" do
-      html =
-        render_surface do
-          ~F"""
-          <Outer.outer>
-            <InnerWrapper.inner_wrapper/>
-          </Outer.outer>
-          """
-        end
-
-      assert html =~ """
-             <span id="field">field from Outer</span>
-               <span id="other_field">field from InnerWrapper</span>
-             """
-    end
-
-    test "imported function components" do
-      import Outer, only: [outer: 1]
-      import InnerWrapper, only: [inner_wrapper: 1]
-
-      html =
-        render_surface do
-          ~F"""
-          <.outer>
-            <.inner_wrapper/>
-          </.outer>
-          """
-        end
-
-      assert html =~ """
-             <span id="field">field from Outer</span>
-               <span id="other_field">field from InnerWrapper</span>
-             """
-    end
-
-    test "reset context after the component" do
-      html =
-        render_surface do
-          ~F"""
-          <Outer.outer>
-            <Inner.inner/>
-          </Outer.outer>
-          <RenderContext/>
-          """
-        end
-
-      assert html =~ """
-             Context: %{}
-             """
-    end
-  end
-
   describe "validate property :get" do
     test "raise compile error when passing invalid bindings" do
       code =
@@ -447,19 +339,6 @@ defmodule Surface.Components.ContextTest do
       end
     end
 
-    defmodule DeadViewWithFunctionComponents do
-      use Phoenix.View, root: "support/dead_views"
-      import Surface
-
-      def render("index.html", assigns) do
-        ~F"""
-        <Outer.outer>
-          <InnerWrapper.inner_wrapper />
-        </Outer.outer>
-        """
-      end
-    end
-
     defmodule DeadViewNamedSlots do
       use Phoenix.View, root: "support/dead_views"
       import Surface
@@ -481,7 +360,6 @@ defmodule Surface.Components.ContextTest do
       expected = ~S(<span id="field">field from Outer</span>)
 
       assert Phoenix.View.render_to_string(DeadView, "index.html", []) =~ expected
-      assert Phoenix.View.render_to_string(DeadViewWithFunctionComponents, "index.html", []) =~ expected
     end
 
     test "pass context to named slots" do

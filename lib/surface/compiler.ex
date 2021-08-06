@@ -564,7 +564,7 @@ defmodule Surface.Compiler do
     meta =
       node_meta
       |> Helpers.to_meta(compile_meta)
-      |> Map.merge(%{module: mod, node_alias: name})
+      |> Map.merge(%{module: mod, node_alias: name, function_component?: true})
 
     with {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
          {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),

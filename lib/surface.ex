@@ -233,17 +233,22 @@ defmodule Surface do
 
     slot_assigns = map_slots_to_assigns(module, slot_props)
 
-    Map.new(
-      props ++
-        slot_assigns ++
-        [
-          __surface__: %{
-            slots: Map.new(slots),
-            provided_templates: Keyword.keys(slot_props)
-          },
-          __context__: context
-        ]
-    )
+    if module do
+      Map.new(
+        props ++
+          slot_assigns ++
+          [
+            __surface__: %{
+              slots: Map.new(slots),
+              provided_templates: Keyword.keys(slot_props)
+            },
+            __context__: context
+          ]
+      )
+    else
+      # Function components don't support slots nor contexts
+      Map.new(props)
+    end
   end
 
   defp map_slots_to_assigns(module, slot_props) do

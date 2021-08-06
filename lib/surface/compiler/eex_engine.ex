@@ -216,6 +216,43 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
+  # Dynamic component
+  defp to_expression(%AST.FunctionComponent{type: :dynamic} = component, buffer, state) do
+    %AST.FunctionComponent{
+      module: %AST.AttributeExpr{value: module_expr},
+      fun: fun,
+      props: props,
+      meta: meta
+    } = component
+
+    fun_expr =
+      case fun do
+        nil -> :render
+        %AST.AttributeExpr{value: expr} -> expr
+      end
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {context_expr, context_var, state} = process_context(nil, nil, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
+
+    quote generated: true do
+      component(
+        &apply(unquote(module_expr), unquote(fun_expr), [&1]),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module_expr),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
+    |> maybe_print_expression(component)
+  end
+
   # Local function component
   defp to_expression(%AST.FunctionComponent{type: :local} = component, buffer, state) do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
@@ -234,37 +271,6 @@ defmodule Surface.Compiler.EExEngine do
           unquote(slot_props),
           unquote(slot_meta),
           nil,
-          unquote(meta.node_alias)
-        ),
-        unquote(do_block)
-      )
-    end
-    |> maybe_print_expression(component)
-  end
-
-  # Dynamic component
-  defp to_expression(%AST.FunctionComponent{module: %AST.AttributeExpr{}} = component, buffer, state) do
-    %AST.FunctionComponent{
-      module: %AST.AttributeExpr{value: module_expr},
-      fun: fun,
-      props: props,
-      meta: meta
-    } = component
-
-    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
-    {context_expr, context_var, state} = process_context(nil, fun, props, meta.caller, state)
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
-
-    quote generated: true do
-      component(
-        &(unquote(module_expr).unquote(fun) / 1),
-        Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module_expr),
           unquote(meta.node_alias)
         ),
         unquote(do_block)
@@ -304,47 +310,7 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(component)
   end
 
-  # LiveView
-  defp to_expression(%AST.Component{type: Surface.LiveView} = component, _buffer, _state) do
-    %AST.Component{module: module, props: props} = component
-
-    props_expr =
-      collect_component_props(module, props)
-      |> Enum.reject(fn {_, value} -> is_nil(value) end)
-
-    quote generated: true do
-      live_render(@socket, unquote(module), unquote(props_expr))
-    end
-    |> maybe_print_expression(component)
-  end
-
-  # Live component
-  defp to_expression(%AST.Component{type: Surface.LiveComponent} = component, buffer, state) do
-    %AST.Component{module: module, props: props, meta: meta} = component
-
-    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
-    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
-    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
-
-    quote generated: true do
-      live_component(
-        unquote(module),
-        Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module),
-          unquote(meta.node_alias)
-        ),
-        unquote(do_block)
-      )
-    end
-    |> maybe_print_expression(component)
-  end
-
-  # Module component
+  # Module stateless component
   defp to_expression(%AST.Component{type: Surface.Component} = component, buffer, state) do
     %AST.Component{module: module, props: props, meta: meta} = component
 
@@ -396,6 +362,46 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(component)
   end
 
+  # Live component
+  defp to_expression(%AST.Component{type: Surface.LiveComponent} = component, buffer, state) do
+    %AST.Component{module: module, props: props, meta: meta} = component
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
+
+    quote generated: true do
+      live_component(
+        unquote(module),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
+    |> maybe_print_expression(component)
+  end
+
+  # LiveView
+  defp to_expression(%AST.Component{type: Surface.LiveView} = component, _buffer, _state) do
+    %AST.Component{module: module, props: props} = component
+
+    props_expr =
+      collect_component_props(module, props)
+      |> Enum.reject(fn {_, value} -> is_nil(value) end)
+
+    quote generated: true do
+      live_render(@socket, unquote(module), unquote(props_expr))
+    end
+    |> maybe_print_expression(component)
+  end
+
   defp handle_dynamic_props(nil), do: []
 
   defp handle_dynamic_props(%AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr}}) do
@@ -422,6 +428,38 @@ defmodule Surface.Compiler.EExEngine do
       end)
 
     Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
+  end
+
+  # Function component
+  defp collect_slot_meta(%AST.FunctionComponent{fun: fun} = component, buffer, state, _context_var)
+       when fun != nil do
+    slot_info =
+      component.templates
+      |> Enum.map(fn {name, templates_for_slot} ->
+        state = %{state | scope: [:template | state.scope]}
+
+        nested_templates = handle_templates(component, templates_for_slot, buffer, state)
+
+        {name, Enum.count(templates_for_slot), nested_templates}
+      end)
+
+    do_block =
+      case slot_info do
+        [{:default, _size, [{let, _, body}]}] ->
+          block =
+            quote generated: true do
+              unquote(let) ->
+                unquote(body)
+            end
+
+          [do: block]
+
+        _ ->
+          []
+      end
+
+    # Function components don't support slots
+    {do_block, [], []}
   end
 
   defp collect_slot_meta(component, buffer, state, context_var) do

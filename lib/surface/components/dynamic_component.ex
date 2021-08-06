@@ -11,7 +11,7 @@ defmodule Surface.Components.Component do
   @doc """
   The module of the component
   """
-  prop module, :module
+  prop module, :module, required: true
 
   @doc """
   The function of the component
@@ -26,18 +26,12 @@ defmodule Surface.Components.Component do
   def transform(node) do
     %AST.Component{props: props, directives: directives, templates: templates, meta: meta} = node
 
-    {module_value, other_props} =
-      props
-      |> Enum.split_with(fn %AST.Attribute{name: name} -> name == :module end)
-      |> case do
-        {[%AST.Attribute{value: value} | _], rest} -> {value, rest}
-        props -> {nil, props}
-      end
+    {%{module: mod, function: fun}, other_props} = AST.pop_attributes_values_as_map(props, [:module, :function])
 
     %AST.FunctionComponent{
-      module: module_value,
-      fun: :render,
-      type: :remote,
+      module: mod,
+      fun: fun,
+      type: :dynamic,
       props: other_props,
       directives: directives,
       templates: templates,

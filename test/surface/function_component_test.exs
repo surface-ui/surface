@@ -1,11 +1,13 @@
 defmodule Surface.FunctionComponentTest do
   use Surface.ConnCase, async: true
 
+  import Phoenix.LiveView.Helpers
+
   defmodule NotAComponent do
     def func(assigns) do
       ~F"""
       Label: {@label}
-      <#slot/>
+      {render_block(@inner_block)}
       """
     end
   end
@@ -54,18 +56,18 @@ defmodule Surface.FunctionComponentTest do
     """
   end
 
-  defp priv_func_with_slot(assigns) do
+  defp priv_func_with_inner_block(assigns) do
     ~F"""
     <div>
-      <#slot/>
+      {render_block(@inner_block)}
     </div>
     """
   end
 
-  defp priv_func_with_slot_and_args(assigns) do
+  defp priv_func_with_inner_block_and_args(assigns) do
     ~F"""
     <div>
-      <#slot :args={item: "my_item"}/>
+      {render_block(@inner_block, "my_item")}
     </div>
     """
   end
@@ -90,18 +92,18 @@ defmodule Surface.FunctionComponentTest do
     """
   end
 
-  def public_func_with_slot(assigns) do
+  def public_func_with_inner_block(assigns) do
     ~F"""
     <div>
-      <#slot/>
+      {render_block(@inner_block)}
     </div>
     """
   end
 
-  def public_func_with_slot_and_args(assigns) do
+  def public_func_with_inner_block_and_args(assigns) do
     ~F"""
     <div>
-      <#slot :args={item: "my_item"}/>
+      {render_block(@inner_block, item: "my_item")}
     </div>
     """
   end
@@ -170,14 +172,14 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
-  test "render private function component with slot" do
+  test "render private function component with inner block" do
     html =
       render_surface do
         ~F"""
-        <.priv_func_with_slot>
+        <.priv_func_with_inner_block>
           <Stateless label="stateless"/>
           <Stateful id="stateful" label="stateful"/>
-        </.priv_func_with_slot>
+        </.priv_func_with_inner_block>
         """
       end
 
@@ -189,13 +191,13 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
-  test "render private function component with slot args" do
+  test "render private function component with inner block and args" do
     html =
       render_surface do
         ~F"""
-        <.priv_func_with_slot_and_args :let={item: item}>
+        <.priv_func_with_inner_block_and_args :let={item}>
           Arg: {item}
-        </.priv_func_with_slot_and_args>
+        </.priv_func_with_inner_block_and_args>
         """
       end
 
@@ -270,14 +272,14 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
-  test "render public function component with slot" do
+  test "render public function component with inner block" do
     html =
       render_surface do
         ~F"""
-        <Surface.FunctionComponentTest.public_func_with_slot>
+        <Surface.FunctionComponentTest.public_func_with_inner_block>
           <Stateless label="stateless"/>
           <Stateful id="stateful" label="stateful"/>
-        </Surface.FunctionComponentTest.public_func_with_slot>
+        </Surface.FunctionComponentTest.public_func_with_inner_block>
         """
       end
 
@@ -289,13 +291,13 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
-  test "render public function component with slot args" do
+  test "render public function component with inner block and args" do
     html =
       render_surface do
         ~F"""
-        <Surface.FunctionComponentTest.public_func_with_slot_and_args :let={item: item}>
+        <Surface.FunctionComponentTest.public_func_with_inner_block_and_args :let={item: item}>
           Arg: {item}
-        </Surface.FunctionComponentTest.public_func_with_slot_and_args>
+        </Surface.FunctionComponentTest.public_func_with_inner_block_and_args>
         """
       end
 
@@ -304,6 +306,31 @@ defmodule Surface.FunctionComponentTest do
              Arg: my_item
            </div>
            """
+  end
+
+  describe "dynamic function components" do
+    alias Surface.Components.Component
+
+    test "render dynamic public function component with inner block and args" do
+      html =
+        render_surface do
+          ~F"""
+          <Component
+            module={Surface.FunctionComponentTest}
+            function={:public_func_with_inner_block_and_args}
+            :let={item: item}
+          >
+            Arg: {item}
+          </Component>
+          """
+        end
+
+      assert html =~ """
+             <div>
+               Arg: my_item
+             </div>
+             """
+    end
   end
 
   test "render imported public function component" do
