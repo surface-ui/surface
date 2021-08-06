@@ -658,7 +658,7 @@ defmodule Surface.CompilerTest do
       code = """
       <div>
         <Button label="label" click="event"/>
-        <Button click={{ , }} />
+        <Button click={,} />
       </div>
       """
 
@@ -674,7 +674,7 @@ defmodule Surface.CompilerTest do
           Test
         </ColumnWithoutTitle>
         <ColumnWithoutTitle>
-          {{ , }}
+          {,}
         </ColumnWithoutTitle>
       </Grid>
       """
@@ -691,7 +691,7 @@ defmodule Surface.CompilerTest do
           label="label"
           click="event"
         />
-        <Button click={{ , }} />
+        <Button click={,} />
       </div>
       """
 
@@ -702,7 +702,7 @@ defmodule Surface.CompilerTest do
 
     test "raise error on the right line when components has only data components" do
       code = """
-      <Grid items={{ , }}>
+      <Grid items={,}>
         <ColumnWithoutTitle>
           Test
         </ColumnWithoutTitle>
@@ -716,11 +716,11 @@ defmodule Surface.CompilerTest do
 
     test "raise error on the right line when error occurs in data components" do
       code = """
-      <Grid items={{ user <- users }}>
+      <Grid items={user <- users}>
         <ColumnWithoutTitle>
           Test
         </ColumnWithoutTitle>
-        <Column title={{ , }}>
+        <Column title={,}>
           Test
         </Column>
       </Grid>
@@ -733,7 +733,7 @@ defmodule Surface.CompilerTest do
 
     test "raise error on the right line when error occurs in live components" do
       code = """
-      <GridLive items={{ , }}>
+      <GridLive items={,}>
         <ColumnWithoutTitle>
           Test
         </ColumnWithoutTitle>
@@ -828,7 +828,7 @@ defmodule Surface.CompilerSyncTest do
 
   test "warning on undefined assign in property" do
     code = """
-    <div prop={{ @assign }} />
+    <div prop={@assign} />
     """
 
     {:warn, line, message} = compile_component(code)
@@ -840,7 +840,7 @@ defmodule Surface.CompilerSyncTest do
   test "warning on undefined assign in interpolation" do
     code = """
     <div>
-      {{ @assign }}
+      {@assign}
     </div>
     """
 
@@ -920,14 +920,14 @@ defmodule Surface.CompilerSyncTest do
       def render(assigns) do
         ~F"\""
         <div>
-          {{ sum(assigns) }}
+          {sum(assigns)}
         </div>
         "\""
       end
 
       def sum(assigns) do
         ~F"\""
-        {{ @a + @b }}
+        {@a + @b}
         "\""
       end
     end
@@ -951,14 +951,14 @@ defmodule Surface.CompilerSyncTest do
       def render(assigns) do
         ~F"\""
         <div>
-          {{ sum(assigns) }}
+          {sum(assigns)}
         </div>
         "\""
       end
 
       def sum(assigns) do
         ~F"\""
-        {{ @a + @b }}
+        {@a + @b}
         "\""
       end
     end
@@ -1055,7 +1055,7 @@ defmodule Surface.CompilerSyncTest do
 
       def render(assigns) do
         ~F"\""
-        {{ 1 }}
+        {1}
         "\""
       end
     end

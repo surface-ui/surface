@@ -13,8 +13,8 @@ defmodule Surface.Components.Form.FileInput do
   ```
   <FileInput form="user" field="picture" />
 
-  <Form for={{ :user }} opts={{ multipart: true }}>
-    <FileInput field={{ :picture }} />
+  <Form for={:user} opts={multipart: true}>
+    <FileInput field={:picture} />
   </Form>
   ```
   """

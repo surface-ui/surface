@@ -12,7 +12,7 @@ defmodule Surface.Components.Form.ColorInput do
   ## Examples
 
   ```
-  <ColorInput form="user" field="color" opts={{ autofocus: "autofocus" }}>
+  <ColorInput form="user" field="color" opts={autofocus: "autofocus"}>
   ```
   """
 

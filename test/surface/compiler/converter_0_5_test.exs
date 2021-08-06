@@ -12,16 +12,16 @@ defmodule Surface.Compiler.Converter_0_5Test do
   test "don't convert code inside macros" do
     code =
       convert("""
-      <div class={{ @class }}>text</div>
+      <div class={@class}>text</div>
       <#Raw>
-        <div class={{ @class }}>text</div>
+        <div class={@class}>text</div>
       </#Raw>
       """)
 
     assert code == """
            <div class={@class}>text</div>
            <#Raw>
-             <div class={{ @class }}>text</div>
+             <div class={@class}>text</div>
            </#Raw>
            """
   end

@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.UrlInput do
   ## Examples
 
   ```
-  <UrlInput form="user" field="name" opts={{ autofocus: "autofocus" }}>
+  <UrlInput form="user" field="name" opts={autofocus: "autofocus"}>
   ```
   """
 
