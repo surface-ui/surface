@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Compile.Surface do
   @recursive true
 
   @default_hooks_output_dir "assets/js/_hooks"
-  @hooks_extension ".hooks.js"
+  @default_hooks_extension ".hooks.js"
 
   @doc false
   def run(args) do
@@ -62,9 +62,9 @@ defmodule Mix.Tasks.Compile.Surface do
         reduce: {[], []} do
       {js_files, css_files} ->
         base_file = mod.module_info() |> get_in([:compile, :source]) |> Path.rootname()
-        js_file = "#{base_file}#{@hooks_extension}"
+        js_file = "#{base_file}#{hooks_extension()}"
         base_name = inspect(mod)
-        dest_js_file = "#{base_name}#{@hooks_extension}"
+        dest_js_file = "#{base_name}#{hooks_extension()}"
         css_file = "#{base_file}.css"
         dest_css_file = "#{base_name}.css"
 
@@ -90,7 +90,7 @@ defmodule Mix.Tasks.Compile.Surface do
     {hooks, imports} =
       for {{_file, dest_file}, index} <- files, reduce: {[], []} do
         {hooks, imports} ->
-          namespace = Path.basename(dest_file, @hooks_extension)
+          namespace = Path.basename(dest_file, hooks_extension())
           var = "c#{index}"
           hook = ~s[ns(#{var}, "#{namespace}")]
           imp = ~s[import * as #{var} from "./#{namespace}.hooks"]
@@ -126,7 +126,7 @@ defmodule Mix.Tasks.Compile.Surface do
 
     all_files =
       js_output_dir
-      |> Path.join("*#{@hooks_extension}")
+      |> Path.join("*#{hooks_extension()}")
       |> Path.wildcard()
 
     unsused_files = all_files -- used_files
@@ -176,5 +176,10 @@ defmodule Mix.Tasks.Compile.Surface do
     Build time: #{build_time}
     */\
     """
+  end
+
+  defp hooks_extension() do
+    opts = Application.get_env(:surface, :compiler, [])
+    Keyword.get(opts, :hooks_extension, @default_hooks_extension)
   end
 end
