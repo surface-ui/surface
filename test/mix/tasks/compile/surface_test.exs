@@ -6,12 +6,18 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   @hooks_rel_output_dir "tmp/_hooks"
   @hooks_output_dir Path.join(File.cwd!(), @hooks_rel_output_dir)
   @test_components_dir Path.join(File.cwd!(), "test/support/mix/tasks/compile/surface_test")
+  @jsx_hooks_extension ".hooks.jsx"
 
   @button_src_hooks_file Path.join(@test_components_dir, "fake_button.hooks.js")
+  @button_src_hooks_file_jsx_extension Path.join(@test_components_dir, "fake_button.hooks.jsx")
   @button_dest_hooks_file Path.join(
                             @hooks_output_dir,
                             "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.js"
                           )
+  @button_dest_hooks_file_jsx_extension Path.join(
+                                          @hooks_output_dir,
+                                          "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.jsx"
+                                        )
   @link_dest_hooks_file Path.join(
                           @hooks_output_dir,
                           "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.js"
@@ -21,24 +27,17 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
   @build_time DateTime.new!(~D[2021-01-01], ~T[20:01:02.000003])
 
-  setup_all do
+  setup do
     conf_before = Application.get_env(:surface, :compiler, [])
     Application.put_env(:surface, :compiler, hooks_output_dir: @hooks_rel_output_dir)
 
-    on_exit(fn ->
-      Application.put_env(:surface, :compiler, conf_before)
-    end)
-
-    :ok
-  end
-
-  setup do
     if File.exists?(@hooks_output_dir) do
       File.rm_rf!(@hooks_output_dir)
     end
 
     on_exit(fn ->
       File.rm_rf!(@hooks_output_dir)
+      Application.put_env(:surface, :compiler, conf_before)
     end)
 
     :ok
@@ -71,6 +70,21 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
            let FakeLink = {}
            export { FakeLink }\
            """
+  end
+
+  test "copy hooks file with different extension to output dir" do
+    refute File.exists?(@button_dest_hooks_file)
+    refute File.exists?(@button_dest_hooks_file_jsx_extension)
+
+    Application.put_env(:surface, :compiler,
+      hooks_output_dir: @hooks_rel_output_dir,
+      hooks_extension: @jsx_hooks_extension
+    )
+
+    run([])
+
+    refute File.exists?(@button_dest_hooks_file)
+    assert File.exists?(@button_dest_hooks_file_jsx_extension)
   end
 
   test "generate index.js file for hooks" do
