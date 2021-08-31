@@ -27,8 +27,11 @@ defmodule Surface.Components.Form.TextArea do
   @doc "Specifies the visible width of a text area"
   prop cols, :string
 
+  @doc "Placeholder text"
+  prop placeholder, :string
+
   def render(assigns) do
-    helper_opts = props_to_opts(assigns)
+    helper_opts = props_to_opts(assigns, [:placeholder])
     attr_opts = props_to_attr_opts(assigns, [:value, :rows, :cols, class: get_default_class()])
     event_opts = events_to_opts(assigns)
 

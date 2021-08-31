@@ -24,8 +24,11 @@ defmodule Surface.Components.Form.TelephoneInput do
   @doc "A regular expression to validate the entered value"
   prop pattern, :string
 
+  @doc "Placeholder text."
+  prop placeholder, :string
+
   def render(assigns) do
-    helper_opts = props_to_opts(assigns)
+    helper_opts = props_to_opts(assigns, [:placeholder])
     attr_opts = props_to_attr_opts(assigns, [:value, :pattern, class: get_default_class()])
     event_opts = events_to_opts(assigns)
 

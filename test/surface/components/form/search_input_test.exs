@@ -64,6 +64,17 @@ defmodule Surface.Components.Form.SearchInputTest do
     assert html =~ ~r/class="input primary"/
   end
 
+  test "setting the placeholder" do
+    html =
+      render_surface do
+        ~F"""
+        <SearchInput form="song" field="title" placeholder="placeholder-text" />
+        """
+      end
+
+    assert html =~ ~r/placeholder="placeholder-text"/
+  end
+
   test "passing other options" do
     html =
       render_surface do
