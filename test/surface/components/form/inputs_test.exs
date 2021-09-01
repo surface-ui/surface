@@ -28,6 +28,22 @@ defmodule Surface.Components.Form.InputsTest do
         |> Ecto.Changeset.cast_embed(:children)
   end
 
+  defmodule InputsWithNestedField do
+    use Surface.Component
+
+    alias Surface.Components.Form.Field
+
+    def render(assigns) do
+      ~F"""
+      <Inputs for={:children}>
+        <Field name={:name}>
+          <TextInput/>
+        </Field>
+      </Inputs>
+      """
+    end
+  end
+
   test "using generated form received as slot args" do
     html =
       render_surface do
@@ -91,6 +107,25 @@ defmodule Surface.Components.Form.InputsTest do
            <input name="_csrf_token" type="hidden" value="test">
              <input id="parent_children_name" name="parent[children][name]" type="text">
              <input id="parent_children_email" name="parent[children][email]" type="text">
+           </form>
+           """
+  end
+
+  test "using generated form and field stored in the context" do
+    html =
+      render_surface do
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <InputsWithNestedField/>
+        </Form>
+        """
+      end
+
+    assert html =~ """
+           <form action="#" method="post"><input name="_csrf_token" type="hidden" value="test">
+             <div>
+             <input id="parent_children_name" name="parent[children][name]" type="text">
+           </div>
            </form>
            """
   end

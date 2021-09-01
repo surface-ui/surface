@@ -175,11 +175,11 @@ defmodule Surface.Compiler.EExEngine do
     context_expr =
       if is_child_component?(state) do
         quote generated: true do
-          Map.merge(@__context__, unquote(parent_context_var))
+          unquote(parent_context_var)
         end
       else
         quote do
-          @__context__
+          %{}
         end
       end
 
@@ -285,7 +285,7 @@ defmodule Surface.Compiler.EExEngine do
           quote do: %{}
 
         state.context_vars.changed != [] && gets_context? ->
-          quote do: Enum.reduce([unquote_splicing(state.context_vars.changed)], &Map.merge/2)
+          quote do: Enum.reduce([unquote_splicing(state.context_vars.changed ++ [initial_context])], &Map.merge/2)
 
         true ->
           initial_context
