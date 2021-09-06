@@ -93,11 +93,11 @@ defmodule Surface.Components.Form do
     assigns = assign(assigns, opts: opts)
 
     ~F"""
-    {form = form_for(@for, @action, @opts)}
+    <.form :let={form} for={@for} action={@action} {...@opts}>
       <Context put={__MODULE__, form: form}>
         <#slot :args={form: form} />
       </Context>
-    <#Raw></form></#Raw>
+    </.form>
     """
   end
 end
