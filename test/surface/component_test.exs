@@ -171,7 +171,7 @@ defmodule Surface.ComponentTest do
   end
 
   test "render dynamic components" do
-    alias Surface.Components.Component
+    alias Surface.Components.Dynamic.Component
 
     assigns = %{module: Stateless, label: "my label", class: [myclass: true]}
 

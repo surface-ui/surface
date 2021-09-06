@@ -1006,7 +1006,7 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp validate_templates(Surface.Components.Component, _templates, _meta) do
+  defp validate_templates(Surface.Components.Dynamic.Component, _templates, _meta) do
     :ok
   end
 

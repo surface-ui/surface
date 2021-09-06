@@ -1,4 +1,4 @@
-defmodule Surface.Components.Component do
+defmodule Surface.Components.Dynamic.Component do
   @moduledoc """
   A built-in component that allows users to inject dynamic components into
   a Surface template.

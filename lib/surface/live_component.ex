@@ -64,7 +64,8 @@ defmodule Surface.LiveComponent do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Components.{Context, Raw, Component}
+      alias Surface.Components.{Context, Raw}
+      alias Surface.Components.Dynamic.Component
 
       @doc """
       The id of the live component (required by LiveView for stateful components).

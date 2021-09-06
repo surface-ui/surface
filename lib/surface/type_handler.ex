@@ -232,7 +232,7 @@ defmodule Surface.TypeHandler do
 
   def attribute_type_and_opts(nil, _name, _meta), do: {:string, []}
 
-  def attribute_type_and_opts(Surface.Components.Component, _name, _meta) do
+  def attribute_type_and_opts(Surface.Components.Dynamic.Component, _name, _meta) do
     # TODO: If we add a property to define the list of available modules
     # we could go through the list and validate/retrieve the types and opts
     {:any, []}

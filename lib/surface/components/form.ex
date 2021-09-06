@@ -13,7 +13,6 @@ defmodule Surface.Components.Form do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form
   import Surface.Components.Utils, only: [opts_to_phx_opts: 1]
   import Surface.Components.Form.Utils, only: [props_to_opts: 2, props_to_attr_opts: 2]
 

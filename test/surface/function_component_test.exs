@@ -309,7 +309,7 @@ defmodule Surface.FunctionComponentTest do
   end
 
   describe "dynamic function components" do
-    alias Surface.Components.Component
+    alias Surface.Components.Dynamic.Component
 
     test "render dynamic public function component with inner block and args" do
       html =

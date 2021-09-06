@@ -48,7 +48,8 @@ defmodule Surface.Component do
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
 
-      alias Surface.Components.{Context, Raw, Component}
+      alias Surface.Components.{Context, Raw}
+      alias Surface.Components.Dynamic.Component
 
       @doc "Built-in assign"
       data inner_block, :fun

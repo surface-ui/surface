@@ -1,4 +1,4 @@
-defmodule Surface.Components.ComponentComponentTest do
+defmodule Surface.Components.Dynamic.ComponentTest do
   use Surface.ConnCase, async: true
   import Phoenix.ConnTest
 
@@ -190,7 +190,7 @@ defmodule Surface.Components.ComponentComponentTest do
   end
 
   describe "Without LiveView" do
-    alias Surface.Components.Component
+    alias Surface.Components.Dynamic.Component
 
     test "render stateless component" do
       html =
@@ -272,11 +272,11 @@ defmodule Surface.Components.ComponentComponentTest do
     end
   end
 
-  describe "components in dead views" do
+  describe "dynamic components in dead views" do
     defmodule DeadView do
       use Phoenix.View, root: "support/dead_views"
       import Surface
-      alias Surface.Components.Component
+      alias Surface.Components.Dynamic.Component
 
       def render("index.html", assigns) do
         ~F"""
