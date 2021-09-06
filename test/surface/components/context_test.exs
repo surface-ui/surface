@@ -86,6 +86,22 @@ defmodule Surface.Components.ContextTest do
     end
   end
 
+  defmodule InputsWithNestedField do
+    use Surface.Component
+
+    alias Surface.Components.Form.{Inputs, Field, TextInput}
+
+    def render(assigns) do
+      ~F"""
+      <Inputs for={:children}>
+        <Field name={:name}>
+          <TextInput/>
+        </Field>
+      </Inputs>
+      """
+    end
+  end
+
   describe "in components" do
     test "pass context to child component" do
       html =
@@ -181,6 +197,28 @@ defmodule Surface.Components.ContextTest do
         end
 
       assert html =~ "field from OuterWithNamedSlots"
+    end
+
+    test "using form and field stored in the context" do
+      alias Surface.Components.Form
+
+      html =
+        render_surface do
+          ~F"""
+          <Form for={:parent} opts={csrf_token: "test"}>
+            <InputsWithNestedField/>
+          </Form>
+          """
+        end
+
+      assert html =~ """
+             <form action="#" method="post">
+                 <input name="_csrf_token" type="hidden" value="test">
+               <div>
+               <input id="parent_children_name" name="parent[children][name]" type="text">
+             </div>
+             </form>
+             """
     end
   end
 
