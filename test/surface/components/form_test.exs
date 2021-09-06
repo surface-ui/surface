@@ -41,8 +41,8 @@ defmodule Surface.Components.FormTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
            </form>
            """
   end
@@ -58,8 +58,8 @@ defmodule Surface.Components.FormTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
              <input id="user_name" name="user[name]" type="text">
            </form>
            """
@@ -76,8 +76,8 @@ defmodule Surface.Components.FormTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
              <input id="user_name" name="user[name]" type="text">
            </form>
            """

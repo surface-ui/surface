@@ -42,8 +42,8 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
              <input id="parent_children_name" name="parent[children][name]" type="text">
              <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
@@ -65,8 +65,8 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
                <div>index: <span>0</span></div>
                <div>index: <span>1</span></div>
            </form>
@@ -87,8 +87,8 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
              <input id="parent_children_name" name="parent[children][name]" type="text">
              <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
@@ -109,8 +109,8 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
              <input id="parent_children_name" name="custom_name[name]" type="text">
              <input id="parent_children_email" name="custom_name[email]" type="text">
            </form>

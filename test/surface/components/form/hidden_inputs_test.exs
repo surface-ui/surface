@@ -18,8 +18,8 @@ defmodule Surface.Components.Form.HiddenInputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
            </form>
            """
   end
@@ -37,8 +37,8 @@ defmodule Surface.Components.Form.HiddenInputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
            </form>
            """
   end

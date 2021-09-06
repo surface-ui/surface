@@ -13,7 +13,6 @@ defmodule Surface.Components.Form do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form
   import Surface.Components.Utils, only: [opts_to_phx_opts: 1]
   import Surface.Components.Form.Utils, only: [props_to_opts: 2, props_to_attr_opts: 2]
 
@@ -93,11 +92,11 @@ defmodule Surface.Components.Form do
     assigns = assign(assigns, opts: opts)
 
     ~F"""
-    {form = form_for(@for, @action, @opts)}
+    <.form :let={form} for={@for} action={@action} {...@opts}>
       <Context put={__MODULE__, form: form}>
         <#slot :args={form: form} />
       </Context>
-    <#Raw></form></#Raw>
+    </.form>
     """
   end
 end

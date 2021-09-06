@@ -202,7 +202,8 @@ defmodule Surface do
 
   @doc false
   def default_props(module) do
-    Enum.map(module.__props__(), fn %{name: name, opts: opts} -> {name, opts[:default]} end)
+    props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
+    Enum.map(props, fn %{name: name, opts: opts} -> {name, opts[:default]} end)
   end
 
   @doc false
@@ -230,26 +231,31 @@ defmodule Surface do
       |> Keyword.merge(dynamic_props)
       |> Keyword.merge(static_props)
 
-    slot_assigns =
-      module
-      |> map_slots_to_assigns(slot_props)
+    slot_assigns = map_slots_to_assigns(module, slot_props)
 
-    Map.new(
-      props ++
-        slot_assigns ++
-        [
-          __surface__: %{
-            slots: Map.new(slots),
-            provided_templates: Keyword.keys(slot_props)
-          },
-          __context__: context
-        ]
-    )
+    if module do
+      Map.new(
+        props ++
+          slot_assigns ++
+          [
+            __surface__: %{
+              slots: Map.new(slots),
+              provided_templates: Keyword.keys(slot_props)
+            },
+            __context__: context
+          ]
+      )
+    else
+      # Function components don't support slots nor contexts
+      Map.new(props)
+    end
   end
 
   defp map_slots_to_assigns(module, slot_props) do
+    slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
+
     mapping =
-      module.__slots__()
+      slots
       |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
       |> Enum.filter(fn value -> not match?({_, nil}, value) end)
 

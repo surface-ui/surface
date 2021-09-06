@@ -19,7 +19,7 @@ defmodule Surface.Directive.ComponentProps do
         %AST.Directive{value: %AST.AttributeExpr{} = expr, meta: meta},
         %mod{} = node
       )
-      when mod in [AST.Component, AST.SlotableComponent] do
+      when mod in [AST.Component, AST.FunctionComponent, AST.SlotableComponent] do
     %{
       node
       | dynamic_props: %AST.DynamicAttribute{

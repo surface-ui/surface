@@ -106,12 +106,14 @@ defmodule Surface.Components.Context do
   end
 
   defp context_map(context, puts, gets) do
-    ctx =
-      for {scope, values} <- puts, {key, value} <- values, reduce: context do
+    updated_context =
+      for {scope, values} <- puts, {key, value} <- values, reduce: %{} do
         acc ->
           {full_key, value} = normalize_set(scope, key, value)
           Map.put(acc, full_key, value)
       end
+
+    full_context = Map.merge(context, updated_context)
 
     props =
       for {scope, values} <- gets, {key, _value} <- values, into: %{} do
@@ -122,10 +124,10 @@ defmodule Surface.Components.Context do
             {scope, key}
           end
 
-        {key, Map.get(ctx, key, nil)}
+        {key, Map.get(full_context, key, nil)}
       end
 
-    {ctx, props}
+    {updated_context, props}
   end
 
   defp normalize_set(nil, key, value) do

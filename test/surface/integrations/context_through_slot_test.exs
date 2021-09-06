@@ -50,15 +50,17 @@ defmodule Surface.ContextThroughSlotTest do
 
     def render(assigns) do
       ~F"""
-        <Parent>
-          <Child/>
-        </Parent>
+      <Parent>
+        <Child/>
+      </Parent>
       """
     end
   end
 
   test "child should take context from parent when rendered in slot", %{conn: conn} do
+    expected = "<div><div>bar</div></div>"
+
     {:ok, _view, html} = live_isolated(conn, ExampleWeb.ContextLive)
-    assert html =~ "<div><div>bar</div></div>"
+    assert html =~ expected
   end
 end

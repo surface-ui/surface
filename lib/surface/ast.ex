@@ -95,9 +95,10 @@ defmodule Surface.AST.Meta do
       * `:node_alias` - the alias used inside the source code (e.g. `LivePatch`)
       * `:file` - the file from which the source was extracted
       * `:caller` - a Macro.Env struct representing the caller
+      * `:function_component?` - indicates it's a function component or not
   """
-  @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks]}
-  defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks]
+  @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks, :function_component?]}
+  defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks, :function_component?]
 
   @type t :: %__MODULE__{
           line: non_neg_integer(),
@@ -106,7 +107,8 @@ defmodule Surface.AST.Meta do
           node_alias: binary() | nil,
           caller: Macro.Env.t(),
           file: binary(),
-          checks: Keyword.t(boolean())
+          checks: Keyword.t(boolean()),
+          function_component?: boolean()
         }
 
   def quoted_caller_cid(meta) do
@@ -425,7 +427,7 @@ end
 
 defmodule Surface.AST.Component do
   @moduledoc """
-  An AST node representing a standard HTML tag
+  An AST node representing a component
 
   ## Properties
       * `:module` - the component module
@@ -442,6 +444,38 @@ defmodule Surface.AST.Component do
           module: module(),
           debug: list(atom()),
           type: module(),
+          props: list(Surface.AST.Attribute.t()),
+          dynamic_props: Surface.AST.DynamicAttribute.t(),
+          directives: list(Surface.AST.Directive.t()),
+          templates: %{
+            :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
+            optional(atom()) => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t())
+          },
+          meta: Surface.AST.Meta.t()
+        }
+end
+
+defmodule Surface.AST.FunctionComponent do
+  @moduledoc """
+  An AST node representing a function component
+
+  ## Properties
+      * `:module` - the component module
+      * `:fun` - the render function
+      * `:type` - the type of function (:local or :remote)
+      * `:props` - the props for this component
+      * `:directives` - any directives to be applied to this tag
+      * `:children` - the tag children
+      * `:meta` - compilation meta data
+      * `:debug` - keyword list indicating when debug information should be printed during compilation
+  """
+  defstruct [:module, :fun, :type, :props, :dynamic_props, :templates, :meta, debug: [], directives: []]
+
+  @type t :: %__MODULE__{
+          module: module() | Surface.AST.AttributeExpr.t(),
+          fun: atom() | Surface.AST.AttributeExpr.t() | nil,
+          debug: list(atom()),
+          type: :local | :remote | :dynamic,
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
@@ -524,30 +558,47 @@ defmodule Surface.AST.SlotableComponent do
 end
 
 defmodule Surface.AST do
+  alias __MODULE__
+
   @type t ::
-          Surface.AST.Literal.t()
-          | Surface.AST.Interpolation.t()
-          | Surface.AST.Expr.t()
-          | Surface.AST.Tag.t()
-          | Surface.AST.VoidTag.t()
-          | Surface.AST.Template.t()
-          | Surface.AST.Slot.t()
-          | Surface.AST.If.t()
-          | Surface.AST.For.t()
-          | Surface.AST.Container.t()
-          | Surface.AST.Component.t()
-          | Surface.AST.MacroComponent.t()
-          | Surface.AST.SlotableComponent.t()
-          | Surface.AST.Error.t()
+          AST.Literal.t()
+          | AST.Interpolation.t()
+          | AST.Expr.t()
+          | AST.Tag.t()
+          | AST.VoidTag.t()
+          | AST.Template.t()
+          | AST.Slot.t()
+          | AST.If.t()
+          | AST.For.t()
+          | AST.Container.t()
+          | AST.Component.t()
+          | AST.MacroComponent.t()
+          | AST.SlotableComponent.t()
+          | AST.Error.t()
 
   def find_attribute_value(attributes, name) do
     Enum.find_value(attributes, fn
-      %Surface.AST.Attribute{name: ^name, value: value} -> value
+      %AST.Attribute{name: ^name, value: value} -> value
       _ -> nil
     end)
   end
 
   def has_attribute?(attributes, name) do
     Enum.any?(attributes, fn %{name: attr_name} -> attr_name == name end)
+  end
+
+  def pop_attributes_values_as_map(attributes, names) do
+    initial = {Map.new(names, &{&1, nil}), []}
+
+    {map, others} =
+      Enum.reduce(attributes, initial, fn %AST.Attribute{name: name, value: value} = attr, {map, others} ->
+        if name in names do
+          {Map.put(map, name, value), others}
+        else
+          {map, [attr | others]}
+        end
+      end)
+
+    {map, Enum.reverse(others)}
   end
 end

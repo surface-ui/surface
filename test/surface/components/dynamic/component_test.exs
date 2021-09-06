@@ -1,4 +1,4 @@
-defmodule Surface.ComponentTest do
+defmodule Surface.Components.Dynamic.ComponentTest do
   use Surface.ConnCase, async: true
   import Phoenix.ConnTest
 
@@ -57,8 +57,10 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
+      module = Stateless
+
       ~F"""
-      <Stateless label="My label" class="myclass"/>
+      <Component module={module} label="My label" class="myclass"/>
       """
     end
   end
@@ -68,9 +70,9 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~F"""
-      <Outer>
-        <Inner/>
-      </Outer>
+      <Component module={Outer}>
+        <Component module={Inner}/>
+      </Component>
       """
     end
   end
@@ -80,9 +82,9 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~F"""
-      <OuterWithSlotArgs :let={info: my_info}>
+      <Component module={OuterWithSlotArgs} :let={info: my_info}>
         {my_info}
-      </OuterWithSlotArgs>
+      </Component>
       """
     end
   end
@@ -123,8 +125,10 @@ defmodule Surface.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
+      module = StatelessWithId
+
       ~F"""
-      <StatelessWithId id="my_id" />
+      <Component module={module} id="my_id" />
       """
     end
   end
@@ -134,78 +138,9 @@ defmodule Surface.ComponentTest do
 
     def render(assigns) do
       ~F"""
-      <StatelessWithIdAndUpdate id="my_id" />
+      <Component module={StatelessWithIdAndUpdate} id="my_id" />
       """
     end
-  end
-
-  defmodule Recursive do
-    use Surface.Component
-
-    prop list, :list
-    prop count, :integer, default: 1
-
-    def render(%{list: [item | rest]} = assigns) do
-      ~F"""
-      {@count}. {item}
-      <Recursive list={rest} count={@count + 1}/>
-      """
-    end
-
-    def render(assigns), do: ~F""
-  end
-
-  test "render recursive components" do
-    html =
-      render_surface do
-        ~F"""
-        <Recursive list={["a", "b", "c"]}/>
-        """
-      end
-
-    assert html =~ """
-           1. a
-           2. b
-           3. c
-           """
-  end
-
-  test "render dynamic components" do
-    alias Surface.Components.Dynamic.Component
-
-    assigns = %{module: Stateless, label: "my label", class: [myclass: true]}
-
-    html =
-      render_surface do
-        ~F"""
-        <Component module={@module} label={@label} class={@class}/>
-        """
-      end
-
-    assert html =~ """
-           <div class="myclass">
-             <span>my label</span>
-           </div>
-           """
-  end
-
-  test "raise compile error if option :slot is not a string" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestSlotWithoutSlotName_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Surface.Component, slot: {1, 2}
-
-      prop label, :string
-    end
-    """
-
-    message = "code.exs:2: invalid value for option :slot. Expected a string, got: {1, 2}"
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-    end)
   end
 
   describe "With LiveView" do
@@ -255,11 +190,13 @@ defmodule Surface.ComponentTest do
   end
 
   describe "Without LiveView" do
+    alias Surface.Components.Dynamic.Component
+
     test "render stateless component" do
       html =
         render_surface do
           ~F"""
-          <Stateless label="My label" class="myclass"/>
+          <Component module={Stateless} label="My label" class="myclass"/>
           """
         end
 
@@ -274,9 +211,9 @@ defmodule Surface.ComponentTest do
       html =
         render_surface do
           ~F"""
-          <Outer>
-            <Inner/>
-          </Outer>
+          <Component module={Outer}>
+            <Component module={Inner}/>
+          </Component>
           """
         end
 
@@ -291,9 +228,9 @@ defmodule Surface.ComponentTest do
       html =
         render_surface do
           ~F"""
-          <OuterWithSlotArgs :let={info: my_info}>
+          <Component module={OuterWithSlotArgs} :let={info: my_info}>
             {my_info}
-          </OuterWithSlotArgs>
+          </Component>
           """
         end
 
@@ -335,19 +272,20 @@ defmodule Surface.ComponentTest do
     end
   end
 
-  describe "components in dead views" do
+  describe "dynamic components in dead views" do
     defmodule DeadView do
       use Phoenix.View, root: "support/dead_views"
       import Surface
+      alias Surface.Components.Dynamic.Component
 
       def render("index.html", assigns) do
         ~F"""
-        <Outer><Stateless label="My label" class="myclass"/></Outer>
+        <Component module={Outer}><Component module={Stateless} label="My label" class="myclass"/></Component>
         """
       end
     end
 
-    test "renders the component" do
+    test "renders dynamic components" do
       assert Phoenix.View.render_to_string(DeadView, "index.html", []) =~
                """
                <div><div class="myclass">

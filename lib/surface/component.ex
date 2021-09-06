@@ -49,6 +49,7 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       alias Surface.Components.{Context, Raw}
+      alias Surface.Components.Dynamic.Component
 
       @doc "Built-in assign"
       data inner_block, :fun
