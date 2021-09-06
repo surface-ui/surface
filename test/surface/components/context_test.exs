@@ -42,17 +42,6 @@ defmodule Surface.Components.ContextTest do
       </Context>
       """
     end
-
-    def inner(assigns) do
-      ~F"""
-      <Context
-        get={ContextTest.Outer, field: field}
-        get={ContextTest.InnerWrapper, field: other_field}>
-        <span id="field">{field}</span>
-        <span id="other_field">{other_field}</span>
-      </Context>
-      """
-    end
   end
 
   defmodule InnerWrapper do
@@ -65,14 +54,6 @@ defmodule Surface.Components.ContextTest do
       </Context>
       """
     end
-
-    def inner_wrapper(assigns) do
-      ~F"""
-      <Context put={__MODULE__, field: "field from InnerWrapper"}>
-        <Inner.inner />
-      </Context>
-      """
-    end
   end
 
   defmodule InnerWithOptionAs do
@@ -81,14 +62,6 @@ defmodule Surface.Components.ContextTest do
     alias Surface.Components.ContextTest
 
     def render(assigns) do
-      ~F"""
-      <Context get={ContextTest.Outer, field: my_field}>
-        <span>{my_field}</span>
-      </Context>
-      """
-    end
-
-    def inner_with_option_as(assigns) do
       ~F"""
       <Context get={ContextTest.Outer, field: my_field}>
         <span>{my_field}</span>
