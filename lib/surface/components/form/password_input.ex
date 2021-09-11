@@ -21,12 +21,12 @@ defmodule Surface.Components.Form.PasswordInput do
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
-  @doc "Placeholder text."
+  @doc "An example value to display inside the field when it has no value"
   prop placeholder, :string
 
   def render(assigns) do
-    helper_opts = props_to_opts(assigns, [:placeholder])
-    attr_opts = props_to_attr_opts(assigns, [:value, class: get_default_class()])
+    helper_opts = props_to_opts(assigns, [])
+    attr_opts = props_to_attr_opts(assigns, [:value, :placeholder, class: get_default_class()])
     event_opts = events_to_opts(assigns)
 
     opts =

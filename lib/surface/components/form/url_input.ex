@@ -23,9 +23,10 @@ defmodule Surface.Components.Form.UrlInput do
 
   @doc "Placeholder text"
   prop placeholder, :string
+
   def render(assigns) do
-    helper_opts = props_to_opts(assigns, [:placeholder])
-    attr_opts = props_to_attr_opts(assigns, [:value, class: get_default_class()])
+    helper_opts = props_to_opts(assigns, [])
+    attr_opts = props_to_attr_opts(assigns, [:value, :placeholder, class: get_default_class()])
     event_opts = events_to_opts(assigns)
 
     opts =
