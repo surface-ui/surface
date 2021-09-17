@@ -1,2 +1,0 @@
-let FakeLink = {}
-export { FakeLink }

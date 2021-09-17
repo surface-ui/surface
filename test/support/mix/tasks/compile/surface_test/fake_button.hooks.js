@@ -1,2 +1,0 @@
-let FakeButton = {}
-export { FakeButton }
