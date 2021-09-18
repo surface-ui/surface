@@ -15,6 +15,10 @@ defmodule Surface.Directive.Values do
 
   def extract(_, _), do: []
 
+  def process(%AST.Directive{} = directive, %AST.If{children: children}) do
+    process(directive, List.first(children))
+  end
+
   def process(
         %AST.Directive{
           value: %AST.AttributeExpr{value: value} = expr,
