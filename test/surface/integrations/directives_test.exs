@@ -1013,6 +1013,19 @@ defmodule Surface.DirectivesTest do
                Show
              </div>
              """
+
+      assigns = %{show: false}
+
+      html =
+        render_surface do
+          ~F"""
+          <div :if={@show} :values={foo: "bar"}>
+            Show
+          </div>
+          """
+        end
+
+      assert html == "\n"
     end
   end
 end
