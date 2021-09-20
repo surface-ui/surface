@@ -2,6 +2,7 @@ defmodule Surface.Components.Form.InputsTest do
   use Surface.ConnCase, async: true
 
   alias Surface.Components.Form
+  alias Surface.Components.Form.Field
   alias Surface.Components.Form.Inputs
   alias Surface.Components.Form.TextInput
 
@@ -113,6 +114,32 @@ defmodule Surface.Components.Form.InputsTest do
                <input name="_csrf_token" type="hidden" value="test">
              <input id="parent_children_name" name="custom_name[name]" type="text">
              <input id="parent_children_email" name="custom_name[email]" type="text">
+           </form>
+           """
+  end
+
+  test "using generated field stored in the Field context" do
+    html =
+      render_surface do
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Field name={:children}>
+            <Inputs>
+              <TextInput field="name" />
+              <TextInput field="email" />
+            </Inputs>
+          </Field>
+        </Form>
+        """
+      end
+
+    assert html =~ """
+           <form action="#" method="post">\
+           <input name="_csrf_token" type="hidden" value="test">
+             <div>
+             <input id="parent_children_name" name="parent[children][name]" type="text">
+             <input id="parent_children_email" name="parent[children][email]" type="text">
+           </div>
            </form>
            """
   end
