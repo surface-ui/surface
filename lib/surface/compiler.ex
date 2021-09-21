@@ -19,9 +19,9 @@ defmodule Surface.Compiler do
     Surface.Directive.Events,
     Surface.Directive.Show,
     Surface.Directive.Hook,
+    Surface.Directive.Values,
     Surface.Directive.If,
     Surface.Directive.For,
-    Surface.Directive.Values,
     Surface.Directive.Debug
   ]
 

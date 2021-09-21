@@ -995,6 +995,38 @@ defmodule Surface.DirectivesTest do
              </div>
              """
     end
+
+    test "with :if" do
+      assigns = %{show: true}
+
+      html =
+        render_surface do
+          ~F"""
+          <div :if={@show} :values={foo: "bar"}>
+            Show
+          </div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-value-foo=\"bar\">
+               Show
+             </div>
+             """
+
+      assigns = %{show: false}
+
+      html =
+        render_surface do
+          ~F"""
+          <div :if={@show} :values={foo: "bar"}>
+            Show
+          </div>
+          """
+        end
+
+      assert html == "\n"
+    end
   end
 end
 
