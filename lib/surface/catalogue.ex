@@ -28,10 +28,10 @@ defmodule Surface.Catalogue do
 
   @default_config [
     head_css: """
-    <link phx-track-static rel="stylesheet" href="/css/app.css"/>
+    <link phx-track-static rel="stylesheet" href="/assets/app.css"/>
     """,
     head_js: """
-    <script defer type="module" src="/js/app.js"></script>
+    <script defer type="module" src="/assets/app.js"></script>
     """
   ]
 
