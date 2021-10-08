@@ -953,6 +953,9 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp process_context(module, fun, props, caller, state) do
+    caller_is_module_component? =
+      Module.get_attribute(caller.module, :component_type) && caller.function == {:render, 1}
+
     gets_context? =
       (function_exported?(module, :__gets_context__?, 1) and module.__gets_context__?({fun, 1})) or
         (module == Context and AST.has_attribute?(props, :get))
@@ -971,7 +974,7 @@ defmodule Surface.Compiler.EExEngine do
     end
 
     initial_context =
-      if Module.get_attribute(caller.module, :component_type) do
+      if caller_is_module_component? do
         quote do: @__context__
       else
         quote do: %{}

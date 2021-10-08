@@ -222,6 +222,52 @@ defmodule Surface.Components.ContextTest do
     end
   end
 
+  describe "inside function components" do
+    defmodule FunctionComponents do
+      def pass_to_child(assigns) do
+        ~F"""
+        <Outer>
+          <Inner/>
+        </Outer>
+        """
+      end
+
+      def pass_to_tree_of_components(assigns) do
+        ~F"""
+        <Outer>
+          <InnerWrapper />
+        </Outer>
+        """
+      end
+    end
+
+    test "pass context to child component" do
+      html =
+        render_surface do
+          ~F"""
+          <FunctionComponents.pass_to_child/>
+          """
+        end
+
+      assert html =~ """
+             <span id="field">field from Outer</span>\
+             """
+    end
+
+    test "pass context down the tree of components" do
+      html =
+        render_surface do
+          ~F"""
+          <FunctionComponents.pass_to_tree_of_components/>
+          """
+        end
+
+      assert html =~ """
+             <span id="field">field from Outer</span>\
+             """
+    end
+  end
+
   describe "validate property :get" do
     test "raise compile error when passing invalid bindings" do
       code =
