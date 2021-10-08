@@ -95,7 +95,7 @@ defmodule Surface.Components.Form.SelectTest do
     assert html =~ """
            <select id="user_role" name="user[role]">\
            <option value="admin">Admin</option>\
-           <option value="user" selected>User</option>\
+           <option selected value="user">User</option>\
            </select>
            """
   end
@@ -109,7 +109,7 @@ defmodule Surface.Components.Form.SelectTest do
       end
 
     assert html =~ """
-           <select id="user_role" name="user[role]" disabled>\
+           <select disabled id="user_role" name="user[role]">\
            <option value="admin">Admin</option>\
            <option value="user">User</option>\
            </select>

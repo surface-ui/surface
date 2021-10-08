@@ -84,7 +84,7 @@ defmodule Surface.Components.Form.RadioButtonTest do
       end
 
     assert html =~ """
-           <input id="role" name="role" type="radio" value="" checked>
+           <input checked id="role" name="role" type="radio" value="">
            """
   end
 

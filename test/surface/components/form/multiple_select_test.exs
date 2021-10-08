@@ -64,7 +64,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
 
     assert html =~ """
            <select id="user_roles" multiple="" name="user[roles][]">\
-           <option value="admin" selected>Admin</option>\
+           <option selected value="admin">Admin</option>\
            <option value="user">User</option>\
            </select>
            """

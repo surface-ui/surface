@@ -39,9 +39,9 @@ defmodule Surface.Components.Form.TimeSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2" selected>02</option>)
-    assert html =~ ~s(<option value="11" selected>11</option>)
-    assert html =~ ~s(<option value="13" selected>13</option>)
+    assert html =~ ~s(<option selected value="2">02</option>)
+    assert html =~ ~s(<option selected value="11">11</option>)
+    assert html =~ ~s(<option selected value="13">13</option>)
   end
 
   test "setting the value as tuple" do
@@ -52,9 +52,9 @@ defmodule Surface.Components.Form.TimeSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2" selected>02</option>)
-    assert html =~ ~s(<option value="11" selected>11</option>)
-    assert html =~ ~s(<option value="13" selected>13</option>)
+    assert html =~ ~s(<option selected value="2">02</option>)
+    assert html =~ ~s(<option selected value="11">11</option>)
+    assert html =~ ~s(<option selected value="13">13</option>)
   end
 
   test "setting the default value as map" do
@@ -65,9 +65,9 @@ defmodule Surface.Components.Form.TimeSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2" selected>02</option>)
-    assert html =~ ~s(<option value="11" selected>11</option>)
-    assert html =~ ~s(<option value="13" selected>13</option>)
+    assert html =~ ~s(<option selected value="2">02</option>)
+    assert html =~ ~s(<option selected value="11">11</option>)
+    assert html =~ ~s(<option selected value="13">13</option>)
   end
 
   test "setting the default value as tuple" do
@@ -78,9 +78,9 @@ defmodule Surface.Components.Form.TimeSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2" selected>02</option>)
-    assert html =~ ~s(<option value="11" selected>11</option>)
-    assert html =~ ~s(<option value="13" selected>13</option>)
+    assert html =~ ~s(<option selected value="2">02</option>)
+    assert html =~ ~s(<option selected value="11">11</option>)
+    assert html =~ ~s(<option selected value="13">13</option>)
   end
 
   test "passing other options" do

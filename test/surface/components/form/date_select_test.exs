@@ -41,9 +41,9 @@ defmodule Surface.Components.Form.DateSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2020" selected>2020</option>)
-    assert html =~ ~s(<option value="10" selected>October</option>)
-    assert html =~ ~s(<option value="9" selected>09</option>)
+    assert html =~ ~s(<option selected value="2020">2020</option>)
+    assert html =~ ~s(<option selected value="10">October</option>)
+    assert html =~ ~s(<option selected value="9">09</option>)
   end
 
   test "setting the value as tuple" do
@@ -54,9 +54,9 @@ defmodule Surface.Components.Form.DateSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2020" selected>2020</option>)
-    assert html =~ ~s(<option value="10" selected>October</option>)
-    assert html =~ ~s(<option value="9" selected>09</option>)
+    assert html =~ ~s(<option selected value="2020">2020</option>)
+    assert html =~ ~s(<option selected value="10">October</option>)
+    assert html =~ ~s(<option selected value="9">09</option>)
   end
 
   test "setting the default value as map" do
@@ -67,9 +67,9 @@ defmodule Surface.Components.Form.DateSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2020" selected>2020</option>)
-    assert html =~ ~s(<option value="10" selected>October</option>)
-    assert html =~ ~s(<option value="9" selected>09</option>)
+    assert html =~ ~s(<option selected value="2020">2020</option>)
+    assert html =~ ~s(<option selected value="10">October</option>)
+    assert html =~ ~s(<option selected value="9">09</option>)
   end
 
   test "setting the default value as tuple" do
@@ -80,9 +80,9 @@ defmodule Surface.Components.Form.DateSelectTest do
         """
       end
 
-    assert html =~ ~s(<option value="2020" selected>2020</option>)
-    assert html =~ ~s(<option value="10" selected>October</option>)
-    assert html =~ ~s(<option value="9" selected>09</option>)
+    assert html =~ ~s(<option selected value="2020">2020</option>)
+    assert html =~ ~s(<option selected value="10">October</option>)
+    assert html =~ ~s(<option selected value="9">09</option>)
   end
 
   test "passing options to year, month and day" do
