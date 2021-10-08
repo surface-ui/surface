@@ -8,7 +8,6 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   @test_components_dir Path.join(File.cwd!(), "test/support/mix/tasks/compile/surface_test")
 
   @button_src_hooks_file Path.join(@test_components_dir, "fake_button.hooks.js")
-  @button_rel_src_hooks_file Path.join("test/support/mix/tasks/compile/surface_test", "fake_button.hooks.js")
   @button_dest_hooks_file Path.join(
                             @hooks_output_dir,
                             "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.js"
@@ -17,7 +16,6 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   @button_src_hooks_file_content_modified "let FakeButton = { mounted() {} }\nexport { FakeButton }"
 
   @link_src_hooks_file Path.join(@test_components_dir, "fake_link.hooks.js")
-  @link_rel_src_hooks_file Path.join("test/support/mix/tasks/compile/surface_test", "fake_link.hooks.js")
   @link_dest_hooks_file Path.join(
                           @hooks_output_dir,
                           "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.js"
