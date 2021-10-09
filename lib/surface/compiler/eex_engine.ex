@@ -781,8 +781,14 @@ defmodule Surface.Compiler.EExEngine do
         {requires, Map.put(by_name, name, Enum.reverse(templates))}
       end)
 
-    [requires, %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
-    |> maybe_prepend_require(mod, component.meta)
+    ast = [requires, %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
+
+    # No need to require function components
+    if type == AST.FunctionComponent do
+      ast
+    else
+      maybe_prepend_require(ast, mod, component.meta)
+    end
   end
 
   defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: module} = meta} | nodes])
@@ -922,7 +928,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.Expr{
       value:
         quote generated: true, line: line do
-          require unquote(module)
+          require(unquote(module)).__info__(:module)
         end,
       meta: %AST.Meta{}
     }
