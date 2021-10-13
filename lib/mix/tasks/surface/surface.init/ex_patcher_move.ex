@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Surface.Init.ExPatcher.Move do
+  @moduledoc false
+
   alias Sourceror.Zipper, as: Z
 
   def apply(zipper, moves) do
@@ -69,6 +71,27 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher.Move do
   def find_def(zipper, name, predicate \\ fn _ -> true end) do
     find_child(zipper, fn
       {:def, _, [{^name, _, args} | _]} ->
+        predicate.(args)
+
+      _ ->
+        false
+    end)
+  end
+
+  def find_defp(zipper, name, predicate \\ fn _ -> true end) do
+    find_child(zipper, fn
+      {:defp, _, [{^name, _, args} | _]} ->
+        predicate.(args)
+
+      _ ->
+        false
+    end)
+  end
+
+  def find_defp_with_args(zipper, name, predicate) do
+    find_child(zipper, fn
+      {:defp, _, [{^name, _, node_args} | _]} ->
+        args = Enum.map(node_args, &Sourceror.to_string/1)
         predicate.(args)
 
       _ ->

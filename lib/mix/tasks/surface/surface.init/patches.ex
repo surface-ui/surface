@@ -72,6 +72,110 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{name: name, instructions: instructions, patch: patch}
   end
 
+  def mix_exs_add_surface_catalogue_dep() do
+    name = "Add `surface_catalogue` dependency"
+
+    instructions = """
+    TODO
+    """
+
+    patch = fn code ->
+      code
+      |> parse_string!()
+      |> enter_defmodule()
+      |> enter_defp(:deps)
+      |> halt_if(&find_list_item_containing(&1, "{:surface_catalogue, "), :already_patched)
+      |> append_list_item(
+        ~S({:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}),
+        preserve_indentation: true
+      )
+    end
+
+    %{name: name, instructions: instructions, patch: patch}
+  end
+
+  def mix_exs_catalogue_update_elixirc_paths() do
+    name = "Configure `elixirc_paths`"
+
+    instructions = """
+    TODO
+    """
+
+    add_elixirc_paths_dev_entry = fn code ->
+      code
+      |> parse_string!()
+      |> enter_defmodule()
+      |> halt_if(
+        fn patcher ->
+          find_defp_with_args(patcher, :elixirc_paths, &match?([":dev"], &1))
+        end,
+        :maybe_already_patched
+      )
+      |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
+      |> replace(&"defp elixirc_paths(:dev), do: [\"lib\"] ++ catalogues()\n  #{&1}")
+    end
+
+    add_catalogues_fun = fn code ->
+      code
+      |> parse_string!()
+      |> enter_defmodule()
+      |> halt_if(&find_def(&1, "catalogues"), :already_patched)
+      |> last_child()
+      |> replace_code(
+        &"""
+        #{&1}
+
+          def catalogues do
+            [
+              "priv/catalogue"
+            ]
+          end\
+        """
+      )
+    end
+
+    %{name: name, instructions: instructions, patch: [add_elixirc_paths_dev_entry, add_catalogues_fun]}
+  end
+
+  def catalogue_router_config(web_module) do
+    name = "Add `Surface.Catalogue.Router` to router config"
+
+    instructions = """
+    TODO
+    """
+
+    add_import = fn code ->
+      code
+      |> parse_string!()
+      |> enter_defmodule(Module.concat(web_module, Router))
+      |> halt_if(&find_code_containing(&1, "Surface.Catalogue.Router"), :already_patched)
+      |> find_call_with_args(:use, fn args -> args == [inspect(web_module), ":router"] end)
+      |> replace(&"#{&1}\n\n  import Surface.Catalogue.Router")
+    end
+
+    add_route = fn code ->
+      code
+      |> parse_string!()
+      |> enter_defmodule(Module.concat(web_module, Router))
+      |> halt_if(&find_code(&1, "surface_catalogue"), :already_patched)
+      |> last_child()
+      |> replace_code(
+        &"""
+        #{&1}
+
+          if Mix.env() == :dev do
+            scope "/" do
+              pipe_through :browser
+              surface_catalogue "/catalogue"
+            end
+          end\
+        """
+      )
+    end
+
+    %{name: name, instructions: instructions, patch: [add_import, add_route]}
+  end
+
   def formatter_surface_inputs() do
     name = "Add file extensions to :surface_inputs"
 
@@ -243,6 +347,40 @@ defmodule Mix.Tasks.Surface.Init.Patches do
           |> halt_if(&find_list_item_containing(&1, "Surface.Components.Form.ErrorTag"), :already_patched)
           |> append_list_item(error_tag_item)
       end
+    end
+
+    %{name: name, instructions: instructions, patch: patch}
+  end
+
+  def endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module) do
+    name = "Update patterns in :reload_patterns to reload catalogue files"
+
+    instructions = """
+    Update the :reload_patterns entry to include catalogue files.
+
+    # Example
+
+    ```
+    config :my_app, MyAppWeb.Endpoint,
+      live_reload: [
+        patterns: [
+          ~r"priv/catalogue/.*(ex)$"
+          ...
+        ]
+      ]
+    ```
+    """
+
+    patch = fn code ->
+      code
+      |> parse_string!()
+      |> find_endpoint_config_with_live_reload(context_app, web_module)
+      |> find_keyword_value([:live_reload, :patterns])
+      |> halt_if(&find_code_containing(&1, "catalogue"), :already_patched)
+      # Could not use `append_list_item` as it messes with the indentation of the parent node
+      |> down()
+      |> last_child()
+      |> replace_code(&"#{&1},\n      ~r\"priv/catalogue/.*(ex)$\"")
     end
 
     %{name: name, instructions: instructions, patch: patch}

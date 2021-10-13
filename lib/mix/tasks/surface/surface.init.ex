@@ -6,16 +6,18 @@ defmodule Mix.Tasks.Surface.Init do
 
   ## Important note
 
-  This task is still **experimental**. Make sure you have committed your work or have
-  a proper backup before running it. As it may change a few files, it's recommended to
+  This task is still **experimental**. Make sure you have committed your work or have a proper
+  backup before running it. As it may change a few files in the project, it's recommended to
   have a safe way to rollback the changes in case anything goes wrong.
 
   ## Options
 
-    * `--catalogue` - [Experimental] configures the Surface Catalogue.
+    * `--catalogue` - Configures the experimental Surface Catalogue for the project, which
+      will be available at the `/catalogue` route. For more information
+      see: https://github.com/surface-ui/surface_catalogue.
 
-    * `--demo` - [Experimental] generates a sample `<Hero>`. When used with `--catalogue`,
-      it also generates two examples and a playground for the component.
+    * `--demo` - Generates a sample `<Hero>` component. When used together with the `--catalogue`
+      option, it additionally generates two catalogue examples and a playground for the component.
 
     * `--no-formatter` - do not configure the Surface formatter.
 
@@ -38,8 +40,6 @@ defmodule Mix.Tasks.Surface.Init do
     catalogue: false,
     demo: false
   ]
-
-  @aliases [d: :demo]
 
   @experimental_warning """
   This task will change existing files in your project.
@@ -95,7 +95,22 @@ defmodule Mix.Tasks.Surface.Init do
         []
       end
 
-    patches = default_patches ++ formatter_patches ++ gettext_patches
+    catalogue_patches =
+      if opts[:catalogue] do
+        [
+          {"mix.exs",
+           [
+             Patches.mix_exs_add_surface_catalogue_dep(),
+             Patches.mix_exs_catalogue_update_elixirc_paths()
+           ]},
+          {"config/dev.exs", Patches.endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module)},
+          {"#{web_path}/router.ex", Patches.catalogue_router_config(web_module)}
+        ]
+      else
+        []
+      end
+
+    patches = default_patches ++ formatter_patches ++ gettext_patches ++ catalogue_patches
 
     patches
     |> FilePatcher.patch_files()
@@ -103,7 +118,7 @@ defmodule Mix.Tasks.Surface.Init do
   end
 
   defp parse_opts(args) do
-    {opts, _parsed} = OptionParser.parse!(args, strict: @switches, aliases: @aliases)
+    {opts, _parsed} = OptionParser.parse!(args, strict: @switches)
     Keyword.merge(@default_opts, opts)
   end
 

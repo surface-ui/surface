@@ -1,9 +1,13 @@
 defmodule Mix.Tasks.Surface.Init.ExPatcher do
+  @moduledoc false
+
   alias Sourceror.Zipper, as: Z
   alias Mix.Tasks.Surface.Init.ExPatcher.Move
 
   @derive {Inspect, only: [:code, :result, :node]}
   defstruct [:zipper, :node, :code, :moves, :result]
+
+  @line_break ["\n", "\r\n", "\r"]
 
   def parse_string!(code) do
     zipper = code |> Sourceror.parse_string!() |> Z.zip()
@@ -115,9 +119,23 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     move(patcher, &Move.find_def(&1, name, predicate))
   end
 
+  def find_defp(patcher, name, predicate \\ fn _ -> true end) do
+    move(patcher, &Move.find_defp(&1, name, predicate))
+  end
+
+  def find_defp_with_args(patcher, name, predicate) do
+    move(patcher, &Move.find_defp_with_args(&1, name, predicate))
+  end
+
   def enter_def(patcher, name) do
     patcher
     |> find_def(name)
+    |> body()
+  end
+
+  def enter_defp(patcher, name) do
+    patcher
+    |> find_defp(name)
     |> body()
   end
 
@@ -157,6 +175,10 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     move(patcher, &Z.down(&1))
   end
 
+  def last_child(patcher) do
+    move(patcher, &Move.last_child(&1))
+  end
+
   def find_child_with_code(patcher, string) do
     move(patcher, &Move.find_child_with_code(&1, string))
   end
@@ -180,6 +202,15 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
 
   def replace(patcher, code) when is_binary(code) do
     patch(patcher, fn _zipper -> code end)
+  end
+
+  def replace_code(%__MODULE__{code: code} = patcher, fun) when is_function(fun) do
+    patch(patcher, [preserve_indentation: false], fn zipper ->
+      node = Z.node(zipper)
+      range = Sourceror.get_range(node)
+      code_to_replace = get_code_by_range(code, range)
+      fun.(code_to_replace)
+    end)
   end
 
   def insert_after(patcher, string) do
@@ -220,10 +251,11 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     end)
   end
 
-  def append_list_item(patcher, string) do
+  def append_list_item(patcher, string, opts \\ []) do
+    opts = Keyword.merge([preserve_indentation: false], opts)
     node = Sourceror.parse_string!(string)
 
-    patch(patcher, [preserve_indentation: false], fn zipper ->
+    patch(patcher, opts, fn zipper ->
       zipper
       |> Z.down()
       |> Z.append_child(node)
@@ -316,5 +348,44 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     "mix.exs"
     |> Mix.Tasks.Format.formatter_opts_for_file()
     |> Keyword.take([:line_length])
+  end
+
+  defp get_code_by_range(code, range) do
+    {_, text_after} = split_at(code, range.start[:line], range.start[:column])
+    line = range.end[:line] - range.start[:line] + 1
+    {text, _} = split_at(text_after, line, range.end[:column])
+    text
+  end
+
+  defp split_at(code, line, col) do
+    pos = find_position(code, line, col, {0, 1, 1})
+    String.split_at(code, pos)
+  end
+
+  defp find_position(_text, line, col, {pos, line, col}) do
+    pos
+  end
+
+  defp find_position(text, line, col, {pos, current_line, current_col}) do
+    case String.next_grapheme(text) do
+      {grapheme, rest} ->
+        {new_pos, new_line, new_col} =
+          if grapheme in @line_break do
+            if current_line == line do
+              # this is the line we're lookin for
+              # but it's shorter than expected
+              {pos, current_line, col}
+            else
+              {pos + 1, current_line + 1, 1}
+            end
+          else
+            {pos + 1, current_line, current_col + 1}
+          end
+
+        find_position(rest, line, col, {new_pos, new_line, new_col})
+
+      nil ->
+        pos
+    end
   end
 end

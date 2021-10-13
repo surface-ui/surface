@@ -87,9 +87,9 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
     case File.read(file) do
       {:ok, code} ->
         {updated_code, results} =
-          Enum.reduce(patches, {code, []}, fn %{patch: fun, name: name, instructions: instructions},
+          Enum.reduce(patches, {code, []}, fn %{patch: patch, name: name, instructions: instructions},
                                               {code, results} ->
-            {result, updated_code} = code |> fun.() |> convert_patch_result()
+            {result, updated_code} = patch |> List.wrap() |> run_patch_funs(code)
             {updated_code, [{result, name, file, instructions} | results]}
           end)
 
@@ -102,6 +102,16 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
       {:error, _reason} ->
         to_results(patches, :cannot_read_file, file)
     end
+  end
+
+  def run_patch_funs(funs, code) do
+    Enum.reduce_while(funs, {:unpatched, code}, fn
+      fun, {result, code} when result in [:patched, :unpatched] ->
+        {:cont, code |> fun.() |> convert_patch_result()}
+
+      _fun, result ->
+        {:halt, result}
+    end)
   end
 
   defp convert_patch_result(%ExPatcher{code: code, result: result}) do

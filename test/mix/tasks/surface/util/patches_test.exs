@@ -1,21 +1,13 @@
 defmodule Mix.Tasks.Surface.Init.PatchesTest do
   use ExUnit.Case, async: true
 
-  alias Mix.Tasks.Surface.Init.ExPatcher
   alias Mix.Tasks.Surface.Init.Patches
-
-  defp convert_patch_result(%ExPatcher{code: code, result: result}) do
-    {result, code}
-  end
-
-  defp convert_patch_result(result) do
-    result
-  end
+  alias Mix.Tasks.Surface.Init.FilePatcher
 
   def patch_code(code, patch_spec) do
-    code
-    |> patch_spec.patch.()
-    |> convert_patch_result()
+    patch_spec.patch
+    |> List.wrap()
+    |> FilePatcher.run_patch_funs(code)
   end
 
   describe "patch_mix_compilers" do
@@ -113,6 +105,164 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:maybe_already_patched, ^code} = patch_code(code, Patches.mix_compilers())
+    end
+  end
+
+  describe "mix_exs_add_surface_catalogue_dep" do
+    test "add :surface_catalogue to deps" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app
+          ]
+        end
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:plug_cowboy, "~> 2.5"}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = patch_code(code, Patches.mix_exs_add_surface_catalogue_dep())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               def project do
+                 [
+                   app: :my_app
+                 ]
+               end
+
+               # Specifies your project dependencies.
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"},
+                   {:plug_cowboy, "~> 2.5"},
+                   {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+                 ]
+               end
+             end
+             """
+    end
+
+    test "don't apply it if maybe already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app
+          ]
+        end
+
+        # Specifies which paths to compile per environment.
+        defp elixirc_paths(:test), do: ["lib", "test/support"]
+        defp elixirc_paths(:dev), do: ["lib"]
+        defp elixirc_paths(_), do: ["lib"]
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]},
+            {:plug_cowboy, "~> 2.5"}
+          ]
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = patch_code(code, Patches.mix_exs_add_surface_catalogue_dep())
+    end
+  end
+
+  describe "mix_exs_catalogue_update_elixirc_paths" do
+    test "add :surface_catalogue to deps" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        # Specifies which paths to compile per environment.
+        defp elixirc_paths(:test), do: ["lib", "test/support"]
+        defp elixirc_paths(_), do: ["lib"]
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:plug_cowboy, "~> 2.5"},
+            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = patch_code(code, Patches.mix_exs_catalogue_update_elixirc_paths())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               # Specifies which paths to compile per environment.
+               defp elixirc_paths(:test), do: ["lib", "test/support"]
+               defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
+               defp elixirc_paths(_), do: ["lib"]
+
+               # Specifies your project dependencies.
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"},
+                   {:plug_cowboy, "~> 2.5"},
+                   {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+                 ]
+               end
+
+               def catalogues do
+                 [
+                   "priv/catalogue"
+                 ]
+               end
+             end
+             """
+    end
+
+    test "don't apply it if maybe already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        # Specifies which paths to compile per environment.
+        defp elixirc_paths(:test), do: ["lib", "test/support"]
+        defp elixirc_paths(:dev), do: ["lib"]
+        defp elixirc_paths(_), do: ["lib"]
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]},
+            {:plug_cowboy, "~> 2.5"}
+          ]
+        end
+      end
+      """
+
+      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.mix_exs_catalogue_update_elixirc_paths())
     end
   end
 
@@ -357,6 +507,116 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
 
       assert {:already_patched, ^code} =
                patch_code(code, Patches.endpoint_config_live_reload_patterns(:my_app, MyAppWeb, "lib/my_app_web"))
+    end
+  end
+
+  describe "endpoint_config_live_reload_patterns_for_catalogue" do
+    test "update live_reload patterns" do
+      code = """
+      import Config
+
+      # Watch static and templates for browser reloading.
+      config :my_app, MyAppWeb.Endpoint,
+        reloadable_compilers: [:phoenix, :elixir, :surface],
+        live_reload: [
+          patterns: [
+            ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
+            ~r"lib/my_app_web/templates/.*(eex)$"
+          ]
+        ]
+      """
+
+      {:patched, updated_code} =
+        patch_code(code, Patches.endpoint_config_live_reload_patterns_for_catalogue(:my_app, MyAppWeb))
+
+      assert updated_code == """
+             import Config
+
+             # Watch static and templates for browser reloading.
+             config :my_app, MyAppWeb.Endpoint,
+               reloadable_compilers: [:phoenix, :elixir, :surface],
+               live_reload: [
+                 patterns: [
+                   ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
+                   ~r"lib/my_app_web/templates/.*(eex)$",
+                   ~r"priv/catalogue/.*(ex)$"
+                 ]
+               ]
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      import Config
+
+      # Watch static and templates for browser reloading.
+      config :my_app, MyAppWeb.Endpoint,
+        reloadable_compilers: [:phoenix, :elixir, :surface],
+        live_reload: [
+          patterns: [
+            ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
+            ~r"lib/my_app_web/templates/.*(eex)$",
+            ~r"priv/catalogue/.*(ex)$"
+          ]
+        ]
+      """
+
+      assert {:already_patched, ^code} =
+               patch_code(code, Patches.endpoint_config_live_reload_patterns_for_catalogue(:my_app, MyAppWeb))
+    end
+  end
+
+  describe "catalogue_router_config" do
+    test "add import Surface.Catalogue.Router and the catalogue route" do
+      code = """
+      defmodule MyAppWeb.Router do
+        use MyAppWeb, :router
+
+        pipeline :browser do
+          plug :accepts, ["html"]
+          plug :fetch_session
+        end
+      end
+      """
+
+      {:patched, updated_code} = patch_code(code, Patches.catalogue_router_config(MyAppWeb))
+
+      assert updated_code == """
+             defmodule MyAppWeb.Router do
+               use MyAppWeb, :router
+
+               import Surface.Catalogue.Router
+
+               pipeline :browser do
+                 plug :accepts, ["html"]
+                 plug :fetch_session
+               end
+
+               if Mix.env() == :dev do
+                 scope "/" do
+                   pipe_through :browser
+                   surface_catalogue "/catalogue"
+                 end
+               end
+             end
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      defmodule MyAppWeb.Router do
+        use MyDemoWeb, :router
+
+        import Surface.Catalogue.Router
+
+        pipeline :browser do
+          plug :accepts, ["html"]
+          plug :fetch_session
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = patch_code(code, Patches.catalogue_router_config(MyAppWeb))
     end
   end
 
