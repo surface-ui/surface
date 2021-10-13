@@ -19,6 +19,8 @@ defmodule Mix.Tasks.Surface.Init do
     * `--demo` - Generates a sample `<Hero>` component. When used together with the `--catalogue`
       option, it additionally generates two catalogue examples and a playground for the component.
 
+    * `--yes` - automatic answer "yes" to all prompts.
+
     * `--no-formatter` - do not configure the Surface formatter.
 
   """
@@ -32,13 +34,15 @@ defmodule Mix.Tasks.Surface.Init do
   @switches [
     formatter: :boolean,
     catalogue: :boolean,
-    demo: :boolean
+    demo: :boolean,
+    yes: :boolean
   ]
 
   @default_opts [
     formatter: true,
     catalogue: false,
-    demo: false
+    demo: false,
+    yes: false
   ]
 
   @experimental_warning """
@@ -50,21 +54,36 @@ defmodule Mix.Tasks.Surface.Init do
   @doc false
   def run(args) do
     opts = parse_opts(args)
+    assigns = init_assigns(opts)
 
-    Mix.shell().info([:yellow, "\nNote: ", :reset, @experimental_warning])
+    unless assigns.yes do
+      Mix.shell().info([:yellow, "\nNote: ", :reset, @experimental_warning])
 
-    unless Mix.shell().yes?("Do you want to continue?") do
-      exit(:normal)
+      unless Mix.shell().yes?("Do you want to continue?") do
+        exit(:normal)
+      end
     end
 
+    patches =
+      patches(:common, assigns) ++
+        patches(:formatter, assigns) ++
+        patches(:error_tag, assigns) ++
+        patches(:catalogue, assigns)
+
+    patches
+    |> FilePatcher.patch_files()
+    |> FilePatcher.print_patch_results()
+  end
+
+  defp patches(:common, assigns) do
     %{
       context_app: context_app,
       web_module: web_module,
       web_module_path: web_module_path,
       web_path: web_path
-    } = project_info()
+    } = assigns
 
-    default_patches = [
+    [
       {"mix.exs", Patches.mix_compilers()},
       {"config/dev.exs",
        [
@@ -74,67 +93,62 @@ defmodule Mix.Tasks.Surface.Init do
       {web_module_path, Patches.web_view_config(web_module)},
       {"assets/js/app.js", Patches.js_hooks()}
     ]
-
-    formatter_patches =
-      if opts[:formatter] do
-        [
-          {".formatter.exs",
-           [
-             Patches.formatter_surface_inputs(),
-             Patches.formatter_import_deps()
-           ]}
-        ]
-      else
-        []
-      end
-
-    gettext_patches =
-      if using_gettext?(web_path, web_module) do
-        [{"config/config.exs", [Patches.config_error_tag(web_module)]}]
-      else
-        []
-      end
-
-    catalogue_patches =
-      if opts[:catalogue] do
-        [
-          {"mix.exs",
-           [
-             Patches.mix_exs_add_surface_catalogue_dep(),
-             Patches.mix_exs_catalogue_update_elixirc_paths()
-           ]},
-          {"config/dev.exs", Patches.endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module)},
-          {"#{web_path}/router.ex", Patches.catalogue_router_config(web_module)}
-        ]
-      else
-        []
-      end
-
-    patches = default_patches ++ formatter_patches ++ gettext_patches ++ catalogue_patches
-
-    patches
-    |> FilePatcher.patch_files()
-    |> FilePatcher.print_patch_results()
   end
+
+  defp patches(:formatter, %{formatter: true}) do
+    [
+      {".formatter.exs",
+       [
+         Patches.formatter_surface_inputs(),
+         Patches.formatter_import_deps()
+       ]}
+    ]
+  end
+
+  defp patches(:error_tag, %{using_gettext?: true, web_module: web_module}) do
+    [
+      {"config/config.exs", Patches.config_error_tag(web_module)}
+    ]
+  end
+
+  defp patches(:catalogue, %{catalogue: true} = assigns) do
+    %{context_app: context_app, web_module: web_module, web_path: web_path} = assigns
+
+    [
+      {"mix.exs",
+       [
+         Patches.mix_exs_add_surface_catalogue_dep(),
+         Patches.mix_exs_catalogue_update_elixirc_paths()
+       ]},
+      {"config/dev.exs", Patches.endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module)},
+      {"#{web_path}/router.ex", Patches.catalogue_router_config(web_module)}
+    ]
+  end
+
+  defp patches(_, _), do: []
 
   defp parse_opts(args) do
     {opts, _parsed} = OptionParser.parse!(args, strict: @switches)
     Keyword.merge(@default_opts, opts)
   end
 
-  defp project_info() do
+  defp init_assigns(opts) do
     context_app = Mix.Phoenix.context_app()
     web_path = Mix.Phoenix.web_path(context_app)
     base = Module.concat([Mix.Phoenix.base()])
     web_module = Mix.Phoenix.web_module(base)
     web_module_path = web_module_path(context_app)
+    using_gettext? = using_gettext?(web_path, web_module)
 
-    %{
+    opts
+    |> Map.new()
+    |> Map.merge(%{
       context_app: context_app,
       web_module: web_module,
       web_module_path: web_module_path,
-      web_path: web_path
-    }
+      web_path: web_path,
+      using_gettext?: using_gettext?
+    })
   end
 
   defp web_module_path(ctx_app) do
