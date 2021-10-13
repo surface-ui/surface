@@ -188,7 +188,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     end
   end
 
-  describe "mix_exs_catalogue_update_elixirc_paths" do
+  describe "configure_catalogue_in_mix_exs" do
     test "add :surface_catalogue to deps" do
       code = """
       defmodule MyApp.MixProject do
@@ -210,7 +210,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.mix_exs_catalogue_update_elixirc_paths())
+      {:patched, updated_code} = patch_code(code, Patches.configure_catalogue_in_mix_exs())
 
       assert updated_code == """
              defmodule MyApp.MixProject do
@@ -240,6 +240,37 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
              """
     end
 
+    test "don't apply it if already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        # Specifies which paths to compile per environment.
+        defp elixirc_paths(:test), do: ["lib", "test/support"]
+        defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
+        defp elixirc_paths(_), do: ["lib"]
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:plug_cowboy, "~> 2.5"},
+            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+          ]
+        end
+
+        def catalogues do
+          [
+            "priv/catalogue"
+          ]
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = patch_code(code, Patches.configure_catalogue_in_mix_exs())
+    end
+
     test "don't apply it if maybe already patched" do
       code = """
       defmodule MyApp.MixProject do
@@ -262,11 +293,11 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.mix_exs_catalogue_update_elixirc_paths())
+      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.configure_catalogue_in_mix_exs())
     end
   end
 
-  describe "patch_web_view_config" do
+  describe "add_import_to_view_macro" do
     test "add import Surface" do
       code = """
       defmodule MyAppWeb do
@@ -283,7 +314,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.web_view_config(MyAppWeb))
+      {:patched, updated_code} = patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
 
       assert updated_code == """
              defmodule MyAppWeb do
@@ -319,11 +350,11 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.web_view_config(MyAppWeb))
+      assert {:already_patched, ^code} = patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
     end
   end
 
-  describe "patch_formatter_surface_inputs" do
+  describe "add_surface_inputs_to_formatter_config" do
     test "add :surface_inputs" do
       code = """
       [
@@ -332,7 +363,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.formatter_surface_inputs())
+      {:patched, updated_code} = patch_code(code, Patches.add_surface_inputs_to_formatter_config())
 
       assert updated_code == """
              [
@@ -352,11 +383,11 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.formatter_surface_inputs())
+      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_inputs_to_formatter_config())
     end
   end
 
-  describe "patch_formatter_import_deps" do
+  describe "add_surface_to_import_deps_in_formatter_config" do
     test "add :surface to :import_deps" do
       code = """
       [
@@ -365,7 +396,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.formatter_import_deps())
+      {:patched, updated_code} = patch_code(code, Patches.add_surface_to_import_deps_in_formatter_config())
 
       assert updated_code == """
              [
@@ -383,7 +414,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.formatter_import_deps())
+      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_to_import_deps_in_formatter_config())
     end
   end
 
@@ -566,7 +597,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     end
   end
 
-  describe "catalogue_router_config" do
+  describe "configure_catalogue_route" do
     test "add import Surface.Catalogue.Router and the catalogue route" do
       code = """
       defmodule MyAppWeb.Router do
@@ -579,7 +610,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.catalogue_router_config(MyAppWeb))
+      {:patched, updated_code} = patch_code(code, Patches.configure_catalogue_route(MyAppWeb))
 
       assert updated_code == """
              defmodule MyAppWeb.Router do
@@ -616,7 +647,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.catalogue_router_config(MyAppWeb))
+      assert {:already_patched, ^code} = patch_code(code, Patches.configure_catalogue_route(MyAppWeb))
     end
   end
 

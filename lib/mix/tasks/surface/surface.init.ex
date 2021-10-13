@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Surface.Init do
         Patches.endpoint_config_live_reload_patterns(context_app, web_module, web_path)
       ],
       web_module_path => [
-        Patches.web_view_config(web_module)
+        Patches.add_import_surface_to_view_macro(web_module)
       ]
     }
   end
@@ -116,8 +116,8 @@ defmodule Mix.Tasks.Surface.Init do
   defp patches_for(:formatter, %{formatter: true}) do
     %{
       ".formatter.exs" => [
-        Patches.formatter_surface_inputs(),
-        Patches.formatter_import_deps()
+        Patches.add_surface_inputs_to_formatter_config(),
+        Patches.add_surface_to_import_deps_in_formatter_config()
       ]
     }
   end
@@ -147,13 +147,13 @@ defmodule Mix.Tasks.Surface.Init do
     %{
       "mix.exs" => [
         Patches.add_surface_catalogue_to_mix_deps(),
-        Patches.mix_exs_catalogue_update_elixirc_paths()
+        Patches.configure_catalogue_in_mix_exs()
       ],
       "config/dev.exs" => [
         Patches.endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module)
       ],
       "#{web_path}/router.ex" => [
-        Patches.catalogue_router_config(web_module)
+        Patches.configure_catalogue_route(web_module)
       ]
     }
   end

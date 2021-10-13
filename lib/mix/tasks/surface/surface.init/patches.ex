@@ -27,36 +27,25 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     }
   end
 
-  def web_view_config(web_module) do
-    name = "Add `import Surface` to view config"
+  def add_import_surface_to_view_macro(web_module) do
+    %{
+      name: "Add `import Surface` to view config",
+      patch: &Patchers.Phoenix.add_import_to_view_macro(&1, Surface, web_module),
+      instructions: """
+      In order to have `~F` available for any Phoenix view, you can import surface.
 
-    instructions = """
-    In order to have `~F` available for any Phoenix view, you can import surface.
+      # Example
 
-    # Example
-
-    ```elixir
-    def view do
-      quote do
-        ...
-        import Surface
+      ```elixir
+      def view do
+        quote do
+          ...
+          import Surface
+        end
       end
-    end
-    ```
-    """
-
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule(web_module)
-      # add it to view_helpers instead?
-      |> enter_def(:view)
-      |> enter_call(:quote)
-      |> halt_if(&find_code_containing(&1, "import Surface"), :already_patched)
-      |> append_child("\nimport Surface")
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+      ```
+      """
+    }
   end
 
   def add_surface_catalogue_to_mix_deps() do
@@ -74,8 +63,8 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     }
   end
 
-  def mix_exs_catalogue_update_elixirc_paths() do
-    name = "Configure `elixirc_paths`"
+  def configure_catalogue_in_mix_exs() do
+    name = "Configure `elixirc_paths` for the catalogue"
 
     instructions = """
     TODO
@@ -87,8 +76,15 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       |> enter_defmodule()
       |> halt_if(
         fn patcher ->
-          find_defp_with_args(patcher, :elixirc_paths, &match?([":dev"], &1))
+          patcher
+          |> find_defp_with_args(:elixirc_paths, &match?([":dev"], &1))
+          |> body()
+          |> find_code("catalogues()")
         end,
+        :already_patched
+      )
+      |> halt_if(
+        fn patcher -> find_defp_with_args(patcher, :elixirc_paths, &match?([":dev"], &1)) end,
         :maybe_already_patched
       )
       |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
@@ -105,98 +101,62 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{name: name, instructions: instructions, patch: [add_elixirc_paths_dev_entry, add_catalogues_fun]}
   end
 
-  def catalogue_router_config(web_module) do
-    name = "Add `Surface.Catalogue.Router` to router config"
-
-    instructions = """
-    TODO
-    """
-
-    add_import = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule(Module.concat(web_module, Router))
-      |> halt_if(&find_code_containing(&1, "Surface.Catalogue.Router"), :already_patched)
-      |> find_call_with_args(:use, fn args -> args == [inspect(web_module), ":router"] end)
-      |> replace(&"#{&1}\n\n  import Surface.Catalogue.Router")
-    end
-
-    add_route = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule(Module.concat(web_module, Router))
-      |> halt_if(&find_code(&1, "surface_catalogue"), :already_patched)
-      |> last_child()
-      |> replace_code(
-        &"""
-        #{&1}
-
+  def configure_catalogue_route(web_module) do
+    %{
+      name: "Configure catalogue route",
+      instructions: "TODO",
+      patch: [
+        &Patchers.Phoenix.add_import_to_router(&1, Surface.Catalogue.Router, web_module),
+        &Patchers.Phoenix.append_route(&1, "/catalogue", web_module, """
           if Mix.env() == :dev do
             scope "/" do
               pipe_through :browser
               surface_catalogue "/catalogue"
             end
           end\
-        """
-      )
-    end
-
-    %{name: name, instructions: instructions, patch: [add_import, add_route]}
+        """)
+      ]
+    }
   end
 
-  def formatter_surface_inputs() do
-    name = "Add file extensions to :surface_inputs"
+  def add_surface_inputs_to_formatter_config() do
+    %{
+      name: "Add file extensions to :surface_inputs",
+      patch: &Patchers.Formatter.add_config(&1, :surface_inputs, ~S(["{lib,test}/**/*.{ex,exs,sface}"])),
+      instructions: """
+      In case you'll be using `mix format`, make sure you add the required file patterns
+      to your `.formatter.exs` file.
 
-    instructions = """
-    In case you'll be using `mix format`, make sure you add the required file patterns
-    to your `.formatter.exs` file.
+      # Example
 
-    # Example
-
-    ```
-    [
-      surface_inputs: ["{lib,test}/**/*.{ex,exs,sface}"],
-      ...
-    ]
-    ```
-    """
-
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> halt_if(&find_keyword(&1, :surface_inputs), :already_patched)
-      |> append_keyword(:surface_inputs, ~S(["{lib,test}/**/*.{ex,exs,sface}"]))
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+      ```
+      [
+        surface_inputs: ["{lib,test}/**/*.{ex,exs,sface}"],
+        ...
+      ]
+      ```
+      """
+    }
   end
 
-  def formatter_import_deps() do
-    name = "Add :surface to :import_deps"
+  def add_surface_to_import_deps_in_formatter_config() do
+    %{
+      name: "Add :surface to :import_deps",
+      patch: &Patchers.Formatter.add_import_dep(&1, ":surface"),
+      instructions: """
+      In case you'll be using `mix format`, make sure you add `:surface` to the `import_deps`
+      configuration in your `.formatter.exs` file.
 
-    instructions = """
-    In case you'll be using `mix format`, make sure you add `:surface` to the `import_deps`
-    configuration in your `.formatter.exs` file.
+      # Example
 
-    # Example
-
-    ```
-    [
-      import_deps: [:ecto, :phoenix, :surface],
-      ...
-    ]
-    ```
-    """
-
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> find_keyword_value(:import_deps)
-      |> halt_if(&find_list_item_with_code(&1, ":surface"), :already_patched)
-      |> append_list_item(":surface")
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+      ```
+      [
+        import_deps: [:ecto, :phoenix, :surface],
+        ...
+      ]
+      ```
+      """
+    }
   end
 
   def endpoint_config_reloadable_compilers(context_app, web_module) do
