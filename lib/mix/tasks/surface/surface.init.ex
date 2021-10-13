@@ -104,7 +104,6 @@ defmodule Mix.Tasks.Surface.Init do
 
     %{
       "config/dev.exs" => [
-        Patches.endpoint_config_reloadable_compilers(context_app, web_module),
         Patches.endpoint_config_live_reload_patterns(context_app, web_module, web_path)
       ],
       web_module_path => [
@@ -130,13 +129,16 @@ defmodule Mix.Tasks.Surface.Init do
     }
   end
 
-  defp patches_for(:js_hooks, %{js_hooks: true}) do
+  defp patches_for(:js_hooks, %{js_hooks: true, context_app: context_app, web_module: web_module}) do
     %{
       "mix.exs" => [
         Patches.add_surface_to_mix_compilers()
       ],
       "assets/js/app.js" => [
         Patches.js_hooks()
+      ],
+      "config/dev.exs" => [
+        Patches.endpoint_config_reloadable_compilers(context_app, web_module)
       ]
     }
   end
