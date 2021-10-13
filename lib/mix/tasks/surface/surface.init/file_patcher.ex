@@ -76,6 +76,8 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
   end
 
   def patch_files(list) do
+    list = Enum.reduce(list, fn item, acc -> Map.merge(acc, item, fn _k, a, b -> a ++ b end) end)
+
     for {file, patches} <- list do
       patch_file(file, List.wrap(patches))
     end
