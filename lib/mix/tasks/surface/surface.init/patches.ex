@@ -3,41 +3,28 @@ defmodule Mix.Tasks.Surface.Init.Patches do
 
   import Mix.Tasks.Surface.Init.ExPatcher
   alias Mix.Tasks.Surface.Init.ExPatcher
+  alias Mix.Tasks.Surface.Init.Patchers
 
-  def mix_compilers() do
-    name = "Add :surface to compilers"
+  def add_surface_to_mix_compilers() do
+    %{
+      name: "Add :surface to compilers",
+      patch: &Patchers.MixExs.add_compiler(&1, ":surface"),
+      instructions: """
+      Append `:surface` to the list of compilers.
 
-    instructions = """
-    Append `:surface` to the list of compilers.
+      # Example
 
-    # Example
-
-    ```
-    def project do
-      [
-        ...
-        compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
-        ...
-      ]
-    end
-    ```
-    """
-
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule()
-      |> enter_def(:project)
-      |> find_keyword_value(:compilers)
-      |> halt_if(
-        fn patcher -> node_to_string(patcher) == "[:gettext] ++ Mix.compilers() ++ [:surface]" end,
-        :already_patched
-      )
-      |> halt_if(&find_code_containing(&1, ":surface"), :maybe_already_patched)
-      |> append_child(" ++ [:surface]")
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+      ```
+      def project do
+        [
+          ...
+          compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+          ...
+        ]
+      end
+      ```
+      """
+    }
   end
 
   def web_view_config(web_module) do
@@ -72,26 +59,19 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{name: name, instructions: instructions, patch: patch}
   end
 
-  def mix_exs_add_surface_catalogue_dep() do
-    name = "Add `surface_catalogue` dependency"
-
-    instructions = """
-    TODO
-    """
-
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule()
-      |> enter_defp(:deps)
-      |> halt_if(&find_list_item_containing(&1, "{:surface_catalogue, "), :already_patched)
-      |> append_list_item(
-        ~S({:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}),
-        preserve_indentation: true
-      )
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+  def add_surface_catalogue_to_mix_deps() do
+    %{
+      name: "Add `surface_catalogue` dependency",
+      patch:
+        &Patchers.MixExs.add_dep(
+          &1,
+          ":surface_catalogue",
+          ~S(path: "../../surface_catalogue", only: [:test, :dev])
+        ),
+      instructions: """
+      TODO
+      """
+    }
   end
 
   def mix_exs_catalogue_update_elixirc_paths() do
@@ -115,24 +95,12 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       |> replace(&"defp elixirc_paths(:dev), do: [\"lib\"] ++ catalogues()\n  #{&1}")
     end
 
-    add_catalogues_fun = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule()
-      |> halt_if(&find_def(&1, "catalogues"), :already_patched)
-      |> last_child()
-      |> replace_code(
-        &"""
-        #{&1}
-
-          def catalogues do
-            [
-              "priv/catalogue"
-            ]
-          end\
-        """
-      )
-    end
+    add_catalogues_fun =
+      &Patchers.MixExs.append_def(&1, "catalogues", """
+          [
+            "priv/catalogue"
+          ]\
+      """)
 
     %{name: name, instructions: instructions, patch: [add_elixirc_paths_dev_entry, add_catalogues_fun]}
   end

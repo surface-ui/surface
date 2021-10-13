@@ -133,7 +133,7 @@ defmodule Mix.Tasks.Surface.Init do
   defp patches_for(:js_hooks, %{js_hooks: true}) do
     %{
       "mix.exs" => [
-        Patches.mix_compilers()
+        Patches.add_surface_to_mix_compilers()
       ],
       "assets/js/app.js" => [
         Patches.js_hooks()
@@ -146,7 +146,7 @@ defmodule Mix.Tasks.Surface.Init do
 
     %{
       "mix.exs" => [
-        Patches.mix_exs_add_surface_catalogue_dep(),
+        Patches.add_surface_catalogue_to_mix_deps(),
         Patches.mix_exs_catalogue_update_elixirc_paths()
       ],
       "config/dev.exs" => [

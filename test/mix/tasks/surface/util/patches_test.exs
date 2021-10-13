@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     |> FilePatcher.run_patch_funs(code)
   end
 
-  describe "patch_mix_compilers" do
+  describe "add_surface_to_mix_compilers" do
     test "add :surface to compilers" do
       code = """
       defmodule MyApp.MixProject do
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.mix_compilers())
+      {:patched, updated_code} = patch_code(code, Patches.add_surface_to_mix_compilers())
 
       assert updated_code == """
              defmodule MyApp.MixProject do
@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.mix_compilers())
+      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_to_mix_compilers())
     end
 
     test "don't apply it if maybe already patched" do
@@ -104,11 +104,11 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.mix_compilers())
+      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.add_surface_to_mix_compilers())
     end
   end
 
-  describe "mix_exs_add_surface_catalogue_dep" do
+  describe "add_surface_catalogue_to_mix_deps" do
     test "add :surface_catalogue to deps" do
       code = """
       defmodule MyApp.MixProject do
@@ -131,7 +131,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.mix_exs_add_surface_catalogue_dep())
+      {:patched, updated_code} = patch_code(code, Patches.add_surface_catalogue_to_mix_deps())
 
       assert updated_code == """
              defmodule MyApp.MixProject do
@@ -184,7 +184,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.mix_exs_add_surface_catalogue_dep())
+      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_catalogue_to_mix_deps())
     end
   end
 
