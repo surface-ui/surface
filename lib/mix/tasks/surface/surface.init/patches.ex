@@ -1,8 +1,6 @@
 defmodule Mix.Tasks.Surface.Init.Patches do
   @moduledoc false
 
-  import Mix.Tasks.Surface.Init.ExPatcher
-  alias Mix.Tasks.Surface.Init.ExPatcher
   alias Mix.Tasks.Surface.Init.Patchers
 
   # Common patches
@@ -200,38 +198,12 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     ```
     """
 
-    patch = fn code ->
-      error_tag_item =
-        "{Surface.Components.Form.ErrorTag, default_translator: {#{inspect(web_module)}.ErrorHelpers, :translate_error}}"
-
-      patcher =
-        code
-        |> parse_string!()
-        |> find_call_with_args(:config, &match?([":surface", ":components", _], &1))
-        |> last_arg()
-
-      case patcher do
-        %ExPatcher{node: nil} ->
-          code
-          |> parse_string!()
-          |> find_call_with_args(:config, &match?([":phoenix", ":json_library", _], &1))
-          |> last_arg()
-          |> replace(
-            &"""
-            #{&1}
-
-            config :surface, :components, [
-              #{error_tag_item}
-            ]\
-            """
-          )
-
-        components_patcher ->
-          components_patcher
-          |> halt_if(&find_list_item_containing(&1, "Surface.Components.Form.ErrorTag"), :already_patched)
-          |> append_list_item(error_tag_item)
-      end
-    end
+    patch =
+      &Patchers.Component.add_config(
+        &1,
+        "Surface.Components.Form.ErrorTag",
+        "default_translator: {#{inspect(web_module)}.ErrorHelpers, :translate_error}"
+      )
 
     %{name: name, instructions: instructions, patch: patch}
   end
