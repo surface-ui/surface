@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
       if zipper do
         {Z.node(zipper), result(patcher)}
       else
-        {nil, :code_not_found}
+        {nil, :cannot_patch}
       end
 
     %__MODULE__{patcher | zipper: zipper, node: node, result: result}

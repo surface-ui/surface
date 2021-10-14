@@ -748,7 +748,10 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       window.liveSocket = liveSocket
       """
 
-      assert {:file_modified, ^code} = patch_code(code, Patches.js_hooks())
+      {status, updated_code} = patch_code(code, Patches.js_hooks())
+
+      assert updated_code == code
+      assert status == :cannot_patch
     end
   end
 

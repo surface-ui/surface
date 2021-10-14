@@ -279,55 +279,27 @@ defmodule Mix.Tasks.Surface.Init.Patches do
   end
 
   def js_hooks() do
-    name = "Configure components' JS hooks"
+    %{
+      name: "Configure components' JS hooks",
+      instructions: """
+      Import Surface components' hooks and pass them to `new LiveSocket(...)`.
 
-    instructions = """
-    Import Surface components' hooks and pass them to `new LiveSocket(...)`.
+      # Example
 
-    # Example
+      ```JS
+      import Hooks from "./_hooks"
 
-    ```JS
-    import Hooks from "./_hooks"
-
-    let liveSocket = new LiveSocket("/live", Socket, { hooks: Hooks, ... })
-    ```
-    """
-
-    patch = fn code ->
-      import_toolbar_string = ~S[import topbar from "../vendor/topbar"]
-      import_hooks_string = ~S[import Hooks from "./_hooks"]
-
-      live_socket_string = ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})]
-
-      patched_live_socket_string =
-        ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})]
-
-      already_patched? =
-        Regex.match?(to_regex(import_hooks_string), code) and
-          Regex.match?(to_regex(patched_live_socket_string), code)
-
-      import_toolbar_regex = to_regex(import_toolbar_string)
-      live_socket_regex = to_regex(live_socket_string)
-      patchable? = Regex.match?(import_toolbar_regex, code) and Regex.match?(live_socket_regex, code)
-
-      cond do
-        already_patched? ->
-          {:already_patched, code}
-
-        patchable? ->
-          updated_code = Regex.replace(import_toolbar_regex, code, ~s[\\0\n#{import_hooks_string}])
-          updated_code = Regex.replace(live_socket_regex, updated_code, patched_live_socket_string)
-          {:patched, updated_code}
-
-        true ->
-          {:file_modified, code}
-      end
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
-  end
-
-  defp to_regex(string) do
-    Regex.compile!("^#{Regex.escape(string)}$", "m")
+      let liveSocket = new LiveSocket("/live", Socket, { hooks: Hooks, ... })
+      ```
+      """,
+      patch: [
+        &Patchers.JS.add_import(&1, ~S[import Hooks from "./_hooks"]),
+        &Patchers.JS.replace_line_text(
+          &1,
+          ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})],
+          ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})]
+        )
+      ]
+    }
   end
 end

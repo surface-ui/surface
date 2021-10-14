@@ -3,6 +3,21 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
 
   alias Mix.Tasks.Surface.Init.ExPatcher
 
+  @result_precedence %{
+    :unpatched => 0,
+    :patched => 1,
+    :already_patched => 2,
+    :maybe_already_patched => 3,
+    :cannot_patch => 4
+  }
+
+  @results_with_message [
+    :maybe_already_patched,
+    :cannot_patch,
+    :file_not_found,
+    :cannot_read_file
+  ]
+
   def print_patch_results(results) do
     results = List.flatten(results)
     n_patches = length(results)
@@ -13,11 +28,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
     n_patches_skipped = n_patches - n_patches_applied
 
     patches_with_messages =
-      (results_by_type[:maybe_already_patched] || []) ++
-        (results_by_type[:code_not_found] || []) ++
-        (results_by_type[:file_modified] || []) ++
-        (results_by_type[:file_not_found] || []) ++
-        (results_by_type[:cannot_read_file] || [])
+      Enum.reduce(@results_with_message, [], fn result, acc -> acc ++ (results_by_type[result] || []) end)
 
     n_patches_with_messages = length(patches_with_messages)
 
@@ -41,22 +52,24 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
     patches_with_messages
     |> Enum.with_index(1)
     |> Enum.each(fn {{result, name, file, instructions}, index} ->
-      reason =
+      {reason, details} =
         case result do
           :maybe_already_patched ->
-            "it seems the patch has already been applied or manually set up"
+            {"it seems the patch has already been applied or manually set up", ""}
 
-          :code_not_found ->
-            "unexpected structure of the code"
+          :cannot_patch ->
+            {"unexpected file content",
+             """
 
-          :file_modified ->
-            "the file has been modified by the user and it's no longer safe to automatically patch it"
+             *Either the original file has changed or it has been modified by the user \
+             and it's no longer safe to automatically patch it.*
+             """}
 
           :file_not_found ->
-            "file not found"
+            {"file not found", ""}
 
           :cannot_read_file ->
-            "cannot read file"
+            {"cannot read file", ""}
         end
 
       IO.ANSI.Docs.print_headings(["Message ##{index}"], print_opts)
@@ -65,7 +78,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
       Patch _"#{name}"_ was not applied to `#{file}`.
 
       Reason: *#{reason}.*
-
+      #{details}
       If you believe you still need to apply this patch, you must do it manually with the following instructions:
 
       #{instructions}
@@ -107,16 +120,32 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
   end
 
   def run_patch_funs(funs, code) do
-    Enum.reduce_while(funs, {:unpatched, code}, fn
-      fun, {result, code} when result in [:patched, :unpatched] ->
-        {:cont, code |> fun.() |> convert_patch_result()}
-
-      _fun, result ->
-        {:halt, result}
-    end)
+    run_patch_funs(funs, code, code, :unpatched)
   end
 
-  defp convert_patch_result(%ExPatcher{code: code, result: result}) do
+  def run_patch_funs([], _original_code, last_code, last_result) do
+    {last_result, last_code}
+  end
+
+  def run_patch_funs([fun | funs], original_code, last_code, last_result) do
+    {result, patched_code} = last_code |> fun.() |> convert_patch_result()
+    result = Enum.max_by([result, last_result], fn item -> @result_precedence[item] end)
+
+    code =
+      if result == :patched do
+        patched_code
+      else
+        original_code
+      end
+
+    if result == :cannot_patch do
+      {result, code}
+    else
+      run_patch_funs(funs, original_code, code, result)
+    end
+  end
+
+  defp convert_patch_result(%ExPatcher{result: result, code: code}) do
     {result, code}
   end
 
