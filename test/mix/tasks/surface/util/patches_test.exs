@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+                   {:surface_catalogue, github: "surface-ui/surface_catalogue", only: [:test, :dev]}
                  ]
                end
              end
@@ -177,7 +177,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
           [
             {:phoenix, "~> 1.6.0"},
             {:surface, "~> 0.5.2"},
-            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]},
+            {:surface_catalogue, github: "surface-ui/surface_catalogue", only: [:test, :dev]},
             {:plug_cowboy, "~> 2.5"}
           ]
         end
@@ -418,26 +418,33 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     end
   end
 
-  describe "patch_endpoint_config_reloadable_compilers" do
+  describe "add_surface_to_reloadable_compilers_in_endpoint_config" do
+    defmodule Elixir.MyTestAppWeb.Endpoint do
+      def config(:reloadable_compilers) do
+        [:gettext, :elixir]
+      end
+    end
+
     test "add reloadable_compilers if there's no :reloadable_compilers key" do
       code = """
       import Config
 
       # Watch static and templates for browser reloading.
-      config :my_app, MyAppWeb.Endpoint,
+      config :my_app, MyTestAppWeb.Endpoint,
         live_reload: [
           patterns: []
         ]
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.endpoint_config_reloadable_compilers(:my_app, MyAppWeb))
+      {:patched, updated_code} =
+        patch_code(code, Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb))
 
       assert updated_code == """
              import Config
 
              # Watch static and templates for browser reloading.
-             config :my_app, MyAppWeb.Endpoint,
-               reloadable_compilers: [:phoenix, :elixir, :surface],
+             config :my_app, MyTestAppWeb.Endpoint,
+               reloadable_compilers: [:gettext, :elixir, :surface],
                live_reload: [
                  patterns: []
                ]
@@ -449,20 +456,21 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       import Config
 
       # Watch static and templates for browser reloading.
-      config :my_app, MyAppWeb.Endpoint,
+      config :my_app, MyTestAppWeb.Endpoint,
         reloadable_compilers: [:phoenix, :elixir],
         live_reload: [
           patterns: []
         ]
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.endpoint_config_reloadable_compilers(:my_app, MyAppWeb))
+      {:patched, updated_code} =
+        patch_code(code, Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb))
 
       assert updated_code == """
              import Config
 
              # Watch static and templates for browser reloading.
-             config :my_app, MyAppWeb.Endpoint,
+             config :my_app, MyTestAppWeb.Endpoint,
                reloadable_compilers: [:phoenix, :elixir, :surface],
                live_reload: [
                  patterns: []
@@ -475,7 +483,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       import Config
 
       # Watch static and templates for browser reloading.
-      config :my_app, MyAppWeb.Endpoint,
+      config :my_app, MyTestAppWeb.Endpoint,
         reloadable_compilers: [:phoenix, :elixir, :surface],
         live_reload: [
           patterns: []
@@ -483,11 +491,14 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:already_patched, ^code} =
-               patch_code(code, Patches.endpoint_config_reloadable_compilers(:my_app, MyAppWeb))
+               patch_code(
+                 code,
+                 Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
+               )
     end
   end
 
-  describe "patch_endpoint_config_live_reload_patterns" do
+  describe "add_surface_live_reload_pattern_to_endpoint_config" do
     test "update live_reload patterns" do
       code = """
       import Config
@@ -504,7 +515,10 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       {:patched, updated_code} =
-        patch_code(code, Patches.endpoint_config_live_reload_patterns(:my_app, MyAppWeb, "lib/my_app_web"))
+        patch_code(
+          code,
+          Patches.add_surface_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb, "lib/my_app_web")
+        )
 
       assert updated_code == """
              import Config
@@ -537,11 +551,14 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:already_patched, ^code} =
-               patch_code(code, Patches.endpoint_config_live_reload_patterns(:my_app, MyAppWeb, "lib/my_app_web"))
+               patch_code(
+                 code,
+                 Patches.add_surface_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb, "lib/my_app_web")
+               )
     end
   end
 
-  describe "endpoint_config_live_reload_patterns_for_catalogue" do
+  describe "add_catalogue_live_reload_pattern_to_endpoint_config" do
     test "update live_reload patterns" do
       code = """
       import Config
@@ -558,7 +575,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       {:patched, updated_code} =
-        patch_code(code, Patches.endpoint_config_live_reload_patterns_for_catalogue(:my_app, MyAppWeb))
+        patch_code(code, Patches.add_catalogue_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb))
 
       assert updated_code == """
              import Config
@@ -593,7 +610,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:already_patched, ^code} =
-               patch_code(code, Patches.endpoint_config_live_reload_patterns_for_catalogue(:my_app, MyAppWeb))
+               patch_code(code, Patches.add_catalogue_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb))
     end
   end
 

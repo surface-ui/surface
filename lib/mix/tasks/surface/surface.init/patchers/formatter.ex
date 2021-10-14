@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Surface.Init.Patchers.Formatter do
   @moduledoc false
 
+  # Common patches for `.formatter`
+
   import Mix.Tasks.Surface.Init.ExPatcher
 
   def add_config(code, key, value) do

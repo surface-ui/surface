@@ -1,8 +1,10 @@
 defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
   @moduledoc false
 
-  import Mix.Tasks.Surface.Init.ExPatcher
-  # alias Mix.Tasks.Surface.Init.ExPatcher
+  # Common patches for phoenix projects
+
+  alias Mix.Tasks.Surface.Init.ExPatcher
+  import ExPatcher
 
   def add_import_to_view_macro(code, module, web_module) do
     import_str = "import #{inspect(module)}"
@@ -36,113 +38,61 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> replace_code(&"#{&1}\n\n#{route_code}")
   end
 
-  # def endpoint_config_reloadable_compilers(context_app, web_module) do
-  #   name = "Add :surface to :reloadable_compilers"
+  def add_reloadable_compiler_to_endpoint_config(code, compiler, context_app, web_module) do
+    reloadable_compilers = Module.concat(web_module, Endpoint).config(:reloadable_compilers)
 
-  #   instructions = """
-  #   Add :surface to the list of reloadable compilers.
+    patcher =
+      code
+      |> parse_string!()
+      |> find_endpoint_config_with_live_reload(context_app, web_module)
 
-  #   # Example
+    case find_keyword(patcher, :reloadable_compilers) do
+      %ExPatcher{node: nil} ->
+        value = inspect(reloadable_compilers ++ [compiler])
+        insert_keyword(patcher, :reloadable_compilers, value)
 
-  #   ```
-  #   config :my_app, MyAppWeb.Endpoint,
-  #     reloadable_compilers: [:phoenix, :elixir, :surface],
-  #     ...
-  #   ```
-  #   """
+      list_patcher ->
+        list_patcher
+        |> value()
+        |> halt_if(&find_list_item_with_code(&1, inspect(compiler)), :already_patched)
+        |> append_list_item(inspect(compiler))
+    end
+  end
 
-  #   patch = fn code ->
-  #     patcher =
-  #       code
-  #       |> parse_string!()
-  #       |> find_endpoint_config_with_live_reload(context_app, web_module)
+  def add_live_reload_pattern_to_endpoint_config(code, pattern, already_pached_text, context_app, web_module) do
+    code
+    |> parse_string!()
+    |> find_endpoint_config_with_live_reload(context_app, web_module)
+    |> find_keyword_value([:live_reload, :patterns])
+    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    # Could not use `append_list_item` as it messes with the indentation of the parent node
+    |> down()
+    |> last_child()
+    |> replace_code(&"#{&1},\n      #{pattern}")
+  end
 
-  #     case find_keyword(patcher, :reloadable_compilers) do
-  #       %ExPatcher{node: nil} ->
-  #         insert_keyword(patcher, :reloadable_compilers, "[:phoenix, :elixir, :surface]")
+  def replace_live_reload_pattern_in_endpoint_config(
+        code,
+        pattern,
+        replacement,
+        already_pached_text,
+        context_app,
+        web_module
+      ) do
+    code
+    |> parse_string!()
+    |> find_endpoint_config_with_live_reload(context_app, web_module)
+    |> find_keyword_value([:live_reload, :patterns])
+    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    |> find_list_item_with_code(pattern)
+    |> replace(replacement)
+  end
 
-  #       list_patcher ->
-  #         list_patcher
-  #         |> value()
-  #         |> halt_if(&find_list_item_with_code(&1, ":surface"), :already_patched)
-  #         |> append_list_item(":surface")
-  #     end
-  #   end
+  defp find_endpoint_config_with_live_reload(patcher, context_app, web_module) do
+    args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
 
-  #   %{name: name, instructions: instructions, patch: patch}
-  # end
-
-  # def endpoint_config_live_reload_patterns(context_app, web_module, web_path) do
-  #   name = "Update patterns in :reload_patterns"
-
-  #   instructions = """
-  #   Update the :reload_patterns entry to include surface-related files.
-
-  #   # Example
-
-  #   ```
-  #   config :my_app, MyAppWeb.Endpoint,
-  #     live_reload: [
-  #       patterns: [
-  #         ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
-  #         ...
-  #       ]
-  #     ]
-  #   ```
-  #   """
-
-  #   patch = fn code ->
-  #     code
-  #     |> parse_string!()
-  #     |> find_endpoint_config_with_live_reload(context_app, web_module)
-  #     |> find_keyword_value([:live_reload, :patterns])
-  #     |> halt_if(&find_code_containing(&1, "sface"), :already_patched)
-  #     |> find_list_item_with_code(~s[~r"#{web_path}/(live|views)/.*(ex)$"])
-  #     |> replace(~s[~r"#{web_path}/(live|views|components)/.*(ex|sface|js)$"])
-  #   end
-
-  #   %{name: name, instructions: instructions, patch: patch}
-  # end
-
-  # def endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module) do
-  #   name = "Update patterns in :reload_patterns to reload catalogue files"
-
-  #   instructions = """
-  #   Update the :reload_patterns entry to include catalogue files.
-
-  #   # Example
-
-  #   ```
-  #   config :my_app, MyAppWeb.Endpoint,
-  #     live_reload: [
-  #       patterns: [
-  #         ~r"priv/catalogue/.*(ex)$"
-  #         ...
-  #       ]
-  #     ]
-  #   ```
-  #   """
-
-  #   patch = fn code ->
-  #     code
-  #     |> parse_string!()
-  #     |> find_endpoint_config_with_live_reload(context_app, web_module)
-  #     |> find_keyword_value([:live_reload, :patterns])
-  #     |> halt_if(&find_code_containing(&1, "catalogue"), :already_patched)
-  #     # Could not use `append_list_item` as it messes with the indentation of the parent node
-  #     |> down()
-  #     |> last_child()
-  #     |> replace_code(&"#{&1},\n      ~r\"priv/catalogue/.*(ex)$\"")
-  #   end
-
-  #   %{name: name, instructions: instructions, patch: patch}
-  # end
-
-  # defp find_endpoint_config_with_live_reload(patcher, context_app, web_module) do
-  #   args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
-
-  #   patcher
-  #   |> find_call_with_args_and_opt(:config, args, :live_reload)
-  #   |> last_arg()
-  # end
+    patcher
+    |> find_call_with_args_and_opt(:config, args, :live_reload)
+    |> last_arg()
+  end
 end

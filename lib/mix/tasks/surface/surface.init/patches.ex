@@ -5,23 +5,33 @@ defmodule Mix.Tasks.Surface.Init.Patches do
   alias Mix.Tasks.Surface.Init.ExPatcher
   alias Mix.Tasks.Surface.Init.Patchers
 
-  def add_surface_to_mix_compilers() do
+  # Common patches
+
+  def add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path) do
     %{
-      name: "Add :surface to compilers",
-      patch: &Patchers.MixExs.add_compiler(&1, ":surface"),
+      name: "Update patterns in :reload_patterns",
+      patch:
+        &Patchers.Phoenix.replace_live_reload_pattern_in_endpoint_config(
+          &1,
+          ~s[~r"#{web_path}/(live|views)/.*(ex)$"],
+          ~s[~r"#{web_path}/(live|views|components)/.*(ex|sface|js)$"],
+          "sface",
+          context_app,
+          web_module
+        ),
       instructions: """
-      Append `:surface` to the list of compilers.
+      Update the :reload_patterns entry to include surface-related files.
 
       # Example
 
       ```
-      def project do
-        [
-          ...
-          compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
-          ...
+      config :my_app, MyAppWeb.Endpoint,
+        live_reload: [
+          patterns: [
+            ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
+            ...
+          ]
         ]
-      end
       ```
       """
     }
@@ -48,76 +58,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     }
   end
 
-  def add_surface_catalogue_to_mix_deps() do
-    %{
-      name: "Add `surface_catalogue` dependency",
-      patch:
-        &Patchers.MixExs.add_dep(
-          &1,
-          ":surface_catalogue",
-          ~S(path: "../../surface_catalogue", only: [:test, :dev])
-        ),
-      instructions: """
-      TODO
-      """
-    }
-  end
-
-  def configure_catalogue_in_mix_exs() do
-    name = "Configure `elixirc_paths` for the catalogue"
-
-    instructions = """
-    TODO
-    """
-
-    add_elixirc_paths_dev_entry = fn code ->
-      code
-      |> parse_string!()
-      |> enter_defmodule()
-      |> halt_if(
-        fn patcher ->
-          patcher
-          |> find_defp_with_args(:elixirc_paths, &match?([":dev"], &1))
-          |> body()
-          |> find_code("catalogues()")
-        end,
-        :already_patched
-      )
-      |> halt_if(
-        fn patcher -> find_defp_with_args(patcher, :elixirc_paths, &match?([":dev"], &1)) end,
-        :maybe_already_patched
-      )
-      |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
-      |> replace(&"defp elixirc_paths(:dev), do: [\"lib\"] ++ catalogues()\n  #{&1}")
-    end
-
-    add_catalogues_fun =
-      &Patchers.MixExs.append_def(&1, "catalogues", """
-          [
-            "priv/catalogue"
-          ]\
-      """)
-
-    %{name: name, instructions: instructions, patch: [add_elixirc_paths_dev_entry, add_catalogues_fun]}
-  end
-
-  def configure_catalogue_route(web_module) do
-    %{
-      name: "Configure catalogue route",
-      instructions: "TODO",
-      patch: [
-        &Patchers.Phoenix.add_import_to_router(&1, Surface.Catalogue.Router, web_module),
-        &Patchers.Phoenix.append_route(&1, "/catalogue", web_module, """
-          if Mix.env() == :dev do
-            scope "/" do
-              pipe_through :browser
-              surface_catalogue "/catalogue"
-            end
-          end\
-        """)
-      ]
-    }
-  end
+  # Formatter patches
 
   def add_surface_inputs_to_formatter_config() do
     %{
@@ -159,73 +100,88 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     }
   end
 
-  def endpoint_config_reloadable_compilers(context_app, web_module) do
-    name = "Add :surface to :reloadable_compilers"
+  # Catalogue patches
 
-    instructions = """
-    Add :surface to the list of reloadable compilers.
-
-    # Example
-
-    ```
-    config :my_app, MyAppWeb.Endpoint,
-      reloadable_compilers: [:phoenix, :elixir, :surface],
-      ...
-    ```
-    """
-
-    patch = fn code ->
-      patcher =
-        code
-        |> parse_string!()
-        |> find_endpoint_config_with_live_reload(context_app, web_module)
-
-      case find_keyword(patcher, :reloadable_compilers) do
-        %ExPatcher{node: nil} ->
-          insert_keyword(patcher, :reloadable_compilers, "[:phoenix, :elixir, :surface]")
-
-        list_patcher ->
-          list_patcher
-          |> value()
-          |> halt_if(&find_list_item_with_code(&1, ":surface"), :already_patched)
-          |> append_list_item(":surface")
-      end
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+  def add_surface_catalogue_to_mix_deps() do
+    %{
+      name: "Add `surface_catalogue` dependency",
+      patch:
+        &Patchers.MixExs.add_dep(
+          &1,
+          ":surface_catalogue",
+          ~S(github: "surface-ui/surface_catalogue", only: [:test, :dev])
+        ),
+      instructions: """
+      TODO
+      """
+    }
   end
 
-  def endpoint_config_live_reload_patterns(context_app, web_module, web_path) do
-    name = "Update patterns in :reload_patterns"
+  def configure_catalogue_in_mix_exs() do
+    %{
+      name: "Configure `elixirc_paths` for the catalogue",
+      patch: [
+        &Patchers.MixExs.add_elixirc_paths_entry(&1, ":dev", ~S|["lib"] ++ catalogues()|, "catalogues()"),
+        &Patchers.MixExs.append_def(&1, "catalogues", """
+            [
+              "priv/catalogue"
+            ]\
+        """)
+      ],
+      instructions: """
+      TODO
+      """
+    }
+  end
 
-    instructions = """
-    Update the :reload_patterns entry to include surface-related files.
-
-    # Example
-
-    ```
-    config :my_app, MyAppWeb.Endpoint,
-      live_reload: [
-        patterns: [
-          ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
-          ...
-        ]
+  def configure_catalogue_route(web_module) do
+    %{
+      name: "Configure catalogue route",
+      instructions: "TODO",
+      patch: [
+        &Patchers.Phoenix.add_import_to_router(&1, Surface.Catalogue.Router, web_module),
+        &Patchers.Phoenix.append_route(&1, "/catalogue", web_module, """
+          if Mix.env() == :dev do
+            scope "/" do
+              pipe_through :browser
+              surface_catalogue "/catalogue"
+            end
+          end\
+        """)
       ]
-    ```
-    """
-
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> find_endpoint_config_with_live_reload(context_app, web_module)
-      |> find_keyword_value([:live_reload, :patterns])
-      |> halt_if(&find_code_containing(&1, "sface"), :already_patched)
-      |> find_list_item_with_code(~s[~r"#{web_path}/(live|views)/.*(ex)$"])
-      |> replace(~s[~r"#{web_path}/(live|views|components)/.*(ex|sface|js)$"])
-    end
-
-    %{name: name, instructions: instructions, patch: patch}
+    }
   end
+
+  def add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module) do
+    %{
+      name: "Update patterns in :reload_patterns to reload catalogue files",
+      patch:
+        &Patchers.Phoenix.add_live_reload_pattern_to_endpoint_config(
+          &1,
+          ~S|~r"priv/catalogue/.*(ex)$"|,
+          "catalogue",
+          context_app,
+          web_module
+        ),
+      instructions: """
+      Update the :reload_patterns entry to include catalogue files.
+
+      # Example
+
+      ```
+      config :my_app, MyAppWeb.Endpoint,
+        live_reload: [
+          patterns: [
+            ~r"priv/catalogue/.*(ex)$"
+            ...
+          ]
+        ]
+      ```
+      """
+    }
+  end
+
+  # ErrorTag patches
 
   def config_error_tag(web_module) do
     name = "Configure the ErrorTag component to use Gettext"
@@ -280,38 +236,46 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{name: name, instructions: instructions, patch: patch}
   end
 
-  def endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module) do
-    name = "Update patterns in :reload_patterns to reload catalogue files"
+  # JS hooks patches
 
-    instructions = """
-    Update the :reload_patterns entry to include catalogue files.
+  def add_surface_to_mix_compilers() do
+    %{
+      name: "Add :surface to compilers",
+      patch: &Patchers.MixExs.add_compiler(&1, ":surface"),
+      instructions: """
+      Append `:surface` to the list of compilers.
 
-    # Example
+      # Example
 
-    ```
-    config :my_app, MyAppWeb.Endpoint,
-      live_reload: [
-        patterns: [
-          ~r"priv/catalogue/.*(ex)$"
+      ```
+      def project do
+        [
+          ...
+          compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
           ...
         ]
-      ]
-    ```
-    """
+      end
+      ```
+      """
+    }
+  end
 
-    patch = fn code ->
-      code
-      |> parse_string!()
-      |> find_endpoint_config_with_live_reload(context_app, web_module)
-      |> find_keyword_value([:live_reload, :patterns])
-      |> halt_if(&find_code_containing(&1, "catalogue"), :already_patched)
-      # Could not use `append_list_item` as it messes with the indentation of the parent node
-      |> down()
-      |> last_child()
-      |> replace_code(&"#{&1},\n      ~r\"priv/catalogue/.*(ex)$\"")
-    end
+  def add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module) do
+    %{
+      name: "Add :surface to :reloadable_compilers",
+      patch: &Patchers.Phoenix.add_reloadable_compiler_to_endpoint_config(&1, :surface, context_app, web_module),
+      instructions: """
+      Add :surface to the list of reloadable compilers.
 
-    %{name: name, instructions: instructions, patch: patch}
+      # Example
+
+      ```
+      config :my_app, MyAppWeb.Endpoint,
+        reloadable_compilers: [:phoenix, :elixir, :surface],
+        ...
+      ```
+      """
+    }
   end
 
   def js_hooks() do
@@ -361,14 +325,6 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     end
 
     %{name: name, instructions: instructions, patch: patch}
-  end
-
-  defp find_endpoint_config_with_live_reload(patcher, context_app, web_module) do
-    args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
-
-    patcher
-    |> find_call_with_args_and_opt(:config, args, :live_reload)
-    |> last_arg()
   end
 
   defp to_regex(string) do

@@ -67,6 +67,8 @@ defmodule Mix.Tasks.Surface.Init do
     opts = parse_opts(args)
     assigns = init_assigns(opts)
 
+    Mix.Task.run("app.start")
+
     unless assigns.yes do
       message = """
       This task will change existing files in your project.
@@ -104,7 +106,7 @@ defmodule Mix.Tasks.Surface.Init do
 
     %{
       "config/dev.exs" => [
-        Patches.endpoint_config_live_reload_patterns(context_app, web_module, web_path)
+        Patches.add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path)
       ],
       web_module_path => [
         Patches.add_import_surface_to_view_macro(web_module)
@@ -138,7 +140,7 @@ defmodule Mix.Tasks.Surface.Init do
         Patches.js_hooks()
       ],
       "config/dev.exs" => [
-        Patches.endpoint_config_reloadable_compilers(context_app, web_module)
+        Patches.add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module)
       ]
     }
   end
@@ -152,7 +154,7 @@ defmodule Mix.Tasks.Surface.Init do
         Patches.configure_catalogue_in_mix_exs()
       ],
       "config/dev.exs" => [
-        Patches.endpoint_config_live_reload_patterns_for_catalogue(context_app, web_module)
+        Patches.add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module)
       ],
       "#{web_path}/router.ex" => [
         Patches.configure_catalogue_route(web_module)
