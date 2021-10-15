@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Surface.Init do
       option, it additionally generates two catalogue examples and a playground for the component.
 
     * `--yes` - automatic answer "yes" to all prompts. Warning: this will also say "yes"
-      to overwrite existing files as well as running `mix deps.get` if required.
+      to overwrite existing files as well as fetching/installing dependencies, if required.
 
     * `--no-formatter` - do not configure the Surface formatter.
 
