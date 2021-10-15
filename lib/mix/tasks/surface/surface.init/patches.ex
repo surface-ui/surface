@@ -103,6 +103,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
   def add_surface_catalogue_to_mix_deps() do
     %{
       name: "Add `surface_catalogue` dependency",
+      update_deps: [:surface_catalogue],
       patch:
         &Patchers.MixExs.add_dep(
           &1,

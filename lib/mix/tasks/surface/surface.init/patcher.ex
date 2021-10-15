@@ -48,15 +48,25 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     results
     |> Enum.zip(src_dest_list)
     |> Enum.map(fn
-      {true, {_src, dest}} -> {:patched, "Create #{dest}", dest, ""}
-      {false, {_src, dest}} -> {:already_patched, "Create #{dest}", dest, ""}
+      {true, {_src, dest}} -> {:patched, dest, %{name: "Create #{dest}", instructions: ""}}
+      {false, {_src, dest}} -> {:already_patched, dest, %{name: "Create #{dest}", instructions: ""}}
     end)
+  end
+
+  def extract_updated_deps_from_results(patch_files_results) do
+    patch_files_results
+    |> List.flatten()
+    |> Enum.map(fn
+      {:patched, _, %{update_deps: deps}} -> deps
+      _ -> []
+    end)
+    |> List.flatten()
   end
 
   def print_results(results) do
     results = List.flatten(results)
     n_patches = length(results)
-    n_files = Enum.map(results, fn {_, _, file, _} -> file end) |> Enum.uniq() |> length()
+    n_files = Enum.map(results, fn {_, file, _} -> file end) |> Enum.uniq() |> length()
     results_by_type = Enum.group_by(results, &elem(&1, 0))
     n_patches_applied = length(results_by_type[:patched] || [])
     n_patches_already_patched = length(results_by_type[:already_patched] || [])
@@ -86,7 +96,7 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
 
     patches_with_messages
     |> Enum.with_index(1)
-    |> Enum.each(fn {{result, name, file, instructions}, index} ->
+    |> Enum.each(fn {{result, file, %{name: name, instructions: instructions}}, index} ->
       {reason, details} =
         case result do
           :maybe_already_patched ->
@@ -129,10 +139,10 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     case File.read(file) do
       {:ok, code} ->
         {updated_code, results} =
-          Enum.reduce(patches, {code, []}, fn %{patch: patch, name: name, instructions: instructions},
-                                              {code, results} ->
+          Enum.reduce(patches, {code, []}, fn patch_spec, {code, results} ->
+            %{patch: patch} = patch_spec
             {result, updated_code} = patch |> List.wrap() |> run_patch_funs(code)
-            {updated_code, [{result, name, file, instructions} | results]}
+            {updated_code, [{result, file, patch_spec} | results]}
           end)
 
         File.write!(file, updated_code)
@@ -181,8 +191,8 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
   end
 
   defp to_results(patches, status, file) do
-    Enum.map(patches, fn %{name: name, instructions: instructions} ->
-      {status, name, file, instructions}
+    Enum.map(patches, fn patch_spec ->
+      {status, file, patch_spec}
     end)
   end
 
