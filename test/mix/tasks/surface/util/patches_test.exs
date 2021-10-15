@@ -2,13 +2,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patches
-  alias Mix.Tasks.Surface.Init.FilePatcher
-
-  def patch_code(code, patch_spec) do
-    patch_spec.patch
-    |> List.wrap()
-    |> FilePatcher.run_patch_funs(code)
-  end
+  alias Mix.Tasks.Surface.Init.Patcher
 
   describe "add_surface_to_mix_compilers" do
     test "add :surface to compilers" do
@@ -33,7 +27,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.add_surface_to_mix_compilers())
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_surface_to_mix_compilers())
 
       assert updated_code == """
              defmodule MyApp.MixProject do
@@ -79,7 +73,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_to_mix_compilers())
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.add_surface_to_mix_compilers())
     end
 
     test "don't apply it if maybe already patched" do
@@ -104,7 +98,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.add_surface_to_mix_compilers())
+      assert {:maybe_already_patched, ^code} = Patcher.patch_code(code, Patches.add_surface_to_mix_compilers())
     end
   end
 
@@ -131,7 +125,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.add_surface_catalogue_to_mix_deps())
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_surface_catalogue_to_mix_deps())
 
       assert updated_code == """
              defmodule MyApp.MixProject do
@@ -184,7 +178,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_catalogue_to_mix_deps())
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.add_surface_catalogue_to_mix_deps())
     end
   end
 
@@ -210,7 +204,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.configure_catalogue_in_mix_exs())
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.configure_catalogue_in_mix_exs())
 
       assert updated_code == """
              defmodule MyApp.MixProject do
@@ -268,7 +262,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.configure_catalogue_in_mix_exs())
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.configure_catalogue_in_mix_exs())
     end
 
     test "don't apply it if maybe already patched" do
@@ -293,7 +287,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:maybe_already_patched, ^code} = patch_code(code, Patches.configure_catalogue_in_mix_exs())
+      assert {:maybe_already_patched, ^code} = Patcher.patch_code(code, Patches.configure_catalogue_in_mix_exs())
     end
   end
 
@@ -314,7 +308,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
 
       assert updated_code == """
              defmodule MyAppWeb do
@@ -350,7 +344,8 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
+      assert {:already_patched, ^code} =
+               Patcher.patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
     end
   end
 
@@ -363,7 +358,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.add_surface_inputs_to_formatter_config())
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_surface_inputs_to_formatter_config())
 
       assert updated_code == """
              [
@@ -383,7 +378,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_inputs_to_formatter_config())
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.add_surface_inputs_to_formatter_config())
     end
   end
 
@@ -396,7 +391,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.add_surface_to_import_deps_in_formatter_config())
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_surface_to_import_deps_in_formatter_config())
 
       assert updated_code == """
              [
@@ -414,7 +409,8 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       ]
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.add_surface_to_import_deps_in_formatter_config())
+      assert {:already_patched, ^code} =
+               Patcher.patch_code(code, Patches.add_surface_to_import_deps_in_formatter_config())
     end
   end
 
@@ -437,7 +433,10 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       {:patched, updated_code} =
-        patch_code(code, Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb))
+        Patcher.patch_code(
+          code,
+          Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
+        )
 
       assert updated_code == """
              import Config
@@ -464,7 +463,10 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       {:patched, updated_code} =
-        patch_code(code, Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb))
+        Patcher.patch_code(
+          code,
+          Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
+        )
 
       assert updated_code == """
              import Config
@@ -491,7 +493,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:already_patched, ^code} =
-               patch_code(
+               Patcher.patch_code(
                  code,
                  Patches.add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
                )
@@ -515,7 +517,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       {:patched, updated_code} =
-        patch_code(
+        Patcher.patch_code(
           code,
           Patches.add_surface_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb, "lib/my_app_web")
         )
@@ -551,7 +553,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:already_patched, ^code} =
-               patch_code(
+               Patcher.patch_code(
                  code,
                  Patches.add_surface_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb, "lib/my_app_web")
                )
@@ -575,7 +577,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       {:patched, updated_code} =
-        patch_code(code, Patches.add_catalogue_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb))
+        Patcher.patch_code(code, Patches.add_catalogue_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb))
 
       assert updated_code == """
              import Config
@@ -610,7 +612,10 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       """
 
       assert {:already_patched, ^code} =
-               patch_code(code, Patches.add_catalogue_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb))
+               Patcher.patch_code(
+                 code,
+                 Patches.add_catalogue_live_reload_pattern_to_endpoint_config(:my_app, MyAppWeb)
+               )
     end
   end
 
@@ -627,7 +632,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.configure_catalogue_route(MyAppWeb))
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.configure_catalogue_route(MyAppWeb))
 
       assert updated_code == """
              defmodule MyAppWeb.Router do
@@ -664,7 +669,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       end
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.configure_catalogue_route(MyAppWeb))
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.configure_catalogue_route(MyAppWeb))
     end
   end
 
@@ -686,7 +691,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       window.liveSocket = liveSocket
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.js_hooks())
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.js_hooks())
 
       assert updated_code == """
              // We import the CSS which is extracted to its own file by esbuild.
@@ -724,7 +729,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       window.liveSocket = liveSocket
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.js_hooks())
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.js_hooks())
     end
 
     test "don't apply it if code has been modified" do
@@ -748,7 +753,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       window.liveSocket = liveSocket
       """
 
-      {status, updated_code} = patch_code(code, Patches.js_hooks())
+      {status, updated_code} = Patcher.patch_code(code, Patches.js_hooks())
 
       assert updated_code == code
       assert status == :cannot_patch
@@ -768,7 +773,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       import_config "#{config_env()}.exs"
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.config_error_tag(MyAppWeb))
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.config_error_tag(MyAppWeb))
 
       assert updated_code == ~S"""
              import Config
@@ -802,7 +807,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       import_config "#{config_env()}.exs"
       """
 
-      {:patched, updated_code} = patch_code(code, Patches.config_error_tag(MyAppWeb))
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.config_error_tag(MyAppWeb))
 
       assert updated_code == ~S"""
              import Config
@@ -838,7 +843,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       import_config "#{config_env()}.exs"
       """
 
-      assert {:already_patched, ^code} = patch_code(code, Patches.config_error_tag(MyAppWeb))
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.config_error_tag(MyAppWeb))
     end
   end
 end

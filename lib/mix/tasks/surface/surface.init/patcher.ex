@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.FilePatcher do
+defmodule Mix.Tasks.Surface.Init.Patcher do
   @moduledoc false
 
   alias Mix.Tasks.Surface.Init.ExPatcher
@@ -18,7 +18,42 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
     :cannot_read_file
   ]
 
-  def print_patch_results(results) do
+  @template_folder "priv/templates/surface.init"
+
+  def patch_files(list) do
+    list = Enum.reduce(list, fn item, acc -> Map.merge(acc, item, fn _k, a, b -> a ++ b end) end)
+
+    for {file, patches} <- list do
+      patch_file(file, List.wrap(patches))
+    end
+  end
+
+  def patch_code(code, patch_spec) do
+    patch_spec.patch
+    |> List.wrap()
+    |> run_patch_funs(code)
+  end
+
+  def create_files(assigns, src_dest_list) do
+    %{yes: yes} = assigns
+
+    mapping =
+      Enum.map(src_dest_list, fn {src, dest} ->
+        file_name = Path.basename(src)
+        {:eex, src, Path.join(dest, file_name)}
+      end)
+
+    results = copy_from(paths(), @template_folder, Map.to_list(assigns), mapping, force: yes)
+
+    results
+    |> Enum.zip(src_dest_list)
+    |> Enum.map(fn
+      {true, {_src, dest}} -> {:patched, "Create #{dest}", dest, ""}
+      {false, {_src, dest}} -> {:already_patched, "Create #{dest}", dest, ""}
+    end)
+  end
+
+  def print_results(results) do
     results = List.flatten(results)
     n_patches = length(results)
     n_files = Enum.map(results, fn {_, _, file, _} -> file end) |> Enum.uniq() |> length()
@@ -88,15 +123,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
     end)
   end
 
-  def patch_files(list) do
-    list = Enum.reduce(list, fn item, acc -> Map.merge(acc, item, fn _k, a, b -> a ++ b end) end)
-
-    for {file, patches} <- list do
-      patch_file(file, List.wrap(patches))
-    end
-  end
-
-  def patch_file(file, patches) do
+  defp patch_file(file, patches) do
     Mix.shell().info([:green, "* patching ", :reset, file])
 
     case File.read(file) do
@@ -119,15 +146,15 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
     end
   end
 
-  def run_patch_funs(funs, code) do
+  defp run_patch_funs(funs, code) do
     run_patch_funs(funs, code, code, :unpatched)
   end
 
-  def run_patch_funs([], _original_code, last_code, last_result) do
+  defp run_patch_funs([], _original_code, last_code, last_result) do
     {last_result, last_code}
   end
 
-  def run_patch_funs([fun | funs], original_code, last_code, last_result) do
+  defp run_patch_funs([fun | funs], original_code, last_code, last_result) do
     {result, patched_code} = last_code |> fun.() |> convert_patch_result()
     result = Enum.max_by([result, last_result], fn item -> @result_precedence[item] end)
 
@@ -158,4 +185,41 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
       {status, name, file, instructions}
     end)
   end
+
+  defp paths(), do: [".", :surface]
+
+  # Copied from https://github.com/phoenixframework/phoenix/blob/adfaac06992323224f94a471f5d7b95aca4c3156/lib/mix/phoenix.ex#L29
+  # so we could pass the `opts` to `create_file`
+  defp copy_from(apps, source_dir, binding, mapping, opts) when is_list(mapping) do
+    roots = Enum.map(apps, &to_app_source(&1, source_dir))
+
+    for {format, source_file_path, target} <- mapping do
+      source =
+        Enum.find_value(roots, fn root ->
+          source = Path.join(root, source_file_path)
+          if File.exists?(source), do: source
+        end) || raise "could not find #{source_file_path} in any of the sources"
+
+      case format do
+        :text ->
+          Mix.Generator.create_file(target, File.read!(source), opts)
+
+        :eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
+
+        :new_eex ->
+          if File.exists?(target) do
+            :ok
+          else
+            Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
+          end
+      end
+    end
+  end
+
+  defp to_app_source(path, source_dir) when is_binary(path),
+    do: Path.join(path, source_dir)
+
+  defp to_app_source(app, source_dir) when is_atom(app),
+    do: Application.app_dir(app, source_dir)
 end
