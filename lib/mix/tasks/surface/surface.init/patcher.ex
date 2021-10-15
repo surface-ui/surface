@@ -46,10 +46,10 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     results = copy_from(paths(), @template_folder, Map.to_list(assigns), mapping, force: yes)
 
     results
-    |> Enum.zip(src_dest_list)
+    |> Enum.zip(mapping)
     |> Enum.map(fn
-      {true, {_src, dest}} -> {:patched, dest, %{name: "Create #{dest}", instructions: ""}}
-      {false, {_src, dest}} -> {:already_patched, dest, %{name: "Create #{dest}", instructions: ""}}
+      {true, {_, _, dest}} -> {:patched, dest, %{name: "Create #{dest}", instructions: ""}}
+      {false, {_, _, dest}} -> {:already_patched, dest, %{name: "Create #{dest}", instructions: ""}}
     end)
   end
 
@@ -77,7 +77,7 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
 
     n_patches_with_messages = length(patches_with_messages)
 
-    Mix.shell().info(["\nFinished running #{n_patches} patches against #{n_files} files."])
+    Mix.shell().info(["\nFinished running #{n_patches} patches for #{n_files} files."])
 
     if n_patches_with_messages > 0 do
       Mix.shell().info([:yellow, "#{n_patches_with_messages} messages emitted."])
