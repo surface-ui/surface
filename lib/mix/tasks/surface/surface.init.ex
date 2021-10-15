@@ -26,7 +26,8 @@ defmodule Mix.Tasks.Surface.Init do
     * `--demo` - Generates a sample `<Hero>` component. When used together with the `--catalogue`
       option, it additionally generates two catalogue examples and a playground for the component.
 
-    * `--yes` - automatic answer "yes" to all prompts.
+    * `--yes` - automatic answer "yes" to all prompts. Warning: this will also say "yes"
+      to overwrite existing files as well as running `mix deps.get` if required.
 
     * `--no-formatter` - do not configure the Surface formatter.
 
@@ -62,6 +63,8 @@ defmodule Mix.Tasks.Surface.Init do
     error_tag: true
   ]
 
+  @template_folder "priv/templates/surface.init"
+
   @doc false
   def run(args) do
     opts = parse_opts(args)
@@ -83,17 +86,32 @@ defmodule Mix.Tasks.Surface.Init do
       end
     end
 
-    patches = [
-      patches_for(:common, assigns),
-      patches_for(:formatter, assigns),
-      patches_for(:error_tag, assigns),
-      patches_for(:js_hooks, assigns),
-      patches_for(:catalogue, assigns)
+    patch_files_results =
+      FilePatcher.patch_files([
+        patches_for(:common, assigns),
+        patches_for(:formatter, assigns),
+        patches_for(:error_tag, assigns),
+        patches_for(:js_hooks, assigns),
+        patches_for(:catalogue, assigns)
+      ])
+
+    create_files_results = [
+      create_files_for(:demo, assigns),
+      create_files_for(:demo_catalogue, assigns)
     ]
 
-    patches
-    |> FilePatcher.patch_files()
-    |> FilePatcher.print_patch_results()
+    FilePatcher.print_patch_results(patch_files_results ++ create_files_results)
+
+    Mix.shell().info("")
+
+    # TODO
+    message = """
+    New dependencies were added to your project. Do you want fetch them now?\
+    """
+
+    if assigns.yes || Mix.shell().yes?(message) do
+      Mix.Task.run("deps.get")
+    end
   end
 
   defp patches_for(:common, assigns) do
@@ -164,6 +182,25 @@ defmodule Mix.Tasks.Surface.Init do
 
   defp patches_for(_, _), do: %{}
 
+  defp create_files_for(:demo, %{demo: true, web_path: web_path} = assigns) do
+    create_files(assigns, [
+      {"demo/hero.ex", Path.join([web_path, "components"])}
+    ])
+  end
+
+  defp create_files_for(:demo_catalogue, %{demo: true, catalogue: true, web_module: web_module} = assigns) do
+    web_folder = web_module |> inspect() |> Macro.underscore()
+    dest = Path.join(["priv/catalogue/", web_folder])
+
+    create_files(assigns, [
+      {"demo/example01.ex", dest},
+      {"demo/example02.ex", dest},
+      {"demo/playground.ex", dest}
+    ])
+  end
+
+  defp create_files_for(_, _), do: []
+
   defp parse_opts(args) do
     {opts, _parsed} = OptionParser.parse!(args, strict: @switches)
     Keyword.merge(@default_opts, opts)
@@ -205,4 +242,60 @@ defmodule Mix.Tasks.Surface.Init do
     |> ExPatcher.find_code_containing("Gettext.dngettext")
     |> ExPatcher.valid?()
   end
+
+  defp paths(), do: [".", :surface]
+
+  defp create_files(assigns, src_dest_list) do
+    %{yes: yes} = assigns
+
+    mapping =
+      Enum.map(src_dest_list, fn {src, dest} ->
+        file_name = Path.basename(src)
+        {:eex, src, Path.join(dest, file_name)}
+      end)
+
+    results = copy_from(paths(), @template_folder, Map.to_list(assigns), mapping, force: yes)
+
+    results
+    |> Enum.zip(src_dest_list)
+    |> Enum.map(fn
+      {true, {_src, dest}} -> {:patched, "Create #{dest}", dest, ""}
+      {false, {_src, dest}} -> {:already_patched, "Create #{dest}", dest, ""}
+    end)
+  end
+
+  # Copied from https://github.com/phoenixframework/phoenix/blob/adfaac06992323224f94a471f5d7b95aca4c3156/lib/mix/phoenix.ex#L29
+  # so we could pass the `opts` to `create_file`
+  def copy_from(apps, source_dir, binding, mapping, opts \\ []) when is_list(mapping) do
+    roots = Enum.map(apps, &to_app_source(&1, source_dir))
+
+    for {format, source_file_path, target} <- mapping do
+      source =
+        Enum.find_value(roots, fn root ->
+          source = Path.join(root, source_file_path)
+          if File.exists?(source), do: source
+        end) || raise "could not find #{source_file_path} in any of the sources"
+
+      case format do
+        :text ->
+          Mix.Generator.create_file(target, File.read!(source), opts)
+
+        :eex ->
+          Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
+
+        :new_eex ->
+          if File.exists?(target) do
+            :ok
+          else
+            Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
+          end
+      end
+    end
+  end
+
+  defp to_app_source(path, source_dir) when is_binary(path),
+    do: Path.join(path, source_dir)
+
+  defp to_app_source(app, source_dir) when is_atom(app),
+    do: Application.app_dir(app, source_dir)
 end

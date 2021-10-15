@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
       Mix.shell().info([:yellow, "#{n_patches_with_messages} messages emitted."])
     end
 
-    summary = "#{n_patches_applied} patches applied, #{n_patches_skipped} skipped."
+    summary = "#{n_patches_applied} changes applied, #{n_patches_skipped} skipped."
 
     if n_patches_already_patched == n_patches do
       Mix.shell().info([:yellow, summary])
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatcher do
   end
 
   def patch_file(file, patches) do
-    Mix.shell().info([:green, "* Patching ", :reset, file])
+    Mix.shell().info([:green, "* patching ", :reset, file])
 
     case File.read(file) do
       {:ok, code} ->
