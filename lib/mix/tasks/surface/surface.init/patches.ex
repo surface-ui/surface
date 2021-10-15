@@ -317,4 +317,20 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       ]
     }
   end
+
+  def add_ignore_js_hooks_to_gitignore() do
+    %{
+      name: "Ignore generated JS hook files for components",
+      instructions: "",
+      patch:
+        &Patchers.Text.append_line(
+          &1,
+          """
+          # Ignore generated js hook files for components
+          assets/js/_hooks/
+          """,
+          "assets/js/_hooks/"
+        )
+    }
+  end
 end

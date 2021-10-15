@@ -760,6 +760,56 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     end
   end
 
+  describe "add_ignore_js_hooks_to_gitignore" do
+    test "add entry to ignore generated JS hook files in .gitignore" do
+      code = """
+      # Ignore assets that are produced by build tools.
+      /priv/static/assets/
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_ignore_js_hooks_to_gitignore())
+
+      assert updated_code == """
+             # Ignore assets that are produced by build tools.
+             /priv/static/assets/
+
+             # Ignore generated js hook files for components
+             assets/js/_hooks/
+             """
+    end
+
+    test "trim spaces at the end so we can have a single line before the appended code" do
+      code = """
+      # Ignore assets that are produced by build tools.
+      /priv/static/assets/
+
+
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_ignore_js_hooks_to_gitignore())
+
+      assert updated_code == """
+             # Ignore assets that are produced by build tools.
+             /priv/static/assets/
+
+             # Ignore generated js hook files for components
+             assets/js/_hooks/
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      # Ignore assets that are produced by build tools.
+      /priv/static/assets/
+
+      # Ignore generated js hook files for components
+      assets/js/_hooks/
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.add_ignore_js_hooks_to_gitignore())
+    end
+  end
+
   describe "patch_config_error_tag" do
     test "add `config :surface, :components` with the ErrorTag config" do
       code = ~S"""

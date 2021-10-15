@@ -165,6 +165,9 @@ defmodule Mix.Tasks.Surface.Init do
       ],
       "config/dev.exs" => [
         Patches.add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module)
+      ],
+      ".gitignore" => [
+        Patches.add_ignore_js_hooks_to_gitignore()
       ]
     }
   end
