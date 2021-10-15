@@ -110,7 +110,17 @@ defmodule Mix.Tasks.Surface.Init.Patches do
           ~S(github: "surface-ui/surface_catalogue", only: [:test, :dev])
         ),
       instructions: """
-      TODO
+      Add `surface_catalogue` to your list of dependencies in `mix.exs` (development/test-only).
+
+      # Example
+
+      ```
+      def deps do
+        [
+          {:surface_catalogue, "~> 0.1.0", only: [:test, :dev]}
+        ]
+      end
+      ```
       """
     }
   end
@@ -127,7 +137,22 @@ defmodule Mix.Tasks.Surface.Init.Patches do
         """)
       ],
       instructions: """
-      TODO
+      If you want to access examples and playgrounds for components, edit your `mix.exs` file,
+      adding a new entry for `elixirc_paths` along with a `catalogues` function listing the
+      catalogues you want to be loaded.
+
+      # Example
+
+      ```
+      defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
+
+      ...
+
+      def catalogues do
+        [
+          "priv/catalogue"
+        ]
+      end
       """
     }
   end
@@ -135,7 +160,6 @@ defmodule Mix.Tasks.Surface.Init.Patches do
   def configure_catalogue_route(web_module) do
     %{
       name: "Configure catalogue route",
-      instructions: "TODO",
       patch: [
         &Patchers.Phoenix.add_import_to_router(&1, Surface.Catalogue.Router, web_module),
         &Patchers.Phoenix.append_route(&1, "/catalogue", web_module, """
@@ -146,7 +170,25 @@ defmodule Mix.Tasks.Surface.Init.Patches do
             end
           end\
         """)
-      ]
+      ],
+      instructions: """
+      Update your `router.ex` configuration so the catalogue can be available at `/catalogue`.
+
+      # Example
+
+      ```
+      import Surface.Catalogue.Router
+
+      ...
+
+      if Mix.env() == :dev do
+        scope "/" do
+          pipe_through :browser
+          surface_catalogue "/catalogue"
+        end
+      end
+      ```
+      """
     }
   end
 
