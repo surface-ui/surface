@@ -673,6 +673,54 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     end
   end
 
+  describe "configure_demo_route" do
+    test "add the demo route" do
+      code = """
+      defmodule MyAppWeb.Router do
+        use MyAppWeb, :router
+
+        scope "/", MyAppWeb do
+          pipe_through :browser
+
+          get "/", PageController, :index
+        end
+      end
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.configure_demo_route(MyAppWeb))
+
+      assert updated_code == """
+             defmodule MyAppWeb.Router do
+               use MyAppWeb, :router
+
+               scope "/", MyAppWeb do
+                 pipe_through :browser
+
+                 get "/", PageController, :index
+                 live "/demo", Demo
+               end
+             end
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      defmodule MyAppWeb.Router do
+        use MyAppWeb, :router
+
+        scope "/", MyAppWeb do
+          pipe_through :browser
+
+          get "/", PageController, :index
+          live "/demo", Demo
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.configure_demo_route(MyAppWeb))
+    end
+  end
+
   describe "patch_js_hooks" do
     test "configure JS hooks" do
       code = """

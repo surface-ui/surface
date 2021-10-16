@@ -193,6 +193,26 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     }
   end
 
+  def configure_demo_route(web_module) do
+    %{
+      name: "Configure demo route",
+      patch: &Patchers.Phoenix.append_route_to_main_scope(&1, ~S("/demo"), web_module, ~S(live "/demo", Demo)),
+      instructions: """
+      Update your `router.ex` configuration so the demo can be available at `/demo`.
+
+      # Example
+
+      ```
+      scope "/", MyAppWeb do
+        pipe_through :browser
+
+        live "/demo", Demo
+      end
+      ```
+      """
+    }
+  end
+
   def add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module) do
     %{
       name: "Update patterns in :reload_patterns to reload catalogue files",

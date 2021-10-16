@@ -94,6 +94,7 @@ defmodule Mix.Tasks.Surface.Init do
         patches_for(:formatter, assigns),
         patches_for(:error_tag, assigns),
         patches_for(:js_hooks, assigns),
+        patches_for(:demo, assigns),
         patches_for(:catalogue, assigns)
       ])
 
@@ -189,11 +190,22 @@ defmodule Mix.Tasks.Surface.Init do
     }
   end
 
+  defp patches_for(:demo, %{demo: true} = assigns) do
+    %{web_module: web_module, web_path: web_path} = assigns
+
+    %{
+      "#{web_path}/router.ex" => [
+        Patches.configure_demo_route(web_module)
+      ]
+    }
+  end
+
   defp patches_for(_, _), do: %{}
 
   defp create_files_for(:demo, %{demo: true, web_path: web_path} = assigns) do
     Patcher.create_files(assigns, [
-      {"demo/hero.ex", Path.join([web_path, "components"])}
+      {"demo/hero.ex", Path.join([web_path, "components"])},
+      {"demo/demo.ex", Path.join([web_path, "live"])}
     ])
   end
 

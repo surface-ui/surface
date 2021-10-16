@@ -38,6 +38,19 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> replace_code(&"#{&1}\n\n#{route_code}")
   end
 
+  def append_route_to_main_scope(code, route, web_module, route_code) do
+    web_module_str = inspect(web_module)
+
+    code
+    |> parse_string!()
+    |> enter_defmodule(Module.concat(web_module, Router))
+    |> halt_if(&find_code(&1, route), :already_patched)
+    |> find_call_with_args(:scope, &match?([~S("/"), ^web_module_str | _], &1))
+    |> body()
+    |> last_child()
+    |> replace_code(&"#{&1}\n    #{route_code}")
+  end
+
   def add_reloadable_compiler_to_endpoint_config(code, compiler, context_app, web_module) do
     reloadable_compilers = Module.concat(web_module, Endpoint).config(:reloadable_compilers)
 
