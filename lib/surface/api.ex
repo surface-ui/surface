@@ -315,6 +315,7 @@ defmodule Surface.API do
 
     quoted_changing_fallback =
       quote do
+        @doc false
         def __changes_context__?(_fun), do: false
       end
 
@@ -328,6 +329,7 @@ defmodule Surface.API do
 
     quoted_getting_fallback =
       quote do
+        @doc false
         def __gets_context__?(_fun), do: false
       end
 

@@ -9,8 +9,8 @@ defmodule Surface.Catalogue.CatalogueTest do
     test "get default configuration if none is provided" do
       config = Surface.Catalogue.get_config(FakeExample)
 
-      assert config[:head_css] =~ "/css/app.css"
-      assert config[:head_js] =~ "/js/app.js"
+      assert config[:head_css] =~ "/assets/app.css"
+      assert config[:head_js] =~ "/assets/app.js"
     end
 
     test "calalogue config overrides default config" do

@@ -21,7 +21,7 @@ defmodule Surface.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :inets],
       env: [csrf_token_reader: {Plug.CSRFProtection, :get_csrf_token_for, []}]
     ]
   end
@@ -36,6 +36,7 @@ defmodule Surface.MixProject do
       {:phoenix_live_view, "~> 0.16"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
+      {:sourceror, "~> 0.8.5"},
       {:ecto, "~> 3.4.2", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
     ]
