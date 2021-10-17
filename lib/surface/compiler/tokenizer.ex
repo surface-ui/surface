@@ -5,7 +5,7 @@ defmodule Surface.Compiler.Tokenizer do
   @unquoted_value_invalid_chars '"\'=<`'
   @unquoted_value_stop_chars @space_chars ++ '>'
   @block_name_stop_chars @space_chars ++ '}'
-  @markers ["=", "...", "~", "$", "^"]
+  @markers ["=", "...", "$", "^", ~S(~")]
 
   @ignored_body_tags ["style", "script"]
 
@@ -718,9 +718,18 @@ defmodule Surface.Compiler.Tokenizer do
   ## handle_expression
 
   # handle tagged expressions
-  for marker <- @markers do
-    defp handle_expression(unquote(marker) <> rest, line, column, state) do
+  for marker <- @markers, {maybe_marker, maybe_double_quote} = String.split_at(marker, -1) do
+    defp handle_expression(unquote(marker) <> rest = text, line, column, state) do
       marker = unquote(marker)
+
+      {marker, rest} =
+        if unquote(maybe_double_quote) == ~S(") do
+          unquote(maybe_marker) <> rest = text
+          {unquote(maybe_marker), rest}
+        else
+          {marker, rest}
+        end
+
       marker_column_end = column + String.length(marker)
 
       meta = %{line: line, column: column, line_end: line, column_end: marker_column_end, file: state.file}

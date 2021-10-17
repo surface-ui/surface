@@ -374,13 +374,6 @@ defmodule Surface.Compiler.TokenizerTest do
                 %{line: 1, column: 2, line_end: 1, column_end: 3}}
              ] = tokens
 
-      tokens = tokenize!("{~@class}")
-
-      assert [
-               {:tagged_expr, "~", {:expr, "@class", %{line: 1, column: 3, line_end: 1, column_end: 9}},
-                %{line: 1, column: 2, line_end: 1, column_end: 3}}
-             ] = tokens
-
       tokens = tokenize!("{$@class}")
 
       assert [
@@ -780,6 +773,14 @@ defmodule Surface.Compiler.TokenizerTest do
                   %{column: 13, line: 1, column_end: 14, line_end: 1}},
                  %{column: 6, column_end: 11, line: 1, line_end: 1}
                }
+             ] = attrs
+    end
+
+    test "marker `~` should not conflict with sigils" do
+      attrs = tokenize_attrs(~S(<div title={~D[2021-10-12]}>))
+
+      assert [
+               {"title", {:expr, "~D[2021-10-12]", %{column: 13, line: 1, column_end: 27, line_end: 1}}, %{}}
              ] = attrs
     end
   end
