@@ -21,7 +21,7 @@ defmodule Surface.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :inets],
+      extra_applications: [:logger],
       env: [csrf_token_reader: {Plug.CSRFProtection, :get_csrf_token_for, []}]
     ]
   end
