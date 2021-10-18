@@ -143,7 +143,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_catalogue, github: "surface-ui/surface_catalogue", only: [:test, :dev]}
+                   {:surface_catalogue, github: "surface-ui/surface_catalogue"}
                  ]
                end
              end

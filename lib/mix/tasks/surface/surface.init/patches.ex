@@ -108,17 +108,17 @@ defmodule Mix.Tasks.Surface.Init.Patches do
         &Patchers.MixExs.add_dep(
           &1,
           ":surface_catalogue",
-          ~S(github: "surface-ui/surface_catalogue", only: [:test, :dev])
+          ~S(github: "surface-ui/surface_catalogue")
         ),
       instructions: """
-      Add `surface_catalogue` to your list of dependencies in `mix.exs` (development/test-only).
+      Add `surface_catalogue` to the list of dependencies in `mix.exs`.
 
       # Example
 
       ```
       def deps do
         [
-          {:surface_catalogue, "~> 0.1.0", only: [:test, :dev]}
+          {:surface_catalogue, "~> 0.2.0"}
         ]
       end
       ```
