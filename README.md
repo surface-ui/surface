@@ -5,10 +5,9 @@
 Surface is a **server-side rendering** component library that allows developers to
 build **rich interactive user-interfaces**, writing minimal custom Javascript.
 
-Built on top of [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/) and its new
-[LiveComponent](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html), Surface
-leverages the amazing Phoenix Framework to provide a **fast** and **productive** solution to build
-modern web applications.
+Built on top of [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/) and its component API,
+Surface leverages the amazing Phoenix Framework to provide a **fast** and **productive** solution
+to build modern web applications.
 
 Full documentation and live examples can be found at [surface-ui.org](https://surface-ui.org).
 
@@ -62,35 +61,69 @@ end
 
 ## Installation
 
-Phoenix v1.5 comes with built-in support for LiveView apps. You can create a new application with:
+Phoenix v1.6 comes with built-in support for LiveView apps. You can create a new phoenix application with:
 
 ```
 mix phx.new my_app --live
 ```
 
-Then add `surface` to the list of dependencies in `mix.exs`:
+> **Note:** In case you want to add Surface to an existing Phoenix application that doesn't have
+LiveView properly installed, please see Phoenix Liveview's installation instructions at
+[hexdocs.pm/phoenix_live_view/installation.html](https://hexdocs.pm/phoenix_live_view/installation.html).
+
+Add `surface` to the list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.5.0"}
+    {:surface, "~> 0.6.0"}
   ]
 end
 ```
 
-If you're using `mix format`, make sure you add `:surface` to the `import_deps`
-configuration in your `.formatter.exs` file:
+## Configuring the project using `mix surface.init`
 
-```elixir
-[
-  import_deps: [:ecto, :phoenix, :surface],
-  ...
-]
+After fetching the dependencies with `mix deps.get`, you can run the `surface.init` task to
+update the necessary files in your project.
+
+In case you want the task to also generate a sample component for you, use can use the `--demo` option.
+A liveview using the component will be available at the `/demo` route.
+
+Additionally, the task can also set up a [Surface Catalogue](https://github.com/surface-ui/surface_catalogue/)
+for your project using the `--catalogue` option. The catalogue will be available at `/catalogue`.
+
+> **Note:** When using the `--demo` and `--catalogue` options together, the task also generates two
+> catalogue examples and a playground for the sample component.
+
+```
+mix surface.init --demo --catalogue
 ```
 
-For further information regarding installation, including how to quickly get started
-using a boilerplate, please visit the [Getting Started](https://surface-ui.org/getting_started)
-guide.
+Start the Phoenix server with:
+
+```
+mix phx.server
+```
+
+That's it! You can now access your application at http://localhost:4000.
+
+You can see the full list of options provided by `surface.init` by running:
+
+```
+mix help surface.init
+```
+
+For further information regarding installation, including how to install Surface manually,
+please visit the [Getting Started](https://surface-ui.org/getting_started) guide.
+
+## Migrating from `v0.5.x` to `v0.6.x`
+
+Surface `v0.6.x` relies on the Liveview features available since `v0.16`. The main change
+from the user perspective is that the stateless `Surface.Component` now is built on top of
+`Phoenix.Component` instead of `Phoenix.LiveComponent`. This means the `mount/1`, `preload/1`
+and `udpate/2` callbacks are no longer available. If you initialize any assign or compute
+any value using those callbacks, you need to replace them with one of the new
+[assign helpers](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#module-assigns).
 
 ## Migrating from `v0.4.x` to `v0.5.x`
 
