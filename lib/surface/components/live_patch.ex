@@ -24,7 +24,7 @@ defmodule Surface.Components.LivePatch do
   prop class, :css_class, default: ""
 
   @doc """
-  The label for the generated `<a>` alement, if no content (default slot) is provided.
+  The label for the generated `<a>` element, if no content (default slot) is provided.
   """
   prop label, :string
 
