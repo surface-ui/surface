@@ -143,7 +143,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_catalogue, github: "surface-ui/surface_catalogue"}
+                   {:surface_catalogue, "~> 0.2.0"}
                  ]
                end
              end
@@ -171,7 +171,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
           [
             {:phoenix, "~> 1.6.0"},
             {:surface, "~> 0.5.2"},
-            {:surface_catalogue, github: "surface-ui/surface_catalogue", only: [:test, :dev]},
+            {:surface_catalogue, "~> 0.2.0"},
             {:plug_cowboy, "~> 2.5"}
           ]
         end
@@ -198,7 +198,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
             {:phoenix, "~> 1.6.0"},
             {:surface, "~> 0.5.2"},
             {:plug_cowboy, "~> 2.5"},
-            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+            {:surface_catalogue, "~> 0.2.0"}
           ]
         end
       end
@@ -221,7 +221,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+                   {:surface_catalogue, "~> 0.2.0"}
                  ]
                end
 
@@ -250,7 +250,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
             {:phoenix, "~> 1.6.0"},
             {:surface, "~> 0.5.2"},
             {:plug_cowboy, "~> 2.5"},
-            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]}
+            {:surface_catalogue, "~> 0.2.0"}
           ]
         end
 
@@ -280,7 +280,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
           [
             {:phoenix, "~> 1.6.0"},
             {:surface, "~> 0.5.2"},
-            {:surface_catalogue, path: "../../surface_catalogue", only: [:test, :dev]},
+            {:surface_catalogue, "~> 0.2.0"},
             {:plug_cowboy, "~> 2.5"}
           ]
         end

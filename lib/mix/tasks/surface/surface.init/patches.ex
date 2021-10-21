@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
         &Patchers.MixExs.add_dep(
           &1,
           ":surface_catalogue",
-          ~S(github: "surface-ui/surface_catalogue")
+          ~S("~> 0.2.0")
         ),
       instructions: """
       Add `surface_catalogue` to the list of dependencies in `mix.exs`.
