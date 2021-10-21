@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.0 (2021-10-21)
+
+  * Compatibility with Phoenix `v1.6` and Liveview `v0.16`
+  * New `mix surface.init` task
+  * Add support for function components
+  * Add support for dynamic function components via `<Component>`
+  * Add support for recursive function components
+  * Optimize change tracking for contexts
+  * Fix race condition when compiling tests
+  * Fix recompilation of used components
+
 ## v0.5.1 (2021-07-13)
 
   * Add property `values` to form inputs
