@@ -58,6 +58,27 @@ defmodule Mix.Tasks.Surface.Init.Patches do
 
   # Formatter patches
 
+  def add_surface_formatter_to_mix_deps() do
+    %{
+      name: "Add `surface_formatter` dependency",
+      update_deps: [:surface_formatter],
+      patch: &Patchers.MixExs.add_dep(&1, ":surface_formatter", ~S("~> 0.6.0")),
+      instructions: """
+      Add `surface_formatter` to the list of dependencies in `mix.exs`.
+
+      # Example
+
+      ```
+      def deps do
+        [
+          {:surface_formatter, "~> 0.6.0"}
+        ]
+      end
+      ```
+      """
+    }
+  end
+
   def add_surface_inputs_to_formatter_config() do
     %{
       name: "Add file extensions to :surface_inputs",
@@ -104,12 +125,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{
       name: "Add `surface_catalogue` dependency",
       update_deps: [:surface_catalogue],
-      patch:
-        &Patchers.MixExs.add_dep(
-          &1,
-          ":surface_catalogue",
-          ~S("~> 0.2.0")
-        ),
+      patch: &Patchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.2.0")),
       instructions: """
       Add `surface_catalogue` to the list of dependencies in `mix.exs`.
 

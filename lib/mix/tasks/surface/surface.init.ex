@@ -111,8 +111,10 @@ defmodule Mix.Tasks.Surface.Init do
       Mix.shell().info("\nThe following dependencies were updated/added to your project:\n")
 
       for dep <- updated_deps do
-        Mix.shell().info(["  * #{dep}\n"])
+        Mix.shell().info(["  * #{dep}"])
       end
+
+      Mix.shell().info("")
 
       if assigns.yes || Mix.shell().yes?("Do you want to fetch and install them now?") do
         Mix.shell().cmd("mix deps.get", [])
@@ -141,6 +143,9 @@ defmodule Mix.Tasks.Surface.Init do
 
   defp patches_for(:formatter, %{formatter: true}) do
     %{
+      "mix.exs" => [
+        Patches.add_surface_formatter_to_mix_deps()
+      ],
       ".formatter.exs" => [
         Patches.add_surface_inputs_to_formatter_config(),
         Patches.add_surface_to_import_deps_in_formatter_config()

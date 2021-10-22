@@ -150,7 +150,7 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
              """
     end
 
-    test "don't apply it if maybe already patched" do
+    test "don't apply it if already patched" do
       code = """
       defmodule MyApp.MixProject do
         use Mix.Project
@@ -346,6 +346,86 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
 
       assert {:already_patched, ^code} =
                Patcher.patch_code(code, Patches.add_import_surface_to_view_macro(MyAppWeb))
+    end
+  end
+
+  describe "add_surface_formatter_to_mix_deps" do
+    test "add :surface_formatter to deps" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app
+          ]
+        end
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:plug_cowboy, "~> 2.5"}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_surface_formatter_to_mix_deps())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               def project do
+                 [
+                   app: :my_app
+                 ]
+               end
+
+               # Specifies your project dependencies.
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"},
+                   {:plug_cowboy, "~> 2.5"},
+                   {:surface_formatter, "~> 0.6.0"}
+                 ]
+               end
+             end
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app
+          ]
+        end
+
+        # Specifies which paths to compile per environment.
+        defp elixirc_paths(:test), do: ["lib", "test/support"]
+        defp elixirc_paths(:dev), do: ["lib"]
+        defp elixirc_paths(_), do: ["lib"]
+
+        # Specifies your project dependencies.
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"},
+            {:surface_formatter, "~> 0.6.0"},
+            {:plug_cowboy, "~> 2.5"}
+          ]
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, Patches.add_surface_formatter_to_mix_deps())
     end
   end
 
