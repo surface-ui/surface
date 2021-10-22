@@ -64,7 +64,7 @@ end
 Phoenix v1.6 comes with built-in support for LiveView apps. You can create a new phoenix application with:
 
 ```
-mix phx.new my_app --live
+mix phx.new my_app
 ```
 
 > **Note:** In case you want to add Surface to an existing Phoenix application that doesn't have
