@@ -92,6 +92,16 @@ A liveview using the component will be available at the `/demo` route.
 Additionally, the task can also set up a [Surface Catalogue](https://github.com/surface-ui/surface_catalogue/)
 for your project using the `--catalogue` option. The catalogue will be available at `/catalogue`.
 
+If you want to disable surface formatter, you can pass ```--no-formatter``` as a command line option. Otherwise, you have to add surface_formatter to mix. 
+```elixir
+def deps do
+  [
+    {:surface_formatter, "~> 0.6.0"}
+  ]
+```
+Surface Formatter is already configured - and - you can find the configuration inside ```.formatter.exs``` For detailed description of options, please refer to [Surface Formatter](https://github.com/surface-ui/surface_formatter)
+
+
 > **Note:** When using the `--demo` and `--catalogue` options together, the task also generates two
 > catalogue examples and a playground for the sample component.
 
@@ -121,7 +131,7 @@ please visit the [Getting Started](https://surface-ui.org/getting_started) guide
 Surface `v0.6.x` relies on the Liveview features available since `v0.16`. The main change
 from the user perspective is that the stateless `Surface.Component` now is built on top of
 `Phoenix.Component` instead of `Phoenix.LiveComponent`. This means the `mount/1`, `preload/1`
-and `udpate/2` callbacks are no longer available. If you initialize any assign or compute
+and `update/2` callbacks are no longer available. If you initialize any assign or compute
 any value using those callbacks, you need to replace them with one of the new
 [assign helpers](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#module-assigns).
 
