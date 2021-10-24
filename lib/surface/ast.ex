@@ -95,7 +95,7 @@ defmodule Surface.AST.Meta do
       * `:node_alias` - the alias used inside the source code (e.g. `LivePatch`)
       * `:file` - the file from which the source was extracted
       * `:caller` - a Macro.Env struct representing the caller
-      * `:function_component?` - indicates it's a function component or not
+      * `:function_component?` - indicates if it's a function component or not
   """
   @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks, :function_component?]}
   defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks, :function_component?]

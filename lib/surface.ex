@@ -1,6 +1,6 @@
 defmodule Surface do
   @moduledoc """
-  Surface is component based library for **Phoenix LiveView**.
+  Surface is a component based library for **Phoenix LiveView**.
 
   Built on top of the new `Phoenix.LiveComponent` API, Surface provides
   a more declarative way to express and use components in Phoenix.
@@ -97,8 +97,8 @@ defmodule Surface do
 
   alias Phoenix.LiveView
   alias Surface.API
-  alias Surface.IOHelper
   alias Surface.Compiler.Helpers
+  alias Surface.IOHelper
 
   @doc """
   Translates Surface code into Phoenix templates.
@@ -259,8 +259,7 @@ defmodule Surface do
       |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
       |> Enum.filter(fn value -> not match?({_, nil}, value) end)
 
-    slot_props
-    |> Enum.map(fn {name, info} -> {Keyword.get(mapping, name, name), info} end)
+    Enum.map(slot_props, fn {name, info} -> {Keyword.get(mapping, name, name), info} end)
   end
 
   @doc false
@@ -312,7 +311,7 @@ defmodule Surface do
   @doc """
   Tests if a slot has been filled in.
 
-  Useful to avoid rendering unecessary html tags that are used to wrap an optional slot
+  Useful to avoid rendering unnecessary html tags that are used to wrap an optional slot
   in combination with `:if` directive.
 
   ## Examples

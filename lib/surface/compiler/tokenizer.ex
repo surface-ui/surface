@@ -238,7 +238,7 @@ defmodule Surface.Compiler.Tokenizer do
         [{:block_open, name, nil, %{line: line, column: column}} | _] = acc
 
         message = """
-        expected closing `}` for opening block expression `{##{name}` begining at \
+        expected closing `}` for opening block expression `{##{name}` beginning at \
         line: #{line}, column: #{column - 1}\
         """
 
@@ -743,7 +743,7 @@ defmodule Surface.Compiler.Tokenizer do
 
         {:error, :expected_closing_brace, error_line, error_column} ->
           message = """
-          expected closing `}` for tagged expression `{#{marker}` begining at \
+          expected closing `}` for tagged expression `{#{marker}` beginning at \
           line: #{line}, column: #{column}\
           """
 
@@ -763,7 +763,7 @@ defmodule Surface.Compiler.Tokenizer do
 
       {:error, :expected_closing_brace, error_line, error_column} ->
         message = """
-        expected closing `}` for expression begining at line: #{line}, column: #{column}\
+        expected closing `}` for expression beginning at line: #{line}, column: #{column}\
         """
 
         raise parse_error(message, error_line, error_column, state)
