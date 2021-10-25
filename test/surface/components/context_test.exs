@@ -2,6 +2,7 @@ defmodule Surface.Components.ContextTest do
   use Surface.ConnCase, async: true
 
   alias Surface.Components.Context
+  alias Surface.ContextTest.Components.ComponentWithExternalTemplateUsingContext
 
   defmodule Outer do
     use Surface.Component
@@ -115,6 +116,21 @@ defmodule Surface.Components.ContextTest do
 
       assert html =~ """
              <span id="field">field from Outer</span>\
+             """
+    end
+
+    test "pass context to child component using external template" do
+      html =
+        render_surface do
+          ~F"""
+          <Outer>
+            <ComponentWithExternalTemplateUsingContext/>
+          </Outer>
+          """
+        end
+
+      assert html =~ """
+             <div>field from Outer</div>\
              """
     end
 

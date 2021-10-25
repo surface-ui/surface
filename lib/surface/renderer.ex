@@ -22,6 +22,8 @@ defmodule Surface.Renderer do
         :ok
 
       {false, _, true} ->
+        env = Map.put(env, :function, {:render, 1})
+
         ast =
           template
           |> File.read!()
