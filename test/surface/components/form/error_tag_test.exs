@@ -42,10 +42,10 @@ defmodule Surface.Components.Form.ErrorTagTest do
       end
 
     assert html =~
-             "<span phx-feedback-for=\"user_name\">is already taken</span>"
+             "<span phx-feedback-for=\"user[name]\">is already taken</span>"
 
     assert html =~
-             "<span phx-feedback-for=\"user_name\">another test error</span>"
+             "<span phx-feedback-for=\"user[name]\">another test error</span>"
   end
 
   test "no errors are shown if changeset.action is empty", %{changeset: changeset} do
@@ -101,7 +101,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
       end
 
     assert html =~
-             "<span class=\"test-class\" phx-feedback-for=\"user_name\">is already taken</span>"
+             "<span class=\"test-class\" phx-feedback-for=\"user[name]\">is already taken</span>"
   end
 
   test "no changeset shows no errors" do
@@ -173,7 +173,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
         end
 
       assert html =~
-               "<span phx-feedback-for=\"user_name\">translated by config translator</span>"
+               "<span phx-feedback-for=\"user[name]\">translated by config translator</span>"
     end
   end
 
@@ -194,10 +194,10 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
         end
 
       assert html =~
-               "<span phx-feedback-for=\"user_name\">translated by prop translator</span>"
+               "<span phx-feedback-for=\"user[name]\">translated by prop translator</span>"
 
       refute html =~
-               "<span phx-feedback-for=\"user_name\">translated by config translator</span>"
+               "<span phx-feedback-for=\"user[name]\">translated by config translator</span>"
     end
   end
 
@@ -217,7 +217,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
         end
 
       assert html =~
-               "<span class=\"class-from-config\" phx-feedback-for=\"user_name\">is already taken</span>"
+               "<span class=\"class-from-config\" phx-feedback-for=\"user[name]\">is already taken</span>"
     end
   end
 
@@ -237,7 +237,7 @@ defmodule Surface.Components.Form.ErrorTagSyncTest do
         end
 
       assert html =~
-               "<span class=\"class-from-prop\" phx-feedback-for=\"user_name\">is already taken</span>"
+               "<span class=\"class-from-prop\" phx-feedback-for=\"user[name]\">is already taken</span>"
     end
   end
 

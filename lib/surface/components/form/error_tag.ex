@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.ErrorTag do
   ]
   ```
 
-  > **Note:** If you don't configure a `default_translator`, Surface will try to translate errors using 
+  > **Note:** If you don't configure a `default_translator`, Surface will try to translate errors using
   a built-in message translator which may not cover all types of errors. If the error cannot
   be translated, a generic `"invalid value"` will be returned and a warning will be emitted,
   reminding the user to set up a proper `default_translator` that can handle such cases.
@@ -56,7 +56,7 @@ defmodule Surface.Components.Form.ErrorTag do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [input_id: 2]
+  import Phoenix.HTML.Form, only: [input_name: 2]
 
   alias Surface.Components.Form.Input.InputContext
 
@@ -113,7 +113,7 @@ defmodule Surface.Components.Form.ErrorTag do
       <span
         :for={error <- Keyword.get_values(form.errors, field)}
         class={class}
-        phx-feedback-for={@feedback_for || input_id(form, field)}
+        phx-feedback-for={@feedback_for || input_name(form, field)}
       >{translate_error.(error)}</span>
     </InputContext>
     """
