@@ -56,6 +56,7 @@ defmodule Surface.LiveComponent do
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
+      import Phoenix.LiveView.Helpers, except: [slot: 2]
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 

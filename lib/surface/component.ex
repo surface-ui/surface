@@ -40,6 +40,7 @@ defmodule Surface.Component do
       @before_compile unquote(__MODULE__)
 
       use Phoenix.Component
+      import Phoenix.LiveView.Helpers, except: [slot: 2]
 
       @behaviour unquote(__MODULE__)
 

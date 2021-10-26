@@ -246,9 +246,13 @@ defmodule Surface do
           ]
       )
     else
-      # Function components don't support slots nor contexts
-      Map.new(props)
+      # Function components don't support contexts
+      Map.new(props ++ slot_assigns)
     end
+  end
+
+  defp map_slots_to_assigns(nil, slot_props) do
+    slot_props
   end
 
   defp map_slots_to_assigns(module, slot_props) do
