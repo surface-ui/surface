@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.1 (2021-10-26)
+
+  * Add `surface_formatter` dependency to `mix.exs` when running `mix surface.init` (#507)
+  * Allow `Inputs` component inside the `Field` component (#492)
+  * Fix using context with external `.sface` templates (#511)
+  * Fix attribute name conversion (#512)
+
 ## v0.6.0 (2021-10-21)
 
   * Compatibility with Phoenix `v1.6` and Liveview `v0.16`
