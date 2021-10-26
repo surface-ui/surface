@@ -11,6 +11,29 @@ defmodule HtmlTagTest do
     end)
   end
 
+  test "dynamic attribute names in camel_case should be translated to snake-case" do
+    expected = ~S(<button phx-value-my-value="foo"></button>)
+
+    html = render_surface(do: ~F[<button {... phx_value_my_value: String.downcase("FOO")}/>])
+    assert html =~ expected
+
+    html = render_surface(do: ~F[<button {... phx_value_my_value: "foo"}/>])
+    assert html =~ expected
+  end
+
+  test "literal attribute names in camel_case should not be translated to snake-case" do
+    expected = ~S(<button phx-value-my_value="foo"></button>)
+
+    html = render_surface(do: ~F[<button phx-value-my_value="foo"/>])
+    assert html =~ expected
+
+    html = render_surface(do: ~F[<button phx-value-my_value={"foo"}/>])
+    assert html =~ expected
+
+    html = render_surface(do: ~F[<button phx-value-my_value={String.downcase("FOO")}/>])
+    assert html =~ expected
+  end
+
   describe "escape HTML when interpolating" do
     test "inside the body" do
       assigns = %{value: @encoded_json}

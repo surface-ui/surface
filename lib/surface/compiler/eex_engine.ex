@@ -829,7 +829,7 @@ defmodule Surface.Compiler.EExEngine do
          | attributes
        ]) do
     runtime_value = Surface.TypeHandler.expr_to_value!(type, name, [value], [], nil, value)
-    [Surface.TypeHandler.attr_to_html!(type, name, runtime_value), to_html_attributes(attributes)]
+    [Surface.TypeHandler.attr_to_html!(type, to_string(name), runtime_value), to_html_attributes(attributes)]
   end
 
   defp to_html_attributes([
@@ -873,7 +873,7 @@ defmodule Surface.Compiler.EExEngine do
     try do
       {expr_value, _} = Code.eval_quoted(expr.value)
 
-      value = evaluate_literal_attribute(attr.name, attr.type, expr_value, attr.meta)
+      value = evaluate_literal_attribute(to_string(attr.name), attr.type, expr_value, attr.meta)
 
       [value | to_html_attributes(attributes)]
     rescue
@@ -892,7 +892,9 @@ defmodule Surface.Compiler.EExEngine do
        ]) do
     value =
       quote generated: true do
-        Phoenix.HTML.raw(Surface.TypeHandler.attr_to_html!(unquote(type), unquote(name), unquote(expr_value)))
+        Phoenix.HTML.raw(
+          Surface.TypeHandler.attr_to_html!(unquote(type), unquote(to_string(name)), unquote(expr_value))
+        )
       end
 
     [%{expr | value: value} | to_html_attributes(attributes)]
