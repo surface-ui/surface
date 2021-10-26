@@ -134,8 +134,8 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test">
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
              <div>
              <input id="parent_children_name" name="parent[children][name]" type="text">
              <input id="parent_children_email" name="parent[children][email]" type="text">
