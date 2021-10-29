@@ -505,6 +505,12 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp collect_slot_meta(component, buffer, state, context_var) do
+    component_slots =
+      if component.type in [Surface.Component, Surface.LiveComponent] &&
+           function_exported?(component.module, :__slots__, 0),
+         do: component.module.__slots__(),
+         else: []
+
     slot_info =
       component.templates
       |> Enum.map(fn {name, templates_for_slot} ->
@@ -512,7 +518,14 @@ defmodule Surface.Compiler.EExEngine do
 
         nested_templates = handle_templates(component, templates_for_slot, buffer, state)
 
-        {name, Enum.count(templates_for_slot), nested_templates}
+        slot_name =
+          Enum.find_value(component_slots, name, fn slot ->
+            if slot.name == name do
+              slot.opts[:as] || slot.name
+            end
+          end)
+
+        {slot_name, Enum.count(templates_for_slot), nested_templates}
       end)
 
     slot_props =
