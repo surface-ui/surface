@@ -156,7 +156,8 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_expression(
          %AST.Slot{
-           name: slot_name,
+           name: provided_name,
+           as: slot_as,
            index: index_ast,
            args: args_expr,
            default: default,
@@ -183,6 +184,8 @@ defmodule Surface.Compiler.EExEngine do
           %{}
         end
       end
+
+    slot_name = slot_as || provided_name
 
     slot_assign = {:@, [], [{slot_name, [], nil}]}
 

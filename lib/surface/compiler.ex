@@ -71,7 +71,7 @@ defmodule Surface.Compiler do
   ]
 
   defmodule CompileMeta do
-    defstruct [:line, :file, :caller, :checks, :variables]
+    defstruct [:line, :file, :caller, :checks, :variables, :module]
 
     @type t :: %__MODULE__{
             line: non_neg_integer(),
@@ -499,6 +499,7 @@ defmodule Surface.Compiler do
       {:ok,
        %AST.Slot{
          name: name,
+         as: slot.opts[:as],
          index: index,
          directives: directives,
          default: to_ast(children, compile_meta),

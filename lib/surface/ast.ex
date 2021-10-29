@@ -307,10 +307,11 @@ defmodule Surface.AST.Slot do
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this slot
   """
-  defstruct [:name, :index, :args, :default, :meta, directives: []]
+  defstruct [:name, :as, :index, :args, :default, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: binary(),
+          as: atom(),
           index: any(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t(),
