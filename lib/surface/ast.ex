@@ -443,7 +443,7 @@ defmodule Surface.AST.Component do
   @type t :: %__MODULE__{
           module: module() | Surface.AST.AttributeExpr.t(),
           debug: list(atom()),
-          type: module() | :dynammic_live,
+          type: module() | :dynamic_live,
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
