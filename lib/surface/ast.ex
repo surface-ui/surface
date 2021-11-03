@@ -431,7 +431,7 @@ defmodule Surface.AST.Component do
 
   ## Properties
       * `:module` - the component module
-      * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.LiveView)
+      * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.LiveView or :dynamic_live)
       * `:props` - the props for this component
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
@@ -441,9 +441,9 @@ defmodule Surface.AST.Component do
   defstruct [:module, :type, :props, :dynamic_props, :templates, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
-          module: module(),
+          module: module() | Surface.AST.AttributeExpr.t(),
           debug: list(atom()),
-          type: module(),
+          type: module() | :dynammic_live,
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
