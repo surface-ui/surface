@@ -988,7 +988,7 @@ defmodule Surface.SlotSyncTest do
       end
 
     message = """
-    code:2: The slotable component <Surface.SlotTest.InnerData> as the `:slot` option set to `inner`.
+    code:2: The slotable component <Surface.SlotTest.InnerData> has the `:slot` option set to `inner`.
 
     That slot name is not declared in parent component <StatefulComponent>.
 
