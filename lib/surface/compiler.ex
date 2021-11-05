@@ -1115,7 +1115,7 @@ defmodule Surface.Compiler do
     header_message =
       if component_slotable?(template_meta.module) do
         """
-        The slotable component <#{inspect(template_meta.module)}> as the `:slot` option set to \
+        The slotable component <#{inspect(template_meta.module)}> has the `:slot` option set to \
         `#{slot_name}`.
 
         That slot name is not declared in parent component <#{parent_meta.node_alias}>.
