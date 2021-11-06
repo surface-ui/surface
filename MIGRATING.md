@@ -1,3 +1,77 @@
+# Migrating from `v0.5.x` to `v0.6.x`
+
+The `mount` and `update` callbacks are no longer available as `Surface.Component` now is built on top of function components instead of stateless live components.
+
+Basically, any data preparation that was done inside those callbacks must be moved to `render/1`. The Phoenix Live View API has been updated so you can use [`assign`](https://hexdocs.pm/phoenix_live_view/0.16.4/Phoenix.LiveView.html#assign/2), [`assign_new`](https://hexdocs.pm/phoenix_live_view/0.16.4/Phoenix.LiveView.html#assign/2), etc. in any function component.
+
+Before:
+```elixir
+defmodule StatelessComponent do
+ use Surface.Component
+
+ prop count, :string
+ data count_mount, :string
+ data count_updated, :string
+
+ @impl true
+ def mount(socket) do
+   socket = 
+     socket
+     |> assign(:count_mount, socket.assigns.count + 1)
+
+   {:ok, socket}
+ end
+
+ @impl true
+ def update(assigns, socket) do
+   socket = 
+     socket
+     |> assign(assigns)
+     |> assign(:count_updated, assigns.count + 2)
+
+   {:ok, socket}
+ end
+
+ @impl true
+ def render(assigns) do
+   ~F"""
+   <div>{@count} - {@count_updated}</div>
+   """
+ end
+end
+```
+
+After:
+```elixir
+defmodule StatelessComponent do
+  use Surface.Component
+
+  prop count, :string
+  data count_mount, :string
+  data count_updated, :string
+
+  defp mount(assigns) do
+    assign_new(assigns, :count_mount, fn -> assigns.count + 1 end)
+  end
+
+  defp update(assigns) do
+    assign(assigns, :count_updated, assigns.count + 2)
+  end
+
+  @impl true
+  def render(assigns) do
+    assigns =
+      assigns
+      |> mount()
+      |> update()
+
+    ~F"""
+    <div>{@count} - {@count_mount} - {@count_updated}</div>
+    """
+  end
+end
+```
+
 # Migrating from `v0.4.x` to `v0.5.x`
 
 This guide provides detailed instructions on how to run the built-in converter to
