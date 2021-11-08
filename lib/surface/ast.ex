@@ -572,6 +572,7 @@ defmodule Surface.AST do
           | AST.For.t()
           | AST.Container.t()
           | AST.Component.t()
+          | AST.FunctionComponent.t()
           | AST.MacroComponent.t()
           | AST.SlotableComponent.t()
           | AST.Error.t()
