@@ -33,8 +33,5 @@ defmodule Surface.Components.Dynamic.LiveComponent do
     }
   end
 
-  def render(assigns),
-    do: ~F"""
-      <div/>
-    """
+  def render(assigns), do: ~F[<div/>]
 end

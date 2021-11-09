@@ -649,6 +649,10 @@ defmodule Surface.Compiler.EExEngine do
     let
   end
 
+  defp add_default_bindings(%{module: %Surface.AST.AttributeExpr{}}, _name, let) do
+    let
+  end
+
   defp add_default_bindings(%{module: module, props: props}, name, let) do
     (module.__get_slot__(name)[:opts][:args] || [])
     |> Enum.reject(fn

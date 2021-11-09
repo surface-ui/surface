@@ -1,18 +1,6 @@
 defmodule Surface.Components.Dynamic.LiveComponentTest do
   use Surface.ConnCase, async: true
 
-  defmodule StatelessComponent do
-    use Surface.Component
-
-    prop label, :string
-
-    def render(assigns) do
-      ~F"""
-      <div phx-click="click">{@label}</div>
-      """
-    end
-  end
-
   defmodule StatefulComponent do
     use Surface.LiveComponent
 
@@ -34,18 +22,32 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     end
   end
 
+  defmodule StatefulComponentWithDefaultSlot do
+    use Surface.LiveComponent
+
+    slot default
+
+    prop label, :string
+
+    def render(assigns) do
+      ~F"""
+      <div id="theDiv">
+        <#slot/> 
+        {@label}
+      </div>
+      """
+    end
+  end
+
   defmodule View do
     use Surface.LiveView
     alias Surface.Components.Dynamic.LiveComponent
-
-    data label, :string, default: "Initial stateless"
 
     def render(assigns) do
       module = StatefulComponent
 
       ~F"""
-      <StatelessComponent label={@label} />
-      <LiveComponent module={module} id="comp" />
+      <LiveComponent module={module} id="comp"/>
       """
     end
 
@@ -54,19 +56,34 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     end
   end
 
-  test "render stateless component" do
-    {:ok, _view, html} = live_isolated(build_conn(), View)
-    assert html =~ "Initial stateless"
-  end
+  defmodule ViewWithInnerContent do
+    use Surface.LiveView
+    alias Surface.Components.Dynamic.LiveComponent
 
-  test "handle events in stateless component (handled by the live view)" do
-    {:ok, view, _html} = live_isolated(build_conn(), View)
-    assert render_click(view, :click) =~ "Updated stateless"
+    def render(assigns) do
+      module = StatefulComponentWithDefaultSlot
+
+      ~F"""
+      <LiveComponent module={module} id="comp" label="my label">
+        <span>Inner</span>
+      </LiveComponent>
+      """
+    end
   end
 
   test "render LiveComponent" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
     assert html =~ "Initial stateful"
+  end
+
+  test "render LiveComponent and check props" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithInnerContent)
+    assert html =~ "my label"
+  end
+
+  test "render LiveComponent with default slot" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithInnerContent)
+    assert html =~ "Inner"
   end
 
   test "render data assigned in update/2" do
