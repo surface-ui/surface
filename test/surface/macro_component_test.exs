@@ -76,8 +76,12 @@ defmodule Surface.MacroComponentTest do
   end
 
   test "empty content is translated to empty string" do
-    assert render_surface(do: ~F[<#RenderContent />] == "")
-    assert render_surface(do: ~F[<#RenderContent></#RenderContent>] == "")
+    assert render_surface(do: ~F[<#RenderContent />]) == ""
+    assert render_surface(do: ~F[<#RenderContent></#RenderContent>]) == ""
+  end
+
+  test "non empty content is translated to non empty string" do
+    assert render_surface(do: ~F[<#RenderContent>ABC</#RenderContent>]) == "ABC"
   end
 
   test "parses its own content" do
