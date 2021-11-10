@@ -388,6 +388,35 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(component)
   end
 
+  defp to_expression(%AST.Component{type: :dynamic_live} = component, buffer, state) do
+    %AST.Component{
+      module: %AST.AttributeExpr{value: module_expr},
+      props: props,
+      meta: meta
+    } = component
+
+    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {context_expr, context_var, state} = process_context(nil, :render, props, meta.caller, state)
+    {do_block, slot_meta, slot_props} = collect_slot_meta(component, buffer, state, context_var)
+
+    quote generated: true do
+      live_component(
+        unquote(module_expr),
+        Surface.build_assigns(
+          unquote(context_expr),
+          unquote(props_expr),
+          unquote(dynamic_props_expr),
+          unquote(slot_props),
+          unquote(slot_meta),
+          unquote(module_expr),
+          unquote(meta.node_alias)
+        ),
+        unquote(do_block)
+      )
+    end
+    |> maybe_print_expression(component)
+  end
+
   # LiveView
   defp to_expression(%AST.Component{type: Surface.LiveView} = component, _buffer, _state) do
     %AST.Component{module: module, props: props} = component
@@ -617,6 +646,10 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp add_default_bindings(%AST.FunctionComponent{}, _name, let) do
+    let
+  end
+
+  defp add_default_bindings(%{module: %Surface.AST.AttributeExpr{}}, _name, let) do
     let
   end
 

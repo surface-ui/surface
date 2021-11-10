@@ -66,6 +66,7 @@ defmodule Surface.LiveComponent do
 
       alias Surface.Components.{Context, Raw}
       alias Surface.Components.Dynamic.Component
+      alias Surface.Components.Dynamic.LiveComponent
 
       @doc """
       The id of the live component (required by LiveView for stateful components).

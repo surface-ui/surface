@@ -1010,6 +1010,10 @@ defmodule Surface.Compiler do
     :ok
   end
 
+  defp validate_templates(Surface.Components.Dynamic.LiveComponent, _templates, _meta) do
+    :ok
+  end
+
   defp validate_templates(mod, templates, meta) do
     names = Map.keys(templates)
 

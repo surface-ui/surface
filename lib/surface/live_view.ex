@@ -39,6 +39,7 @@ defmodule Surface.LiveView do
 
       alias Surface.Components.{Context, Raw}
       alias Surface.Components.Dynamic.Component
+      alias Surface.Components.Dynamic.LiveComponent
 
       @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
