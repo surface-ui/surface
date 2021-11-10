@@ -1,3 +1,87 @@
+# Migrating from `v0.5.x` to `v0.6.x`
+
+`Surface.Component` now is built on top of function components instead of stateless live components. This decision implies some breaking changes described below with solutions that allow you updade your code smoothly.
+
+## The `mount` and `update` callbacks are no longer available
+Basically, any data preparation that was done inside those callbacks must be moved to `render/1`. The Phoenix Live View API has been updated so you can use [`assign`](https://hexdocs.pm/phoenix_live_view/0.16.4/Phoenix.LiveView.html#assign/2), [`assign_new`](https://hexdocs.pm/phoenix_live_view/0.16.4/Phoenix.LiveView.html#assign/2), etc. in any function component.
+
+Before:
+```elixir
+defmodule StatelessComponent do
+ use Surface.Component
+
+ prop count, :string
+ data count_mount, :string
+ data count_updated, :string
+
+ @impl true
+ def mount(socket) do
+   socket = 
+     socket
+     |> assign(:count_mount, socket.assigns.count + 1)
+
+   {:ok, socket}
+ end
+
+ @impl true
+ def update(assigns, socket) do
+   socket = 
+     socket
+     |> assign(assigns)
+     |> assign(:count_updated, assigns.count + 2)
+
+   {:ok, socket}
+ end
+
+ @impl true
+ def render(assigns) do
+   ~F"""
+   <div>{@count} - {@count_updated}</div>
+   """
+ end
+end
+```
+
+After:
+```elixir
+defmodule StatelessComponent do
+  use Surface.Component
+
+  prop count, :string
+  data count_mount, :string
+  data count_updated, :string
+
+  @impl true
+  def render(assigns) do
+    assigns =
+      |> assign_new(:count_mount, fn -> assigns.count + 1 end) assigns
+      |> assign(:count_updated, assigns.count + 2)
+
+    ~F"""
+    <div>{@count} - {@count_mount} - {@count_updated}</div>
+    """
+  end
+end
+```
+## `@socket`  is no longer available in the `render` function and the `.sface` files 
+
+If you were using the `@socket` assign to render routes, you should now use the application `Endpoint` instead.
+
+
+Before
+```elixir
+Routes.page_path(@socket, :show, "Hello")
+# or
+MyAppWeb.Router.Helpers.page_path(@socket, :show, "Hello")
+```
+
+After:
+```elixir
+Routes.page_path(MyAppWeb.Endpoint, :show, "Hello")
+# or
+MyAppWeb.Router.Helpers.page_path(MyAppWeb.Endpoint, :show, "Hello")
+```
+
 # Migrating from `v0.4.x` to `v0.5.x`
 
 This guide provides detailed instructions on how to run the built-in converter to
