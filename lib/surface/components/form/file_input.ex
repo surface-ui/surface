@@ -11,9 +11,7 @@ defmodule Surface.Components.Form.FileInput do
   ## Examples
 
   ```
-  <FileInput form="user" field="picture" />
-
-  <Form for={:user} opts={multipart: true}>
+  <Form for={:user} multipart={true}>
     <FileInput field={:picture} />
   </Form>
   ```
