@@ -133,7 +133,6 @@ defmodule Mix.Tasks.Surface.Format do
   # The below functions are taken directly from Mix.Tasks.Format with insignificant modification
   #
 
-  # TODO: Add support for `check_equivalent: :boolean` here
   @switches [
     check_formatted: :boolean,
     dot_formatter: :string,
