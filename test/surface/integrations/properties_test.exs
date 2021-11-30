@@ -879,4 +879,57 @@ defmodule Surface.PropertiesSyncTest do
              code:3:\
            """
   end
+
+  test "error if the deprecation message is not set correctly" do
+    code =
+      """
+        defmodule WrongDeprecatedPropComponent do
+          use Surface.Component
+
+          prop deprecated, :any, deprecated: true
+
+          def render(assigns) do
+            ~F"\""
+            "\""
+          end
+        end
+    """
+
+    message = "code.exs:4: invalid value for option :deprecated in prop deprecated. Expected a string, got: true"
+    assert_raise(CompileError, message, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+  end
+
+  defmodule DeprecatedPropComponent do
+    use Surface.Component
+
+    prop deprecated, :any, deprecated: "This prop is deprecated"
+
+    def render(assigns) do
+      ~F"""
+      """
+    end
+  end
+
+  test "warn if deprecated prop is set on component" do
+    code =
+      quote do
+        ~F"""
+        <DeprecatedPropComponent deprecated="test" />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code, %{deprecated: "anst"})
+      end)
+
+    assert output =~ ~r"""
+           the prop `deprecated` is marked as deprecated.
+           Hint: This is prop is deprecated
+
+             code.exs:1:\
+           """
+  end
 end

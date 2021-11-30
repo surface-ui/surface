@@ -329,7 +329,7 @@ defmodule Surface.APITest do
       code = "prop label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static, :deprecated\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

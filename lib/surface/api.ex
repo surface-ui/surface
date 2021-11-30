@@ -436,7 +436,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate, :root, :static]
+    [:required, :default, :values, :values!, :accumulate, :root, :static, :deprecated]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
@@ -496,6 +496,11 @@ defmodule Surface.API do
 
     :ok
   end
+
+  defp validate_opt(:prop, name, _type, _opts, :deprecated, value, _line, _env) when not is_binary(value) do
+    {:error, "invalid value for option :deprecated in prop #{name}. Expected a string, got: #{inspect(value)}"}
+  end
+
 
   defp validate_opt(:data, name, _type, opts, :default, value, line, env) do
     warn_on_invalid_default(:data, name, value, opts, line, env)
