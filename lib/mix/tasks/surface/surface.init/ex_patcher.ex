@@ -207,7 +207,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
   def replace_code(%__MODULE__{code: code} = patcher, fun) when is_function(fun) do
     patch(patcher, [preserve_indentation: false], fn zipper ->
       node = Z.node(zipper)
-      range = Sourceror.get_range(node)
+      range = Sourceror.get_range(node, include_comments: true)
       code_to_replace = get_code_by_range(code, range)
       fun.(code_to_replace)
     end)
@@ -297,7 +297,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
 
         last_child_zipper ->
           node = Z.node(last_child_zipper)
-          range = Sourceror.get_range(node)
+          range = Sourceror.get_range(node, include_comments: true)
           updated_code = Sourceror.parse_string!(Sourceror.to_string(node) <> string)
 
           change =
@@ -323,7 +323,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     patch =
       case fun.(zipper) do
         change when is_binary(change) ->
-          range = zipper |> Z.node() |> Sourceror.get_range()
+          range = zipper |> Z.node() |> Sourceror.get_range(include_comments: true)
           Map.merge(%{change: change, range: range}, Map.new(opts))
 
         patch ->
