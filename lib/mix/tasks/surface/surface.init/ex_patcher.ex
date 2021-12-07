@@ -207,7 +207,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
   def replace_code(%__MODULE__{code: code} = patcher, fun) when is_function(fun) do
     patch(patcher, [preserve_indentation: false], fn zipper ->
       node = Z.node(zipper)
-      range = Sourceror.get_range(node)
+      range = Sourceror.get_range(node, include_comments: true)
       code_to_replace = get_code_by_range(code, range)
       fun.(code_to_replace)
     end)
@@ -295,20 +295,34 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
           |> Z.node()
           |> Sourceror.to_string()
 
+        {{:., _, _}, _} ->
+          # We can't get the range of the dot call in a qualified call like
+          # `foo.bar()`, so we apply the patch to the parent. We get into this
+          # situation when the qualified call has no arguments: the first child
+          # will be a dot call of the form `{:., meta, [left, identifier]}`
+          # where `identifier` is a bare atom, like `:compilers`. The line
+          # metadata for the identifier lives in the parent call, making it
+          # impossible to generate a patch for the child call alone.
+          append_child_patch(zipper, string)
+
         last_child_zipper ->
-          node = Z.node(last_child_zipper)
-          range = Sourceror.get_range(node)
-          updated_code = Sourceror.parse_string!(Sourceror.to_string(node) <> string)
-
-          change =
-            last_child_zipper
-            |> Z.replace(updated_code)
-            |> Z.node()
-            |> Sourceror.to_string()
-
-          %{change: change, range: range}
+          append_child_patch(last_child_zipper, string)
       end
     end)
+  end
+
+  defp append_child_patch(zipper, string) do
+    node = Z.node(zipper)
+    range = Sourceror.get_range(node, include_comments: true)
+    updated_code = Sourceror.parse_string!(Sourceror.to_string(node) <> string)
+
+    change =
+      zipper
+      |> Z.replace(updated_code)
+      |> Z.node()
+      |> Sourceror.to_string()
+
+    %{change: change, range: range}
   end
 
   def patch(patcher, opts \\ [], fun)
@@ -323,7 +337,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     patch =
       case fun.(zipper) do
         change when is_binary(change) ->
-          range = zipper |> Z.node() |> Sourceror.get_range()
+          range = zipper |> Z.node() |> Sourceror.get_range(include_comments: true)
           Map.merge(%{change: change, range: range}, Map.new(opts))
 
         patch ->
