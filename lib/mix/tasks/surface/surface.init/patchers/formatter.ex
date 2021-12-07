@@ -19,4 +19,20 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Formatter do
     |> halt_if(&find_list_item_with_code(&1, dep), :already_patched)
     |> append_list_item(dep)
   end
+
+  def add_input(code, pattern) do
+    code
+    |> parse_string!()
+    |> find_keyword_value(:inputs)
+    |> halt_if(&find_list_item_with_code(&1, pattern), :already_patched)
+    |> append_list_item(pattern)
+  end
+
+  def add_plugin(code, plugin) do
+    code
+    |> parse_string!()
+    |> find_keyword_value(:plugins)
+    |> halt_if(&find_list_item_with_code(&1, plugin), :already_patched)
+    |> append_list_item(plugin)
+  end
 end
