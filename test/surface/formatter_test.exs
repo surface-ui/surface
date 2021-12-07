@@ -4,7 +4,7 @@ defmodule Surface.FormatterTest do
   alias Surface.Formatter
 
   def assert_formatter_outputs(input_code, expected_formatted_result, opts \\ []) do
-    assert expected_formatted_result == Formatter.format_string!(input_code, opts)
+    assert Formatter.format_string!(input_code, opts) == expected_formatted_result
 
     # demonstrate that the output can be parsed by the Surface parser
     Surface.Compiler.Parser.parse!(expected_formatted_result)
@@ -1605,5 +1605,32 @@ defmodule Surface.FormatterTest do
       bar: @bar == "yes"
     } />
     """)
+  end
+
+  test "newlines without trailing whitespace in formatted attribute expressions" do
+    # This demonstrates a bugfix where the empty newline in between case clauses
+    # would be indented with spaces even though there were no contents on the line.
+    assert_formatter_outputs(
+      ~S"""
+      <Component bool_prop attribute={case @foo do
+        "bar" ->
+          true
+        "baz" ->
+          false
+      end} />
+      """,
+      ~S"""
+      <Component
+        bool_prop
+        attribute={case @foo do
+          "bar" ->
+            true
+
+          "baz" ->
+            false
+        end}
+      />
+      """
+    )
   end
 end

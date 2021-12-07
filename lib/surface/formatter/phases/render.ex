@@ -20,6 +20,8 @@ defmodule Surface.Formatter.Phases.Render do
   # Line length of opening tags before splitting attributes onto their own line
   @default_line_length 98
 
+  @newline_not_followed_by_newline ~r/\n(?!\n)/
+
   @doc """
   Given a `t:Surface.Formatter.formatter_node/0` node, render it to a string
   for writing back into a file.
@@ -37,7 +39,7 @@ defmodule Surface.Formatter.Phases.Render do
 
         String.replace(
           "{#{formatted}}",
-          "\n",
+          @newline_not_followed_by_newline,
           "\n#{String.duplicate(@tab, opts[:indent])}"
         )
 
@@ -132,7 +134,10 @@ defmodule Surface.Formatter.Phases.Render do
 
     opening =
       "{##{name}#{if expr, do: " "}#{expr}}"
-      |> String.replace("\n", "\n" <> String.duplicate(@tab, opts[:indent] + 1))
+      |> String.replace(
+        @newline_not_followed_by_newline,
+        "\n" <> String.duplicate(@tab, opts[:indent] + 1)
+      )
 
     next_indent =
       case children do
@@ -245,7 +250,9 @@ defmodule Surface.Formatter.Phases.Render do
             #     baz: true
             #   }
             # to look right
-            with_newlines_indented = String.replace(attr, "\n", "\n#{attr_indentation}")
+            with_newlines_indented =
+              String.replace(attr, @newline_not_followed_by_newline, "\n#{attr_indentation}")
+
             "#{attr_indentation}#{with_newlines_indented}"
         end)
 
@@ -275,8 +282,11 @@ defmodule Surface.Formatter.Phases.Render do
             joined_attributes =
               rendered_attributes
               |> Enum.map(fn
-                {:do_not_indent_newlines, attr} -> attr
-                attr -> String.replace(attr, "\n", "\n#{attr_indentation}")
+                {:do_not_indent_newlines, attr} ->
+                  attr
+
+                attr ->
+                  String.replace(attr, @newline_not_followed_by_newline, "\n#{attr_indentation}")
               end)
               |> Enum.join(" ")
 
