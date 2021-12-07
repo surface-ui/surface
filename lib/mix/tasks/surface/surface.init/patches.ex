@@ -99,6 +99,26 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     }
   end
 
+  def add_sface_files_to_inputs_in_formatter_config() do
+    %{
+      name: "Add sface files to :inputs",
+      patch: &Patchers.Formatter.add_input(&1, ~S("{lib,test}/**/*.sface")),
+      instructions: """
+      In case you'll be using `mix format`, make sure you add the required file patterns
+      to your `.formatter.exs` file.
+
+      # Example
+
+      ```
+      [
+        inputs: ["{lib,test}/**/*.sface", ...],
+        ...
+      ]
+      ```
+      """
+    }
+  end
+
   def add_surface_to_import_deps_in_formatter_config() do
     %{
       name: "Add :surface to :import_deps",
@@ -112,6 +132,26 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       ```
       [
         import_deps: [:ecto, :phoenix, :surface],
+        ...
+      ]
+      ```
+      """
+    }
+  end
+
+  def add_formatter_plugin_to_formatter_config() do
+    %{
+      name: "Add Surface.Formatter.Plugin to :plugins",
+      patch: &Patchers.Formatter.add_plugin(&1, "Surface.Formatter.Plugin"),
+      instructions: """
+      In case you'll be using `mix format`, make sure you add `Surface.Formatter.Plugin`
+      to the `plugins` in your `.formatter.exs` file.
+
+      # Example
+
+      ```
+      [
+        plugins: [Surface.Formatter.Plugin],
         ...
       ]
       ```

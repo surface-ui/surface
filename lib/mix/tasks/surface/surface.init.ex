@@ -142,15 +142,25 @@ defmodule Mix.Tasks.Surface.Init do
   end
 
   defp patches_for(:formatter, %{formatter: true}) do
-    %{
-      "mix.exs" => [
-        Patches.add_surface_formatter_to_mix_deps()
-      ],
-      ".formatter.exs" => [
-        Patches.add_surface_inputs_to_formatter_config(),
-        Patches.add_surface_to_import_deps_in_formatter_config()
-      ]
-    }
+    if Version.match?(System.version(), ">= 1.13.0") do
+      %{
+        ".formatter.exs" => [
+          Patches.add_sface_files_to_inputs_in_formatter_config(),
+          Patches.add_surface_to_import_deps_in_formatter_config(),
+          Patches.add_formatter_plugin_to_formatter_config()
+        ]
+      }
+    else
+      %{
+        "mix.exs" => [
+          Patches.add_surface_formatter_to_mix_deps()
+        ],
+        ".formatter.exs" => [
+          Patches.add_surface_inputs_to_formatter_config(),
+          Patches.add_surface_to_import_deps_in_formatter_config()
+        ]
+      }
+    end
   end
 
   defp patches_for(:error_tag, %{error_tag: true, using_gettext?: true, web_module: web_module}) do
