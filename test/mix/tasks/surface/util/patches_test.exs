@@ -51,52 +51,6 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
              """
     end
 
-    test "add :surface to compilers when there are no other compilers" do
-      code = """
-      defmodule MyApp.MixProject do
-        use Mix.Project
-
-        def project do
-          [
-            app: :my_app,
-            compilers: Mix.compilers(),
-            start_permanent: Mix.env() == :prod
-          ]
-        end
-
-        defp deps do
-          [
-            {:phoenix, "~> 1.6.0"},
-            {:surface, "~> 0.5.2"}
-          ]
-        end
-      end
-      """
-
-      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_surface_to_mix_compilers())
-
-      assert updated_code == """
-             defmodule MyApp.MixProject do
-               use Mix.Project
-
-               def project do
-                 [
-                   app: :my_app,
-                   compilers: Mix.compilers() ++ [:surface],
-                   start_permanent: Mix.env() == :prod
-                 ]
-               end
-
-               defp deps do
-                 [
-                   {:phoenix, "~> 1.6.0"},
-                   {:surface, "~> 0.5.2"}
-                 ]
-               end
-             end
-             """
-    end
-
     test "don't apply it if already patched" do
       code = """
       defmodule MyApp.MixProject do
