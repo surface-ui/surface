@@ -56,7 +56,8 @@ defmodule Surface.Formatter.Plugin do
   end
 
   def format(contents, opts) do
-    opts = Keyword.put(opts, :line_length, opts[:surface_line_length] || opts[:line_length])
+    line_length = opts[:surface_line_length] || opts[:line_length]
+    opts = if line_length, do: Keyword.put(opts, :line_length, line_length), else: opts
     Surface.Formatter.format_string!(contents, opts)
   end
 end

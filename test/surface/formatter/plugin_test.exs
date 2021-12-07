@@ -65,6 +65,7 @@ defmodule Surface.Formatter.PluginTest do
   test ":surface_line_length overrides :line_length" do
     assert_formatter_output(
       "surface_line_length.ex",
+      [line_length: 200, surface_line_length: 50],
       """
       defmodule Foo do
         def render(assigns) do
@@ -88,6 +89,20 @@ defmodule Surface.Formatter.PluginTest do
           \"\"\"
         end
       end
+      """
+    )
+  end
+
+  test "omitting :line_length and :surface_line_length defaults to default line_length" do
+    # reproducing a bug that occurred when both were omitted, with an Elixir expression
+    assert_formatter_output(
+      "config.sface",
+      [],
+      """
+        {@foo}
+      """,
+      """
+      {@foo}
       """
     )
   end
