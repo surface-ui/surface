@@ -167,7 +167,7 @@ defmodule Surface.LiveViewTest do
   @doc false
   def generate_live_view_ast(render_code, props, env) do
     {func, _} = env.function
-    module = Module.concat([env.module, "(#{func}) at line #{env.line}"])
+    module = Module.concat([env.module, String.replace("(#{func}) at line #{env.line}", "/", "_")])
 
     props_ast =
       for {name, _} <- props do
