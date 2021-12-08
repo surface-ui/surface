@@ -21,7 +21,7 @@ jobs:
           - elixir: 1.12.1
             otp: 24.0
             check_formatted: true
-          - elixir: 1.13.0-rc.1
+          - elixir: 1.13.0
             otp: 24.0
             run_plugin_tests: true
             warnings-as-errors: true
