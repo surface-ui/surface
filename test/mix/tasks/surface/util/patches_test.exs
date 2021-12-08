@@ -494,6 +494,65 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
     end
   end
 
+  describe "add_formatter_plugin_to_formatter_config" do
+    test "add `plugins: [Surface.Formatter.Plugin]` if :plugins don't exist" do
+      code = """
+      [
+        import_deps: [:phoenix, :ecto, :surface]
+      ]
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_formatter_plugin_to_formatter_config())
+
+      assert updated_code == """
+             [
+               import_deps: [:phoenix, :ecto, :surface],
+               plugins: [Surface.Formatter.Plugin]
+             ]
+             """
+    end
+
+    test "add Surface.Formatter.Plugin to :plugins if :plugins already exists" do
+      code = """
+      [
+        import_deps: [:phoenix, :ecto, :surface],
+        plugins: [WhateverPlugin]
+      ]
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, Patches.add_formatter_plugin_to_formatter_config())
+
+      assert updated_code == """
+             [
+               import_deps: [:phoenix, :ecto, :surface],
+               plugins: [WhateverPlugin, Surface.Formatter.Plugin]
+             ]
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      [
+        import_deps: [:phoenix, :ecto, :surface],
+        plugins: [Surface.Formatter.Plugin]
+      ]
+      """
+
+      assert {:already_patched, ^code} =
+               Patcher.patch_code(code, Patches.add_formatter_plugin_to_formatter_config())
+
+      code = """
+      [
+        import_deps: [:phoenix, :ecto, :surface],
+        plugins: [WhateverPlugin, Surface.Formatter.Plugin]
+      ]
+      """
+
+      assert {:already_patched, ^code} =
+               Patcher.patch_code(code, Patches.add_formatter_plugin_to_formatter_config())
+    end
+  end
+
   describe "add_surface_to_reloadable_compilers_in_endpoint_config" do
     defmodule Elixir.MyTestAppWeb.Endpoint do
       def config(:reloadable_compilers) do
