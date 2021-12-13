@@ -56,7 +56,7 @@ defmodule Surface.LiveViewTest do
 
     inner_block_assigns =
       quote do
-        %{__slot__: :inner_block, inner_block: Phoenix.LiveView.Helpers.slot(:inner_block, do: unquote(clauses))}
+        %{__slot__: :inner_block, inner_block: Phoenix.LiveView.Helpers.inner_block(:inner_block, do: unquote(clauses))}
       end
 
     render_component_call =

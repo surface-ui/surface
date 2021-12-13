@@ -523,7 +523,7 @@ defmodule Surface.Compiler.EExEngine do
 
           ast =
             quote do
-              Phoenix.LiveView.Helpers.slot(:inner_block, do: unquote(block))
+              Phoenix.LiveView.Helpers.inner_block(:inner_block, do: unquote(block))
             end
 
           props = [__slot__: :inner_block, inner_block: ast]
@@ -579,7 +579,7 @@ defmodule Surface.Compiler.EExEngine do
 
             ast =
               quote do
-                Phoenix.LiveView.Helpers.slot(unquote(name), do: unquote(block))
+                Phoenix.LiveView.Helpers.inner_block(unquote(name), do: unquote(block))
               end
 
             props = [__slot__: name, inner_block: ast] ++ props
