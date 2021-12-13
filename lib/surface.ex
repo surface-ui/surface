@@ -231,12 +231,9 @@ defmodule Surface do
       |> Keyword.merge(dynamic_props)
       |> Keyword.merge(static_props)
 
-    slot_assigns = map_slots_to_assigns(module, slot_props)
-
     if module do
       Map.new(
         props ++
-          slot_assigns ++
           [
             __surface__: %{
               slots: Map.new(slots),
@@ -247,24 +244,10 @@ defmodule Surface do
       )
     else
       # Function components don't support contexts
-      Map.new(props ++ slot_assigns)
+      Map.new(props)
     end
   end
 
-  defp map_slots_to_assigns(nil, slot_props) do
-    slot_props
-  end
-
-  defp map_slots_to_assigns(module, slot_props) do
-    slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
-
-    mapping =
-      slots
-      |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
-      |> Enum.filter(fn value -> not match?({_, nil}, value) end)
-
-    Enum.map(slot_props, fn {name, info} -> {Keyword.get(mapping, name, name), info} end)
-  end
 
   @doc false
   def css_class(value) when is_list(value) do
