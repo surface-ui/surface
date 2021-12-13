@@ -248,7 +248,6 @@ defmodule Surface do
     end
   end
 
-
   @doc false
   def css_class(value) when is_list(value) do
     with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, []),

@@ -245,15 +245,18 @@ defmodule Surface.Compiler.EExEngine do
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &apply(unquote(module_expr), unquote(fun_expr), [&1]),
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module_expr),
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module_expr),
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
@@ -272,15 +275,18 @@ defmodule Surface.Compiler.EExEngine do
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &(unquote(Macro.var(fun, __MODULE__)) / 1),
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          nil,
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            nil,
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
@@ -304,15 +310,18 @@ defmodule Surface.Compiler.EExEngine do
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &(unquote(module).unquote(fun) / 1),
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module_for_build_assigns),
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module_for_build_assigns),
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
@@ -331,15 +340,18 @@ defmodule Surface.Compiler.EExEngine do
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &unquote(module).render/1,
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module),
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
@@ -358,15 +370,18 @@ defmodule Surface.Compiler.EExEngine do
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &unquote(module).render/1,
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module),
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
@@ -383,16 +398,20 @@ defmodule Surface.Compiler.EExEngine do
     slot_props_map = {:%{}, [generated: true], [{:module, module} | slot_props]}
 
     quote generated: true do
-      Phoenix.LiveView.Helpers.component(&Phoenix.LiveView.Helpers.live_component/1,
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module),
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+      Phoenix.LiveView.Helpers.component(
+        &Phoenix.LiveView.Helpers.live_component/1,
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module),
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
@@ -412,16 +431,20 @@ defmodule Surface.Compiler.EExEngine do
     slot_props_map = {:%{}, [generated: true], [{:module, module_expr} | slot_props]}
 
     quote generated: true do
-      Phoenix.LiveView.Helpers.component(&Phoenix.LiveView.Helpers.live_component/1,
-        Map.merge(Surface.build_assigns(
-          unquote(context_expr),
-          unquote(props_expr),
-          unquote(dynamic_props_expr),
-          unquote(slot_props),
-          unquote(slot_meta),
-          unquote(module_expr),
-          unquote(meta.node_alias)
-        ), unquote(slot_props_map))
+      Phoenix.LiveView.Helpers.component(
+        &Phoenix.LiveView.Helpers.live_component/1,
+        Map.merge(
+          Surface.build_assigns(
+            unquote(context_expr),
+            unquote(props_expr),
+            unquote(dynamic_props_expr),
+            unquote(slot_props),
+            unquote(slot_meta),
+            unquote(module_expr),
+            unquote(meta.node_alias)
+          ),
+          unquote(slot_props_map)
+        )
       )
     end
     |> maybe_print_expression(component)
