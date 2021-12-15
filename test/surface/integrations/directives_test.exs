@@ -1,6 +1,9 @@
 defmodule Surface.DirectivesTest do
   use Surface.ConnCase, async: true
 
+  import Phoenix.HTML.Engine, only: [html_escape: 1]
+  alias Phoenix.LiveView.JS
+
   defmodule Div do
     use Surface.Component
 
@@ -722,8 +725,10 @@ defmodule Surface.DirectivesTest do
           """
         end
 
+      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
       assert html =~ """
-             <button phx-click="ok" phx-target="#comp">OK</button>
+             <button phx-click="#{event}">OK</button>
              """
     end
 
@@ -763,8 +768,97 @@ defmodule Surface.DirectivesTest do
           """
         end
 
+      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
       assert html =~ """
-             <button phx-click="ok" phx-target="#comp">OK</button>
+             <button phx-click="#{event}">OK</button>
+             """
+    end
+
+    test "as %JS{} struct without target" do
+      html =
+        render_surface do
+          ~F"""
+          <button :on-click={JS.push("ok")}>OK</button>
+          """
+        end
+
+      event = html_escape(~S([["push",{"event":"ok"}]]))
+
+      assert html =~ """
+             <button phx-click="#{event}">OK</button>
+             """
+    end
+
+    test "as %JS{} struct with target" do
+      html =
+        render_surface do
+          ~F"""
+          <button :on-click={JS.push("ok", target: "#comp")}>OK</button>
+          """
+        end
+
+      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
+      assert html =~ """
+             <button phx-click="#{event}">OK</button>
+             """
+    end
+
+    test "as %JS{} struct with target as :live_view" do
+      html =
+        render_surface do
+          ~F"""
+          <button :on-click={JS.push("ok", target: :live_view)}>OK</button>
+          """
+        end
+
+      event = html_escape(~S([["push",{"event":"ok"}]]))
+
+      assert html =~ """
+             <button phx-click="#{event}">OK</button>
+             """
+    end
+
+    defmodule LiveComponentUsingOnEvent do
+      use Surface.LiveComponent
+
+      def render(assigns), do: ~F[<button :on-click={JS.push("ok")}>OK</button>]
+    end
+
+    test "set the target of the %JS{} to @myself if it's a live_component and there's no target set yet" do
+      html =
+        render_surface do
+          ~F"""
+          <LiveComponentUsingOnEvent id="123"/>
+          """
+        end
+
+      event = html_escape(~S([["push",{"event":"ok","target":1}]]))
+
+      assert html =~ """
+             <button phx-click="#{event}">OK</button>
+             """
+    end
+
+    defmodule LiveComponentUsingOnEventWithTarget do
+      use Surface.LiveComponent
+
+      def render(assigns), do: ~F[<button :on-click={JS.push("ok", target: "#comp")}>OK</button>]
+    end
+
+    test "don't set the target of the %JS{} if it's a live_component but there's already a target set" do
+      html =
+        render_surface do
+          ~F"""
+          <LiveComponentUsingOnEventWithTarget id="123"/>
+          """
+        end
+
+      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
+      assert html =~ """
+             <button phx-click="#{event}">OK</button>
              """
     end
 

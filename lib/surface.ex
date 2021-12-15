@@ -271,6 +271,10 @@ defmodule Surface do
     [{event_name, name}, {:phx_target, target}]
   end
 
+  def event_to_opts(%Phoenix.LiveView.JS{} = value, event_name) do
+    [{event_name, value}]
+  end
+
   def event_to_opts(nil, _event_name) do
     []
   end
