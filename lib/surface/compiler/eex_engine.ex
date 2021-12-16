@@ -787,15 +787,17 @@ defmodule Surface.Compiler.EExEngine do
   defp to_dynamic_nested_html([
          %AST.Container{
            children: children,
-           meta: %AST.Meta{
-             module: mod,
-             line: line
-           }
+           meta:
+             %AST.Meta{
+               module: mod,
+               line: line
+             } = meta
          }
          | nodes
        ])
        when not is_nil(mod) do
-    [require_expr(mod, line), to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
+    put_injected_component(meta.caller.module, mod, line)
+    [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([%AST.Container{children: children} | nodes]) do
@@ -865,32 +867,26 @@ defmodule Surface.Compiler.EExEngine do
               {requires, [%{template | children: to_token_sequence(children)} | templates]}
 
             %AST.SlotableComponent{} = template, {requires, templates} ->
-              [cmp, nested, translated] = to_dynamic_nested_html([template])
-
-              {[cmp, nested | requires], [translated | templates]}
+              [nested, translated] = to_dynamic_nested_html([template])
+              {[nested | requires], [translated | templates]}
           end)
 
         {requires, Map.put(by_name, name, Enum.reverse(templates))}
       end)
 
-    ast = [requires, %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
-
-    # No need to require function components
-    if type == AST.FunctionComponent do
-      ast
-    else
-      maybe_prepend_require(ast, mod, component.meta)
-    end
+    put_injected_component(component.meta.caller.module, mod, component.meta.line)
+    [requires, %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: module} = meta} | nodes])
        when not is_nil(module) do
+    put_injected_component(meta.caller.module, module, meta.line)
+
     [
       ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
       escape_message(message),
       ~S(</span>) | to_dynamic_nested_html(nodes)
     ]
-    |> maybe_prepend_require(module, meta)
   end
 
   defp to_dynamic_nested_html([%AST.Error{message: message} | nodes]),
@@ -1043,12 +1039,10 @@ defmodule Surface.Compiler.EExEngine do
     |> Macro.var(caller.module)
   end
 
-  defp maybe_prepend_require(ast, module, meta) do
-    # A module can't require itself
-    if module == meta.caller.module || match?(%Surface.AST.AttributeExpr{}, module) do
-      ast
-    else
-      [require_expr(module, meta.line) | ast]
+  defp put_injected_component(caller_module, component_module, line) do
+    # No need to store dynamic modules
+    if !match?(%Surface.AST.AttributeExpr{}, component_module) do
+      Module.put_attribute(caller_module, :__injected_components__, {component_module, line})
     end
   end
 

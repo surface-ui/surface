@@ -684,18 +684,8 @@ defmodule Surface.Compiler do
            collect_directives(@meta_component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta, compile_meta),
          :ok <- validate_properties(mod, attributes, directives, meta) do
-      compile_dep_expr = %AST.Expr{
-        value:
-          quote generated: true, line: meta.line do
-            require(unquote(mod)).__compile_dep__()
-          end,
-        meta: meta
-      }
-
       expanded_children = mod.expand(attributes, List.to_string(children), meta)
-      children_with_dep = [compile_dep_expr | List.wrap(expanded_children)]
-
-      {:ok, %AST.Container{children: children_with_dep, directives: directives, meta: meta}}
+      {:ok, %AST.Container{children: List.wrap(expanded_children), directives: directives, meta: meta}}
     else
       false ->
         {:error, {"cannot render <#{name}> (MacroComponents must export an expand/3 function)", meta.line}, meta}
