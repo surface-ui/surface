@@ -3,6 +3,7 @@ defmodule Surface.Directive.Events do
 
   @events [
     "click",
+    "click-away",
     "capture-click",
     "blur",
     "focus",
