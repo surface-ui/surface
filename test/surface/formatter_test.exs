@@ -1523,10 +1523,43 @@ defmodule Surface.FormatterTest do
     )
   end
 
-  test "Multi-line strings in lists in attributes aren't indented every time the formatter is ran" do
+  test "Multi-line strings in attributes aren't indented every time the formatter is ran" do
+    # multiple attributes
+    assert_formatter_doesnt_change(~S"""
+    <div
+      class="test"
+      x-data={"{
+        foo: '#{@bar}',
+        baz: '#{@qux}'
+      }"}
+    />
+    """)
+
+    # single attribute
+    assert_formatter_doesnt_change(~S"""
+    <div x-data={"{
+      foo: '#{@bar}',
+      baz: '#{@qux}'
+    }"} />
+    """)
+
+    # nested multiline strings
+    assert_formatter_doesnt_change(~S"""
+    <div x-data={"{
+      foo: '#{@bar}',
+      baz: '#{"[
+        nested
+        multiline
+        string
+      ]"}'
+    }"} />
+    """)
+
+    # lists in attributes
     assert_formatter_doesnt_change(~S"""
     <Wrapper>
       <Wrapper>
+        {!-- indenting this component allowed us to reproduce a bug --}
         <First
           class={
             "w-full h-12 max-w-full px-4 bg-black-100 hover:bg-black-120 text-base leading-normal
