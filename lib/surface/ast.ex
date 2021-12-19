@@ -114,7 +114,8 @@ defmodule Surface.AST.Meta do
   def quoted_caller_cid(meta) do
     cond do
       Module.open?(meta.caller.module) and
-          Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent ->
+        Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent and
+          meta.caller.function == {:render, 1} ->
         quote generated: true do
           @myself
         end

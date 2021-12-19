@@ -862,6 +862,28 @@ defmodule Surface.DirectivesTest do
              """
     end
 
+    defmodule FunctionComponentUsingOnEventInLivecomponent do
+      use Surface.LiveComponent
+
+      def render(assigns), do: ~F[<div><.func/></div>]
+      def func(assigns), do: ~F[<button :on-click={JS.push("ok")}>OK</button>]
+    end
+
+    test "as %JS{} struct on a function component without target in a live component" do
+      html =
+        render_surface do
+          ~F"""
+          <FunctionComponentUsingOnEventInLivecomponent id="123"/>
+          """
+        end
+
+      event = html_escape(~S([["push",{"event":"ok"}]]))
+
+      assert html =~ """
+             <button phx-click="#{event}">OK</button>\
+             """
+    end
+
     test "do not translate invalid events" do
       html =
         render_surface do
