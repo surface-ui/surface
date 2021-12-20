@@ -755,7 +755,7 @@ defmodule Surface.FormatterTest do
       )
     end
 
-    test "attribute expressions that are a list merged with a keyword list are formatted" do
+    test "attribute expressions that are a list merged with a keyword list" do
       assert_formatter_outputs(
         """
         <span class={ "container", "container--dark": @dark_mode } />
@@ -766,7 +766,7 @@ defmodule Surface.FormatterTest do
       )
     end
 
-    test "attribute expressions with a function call that omits parentheses are formatted" do
+    test "attribute expressions with a function call that omits parentheses" do
       assert_formatter_outputs(
         """
         <Component items={ Enum.map @items, & &1.foo }/>
@@ -796,7 +796,7 @@ defmodule Surface.FormatterTest do
       )
     end
 
-    test "(bugfix) attribute expresssions that are keyword lists without brackets and with interpolated string keys are formatted and don't crash" do
+    test "(bugfix) attribute expresssions that are keyword lists without brackets, with interpolated string keys" do
       assert_formatter_outputs(
         ~S"""
         <Component attr={"a-#{@b}": c} />
@@ -829,7 +829,7 @@ defmodule Surface.FormatterTest do
       )
     end
 
-    test "dynamic attributes are formatted" do
+    test "dynamic attributes" do
       assert_formatter_outputs(
         """
         <Foo { ... @bar } />
@@ -892,7 +892,7 @@ defmodule Surface.FormatterTest do
       """)
     end
 
-    test "shorthand assigns passthrough attributes are formatted" do
+    test "shorthand assigns passthrough attributes" do
       assert_formatter_outputs(
         """
         <Foo {= @bar} />
@@ -923,7 +923,7 @@ defmodule Surface.FormatterTest do
       )
     end
 
-    test "root prop is formatted" do
+    test "root prop" do
       assert_formatter_outputs(
         """
         <MyIf { @var  >  10 } />
@@ -984,6 +984,60 @@ defmodule Surface.FormatterTest do
     test "true boolean attribute in directive" do
       assert_formatter_doesnt_change("""
       <div :if={true} />
+      """)
+    end
+
+    test "strings in attribute expressions with keyword shorthand aren't modified" do
+      # By putting at least 2 attributes in the following examples,
+      # we make sure to hit `Surface.Formatter.Phases.Render.quoted_strings_with_newlines/1`
+      # which is only used with multiple attributes.
+      #
+      # Rendering a multi-attribute node involves extra specialized logic
+      # for dealing with newlines in strings properly.
+
+      assert_formatter_doesnt_change("""
+      <Component
+        id="foo"
+        value={if @bar, do: "baz
+
+        qux"}
+      />
+      """)
+
+      # deeply nested in blocks
+      assert_formatter_doesnt_change("""
+      <Component
+        id="foo"
+        value={if @bar do
+          if @baz do
+            unless @qux do
+              "result
+              with
+              newlines"
+            end
+          end
+        end}
+      />
+      """)
+
+      assert_formatter_doesnt_change("""
+      <Component
+        id="1"
+        value={case @foo do
+          "bar" ->
+            with "qux" <- @baz,
+                 :ok <- value?() do
+              cond do
+                @test != "newliney
+                " ->
+                  "pass"
+              end
+            end
+
+          :baz ->
+            nil
+        end}
+      />
       """)
     end
   end

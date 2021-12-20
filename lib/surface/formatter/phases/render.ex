@@ -389,13 +389,30 @@ defmodule Surface.Formatter.Phases.Render do
           []
         end
 
-      {:<<>>, _, nodes} when is_list(nodes) ->
+      [{:do, string}] when is_binary(string) ->
+        if String.contains?(string, "\n") do
+          [string]
+        else
+          []
+        end
+
+      {operation, _, nodes} when is_atom(operation) and is_list(nodes) ->
+        quoted_strings_with_newlines(nodes)
+
+      [{:do, node_or_nodes}] ->
+        quoted_strings_with_newlines(node_or_nodes)
+
+      nodes when is_list(nodes) ->
         quoted_strings_with_newlines(nodes)
 
       _ ->
         []
     end)
     |> List.flatten()
+  end
+
+  defp quoted_strings_with_newlines(node) do
+    quoted_strings_with_newlines([node])
   end
 
   defp is_keyword_item_with_interpolated_key?(item) do
