@@ -389,13 +389,30 @@ defmodule Surface.Formatter.Phases.Render do
           []
         end
 
-      {:<<>>, _, nodes} when is_list(nodes) ->
+      [{:do, string}] when is_binary(string) ->
+        if String.contains?(string, "\n") do
+          [string]
+        else
+          []
+        end
+
+      {operation, _, nodes} when is_atom(operation) and is_list(nodes) ->
+        quoted_strings_with_newlines(nodes)
+
+      [{:do, node_or_nodes}] ->
+        quoted_strings_with_newlines(node_or_nodes)
+
+      nodes when is_list(nodes) ->
         quoted_strings_with_newlines(nodes)
 
       _ ->
         []
     end)
     |> List.flatten()
+  end
+
+  defp quoted_strings_with_newlines(node) do
+    quoted_strings_with_newlines([node])
   end
 
   defp is_keyword_item_with_interpolated_key?(item) do
@@ -423,39 +440,39 @@ defmodule Surface.Formatter.Phases.Render do
 
   @spec format_attribute_expression(String.t(), [render_attribute_option]) :: String.t()
   defp format_attribute_expression(expression, opts) when is_binary(expression) do
-    if has_invisible_brackets?(expression) do
-      # handle keyword lists, which will be stripped of the outer brackets per surface syntax sugar
-      formatted =
+    formatted =
+      if has_invisible_brackets?(expression) do
+        # handle keyword lists, which will be stripped of the outer brackets per surface syntax sugar
         "[#{expression}]"
         |> Code.format_string!(locals_without_parens: [...: 1])
         |> Enum.slice(1..-2)
         |> to_string()
-
-      if length(Keyword.get(opts, :attributes, [])) > 1 do
-        # handle scenario where list contains string(s) with newlines;
-        # in order to ensure the formatter is idempotent (always emits
-        # the same output when run more than once), we dedent newlines
-        # in strings because multi-line attributes are later indented
-        expression
-        |> quoted_strings_with_newlines()
-        |> Enum.uniq()
-        |> Enum.reduce(formatted, fn string_with_newlines, formatted ->
-          dedented =
-            String.replace(
-              string_with_newlines,
-              "\n#{String.duplicate(@tab, opts[:indent] + 1)}",
-              "\n"
-            )
-
-          String.replace(formatted, string_with_newlines, dedented)
-        end)
       else
-        formatted
+        expression
+        |> Code.format_string!(locals_without_parens: [...: 1])
+        |> to_string()
       end
-    else
+
+    if length(Keyword.get(opts, :attributes, [])) > 1 do
+      # handle scenario where list contains string(s) with newlines;
+      # in order to ensure the formatter is idempotent (always emits
+      # the same output when run more than once), we dedent newlines
+      # in strings because multi-line attributes are later indented
       expression
-      |> Code.format_string!(locals_without_parens: [...: 1])
-      |> to_string()
+      |> quoted_strings_with_newlines()
+      |> Enum.uniq()
+      |> Enum.reduce(formatted, fn string_with_newlines, formatted ->
+        dedented =
+          String.replace(
+            string_with_newlines,
+            "\n#{String.duplicate(@tab, opts[:indent] + 1)}",
+            "\n"
+          )
+
+        String.replace(formatted, string_with_newlines, dedented)
+      end)
+    else
+      formatted
     end
   end
 
