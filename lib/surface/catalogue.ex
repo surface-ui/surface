@@ -18,10 +18,10 @@ defmodule Surface.Catalogue do
       of each example or playground.
 
     * `example` - A keyword list of options to be applied for all examples
-      in in the catalogue.
+      in the catalogue.
 
     * `playground` - A keyword list of options to be applied for all playgrounds
-      in in the catalogue.
+      in the catalogue.
 
   """
   @callback config :: keyword()
@@ -80,12 +80,14 @@ defmodule Surface.Catalogue do
   @doc false
   def get_config(module) do
     meta = get_metadata(module)
+    project_config = Application.get_env(:surface_catalogue, :assets_config, [])
     user_config = Map.get(meta, :config, [])
     catalogue = Keyword.get(user_config, :catalogue)
     catalogue_config = get_catalogue_config(catalogue)
     {type_config, catalogue_config} = Keyword.split(catalogue_config, [:example, :playground])
 
     @default_config
+    |> Keyword.merge(project_config)
     |> Keyword.merge(catalogue_config)
     |> Keyword.merge(type_config[meta.type] || [])
     |> Keyword.merge(user_config)
