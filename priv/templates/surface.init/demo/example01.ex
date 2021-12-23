@@ -4,11 +4,11 @@ defmodule <%= inspect(web_module) %>.Components.Hero.Example01 do
   """
 
   use Surface.Catalogue.Example,
-    subject: <%= web_module %>.Components.Hero,
+    subject: <%= inspect(web_module) %>.Components.Hero,
     height: "480px",
     title: "Name & Subtitle"
 
-  alias <%= web_module %>.Components.Hero
+  alias <%= inspect(web_module) %>.Components.Hero
 
   def render(assigns) do
     ~F"""
