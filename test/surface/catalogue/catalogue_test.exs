@@ -5,6 +5,11 @@ defmodule Surface.Catalogue.CatalogueTest do
   alias Surface.Catalogue.FakePlayground
   alias Surface.Catalogue.FakeExampleWithUserConfig
 
+  setup do
+    Application.delete_env(:surface_catalogue, :assets_config)
+    :ok
+  end
+
   describe "get_config/1" do
     test "get default configuration if none is provided" do
       config = Surface.Catalogue.get_config(FakeExample)
