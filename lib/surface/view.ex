@@ -1,5 +1,5 @@
 defmodule Surface.View do
-  @doc """
+  @moduledoc """
   Use this module on regular Phoenix views to enable .sface templates
 
   The template files need to end with `.html.sface`
