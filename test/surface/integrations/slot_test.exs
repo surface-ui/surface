@@ -840,7 +840,7 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~F"""
-        <OuterWithOptionalNamedSlot />
+        <OuterWithOptionalNamedSlot/>
         """
       end
 

@@ -212,7 +212,6 @@ defmodule Surface do
         static_props,
         dynamic_props,
         slot_props,
-        slots,
         module,
         node_alias
       ) do
@@ -236,7 +235,6 @@ defmodule Surface do
         props ++
           [
             __surface__: %{
-              slots: Map.new(slots),
               provided_templates: Keyword.keys(slot_props)
             },
             __context__: context
