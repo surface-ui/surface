@@ -42,9 +42,8 @@ defmodule Surface.BaseComponent do
   end
 
   @doc false
-  def restore_private_assigns(socket, %{__surface__: surface, __context__: context}) do
+  def restore_private_assigns(socket, %{__context__: context}) do
     socket
-    |> Phoenix.LiveView.assign(:__surface__, surface)
     |> Phoenix.LiveView.assign(:__context__, context)
   end
 
@@ -61,6 +60,27 @@ defmodule Surface.BaseComponent do
     for {mod, line} <- components, mod != env.module do
       quote line: line do
         require(unquote(mod)).__info__(:module)
+      end
+    end
+  end
+
+  defmacro __before_compile_init_slots__(env) do
+    quoted_assigns =
+      for %{name: name} <- Surface.API.get_slots(env.module) do
+        quote do
+          var!(assigns) = assign_new(var!(assigns), unquote(name), fn -> nil end)
+        end
+      end
+
+    if Module.defines?(env.module, {:render, 1}) do
+      quote do
+        defoverridable render: 1
+
+        def render(var!(assigns)) do
+          unquote_splicing(quoted_assigns)
+
+          super(var!(assigns))
+        end
       end
     end
   end

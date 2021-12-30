@@ -68,8 +68,7 @@ defmodule Surface.LiveViewTest do
           &Surface.LiveViewTest.BlockWrapper.render/1,
           %{
             inner_block: unquote(inner_block_assigns),
-            __context__: %{},
-            __surface__: %{provided_templates: [:default]}
+            __context__: %{}
           }
         )
       end

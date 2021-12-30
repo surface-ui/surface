@@ -111,7 +111,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <header :if={slot_assigned?(:header)}>
+        <header :if={slot_assigned?(@header)}>
           <#slot name="header"/>
         </header>
         <main :if={slot_assigned?(:default)}>
@@ -1130,7 +1130,47 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
           <div>
-            <header :if={{ slot_assigned?(:heade) }}>
+            <header :if={slot_assigned?(:heade)}>
+              <#slot name="header"/>
+            </header>
+            <#slot />
+            <footer>
+              <#slot name="footer" />
+            </footer>
+          </div>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           no slot "heade" defined in the component 'Elixir.Surface.SlotSyncTest.TestComponentWithWrongOptionalSlotName'
+
+             Did you mean "header"\?
+
+             Available slots: "default", "footer" and "header"
+             code.exs:11:\
+           """
+  end
+
+  test "warn on component that uses slot_assigned?(@var) when @var does not exist" do
+    component_code = """
+    defmodule TestComponentWithWrongOptionalSlotName do
+      use Surface.Component
+
+      slot header
+      slot default
+      slot footer
+
+      def render(assigns) do
+        ~F"\""
+          <div>
+            <header :if={slot_assigned?(@heade)}>
               <#slot name="header"/>
             </header>
             <#slot />

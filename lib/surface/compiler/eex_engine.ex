@@ -192,17 +192,15 @@ defmodule Surface.Compiler.EExEngine do
     # TODO: map names somehow?
     slot_content_expr =
       quote generated: true do
-        if unquote(slot_assign) do
-          Phoenix.LiveView.Helpers.render_slot(
-            Enum.at(List.wrap(unquote(slot_assign)), unquote(slot_index)),
-            {
-              unquote(slot_name),
-              unquote(slot_index),
-              Map.new(unquote(args_expr)),
-              unquote(context_expr)
-            }
-          )
-        end
+        Phoenix.LiveView.Helpers.render_slot(
+          Enum.at(List.wrap(unquote(slot_assign)), unquote(slot_index)),
+          {
+            unquote(slot_name),
+            unquote(slot_index),
+            Map.new(unquote(args_expr)),
+            unquote(context_expr)
+          }
+        )
       end
 
     default_value =
@@ -213,7 +211,7 @@ defmodule Surface.Compiler.EExEngine do
       })
 
     quote generated: true do
-      if Enum.member?(@__surface__.provided_templates, unquote(slot_name)) do
+      if unquote(slot_assign) do
         unquote(slot_content_expr)
       else
         unquote(default_value)
@@ -250,7 +248,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             unquote(module_expr),
             unquote(meta.node_alias)
           ),
@@ -279,7 +276,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             nil,
             unquote(meta.node_alias)
           ),
@@ -313,7 +309,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             unquote(module_for_build_assigns),
             unquote(meta.node_alias)
           ),
@@ -342,7 +337,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             unquote(module),
             unquote(meta.node_alias)
           ),
@@ -371,7 +365,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             unquote(module),
             unquote(meta.node_alias)
           ),
@@ -400,7 +393,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             unquote(module),
             unquote(meta.node_alias)
           ),
@@ -432,7 +424,6 @@ defmodule Surface.Compiler.EExEngine do
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
-            unquote(slot_props),
             unquote(module_expr),
             unquote(meta.node_alias)
           ),
