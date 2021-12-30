@@ -215,6 +215,8 @@ defmodule Surface do
         module,
         node_alias
       ) do
+    Code.ensure_loaded(module)
+
     static_prop_names = Keyword.keys(static_props)
 
     dynamic_props =
