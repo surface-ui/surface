@@ -448,11 +448,13 @@ defmodule Surface.Compiler do
 
     with {:ok, directives, attributes} <-
            collect_directives(@template_directive_handlers, attributes, meta),
-         slot <- get_slot_name(name, attributes) do
+         slot <- get_slot_name(name, attributes),
+         attributes <- process_attributes(nil, attributes, meta, compile_meta) do
       {:ok,
        %AST.Template{
          name: slot,
          children: to_ast(children, compile_meta),
+         props: attributes,
          directives: directives,
          let: [],
          meta: meta
@@ -897,6 +899,7 @@ defmodule Surface.Compiler do
         process_directives(%AST.Template{
           name: :default,
           children: default_children,
+          props: [],
           directives: directives,
           let: [],
           meta: meta

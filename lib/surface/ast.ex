@@ -391,18 +391,20 @@ defmodule Surface.AST.Template do
 
   ## Properties
       * `:name` - the template name
+      * `:props` - the props for slot entry tag
       * `:let` - the bindings for this template
       * `:children` - the template children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
       * `:directives` - directives associated with this template
   """
-  defstruct [:name, :children, :let, :meta, directives: []]
+  defstruct [:name, :props, :children, :let, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: atom(),
           children: list(Surface.AST.t()),
           directives: list(Surface.AST.Directive.t()),
+          props: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           # quoted?
           let: list(Keyword.t(atom())),
           meta: Surface.AST.Meta.t()

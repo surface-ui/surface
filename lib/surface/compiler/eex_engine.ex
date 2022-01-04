@@ -602,6 +602,7 @@ defmodule Surface.Compiler.EExEngine do
          [
            %AST.Template{
              name: name,
+             props: props,
              let: let,
              children: children
            }
@@ -616,8 +617,11 @@ defmodule Surface.Compiler.EExEngine do
         context_vars: %{state.context_vars | count: state.context_vars.count + 1}
     }
 
+    props = collect_component_props(nil, props)
+
     [
-      {add_default_bindings(component, name, let), [], handle_nested_block(children, buffer, nested_block_state)}
+      {add_default_bindings(component, name, let), props,
+       handle_nested_block(children, buffer, nested_block_state)}
       | handle_templates(component, tail, buffer, state)
     ]
   end

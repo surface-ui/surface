@@ -282,6 +282,50 @@ defmodule Surface.SlotTest do
            """
   end
 
+  test "render multiple slot entries with props (shorthand notation)" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithMultipleSlotableEntries>
+          Content 1
+          <:inner label="label 1">
+            <b>content 1</b>
+            <StatefulComponent id="stateful1"/>
+          </:inner>
+          Content 2
+            Content 2.1
+          <:inner label="label 2">
+            <b>content 2</b>
+          </:inner>
+          Content 3
+          <StatefulComponent id="stateful2"/>
+        </OuterWithMultipleSlotableEntries>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             <div>
+               label 1: \
+
+               <b>content 1</b>
+               <div>Stateful</div>
+             </div><div>
+               label 2: \
+
+               <b>content 2</b>
+             </div>
+             <div>
+             Content 1
+             Content 2
+               Content 2.1
+             Content 3
+             <div>Stateful</div>
+             </div>
+           </div>
+           """
+  end
+
   test "assign named slots with args" do
     html =
       render_surface do
@@ -290,6 +334,25 @@ defmodule Surface.SlotTest do
           <#template slot="body" :let={info: my_info}>
             Info: {my_info}
           </#template>
+        </OuterWithNamedSlotAndArgs>
+        """
+      end
+
+    assert html =~ """
+           <div>
+               Info: Info from slot
+           </div>
+           """
+  end
+
+  test "assign named slots with args (shorthand notation)" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithNamedSlotAndArgs>
+          <:body :let={info: my_info}>
+            Info: {my_info}
+          </:body>
         </OuterWithNamedSlotAndArgs>
         """
       end
@@ -497,6 +560,49 @@ defmodule Surface.SlotTest do
           <Column title="NAME">
             Name: {user.name}
           </Column>
+        </Grid>
+        """
+      end
+
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 ID
+               </th><th>
+                 NAME
+               </th>
+             </tr>
+             <tr>
+               <td>
+               <b>Id: 1</b>
+               </td><td>
+               Name: First
+               </td>
+             </tr><tr>
+               <td>
+               <b>Id: 2</b>
+               </td><td>
+               Name: Second
+               </td>
+             </tr>
+           </table>
+           """
+  end
+
+  test "render slot with slot args containing parent bindings (shorthand notation)" do
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+
+    html =
+      render_surface do
+        ~F"""
+        <Grid items={user <- @items}>
+          <:cols title="ID">
+            <b>Id: {user.id}</b>
+          </:cols>
+          <:cols title="NAME">
+            Name: {user.name}
+          </:cols>
         </Grid>
         """
       end
