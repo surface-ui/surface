@@ -164,19 +164,19 @@ defmodule Surface.SlotTest do
   end
 
   defmodule Column do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, required: true
   end
 
   defmodule ColumnWithDefaultTitle do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, default: "default title"
   end
 
   defmodule ColumnWithRender do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, required: true
 
@@ -194,7 +194,7 @@ defmodule Surface.SlotTest do
   end
 
   defmodule ColumnWithRenderAndDefaultTitle do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, default: "default title"
 
@@ -216,7 +216,7 @@ defmodule Surface.SlotTest do
 
     prop items, :list, required: true
 
-    slot cols, args: [:info, item: ^items]
+    slot col, as: :cols, args: [:info, item: ^items]
 
     def render(assigns) do
       info = "Some info from Grid"
@@ -230,7 +230,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={{_col, index} <- Enum.with_index(@cols)}>
-            <#slot name="cols" index={index} :args={item: item, info: info}/>
+            <#slot name="col" index={index} :args={item: item, info: info}/>
           </td>
         </tr>
       </table>
@@ -597,12 +597,12 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <Grid items={user <- @items}>
-          <:cols title="ID">
+          <:col title="ID">
             <b>Id: {user.id}</b>
-          </:cols>
-          <:cols title="NAME">
+          </:col>
+          <:col title="NAME">
             Name: {user.name}
-          </:cols>
+          </:col>
         </Grid>
         """
       end
@@ -744,12 +744,12 @@ defmodule Surface.SlotTest do
       end
 
     message = """
-    code:3: undefined argument `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
+    code:3: undefined argument `:non_existing` for slot `col` in `Surface.SlotTest.Grid`.
 
     Available arguments: [:info, :item].
 
     Hint: You can define a new slot argument using the `args` option: \
-    `slot cols, args: [..., :non_existing]`
+    `slot col, args: [..., :non_existing]`
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1124,7 +1124,7 @@ defmodule Surface.SlotSyncTest do
 
     Please declare the slot in the parent component or rename the value in the `:slot` option.
 
-    Available slot: "cols"
+    Available slot: "col"
     """
 
     assert_raise(CompileError, message, fn ->
