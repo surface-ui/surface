@@ -2,8 +2,6 @@ defmodule Surface.View do
   @moduledoc """
   Use this module on regular Phoenix views to enable .sface templates
 
-  The template files need to end with `.html.sface`
-
   ## Examples
 
   To make sface templates available on all your views, add to the `view` function on `lib/your_app_web.ex`:
@@ -44,7 +42,7 @@ defmodule Surface.View do
     renders =
       for {name, _} <- templates(module, root) do
         quote do
-          def render(unquote(name), assigns) do
+          def render("#{unquote(name)}.html", assigns) do
             render_surface(unquote(name), assigns)
           end
         end
