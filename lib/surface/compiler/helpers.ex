@@ -4,8 +4,7 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.IOHelper
 
   @builtin_common_assigns [
-    :__context__,
-    :__surface__
+    :__context__
   ]
 
   @builtin_component_assigns [:inner_block] ++ @builtin_common_assigns
@@ -58,7 +57,7 @@ defmodule Surface.Compiler.Helpers do
     defined_assigns =
       caller.module
       |> Surface.API.get_assigns()
-      |> Enum.map(& &1.name)
+      |> Enum.map(&(&1[:opts][:as] || &1.name))
 
     builtin_assigns = builtin_assigns_by_type(component_type)
     undefined_assigns = Keyword.drop(used_assigns, builtin_assigns ++ defined_assigns)

@@ -5,12 +5,29 @@ defmodule Surface.Catalogue.CatalogueTest do
   alias Surface.Catalogue.FakePlayground
   alias Surface.Catalogue.FakeExampleWithUserConfig
 
+  setup do
+    Application.delete_env(:surface_catalogue, :assets_config)
+    :ok
+  end
+
   describe "get_config/1" do
     test "get default configuration if none is provided" do
       config = Surface.Catalogue.get_config(FakeExample)
 
       assert config[:head_css] =~ "/assets/app.css"
       assert config[:head_js] =~ "/assets/app.js"
+    end
+
+    test ":surface_catalogue config overrides default config" do
+      Application.put_env(:surface_catalogue, :assets_config,
+        head_css: "Configs's fake head css",
+        head_js: "Configs's fake head js"
+      )
+
+      config = Surface.Catalogue.get_config(FakeExample)
+
+      assert config[:head_css] =~ "Configs's fake head css"
+      assert config[:head_js] =~ "Configs's fake head js"
     end
 
     test "calalogue config overrides default config" do

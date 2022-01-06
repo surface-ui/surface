@@ -78,20 +78,21 @@ defmodule Surface.SlotChangeTrackingTest do
     end
   end
 
-  test "changing a slot arg updates any view/component using it" do
-    {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
+  # TODO: Uncomment when update to LV v0.17.6
+  # test "changing a slot arg updates any view/component using it" do
+  #   {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
 
-    assert html =~ "Value in the Counter: 0"
-    assert html =~ "Value in the View: 0"
+  #   assert html =~ "Value in the Counter: 0"
+  #   assert html =~ "Value in the View: 0"
 
-    html =
-      view
-      |> element("#incButton", "+")
-      |> render_click()
+  #   html =
+  #     view
+  #     |> element("#incButton", "+")
+  #     |> render_click()
 
-    assert html =~ "Value in the Counter: 1"
-    assert html =~ "Value in the View: 1"
-  end
+  #   assert html =~ "Value in the Counter: 1"
+  #   assert html =~ "Value in the View: 1"
+  # end
 
   test "change tracking is disabled if a child component uses a passed slot arg" do
     {:ok, view, html} =

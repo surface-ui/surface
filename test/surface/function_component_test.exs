@@ -7,7 +7,7 @@ defmodule Surface.FunctionComponentTest do
     def func(assigns) do
       ~F"""
       Label: {@label}
-      {render_block(@inner_block)}
+      {render_slot(@inner_block)}
       """
     end
   end
@@ -59,7 +59,7 @@ defmodule Surface.FunctionComponentTest do
   defp priv_func_with_inner_block(assigns) do
     ~F"""
     <div>
-      {render_block(@inner_block)}
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -67,7 +67,7 @@ defmodule Surface.FunctionComponentTest do
   defp priv_func_with_inner_block_and_args(assigns) do
     ~F"""
     <div>
-      {render_block(@inner_block, "my_item")}
+      {render_slot(@inner_block, "my_item")}
     </div>
     """
   end
@@ -95,7 +95,7 @@ defmodule Surface.FunctionComponentTest do
   def public_func_with_inner_block(assigns) do
     ~F"""
     <div>
-      {render_block(@inner_block)}
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -103,7 +103,7 @@ defmodule Surface.FunctionComponentTest do
   def public_func_with_inner_block_and_args(assigns) do
     ~F"""
     <div>
-      {render_block(@inner_block, item: "my_item")}
+      {render_slot(@inner_block, item: "my_item")}
     </div>
     """
   end
