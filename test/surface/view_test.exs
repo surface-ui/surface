@@ -14,4 +14,21 @@ defmodule Surface.ViewTest do
 
     assert result == "Hello world!\n"
   end
+
+  describe "__mix_recompile?__" do
+    @new_file_path "test/support/view_test/templates/foo/new_file.sface"
+    test "returns true when list of templates from the view changes" do
+      on_exit(fn -> File.rm!(@new_file_path) end)
+
+      refute FooView.SurfaceRecompilationHelper.__mix_recompile__?()
+      File.touch!(@new_file_path)
+      assert FooView.SurfaceRecompilationHelper.__mix_recompile__?()
+    end
+  end
+
+  describe "hash/2" do
+    test "returns hash of all template paths for the given view" do
+      assert is_binary(Surface.View.hash(FooView, "test/support/view_test/templates"))
+    end
+  end
 end

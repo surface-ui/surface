@@ -43,7 +43,7 @@ defmodule Surface.View do
       for {name, _} <- templates(module, root) do
         quote do
           def render("#{unquote(name)}.html", assigns) do
-            render_surface(unquote(name), assigns)
+            __render_surface__(unquote(name), assigns)
           end
         end
       end
@@ -60,21 +60,36 @@ defmodule Surface.View do
   defmacro __before_compile__(env) do
     root = Module.get_attribute(env.module, :surface_view_root)
 
-    for {name, path} <- templates(env.module, root) do
-      ast =
-        path
-        |> File.read!()
-        |> Surface.Compiler.compile(1, env, path)
-        |> Surface.Compiler.to_live_struct()
+    render_funs =
+      for {name, path} <- templates(env.module, root) do
+        ast =
+          path
+          |> File.read!()
+          |> Surface.Compiler.compile(1, env, path)
+          |> Surface.Compiler.to_live_struct()
 
-      quote do
-        @file unquote(path)
-        @external_resource unquote(path)
-        defp render_surface(unquote(name), var!(assigns)) do
-          unquote(ast)
+        quote do
+          @file unquote(path)
+          @external_resource unquote(path)
+          defp __render_surface__(unquote(name), var!(assigns)) do
+            unquote(ast)
+          end
         end
       end
-    end
+
+    recompilation_helper =
+      quote do
+        defmodule SurfaceRecompilationHelper do
+          @moduledoc false
+
+          @doc false
+          def __mix_recompile__? do
+            unquote(hash(env.module, root)) != Surface.View.hash(unquote(env.module), unquote(root))
+          end
+        end
+      end
+
+    [recompilation_helper | render_funs]
   end
 
   defp templates(module, root) do
@@ -99,5 +114,17 @@ defmodule Surface.View do
     path
     |> Path.basename()
     |> String.replace_trailing(".sface", "")
+  end
+
+  @doc """
+  Returns the hash of all template paths for the given view.
+  Used by Surface to check if a given view requires recompilation when a new template is added.
+  """
+  def hash(module, root) do
+    module
+    |> templates_wildcard(root)
+    |> Path.wildcard()
+    |> Enum.sort()
+    |> :erlang.md5()
   end
 end
