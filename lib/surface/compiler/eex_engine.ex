@@ -159,7 +159,7 @@ defmodule Surface.Compiler.EExEngine do
            name: provided_name,
            as: slot_as,
            index: index_ast,
-           for: slot_entry_ast,
+           for: slot_for_ast,
            args: args_expr,
            default: default,
            meta: meta
@@ -173,10 +173,11 @@ defmodule Surface.Compiler.EExEngine do
         %AST.Literal{value: value} -> value
       end
 
-    slot_entry =
-      case slot_entry_ast do
+    slot_for =
+      case slot_for_ast do
         %AST.AttributeExpr{value: expr} -> expr
         %AST.Literal{value: value} -> value
+        _ -> nil
       end
 
     parent_context_var = context_name(state.context_vars.count - 1, meta.caller)
@@ -193,9 +194,9 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     slot_value =
-      if slot_entry do
+      if slot_for do
         quote do
-          unquote(slot_entry)
+          unquote(slot_for)
         end
       else
         slot_name = slot_as || provided_name

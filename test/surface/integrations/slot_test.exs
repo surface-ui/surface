@@ -229,8 +229,8 @@ defmodule Surface.SlotTest do
           </th>
         </tr>
         <tr :for={item <- @items}>
-          <td :for={{_col, index} <- Enum.with_index(@cols)}>
-            <#slot name="col" index={index} :args={item: item, info: info}/>
+          <td :for={col <- @cols}>
+            <#slot for={col} :args={item: item, info: info}/>
           </td>
         </tr>
       </table>

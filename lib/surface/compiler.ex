@@ -486,38 +486,56 @@ defmodule Surface.Compiler do
       end
 
     # TODO: Validate attributes with custom messages
-    name = attribute_value(attributes, "name", :default)
+
+    has_for? = has_attribute?(attributes, "for")
+
+    name = attribute_value_as_atom(attributes, "name", nil) || extract_name_from_for(attributes)
+
+    name =
+      if !name and !has_for? do
+        :default
+      else
+        name
+      end
+
     short_slot_syntax? = not has_attribute?(attributes, "name")
-    slot_entry = attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+
+    slot_entry =
+      if has_for? do
+        attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+      end
+
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
-    with {:ok, directives, attrs} <- collect_directives(@slot_directive_handlers, attributes, meta),
-         slot <- Enum.find(defined_slots, fn slot -> slot.name == name end),
-         slot when not is_nil(slot) <- slot do
-      maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
-      validate_slot_attrs!(attrs)
+    {:ok, directives, attrs} = collect_directives(@slot_directive_handlers, attributes, meta)
+    validate_slot_attrs!(attrs, meta.caller)
+    slot = Enum.find(defined_slots, fn slot -> slot.name == name end)
 
-      {:ok,
-       %AST.Slot{
-         name: name,
-         as: slot.opts[:as],
-         index: index,
-         for: slot_entry,
-         directives: directives,
-         default: to_ast(children, compile_meta),
-         args: [],
-         meta: meta
-       }}
-    else
-      _ ->
-        raise_missing_slot_error!(
-          meta.caller.module,
-          name,
-          meta,
-          defined_slots,
-          short_slot_syntax?
-        )
+    if slot do
+      maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
     end
+
+    if name && !slot do
+      raise_missing_slot_error!(
+        meta.caller.module,
+        name,
+        meta,
+        defined_slots,
+        short_slot_syntax?
+      )
+    end
+
+    {:ok,
+     %AST.Slot{
+       name: name,
+       as: if(slot, do: slot[:opts][:as]),
+       index: index,
+       for: slot_entry,
+       directives: directives,
+       default: to_ast(children, compile_meta),
+       args: [],
+       meta: meta
+     }}
   end
 
   defp convert_node_to_ast(:tag, {name, attributes, children, node_meta}, compile_meta) do
@@ -705,12 +723,36 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp attribute_value(attributes, attr_name, default) do
+  defp attribute_value_as_atom(attributes, attr_name, default) do
     Enum.find_value(attributes, default, fn {name, value, _} ->
       if name == attr_name do
         String.to_atom(value)
       end
     end)
+  end
+
+  defp attribute_raw_value(attributes, attr_name, default) do
+    Enum.find_value(attributes, default, fn
+      {^attr_name, {:attribute_expr, expr, _}, _} ->
+        expr
+
+      _ ->
+        nil
+    end)
+  end
+
+  defp extract_name_from_for(attributes) do
+    with value when is_binary(value) <- attribute_raw_value(attributes, "for", nil),
+         {:ok, {:@, _, [{assign_name, _, _}]}} when is_atom(assign_name) <- Code.string_to_quoted(value) do
+      assign_name
+    else
+      {:error, _} ->
+        # TODO: raise
+        nil
+
+      _ ->
+        nil
+    end
   end
 
   defp has_attribute?([], _), do: false
@@ -743,7 +785,7 @@ defmodule Surface.Compiler do
     nil
   end
 
-  defp get_slot_name("#template", attributes), do: attribute_value(attributes, "slot", :default)
+  defp get_slot_name("#template", attributes), do: attribute_value_as_atom(attributes, "slot", :default)
   defp get_slot_name(":" <> name, _), do: String.to_atom(name)
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)
@@ -1269,15 +1311,36 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp validate_slot_attrs!(attrs) do
-    Enum.each(attrs, &validate_slot_attr!/1)
+  defp validate_slot_attrs!(attrs, caller) do
+    Enum.each(attrs, &validate_slot_attr!(&1, caller))
   end
 
-  defp validate_slot_attr!({name, _, _meta}) when name in @valid_slot_props do
+  # TODO: Deprecate `name` and `index` after releasing v0.7
+  #
+  # defp validate_slot_attr!({"name", value, meta}, caller) do
+  #   message = """
+  #   properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
+
+  #   Rendering the slot:
+
+  #     <#slot for={@#{value}}/>
+
+  #   Iterating over the slot items:
+
+  #     {#for item <- @#{value}}
+  #       <#slot for={item}/>
+  #     {/for}
+  #   """
+  #   Surface.IOHelper.warn(message, caller, meta.line)
+
+  #   :ok
+  # end
+
+  defp validate_slot_attr!({name, _, _meta}, _caller) when name in @valid_slot_props do
     :ok
   end
 
-  defp validate_slot_attr!({name, _, %{file: file, line: line}}) do
+  defp validate_slot_attr!({name, _, %{file: file, line: line}}, _caller) do
     type =
       case name do
         ":" <> _ -> "directive"
