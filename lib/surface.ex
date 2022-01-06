@@ -196,7 +196,6 @@ defmodule Surface do
   @doc "Initialize surface state in the socket"
   def init(socket) do
     socket
-    |> LiveView.assign_new(:__surface__, fn -> %{} end)
     |> LiveView.assign_new(:__context__, fn -> %{} end)
   end
 
@@ -207,15 +206,9 @@ defmodule Surface do
   end
 
   @doc false
-  def build_assigns(
-        context,
-        static_props,
-        dynamic_props,
-        slot_props,
-        slots,
-        module,
-        node_alias
-      ) do
+  def build_assigns(context, static_props, dynamic_props, module, node_alias) do
+    Code.ensure_loaded(module)
+
     static_prop_names = Keyword.keys(static_props)
 
     dynamic_props =
@@ -231,35 +224,12 @@ defmodule Surface do
       |> Keyword.merge(dynamic_props)
       |> Keyword.merge(static_props)
 
-    slot_assigns = map_slots_to_assigns(module, slot_props)
-
     if module do
-      Map.new(
-        props ++
-          slot_assigns ++
-          [
-            __surface__: %{
-              slots: Map.new(slots),
-              provided_templates: Keyword.keys(slot_props)
-            },
-            __context__: context
-          ]
-      )
+      Map.new([__context__: context] ++ props)
     else
-      # Function components don't support slots nor contexts
+      # Function components don't support contexts
       Map.new(props)
     end
-  end
-
-  defp map_slots_to_assigns(module, slot_props) do
-    slots = if function_exported?(module, :__slots__, 0), do: module.__slots__(), else: []
-
-    mapping =
-      slots
-      |> Enum.map(fn %{name: name, opts: opts} -> {name, Keyword.get(opts, :as)} end)
-      |> Enum.filter(fn value -> not match?({_, nil}, value) end)
-
-    Enum.map(slot_props, fn {name, info} -> {Keyword.get(mapping, name, name), info} end)
   end
 
   @doc false
@@ -283,6 +253,10 @@ defmodule Surface do
 
   def event_to_opts(%{name: name, target: target}, event_name) do
     [{event_name, name}, {:phx_target, target}]
+  end
+
+  def event_to_opts(%Phoenix.LiveView.JS{} = value, event_name) do
+    [{event_name, value}]
   end
 
   def event_to_opts(nil, _event_name) do
@@ -322,54 +296,60 @@ defmodule Surface do
     </div>
     ```
   """
-  defmacro slot_assigned?(slot) do
-    defined_slots =
-      API.get_slots(__CALLER__.module)
-      |> Enum.map(& &1.name)
-      |> Enum.uniq()
-
-    if slot not in defined_slots do
-      undefined_slot(defined_slots, slot, __CALLER__)
-    end
+  defmacro slot_assigned?(slot) when is_atom(slot) do
+    validate_undefined_slot(slot, __CALLER__)
 
     quote do
-      unquote(__MODULE__).slot_assigned?(var!(assigns), unquote(slot))
+      !!var!(assigns)[unquote(slot)]
     end
   end
 
-  @doc false
-  def slot_assigned?(%{__surface__: %{provided_templates: slots}}, slot), do: slot in slots
-  def slot_assigned?(_, _), do: false
+  defmacro slot_assigned?(
+             {{:., _, [Phoenix.LiveView.Engine, :fetch_assign!]}, _, [{:assigns, _, _}, slot_name]} = slot
+           ) do
+    validate_undefined_slot(slot_name, __CALLER__)
 
-  defp undefined_slot(defined_slots, slot_name, caller) do
-    similar_slot_message =
-      case Helpers.did_you_mean(slot_name, defined_slots) do
-        {similar, score} when score > 0.8 ->
-          "\n\n  Did you mean #{inspect(to_string(similar))}?"
+    quote do
+      !!unquote(slot)
+    end
+  end
 
-        _ ->
+  defp validate_undefined_slot(slot_name, caller) do
+    defined_slots =
+      API.get_slots(caller.module)
+      |> Enum.map(& &1.name)
+      |> Enum.uniq()
+
+    if slot_name not in defined_slots do
+      similar_slot_message =
+        case Helpers.did_you_mean(slot_name, defined_slots) do
+          {similar, score} when score > 0.8 ->
+            "\n\n  Did you mean #{inspect(to_string(similar))}?"
+
+          _ ->
+            ""
+        end
+
+      existing_slots_message =
+        if defined_slots == [] do
           ""
-      end
+        else
+          slots =
+            defined_slots
+            |> Enum.map(&to_string/1)
+            |> Enum.sort()
 
-    existing_slots_message =
-      if defined_slots == [] do
-        ""
-      else
-        slots =
-          defined_slots
-          |> Enum.map(&to_string/1)
-          |> Enum.sort()
+          available = Helpers.list_to_string("slot:", "slots:", slots)
+          "\n\n  Available #{available}"
+        end
 
-        available = Helpers.list_to_string("slot:", "slots:", slots)
-        "\n\n  Available #{available}"
-      end
+      message = """
+      no slot "#{slot_name}" defined in the component '#{caller.module}'\
+      #{similar_slot_message}\
+      #{existing_slots_message}\
+      """
 
-    message = """
-    no slot "#{slot_name}" defined in the component '#{caller.module}'\
-    #{similar_slot_message}\
-    #{existing_slots_message}\
-    """
-
-    IOHelper.warn(message, caller)
+      IOHelper.warn(message, caller)
+    end
   end
 end

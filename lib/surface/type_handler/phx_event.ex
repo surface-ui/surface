@@ -8,6 +8,10 @@ defmodule Surface.TypeHandler.PhxEvent do
     {:ok, value}
   end
 
+  def value_to_html(_name, %Phoenix.LiveView.JS{} = value) do
+    {:ok, value}
+  end
+
   def value_to_html(name, value) do
     "phx-" <> event = to_string(name)
 
