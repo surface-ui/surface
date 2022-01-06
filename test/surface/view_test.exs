@@ -11,21 +11,23 @@ end
 defmodule Surface.ViewTest do
   use ExUnit.Case, async: true
 
-  test "generates render/2 function for sface files found on templates folder" do
-    result =
-      MyAppWeb.FooView.render("index.html", %{name: "world"})
-      |> Phoenix.HTML.Safe.to_iodata()
-      |> IO.iodata_to_binary()
+  describe "render/2" do
+    test "generates render/2 for sface files found on the templates folder" do
+      result =
+        MyAppWeb.FooView.render("index.html", %{name: "world"})
+        |> Phoenix.HTML.Safe.to_iodata()
+        |> IO.iodata_to_binary()
 
-    assert result == "Hello world!\n"
-  end
+      assert result == "Hello world!\n"
+    end
 
-  test "supports nested views" do
-    result =
-      MyAppWeb.Nested.FooView.render("index.html", %{name: "world"})
-      |> Phoenix.HTML.Safe.to_iodata()
-      |> IO.iodata_to_binary()
+    test "supports nested views" do
+      result =
+        MyAppWeb.Nested.FooView.render("index.html", %{name: "world"})
+        |> Phoenix.HTML.Safe.to_iodata()
+        |> IO.iodata_to_binary()
 
-    assert result == "Nested hello world!\n"
+      assert result == "Nested hello world!\n"
+    end
   end
 end
