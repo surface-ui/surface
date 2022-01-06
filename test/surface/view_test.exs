@@ -16,7 +16,7 @@ defmodule Surface.ViewTest do
   end
 
   describe "__mix_recompile?__" do
-    @new_file_path "test/support/view_test/templates/foo/new_file.sface"
+    @new_file_path "test/support/view_test/templates/foo/recompilation_test.sface"
     test "returns true when list of templates from the view changes" do
       on_exit(fn -> File.rm!(@new_file_path) end)
 
