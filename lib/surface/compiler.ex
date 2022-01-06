@@ -47,7 +47,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props ["name", "index"]
+  @valid_slot_props ["for", "name", "index"]
 
   @directive_prefixes [":", "s-"]
 
@@ -488,11 +488,10 @@ defmodule Surface.Compiler do
     # TODO: Validate attributes with custom messages
     name = attribute_value(attributes, "name", :default)
     short_slot_syntax? = not has_attribute?(attributes, "name")
-
+    slot_entry = attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
-    with {:ok, directives, attrs} <-
-           collect_directives(@slot_directive_handlers, attributes, meta),
+    with {:ok, directives, attrs} <- collect_directives(@slot_directive_handlers, attributes, meta),
          slot <- Enum.find(defined_slots, fn slot -> slot.name == name end),
          slot when not is_nil(slot) <- slot do
       maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
@@ -503,6 +502,7 @@ defmodule Surface.Compiler do
          name: name,
          as: slot.opts[:as],
          index: index,
+         for: slot_entry,
          directives: directives,
          default: to_ast(children, compile_meta),
          args: [],
@@ -1287,7 +1287,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

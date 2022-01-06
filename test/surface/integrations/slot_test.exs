@@ -30,8 +30,8 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <div :for={{data, index} <- Enum.with_index(@inner)}>
-          {data.label}: <#slot name="inner" index={index} />
+        <div :for={data <- @inner}>
+          {data.label}: <#slot for={data} />
         </div>
         <div>
           <#slot />
@@ -112,7 +112,7 @@ defmodule Surface.SlotTest do
       ~F"""
       <div>
         <header :if={slot_assigned?(@header)}>
-          <#slot name="header"/>
+          <#slot for={@header}/>
         </header>
         <main :if={slot_assigned?(:default)}>
           <#slot>
@@ -120,7 +120,7 @@ defmodule Surface.SlotTest do
           </#slot>
         </main>
         <footer>
-        <#slot name="footer">
+        <#slot for={@footer}>
           Footer fallback
         </#slot>
         </footer>
@@ -1343,7 +1343,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1374,7 +1374,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1404,7 +1404,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
