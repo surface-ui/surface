@@ -3,27 +3,21 @@ defmodule Surface.LiveViewTest do
   Conveniences for testing Surface components.
   """
 
-  alias Phoenix.LiveView.{Diff, Socket}
-
   defmodule BlockWrapper do
     @moduledoc false
 
-    use Surface.Component
-
-    slot default, required: true
+    use Phoenix.Component
 
     def render(assigns) do
-      ~F[<#slot/>]
+      ~H[<%= render_slot(@inner_block) %>]
     end
-
-    def __live__, do: %{kind: :component, module: __MODULE__}
   end
 
   defmacro __using__(_opts) do
     quote do
       import Phoenix.ConnTest
       import Phoenix.LiveViewTest
-      import Phoenix.LiveView.Helpers, only: [live_component: 3, live_component: 4, component: 2, component: 3]
+      import Phoenix.LiveView.Helpers, only: [live_component: 2, live_component: 3, component: 2]
       import Surface, only: [sigil_F: 2]
       import Surface.LiveViewTest
     end
@@ -54,12 +48,28 @@ defmodule Surface.LiveViewTest do
 
   """
   defmacro render_surface(do: do_block) do
+    clauses =
+      quote do
+        _ ->
+          unquote(do_block)
+      end
+
+    inner_block_assigns =
+      quote do
+        %{
+          __slot__: :inner_block,
+          inner_block: Phoenix.LiveView.Helpers.inner_block(:inner_block, do: unquote(clauses))
+        }
+      end
+
     render_component_call =
       quote do
-        Surface.LiveViewTest.render_component_with_block(
-          Surface.LiveViewTest.BlockWrapper,
-          %{__context__: %{}, __surface__: %{provided_templates: [:default]}},
-          do: unquote(do_block)
+        Phoenix.LiveViewTest.render_component(
+          &Surface.LiveViewTest.BlockWrapper.render/1,
+          %{
+            inner_block: unquote(inner_block_assigns),
+            __context__: %{}
+          }
         )
       end
 
@@ -188,62 +198,6 @@ defmodule Surface.LiveViewTest do
         end
       end
     end
-  end
-
-  # Custom version of phoenix's `render_component` that supports
-  # passing a inner_block. This should be used until a compatible
-  # version of `phoenix_live_view` is released.
-
-  @doc false
-  defmacro render_component_with_block(component, assigns, opts \\ [], do_block \\ []) do
-    {do_block, opts} =
-      case {do_block, opts} do
-        {[do: do_block], _} -> {do_block, opts}
-        {_, [do: do_block]} -> {do_block, []}
-        {_, _} -> {nil, opts}
-      end
-
-    endpoint =
-      Module.get_attribute(__CALLER__.module, :endpoint) ||
-        raise ArgumentError,
-              "the module attribute @endpoint is not set for #{inspect(__MODULE__)}"
-
-    socket =
-      quote do
-        %Socket{endpoint: unquote(endpoint), router: unquote(opts)[:router]}
-      end
-
-    if do_block do
-      quote do
-        socket = unquote(socket)
-        var!(assigns) = Map.put(var!(assigns), :socket, socket)
-
-        inner_block = fn _, _args ->
-          unquote(do_block)
-        end
-
-        assigns = unquote(assigns) |> Map.new() |> Map.put(:inner_block, inner_block)
-        Surface.LiveViewTest.__render_component_with_block__(socket, unquote(component), assigns)
-      end
-    else
-      quote do
-        assigns = Map.new(unquote(assigns))
-
-        Surface.LiveViewTest.__render_component_with_block__(
-          unquote(socket),
-          unquote(component),
-          assigns
-        )
-      end
-    end
-  end
-
-  @doc false
-  def __render_component_with_block__(socket, component, assigns) do
-    mount_assigns = if assigns[:id], do: %{myself: %Phoenix.LiveComponent.CID{cid: -1}}, else: %{}
-    rendered = Diff.component_to_rendered(socket, component, assigns, mount_assigns)
-    {_, diff, _} = Diff.render(socket, rendered, Diff.new_components())
-    diff |> Diff.to_iodata() |> IO.iodata_to_binary()
   end
 
   @doc false

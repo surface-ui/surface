@@ -56,6 +56,7 @@ defmodule Surface.LiveComponent do
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
+      import Phoenix.LiveView.Helpers, except: [slot: 2]
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
@@ -63,6 +64,8 @@ defmodule Surface.LiveComponent do
 
       use Surface.API, include: [:prop, :slot, :data]
       import Phoenix.HTML
+
+      @before_compile {Surface.BaseComponent, :__before_compile_init_slots__}
 
       alias Surface.Components.{Context, Raw}
       alias Surface.Components.Dynamic.Component

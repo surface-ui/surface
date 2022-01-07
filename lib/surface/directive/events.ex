@@ -3,6 +3,7 @@ defmodule Surface.Directive.Events do
 
   @events [
     "click",
+    "click-away",
     "capture-click",
     "blur",
     "focus",
@@ -43,14 +44,9 @@ defmodule Surface.Directive.Events do
         %type{attributes: attributes} = node
       )
       when type in [AST.Tag, AST.VoidTag] do
-    cid = AST.Meta.quoted_caller_cid(meta)
-
     value =
       quote generated: true do
-        [
-          {unquote("phx-#{event_name}"), {:string, unquote(__MODULE__).event_name(unquote(value))}},
-          "phx-target": {:string, unquote(__MODULE__).event_target(unquote(value), unquote(cid))}
-        ]
+        [{unquote("phx-#{event_name}"), {:event, unquote(value)}}]
       end
 
     %{
@@ -91,25 +87,5 @@ defmodule Surface.Directive.Events do
       end
 
     AST.AttributeExpr.new(value, original, expr_meta)
-  end
-
-  def event_name(%{name: name}) do
-    name
-  end
-
-  def event_name(_) do
-    ""
-  end
-
-  def event_target(%{target: nil}, cid) do
-    to_string(cid)
-  end
-
-  def event_target(%{target: target}, _cid) when target != :live_view do
-    to_string(target)
-  end
-
-  def event_target(_, _cid) do
-    ""
   end
 end

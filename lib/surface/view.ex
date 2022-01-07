@@ -103,8 +103,9 @@ defmodule Surface.View do
     view_name =
       module
       |> Module.split()
-      |> List.last()
-      |> Macro.underscore()
+      |> Enum.drop(1)
+      |> Enum.map(&Macro.underscore/1)
+      |> Enum.join("/")
       |> String.replace_trailing("_view", "")
 
     "#{root}/#{view_name}/*.sface"

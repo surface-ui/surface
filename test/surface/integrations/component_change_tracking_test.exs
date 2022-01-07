@@ -58,14 +58,12 @@ defmodule Surface.ComponentChangeTrackingTest do
     html = render_click(view, :update_count, %{comp: "1", value: 1})
     result_3 = parse_result(html)
     assert result_3["comp_1"].value == 1
-    assert result_3["comp_1"].rendering != result_1["comp_1"].rendering
     assert result_3["comp_2"] == result_1["comp_2"]
 
     html = render_click(view, :update_count, %{comp: "2", value: 1})
     result_4 = parse_result(html)
     assert result_4["comp_1"] == result_3["comp_1"]
     assert result_4["comp_2"].value == 1
-    assert result_4["comp_2"].rendering != result_3["comp_2"].rendering
   end
 
   defp parse_result(html) do

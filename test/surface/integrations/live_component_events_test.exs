@@ -1,6 +1,8 @@
 defmodule Surface.EventsTest do
   use Surface.ConnCase, async: true
 
+  import Phoenix.HTML.Engine, only: [html_escape: 1]
+
   defmodule LiveDiv do
     use Surface.LiveComponent
 
@@ -95,8 +97,10 @@ defmodule Surface.EventsTest do
         """
       end
 
+    event = html_escape(~S([["push",{"event":"click","target":1}]]))
+
     assert html =~ """
-           <button phx-click="click" phx-target="1"\
+           <button phx-click="#{event}"\
            """
   end
 
@@ -110,8 +114,10 @@ defmodule Surface.EventsTest do
         """
       end
 
+    event = html_escape(~S([["push",{"event":"click","target":1}]]))
+
     assert html =~ """
-           <button phx-click="click" phx-target="1"\
+           <button phx-click="#{event}"\
            """
   end
 
@@ -125,14 +131,18 @@ defmodule Surface.EventsTest do
         """
       end
 
+    event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
     assert html =~ """
-           phx-click="ok" phx-target="#comp"\
+           phx-click="#{event}"\
            """
   end
 
   test "override target with keyword list notation" do
+    event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
     expected = """
-    phx-click="ok" phx-target="#comp"\
+    phx-click="#{event}"\
     """
 
     # Event name as string

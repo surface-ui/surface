@@ -30,8 +30,8 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <div :for={{data, index} <- Enum.with_index(@inner)}>
-          {data.label}: <#slot name="inner" index={index} />
+        <div :for={data <- @inner}>
+          {data.label}: <#slot for={data} />
         </div>
         <div>
           <#slot />
@@ -111,8 +111,8 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <header :if={slot_assigned?(:header)}>
-          <#slot name="header"/>
+        <header :if={slot_assigned?(@header)}>
+          <#slot for={@header}/>
         </header>
         <main :if={slot_assigned?(:default)}>
           <#slot>
@@ -120,7 +120,7 @@ defmodule Surface.SlotTest do
           </#slot>
         </main>
         <footer>
-        <#slot name="footer">
+        <#slot for={@footer}>
           Footer fallback
         </#slot>
         </footer>
@@ -164,19 +164,19 @@ defmodule Surface.SlotTest do
   end
 
   defmodule Column do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, required: true
   end
 
   defmodule ColumnWithDefaultTitle do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, default: "default title"
   end
 
   defmodule ColumnWithRender do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, required: true
 
@@ -194,7 +194,7 @@ defmodule Surface.SlotTest do
   end
 
   defmodule ColumnWithRenderAndDefaultTitle do
-    use Surface.Component, slot: "cols"
+    use Surface.Component, slot: "col"
 
     prop title, :string, default: "default title"
 
@@ -216,7 +216,7 @@ defmodule Surface.SlotTest do
 
     prop items, :list, required: true
 
-    slot cols, args: [:info, item: ^items]
+    slot col, as: :cols, args: [:info, item: ^items]
 
     def render(assigns) do
       info = "Some info from Grid"
@@ -229,8 +229,8 @@ defmodule Surface.SlotTest do
           </th>
         </tr>
         <tr :for={item <- @items}>
-          <td :for={{_col, index} <- Enum.with_index(@cols)}>
-            <#slot name="cols" index={index} :args={item: item, info: info}/>
+          <td :for={col <- @cols}>
+            <#slot for={col} :args={item: item, info: info}/>
           </td>
         </tr>
       </table>
@@ -282,6 +282,50 @@ defmodule Surface.SlotTest do
            """
   end
 
+  test "render multiple slot entries with props (shorthand notation)" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithMultipleSlotableEntries>
+          Content 1
+          <:inner label="label 1">
+            <b>content 1</b>
+            <StatefulComponent id="stateful1"/>
+          </:inner>
+          Content 2
+            Content 2.1
+          <:inner label="label 2">
+            <b>content 2</b>
+          </:inner>
+          Content 3
+          <StatefulComponent id="stateful2"/>
+        </OuterWithMultipleSlotableEntries>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             <div>
+               label 1: \
+
+               <b>content 1</b>
+               <div>Stateful</div>
+             </div><div>
+               label 2: \
+
+               <b>content 2</b>
+             </div>
+             <div>
+             Content 1
+             Content 2
+               Content 2.1
+             Content 3
+             <div>Stateful</div>
+             </div>
+           </div>
+           """
+  end
+
   test "assign named slots with args" do
     html =
       render_surface do
@@ -290,6 +334,25 @@ defmodule Surface.SlotTest do
           <#template slot="body" :let={info: my_info}>
             Info: {my_info}
           </#template>
+        </OuterWithNamedSlotAndArgs>
+        """
+      end
+
+    assert html =~ """
+           <div>
+               Info: Info from slot
+           </div>
+           """
+  end
+
+  test "assign named slots with args (shorthand notation)" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithNamedSlotAndArgs>
+          <:body :let={info: my_info}>
+            Info: {my_info}
+          </:body>
         </OuterWithNamedSlotAndArgs>
         """
       end
@@ -527,6 +590,49 @@ defmodule Surface.SlotTest do
            """
   end
 
+  test "render slot with slot args containing parent bindings (shorthand notation)" do
+    assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
+
+    html =
+      render_surface do
+        ~F"""
+        <Grid items={user <- @items}>
+          <:col title="ID">
+            <b>Id: {user.id}</b>
+          </:col>
+          <:col title="NAME">
+            Name: {user.name}
+          </:col>
+        </Grid>
+        """
+      end
+
+    assert html =~ """
+           <table>
+             <tr>
+               <th>
+                 ID
+               </th><th>
+                 NAME
+               </th>
+             </tr>
+             <tr>
+               <td>
+               <b>Id: 1</b>
+               </td><td>
+               Name: First
+               </td>
+             </tr><tr>
+               <td>
+               <b>Id: 2</b>
+               </td><td>
+               Name: Second
+               </td>
+             </tr>
+           </table>
+           """
+  end
+
   test "rename slot with :as do not override other assigns with same name" do
     html =
       render_surface do
@@ -638,12 +744,12 @@ defmodule Surface.SlotTest do
       end
 
     message = """
-    code:3: undefined argument `:non_existing` for slot `cols` in `Surface.SlotTest.Grid`.
+    code:3: undefined argument `:non_existing` for slot `col` in `Surface.SlotTest.Grid`.
 
     Available arguments: [:info, :item].
 
     Hint: You can define a new slot argument using the `args` option: \
-    `slot cols, args: [..., :non_existing]`
+    `slot col, args: [..., :non_existing]`
     """
 
     assert_raise(CompileError, message, fn ->
@@ -840,7 +946,7 @@ defmodule Surface.SlotTest do
     html =
       render_surface do
         ~F"""
-        <OuterWithOptionalNamedSlot />
+        <OuterWithOptionalNamedSlot/>
         """
       end
 
@@ -1018,7 +1124,7 @@ defmodule Surface.SlotSyncTest do
 
     Please declare the slot in the parent component or rename the value in the `:slot` option.
 
-    Available slot: "cols"
+    Available slot: "col"
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1130,7 +1236,47 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
           <div>
-            <header :if={{ slot_assigned?(:heade) }}>
+            <header :if={slot_assigned?(:heade)}>
+              <#slot name="header"/>
+            </header>
+            <#slot />
+            <footer>
+              <#slot name="footer" />
+            </footer>
+          </div>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           no slot "heade" defined in the component 'Elixir.Surface.SlotSyncTest.TestComponentWithWrongOptionalSlotName'
+
+             Did you mean "header"\?
+
+             Available slots: "default", "footer" and "header"
+             code.exs:11:\
+           """
+  end
+
+  test "warn on component that uses slot_assigned?(@var) when @var does not exist" do
+    component_code = """
+    defmodule TestComponentWithWrongOptionalSlotName do
+      use Surface.Component
+
+      slot header
+      slot default
+      slot footer
+
+      def render(assigns) do
+        ~F"\""
+          <div>
+            <header :if={slot_assigned?(@heade)}>
               <#slot name="header"/>
             </header>
             <#slot />
@@ -1197,7 +1343,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1228,7 +1374,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1258,7 +1404,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->

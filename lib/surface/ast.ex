@@ -114,7 +114,8 @@ defmodule Surface.AST.Meta do
   def quoted_caller_cid(meta) do
     cond do
       Module.open?(meta.caller.module) and
-          Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent ->
+        Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent and
+          meta.caller.function == {:render, 1} ->
         quote generated: true do
           @myself
         end
@@ -302,16 +303,19 @@ defmodule Surface.AST.Slot do
   ## Properties
       * `:name` - the slot name
       * `:index` - the index of the slotable entry assigned to this slot
+      * `:for` - the slotable entry assigned for this slot
       * `:default` - a list of AST nodes representing the default content for this slot
       * `:args` - either an atom or a quoted expression representing arguments for this slot
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this slot
   """
-  defstruct [:name, :index, :args, :default, :meta, directives: []]
+  defstruct [:name, :as, :for, :index, :args, :default, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: binary(),
+          as: atom(),
           index: any(),
+          for: any(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t(),
           # quoted ?
@@ -389,18 +393,20 @@ defmodule Surface.AST.Template do
 
   ## Properties
       * `:name` - the template name
+      * `:props` - the props for slot entry tag
       * `:let` - the bindings for this template
       * `:children` - the template children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
       * `:directives` - directives associated with this template
   """
-  defstruct [:name, :children, :let, :meta, directives: []]
+  defstruct [:name, :props, :children, :let, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: atom(),
           children: list(Surface.AST.t()),
           directives: list(Surface.AST.Directive.t()),
+          props: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
           # quoted?
           let: list(Keyword.t(atom())),
           meta: Surface.AST.Meta.t()

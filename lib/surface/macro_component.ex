@@ -23,9 +23,6 @@ defmodule Surface.MacroComponent do
 
       use Surface.API, include: [:prop, :slot]
       @behaviour unquote(__MODULE__)
-
-      @doc false
-      defmacro __compile_dep__, do: nil
     end
   end
 
