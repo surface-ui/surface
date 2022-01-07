@@ -77,19 +77,23 @@ defmodule Surface.View do
         end
       end
 
-    recompilation_helper =
+    mix_recompile =
       quote do
-        defmodule SurfaceRecompilationHelper do
-          @moduledoc false
+        # Override definition injected by Phoenix.Template
+        defoverridable __mix_recompile__?: 0
 
-          @doc false
-          def __mix_recompile__? do
-            unquote(hash(env.module, root)) != Surface.View.hash(unquote(env.module), unquote(root))
-          end
+        @doc false
+        def __mix_recompile__? do
+          super() || __surface_recompile__?()
+        end
+
+        @doc false
+        def __surface_recompile__? do
+          unquote(hash(env.module, root)) != Surface.View.hash(unquote(env.module), unquote(root))
         end
       end
 
-    [recompilation_helper | render_funs]
+    [mix_recompile | render_funs]
   end
 
   defp templates(module, root) do

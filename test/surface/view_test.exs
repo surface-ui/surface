@@ -36,9 +36,9 @@ defmodule Surface.ViewTest do
     test "returns true when list of templates from the view changes" do
       on_exit(fn -> File.rm!(@new_file_path) end)
 
-      refute MyAppWeb.FooView.SurfaceRecompilationHelper.__mix_recompile__?()
+      assert MyAppWeb.FooView.__mix_recompile__?() == false
       File.touch!(@new_file_path)
-      assert MyAppWeb.FooView.SurfaceRecompilationHelper.__mix_recompile__?()
+      assert MyAppWeb.FooView.__mix_recompile__?() == true
     end
   end
 
