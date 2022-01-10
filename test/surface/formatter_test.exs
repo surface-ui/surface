@@ -42,6 +42,25 @@ defmodule Surface.FormatterTest do
       )
     end
 
+    test "empty inputs are not changed" do
+      assert_formatter_doesnt_change("")
+
+      assert_formatter_doesnt_change("""
+      """)
+    end
+
+    test "single line inputs are not changed" do
+      assert_formatter_doesnt_change("<div />")
+
+      assert_formatter_doesnt_change("""
+      <Component with="attribute" />
+      """)
+    end
+
+    test "trailing whitespace is trimmed on single line inputs" do
+      assert_formatter_outputs(~s{<div/>    }, ~s{<div />})
+    end
+
     test "Contents of macro components are preserved" do
       assert_formatter_doesnt_change("""
       <#MacroComponent>
@@ -678,7 +697,7 @@ defmodule Surface.FormatterTest do
     test "shorthand surface syntax (invisible []) is formatted by Elixir code formatter" do
       assert_formatter_outputs(
         "<div class={ foo:        bar }></div>",
-        "<div class={foo: bar} />\n"
+        "<div class={foo: bar} />"
       )
     end
 
