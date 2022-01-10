@@ -376,13 +376,22 @@ defmodule Surface.Formatter do
   """
   @spec format_string!(String.t(), list(option)) :: String.t()
   def format_string!(string, opts \\ []) do
+    trailing_newline =
+      case Regex.run(~r/\n+\s*$/, string) do
+        [match] -> match
+        nil -> nil
+      end
+
     parsed =
       string
       |> String.trim()
       |> Surface.Compiler.Parser.parse!(translator: Surface.Formatter.NodeTranslator)
 
-    # Ensure the :indent option is set
-    opts = Keyword.put_new(opts, :indent, 0)
+    # Ensure the :indent and :trailing_newline options are set
+    opts =
+      opts
+      |> Keyword.put_new(:indent, 0)
+      |> Keyword.put(:trailing_newline, !is_nil(trailing_newline))
 
     [
       Phases.TagWhitespace,
