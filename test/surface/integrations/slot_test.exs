@@ -91,6 +91,23 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule OuterWithDefaultSlotAndArgsFromGenerator do
+    use Surface.Component
+
+    prop items, :list, required: true
+    slot default, args: [item: ^items]
+
+    def render(assigns) do
+      ~F"""
+      <div>
+        {#for item <- @items}
+          <#slot :args={item: item}/>
+        {/for}
+      </div>
+      """
+    end
+  end
+
   defmodule OuterWithoutDefaultSlot do
     use Surface.Component
 
@@ -394,6 +411,24 @@ defmodule Surface.SlotTest do
     assert html =~ """
            <div>
              Info
+           </div>
+           """
+  end
+
+  test "assign default slot with args from generator" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithDefaultSlotAndArgsFromGenerator items={i <- [1, 2]}>
+          Item: {i}
+        </OuterWithDefaultSlotAndArgsFromGenerator>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Item: 1
+             Item: 2
            </div>
            """
   end
