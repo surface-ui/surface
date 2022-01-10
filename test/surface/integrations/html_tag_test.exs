@@ -3,6 +3,16 @@ defmodule HtmlTagTest do
 
   @encoded_json "[{\"x\":10,\"y\":20}]"
 
+  alias Phoenix.LiveView.Rendered
+
+  defp eval(string, assigns \\ %{}) do
+    string
+    |> Surface.Compiler.compile(1, __ENV__)
+    |> Surface.Compiler.to_live_struct()
+    |> Code.eval_quoted(assigns: assigns)
+    |> elem(0)
+  end
+
   test "raise runtime error for invalid attributes values" do
     assert_raise(CompileError, ~r/invalid value for attribute "title"/, fn ->
       "<div title={{1, 2}}/>"
@@ -258,7 +268,7 @@ defmodule HtmlTagTest do
   end
 
   describe "css class attributes" do
-    test "as string" do
+    test "as string literal" do
       assigns = %{value1: true, value2: false, value3: true}
 
       html =
@@ -271,6 +281,12 @@ defmodule HtmlTagTest do
       assert html =~ """
              <div class="myclass"></div>
              """
+    end
+
+    test "as string literal, it's translated directly to static html" do
+      %Rendered{static: static} = eval(~S[<div class="myclass" id={123}/>])
+
+      assert static == [~S(<div class="myclass"), "></div>"]
     end
 
     test "css class with keyword list notation" do

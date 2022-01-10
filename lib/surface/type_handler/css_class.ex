@@ -3,9 +3,17 @@ defmodule Surface.TypeHandler.CssClass do
 
   use Surface.TypeHandler
 
+  alias Surface.AST
+
   @impl true
   def literal_to_ast_node(_type, _name, "", _meta) do
     {:ok, %Surface.AST.Literal{value: ""}}
+  end
+
+  # For HTML nodes, we don't need to convert the class values into a list as
+  # no one can actually read/update those values like we do in components.
+  def literal_to_ast_node(_type, _name, value, %AST.Meta{module: nil}) do
+    {:ok, %Surface.AST.Literal{value: value}}
   end
 
   def literal_to_ast_node(type, name, value, meta) do

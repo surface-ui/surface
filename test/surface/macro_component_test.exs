@@ -121,7 +121,7 @@ defmodule Surface.MacroComponentTest do
 
     assert html =~ """
            <div>
-           <span title="Some title" disabled tabindex="1" id="123">
+           <span title="Some title" disabled tabindex="1" id="123" class="">
              CONTENT
            </span>
            </div>

@@ -14,6 +14,8 @@ defmodule Surface.Compiler.EExEngine do
   # while this should technically work with other engines, the main use case is integration with Phoenix.LiveView.Engine
   @default_engine Phoenix.LiveView.Engine
 
+  @string_types [:string, :css_class]
+
   @spec translate(
           [Surface.AST.t()],
           nil | maybe_improper_list | map
@@ -883,10 +885,10 @@ defmodule Surface.Compiler.EExEngine do
   defp to_html_attributes([]), do: []
 
   defp to_html_attributes([
-         %AST.Attribute{name: name, type: :string, value: %AST.Literal{value: value}}
+         %AST.Attribute{name: name, type: type, value: %AST.Literal{value: value}}
          | attributes
        ])
-       when is_binary(value) do
+       when type in @string_types and is_binary(value) do
     [[" ", to_string(name), "=", ~S("), value, ~S(")], to_html_attributes(attributes)]
   end
 
