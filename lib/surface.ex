@@ -304,9 +304,18 @@ defmodule Surface do
     end
   end
 
+  # TODO: This is only for LV <= 0.17.5. Remove it when surface requires LV >= 0.17.6
   defmacro slot_assigned?(
              {{:., _, [Phoenix.LiveView.Engine, :fetch_assign!]}, _, [{:assigns, _, _}, slot_name]} = slot
            ) do
+    validate_undefined_slot(slot_name, __CALLER__)
+
+    quote do
+      !!unquote(slot)
+    end
+  end
+
+  defmacro slot_assigned?({{:., _, [{:assigns, _, _}, slot_name]}, _, _} = slot) do
     validate_undefined_slot(slot_name, __CALLER__)
 
     quote do
