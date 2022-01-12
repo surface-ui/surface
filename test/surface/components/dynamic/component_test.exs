@@ -267,36 +267,6 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              <div phx-click="#{event}"></div>
              """
     end
-
-    test "render error message if module is not a component", %{conn: conn} do
-      import ExUnit.CaptureIO
-
-      code =
-        quote do
-          ~F"""
-          <div>
-            <Enum/>
-          </div>
-          """
-        end
-
-      output =
-        capture_io(:standard_error, fn ->
-          module = compile_surface(code)
-          {:ok, _view, html} = live_isolated(conn, module)
-
-          assert html =~ """
-                 <div><span style="color: red; border: 2px solid red; padding: 3px"> \
-                 Error: cannot render &lt;Enum&gt; (module Enum is not a component)\
-                 </span></div>\
-                 """
-        end)
-
-      assert output =~ ~r"""
-             cannot render <Enum> \(module Enum is not a component\)
-               code:2:\
-             """
-    end
   end
 
   describe "dynamic components in dead views" do
