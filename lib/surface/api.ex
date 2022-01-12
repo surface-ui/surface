@@ -38,7 +38,8 @@ defmodule Surface.API do
     # Private
     :generator,
     :context_put,
-    :context_get
+    :context_get,
+    :dynamic
   ]
 
   defmacro __using__(include: include) do

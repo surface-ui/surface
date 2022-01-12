@@ -111,17 +111,20 @@ defmodule Surface.AST.Meta do
           function_component?: boolean()
         }
 
-  def quoted_caller_cid(meta) do
+  @doc false
+  def quoted_caller_context(meta) do
     cond do
       Module.open?(meta.caller.module) and
         Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent and
           meta.caller.function == {:render, 1} ->
         quote generated: true do
-          @myself
+          %{cid: @myself}
         end
 
       true ->
-        nil
+        quote do
+          %{cid: nil}
+        end
     end
   end
 end
@@ -262,7 +265,7 @@ defmodule Surface.AST.AttributeExpr do
 
   defp constant?(
          {{:., _, [{:__aliases__, _, [:Surface, :TypeHandler]}, :expr_to_value!]}, _,
-          [_type, _name, clauses, opts, _module, _original]}
+          [_type, _name, clauses, opts, _module, _original, _ctx]}
        ) do
     Macro.quoted_literal?(clauses) and
       Macro.quoted_literal?(opts)

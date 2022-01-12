@@ -26,16 +26,16 @@ defmodule Surface.TypeHandler.CssClass do
   end
 
   @impl true
-  def expr_to_value([value], opts) when is_list(value) do
-    expr_to_value(value, opts)
+  def expr_to_value([value], opts, ctx) when is_list(value) do
+    expr_to_value(value, opts, ctx)
   end
 
-  def expr_to_value(clauses, opts) do
+  def expr_to_value(clauses, opts, ctx) do
     value =
       Enum.reduce(clauses ++ opts, [], fn item, classes ->
         case item do
           list when is_list(list) ->
-            case expr_to_value(list, []) do
+            case expr_to_value(list, [], ctx) do
               {:ok, new_classes} -> Enum.reverse(new_classes) ++ classes
               error -> error
             end

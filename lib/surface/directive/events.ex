@@ -67,25 +67,19 @@ defmodule Surface.Directive.Events do
   end
 
   defp to_quoted_expr(name, event, meta) when is_binary(event) or is_bitstring(event) do
-    AST.AttributeExpr.new(
-      Surface.TypeHandler.expr_to_quoted!(Macro.to_string(event), name, :event, meta),
-      event,
-      meta
-    )
+    quoted = Surface.TypeHandler.expr_to_quoted!(Macro.to_string(event), name, :event, meta)
+    expr = AST.AttributeExpr.new(quoted, event, meta)
+
+    # We force the value to be avaluated at runtime
+    %Surface.AST.AttributeExpr{expr | constant?: false}
   end
 
   defp to_quoted_expr(name, {:attribute_expr, original, expr_meta}, meta) do
     expr_meta = Helpers.to_meta(expr_meta, meta)
+    quoted = Surface.TypeHandler.expr_to_quoted!(original, name, :event, expr_meta)
+    expr = AST.AttributeExpr.new(quoted, original, expr_meta)
 
-    value =
-      original
-      |> Surface.TypeHandler.expr_to_quoted!(name, :event, expr_meta)
-      |> case do
-        [name, opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
-        [name | opts] when is_binary(name) and is_list(opts) -> Keyword.put(opts, :name, name)
-        value -> value
-      end
-
-    AST.AttributeExpr.new(value, original, expr_meta)
+    # We force the value to be avaluated at runtime
+    %Surface.AST.AttributeExpr{expr | constant?: false}
   end
 end

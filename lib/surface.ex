@@ -206,16 +206,43 @@ defmodule Surface do
   end
 
   @doc false
-  def build_assigns(context, static_props, dynamic_props, module, node_alias) do
-    Code.ensure_loaded(module)
+  def build_dynamic_assigns(context, static_props, dynamic_props, module, node_alias, ctx) do
+    static_props =
+      (static_props || [])
+      |> Enum.map(fn
+        # Value as expression
+        {name, {clauses, opts, original}} ->
+          {type, _} =
+            Surface.TypeHandler.attribute_type_and_opts(module, name, %{
+              node_alias: node_alias || module,
+              caller: __ENV__,
+              file: __ENV__.file,
+              line: __ENV__.line
+            })
 
+          runtime_value = Surface.TypeHandler.expr_to_value!(type, name, clauses, opts, module, original, ctx)
+          {name, runtime_value}
+
+        # Value as literal
+        {name, value} ->
+          runtime_value = Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias, ctx)
+          {name, runtime_value}
+      end)
+
+    build_assigns(context, static_props, dynamic_props, module, node_alias, ctx)
+  end
+
+  @doc false
+  def build_assigns(context, static_props, dynamic_props, module, node_alias, ctx) do
+    Code.ensure_loaded(module)
     static_prop_names = Keyword.keys(static_props)
 
     dynamic_props =
       (dynamic_props || [])
       |> Enum.filter(fn {name, _} -> not Enum.member?(static_prop_names, name) end)
       |> Enum.map(fn {name, value} ->
-        {name, Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias || module)}
+        runtime_value = Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias, ctx)
+        {name, runtime_value}
       end)
 
     props =
@@ -234,7 +261,7 @@ defmodule Surface do
 
   @doc false
   def css_class(value) when is_list(value) do
-    with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, []),
+    with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, [], %{}),
          {:ok, string} <- Surface.TypeHandler.CssClass.value_to_html("class", value) do
       string
     else

@@ -13,7 +13,7 @@ defmodule Surface.TypeHandler.Boolean do
   end
 
   @impl true
-  def expr_to_value([value], []) do
+  def expr_to_value([value], [], _ctx) do
     {:ok, !!value}
   end
 end

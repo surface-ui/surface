@@ -256,17 +256,19 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(nil, nil, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], slot_props}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &apply(unquote(module_expr), unquote(fun_expr), [&1]),
         Map.merge(
-          Surface.build_assigns(
+          Surface.build_dynamic_assigns(
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(module_expr),
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -283,6 +285,7 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], slot_props}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
@@ -293,7 +296,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(props_expr),
             unquote(dynamic_props_expr),
             nil,
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -310,6 +314,7 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], slot_props}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     # For now, we can only retrieve props and slots informaton from module components,
     # not function components, so if we're dealing with dynamic or recursive module components,
@@ -325,7 +330,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(module_for_build_assigns),
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -342,6 +348,7 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], slot_props}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
@@ -352,7 +359,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(module),
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -369,6 +377,7 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], slot_props}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
@@ -379,7 +388,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(module),
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -396,6 +406,7 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], [{:module, module} | slot_props]}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
@@ -406,7 +417,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(module),
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -415,6 +427,7 @@ defmodule Surface.Compiler.EExEngine do
     |> maybe_print_expression(component)
   end
 
+  # Dynamic live component
   defp to_expression(%AST.Component{type: :dynamic_live} = component, buffer, state) do
     %AST.Component{
       module: %AST.AttributeExpr{value: module_expr},
@@ -426,17 +439,19 @@ defmodule Surface.Compiler.EExEngine do
     {context_expr, context_var, state} = process_context(nil, :render, props, meta.caller, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [generated: true], [{:module, module_expr} | slot_props]}
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote generated: true do
       Phoenix.LiveView.Helpers.component(
         &Phoenix.LiveView.Helpers.live_component/1,
         Map.merge(
-          Surface.build_assigns(
+          Surface.build_dynamic_assigns(
             unquote(context_expr),
             unquote(props_expr),
             unquote(dynamic_props_expr),
             unquote(module_expr),
-            unquote(meta.node_alias)
+            unquote(meta.node_alias),
+            unquote(ctx)
           ),
           unquote(slot_props_map)
         )
@@ -896,7 +911,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Attribute{name: name, type: type, value: %AST.Literal{value: value}}
          | attributes
        ]) do
-    runtime_value = Surface.TypeHandler.expr_to_value!(type, name, [value], [], nil, value)
+    runtime_value = Surface.TypeHandler.expr_to_value!(type, name, [value], [], nil, value, _ctx = %{})
     [Surface.TypeHandler.attr_to_html!(type, to_string(name), runtime_value), to_html_attributes(attributes)]
   end
 

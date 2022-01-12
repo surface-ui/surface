@@ -8,11 +8,11 @@ defmodule Surface.TypeHandler.Atom do
   end
 
   @impl true
-  def expr_to_value([value], []) when is_atom(value) do
+  def expr_to_value([value], [], _ctx) when is_atom(value) do
     {:ok, value}
   end
 
-  def expr_to_value(clauses, opts) do
+  def expr_to_value(clauses, opts, _ctx) do
     {:error, clauses ++ opts}
   end
 end

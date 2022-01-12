@@ -17,6 +17,18 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     end
   end
 
+  defmodule ComponentWithEvent do
+    use Surface.Component
+
+    prop click, :event
+
+    def render(assigns) do
+      ~F"""
+      <div :on-click={@click}/>
+      """
+    end
+  end
+
   defmodule Outer do
     use Surface.Component
 
@@ -238,6 +250,21 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              <div>
                My info
              </div>
+             """
+    end
+
+    test "attribute values are still converted according to their types but only at runtime" do
+      html =
+        render_surface do
+          ~F"""
+          <Component module={ComponentWithEvent} click={"ok", target: "#comp"}/>
+          """
+        end
+
+      event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
+      assert html =~ """
+             <div phx-click="#{event}"></div>
              """
     end
 
