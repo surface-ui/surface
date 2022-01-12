@@ -19,6 +19,8 @@ defmodule Surface.TypeHandler.Hook do
 
   @impl true
   def expr_to_quoted(type, name, clauses, opts, meta, original) do
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+
     quoted_expr =
       quote generated: true do
         Surface.TypeHandler.expr_to_value!(
@@ -27,7 +29,8 @@ defmodule Surface.TypeHandler.Hook do
           unquote(clauses),
           Keyword.put_new(unquote(opts), :from, __MODULE__),
           unquote(meta.module),
-          unquote(original)
+          unquote(original),
+          unquote(ctx)
         )
       end
 
@@ -35,11 +38,11 @@ defmodule Surface.TypeHandler.Hook do
   end
 
   @impl true
-  def expr_to_value([value], _) when value in [nil, false] do
+  def expr_to_value([value], _, _ctx) when value in [nil, false] do
     {:ok, value}
   end
 
-  def expr_to_value(clauses, opts) do
+  def expr_to_value(clauses, opts, _ctx) do
     case {clauses, opts} do
       {[hook], [from: mod]} when is_binary(hook) and is_atom(mod) ->
         {:ok, {hook, mod}}

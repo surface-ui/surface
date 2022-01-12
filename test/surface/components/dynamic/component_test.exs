@@ -1,6 +1,8 @@
 defmodule Surface.Components.Dynamic.ComponentTest do
   use Surface.ConnCase, async: true
+
   import Phoenix.ConnTest
+  import ExUnit.CaptureIO
 
   defmodule Stateless do
     use Surface.Component
@@ -13,6 +15,18 @@ defmodule Surface.Components.Dynamic.ComponentTest do
       <div class={@class}>
         <span>{@label}</span>
       </div>
+      """
+    end
+  end
+
+  defmodule ComponentWithEvent do
+    use Surface.Component
+
+    prop click, :event
+
+    def render(assigns) do
+      ~F"""
+      <div :on-click={@click}/>
       """
     end
   end
@@ -241,33 +255,66 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              """
     end
 
-    test "render error message if module is not a component", %{conn: conn} do
-      import ExUnit.CaptureIO
-
-      code =
-        quote do
+    test "attribute values are still converted according to their types but only at runtime" do
+      html =
+        render_surface do
           ~F"""
-          <div>
-            <Enum/>
-          </div>
+          <Component module={ComponentWithEvent} click={"ok", target: "#comp"}/>
           """
         end
 
+      event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
+      assert html =~ """
+             <div phx-click="#{event}"></div>
+             """
+    end
+
+    test "at runtime, warn on unknown attributes at the component definition's file/line " do
+      file = Path.relative_to_cwd(__ENV__.file)
+      line = __ENV__.line + 8
+
       output =
         capture_io(:standard_error, fn ->
-          module = compile_surface(code)
-          {:ok, _view, html} = live_isolated(conn, module)
+          assigns = %{mod: ComponentWithEvent}
 
-          assert html =~ """
-                 <div><span style="color: red; border: 2px solid red; padding: 3px"> \
-                 Error: cannot render &lt;Enum&gt; (module Enum is not a component)\
-                 </span></div>\
-                 """
+          render_surface do
+            ~F"""
+            <Component
+              module={@mod}
+              unknown_attr="123"
+            />
+            """
+          end
         end)
 
       assert output =~ ~r"""
-             cannot render <Enum> \(module Enum is not a component\)
-               code:2:\
+             Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
+               #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
+             """
+    end
+
+    test "at runtime, warn on unknown attributes as expr at the component definition's file/line " do
+      file = Path.relative_to_cwd(__ENV__.file)
+      line = __ENV__.line + 8
+
+      output =
+        capture_io(:standard_error, fn ->
+          assigns = %{mod: ComponentWithEvent, var: 123}
+
+          render_surface do
+            ~F"""
+            <Component
+              module={@mod}
+              unknown_attr={@var}
+            />
+            """
+          end
+        end)
+
+      assert output =~ ~r"""
+             Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
+               #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
              """
     end
   end

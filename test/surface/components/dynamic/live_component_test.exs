@@ -1,6 +1,9 @@
 defmodule Surface.Components.Dynamic.LiveComponentTest do
   use Surface.ConnCase, async: true
 
+  alias Surface.Components.Dynamic.LiveComponent
+  import ExUnit.CaptureIO
+
   defmodule StatefulComponent do
     use Surface.LiveComponent
 
@@ -35,6 +38,18 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
         <#slot/>
         {@label}
       </div>
+      """
+    end
+  end
+
+  defmodule StatefulComponentWithEvent do
+    use Surface.LiveComponent
+
+    prop click, :event
+
+    def render(assigns) do
+      ~F"""
+      <div :on-click={@click}/>
       """
     end
   end
@@ -89,6 +104,71 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
   test "render data assigned in update/2" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
     assert html =~ "Assigned in update/2"
+  end
+
+  test "attribute values are still converted according to their types but only at runtime" do
+    html =
+      render_surface do
+        ~F"""
+        <LiveComponent module={StatefulComponentWithEvent} id="comp" click={"ok", target: "#comp"}/>
+        """
+      end
+
+    event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+
+    assert html =~ """
+           <div phx-click="#{event}"></div>
+           """
+  end
+
+  test "at runtime, warn on unknown attributes at the component definition's file/line " do
+    file = Path.relative_to_cwd(__ENV__.file)
+    line = __ENV__.line + 8
+
+    output =
+      capture_io(:standard_error, fn ->
+        assigns = %{mod: StatefulComponentWithEvent}
+
+        render_surface do
+          ~F"""
+          <LiveComponent
+            module={@mod}
+            id="comp"
+            unknown_attr="123"
+          />
+          """
+        end
+      end)
+
+    assert output =~ ~r"""
+           Unknown property "unknown_attr" for component <Surface.Components.Dynamic.LiveComponentTest.StatefulComponentWithEvent>
+             #{file}:#{line}: Surface.Components.Dynamic.LiveComponentTest \(module\)\
+           """
+  end
+
+  test "at runtime, warn on unknown attributes as expr at the component definition's file/line " do
+    file = Path.relative_to_cwd(__ENV__.file)
+    line = __ENV__.line + 8
+
+    output =
+      capture_io(:standard_error, fn ->
+        assigns = %{mod: StatefulComponentWithEvent, var: 123}
+
+        render_surface do
+          ~F"""
+          <LiveComponent
+            module={@mod}
+            id="comp"
+            unknown_attr={@var}
+          />
+          """
+        end
+      end)
+
+    assert output =~ ~r"""
+           Unknown property "unknown_attr" for component <Surface.Components.Dynamic.LiveComponentTest.StatefulComponentWithEvent>
+             #{file}:#{line}: Surface.Components.Dynamic.LiveComponentTest \(module\)\
+           """
   end
 
   # TODO: Uncomment when update to LV v0.17.6

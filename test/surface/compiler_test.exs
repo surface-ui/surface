@@ -140,7 +140,7 @@ defmodule Surface.CompilerTest do
                  type: :string,
                  value: %Surface.AST.AttributeExpr{
                    original: "@label",
-                   value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _]}
+                   value: {_, _, [_, _, [{:@, _, [{:label, _, _}]}], [], _, _, _]}
                  }
                }
              ]

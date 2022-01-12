@@ -10,6 +10,8 @@ defmodule Surface.TypeHandler.Default do
 
   @impl true
   def expr_to_quoted(type, name, clauses, opts, meta, original) do
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+
     quoted_expr =
       quote generated: true do
         Surface.TypeHandler.expr_to_value!(
@@ -18,7 +20,8 @@ defmodule Surface.TypeHandler.Default do
           unquote(clauses),
           unquote(opts),
           unquote(meta.module),
-          unquote(original)
+          unquote(original),
+          unquote(ctx)
         )
       end
 
@@ -26,15 +29,15 @@ defmodule Surface.TypeHandler.Default do
   end
 
   @impl true
-  def expr_to_value([value], []) do
+  def expr_to_value([value], [], _ctx) do
     {:ok, value}
   end
 
-  def expr_to_value([], opts) do
+  def expr_to_value([], opts, _ctx) do
     {:ok, opts}
   end
 
-  def expr_to_value(clauses, opts) do
+  def expr_to_value(clauses, opts, _ctx) do
     {:error, clauses ++ opts}
   end
 
