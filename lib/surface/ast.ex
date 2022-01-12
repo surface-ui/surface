@@ -97,6 +97,9 @@ defmodule Surface.AST.Meta do
       * `:caller` - a Macro.Env struct representing the caller
       * `:function_component?` - indicates if it's a function component or not
   """
+
+  alias Surface.Compiler.Helpers
+
   @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks, :function_component?]}
   defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks, :function_component?]
 
@@ -113,18 +116,20 @@ defmodule Surface.AST.Meta do
 
   @doc false
   def quoted_caller_context(meta) do
-    cond do
-      Module.open?(meta.caller.module) and
-        Module.get_attribute(meta.caller.module, :component_type) == Surface.LiveComponent and
-          meta.caller.function == {:render, 1} ->
-        quote generated: true do
-          %{cid: @myself}
-        end
+    quoted_cid =
+      if Helpers.is_stateful_component(meta.caller.module) and meta.caller.function == {:render, 1} do
+        quote do: @myself
+      else
+        nil
+      end
 
-      true ->
-        quote do
-          %{cid: nil}
-        end
+    quote do
+      %{
+        cid: unquote(quoted_cid),
+        file: unquote(meta.file),
+        line: unquote(meta.line),
+        module: unquote(meta.caller.module)
+      }
     end
   end
 end

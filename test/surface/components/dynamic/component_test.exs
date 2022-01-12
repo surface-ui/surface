@@ -1,6 +1,8 @@
 defmodule Surface.Components.Dynamic.ComponentTest do
   use Surface.ConnCase, async: true
+
   import Phoenix.ConnTest
+  import ExUnit.CaptureIO
 
   defmodule Stateless do
     use Surface.Component
@@ -265,6 +267,54 @@ defmodule Surface.Components.Dynamic.ComponentTest do
 
       assert html =~ """
              <div phx-click="#{event}"></div>
+             """
+    end
+
+    test "at runtime, warn on unknown attributes at the component definition's file/line " do
+      file = Path.relative_to_cwd(__ENV__.file)
+      line = __ENV__.line + 8
+
+      output =
+        capture_io(:standard_error, fn ->
+          assigns = %{mod: ComponentWithEvent}
+
+          render_surface do
+            ~F"""
+            <Component
+              module={@mod}
+              unknown_attr="123"
+            />
+            """
+          end
+        end)
+
+      assert output =~ ~r"""
+             Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
+               #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
+             """
+    end
+
+    test "at runtime, warn on unknown attributes as expr at the component definition's file/line " do
+      file = Path.relative_to_cwd(__ENV__.file)
+      line = __ENV__.line + 8
+
+      output =
+        capture_io(:standard_error, fn ->
+          assigns = %{mod: ComponentWithEvent, var: 123}
+
+          render_surface do
+            ~F"""
+            <Component
+              module={@mod}
+              unknown_attr={@var}
+            />
+            """
+          end
+        end)
+
+      assert output =~ ~r"""
+             Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
+               #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
              """
     end
   end

@@ -205,16 +205,16 @@ defmodule Surface.TypeHandler do
     handler(type).update_prop_expr(value, meta)
   end
 
-  def runtime_prop_value!(module, name, value, node_alias, ctx) do
-    type =
+  def runtime_prop_value!(module, name, clauses, opts, node_alias, original, ctx) do
+    {type, _opts} =
       attribute_type_and_opts(module, name, %{
         node_alias: node_alias || module,
-        caller: __ENV__,
-        file: __ENV__.file,
-        line: __ENV__.line
+        caller: %Macro.Env{module: ctx.module},
+        file: ctx.file,
+        line: ctx.line
       })
 
-    expr_to_value!(type, name, [value], [], module, value, ctx)
+    expr_to_value!(type, name, clauses, opts, module, original, ctx)
   end
 
   def attribute_type_and_opts(name) do
@@ -276,11 +276,12 @@ defmodule Surface.TypeHandler do
     details = if details, do: "\n" <> details, else: details
     {attr_name, attr_kind} = formatted_name_and_kind(name, module)
 
+    original_expr_msg = if original, do: "\nOriginal expression: {#{original}}", else: ""
+
     """
     invalid value for #{attr_kind} #{attr_name}. \
     Expected a #{inspect(type)}, got: #{inspect(value)}.
-
-    Original expression: {#{original}}
+    #{original_expr_msg}
     #{details}\
     """
   end

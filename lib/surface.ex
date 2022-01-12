@@ -99,6 +99,7 @@ defmodule Surface do
   alias Surface.API
   alias Surface.Compiler.Helpers
   alias Surface.IOHelper
+  alias Surface.TypeHandler
 
   @doc """
   Translates Surface code into Phoenix templates.
@@ -208,26 +209,20 @@ defmodule Surface do
   @doc false
   def build_dynamic_assigns(context, static_props, dynamic_props, module, node_alias, ctx) do
     static_props =
-      (static_props || [])
-      |> Enum.map(fn
-        # Value as expression
-        {name, {clauses, opts, original}} ->
-          {type, _} =
-            Surface.TypeHandler.attribute_type_and_opts(module, name, %{
-              node_alias: node_alias || module,
-              caller: __ENV__,
-              file: __ENV__.file,
-              line: __ENV__.line
-            })
+      for {name, value} <- static_props || [] do
+        {clauses, opts, original} =
+          case value do
+            # Value is an expression
+            {_clauses, _opts, _original} ->
+              value
 
-          runtime_value = Surface.TypeHandler.expr_to_value!(type, name, clauses, opts, module, original, ctx)
-          {name, runtime_value}
+            # Value is a literal
+            _ ->
+              {[value], [], nil}
+          end
 
-        # Value as literal
-        {name, value} ->
-          runtime_value = Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias, ctx)
-          {name, runtime_value}
-      end)
+        {name, TypeHandler.runtime_prop_value!(module, name, clauses, opts, inspect(module), original, ctx)}
+      end
 
     build_assigns(context, static_props, dynamic_props, module, node_alias, ctx)
   end
@@ -238,12 +233,10 @@ defmodule Surface do
     static_prop_names = Keyword.keys(static_props)
 
     dynamic_props =
-      (dynamic_props || [])
-      |> Enum.filter(fn {name, _} -> not Enum.member?(static_prop_names, name) end)
-      |> Enum.map(fn {name, value} ->
-        runtime_value = Surface.TypeHandler.runtime_prop_value!(module, name, value, node_alias, ctx)
+      for {name, value} <- dynamic_props || [], !Enum.member?(static_prop_names, name) do
+        runtime_value = TypeHandler.runtime_prop_value!(module, name, [value], [], node_alias, nil, ctx)
         {name, runtime_value}
-      end)
+      end
 
     props =
       module
