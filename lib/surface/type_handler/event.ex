@@ -21,38 +21,30 @@ defmodule Surface.TypeHandler.Event do
   end
 
   @impl true
-  def expr_to_quoted(type, name, clauses, opts, meta, original) do
-    caller_cid = Surface.AST.Meta.quoted_caller_cid(meta)
-
-    with {:ok, quoted_expr} <- super(type, name, clauses, opts, meta, original) do
-      updated_quoted_expr =
-        quote generated: true do
-          unquote(__MODULE__).maybe_update_target(unquote(quoted_expr), unquote(caller_cid))
-        end
-
-      {:ok, updated_quoted_expr}
-    end
-  end
-
-  @impl true
-  def expr_to_value([nil], []) do
+  def expr_to_value([nil], [], _ctx) do
     {:ok, nil}
   end
 
-  def expr_to_value([%{name: _, target: _} = event], []) do
-    {:ok, event}
+  def expr_to_value([%{name: _, target: _} = event], [], %{cid: cid}) do
+    {:ok, maybe_update_target(event, cid)}
   end
 
-  def expr_to_value([%JS{} = js], []) do
-    {:ok, js}
+  def expr_to_value([%JS{} = js], [], %{cid: cid}) do
+    {:ok, maybe_update_target(js, cid)}
   end
 
-  def expr_to_value([name], opts) when is_atom(name) or is_binary(name) do
-    {:ok, %{name: to_string(name), target: Keyword.get(opts, :target)}}
+  def expr_to_value([name], opts, %{cid: cid}) when is_atom(name) or is_binary(name) do
+    value = %{name: to_string(name), target: Keyword.get(opts, :target)}
+    value = maybe_update_target(value, cid)
+    {:ok, value}
   end
 
-  def expr_to_value(clauses, opts) do
+  def expr_to_value(clauses, opts, %{cid: _}) do
     {:error, {clauses, opts}}
+  end
+
+  def expr_to_value(_clauses, _opts, ctx) do
+    raise "the event type requires the caller context to have an cid, got: #{inspect(ctx)}"
   end
 
   @impl true
@@ -81,15 +73,15 @@ defmodule Surface.TypeHandler.Event do
     Surface.TypeHandler.Default.value_to_html(name, value)
   end
 
-  def maybe_update_target(%{target: nil} = event, nil) do
+  defp maybe_update_target(%{target: nil} = event, nil) do
     %{event | target: :live_view}
   end
 
-  def maybe_update_target(%{target: nil} = event, cid) do
+  defp maybe_update_target(%{target: nil} = event, cid) do
     %{event | target: cid}
   end
 
-  def maybe_update_target(%JS{ops: ops} = event, cid) do
+  defp maybe_update_target(%JS{ops: ops} = event, cid) do
     updated_ops =
       Enum.map(ops, fn
         ["push", options] when not is_map_key(options, :target) ->
@@ -108,7 +100,7 @@ defmodule Surface.TypeHandler.Event do
     %JS{event | ops: updated_ops}
   end
 
-  def maybe_update_target(event, _cid) do
+  defp maybe_update_target(event, _cid) do
     event
   end
 end

@@ -10,10 +10,6 @@ defmodule Surface.Compiler do
   alias Surface.AST
   alias Surface.Compiler.Helpers
 
-  @stateful_component_types [
-    Surface.LiveComponent
-  ]
-
   @tag_directive_handlers [
     Surface.Directive.TagAttrs,
     Surface.Directive.Events,
@@ -120,30 +116,11 @@ defmodule Surface.Compiler do
   end
 
   def validate_component_structure(ast, meta, module) do
-    if is_stateful_component(module) do
+    if Helpers.is_stateful_component(module) do
       validate_stateful_component(ast, meta)
     end
 
     ast
-  end
-
-  defp is_stateful_component(module) do
-    cond do
-      function_exported?(module, :component_type, 0) ->
-        module.component_type() in @stateful_component_types
-
-      Module.open?(module) ->
-        # If the template is compiled directly in a test module, get_attribute might fail,
-        # breaking some of the tests once in a while.
-        try do
-          Module.get_attribute(module, :component_type) in @stateful_component_types
-        rescue
-          _e in ArgumentError -> false
-        end
-
-      true ->
-        false
-    end
   end
 
   defp validate_stateful_component(ast, %CompileMeta{caller: %{function: {:render, _}}} = compile_meta) do
@@ -1025,7 +1002,7 @@ defmodule Surface.Compiler do
         message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
 
         message =
-          if prop_name == :id and is_stateful_component(module) do
+          if prop_name == :id and Helpers.is_stateful_component(module) do
             message <>
               """
               \n\nHint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.

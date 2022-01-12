@@ -284,7 +284,7 @@ defmodule HtmlTagTest do
     end
 
     test "as string literal, it's translated directly to static html" do
-      %Rendered{static: static} = eval(~S[<div class="myclass" id={123}/>])
+      %Rendered{static: static} = eval(~S[<div class="myclass" id={"123"}/>])
 
       assert static == [~S(<div class="myclass"), "></div>"]
     end

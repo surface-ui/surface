@@ -202,6 +202,25 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
+  def is_stateful_component(module) do
+    cond do
+      function_exported?(module, :component_type, 0) ->
+        module.component_type() == Surface.LiveComponent
+
+      Module.open?(module) ->
+        # If the template is compiled directly in a test module, get_attribute might fail,
+        # breaking some of the tests once in a while.
+        try do
+          Module.get_attribute(module, :component_type) == Surface.LiveComponent
+        rescue
+          _e in ArgumentError -> false
+        end
+
+      true ->
+        false
+    end
+  end
+
   defp get_imported_module(func, env) do
     Enum.find_value(env.functions, fn {mod, funcs} ->
       if mod not in [Application, IEx.Helpers, Kernel, Kernel.Typespec] do

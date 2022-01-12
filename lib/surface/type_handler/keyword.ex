@@ -9,7 +9,7 @@ defmodule Surface.TypeHandler.Keyword do
   end
 
   @impl true
-  def expr_to_value([value], []) do
+  def expr_to_value([value], [], _ctx) do
     if is_list(value) and Keyword.keyword?(value) do
       {:ok, value}
     else
@@ -17,11 +17,11 @@ defmodule Surface.TypeHandler.Keyword do
     end
   end
 
-  def expr_to_value([], opts) do
+  def expr_to_value([], opts, _ctx) do
     {:ok, opts}
   end
 
-  def expr_to_value(clauses, opts) do
+  def expr_to_value(clauses, opts, _ctx) do
     {:error, clauses ++ opts}
   end
 end
