@@ -208,6 +208,8 @@ defmodule Surface do
 
   @doc false
   def build_dynamic_assigns(context, static_props, dynamic_props, module, node_alias, ctx) do
+    Code.ensure_loaded(module)
+
     static_props =
       for {name, value} <- static_props || [] do
         {clauses, opts, original} =
@@ -230,6 +232,7 @@ defmodule Surface do
   @doc false
   def build_assigns(context, static_props, dynamic_props, module, node_alias, ctx) do
     Code.ensure_loaded(module)
+
     static_prop_names = Keyword.keys(static_props)
 
     dynamic_props =
@@ -254,7 +257,7 @@ defmodule Surface do
 
   @doc false
   def css_class(value) when is_list(value) do
-    with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, [], %{}),
+    with {:ok, value} <- Surface.TypeHandler.CssClass.expr_to_value(value, [], _ctx = %{}),
          {:ok, string} <- Surface.TypeHandler.CssClass.value_to_html("class", value) do
       string
     else

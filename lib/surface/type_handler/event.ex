@@ -73,15 +73,15 @@ defmodule Surface.TypeHandler.Event do
     Surface.TypeHandler.Default.value_to_html(name, value)
   end
 
-  def maybe_update_target(%{target: nil} = event, nil) do
+  defp maybe_update_target(%{target: nil} = event, nil) do
     %{event | target: :live_view}
   end
 
-  def maybe_update_target(%{target: nil} = event, cid) do
+  defp maybe_update_target(%{target: nil} = event, cid) do
     %{event | target: cid}
   end
 
-  def maybe_update_target(%JS{ops: ops} = event, cid) do
+  defp maybe_update_target(%JS{ops: ops} = event, cid) do
     updated_ops =
       Enum.map(ops, fn
         ["push", options] when not is_map_key(options, :target) ->
@@ -100,7 +100,7 @@ defmodule Surface.TypeHandler.Event do
     %JS{event | ops: updated_ops}
   end
 
-  def maybe_update_target(event, _cid) do
+  defp maybe_update_target(event, _cid) do
     event
   end
 end
