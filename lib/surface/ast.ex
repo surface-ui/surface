@@ -270,10 +270,9 @@ defmodule Surface.AST.AttributeExpr do
 
   defp constant?(
          {{:., _, [{:__aliases__, _, [:Surface, :TypeHandler]}, :expr_to_value!]}, _,
-          [_type, _name, clauses, opts, _module, _original, _ctx]}
+          [_type, _name, clauses, opts, _module, _original, ctx]}
        ) do
-    Macro.quoted_literal?(clauses) and
-      Macro.quoted_literal?(opts)
+    Macro.quoted_literal?(clauses) and Macro.quoted_literal?(opts) and Macro.quoted_literal?(ctx)
   end
 
   defp constant?(expr) do
