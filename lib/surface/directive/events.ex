@@ -76,7 +76,7 @@ defmodule Surface.Directive.Events do
     quoted = Surface.TypeHandler.expr_to_quoted!(original, name, :event, expr_meta)
     expr = AST.AttributeExpr.new(quoted, original, expr_meta)
 
-    # We force the value to be avaluated at runtime
+    # We force the value to be evaluated at runtime
     %Surface.AST.AttributeExpr{expr | constant?: false}
   end
 end

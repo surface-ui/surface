@@ -113,7 +113,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
         <div class={ {1, 2} }>
           { {3, 4} }
         </div>
-        <!-- The edge case we can't distingush. This breaks the code. -->
+        <!-- The edge case we can't distinguish. This breaks the code. -->
         <Comp a_tuple={{1, 2}}>
           {{3, 4}}
         </Comp>
@@ -126,7 +126,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
              <div class={ {1, 2} }>
                { {3, 4} }
              </div>
-             <!-- The edge case we can't distingush. This breaks the code. -->
+             <!-- The edge case we can't distinguish. This breaks the code. -->
              <Comp a_tuple={1, 2}>
                {3, 4}
              </Comp>

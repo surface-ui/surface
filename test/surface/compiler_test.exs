@@ -394,7 +394,7 @@ defmodule Surface.CompilerTest do
            } = node
   end
 
-  test "LiveView's propeties are forwarded to live_render as options" do
+  test "LiveView's properties are forwarded to live_render as options" do
     code = """
     <MyLiveViewWith id="my_id" session={%{user_id: 1}} />
     """

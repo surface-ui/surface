@@ -8,7 +8,7 @@ defmodule Surface.Components.Form.Label do
   Option `class` can be set directly and will override anything in `opts`.
 
   All given options are forwarded to the underlying tag. A default value is
-  provided for for attribute but can be overriden if you pass a value to the
+  provided for for attribute but can be overridden if you pass a value to the
   for option. Text content would be inferred from field if not specified.
   """
 

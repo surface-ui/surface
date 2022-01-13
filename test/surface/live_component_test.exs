@@ -20,7 +20,7 @@ defmodule Surface.LiveComponentTest do
     data assigned_in_update, :any
 
     def update(_assigns, socket) do
-      {:ok, assign(socket, assigned_in_update: "Assinged in update/2")}
+      {:ok, assign(socket, assigned_in_update: "Assigned in update/2")}
     end
 
     def render(assigns) do
@@ -180,7 +180,7 @@ defmodule Surface.LiveComponentTest do
 
   test "render data assigned in update/2" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
-    assert html =~ "Assinged in update/2"
+    assert html =~ "Assigned in update/2"
   end
 
   # TODO: Uncomment when update to LV v0.17.6
