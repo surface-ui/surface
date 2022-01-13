@@ -85,7 +85,7 @@ defmodule Surface.ContextChangeTrackingTest do
     assert html =~ "Count: 1"
     assert html =~ "field value"
 
-    # Component using context assings should be updated
+    # Component using context assigns should be updated
     assert_receive {:updated, "1"}
 
     # TODO: Components not using the context assigns should not be updated

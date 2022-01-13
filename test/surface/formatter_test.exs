@@ -815,7 +815,7 @@ defmodule Surface.FormatterTest do
       )
     end
 
-    test "(bugfix) attribute expresssions that are keyword lists without brackets, with interpolated string keys" do
+    test "(bugfix) attribute expressions that are keyword lists without brackets, with interpolated string keys" do
       assert_formatter_outputs(
         ~S"""
         <Component attr={"a-#{@b}": c} />

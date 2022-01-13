@@ -416,7 +416,7 @@ defmodule Surface.Formatter do
   def is_element?(_), do: false
 
   @doc """
-  Given a tag, return whether to render the contens verbatim instead of formatting them.
+  Given a tag, return whether to render the contents verbatim instead of formatting them.
   Specifically, don't modify contents of macro components or <pre> and <code> tags.
   """
   @spec render_contents_verbatim?(tag) :: boolean

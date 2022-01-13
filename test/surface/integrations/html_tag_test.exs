@@ -116,7 +116,7 @@ defmodule HtmlTagTest do
     end
   end
 
-  describe "basic attibutes" do
+  describe "basic attributes" do
     test "as literal string" do
       html =
         render_surface do

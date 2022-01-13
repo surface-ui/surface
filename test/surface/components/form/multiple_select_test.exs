@@ -3,7 +3,7 @@ defmodule Surface.Components.Form.MultipleSelectTest do
 
   alias Surface.Components.Form.MultipleSelect
 
-  test "emtpy multiple select" do
+  test "empty multiple select" do
     html =
       render_surface do
         ~F"""
