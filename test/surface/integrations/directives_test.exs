@@ -685,22 +685,6 @@ defmodule Surface.DirectivesTest do
              """
     end
 
-    test "on live components" do
-      code = ~S'''
-      defmodule Surface.DirectivesTest do
-        use Elixir.Surface.LiveComponent
-
-        def render(assigns) do
-          ~F"""
-          <div :show/>
-          """
-        end
-      end
-      '''
-
-      assert {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-    end
-
     test "when false, add hidden attribute" do
       assigns = %{show: false}
 
@@ -1159,6 +1143,32 @@ defmodule Surface.DirectivesTest do
 
       assert html == "\n"
     end
+  end
+
+  test "on live components" do
+    code = ~S'''
+    defmodule Surface.DirectivesTest.OnLiveComponents do
+      use Elixir.Surface.LiveComponent
+
+      def render(assigns) do
+        ~F"""
+        <div>
+          <div
+            :attrs={a: 1}
+            :on-click="fake"
+            :show={false}
+            :hook="fake"
+            :values={a: 1}
+            :if={true}
+            :for={_i <- [1]}>
+          </div>
+        </div>
+        """
+      end
+    end
+    '''
+
+    assert {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
   end
 end
 
