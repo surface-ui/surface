@@ -1167,7 +1167,7 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
-  test "raise compile error and suggest similiar slot if parent component does not define the slot" do
+  test "raise compile error and suggest similar slot if parent component does not define the slot" do
     code =
       quote do
         ~F"""

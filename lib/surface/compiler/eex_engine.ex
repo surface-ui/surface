@@ -316,7 +316,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props_map = {:%{}, [generated: true], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    # For now, we can only retrieve props and slots informaton from module components,
+    # For now, we can only retrieve props and slots information from module components,
     # not function components, so if we're dealing with dynamic or recursive module components,
     # we pass the module, otherwise, we pass `nil`.
     module_for_build_assigns = if fun == :render, do: module

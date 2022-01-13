@@ -1046,7 +1046,7 @@ defmodule Surface.Compiler.ParserSyncTest do
     assert message =~ """
            Using unquoted attribute values is not recommended as they will always be converted to strings.
 
-           For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+           For instance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
 
            Hint: if you want to pass a literal boolean or integer, replace `prop1=1` with `prop1={1}`
            """
@@ -1067,7 +1067,7 @@ defmodule Surface.Compiler.ParserSyncTest do
     assert message =~ """
            Using unquoted attribute values is not recommended as they will always be converted to strings.
 
-           For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+           For instance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
 
            Hint: if you want to pass a literal boolean or integer, replace `prop1=true` with `prop1={true}`
            """
@@ -1075,7 +1075,7 @@ defmodule Surface.Compiler.ParserSyncTest do
     assert message =~ """
            Using unquoted attribute values is not recommended as they will always be converted to strings.
 
-           For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+           For instance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
 
            Hint: if you want to pass a literal boolean or integer, replace `prop2=false` with `prop2={false}`
            """

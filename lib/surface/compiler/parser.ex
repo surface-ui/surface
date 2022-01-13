@@ -299,7 +299,7 @@ defmodule Surface.Compiler.Parser do
       """
       Using unquoted attribute values is not recommended as they will always be converted to strings.
 
-      For intance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
+      For instance, `selected=true` and `tabindex=3` will be translated to `selected="true"` and `tabindex="3"` respectively.
 
       Hint: if you want to pass a literal boolean or integer, replace `#{name}=#{value}` with `#{name}={#{value}}`
       """,
