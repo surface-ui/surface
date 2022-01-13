@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.0 (2022-01-13)
+
+  * Support Liveview `v0.17`
+  * Support rendering `.sface` templates for regular (dead) views (#543)
+  * Support passing properties to slots using the shorthand format, e.g. `<:col label="Name">`
+  * Add built-in formatter supporting integration with `mix format` (#535)
+  * New `<LiveComponent>` component to inject dynamic live components (#518)
+  * Optimize rendering of HTML class attributes literals so they can be treated as static text
+  * Add property `for` to `<#slot/>` so it can render the slot content directly (without using `index`)
+
 ## v0.6.1 (2021-10-26)
 
   * Add `surface_formatter` dependency to `mix.exs` when running `mix surface.init` (#507)
