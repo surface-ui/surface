@@ -10,7 +10,12 @@ defmodule Surface.View do
         # ...
 
         def view do
+          use Phoenix.View,
+            root: "lib/your_app_web/templates",
+            namespace: YourAppWeb
+            
           # ...
+          
           use Surface.View, root: "lib/your_app_web/templates"
         end
       end
