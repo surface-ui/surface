@@ -174,9 +174,11 @@ defmodule Surface.Components.EventsTest do
         """
       end
 
-    assert html =~ ~r"""
+    event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"my_click","target":1}]]))
+
+    assert html =~ """
            <div>
-             <div phx-click="my_click" phx-target="1"></div>
+             <div phx-click="#{event}"></div>
            </div>
            """
   end

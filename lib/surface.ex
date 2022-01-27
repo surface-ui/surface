@@ -269,21 +269,12 @@ defmodule Surface do
     end
   end
 
-  @doc false
-  def event_to_opts(%{name: name, target: :live_view}, event_name) do
-    [{event_name, name}]
-  end
-
-  def event_to_opts(%{name: name, target: target}, event_name) do
-    [{event_name, name}, {:phx_target, target}]
-  end
-
-  def event_to_opts(%Phoenix.LiveView.JS{} = value, event_name) do
-    [{event_name, value}]
-  end
-
   def event_to_opts(nil, _event_name) do
     []
+  end
+
+  def event_to_opts(value, event_name) do
+    [{event_name, Surface.TypeHandler.Event.normalize_value(value)}]
   end
 
   @doc false

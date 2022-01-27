@@ -47,32 +47,6 @@ defmodule Surface.TypeHandler.Event do
     raise "the event type requires the caller context to have an cid, got: #{inspect(ctx)}"
   end
 
-  @impl true
-  def value_to_html(_name, %JS{ops: ops} = value) do
-    updated_ops =
-      Enum.map(ops, fn
-        ["push", %{target: :live_view} = options] ->
-          ["push", Map.delete(options, :target)]
-
-        op ->
-          op
-      end)
-
-    {:ok, %JS{value | ops: updated_ops}}
-  end
-
-  def value_to_html(_name, %{name: name, target: :live_view}) do
-    {:ok, name}
-  end
-
-  def value_to_html(_name, %{name: name, target: target}) do
-    {:ok, JS.push(name, target: target)}
-  end
-
-  def value_to_html(name, value) do
-    Surface.TypeHandler.Default.value_to_html(name, value)
-  end
-
   defp maybe_update_target(%{target: nil} = event, nil) do
     %{event | target: :live_view}
   end
@@ -102,5 +76,27 @@ defmodule Surface.TypeHandler.Event do
 
   defp maybe_update_target(event, _cid) do
     event
+  end
+
+  @doc false
+  def normalize_value(%JS{ops: ops} = value) do
+    updated_ops =
+      Enum.map(ops, fn
+        ["push", %{target: :live_view} = options] ->
+          ["push", Map.delete(options, :target)]
+
+        op ->
+          op
+      end)
+
+    %JS{value | ops: updated_ops}
+  end
+
+  def normalize_value(%{name: name, target: :live_view}) do
+    name
+  end
+
+  def normalize_value(%{name: name, target: target}) do
+    JS.push(name, target: target)
   end
 end
