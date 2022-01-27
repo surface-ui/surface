@@ -131,9 +131,11 @@ defmodule Surface.Components.Link.ButtonTest do
         """
       end
 
-    assert html =~ ~r"""
+    event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"my_click","target":1}]]))
+
+    assert html =~ """
            <div>
-             <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-capture-click="my_click" phx-target=".+">user</button>
+             <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-capture-click="#{event}">user</button>
            </div>
            """
   end
