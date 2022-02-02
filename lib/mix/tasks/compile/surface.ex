@@ -133,11 +133,15 @@ defmodule Mix.Tasks.Compile.Surface do
   end
 
   defp app_modules(app) do
-    app
-    |> Application.app_dir()
-    |> Path.join("ebin/Elixir.*.beam")
-    |> Path.wildcard()
-    |> Enum.map(&beam_to_module/1)
+    if Application.ensure_loaded(app) == :ok do
+      app
+      |> Application.app_dir()
+      |> Path.join("ebin/Elixir.*.beam")
+      |> Path.wildcard()
+      |> Enum.map(&beam_to_module/1)
+    else
+      []
+    end
   end
 
   defp beam_to_module(path) do
