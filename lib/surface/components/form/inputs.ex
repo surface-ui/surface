@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.Inputs do
   prop form, :form
 
   @doc """
-  An atom or string representing the name of the field related to the child inputs.
+  An atom or string representing the field related to the child inputs.
   """
   prop for, :any
 
