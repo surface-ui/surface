@@ -143,4 +143,26 @@ defmodule Surface.Components.Form.InputsTest do
            </form>
            """
   end
+
+  test "property for as string" do
+    html =
+      render_surface do
+        ~F"""
+        <Form for={:parent} opts={csrf_token: "test"}>
+          <Inputs for="children">
+            <TextInput field="name" />
+            <TextInput field="email" />
+          </Inputs>
+        </Form>
+        """
+      end
+
+    assert html =~ """
+           <form action="#" method="post">
+               <input name="_csrf_token" type="hidden" value="test">
+             <input id="parent_children_name" name="parent[children][name]" type="text">
+             <input id="parent_children_email" name="parent[children][email]" type="text">
+           </form>
+           """
+  end
 end
