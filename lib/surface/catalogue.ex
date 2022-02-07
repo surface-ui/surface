@@ -69,7 +69,11 @@ defmodule Surface.Catalogue do
   def get_metadata(module) do
     case Code.fetch_docs(module) do
       {:docs_v1, _, _, "text/markdown", docs, %{catalogue: meta}, _} ->
-        doc = Map.get(docs, "en")
+        doc =
+          if :hidden == docs,
+            do: "",
+            else: Map.get(docs, "en")
+
         meta |> Map.new() |> Map.put(:doc, doc)
 
       _ ->
