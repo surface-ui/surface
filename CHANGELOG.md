@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.1 (2022-02-17)
+
+  * Fix wrong target handling in forms
+  * Fix setting `@moduledoc false` in catalogue examples (#565)
+  * Support Inputs' property `for` as string (#564)
+
 ## v0.7.0 (2022-01-13)
 
   * Support Liveview `v0.17`
