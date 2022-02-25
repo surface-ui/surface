@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{
       name: "Add `surface_catalogue` dependency",
       update_deps: [:surface_catalogue],
-      patch: &Patchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.2.0")),
+      patch: &Patchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.3.0")),
       instructions: """
       Add `surface_catalogue` to the list of dependencies in `mix.exs`.
 
@@ -174,7 +174,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       ```
       def deps do
         [
-          {:surface_catalogue, "~> 0.2.0"}
+          {:surface_catalogue, "~> 0.3.0"}
         ]
       end
       ```
