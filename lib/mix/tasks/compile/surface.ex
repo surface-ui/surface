@@ -178,6 +178,6 @@ defmodule Mix.Tasks.Compile.Surface do
 
   defp hooks_extension() do
     Application.get_env(:surface, :compiler, [])
-    |> Keyword.get(:hooks_extension], @default_hooks_extension)
+    |> Keyword.get(:hooks_extension, @default_hooks_extension)
   end
 end
