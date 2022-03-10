@@ -396,7 +396,7 @@ end
 
 defmodule Surface.AST.Template do
   @moduledoc """
-  An AST node representing a <#template> element. This is used to provide content for slots
+  An AST node representing a <:slot> element. This is used to provide content for slots
 
   ## Properties
       * `:name` - the template name
