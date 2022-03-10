@@ -94,7 +94,7 @@ defmodule Surface.Components.Context do
         end
       end)
 
-    update_let_for_template(node, :default, let)
+    update_let_for_slot_entry(node, :default, let)
   end
 
   def render(assigns) do
@@ -136,14 +136,14 @@ defmodule Surface.Components.Context do
     {{scope, key}, value}
   end
 
-  defp update_let_for_template(node, template_name, let) do
+  defp update_let_for_slot_entry(node, slot_entry_name, let) do
     updated =
-      node.templates
-      |> Map.get(template_name, [])
-      |> Enum.map(fn template -> %{template | let: let} end)
+      node.slot_entries
+      |> Map.get(slot_entry_name, [])
+      |> Enum.map(fn slot_entry -> %{slot_entry | let: let} end)
 
-    templates = Map.put(node.templates, template_name, updated)
+    slot_entries = Map.put(node.slot_entries, slot_entry_name, updated)
 
-    Map.put(node, :templates, templates)
+    Map.put(node, :slot_entries, slot_entries)
   end
 end

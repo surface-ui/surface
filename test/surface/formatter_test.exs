@@ -560,7 +560,7 @@ defmodule Surface.FormatterTest do
         </Header>
 
         This is the same Card component but now we're using
-        <strong>typed slotables</strong> instead of <strong>templates</strong>.
+        <strong>typed slotables</strong> instead of <strong>simple slot entries</strong>.
 
         <Footer>
           <a href="#" class="card-footer-item">Footer Item 1</a>

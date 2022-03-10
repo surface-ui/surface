@@ -506,13 +506,13 @@ defmodule Surface.Compiler.EExEngine do
   defp build_slot_props(%AST.FunctionComponent{fun: fun} = component, buffer, state, _context_var)
        when fun != nil do
     slot_info =
-      component.templates
-      |> Enum.map(fn {name, templates_for_slot} ->
-        state = %{state | scope: [:template | state.scope]}
+      component.slot_entries
+      |> Enum.map(fn {name, slot_entries} ->
+        state = %{state | scope: [:slot_entry | state.scope]}
 
-        nested_templates = handle_templates(component, templates_for_slot, buffer, state)
+        nested_slot_entries = handle_slot_entries(component, slot_entries, buffer, state)
 
-        {name, nested_templates}
+        {name, nested_slot_entries}
       end)
 
     case slot_info do
@@ -552,11 +552,11 @@ defmodule Surface.Compiler.EExEngine do
          else: []
 
     slot_info =
-      component.templates
-      |> Enum.map(fn {name, templates_for_slot} ->
-        state = %{state | scope: [:template | state.scope]}
+      component.slot_entries
+      |> Enum.map(fn {name, slot_entries} ->
+        state = %{state | scope: [:slot_entry | state.scope]}
 
-        nested_templates = handle_templates(component, templates_for_slot, buffer, state)
+        nested_slot_entries = handle_slot_entries(component, slot_entries, buffer, state)
 
         slot_name =
           Enum.find_value(component_slots, name, fn slot ->
@@ -565,7 +565,7 @@ defmodule Surface.Compiler.EExEngine do
             end
           end)
 
-        {slot_name, nested_templates}
+        {slot_name, nested_slot_entries}
       end)
 
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
@@ -619,12 +619,12 @@ defmodule Surface.Compiler.EExEngine do
     state.engine.handle_end(buffer)
   end
 
-  defp handle_templates(_component, [], _, _), do: []
+  defp handle_slot_entries(_component, [], _, _), do: []
 
-  defp handle_templates(
+  defp handle_slot_entries(
          component,
          [
-           %AST.Template{
+           %AST.SlotEntry{
              name: name,
              props: props,
              let: let,
@@ -646,20 +646,20 @@ defmodule Surface.Compiler.EExEngine do
     [
       {add_default_bindings(component, name, let), props,
        handle_nested_block(children, buffer, nested_block_state)}
-      | handle_templates(component, tail, buffer, state)
+      | handle_slot_entries(component, tail, buffer, state)
     ]
   end
 
-  defp handle_templates(component, [slotable | tail], buffer, state) do
+  defp handle_slot_entries(component, [slotable | tail], buffer, state) do
     %AST.SlotableComponent{
       slot: name,
       module: module,
       let: let,
       props: props,
-      templates: %{default: default}
+      slot_entries: %{default: default}
     } = slotable
 
-    template =
+    slot_entry =
       cond do
         !module.__renderless__?() ->
           [
@@ -669,7 +669,7 @@ defmodule Surface.Compiler.EExEngine do
               props: props,
               dynamic_props: nil,
               directives: [],
-              templates: slotable.templates,
+              slot_entries: slotable.slot_entries,
               meta: slotable.meta,
               debug: slotable.debug
             }
@@ -679,7 +679,7 @@ defmodule Surface.Compiler.EExEngine do
           []
 
         true ->
-          %AST.Template{children: children} = List.first(default)
+          %AST.SlotEntry{children: children} = List.first(default)
           children
       end
 
@@ -694,8 +694,8 @@ defmodule Surface.Compiler.EExEngine do
 
     [
       {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
-       handle_nested_block(template, buffer, nested_block_state)}
-      | handle_templates(component, tail, buffer, state)
+       handle_nested_block(slot_entry, buffer, nested_block_state)}
+      | handle_slot_entries(component, tail, buffer, state)
     ]
   end
 
@@ -852,25 +852,25 @@ defmodule Surface.Compiler.EExEngine do
     ]
   end
 
-  defp to_dynamic_nested_html([%type{module: mod, templates: templates_by_name} = component | nodes])
+  defp to_dynamic_nested_html([%type{module: mod, slot_entries: slot_entries_by_name} = component | nodes])
        when type in [AST.Component, AST.FunctionComponent, AST.SlotableComponent] do
-    {requires, templates_by_name} =
-      Enum.reduce(templates_by_name, {[], %{}}, fn {name, templates}, {requires_acc, by_name} ->
-        {requires, templates} =
-          Enum.reduce(templates, {requires_acc, []}, fn
-            %AST.Template{children: children} = template, {requires, templates} ->
-              {requires, [%{template | children: to_token_sequence(children)} | templates]}
+    {requires, slot_entries_by_name} =
+      Enum.reduce(slot_entries_by_name, {[], %{}}, fn {name, slot_entries}, {requires_acc, by_name} ->
+        {requires, slot_entries} =
+          Enum.reduce(slot_entries, {requires_acc, []}, fn
+            %AST.SlotEntry{children: children} = slot_entry, {requires, slot_entries} ->
+              {requires, [%{slot_entry | children: to_token_sequence(children)} | slot_entries]}
 
-            %AST.SlotableComponent{} = template, {requires, templates} ->
-              [nested, translated] = to_dynamic_nested_html([template])
-              {[nested | requires], [translated | templates]}
+            %AST.SlotableComponent{} = slot_entry, {requires, slot_entries} ->
+              [nested, translated] = to_dynamic_nested_html([slot_entry])
+              {[nested | requires], [translated | slot_entries]}
           end)
 
-        {requires, Map.put(by_name, name, Enum.reverse(templates))}
+        {requires, Map.put(by_name, name, Enum.reverse(slot_entries))}
       end)
 
     put_injected_component(component.meta.caller.module, mod, component.meta.line)
-    [requires, %{component | templates: templates_by_name} | to_dynamic_nested_html(nodes)]
+    [requires, %{component | slot_entries: slot_entries_by_name} | to_dynamic_nested_html(nodes)]
   end
 
   defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: module} = meta} | nodes])
@@ -1020,7 +1020,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp is_child_component?(state) do
-    state.depth > 0 and Enum.member?(state.scope, :template)
+    state.depth > 0 and Enum.member?(state.scope, :slot_entry)
   end
 
   defp escape_message(message) do
