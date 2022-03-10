@@ -214,7 +214,6 @@ defmodule Surface.Compiler do
   end
 
   # Slots
-  defp node_type({"#template", _, _, _}), do: :template
   defp node_type({"#slot", _, _, _}), do: :slot
   defp node_type({":" <> _, _, _, _}), do: :template
   defp node_type({"slot", _, _, _}), do: :slot
@@ -762,7 +761,6 @@ defmodule Surface.Compiler do
     nil
   end
 
-  defp get_slot_name("#template", attributes), do: attribute_value_as_atom(attributes, "slot", :default)
   defp get_slot_name(":" <> name, _), do: String.to_atom(name)
 
   defp component_slotable?(mod), do: function_exported?(mod, :__slot_name__, 0)

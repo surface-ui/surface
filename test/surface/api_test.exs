@@ -668,9 +668,9 @@ defmodule Surface.APISyncTest do
         def render(assigns) do
           ~F"\""
           <ComponentWithRequiredDefaultSlot>
-            <#template slot="header">
+            <:header>
               Header
-            </#template>
+            </:header>
           </ComponentWithRequiredDefaultSlot>
           "\""
         end

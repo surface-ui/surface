@@ -348,9 +348,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <OuterWithNamedSlotAndArgs>
-          <#template slot="body" :let={info: my_info}>
+          <:body :let={info: my_info}>
             Info: {my_info}
-          </#template>
+          </:body>
         </OuterWithNamedSlotAndArgs>
         """
       end
@@ -438,13 +438,13 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <OuterWithNamedSlot>
-          <#template slot="header">
+          <:header>
             My header
-          </#template>
+          </:header>
           My body
-          <#template slot="footer">
+          <:footer>
             My footer
-          </#template>
+          </:footer>
         </OuterWithNamedSlot>
         """
       end
@@ -673,9 +673,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <OuterWithRenamedSlot header="My Header Prop">
-          <#template slot="header">
+          <:header>
             My Header Slot
-          </#template>
+          </:header>
         </OuterWithRenamedSlot>
         """
       end
@@ -709,9 +709,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <OuterWithDefaultPropAndSlot default="Default Prop">
-          <#template name="default">
+          <:default>
             Default Slot
-          </#template>
+          </:default>
         </OuterWithDefaultPropAndSlot>
         """
       end
@@ -799,9 +799,9 @@ defmodule Surface.SlotTest do
       quote do
         ~F"""
         <OuterWithNamedSlotAndArgs>
-          <#template slot="body"
+          <:body
             :let={"a_string"}>
-          </#template>
+          </:body>
         </OuterWithNamedSlotAndArgs>
         """
       end
@@ -866,9 +866,9 @@ defmodule Surface.SlotTest do
       quote do
         ~F"""
         <OuterWithNamedSlotAndArgs>
-          <#template slot="body" :let={non_existing: my_info}>
+          <:body :let={non_existing: my_info}>
             Info: {my_info}
-          </#template>
+          </:body>
         </OuterWithNamedSlotAndArgs>
         """
       end
@@ -997,9 +997,9 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <OuterWithOptionalNamedSlot>
-          <#template slot="header">
+          <:header>
             My Header
-          </#template>
+          </:header>
         </OuterWithOptionalNamedSlot>
         """
       end
@@ -1174,9 +1174,9 @@ defmodule Surface.SlotSyncTest do
         <OuterWithNamedSlot>
           <div>
           </div>
-          <#template slot="foot">
+          <:foot>
             My footer
-          </#template>
+          </:foot>
         </OuterWithNamedSlot>
         """
       end
@@ -1478,11 +1478,11 @@ defmodule Surface.SlotSyncTest do
 
            Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
            ```
-           <#template name="cols">
+           <:cols>
              <Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs :let={info: info}>
                ...
              </Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs>
-           </#template>
+           </:cols>
            ```
            """
   end

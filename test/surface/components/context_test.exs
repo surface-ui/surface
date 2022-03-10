@@ -203,11 +203,11 @@ defmodule Surface.Components.ContextTest do
         render_surface do
           ~F"""
           <OuterWithNamedSlots>
-            <#template slot="my_slot">
+            <:my_slot>
               <Context get={field: field}>
                 {field}
               </Context>
-            </#template>
+            </:my_slot>
           </OuterWithNamedSlots>
           """
         end
@@ -419,11 +419,11 @@ defmodule Surface.Components.ContextTest do
       def render("index.html", assigns) do
         ~F"""
         <OuterWithNamedSlots>
-          <#template slot="my_slot">
+          <:my_slot>
             <Context get={field: field}>
               {field}
             </Context>
-          </#template>
+          </:my_slot>
         </OuterWithNamedSlots>
         """
       end
