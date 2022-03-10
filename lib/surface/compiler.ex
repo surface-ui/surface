@@ -35,7 +35,7 @@ defmodule Surface.Compiler do
     Surface.Directive.Debug
   ]
 
-  @template_directive_handlers [Surface.Directive.Let]
+  @slot_entry_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
     Surface.Directive.SlotArgs,
@@ -215,7 +215,7 @@ defmodule Surface.Compiler do
 
   # Slots
   defp node_type({"#slot", _, _, _}), do: :slot
-  defp node_type({":" <> _, _, _, _}), do: :template
+  defp node_type({":" <> _, _, _, _}), do: :slot_entry
   defp node_type({"slot", _, _, _}), do: :slot
 
   # Conditional blocks
@@ -419,15 +419,15 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(:template, {name, attributes, children, node_meta}, compile_meta) do
+  defp convert_node_to_ast(:slot_entry, {name, attributes, children, node_meta}, compile_meta) do
     meta = Helpers.to_meta(node_meta, compile_meta)
 
     with {:ok, directives, attributes} <-
-           collect_directives(@template_directive_handlers, attributes, meta),
+           collect_directives(@slot_entry_directive_handlers, attributes, meta),
          slot <- get_slot_name(name, attributes),
          attributes <- process_attributes(nil, attributes, meta, compile_meta) do
       {:ok,
-       %AST.Template{
+       %AST.SlotEntry{
          name: slot,
          children: to_ast(children, compile_meta),
          props: attributes,
@@ -436,7 +436,7 @@ defmodule Surface.Compiler do
          meta: meta
        }}
     else
-      _ -> {:error, {"failed to parse template", meta.line}, meta}
+      _ -> {:error, {"failed to parse slot entry", meta.line}, meta}
     end
   end
 
@@ -563,7 +563,7 @@ defmodule Surface.Compiler do
       |> Helpers.to_meta(compile_meta)
       |> Map.merge(%{module: mod, node_alias: name, function_component?: true})
 
-    with {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
+    with {:ok, slot_entries, attributes} <- collect_slot_entries(mod, attributes, children, meta),
          {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(nil, attributes, meta, compile_meta) do
       ast = %AST.FunctionComponent{
@@ -572,7 +572,7 @@ defmodule Surface.Compiler do
         type: type,
         props: attributes,
         directives: directives,
-        templates: templates,
+        slot_entries: slot_entries,
         meta: meta
       }
 
@@ -583,7 +583,7 @@ defmodule Surface.Compiler do
   end
 
   # Recursive components must be represented as function components
-  # until we can validate templates and properties of open modules
+  # until we can validate slot entries and properties of open modules
   defp convert_node_to_ast(:recursive_component, node, compile_meta) do
     {name, attributes, children, %{decomposed_tag: {_, mod, _}} = node_meta} = node
 
@@ -592,15 +592,15 @@ defmodule Surface.Compiler do
       |> Helpers.to_meta(compile_meta)
       |> Map.merge(%{module: mod, node_alias: name})
 
-    # TODO: we should call validate_templates/3 and validate_properties/4 validate
+    # TODO: we should call validate_slot_entries/3 and validate_properties/4 validate
     # based on the module attributes since the module is still open
     with component_type <- Module.get_attribute(mod, :component_type),
          true <- component_type != nil,
          # This is a little bit hacky. :let will only be extracted for the default
-         # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
+         # slot entry if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
          # we pass in and modify the attributes so that non-slotable components are not
          # processed by the :let directive
-         {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
+         {:ok, slot_entries, attributes} <- collect_slot_entries(mod, attributes, children, meta),
          {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(nil, attributes, meta, compile_meta) do
       ast = %AST.FunctionComponent{
@@ -609,7 +609,7 @@ defmodule Surface.Compiler do
         type: :remote,
         props: attributes,
         directives: directives,
-        templates: templates,
+        slot_entries: slot_entries,
         meta: meta
       }
 
@@ -631,11 +631,11 @@ defmodule Surface.Compiler do
          true <- function_exported?(mod, :component_type, 0),
          component_type <- mod.component_type(),
          # This is a little bit hacky. :let will only be extracted for the default
-         # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
+         # slot entry if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
          # we pass in and modify the attributes so that non-slotable components are not
          # processed by the :let directive
-         {:ok, templates, attributes} <- collect_templates(mod, attributes, children, meta),
-         :ok <- validate_templates(mod, templates, meta),
+         {:ok, slot_entries, attributes} <- collect_slot_entries(mod, attributes, children, meta),
+         :ok <- validate_slot_entries(mod, slot_entries, meta),
          {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
          attributes <- process_attributes(mod, attributes, meta, compile_meta),
          :ok <- validate_properties(mod, attributes, directives, meta) do
@@ -648,7 +648,7 @@ defmodule Surface.Compiler do
             let: [],
             props: attributes,
             directives: directives,
-            templates: templates,
+            slot_entries: slot_entries,
             meta: meta
           }
         else
@@ -657,7 +657,7 @@ defmodule Surface.Compiler do
             type: component_type,
             props: attributes,
             directives: directives,
-            templates: templates,
+            slot_entries: slot_entries,
             meta: meta
           }
         end
@@ -880,47 +880,47 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([]), do: :ok
 
-  defp validate_tag_children([%AST.Template{name: name} | _]) do
-    {:error, "templates are only allowed as children elements of components, but found template for #{name}"}
+  defp validate_tag_children([%AST.SlotEntry{name: name} | _]) do
+    {:error, "slot entries are only allowed as children elements of components, but found slot entry for #{name}"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
 
   # This is a little bit hacky. :let will only be extracted for the default
-  # template if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
+  # slot entry if `mod` doesn't export __slot_name__ (i.e. if it isn't a slotable component)
   # we pass in and modify the attributes so that non-slotable components are not
   # processed by the :let directive
-  defp collect_templates(mod, attributes, nodes, meta) do
-    # Don't extract the template directives if this module is slotable
+  defp collect_slot_entries(mod, attributes, nodes, meta) do
+    # Don't extract the slot entry directives if this module is slotable
     {:ok, directives, attributes} =
       if component_slotable?(mod) do
         {:ok, [], attributes}
       else
-        collect_directives(@template_directive_handlers, attributes, meta)
+        collect_directives(@slot_entry_directive_handlers, attributes, meta)
       end
 
-    templates =
+    slot_entries =
       nodes
       |> to_ast(meta)
       |> Enum.group_by(fn
-        %AST.Template{name: name} -> name
+        %AST.SlotEntry{name: name} -> name
         %AST.SlotableComponent{slot: name} -> name
         _ -> :default
       end)
 
     {already_wrapped, default_children} =
-      templates
+      slot_entries
       |> Map.get(:default, [])
       |> Enum.split_with(fn
-        %AST.Template{} -> true
+        %AST.SlotEntry{} -> true
         _ -> false
       end)
 
     if Enum.all?(default_children, &Helpers.is_blank_or_empty/1) do
-      {:ok, Map.put(templates, :default, already_wrapped), attributes}
+      {:ok, Map.put(slot_entries, :default, already_wrapped), attributes}
     else
       wrapped =
-        process_directives(%AST.Template{
+        process_directives(%AST.SlotEntry{
           name: :default,
           children: default_children,
           props: [],
@@ -929,7 +929,7 @@ defmodule Surface.Compiler do
           meta: meta
         })
 
-      {:ok, Map.put(templates, :default, [wrapped | already_wrapped]), attributes}
+      {:ok, Map.put(slot_entries, :default, [wrapped | already_wrapped]), attributes}
     end
   end
 
@@ -1024,47 +1024,47 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp validate_templates(Surface.Components.Dynamic.Component, _templates, _meta) do
+  defp validate_slot_entries(Surface.Components.Dynamic.Component, _slot_entries, _meta) do
     :ok
   end
 
-  defp validate_templates(Surface.Components.Dynamic.LiveComponent, _templates, _meta) do
+  defp validate_slot_entries(Surface.Components.Dynamic.LiveComponent, _slot_entries, _meta) do
     :ok
   end
 
-  defp validate_templates(mod, templates, meta) do
-    names = Map.keys(templates)
+  defp validate_slot_entries(mod, slot_entries, meta) do
+    names = Map.keys(slot_entries)
 
     if !function_exported?(mod, :__slots__, 0) and not Enum.empty?(names) do
       message = """
       parent component `#{inspect(mod)}` does not define any slots. \
-      Found the following templates: #{inspect(names)}
+      Found the following slot entries: #{inspect(names)}
       """
 
       IOHelper.compile_error(message, meta.file, meta.line)
     end
 
     for name <- mod.__required_slots_names__(),
-        !Map.has_key?(templates, name) or
-          Enum.all?(Map.get(templates, name, []), &Helpers.is_blank_or_empty/1) do
+        !Map.has_key?(slot_entries, name) or
+          Enum.all?(Map.get(slot_entries, name, []), &Helpers.is_blank_or_empty/1) do
       message = "missing required slot \"#{name}\" for component <#{meta.node_alias}>"
       IOHelper.warn(message, meta.caller, meta.file, meta.line)
     end
 
-    for {slot_name, template_instances} <- templates,
+    for {slot_name, slot_entry_instances} <- slot_entries,
         mod.__get_slot__(slot_name) == nil,
         not component_slotable?(mod),
-        template <- template_instances do
-      raise_missing_parent_slot_error!(mod, slot_name, template.meta, meta)
+        slot_entry <- slot_entry_instances do
+      raise_missing_parent_slot_error!(mod, slot_name, slot_entry.meta, meta)
     end
 
-    for slot_name <- Map.keys(templates),
-        template <- Map.get(templates, slot_name) do
+    for slot_name <- Map.keys(slot_entries),
+        slot_entry <- Map.get(slot_entries, slot_name) do
       slot = mod.__get_slot__(slot_name)
-      args = Keyword.keys(template.let)
+      args = Keyword.keys(slot_entry.let)
 
       arg_meta =
-        Enum.find_value(template.directives, meta, fn directive ->
+        Enum.find_value(slot_entry.directives, meta, fn directive ->
           if directive.module == Surface.Directive.Let do
             directive.meta
           end
@@ -1127,7 +1127,7 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, meta.file, meta.line)
   end
 
-  defp raise_missing_parent_slot_error!(mod, slot_name, template_meta, parent_meta) do
+  defp raise_missing_parent_slot_error!(mod, slot_name, slot_entry_meta, parent_meta) do
     parent_slots = mod.__slots__() |> Enum.map(& &1.name)
 
     similar_slot_message = similar_slot_message(slot_name, parent_slots)
@@ -1135,9 +1135,9 @@ defmodule Surface.Compiler do
     existing_slots_message = existing_slots_message(parent_slots)
 
     header_message =
-      if component_slotable?(template_meta.module) do
+      if component_slotable?(slot_entry_meta.module) do
         """
-        The slotable component <#{inspect(template_meta.module)}> has the `:slot` option set to \
+        The slotable component <#{inspect(slot_entry_meta.module)}> has the `:slot` option set to \
         `#{slot_name}`.
 
         That slot name is not declared in parent component <#{parent_meta.node_alias}>.
@@ -1156,7 +1156,7 @@ defmodule Surface.Compiler do
     #{existing_slots_message}
     """
 
-    IOHelper.compile_error(message, template_meta.file, template_meta.line)
+    IOHelper.compile_error(message, slot_entry_meta.file, slot_entry_meta.line)
   end
 
   defp raise_complex_generator(meta) do

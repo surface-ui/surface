@@ -540,7 +540,7 @@ defmodule Surface.API do
       from the parent's #{slot_name} slot will be exposed via `:let={...}`.
 
       Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
-      and use it inside an explicit template element:
+      and use it inside an explicit slot entry:
       ```
       <:#{slot_name}>
         <#{component_name} :let={#{prop_example}}>

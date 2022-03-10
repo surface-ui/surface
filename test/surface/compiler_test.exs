@@ -482,9 +482,9 @@ defmodule Surface.CompilerTest do
       assert %Surface.AST.Component{
                module: Surface.CompilerTest.Div,
                props: [],
-               templates: %{
+               slot_entries: %{
                  default: [
-                   %Surface.AST.Template{
+                   %Surface.AST.SlotEntry{
                      children: [
                        %Surface.AST.Container{
                          children: [

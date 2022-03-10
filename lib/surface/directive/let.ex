@@ -13,7 +13,7 @@ defmodule Surface.Directive.Let do
   def extract(_, _), do: []
 
   def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %AST.Component{} = node) do
-    update_in(node.templates, fn
+    update_in(node.slot_entries, fn
       %{default: [first | others]} = tpls ->
         Map.put(tpls, :default, [%{first | let: value} | others])
 
@@ -23,7 +23,7 @@ defmodule Surface.Directive.Let do
   end
 
   def process(%AST.Directive{value: %AST.AttributeExpr{value: value}}, %type{} = node)
-      when type in [AST.Template, AST.SlotableComponent] do
+      when type in [AST.SlotEntry, AST.SlotableComponent] do
     %{node | let: value}
   end
 

@@ -1476,7 +1476,7 @@ defmodule Surface.SlotSyncTest do
     assert output =~ ~r"""
            arguments for the default slot in a slotable component are not accessible - instead the arguments from the parent's cols slot will be exposed via `:let={...}`.
 
-           Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable and use it inside an explicit template element:
+           Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable and use it inside an explicit slot entry:
            ```
            <:cols>
              <Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs :let={info: info}>
