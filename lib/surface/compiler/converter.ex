@@ -5,7 +5,7 @@ defmodule Surface.Compiler.Converter do
 
   @callback opts() :: keyword()
   @callback convert(subject :: subject(), text :: binary(), state :: map(), opts :: keyword()) ::
-              binary()
+              binary() | {binary(), state :: map()}
   @callback after_convert_file(ext :: binary(), content :: binary()) :: binary()
 
   alias Surface.Compiler.Tokenizer
@@ -209,9 +209,12 @@ defmodule Surface.Compiler.Converter do
         _ -> {type, state}
       end
 
-    converted_text =
+    {converted_text, new_state} =
       try do
-        converter.convert(new_type, value, new_state, opts)
+        case converter.convert(new_type, value, new_state, opts) do
+          {test, state} -> {test, state}
+          text -> {text, new_state}
+        end
       rescue
         exception ->
           message = """

@@ -29,12 +29,12 @@ defmodule Mix.Tasks.Surface.Convert do
   use Mix.Task
 
   alias Surface.Compiler.Converter
-  alias Surface.Compiler.Converter_0_5
+  alias Surface.Compiler.Converter_0_8
 
-  @converter Converter_0_5
+  @converter Converter_0_8
 
-  defp format_string(string) do
-    Converter.convert(string, converter: @converter)
+  defp format_string(string, converter) do
+    Converter.convert(string, converter: converter)
   end
 
   #
@@ -42,44 +42,44 @@ defmodule Mix.Tasks.Surface.Convert do
   #
 
   @doc false
-  def convert_file_contents!(file, input) do
+  def convert_file_contents!(file, input, converter) do
     ext = Path.extname(file)
 
     content =
       case ext do
         ".sface" ->
-          format_string(input)
+          format_string(input, converter)
 
         _ ->
-          convert_ex_string!(input)
+          convert_ex_string!(input, converter)
       end
 
-    @converter.after_convert_file(ext, content)
+    converter.after_convert_file(ext, content)
   end
 
-  defp convert_ex_string!(input) do
+  defp convert_ex_string!(input, converter) do
     string =
       Regex.replace(~r/( *)~H"\""(.*?)"""(\s)/s, input, fn _match, indent, code, space_after ->
-        "#{indent}~H\"\"\"#{format_string(code)}\"\"\"#{space_after}"
+        "#{indent}~H\"\"\"#{format_string(code, converter)}\"\"\"#{space_after}"
       end)
 
     string =
       Regex.replace(~r/~H\"([^\"].*?)\"/s, string, fn _match, code ->
-        "~H\"#{format_string(code)}\""
+        "~H\"#{format_string(code, converter)}\""
       end)
 
     string =
       Regex.replace(~r/~H\[(.*?)\]/s, string, fn _match, code ->
-        "~H[#{format_string(code)}]"
+        "~H[#{format_string(code, converter)}]"
       end)
 
     string =
       Regex.replace(~r/~H\((.*?)\)/s, string, fn _match, code ->
-        "~H(#{format_string(code)})"
+        "~H(#{format_string(code, converter)})"
       end)
 
     Regex.replace(~r/~H\{(.*?)\}/s, string, fn _match, code ->
-      "~H{#{format_string(code)}}"
+      "~H{#{format_string(code, converter)}}"
     end)
   end
 
@@ -99,14 +99,14 @@ defmodule Mix.Tasks.Surface.Convert do
 
     args
     |> expand_args(dot_formatter, formatter_opts)
-    |> Task.async_stream(&convert_file(&1, opts), ordered: false, timeout: 30000)
+    |> Task.async_stream(&convert_file(&1, opts, @converter), ordered: false, timeout: 30000)
     |> Enum.reduce([], &collect_status/2)
     |> check!()
   end
 
-  defp convert_file({file, _formatter_opts}, task_opts) do
+  defp convert_file({file, _formatter_opts}, task_opts, converter) do
     input = File.read!(file)
-    formatted = convert_file_contents!(file, input)
+    formatted = convert_file_contents!(file, input, converter)
     output = IO.iodata_to_binary([formatted])
 
     dry_run? = Keyword.get(task_opts, :dry_run, false)

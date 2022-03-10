@@ -1,3 +1,11 @@
+# Migrating from `v0.7.x` to `v0.8.x`
+
+## Expected changes
+
+| Subject                       | Examples (Old syntax -> New syntax)                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------------------- |
+| Templates                     | &bull; `<#template>` -> `<:default>`  <br> &bull; `<#template slot="header">` -> `<:header>`  |
+
 # Migrating from `v0.5.x` to `v0.6.x`
 
 `Surface.Component` now is built on top of function components instead of stateless live components. This decision implies some breaking changes described below with solutions that allow you updade your code smoothly.
