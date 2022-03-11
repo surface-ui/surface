@@ -26,8 +26,8 @@ defmodule Surface.Compiler.Converter_0_8 do
     {"#{String.trim(slot)}>", Map.put(state, :slot_name, slot)}
   end
 
-  def convert(:tag_close, "</#template>", %{slot_name: slot_name}, _opts) do
-    "</:#{slot_name}>"
+  def convert(:tag_close, "</#template>", %{slot_name: slot_name} = state, _opts) do
+    {"</:#{slot_name}>", Map.delete(state, :slot_name)}
   end
 
   def convert(_type, text, _state, _opts) do
