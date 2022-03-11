@@ -560,7 +560,7 @@ defmodule Surface.FormatterTest do
         </Header>
 
         This is the same Card component but now we're using
-        <strong>typed slotables</strong> instead of <strong>templates</strong>.
+        <strong>typed slotables</strong> instead of <strong>simple slot entries</strong>.
 
         <Footer>
           <a href="#" class="card-footer-item">Footer Item 1</a>
@@ -1556,13 +1556,13 @@ defmodule Surface.FormatterTest do
     )
   end
 
-  test "<#template slot=\"...\"> is formatted in shorthand syntax" do
+  test "<:slot> is formatted" do
     assert_formatter_outputs(
       """
       <div>
-        <#template slot="header" :let={value: value}> Foo </#template>
+        <:header :let={value: value}> Foo </:header>
 
-        <#template> Foo </#template>
+        <:footer> Foo </:footer>
       </div>
       """,
       """
@@ -1571,27 +1571,10 @@ defmodule Surface.FormatterTest do
           Foo
         </:header>
 
-        <#template>
+        <:footer>
           Foo
-        </#template>
+        </:footer>
       </div>
-      """
-    )
-  end
-
-  test "<template> tags are not rendered as <#template>" do
-    assert_formatter_outputs(
-      """
-      <template>
-        <p> Foo </p>
-      </template>
-      """,
-      """
-      <template>
-        <p>
-          Foo
-        </p>
-      </template>
       """
     )
   end

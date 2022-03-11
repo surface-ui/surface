@@ -305,7 +305,7 @@ end
 
 defmodule Surface.AST.Slot do
   @moduledoc """
-  An AST node representing a <#slot /> element
+  An AST node representing a <#slot /> tag
 
   ## Properties
       * `:name` - the slot name
@@ -394,18 +394,18 @@ defmodule Surface.AST.VoidTag do
         }
 end
 
-defmodule Surface.AST.Template do
+defmodule Surface.AST.SlotEntry do
   @moduledoc """
-  An AST node representing a <#template> element. This is used to provide content for slots
+  An AST node representing a <:slot> entry. This is used to provide content for slots
 
   ## Properties
-      * `:name` - the template name
+      * `:name` - the slot entry name
       * `:props` - the props for slot entry tag
-      * `:let` - the bindings for this template
-      * `:children` - the template children
+      * `:let` - the bindings for this slot entry
+      * `:children` - the slot entry children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
-      * `:directives` - directives associated with this template
+      * `:directives` - directives associated with this slot entry
   """
   defstruct [:name, :props, :children, :let, :meta, directives: []]
 
@@ -451,7 +451,7 @@ defmodule Surface.AST.Component do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :type, :props, :dynamic_props, :templates, :meta, debug: [], directives: []]
+  defstruct [:module, :type, :props, :dynamic_props, :slot_entries, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           module: module() | Surface.AST.AttributeExpr.t(),
@@ -460,9 +460,9 @@ defmodule Surface.AST.Component do
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
-          templates: %{
-            :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
-            optional(atom()) => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t())
+          slot_entries: %{
+            :default => list(Surface.AST.SlotEntry.t() | Surface.AST.SlotableComponent.t()),
+            optional(atom()) => list(Surface.AST.SlotEntry.t() | Surface.AST.SlotableComponent.t())
           },
           meta: Surface.AST.Meta.t()
         }
@@ -482,7 +482,7 @@ defmodule Surface.AST.FunctionComponent do
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :fun, :type, :props, :dynamic_props, :templates, :meta, debug: [], directives: []]
+  defstruct [:module, :fun, :type, :props, :dynamic_props, :slot_entries, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           module: module() | Surface.AST.AttributeExpr.t(),
@@ -492,9 +492,9 @@ defmodule Surface.AST.FunctionComponent do
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
-          templates: %{
-            :default => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t()),
-            optional(atom()) => list(Surface.AST.Template.t() | Surface.AST.SlotableComponent.t())
+          slot_entries: %{
+            :default => list(Surface.AST.SlotEntry.t() | Surface.AST.SlotableComponent.t()),
+            optional(atom()) => list(Surface.AST.SlotEntry.t() | Surface.AST.SlotableComponent.t())
           },
           meta: Surface.AST.Meta.t()
         }
@@ -533,7 +533,7 @@ defmodule Surface.AST.SlotableComponent do
       * `:module` - the component module
       * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.Component)
       * `:slot` - the name of the slot that this component is for
-      * `:let` - the bindings for this template
+      * `:let` - the bindings for this slotable component
       * `:props` - the props for this component
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
@@ -547,7 +547,7 @@ defmodule Surface.AST.SlotableComponent do
     :let,
     :props,
     :dynamic_props,
-    :templates,
+    :slot_entries,
     :meta,
     debug: [],
     directives: []
@@ -562,9 +562,9 @@ defmodule Surface.AST.SlotableComponent do
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
-          templates: %{
-            :default => list(Surface.AST.Template.t()),
-            optional(atom()) => list(Surface.AST.Template.t())
+          slot_entries: %{
+            :default => list(Surface.AST.SlotEntry.t()),
+            optional(atom()) => list(Surface.AST.SlotEntry.t())
           },
           meta: Surface.AST.Meta.t()
         }
@@ -579,7 +579,7 @@ defmodule Surface.AST do
           | AST.Expr.t()
           | AST.Tag.t()
           | AST.VoidTag.t()
-          | AST.Template.t()
+          | AST.SlotEntry.t()
           | AST.Slot.t()
           | AST.If.t()
           | AST.For.t()

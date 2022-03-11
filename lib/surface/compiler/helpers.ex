@@ -153,7 +153,7 @@ defmodule Surface.Compiler.Helpers do
   def is_blank_or_empty(%AST.Literal{value: value}),
     do: blank?(value)
 
-  def is_blank_or_empty(%AST.Template{children: children}),
+  def is_blank_or_empty(%AST.SlotEntry{children: children}),
     do: Enum.all?(children, &is_blank_or_empty/1)
 
   def is_blank_or_empty(_node), do: false

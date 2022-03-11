@@ -153,10 +153,6 @@ defmodule Surface.Formatter.Phases.Render do
     end}"
   end
 
-  def render_node({"#template", [{"slot", slot_name, _} | attributes], children, meta}, opts) do
-    render_node({":#{slot_name}", attributes, children, meta}, opts)
-  end
-
   def render_node({tag, attributes, [], _meta}, opts) do
     render_opening_tag(
       tag,

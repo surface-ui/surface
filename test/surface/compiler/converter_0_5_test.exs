@@ -331,7 +331,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     "\""
     """
 
-    assert Convert.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code, Converter_0_5) === """
            ~F"\""
            <Link label="elixir" to={url} />
            "\""
@@ -349,7 +349,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H"<Link label='elixir' to={{url}} />"
     """
 
-    assert Convert.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code, Converter_0_5) === """
            ~F"<Link label='elixir' to={url} />"
 
            ~F"<Link label='elixir' to={url} />"
@@ -363,7 +363,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H[<Link label="elixir" to={{url}} />]
     """
 
-    assert Convert.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code, Converter_0_5) === """
            ~F[<Link label="elixir" to={url} />]
 
            ~F[<Link label="elixir" to={url} />]
@@ -377,7 +377,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H(<Link label="elixir" to={{url}} />)
     """
 
-    assert Convert.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code, Converter_0_5) === """
            ~F(<Link label="elixir" to={url} />)
 
            ~F(<Link label="elixir" to={url} />)
@@ -391,7 +391,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
     ~H{<slot name="footer" />}
     """
 
-    assert Convert.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code, Converter_0_5) === """
            ~F{<#slot name="header" />}
 
            ~F{<#slot name="footer" />}
@@ -439,7 +439,7 @@ defmodule Surface.Compiler.Converter_0_5Test do
       slot(cols, props: [item: ^items])
     """
 
-    assert Convert.convert_file_contents!("nofile.ex", code) === """
+    assert Convert.convert_file_contents!("nofile.ex", code, Converter_0_5) === """
            # slot commented, props: [:item]
 
            slot default, required: true, args: [:item]

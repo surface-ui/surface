@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.0 (WIP)
+
+### Breaking Changes
+
+  * `<#template>` has been removed in favor of `<:slot_name>`
 ## v0.7.1 (2022-02-17)
 
   * Fix wrong target handling in forms
