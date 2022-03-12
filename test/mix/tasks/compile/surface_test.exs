@@ -1,24 +1,29 @@
 defmodule Mix.Tasks.Compile.SurfaceTest do
   use ExUnit.Case, async: false
+  import ExUnit.CaptureIO
 
   import Mix.Tasks.Compile.Surface
+  alias Mix.Task.Compiler.Diagnostic
 
   @hooks_rel_output_dir "tmp/_hooks"
   @hooks_output_dir Path.join(File.cwd!(), @hooks_rel_output_dir)
   @test_components_dir Path.join(File.cwd!(), "test/support/mix/tasks/compile/surface_test")
 
-  @button_src_hooks_file Path.join(@test_components_dir, "fake_button.hooks.js")
+  @hook_extension Enum.random(~W"js jsx ts tsx")
+  @button_src_hooks_file Path.join(@test_components_dir, "fake_button.hooks.#{@hook_extension}")
   @button_dest_hooks_file Path.join(
                             @hooks_output_dir,
-                            "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.js"
+                            "Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.#{@hook_extension}"
                           )
   @button_src_hooks_file_content "let FakeButton = {}\nexport { FakeButton }"
   @button_src_hooks_file_content_modified "let FakeButton = { mounted() {} }\nexport { FakeButton }"
 
-  @link_src_hooks_file Path.join(@test_components_dir, "fake_link.hooks.js")
+  @link_src_hooks_file Path.join(@test_components_dir, "fake_link.hooks.#{@hook_extension}")
+  @other_hook_extension ~W"js jsx ts tsx" |> List.delete(@hook_extension) |> Enum.random()
+  @other_link_src_hooks_file Path.join(@test_components_dir, "fake_link.hooks.#{@other_hook_extension}")
   @link_dest_hooks_file Path.join(
                           @hooks_output_dir,
-                          "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.js"
+                          "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.#{@hook_extension}"
                         )
   @link_src_hooks_file_content "let FakeLink = {}\nexport { FakeLink }"
 
@@ -47,6 +52,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
       File.rm_rf!(@hooks_output_dir)
       File.rm_rf!(@button_src_hooks_file)
       File.rm_rf!(@link_src_hooks_file)
+      File.rm_rf!(@other_link_src_hooks_file)
     end)
 
     :ok
@@ -128,7 +134,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 
-    generate_files({[], []})
+    generate_files([])
 
     assert File.read!(@hooks_index_file) == """
            /*
@@ -151,6 +157,73 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     assert files_changed?([@hooks_index_file], fn -> run([]) end) == [true]
 
     refute File.exists?(@link_dest_hooks_file)
+  end
+
+  test "prints diagnostic if component has more then 1 hook and uses the first one" do
+    File.write!(@other_link_src_hooks_file, @link_src_hooks_file_content)
+    refute File.exists?(@hooks_output_dir)
+
+    [first_extension, second_extension] = Enum.sort([@other_hook_extension, @hook_extension])
+
+    output =
+      capture_io(:standard_error, fn ->
+        assert {:ok, _} = run([])
+      end)
+
+    assert output =~ """
+           component `Mix.Tasks.Compile.SurfaceTest.FakeLink` has 2 hooks files, using the first one
+             * `test/support/mix/tasks/compile/surface_test/fake_link.hooks.#{first_extension}`
+             * `test/support/mix/tasks/compile/surface_test/fake_link.hooks.#{second_extension}`
+           """
+  end
+
+  test "returns diagnostic if component has more then 1 hook and uses the first one" do
+    File.write!(@other_link_src_hooks_file, @link_src_hooks_file_content)
+    refute File.exists?(@hooks_output_dir)
+
+    file = to_string(Mix.Tasks.Compile.SurfaceTest.FakeLink.module_info(:compile)[:source])
+
+    [first_extension, second_extension] = Enum.sort([@other_hook_extension, @hook_extension])
+
+    message = """
+    component `Mix.Tasks.Compile.SurfaceTest.FakeLink` has 2 hooks files, using the first one
+      * `test/support/mix/tasks/compile/surface_test/fake_link.hooks.#{first_extension}`
+      * `test/support/mix/tasks/compile/surface_test/fake_link.hooks.#{second_extension}`
+    """
+
+    assert run(["--return-errors", "--warnings-as-errors"]) ==
+             {:error,
+              [
+                %Diagnostic{
+                  compiler_name: "Surface",
+                  details: nil,
+                  file: file,
+                  message: message,
+                  position: 1,
+                  severity: :warning
+                }
+              ]}
+
+    assert File.exists?(
+             Path.join(@hooks_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.#{first_extension}")
+           )
+
+    dest_glob = Path.join(@hooks_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.*")
+    assert Path.wildcard(dest_glob) |> length() == 1
+
+    File.rm!(Path.join(@test_components_dir, "fake_link.hooks.#{first_extension}"))
+
+    assert files_changed?([@hooks_index_file], fn -> run([]) end) == [false]
+
+    assert File.exists?(
+             Path.join(@hooks_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.#{second_extension}")
+           )
+
+    assert Path.wildcard(dest_glob) |> length() == 1
+
+    File.rm!(Path.join(@test_components_dir, "fake_link.hooks.#{second_extension}"))
+    assert files_changed?([@hooks_index_file], fn -> run([]) end) == [true]
+    assert Path.wildcard(dest_glob) |> length() == 0
   end
 
   defp inc_mtime(time) do
