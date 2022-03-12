@@ -2,9 +2,12 @@
 
 ## v0.8.0 (WIP)
 
+  * Generate assets for `.hooks.` with the `js`, `jsx`, `ts`, `tsx` extensions, using the first one (#576)
+
 ### Breaking Changes
 
-  * `<#template>` has been removed in favor of `<:slot_name>`
+  * `<#template>` has been removed in favor of `<:slot_name>` (#575)
+
 ## v0.7.1 (2022-02-17)
 
   * Fix wrong target handling in forms
