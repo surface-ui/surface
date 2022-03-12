@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.2 (WIP)
+
+  * Generate assets for `.hooks.` with the `js`, `jsx`, `ts`, `tsx` extensions, using the first one (#576)
+
 ## v0.7.1 (2022-02-17)
 
   * Fix wrong target handling in forms
