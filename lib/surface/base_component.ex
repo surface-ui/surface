@@ -29,6 +29,7 @@ defmodule Surface.BaseComponent do
       Module.register_attribute(__MODULE__, :__injected_components__, accumulate: true)
 
       @before_compile unquote(__MODULE__)
+      @on_load :__ensure_deps_loaded__
 
       # TODO: Remove the alias after fix ElixirSense
       alias Module, as: Mod
@@ -57,11 +58,26 @@ defmodule Surface.BaseComponent do
       |> Module.get_attribute(:__injected_components__, [])
       |> Enum.uniq_by(fn {comp, _line} -> comp end)
 
-    for {mod, line} <- components, mod != env.module do
-      quote line: line do
-        require(unquote(mod)).__info__(:module)
+    ensure_deps_loaded =
+      quote do
+        @doc false
+        def __ensure_deps_loaded__ do
+          unquote(__MODULE__).ensure_deps_loaded(
+            unquote(components),
+            unquote(env.module),
+            unquote(env.file)
+          )
+        end
       end
-    end
+
+    requires =
+      for {mod, line} <- components, mod != env.module do
+        quote line: line do
+          require(unquote(mod)).__info__(:module)
+        end
+      end
+
+    [ensure_deps_loaded | requires]
   end
 
   defmacro __before_compile_init_slots__(env) do
@@ -83,5 +99,21 @@ defmodule Surface.BaseComponent do
         end
       end
     end
+  end
+
+  @doc false
+  def ensure_deps_loaded(components, caller_mod, file) do
+    for {mod, line} <- components, mod != caller_mod do
+      with {:error, reason} <- Code.ensure_loaded(mod) do
+        message = """
+        could not load component `#{inspect(mod)}` called by `#{inspect(caller_mod)}`. \
+        Reason: #{inspect(reason)}
+        """
+
+        Surface.IOHelper.warn(message, __ENV__, file, line)
+      end
+    end
+
+    :ok
   end
 end
