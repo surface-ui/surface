@@ -1722,4 +1722,15 @@ defmodule Surface.FormatterTest do
       """
     )
   end
+
+  test "newlines in strings passed to function calls" do
+    assert_formatter_doesnt_change(~S"""
+    <div>
+      {foo("bar
+        baz
+        qux
+      ")}
+    </div>
+    """)
+  end
 end
