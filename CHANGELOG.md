@@ -1,12 +1,15 @@
 # Changelog
 
-## v0.8.0 (WIP)
-
-  * Generate assets for `.hooks.` with the `js`, `jsx`, `ts`, `tsx` extensions, using the first one (#576)
+## v0.8.0-dev
 
 ### Breaking Changes
 
-  * `<#template>` has been removed in favor of `<:slot_name>` (#575)
+  * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
+
+## v0.7.2 (2022-03-17)
+
+  * Support more extensions other than `.js` as colocated hooks (`jsx`, `ts` and `tsx`) (#576)
+  * Update the `surface.init` task to set up the catalogue to `v0.4`
 
 ## v0.7.1 (2022-02-17)
 
