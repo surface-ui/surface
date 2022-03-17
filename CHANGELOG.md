@@ -1,8 +1,9 @@
 # Changelog
 
-## v0.7.2 (WIP)
+## v0.7.2 (2022-03-17)
 
-  * Generate assets for `.hooks.` with the `js`, `jsx`, `ts`, `tsx` extensions, using the first one (#576)
+  * Support more extensions other than `.js` as colocated hooks (`jsx`, `ts` and `tsx`) (#576)
+  * Update the `surface.init` task to set up the catalogue to `v0.4`
 
 ## v0.7.1 (2022-02-17)
 
