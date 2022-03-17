@@ -196,8 +196,12 @@ defmodule Mix.Tasks.Surface.Init do
         Patches.add_surface_catalogue_to_mix_deps(),
         Patches.configure_catalogue_in_mix_exs()
       ],
+      "config/config.exs" => [
+        Patches.configure_catalogue_esbuild()
+      ],
       "config/dev.exs" => [
-        Patches.add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module)
+        Patches.add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module),
+        Patches.add_catalogue_esbuild_watcher_to_endpoint_config(context_app, web_module)
       ],
       "#{web_path}/router.ex" => [
         Patches.configure_catalogue_route(web_module)

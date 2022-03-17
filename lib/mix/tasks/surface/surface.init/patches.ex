@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
     %{
       name: "Add `surface_catalogue` dependency",
       update_deps: [:surface_catalogue],
-      patch: &Patchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.3.0")),
+      patch: &Patchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.4.0")),
       instructions: """
       Add `surface_catalogue` to the list of dependencies in `mix.exs`.
 
@@ -174,7 +174,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       ```
       def deps do
         [
-          {:surface_catalogue, "~> 0.3.0"}
+          {:surface_catalogue, "~> 0.4.0"}
         ]
       end
       ```
@@ -210,6 +210,35 @@ defmodule Mix.Tasks.Surface.Init.Patches do
           "priv/catalogue"
         ]
       end
+      """
+    }
+  end
+
+  def configure_catalogue_esbuild do
+    %{
+      name: "Configure esbuild for the catalogue",
+      patch:
+        &Patchers.Phoenix.add_esbuild_entry_to_config(&1, :catalogue, """
+        [
+            args: ~w(../deps/surface_catalogue/assets/js/app.js --bundle --target=es2016 --minify --outdir=../priv/static/assets/catalogue),
+            cd: Path.expand("../assets", __DIR__),
+            env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+          ]\
+        """),
+      instructions: """
+      Update your `config/config.exs` to set up a esbuild entry fot the catalogue.
+
+      # Example
+
+      ```
+      config :esbuild,
+        ...
+        catalogue: [
+          args: ~w(../deps/surface_catalogue/assets/js/app.js --bundle --target=es2016 --minify --outdir=../priv/static/assets/catalogue),
+          cd: Path.expand("../assets", __DIR__),
+          env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+        ]
+      ```
       """
     }
   end
@@ -292,6 +321,33 @@ defmodule Mix.Tasks.Surface.Init.Patches do
             ~r"priv/catalogue/.*(ex)$"
             ...
           ]
+        ]
+      ```
+      """
+    }
+  end
+
+  def add_catalogue_esbuild_watcher_to_endpoint_config(context_app, web_module) do
+    %{
+      name: "Add esbuild watcher for :catalogue",
+      patch:
+        &Patchers.Phoenix.add_esbuild_watcher_to_endpoint_config(
+          &1,
+          "{Esbuild, :install_and_run, [:catalogue, ~w(--sourcemap=inline --watch)]}",
+          "catalogue",
+          context_app,
+          web_module
+        ),
+      instructions: """
+      Add a new esbuild watcher for the :catalogue entry.
+
+      # Example
+
+      ```
+      config :my_app, MyAppWeb.Endpoint,
+        watchers: [
+          esbuild: ...,
+          esbuild: {Esbuild, :install_and_run, [:catalogue, ~w(--sourcemap=inline --watch)]},
         ]
       ```
       """

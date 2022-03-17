@@ -101,6 +101,62 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> replace(replacement)
   end
 
+  def add_esbuild_entry_to_config(code, key, value) do
+    patcher =
+      code
+      |> parse_string!()
+      |> find_call_with_args(:config, &match?([":esbuild", _], &1))
+      |> last_arg()
+
+    case patcher do
+      %ExPatcher{node: nil} ->
+        code
+        |> parse_string!()
+        |> find_call_with_args(:config, &match?([":phoenix", ":json_library", _], &1))
+        |> last_arg()
+        |> replace(
+          &"""
+          #{&1}
+
+          config :esbuild,
+            #{key}: #{value}\
+          """
+        )
+
+      esbuild_patcher ->
+        esbuild_patcher
+        |> halt_if(&find_keyword(&1, [:catalogue]), :already_patched)
+        |> find_keyword_value([:default])
+        |> replace_code(
+          &"""
+          #{&1},
+            #{key}: #{value}\
+          """
+        )
+    end
+  end
+
+  def add_esbuild_watcher_to_endpoint_config(code, value, already_pached_text, context_app, web_module) do
+    args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
+
+    code
+    |> parse_string!()
+    |> find_call_with_args_and_opt(:config, args, :watchers)
+    |> last_arg()
+    |> find_keyword_value([:watchers])
+    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    |> last_arg()
+    |> down()
+    |> last_child()
+    # |> replace_code(&"#{&1},\n      #{value}")
+    |> replace_code(
+      &"""
+      #{&1},
+          esbuild: #{value}\
+      """
+    )
+  end
+
   defp find_endpoint_config_with_live_reload(patcher, context_app, web_module) do
     args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
 
