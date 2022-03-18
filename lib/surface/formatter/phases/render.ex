@@ -36,6 +36,12 @@ defmodule Surface.Formatter.Phases.Render do
           expression
           |> String.trim()
           |> Code.format_string!(opts)
+          |> to_string()
+          # handle scenario where expression contains string(s) with newlines;
+          # in order to ensure the formatter is idempotent (always emits
+          # the same output when run more than once), we dedent newlines
+          # in strings because multi-line strings are later indented
+          |> dedent_strings_with_newlines(expression, opts)
 
         String.replace(
           "{#{formatted}}",
@@ -454,19 +460,8 @@ defmodule Surface.Formatter.Phases.Render do
       # in order to ensure the formatter is idempotent (always emits
       # the same output when run more than once), we dedent newlines
       # in strings because multi-line attributes are later indented
-      expression
-      |> quoted_strings_with_newlines()
-      |> Enum.uniq()
-      |> Enum.reduce(formatted, fn string_with_newlines, formatted ->
-        dedented =
-          String.replace(
-            string_with_newlines,
-            "\n#{String.duplicate(@tab, opts[:indent] + 1)}",
-            "\n"
-          )
-
-        String.replace(formatted, string_with_newlines, dedented)
-      end)
+      opts = Keyword.update(opts, :indent, 0, &(&1 + 1))
+      dedent_strings_with_newlines(formatted, expression, opts)
     else
       formatted
     end
@@ -490,5 +485,21 @@ defmodule Surface.Formatter.Phases.Render do
       (is_list(quoted_wrapped_expression) and length(quoted_wrapped_expression) > 1) or
       (is_list(quoted_wrapped_expression) and
          Enum.any?(quoted_wrapped_expression, &is_keyword_item_with_interpolated_key?/1))
+  end
+
+  defp dedent_strings_with_newlines(formatted, original_expression, opts) do
+    original_expression
+    |> quoted_strings_with_newlines()
+    |> Enum.uniq()
+    |> Enum.reduce(formatted, fn string_with_newlines, formatted ->
+      dedented =
+        String.replace(
+          string_with_newlines,
+          "\n#{String.duplicate(@tab, opts[:indent])}",
+          "\n"
+        )
+
+      String.replace(formatted, string_with_newlines, dedented)
+    end)
   end
 end
