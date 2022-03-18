@@ -202,7 +202,17 @@ defmodule Surface do
 
   @doc false
   def default_props(module) do
-    props = if function_exported?(module, :__props__, 0), do: module.__props__(), else: []
+    # The function_exported? call returns false if the module hasn't been loaded yet. Calling
+    # module.__info__(:module) forces the module to be loaded and it turned out to be cheaper
+    # then Code.ensure_loaded/1, so we use it instead to guarantee we get the props.
+    props =
+      if function_exported?(module, :__props__, 0) or
+           (module && function_exported?(module.__info__(:module), :__props__, 0)) do
+        module.__props__()
+      else
+        []
+      end
+
     Enum.map(props, fn %{name: name, opts: opts} -> {name, opts[:default]} end)
   end
 
