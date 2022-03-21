@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Surface.Convert do
 
       mix surface.convert "lib/**/*.{ex,exs,sface}" "test/**/*.{ex,exs}"
 
-  Please read the [Migration Guide](https://github.com/surface-ui/surface/blob/master/MIGRATING.md)
+  Please read the [Migration Guide](https://github.com/surface-ui/surface/blob/main/MIGRATING.md)
   before running the converter and make sure you follow all required steps for a successful migration.
 
   ## Task-specific options

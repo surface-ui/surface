@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Surface.Format do
   current directory for formatter configuration. The Surface formatter accepts
   the same options as `mix format`. Read more about the expected format of
   `.formatter.exs` and the shared configuration options
-  [documented here](https://hexdocs.pm/mix/master/Mix.Tasks.Format.html#module-formatting-options).
+  [documented here](https://hexdocs.pm/mix/main/Mix.Tasks.Format.html#module-formatting-options).
 
   The Surface formatter also takes the following two additional options
   specified in `.formatter.exs`:
@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Surface.Format do
   ## Task-specific options
 
   The Surface formatter accepts the same task-specific options as `mix format`.
-  [Read documentation for the options documented here.](https://hexdocs.pm/mix/master/Mix.Tasks.Format.html#module-task-specific-options).
+  [Read documentation for the options documented here.](https://hexdocs.pm/mix/main/Mix.Tasks.Format.html#module-task-specific-options).
 
   For quick reference, here are some examples of using these options:
 
