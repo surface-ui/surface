@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - misc
 
 jobs:
   mix_test:
@@ -63,7 +64,6 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
       - run: mix format --check-formatted
         if: matrix.check_formatted
-      - run: mix compile --warnings-as-errors
-        if: matrix.warnings_as_errors
+      - run: mix compile --warnings-as-errors=${{matrix.warnings_as_errors || false}}
       - name: mix test
         run: mix test --include integration:${{ !!matrix.run_integration_tests }} --exclude plugin:${{ !matrix.run_plugin_tests }}
