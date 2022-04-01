@@ -136,7 +136,7 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     end
   end
 
-  def add_esbuild_watcher_to_endpoint_config(code, value, already_pached_text, context_app, web_module) do
+  def add_watcher_to_endpoint_config(code, key, value, already_pached_text, context_app, web_module) do
     args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
 
     code
@@ -146,13 +146,11 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> find_keyword_value([:watchers])
     |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
     |> last_arg()
-    |> down()
     |> last_child()
-    # |> replace_code(&"#{&1},\n      #{value}")
     |> replace_code(
       &"""
       #{&1},
-          esbuild: #{value}\
+          #{key}: #{value}\
       """
     )
   end

@@ -26,6 +26,15 @@ defmodule Mix.Tasks.Surface.Init do
     * `--demo` - Generates a sample `<Hero>` component. When used together with the `--catalogue`
       option, it additionally generates two catalogue examples and a playground for the component.
 
+    * `--layouts` - Replaces the generated `.heex` layouts with `.sface` files compatible with Surface.
+      Warning: using this option always replaces the existing layouts, so any changes done
+      in those layout files will be lost. It's recommended to use this option only on fresh projects.
+
+    * `--tailwind` - Configures the project to support Tailwind CSS, adding [tailwind](https://hex.pm/packages/tailwind)
+      as a dependency, which will install tailwind's standalone CLI. That means no Node.js nor npm
+      is required. When used together with the `--catalogue`, `--demo` and `--layouts` options,
+      the related artefacts generated will be styled using Tailwind CSS instead of Milligram.
+
     * `--yes` - automatic answer "yes" to all prompts. Warning: this will also say "yes"
       to overwrite existing files as well as fetching/installing dependencies, if required.
 
@@ -51,6 +60,7 @@ defmodule Mix.Tasks.Surface.Init do
     formatter: :boolean,
     catalogue: :boolean,
     demo: :boolean,
+    tailwind: :boolean,
     yes: :boolean,
     js_hooks: :boolean,
     error_tag: :boolean,
@@ -61,6 +71,7 @@ defmodule Mix.Tasks.Surface.Init do
     formatter: true,
     catalogue: false,
     demo: false,
+    tailwind: false,
     yes: false,
     js_hooks: true,
     error_tag: true,
@@ -95,12 +106,14 @@ defmodule Mix.Tasks.Surface.Init do
         patches_for(:error_tag, assigns),
         patches_for(:js_hooks, assigns),
         patches_for(:demo, assigns),
-        patches_for(:catalogue, assigns)
+        patches_for(:catalogue, assigns),
+        patches_for(:tailwind, assigns)
       ])
 
     create_files_results = [
       create_files_for(:demo, assigns),
-      create_files_for(:demo_catalogue, assigns)
+      create_files_for(:demo_catalogue, assigns),
+      create_files_for(:tailwind, assigns)
     ]
 
     Patcher.print_results(patch_files_results ++ create_files_results)
@@ -219,6 +232,28 @@ defmodule Mix.Tasks.Surface.Init do
     }
   end
 
+  defp patches_for(:tailwind, %{tailwind: true} = assigns) do
+    %{context_app: context_app, web_module: web_module} = assigns
+
+    %{
+      "mix.exs" => [
+        Patches.add_tailwind_to_mix_deps()
+      ],
+      "config/config.exs" => [
+        Patches.configure_tailwind()
+      ],
+      "config/dev.exs" => [
+        Patches.add_tailwind_watcher_to_endpoint_config(context_app, web_module)
+      ],
+      "assets/js/app.js" => [
+        Patches.remove_import_app_css()
+      ],
+      "assets/css/app.css" => [
+        Patches.add_tailwind_directives()
+      ]
+    }
+  end
+
   defp patches_for(_, _), do: %{}
 
   defp create_files_for(:demo, %{demo: true, web_path: web_path} = assigns) do
@@ -236,6 +271,12 @@ defmodule Mix.Tasks.Surface.Init do
       {"demo/example01.ex", dest},
       {"demo/example02.ex", dest},
       {"demo/playground.ex", dest}
+    ])
+  end
+
+  defp create_files_for(:tailwind, assigns) do
+    Patcher.create_files(assigns, [
+      {"tailwind/tailwind.config.js", "assets/"}
     ])
   end
 

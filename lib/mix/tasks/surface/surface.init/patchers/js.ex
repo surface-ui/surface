@@ -18,23 +18,6 @@ defmodule Mix.Tasks.Surface.Init.Patchers.JS do
     end
   end
 
-  def replace_line_text(code, line_text, replacement) do
-    already_patched? = Regex.match?(to_regex(replacement), code)
-    line_text_regex = to_regex(line_text)
-    patchable? = Regex.match?(line_text_regex, code)
-
-    cond do
-      already_patched? ->
-        {:already_patched, code}
-
-      patchable? ->
-        {:patched, Regex.replace(line_text_regex, code, replacement)}
-
-      true ->
-        {:cannot_patch, code}
-    end
-  end
-
   defp to_regex(string) do
     Regex.compile!("^#{Regex.escape(string)}$", "m")
   end

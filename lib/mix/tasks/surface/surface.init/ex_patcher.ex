@@ -265,6 +265,20 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     end)
   end
 
+  def prepend_list_item(patcher, string, opts \\ []) do
+    opts = Keyword.merge([preserve_indentation: false], opts)
+    node = Sourceror.parse_string!(string)
+
+    patch(patcher, opts, fn zipper ->
+      zipper
+      |> Z.down()
+      |> Z.insert_child(node)
+      |> Z.up()
+      |> Z.node()
+      |> Sourceror.to_string(to_string_opts())
+    end)
+  end
+
   def halt_if(%__MODULE__{result: result} = patcher, _predicate, _new_status) when result != :unpatched do
     patcher
   end

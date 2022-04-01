@@ -65,4 +65,18 @@ defmodule Mix.Tasks.Surface.Init.Patchers.MixExs do
     |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
     |> replace(&"defp elixirc_paths(#{env}), do: #{body}\n  #{&1}")
   end
+
+  def update_alias(code, key, already_patched_text, maybe_already_patched, fun) do
+    code
+    |> parse_string!()
+    |> enter_defmodule()
+    |> enter_defp(:aliases)
+    |> find_keyword_value(key)
+    |> halt_if(
+      fn patcher -> node_to_string(patcher) == already_patched_text end,
+      :already_patched
+    )
+    |> halt_if(&find_code_containing(&1, maybe_already_patched), :maybe_already_patched)
+    |> fun.()
+  end
 end
