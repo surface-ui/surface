@@ -42,6 +42,17 @@ defmodule Mix.Tasks.Surface.Convert do
   #
 
   @doc false
+  def convert_file_contents!(:stdin, input, converter) do
+    # determine whether the input is Elixir or Surface code by checking if `Code.string_to_quoted` can parse it
+    case Code.string_to_quoted(input) do
+      {:ok, _} ->
+        convert_ex_string!(input, converter)
+
+      {:error, _} ->
+        format_string(input, converter)
+    end
+  end
+
   def convert_file_contents!(file, input, converter) do
     ext = Path.extname(file)
 
@@ -104,8 +115,16 @@ defmodule Mix.Tasks.Surface.Convert do
     |> check!()
   end
 
+  defp read_file(:stdin) do
+    {IO.stream(:stdio, :line) |> Enum.to_list() |> IO.iodata_to_binary(), :stdin}
+  end
+
+  defp read_file(file) do
+    {File.read!(file), file}
+  end
+
   defp convert_file({file, _formatter_opts}, task_opts, converter) do
-    input = File.read!(file)
+    {input, file} = read_file(file)
     formatted = convert_file_contents!(file, input, converter)
     output = IO.iodata_to_binary([formatted])
 
