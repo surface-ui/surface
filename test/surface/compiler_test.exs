@@ -1046,6 +1046,29 @@ defmodule Surface.CompilerSyncTest do
     assert extract_line(output) == 6
   end
 
+  test "VoidTag is a valid HTML root element" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~F"\""
+        <br />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    refute output =~ "stateful live components must have a HTML root element"
+  end
+
   test "warning on component with required slot that has a default value" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 

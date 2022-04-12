@@ -1486,4 +1486,24 @@ defmodule Surface.SlotSyncTest do
            ```
            """
   end
+
+  test "use slot entry in element that is not a component" do
+    code = ~s[
+    ~F"""
+    <div>
+      <:body />
+    </div>
+    """
+    ]
+
+    output =
+      capture_io(:standard_error, fn ->
+        Code.eval_string(code, [assigns: %{}], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ ~r"""
+           cannot render <div> \(slot entries are only allowed as children elements of components, but found slot entry for body\)
+             code.exs:3:\
+           """
+  end
 end

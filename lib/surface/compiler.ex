@@ -667,13 +667,17 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(:macro_component, {"#" <> name, attributes, children, node_meta}, compile_meta) do
+  defp convert_node_to_ast(
+         :macro_component,
+         {"#" <> name = node_alias, attributes, children, node_meta},
+         compile_meta
+       ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     mod = Helpers.actual_component_module!(name, meta.caller)
-    meta = Map.merge(meta, %{module: mod, node_alias: name})
+    meta = Map.merge(meta, %{module: mod, node_alias: node_alias})
 
     with :ok <- Helpers.validate_component_module(mod, name),
-         meta <- Map.merge(meta, %{module: mod, node_alias: name}),
+         meta <- Map.merge(meta, %{module: mod, node_alias: node_alias}),
          true <- function_exported?(mod, :expand, 3),
          {:ok, directives, attributes} <-
            collect_directives(@meta_component_directive_handlers, attributes, meta),
@@ -683,10 +687,11 @@ defmodule Surface.Compiler do
       {:ok, %AST.Container{children: List.wrap(expanded_children), directives: directives, meta: meta}}
     else
       false ->
-        {:error, {"cannot render <#{name}> (MacroComponents must export an expand/3 function)", meta.line}, meta}
+        {:error, {"cannot render <#{node_alias}> (MacroComponents must export an expand/3 function)", meta.line},
+         meta}
 
       error ->
-        handle_convert_node_to_ast_error(name, error, meta)
+        handle_convert_node_to_ast_error(node_alias, error, meta)
     end
   end
 
