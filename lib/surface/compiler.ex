@@ -667,8 +667,11 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp convert_node_to_ast(:macro_component, {"#" <> name, attributes, children, node_meta}, compile_meta) do
-    node_alias = "#" <> name
+  defp convert_node_to_ast(
+         :macro_component,
+         {"#" <> name = node_alias, attributes, children, node_meta},
+         compile_meta
+       ) do
     meta = Helpers.to_meta(node_meta, compile_meta)
     mod = Helpers.actual_component_module!(name, meta.caller)
     meta = Map.merge(meta, %{module: mod, node_alias: node_alias})
