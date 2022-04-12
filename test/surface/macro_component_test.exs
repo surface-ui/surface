@@ -75,6 +75,11 @@ defmodule Surface.MacroComponentTest do
     end
   end
 
+  defmodule MissingExpand do
+    use Surface.Component
+    def render(assigns), do: ~F""
+  end
+
   test "empty content is translated to empty string" do
     assert render_surface(do: ~F[<#RenderContent />]) == ""
     assert render_surface(do: ~F[<#RenderContent></#RenderContent>]) == ""
@@ -211,5 +216,39 @@ defmodule Surface.MacroComponentTest do
         compile_surface(code, %{class: "markdown"})
       end)
     end)
+  end
+
+  test "missing expand are not rendered" do
+    code =
+      quote do
+        ~F"""
+        <#MissingExpand />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
+
+    assert output =~ ~r"cannot render <#MissingExpand> \(MacroComponents must export an expand/3 function\)"
+  end
+
+  test "non existing is not rendered" do
+    code =
+      quote do
+        ~F"""
+        <#NonExisting />
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        assert_raise(CompileError, ~r/code:1: module NonExisting is not loaded and could not be found/, fn ->
+          compile_surface(code)
+        end)
+      end)
+
+    assert output =~ ~r/cannot render <#NonExisting> \(module NonExisting could not be loaded\)/
   end
 end
