@@ -3,6 +3,8 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   import ExUnit.CaptureIO
 
   import Mix.Tasks.Compile.Surface
+  import ExUnit.CaptureIO
+
   alias Mix.Task.Compiler.Diagnostic
 
   @hooks_rel_output_dir "tmp/_hooks"
@@ -36,7 +38,9 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 
-    assert run([]) == {:noop, []}
+    assert capture_io(:standard_error, fn ->
+             assert run([]) == {:noop, []}
+           end) == ""
 
     assert File.read!(@hooks_index_file) == """
            /*
@@ -47,7 +51,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
            """
   end
 
-  test "prints and returns `{:ok, diagnostics}` without `return_errors` and `warnings_as_errors`" do
+  test "prints and returns `{:ok, diagnostics}` on warning without `return_errors` and `warnings_as_errors`" do
     diagnostic = %Diagnostic{
       message: "test warning",
       file: "file.ex",
@@ -61,10 +65,10 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
         assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [])
       end)
 
-    assert output =~ "test warning"
+    assert output == (IO.ANSI.format([:yellow, "warning: "]) |> IO.iodata_to_binary()) <> "test warning\n\n"
   end
 
-  test "don't print and return `{:error, diagnostics}` with `return_errors` and `warnings_as_errors`" do
+  test "don't print and return `{:error, diagnostics}` on warning with `return_errors` and `warnings_as_errors`" do
     diagnostic = %Diagnostic{
       message: "test warning",
       file: "file.ex",
@@ -80,5 +84,39 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
       end)
 
     refute output =~ "test warning"
+  end
+
+  test "prints and returns `{:error, diagnostics}` on error without `return_errors`" do
+    diagnostic = %Diagnostic{
+      message: "test error",
+      file: "file.ex",
+      position: 1,
+      severity: :error,
+      compiler_name: "Surface"
+    }
+
+    output =
+      capture_io(:standard_error, fn ->
+        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [])
+      end)
+
+    assert output == (IO.ANSI.format([:red, "error: "]) |> IO.iodata_to_binary()) <> "test error\n  file.ex:1\n"
+  end
+
+  test "don't print and return `{:error, diagnostics}` on error with `return_errors`" do
+    diagnostic = %Diagnostic{
+      message: "test error",
+      file: "file.ex",
+      position: 1,
+      severity: :error,
+      compiler_name: "Surface"
+    }
+
+    output =
+      capture_io(:standard_error, fn ->
+        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], return_errors: true)
+      end)
+
+    assert output == ""
   end
 end

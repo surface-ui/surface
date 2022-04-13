@@ -787,11 +787,12 @@ defmodule Surface.Compiler.EExEngine do
                module: mod,
                line: line
              } = meta
-         }
+         } = component
          | nodes
        ])
        when not is_nil(mod) do
-    store_component_call(meta.caller.module, mod, line)
+    %{attributes: attributes, directives: directives, meta: %{node_alias: node_alias}} = component
+    store_component_call(meta.caller.module, node_alias, mod, attributes, directives, line)
     [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
 
@@ -869,13 +870,19 @@ defmodule Surface.Compiler.EExEngine do
         {requires, Map.put(by_name, name, Enum.reverse(slot_entries))}
       end)
 
-    store_component_call(component.meta.caller.module, mod, component.meta.line)
+    %{caller: caller, node_alias: node_alias, line: line} = component.meta
+    %{props: props, directives: directives} = component
+    store_component_call(caller.module, node_alias, mod, props, directives, line)
     [requires, %{component | slot_entries: slot_entries_by_name} | to_dynamic_nested_html(nodes)]
   end
 
-  defp to_dynamic_nested_html([%AST.Error{message: message, meta: %AST.Meta{module: module} = meta} | nodes])
+  defp to_dynamic_nested_html([
+         %AST.Error{message: message, meta: %AST.Meta{module: module, node_alias: node_alias} = meta} = component
+         | nodes
+       ])
        when not is_nil(module) do
-    store_component_call(meta.caller.module, module, meta.line)
+    %{attributes: attributes, directives: directives} = component
+    store_component_call(meta.caller.module, node_alias, module, attributes, directives, meta.line)
 
     [
       ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
@@ -1034,10 +1041,10 @@ defmodule Surface.Compiler.EExEngine do
     |> Macro.var(caller.module)
   end
 
-  defp store_component_call(module, component, line) do
+  defp store_component_call(module, node_alias, component, props, directives, line) do
     # No need to store dynamic modules
     if !match?(%Surface.AST.AttributeExpr{}, component) do
-      call = %{component: component, line: line}
+      call = %{node_alias: node_alias, component: component, props: props, directives: directives, line: line}
       Module.put_attribute(module, :__components_calls__, call)
     end
   end

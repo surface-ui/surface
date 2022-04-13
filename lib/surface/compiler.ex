@@ -591,7 +591,7 @@ defmodule Surface.Compiler do
       |> Helpers.to_meta(compile_meta)
       |> Map.merge(%{module: mod, node_alias: name})
 
-    # TODO: we should call validate_slot_entries/3 and validate_properties/4 validate
+    # TODO: we should call validate_slot_entries/3 validate
     # based on the module attributes since the module is still open
     with component_type <- Module.get_attribute(mod, :component_type),
          true <- component_type != nil,
@@ -636,8 +636,7 @@ defmodule Surface.Compiler do
          {:ok, slot_entries, attributes} <- collect_slot_entries(mod, attributes, children, meta),
          :ok <- validate_slot_entries(mod, slot_entries, meta),
          {:ok, directives, attributes} <- collect_directives(@component_directive_handlers, attributes, meta),
-         attributes <- process_attributes(mod, attributes, meta, compile_meta),
-         :ok <- validate_properties(mod, attributes, directives, meta) do
+         attributes <- process_attributes(mod, attributes, meta, compile_meta) do
       result =
         if component_slotable?(mod) do
           %AST.SlotableComponent{
@@ -681,10 +680,23 @@ defmodule Surface.Compiler do
          true <- function_exported?(mod, :expand, 3),
          {:ok, directives, attributes} <-
            collect_directives(@meta_component_directive_handlers, attributes, meta),
-         attributes <- process_attributes(mod, attributes, meta, compile_meta),
-         :ok <- validate_properties(mod, attributes, directives, meta) do
-      expanded_children = mod.expand(attributes, List.to_string(children), meta)
-      {:ok, %AST.Container{children: List.wrap(expanded_children), directives: directives, meta: meta}}
+         attributes <- process_attributes(mod, attributes, meta, compile_meta) do
+      case validate_properties(mod, attributes) do
+        :ok ->
+          expanded_children = mod.expand(attributes, List.to_string(children), meta)
+
+          {:ok,
+           %AST.Container{
+             attributes: attributes,
+             children: List.wrap(expanded_children),
+             directives: directives,
+             meta: meta
+           }}
+
+        :missing_required_props ->
+          message = "cannot render <#{node_alias}> (missing required props)"
+          {:ok, %AST.Error{attributes: attributes, message: message, meta: meta}}
+      end
     else
       false ->
         {:error, {"cannot render <#{node_alias}> (MacroComponents must export an expand/3 function)", meta.line},
@@ -992,33 +1004,18 @@ defmodule Surface.Compiler do
     attr
   end
 
-  defp validate_properties(module, props, directives, meta) do
-    has_directive_props? = Enum.any?(directives, &match?(%AST.Directive{name: :props}, &1))
-
-    if not has_directive_props? and function_exported?(module, :__props__, 0) do
+  defp validate_properties(module, props) do
+    if function_exported?(module, :__props__, 0) do
       existing_props_names = Enum.map(props, & &1.name)
       required_props_names = module.__required_props_names__()
       missing_props_names = required_props_names -- existing_props_names
 
-      for prop_name <- missing_props_names do
-        message = "Missing required property \"#{prop_name}\" for component <#{meta.node_alias}>"
-
-        message =
-          if prop_name == :id and Helpers.is_stateful_component(module) do
-            message <>
-              """
-              \n\nHint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
-              If you meant to create a stateless component, you can switch to `use Surface.Component`.
-              """
-          else
-            message
-          end
-
-        IOHelper.warn(message, meta.caller, meta.file, meta.line)
+      if Enum.any?(missing_props_names) do
+        :missing_required_props
+      else
+        :ok
       end
     end
-
-    :ok
   end
 
   defp validate_slot_entries(Surface.Components.Dynamic.Component, _slot_entries, _meta) do
