@@ -6,16 +6,18 @@ defmodule Surface.AST.Container do
 
   ## Properties
       * `:children` - children AST nodes
+      * `:attributes` - the specified attributes
       * `:directives` - directives associated with this container
       * `:meta` - compile meta
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:children, :meta, debug: [], directives: []]
+  defstruct [:children, :meta, debug: [], attributes: [], directives: []]
 
   @type t :: %__MODULE__{
           children: list(Surface.AST.t()),
           debug: list(atom()),
           meta: Surface.AST.Meta.t(),
+          attributes: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t())
         }
 end
@@ -427,12 +429,14 @@ defmodule Surface.AST.Error do
   ## Properties
       * `:message` - the error message
       * `:meta` - compilation meta data
+      * `:attributes` - the specified attributes
       * `:directives` - directives associated with this error node
   """
-  defstruct [:message, :meta, directives: []]
+  defstruct [:message, :meta, attributes: [], directives: []]
 
   @type t :: %__MODULE__{
           message: binary(),
+          attributes: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t()
         }
