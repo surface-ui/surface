@@ -26,7 +26,7 @@ defmodule Surface.BaseComponent do
       import Surface
       @behaviour unquote(__MODULE__)
 
-      Module.register_attribute(__MODULE__, :__injected_components__, accumulate: true)
+      Module.register_attribute(__MODULE__, :__components_calls__, accumulate: true)
 
       @before_compile unquote(__MODULE__)
 
@@ -52,16 +52,30 @@ defmodule Surface.BaseComponent do
   end
 
   defmacro __before_compile__(env) do
-    components =
-      env.module
-      |> Module.get_attribute(:__injected_components__, [])
-      |> Enum.uniq_by(fn {comp, _line} -> comp end)
+    components_calls = Module.get_attribute(env.module, :__components_calls__)
 
-    for {mod, line} <- components, mod != env.module do
-      quote line: line do
-        require(unquote(mod)).__info__(:module)
+    def_components_calls_ast =
+      if components_calls != [] do
+        quote do
+          def __components_calls__() do
+            unquote(Macro.escape(components_calls))
+          end
+        end
       end
-    end
+
+    components = Enum.uniq_by(components_calls, & &1.component)
+
+    requires =
+      for %{component: mod, line: line} <- components, mod != env.module do
+        quote line: line do
+          require(unquote(mod)).__info__(:module)
+        end
+      end
+
+    [
+      requires,
+      def_components_calls_ast
+    ]
   end
 
   defmacro __before_compile_init_slots__(env) do
