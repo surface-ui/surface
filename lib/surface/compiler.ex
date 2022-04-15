@@ -805,6 +805,7 @@ defmodule Surface.Compiler do
     duplicated_prop? = mod && (!Keyword.get(type_opts, :accumulate, false) and duplicated_attr?)
     duplicated_html_attr? = !mod && duplicated_attr?
     root_prop? = Keyword.get(type_opts, :root, false)
+    deprecated_prop_message = Keyword.get(type_opts, :deprecated, false)
 
     cond do
       duplicated_prop? && root_prop? ->
@@ -838,6 +839,14 @@ defmodule Surface.Compiler do
         Considering only the last value.
 
         Hint: remove all redundant definitions
+        """
+
+        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
+
+      deprecated_prop_message ->
+        message = """
+        the prop `#{name}` is marked as deprecated.
+        Hint: #{deprecated_prop_message}
         """
 
         IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
