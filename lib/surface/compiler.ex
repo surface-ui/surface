@@ -856,13 +856,15 @@ defmodule Surface.Compiler do
         """
 
         IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
-      
+
       deprecated_prop_message ->
         message = """
         the prop `#{name}` is marked as deprecated.
         Hint: #{deprecated_prop_message}
         """
+
         IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
+
       true ->
         nil
     end

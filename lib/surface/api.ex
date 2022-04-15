@@ -502,7 +502,6 @@ defmodule Surface.API do
     {:error, "invalid value for option :deprecated in prop #{name}. Expected a string, got: #{inspect(value)}"}
   end
 
-
   defp validate_opt(:data, name, _type, opts, :default, value, line, env) do
     warn_on_invalid_default(:data, name, value, opts, line, env)
 
