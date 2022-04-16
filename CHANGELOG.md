@@ -6,6 +6,10 @@
 
   * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
 
+## v0.7.4-dev
+
+  * Optimize the surface compiler for assets generation
+
 ## v0.7.3 (2022-03-18)
 
   * Fix loading component prop's default values

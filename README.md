@@ -52,7 +52,7 @@ end
 
   * **Slots** - placeholders declared by a component that you can fill up with **custom content**.
 
-  * **Contexts** - allows a parent component to share data with its children without passing them as properties.
+  * **Contexts** - allows a parent component to share data with its children without passing them as properties.
 
   * **Compile-time checking** of the template structure, components' properties, slots, events and more.
 
@@ -76,7 +76,7 @@ Add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.7.1"}
+    {:surface, "~> 0.7.2"}
   ]
 end
 ```
