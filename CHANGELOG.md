@@ -5,6 +5,7 @@
   * Support using vanilla phoenix function components with slots in surface templates
   * Add `catalogue_test/1` macro to generate basic tests for catalogue examples and playgrounds
   * Add `Surface.Catalogue.Examples` to allow defining multiple stateless examples in a single module
+  * Added optional compiler config
 
 ### Breaking Changes
 

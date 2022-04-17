@@ -24,11 +24,14 @@ defmodule Mix.Tasks.Compile.Surface do
   * `hooks_output_dir` - defines the folder where the compiler generates the JS hooks files.
     Default is `./assets/js/_hooks/`.
 
+  * `warn_on_undefined_props` - shows warnings when passing assigns that are not defined
+    as props on the component. Default is `true`.
+
   ### Example
 
       config :surface, :compiler,
-        hooks_output_dir: "assets/js/surface"
-
+        hooks_output_dir: "assets/js/surface",
+        warn_on_undefined_props: true
   """
 
   use Mix.Task

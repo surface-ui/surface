@@ -294,7 +294,7 @@ defmodule Surface.TypeHandler do
       {prop.type, prop.opts}
     else
       _ ->
-        if Map.get(meta, :runtime, false) do
+        if Map.get(meta, :runtime, false) and Keyword.get(Application.get_env(:surface, :compiler, []), :warn_on_undefined_props, true) do
           IOHelper.warn(
             "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
             meta.caller,
