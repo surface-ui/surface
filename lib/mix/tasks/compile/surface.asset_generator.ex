@@ -155,10 +155,12 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
   defp components() do
     project_app = Mix.Project.config()[:app]
+    :ok = Application.ensure_loaded(project_app)
+    project_deps_apps = Application.spec(project_app, :applications) || []
     opts = Application.get_env(:surface, :compiler, [])
     only_web_namespace = Keyword.get(opts, :only_web_namespace, false)
 
-    for [app] <- applications(),
+    for app <- [project_app | project_deps_apps],
         deps_apps = Application.spec(app)[:applications] || [],
         app in [:surface, project_app] or :surface in deps_apps,
         prefix = app_beams_prefix(app, project_app, only_web_namespace),
@@ -198,22 +200,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
     {:ok, files} = :file.list_dir(dir)
     {dir, files}
-  end
-
-  defp applications do
-    # If we invoke :application.loaded_applications/0,
-    # it can error if we don't call safe_fixtable before.
-    # Since in both cases we are reaching over the
-    # application controller internals, we choose to match
-    # for performance.
-    apps = :ets.match(:ac_tab, {{:loaded, :"$1"}, :_})
-
-    # Make sure we have the project's app (it might not be there when first compiled)
-    apps = [[Mix.Project.config()[:app]] | apps]
-
-    apps
-    |> MapSet.new()
-    |> MapSet.to_list()
   end
 
   defp module_loaded?(module) do
