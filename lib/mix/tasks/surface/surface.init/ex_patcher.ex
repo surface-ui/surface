@@ -296,6 +296,39 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     %__MODULE__{patcher | result: status}
   end
 
+  def append_code(patcher, string) do
+    patch(patcher, fn zipper ->
+      # If possible, we try to replace the last child so the whole block
+      # doesn't have to be formatted when using `Z.append_child/2`
+      case Move.last_child(zipper) do
+        nil ->
+          node = Sourceror.parse_string!(string)
+
+          zipper
+          |> Z.append_child(node)
+          |> Z.node()
+          |> Sourceror.to_string()
+
+        {{:., _, _}, _} ->
+          # We can't get the range of the dot call in a qualified call like
+          # `foo.bar()`, so we apply the patch to the parent. We get into this
+          # situation when the qualified call has no arguments: the first child
+          # will be a dot call of the form `{:., meta, [left, identifier]}`
+          # where `identifier` is a bare atom, like `:compilers`. The line
+          # metadata for the identifier lives in the parent call, making it
+          # impossible to generate a patch for the child call alone.
+          append_child_patch(zipper, string)
+
+        last_child_zipper ->
+          last_child_range = Sourceror.get_range(Z.node(last_child_zipper))
+          last_child_code = get_code_by_range(code(patcher), last_child_range)
+          indent = Keyword.get(last_child_range.start, :column, 1) - 1
+          change = last_child_code <> "\n" <> format_code!(string, indent)
+          %{change: change, range: last_child_range}
+      end
+    end)
+  end
+
   def append_child(patcher, string) do
     patch(patcher, fn zipper ->
       # If possible, we try to replace the last child so the whole block
@@ -415,5 +448,19 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
       nil ->
         pos
     end
+  end
+
+  defp add_indentation(code, n_spaces) do
+    code
+    |> String.split("\n")
+    |> Enum.map(fn line -> String.duplicate(" ", n_spaces) <> line end)
+    |> Enum.join("\n")
+  end
+
+  defp format_code!(code, indentation) do
+    opts = "mix.exs" |> Mix.Tasks.Format.formatter_opts_for_file()
+    opts = Keyword.update(opts, :line_length, 98, &(&1 - indentation))
+    formatted_code = Code.format_string!(code, opts) |> to_string()
+    add_indentation(formatted_code, indentation)
   end
 end

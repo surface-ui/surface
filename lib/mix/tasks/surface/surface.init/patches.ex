@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Surface.Init.Patches do
   def add_import_surface_to_view_macro(web_module) do
     %{
       name: "Add `import Surface` to view config",
-      patch: &Patchers.Phoenix.add_import_to_view_macro(&1, Surface, web_module),
+      patch: &Patchers.Phoenix.append_code_to_view_macro(&1, "import Surface", web_module),
       instructions: """
       In order to have `~F` available for any Phoenix view, you can import surface.
 
@@ -351,6 +351,34 @@ defmodule Mix.Tasks.Surface.Init.Patches do
           esbuild: ...,
           esbuild: {Esbuild, :install_and_run, [:catalogue, ~w(--sourcemap=inline --watch)]},
         ]
+      ```
+      """
+    }
+  end
+
+  # Layouts patches
+
+  def add_layout_config_to_view_macro(web_path, web_module) do
+    %{
+      name: "Configure `Surface.View` in view config",
+      patch:
+        &Patchers.Phoenix.append_code_to_view_macro(
+          &1,
+          ~s[use Surface.View, root: "#{web_path}/templates"],
+          web_module
+        ),
+      instructions: """
+      Set up `Surface.View` in your view config so you can uses Surface files as dead views/layouts.
+
+      # Example
+
+      ```elixir
+      def view do
+        quote do
+          ...
+          use Surface.View, root: "my_app_web/templates"\
+        end
+      end
       ```
       """
     }

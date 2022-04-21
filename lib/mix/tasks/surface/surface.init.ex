@@ -254,6 +254,20 @@ defmodule Mix.Tasks.Surface.Init do
     }
   end
 
+  defp patches_for(:layouts, assigns) do
+    %{
+      web_module: web_module,
+      web_path: web_path,
+      web_module_path: web_module_path
+    } = assigns
+
+    %{
+      web_module_path => [
+        Patches.add_layout_config_to_view_macro(web_path, web_module)
+      ]
+    }
+  end
+
   defp patches_for(_, _), do: %{}
 
   defp create_files_for(:demo, %{demo: true, web_path: web_path} = assigns) do
