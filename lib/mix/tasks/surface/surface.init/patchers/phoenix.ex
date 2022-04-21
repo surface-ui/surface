@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> enter_def(:view)
     |> enter_call(:quote)
     |> halt_if(&find_code_containing(&1, text_to_append), :already_patched)
-    |> append_code(text_to_append)
+    |> append_child_code(text_to_append)
   end
 
   def add_import_to_router(code, module, web_module) do
@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> enter_defmodule(Module.concat(web_module, Router))
     |> halt_if(&find_code_containing(&1, import_str), :already_patched)
     |> find_call_with_args(:use, fn args -> args == [inspect(web_module), ":router"] end)
-    |> replace(&"#{&1}\n\n  #{import_str}")
+    |> append_code("\n#{import_str}")
   end
 
   def append_route(code, route, web_module, route_code) do
@@ -37,8 +37,7 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> parse_string!()
     |> enter_defmodule(Module.concat(web_module, Router))
     |> halt_if(&find_code(&1, route), :already_patched)
-    |> last_child()
-    |> replace_code(&"#{&1}\n\n#{route_code}")
+    |> append_child_code("\n#{route_code}")
   end
 
   def append_route_to_main_scope(code, route, web_module, route_code) do
@@ -50,8 +49,7 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
     |> halt_if(&find_code(&1, route), :already_patched)
     |> find_call_with_args(:scope, &match?([~S("/"), ^web_module_str | _], &1))
     |> body()
-    |> last_child()
-    |> replace_code(&"#{&1}\n    #{route_code}")
+    |> append_child_code(route_code)
   end
 
   def add_reloadable_compiler_to_endpoint_config(code, compiler, context_app, web_module) do
@@ -115,16 +113,12 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
       %ExPatcher{node: nil} ->
         code
         |> parse_string!()
-        |> find_call_with_args(:config, &match?([":phoenix", ":json_library", _], &1))
-        |> last_arg()
-        |> replace(
-          &"""
-          #{&1}
+        |> find_call_with_args(:import, &(&1 == ["Config"]))
+        |> append_code("""
 
-          config :esbuild,
-            #{key}: #{value}\
-          """
-        )
+        config :esbuild,
+          #{key}: #{value}\
+        """)
 
       esbuild_patcher ->
         esbuild_patcher

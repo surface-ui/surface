@@ -33,16 +33,12 @@ defmodule Mix.Tasks.Surface.Init.Patchers.MixExs do
     |> parse_string!()
     |> enter_defmodule()
     |> halt_if(&find_def(&1, def), :already_patched)
-    |> last_child()
-    |> replace_code(
-      &"""
-      #{&1}
+    |> append_code("""
 
-        def #{def} do
-      #{body}
-        end\
-      """
-    )
+    def #{def} do
+    #{body}
+    end\
+    """)
   end
 
   def add_elixirc_paths_entry(code, env, body, already_pached_text) do

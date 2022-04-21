@@ -379,9 +379,6 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       assert updated_code == ~S"""
              import Config
 
-             # Use Jason for JSON parsing in Phoenix
-             config :phoenix, :json_library, Jason
-
              config :tailwind,
                version: "3.0.23",
                default: [
@@ -392,6 +389,9 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
                  ),
                  cd: Path.expand("../assets", __DIR__)
                ]
+
+             # Use Jason for JSON parsing in Phoenix
+             config :phoenix, :json_library, Jason
 
              # Import environment specific config. This must remain at the bottom
              # of this file so it overrides the configuration defined above.
@@ -1442,12 +1442,12 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       assert updated_code == ~S"""
              import Config
 
-             # Use Jason for JSON parsing in Phoenix
-             config :phoenix, :json_library, Jason
-
              config :surface, :components, [
                {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
              ]
+
+             # Use Jason for JSON parsing in Phoenix
+             config :phoenix, :json_library, Jason
 
              # Import environment specific config. This must remain at the bottom
              # of this file so it overrides the configuration defined above.
@@ -1494,13 +1494,13 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       code = ~S"""
       import Config
 
-      # Use Jason for JSON parsing in Phoenix
-      config :phoenix, :json_library, Jason
-
       config :surface, :components, [
         {Surface.Components.Markdown, default_class: "content"},
         {Surface.Components.Form.ErrorTag, default_translator: {MyAppWeb.ErrorHelpers, :translate_error}}
       ]
+
+      # Use Jason for JSON parsing in Phoenix
+      config :phoenix, :json_library, Jason
 
       # Import environment specific config. This must remain at the bottom
       # of this file so it overrides the configuration defined above.
@@ -1529,15 +1529,15 @@ defmodule Mix.Tasks.Surface.Init.PatchesTest do
       assert updated_code == ~S"""
              import Config
 
-             # Use Jason for JSON parsing in Phoenix
-             config :phoenix, :json_library, Jason
-
              config :esbuild,
                catalogue: [
                  args: ~w(../deps/surface_catalogue/assets/js/app.js --bundle --target=es2016 --minify --outdir=../priv/static/assets/catalogue),
                  cd: Path.expand("../assets", __DIR__),
                  env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
                ]
+
+             # Use Jason for JSON parsing in Phoenix
+             config :phoenix, :json_library, Jason
 
              # Import environment specific config. This must remain at the bottom
              # of this file so it overrides the configuration defined above.

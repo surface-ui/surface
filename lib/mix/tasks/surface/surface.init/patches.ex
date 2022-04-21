@@ -189,9 +189,9 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       patch: [
         &Patchers.MixExs.add_elixirc_paths_entry(&1, ":dev", ~S|["lib"] ++ catalogues()|, "catalogues()"),
         &Patchers.MixExs.append_def(&1, "catalogues", """
-            [
-              "priv/catalogue"
-            ]\
+          [
+            "priv/catalogue"
+          ]\
         """)
       ],
       instructions: """
@@ -250,12 +250,12 @@ defmodule Mix.Tasks.Surface.Init.Patches do
       patch: [
         &Patchers.Phoenix.add_import_to_router(&1, Surface.Catalogue.Router, web_module),
         &Patchers.Phoenix.append_route(&1, "/catalogue", web_module, """
-          if Mix.env() == :dev do
-            scope "/" do
-              pipe_through :browser
-              surface_catalogue "/catalogue"
-            end
-          end\
+        if Mix.env() == :dev do
+          scope "/" do
+            pipe_through :browser
+            surface_catalogue "/catalogue"
+          end
+        end\
         """)
       ],
       instructions: """
