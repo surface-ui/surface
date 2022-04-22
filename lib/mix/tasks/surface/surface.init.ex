@@ -54,13 +54,14 @@ defmodule Mix.Tasks.Surface.Init do
 
   alias Mix.Tasks.Surface.Init.Patcher
   alias Mix.Tasks.Surface.Init.ExPatcher
-  alias Mix.Tasks.Surface.Init.Patches
+  alias Mix.Tasks.Surface.Init.Commands
 
   @switches [
     formatter: :boolean,
     catalogue: :boolean,
     demo: :boolean,
     tailwind: :boolean,
+    layouts: :boolean,
     yes: :boolean,
     js_hooks: :boolean,
     error_tag: :boolean,
@@ -72,6 +73,7 @@ defmodule Mix.Tasks.Surface.Init do
     catalogue: false,
     demo: false,
     tailwind: false,
+    layouts: false,
     yes: false,
     js_hooks: true,
     error_tag: true,
@@ -101,13 +103,13 @@ defmodule Mix.Tasks.Surface.Init do
 
     patch_files_results =
       Patcher.patch_files([
-        patches_for(:common, assigns),
-        patches_for(:formatter, assigns),
-        patches_for(:error_tag, assigns),
-        patches_for(:js_hooks, assigns),
-        patches_for(:demo, assigns),
-        patches_for(:catalogue, assigns),
-        patches_for(:tailwind, assigns)
+        Commands.Common.file_patchers(assigns),
+        Commands.Formatter.file_patchers(assigns),
+        Commands.ErrorTag.file_patchers(assigns),
+        Commands.JsHooks.file_patchers(assigns),
+        Commands.Demo.file_patchers(assigns),
+        Commands.Catalogue.file_patchers(assigns),
+        Commands.Tailwind.file_patchers(assigns)
       ])
 
     create_files_results = [
@@ -135,140 +137,6 @@ defmodule Mix.Tasks.Surface.Init do
       end
     end
   end
-
-  defp patches_for(:common, assigns) do
-    %{
-      context_app: context_app,
-      web_module: web_module,
-      web_module_path: web_module_path,
-      web_path: web_path
-    } = assigns
-
-    %{
-      "config/dev.exs" => [
-        Patches.add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path)
-      ],
-      web_module_path => [
-        Patches.add_import_surface_to_view_macro(web_module)
-      ]
-    }
-  end
-
-  defp patches_for(:formatter, %{formatter: true}) do
-    if Version.match?(System.version(), ">= 1.13.0") do
-      %{
-        ".formatter.exs" => [
-          Patches.add_sface_files_to_inputs_in_formatter_config(),
-          Patches.add_surface_to_import_deps_in_formatter_config(),
-          Patches.add_formatter_plugin_to_formatter_config()
-        ]
-      }
-    else
-      %{
-        "mix.exs" => [
-          Patches.add_surface_formatter_to_mix_deps()
-        ],
-        ".formatter.exs" => [
-          Patches.add_surface_inputs_to_formatter_config(),
-          Patches.add_surface_to_import_deps_in_formatter_config()
-        ]
-      }
-    end
-  end
-
-  defp patches_for(:error_tag, %{error_tag: true, using_gettext?: true, web_module: web_module}) do
-    %{
-      "config/config.exs" => [
-        Patches.config_error_tag(web_module)
-      ]
-    }
-  end
-
-  defp patches_for(:js_hooks, %{js_hooks: true, context_app: context_app, web_module: web_module}) do
-    %{
-      "mix.exs" => [
-        Patches.add_surface_to_mix_compilers()
-      ],
-      "assets/js/app.js" => [
-        Patches.js_hooks()
-      ],
-      "config/dev.exs" => [
-        Patches.add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module)
-      ],
-      ".gitignore" => [
-        Patches.add_ignore_js_hooks_to_gitignore()
-      ]
-    }
-  end
-
-  defp patches_for(:catalogue, %{catalogue: true} = assigns) do
-    %{context_app: context_app, web_module: web_module, web_path: web_path} = assigns
-
-    %{
-      "mix.exs" => [
-        Patches.add_surface_catalogue_to_mix_deps(),
-        Patches.configure_catalogue_in_mix_exs()
-      ],
-      "config/config.exs" => [
-        Patches.configure_catalogue_esbuild()
-      ],
-      "config/dev.exs" => [
-        Patches.add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module),
-        Patches.add_catalogue_esbuild_watcher_to_endpoint_config(context_app, web_module)
-      ],
-      "#{web_path}/router.ex" => [
-        Patches.configure_catalogue_route(web_module)
-      ]
-    }
-  end
-
-  defp patches_for(:demo, %{demo: true} = assigns) do
-    %{web_module: web_module, web_path: web_path} = assigns
-
-    %{
-      "#{web_path}/router.ex" => [
-        Patches.configure_demo_route(web_module)
-      ]
-    }
-  end
-
-  defp patches_for(:tailwind, %{tailwind: true} = assigns) do
-    %{context_app: context_app, web_module: web_module} = assigns
-
-    %{
-      "mix.exs" => [
-        Patches.add_tailwind_to_mix_deps()
-      ],
-      "config/config.exs" => [
-        Patches.configure_tailwind()
-      ],
-      "config/dev.exs" => [
-        Patches.add_tailwind_watcher_to_endpoint_config(context_app, web_module)
-      ],
-      "assets/js/app.js" => [
-        Patches.remove_import_app_css()
-      ],
-      "assets/css/app.css" => [
-        Patches.add_tailwind_directives()
-      ]
-    }
-  end
-
-  defp patches_for(:layouts, assigns) do
-    %{
-      web_module: web_module,
-      web_path: web_path,
-      web_module_path: web_module_path
-    } = assigns
-
-    %{
-      web_module_path => [
-        Patches.add_layout_config_to_view_macro(web_path, web_module)
-      ]
-    }
-  end
-
-  defp patches_for(_, _), do: %{}
 
   defp create_files_for(:demo, %{demo: true, web_path: web_path} = assigns) do
     Patcher.create_files(assigns, [

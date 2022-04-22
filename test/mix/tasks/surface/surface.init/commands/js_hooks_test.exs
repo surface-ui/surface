@@ -1,0 +1,373 @@
+defmodule Mix.Tasks.Surface.Init.Commands.JSHooksTest do
+  use ExUnit.Case, async: true
+
+  alias Mix.Tasks.Surface.Init.Patcher
+  import Mix.Tasks.Surface.Init.Commands.JsHooks
+
+  describe "add_surface_to_mix_compilers" do
+    test "add :surface to compilers" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: [:gettext] ++ Mix.compilers(),
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               def project do
+                 [
+                   app: :my_app,
+                   compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+                   start_permanent: Mix.env() == :prod
+                 ]
+               end
+
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"}
+                 ]
+               end
+             end
+             """
+    end
+
+    test "add :surface to compilers when there are no other compilers" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: Mix.compilers(),
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               def project do
+                 [
+                   app: :my_app,
+                   compilers: Mix.compilers() ++ [:surface],
+                   start_permanent: Mix.env() == :prod
+                 ]
+               end
+
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"}
+                 ]
+               end
+             end
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+    end
+
+    test "don't apply it if maybe already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: [:whatever, :surface],
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      assert {:maybe_already_patched, ^code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+    end
+  end
+
+  describe "patch_js_hooks" do
+    test "configure JS hooks" do
+      code = """
+      // We import the CSS which is extracted to its own file by esbuild.
+      import "../css/app.css"
+
+      import {LiveSocket} from "phoenix_live_view"
+      import topbar from "../vendor/topbar"
+
+      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+      let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+
+      // connect if there are any LiveViews on the page
+      liveSocket.connect()
+
+      window.liveSocket = liveSocket
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, js_hooks())
+
+      assert updated_code == """
+             // We import the CSS which is extracted to its own file by esbuild.
+             import "../css/app.css"
+
+             import {LiveSocket} from "phoenix_live_view"
+             import topbar from "../vendor/topbar"
+             import Hooks from "./_hooks"
+
+             let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+             let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+
+             // connect if there are any LiveViews on the page
+             liveSocket.connect()
+
+             window.liveSocket = liveSocket
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      // We import the CSS which is extracted to its own file by esbuild.
+      import "../css/app.css"
+
+      import {LiveSocket} from "phoenix_live_view"
+      import topbar from "../vendor/topbar"
+      import Hooks from "./_hooks"
+
+      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+      let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+
+      // connect if there are any LiveViews on the page
+      liveSocket.connect()
+
+      window.liveSocket = liveSocket
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, js_hooks())
+    end
+
+    test "don't apply it if code has been modified" do
+      code = """
+      // We import the CSS which is extracted to its own file by esbuild.
+      import "../css/app.css"
+
+      import {LiveSocket} from "phoenix_live_view"
+      import topbar from "../vendor/topbar"
+      import Hooks from "./_hooks"
+
+      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+      // This line has been modified
+      let liveSocket =
+        new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+
+      // connect if there are any LiveViews on the page
+      liveSocket.connect()
+
+      window.liveSocket = liveSocket
+      """
+
+      {status, updated_code} = Patcher.patch_code(code, js_hooks())
+
+      assert updated_code == code
+      assert status == :cannot_patch
+    end
+  end
+
+  describe "add_ignore_js_hooks_to_gitignore" do
+    test "add entry to ignore generated JS hook files in .gitignore" do
+      code = """
+      # Ignore assets that are produced by build tools.
+      /priv/static/assets/
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, add_ignore_js_hooks_to_gitignore())
+
+      assert updated_code == """
+             # Ignore assets that are produced by build tools.
+             /priv/static/assets/
+
+             # Ignore generated js hook files for components
+             assets/js/_hooks/
+             """
+    end
+
+    test "trim spaces at the end so we can have a single line before the appended code" do
+      code = """
+      # Ignore assets that are produced by build tools.
+      /priv/static/assets/
+
+
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, add_ignore_js_hooks_to_gitignore())
+
+      assert updated_code == """
+             # Ignore assets that are produced by build tools.
+             /priv/static/assets/
+
+             # Ignore generated js hook files for components
+             assets/js/_hooks/
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      # Ignore assets that are produced by build tools.
+      /priv/static/assets/
+
+      # Ignore generated js hook files for components
+      assets/js/_hooks/
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, add_ignore_js_hooks_to_gitignore())
+    end
+  end
+
+  describe "add_surface_to_reloadable_compilers_in_endpoint_config" do
+    defmodule Elixir.MyTestAppWeb.Endpoint do
+      def config(:reloadable_compilers) do
+        [:gettext, :elixir]
+      end
+    end
+
+    test "add reloadable_compilers if there's no :reloadable_compilers key" do
+      code = """
+      import Config
+
+      # Watch static and templates for browser reloading.
+      config :my_app, MyTestAppWeb.Endpoint,
+        live_reload: [
+          patterns: []
+        ]
+      """
+
+      {:patched, updated_code} =
+        Patcher.patch_code(
+          code,
+          add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
+        )
+
+      assert updated_code == """
+             import Config
+
+             # Watch static and templates for browser reloading.
+             config :my_app, MyTestAppWeb.Endpoint,
+               reloadable_compilers: [:gettext, :elixir, :surface],
+               live_reload: [
+                 patterns: []
+               ]
+             """
+    end
+
+    test "add :surface to reloadable_compilers if :reloadable_compilers already exists" do
+      code = """
+      import Config
+
+      # Watch static and templates for browser reloading.
+      config :my_app, MyTestAppWeb.Endpoint,
+        reloadable_compilers: [:phoenix, :elixir],
+        live_reload: [
+          patterns: []
+        ]
+      """
+
+      {:patched, updated_code} =
+        Patcher.patch_code(
+          code,
+          add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
+        )
+
+      assert updated_code == """
+             import Config
+
+             # Watch static and templates for browser reloading.
+             config :my_app, MyTestAppWeb.Endpoint,
+               reloadable_compilers: [:phoenix, :elixir, :surface],
+               live_reload: [
+                 patterns: []
+               ]
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      import Config
+
+      # Watch static and templates for browser reloading.
+      config :my_app, MyTestAppWeb.Endpoint,
+        reloadable_compilers: [:phoenix, :elixir, :surface],
+        live_reload: [
+          patterns: []
+        ]
+      """
+
+      assert {:already_patched, ^code} =
+               Patcher.patch_code(
+                 code,
+                 add_surface_to_reloadable_compilers_in_endpoint_config(:my_app, MyTestAppWeb)
+               )
+    end
+  end
+end
