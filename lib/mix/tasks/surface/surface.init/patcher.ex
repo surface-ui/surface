@@ -40,8 +40,8 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     end
   end
 
-  # Copied from https://github.com/phoenixframework/phoenix/blob/adfaac06992323224f94a471f5d7b95aca4c3156/lib/mix/phoenix.ex#L29
-  # so we could pass the `opts` to `create_file`
+  # Copied from `copy_from/4` at https://github.com/phoenixframework/phoenix/blob/adfaac06992323224f94a471f5d7b95aca4c3156/lib/mix/phoenix.ex#L29
+  # so we could pass the `opts` to `create_file`.
   def copy_from(apps, source_dir, binding, mapping, opts) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 

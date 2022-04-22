@@ -22,14 +22,14 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   end
 
   @impl true
-  def create_files(%{layouts: true} = assigns) do
+  def create_files(%{layouts: true, tailwind: true} = assigns) do
     %{web_path: web_path} = assigns
 
     ProjectPatcher.create_files(assigns, [
-      {"layouts/index.sface", Path.join([web_path, "templates/page"])},
-      {"layouts/app.sface", Path.join([web_path, "templates/layout"])},
-      {"layouts/live.sface", Path.join([web_path, "templates/layout"])},
-      {"layouts/root.sface", Path.join([web_path, "templates/layout"])}
+      {"layouts/tailwind/index.sface", Path.join([web_path, "templates/page"])},
+      {"layouts/tailwind/app.sface", Path.join([web_path, "templates/layout"])},
+      {"layouts/tailwind/live.sface", Path.join([web_path, "templates/layout"])},
+      {"layouts/tailwind/root.sface", Path.join([web_path, "templates/layout"])}
     ])
   end
 
