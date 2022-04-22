@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.JS do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.JS do
   @moduledoc false
 
   def add_import(code, import_code) do

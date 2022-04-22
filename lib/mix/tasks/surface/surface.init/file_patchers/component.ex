@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.Component do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.Component do
   @moduledoc false
 
   alias Mix.Tasks.Surface.Init.ExPatcher

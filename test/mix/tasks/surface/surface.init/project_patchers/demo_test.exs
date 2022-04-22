@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.DemoTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.DemoTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.Demo
+  import Mix.Tasks.Surface.Init.ProjectPatchers.Demo
 
   describe "configure_demo_route" do
     test "add the demo route" do

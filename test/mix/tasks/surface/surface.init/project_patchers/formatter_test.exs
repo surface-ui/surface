@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.FormatterTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.Formatter
+  import Mix.Tasks.Surface.Init.ProjectPatchers.Formatter
 
   describe "add_surface_formatter_to_mix_deps" do
     test "add :surface_formatter to deps" do

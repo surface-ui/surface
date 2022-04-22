@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.Formatter do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.Formatter do
   @moduledoc false
 
   # Common patches for `.formatter`

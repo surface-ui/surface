@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.CommonTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CommonTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.Common
+  import Mix.Tasks.Surface.Init.ProjectPatchers.Common
 
   describe "add_surface_live_reload_pattern_to_endpoint_config" do
     test "update live_reload patterns" do

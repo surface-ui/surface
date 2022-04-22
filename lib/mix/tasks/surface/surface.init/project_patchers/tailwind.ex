@@ -1,9 +1,11 @@
-defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
-  alias Mix.Tasks.Surface.Init.ExPatcher
-  alias Mix.Tasks.Surface.Init.Patcher
-  alias Mix.Tasks.Surface.Init.Patchers
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
+  @moduledoc false
 
-  @behaviour Mix.Tasks.Surface.Init.Command
+  alias Mix.Tasks.Surface.Init.ExPatcher
+  alias Mix.Tasks.Surface.Init.ProjectPatcher
+  alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
   def file_patchers(%{tailwind: true} = assigns) do
@@ -32,7 +34,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
 
   @impl true
   def create_files(%{tailwind: true} = assigns) do
-    Patcher.create_files(assigns, [
+    ProjectPatcher.create_files(assigns, [
       {"tailwind/tailwind.config.js", "assets/"}
     ])
   end
@@ -43,7 +45,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
     %{
       name: "Add `tailwind` dependency",
       update_deps: [:tailwind],
-      patch: &Patchers.MixExs.add_dep(&1, ":tailwind", ~S["~> 0.1", runtime: Mix.env() == :dev]),
+      patch: &FilePatchers.MixExs.add_dep(&1, ":tailwind", ~S["~> 0.1", runtime: Mix.env() == :dev]),
       instructions: """
       Add `tailwind` to the list of dependencies in `mix.exs`.
 
@@ -64,7 +66,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
     %{
       name: "Update alias `assets.deploy` to run `tailwind default --minify`",
       patch:
-        &Patchers.MixExs.update_alias(
+        &FilePatchers.MixExs.update_alias(
           &1,
           :"assets.deploy",
           ~S(["tailwind default --minify", "esbuild default --minify", "phx.digest"]),
@@ -93,7 +95,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
     %{
       name: "Configure tailwind",
       patch:
-        &Patchers.Config.add_root_config(&1, :tailwind, """
+        &FilePatchers.Config.add_root_config(&1, :tailwind, """
         config :tailwind,
           version: "3.0.23",
           default: [
@@ -130,7 +132,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
     %{
       name: "Add the tailwind watcher",
       patch:
-        &Patchers.Phoenix.add_watcher_to_endpoint_config(
+        &FilePatchers.Phoenix.add_watcher_to_endpoint_config(
           &1,
           :tailwind,
           "{Tailwind, :install_and_run, [:default, ~w(--watch)]}",
@@ -159,7 +161,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
       name: "Remove importing app.css in app.js",
       instructions: "",
       patch: [
-        &Patchers.Text.remove_text(
+        &FilePatchers.Text.remove_text(
           &1,
           """
           // We import the CSS which is extracted to its own file by esbuild.
@@ -177,7 +179,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
       name: "Add tailwind directives to app.css",
       instructions: "",
       patch:
-        &Patchers.Text.prepend_text(
+        &FilePatchers.Text.prepend_text(
           &1,
           """
           @tailwind base;

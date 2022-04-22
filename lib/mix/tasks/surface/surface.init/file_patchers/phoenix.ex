@@ -1,7 +1,7 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.Phoenix do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
   @moduledoc false
 
-  # Common patches for phoenix projects
+  # Common patches for phoenix files
 
   alias Mix.Tasks.Surface.Init.ExPatcher
   import ExPatcher

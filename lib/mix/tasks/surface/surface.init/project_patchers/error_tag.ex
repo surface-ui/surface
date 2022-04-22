@@ -1,7 +1,9 @@
-defmodule Mix.Tasks.Surface.Init.Commands.ErrorTag do
-  alias Mix.Tasks.Surface.Init.Patchers
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.ErrorTag do
+  @moduledoc false
 
-  @behaviour Mix.Tasks.Surface.Init.Command
+  alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
   def file_patchers(%{error_tag: true, using_gettext?: true} = assigns) do
@@ -37,7 +39,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.ErrorTag do
     """
 
     patch =
-      &Patchers.Component.add_config(
+      &FilePatchers.Component.add_config(
         &1,
         "Surface.Components.Form.ErrorTag",
         "default_translator: {#{inspect(web_module)}.ErrorHelpers, :translate_error}"

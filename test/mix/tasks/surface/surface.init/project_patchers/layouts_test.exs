@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.LayoutsTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.LayoutsTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.Layouts
+  import Mix.Tasks.Surface.Init.ProjectPatchers.Layouts
 
   describe "add_layout_config_to_view_macro" do
     test "add layout config to view macro" do

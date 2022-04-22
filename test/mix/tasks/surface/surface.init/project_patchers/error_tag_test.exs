@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.ErrorTagTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.ErrorTagTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.ErrorTag
+  import Mix.Tasks.Surface.Init.ProjectPatchers.ErrorTag
 
   describe "patch_config_error_tag" do
     test "add `config :surface, :components` with the ErrorTag config" do

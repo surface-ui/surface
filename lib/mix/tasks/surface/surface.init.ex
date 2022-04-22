@@ -52,9 +52,9 @@ defmodule Mix.Tasks.Surface.Init do
 
   use Mix.Task
 
-  alias Mix.Tasks.Surface.Init.Patcher
+  alias Mix.Tasks.Surface.Init.ProjectPatcher
   alias Mix.Tasks.Surface.Init.ExPatcher
-  alias Mix.Tasks.Surface.Init.Commands
+  alias Mix.Tasks.Surface.Init.ProjectPatchers
 
   @switches [
     formatter: :boolean,
@@ -80,15 +80,15 @@ defmodule Mix.Tasks.Surface.Init do
     dep_install: true
   ]
 
-  @commands [
-    Commands.Common,
-    Commands.Formatter,
-    Commands.ErrorTag,
-    Commands.JsHooks,
-    Commands.Demo,
-    Commands.Catalogue,
-    Commands.Tailwind,
-    Commands.Layouts
+  @project_patchers [
+    ProjectPatchers.Common,
+    ProjectPatchers.Formatter,
+    ProjectPatchers.ErrorTag,
+    ProjectPatchers.JsHooks,
+    ProjectPatchers.Demo,
+    ProjectPatchers.Catalogue,
+    ProjectPatchers.Tailwind,
+    ProjectPatchers.Layouts
   ]
 
   @doc false
@@ -113,15 +113,15 @@ defmodule Mix.Tasks.Surface.Init do
     end
 
     patch_files_results =
-      @commands
+      @project_patchers
       |> Enum.map(& &1.file_patchers(assigns))
-      |> Patcher.patch_files()
+      |> ProjectPatcher.patch_files()
 
-    create_files_results = Enum.map(@commands, & &1.create_files(assigns))
+    create_files_results = Enum.map(@project_patchers, & &1.create_files(assigns))
 
-    Patcher.print_results(patch_files_results ++ create_files_results)
+    ProjectPatcher.print_results(patch_files_results ++ create_files_results)
 
-    updated_deps = Patcher.extract_updated_deps_from_results(patch_files_results)
+    updated_deps = ProjectPatcher.extract_updated_deps_from_results(patch_files_results)
 
     if updated_deps != [] && assigns.dep_install do
       Mix.shell().info("\nThe following dependencies were updated/added to your project:\n")

@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.CatalogueTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.Catalogue
+  import Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue
 
   describe "add_surface_catalogue_to_mix_deps" do
     test "add :surface_catalogue to deps" do

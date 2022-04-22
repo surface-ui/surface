@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.MixExs do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
   @moduledoc false
 
   # Common patches for `mix.exs`

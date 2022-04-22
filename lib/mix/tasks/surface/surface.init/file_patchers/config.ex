@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.Config do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.Config do
   @moduledoc false
 
   # Common patches for config files

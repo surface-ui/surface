@@ -1,8 +1,10 @@
-defmodule Mix.Tasks.Surface.Init.Commands.Demo do
-  alias Mix.Tasks.Surface.Init.Patcher
-  alias Mix.Tasks.Surface.Init.Patchers
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Demo do
+  @moduledoc false
 
-  @behaviour Mix.Tasks.Surface.Init.Command
+  alias Mix.Tasks.Surface.Init.ProjectPatcher
+  alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
   def file_patchers(%{demo: true} = assigns) do
@@ -21,7 +23,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Demo do
   def create_files(%{demo: true} = assigns) do
     %{web_path: web_path} = assigns
 
-    Patcher.create_files(assigns, [
+    ProjectPatcher.create_files(assigns, [
       {"demo/hero.ex", Path.join([web_path, "components"])},
       {"demo/demo.ex", Path.join([web_path, "live"])}
     ])
@@ -32,7 +34,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Demo do
   def configure_demo_route(web_module) do
     %{
       name: "Configure demo route",
-      patch: &Patchers.Phoenix.append_route_to_main_scope(&1, ~S("/demo"), web_module, ~S(live "/demo", Demo)),
+      patch: &FilePatchers.Phoenix.append_route_to_main_scope(&1, ~S("/demo"), web_module, ~S(live "/demo", Demo)),
       instructions: """
       Update your `router.ex` configuration so the demo can be available at `/demo`.
 

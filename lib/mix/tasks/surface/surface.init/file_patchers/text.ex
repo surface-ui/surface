@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.Text do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.Text do
   @moduledoc false
 
   def append_line(code, text, already_pached_text) do

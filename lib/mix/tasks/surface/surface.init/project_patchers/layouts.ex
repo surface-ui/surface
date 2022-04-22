@@ -1,7 +1,9 @@
-defmodule Mix.Tasks.Surface.Init.Commands.Layouts do
-  alias Mix.Tasks.Surface.Init.Patchers
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
+  @moduledoc false
 
-  @behaviour Mix.Tasks.Surface.Init.Command
+  alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
   def file_patchers(%{layouts: true} = assigns) do
@@ -18,7 +20,10 @@ defmodule Mix.Tasks.Surface.Init.Commands.Layouts do
     }
   end
 
-  def file_patchers(_assigns), do: []
+  def file_patchers(_assigns) do
+    # TODO
+    []
+  end
 
   @impl true
   def create_files(_assigns), do: []
@@ -27,7 +32,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Layouts do
     %{
       name: "Configure `Surface.View` in view config",
       patch:
-        &Patchers.Phoenix.append_code_to_view_macro(
+        &FilePatchers.Phoenix.append_code_to_view_macro(
           &1,
           ~s[use Surface.View, root: "#{web_path}/templates"],
           web_module

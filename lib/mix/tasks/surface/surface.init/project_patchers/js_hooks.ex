@@ -1,7 +1,9 @@
-defmodule Mix.Tasks.Surface.Init.Commands.JsHooks do
-  alias Mix.Tasks.Surface.Init.Patchers
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JsHooks do
+  @moduledoc false
 
-  @behaviour Mix.Tasks.Surface.Init.Command
+  alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
   def file_patchers(%{js_hooks: true} = assigns) do
@@ -31,7 +33,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.JsHooks do
   def add_surface_to_mix_compilers() do
     %{
       name: "Add :surface to compilers",
-      patch: &Patchers.MixExs.add_compiler(&1, ":surface"),
+      patch: &FilePatchers.MixExs.add_compiler(&1, ":surface"),
       instructions: """
       Append `:surface` to the list of compilers.
 
@@ -53,7 +55,8 @@ defmodule Mix.Tasks.Surface.Init.Commands.JsHooks do
   def add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module) do
     %{
       name: "Add :surface to :reloadable_compilers",
-      patch: &Patchers.Phoenix.add_reloadable_compiler_to_endpoint_config(&1, :surface, context_app, web_module),
+      patch:
+        &FilePatchers.Phoenix.add_reloadable_compiler_to_endpoint_config(&1, :surface, context_app, web_module),
       instructions: """
       Add :surface to the list of reloadable compilers.
 
@@ -83,8 +86,8 @@ defmodule Mix.Tasks.Surface.Init.Commands.JsHooks do
       ```
       """,
       patch: [
-        &Patchers.JS.add_import(&1, ~S[import Hooks from "./_hooks"]),
-        &Patchers.Text.replace_line_text(
+        &FilePatchers.JS.add_import(&1, ~S[import Hooks from "./_hooks"]),
+        &FilePatchers.Text.replace_line_text(
           &1,
           ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})],
           ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})]
@@ -98,7 +101,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.JsHooks do
       name: "Ignore generated JS hook files for components",
       instructions: "",
       patch:
-        &Patchers.Text.append_line(
+        &FilePatchers.Text.append_line(
           &1,
           """
           # Ignore generated js hook files for components

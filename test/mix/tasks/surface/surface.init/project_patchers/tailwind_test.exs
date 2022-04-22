@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.TailwindTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.Tailwind
+  import Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind
 
   describe "add_tailwind_to_mix_deps" do
     test "add :tailwind to deps" do

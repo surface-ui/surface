@@ -1,7 +1,9 @@
-defmodule Mix.Tasks.Surface.Init.Commands.Common do
-  alias Mix.Tasks.Surface.Init.Patchers
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
+  @moduledoc false
 
-  @behaviour Mix.Tasks.Surface.Init.Command
+  alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
   def file_patchers(assigns) do
@@ -29,7 +31,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Common do
     %{
       name: "Update patterns in :reload_patterns",
       patch:
-        &Patchers.Phoenix.replace_live_reload_pattern_in_endpoint_config(
+        &FilePatchers.Phoenix.replace_live_reload_pattern_in_endpoint_config(
           &1,
           ~s[~r"#{web_path}/(live|views)/.*(ex)$"],
           ~s[~r"#{web_path}/(live|views|components)/.*(ex|sface|js)$"],
@@ -58,7 +60,7 @@ defmodule Mix.Tasks.Surface.Init.Commands.Common do
   def add_import_surface_to_view_macro(web_module) do
     %{
       name: "Add `import Surface` to view config",
-      patch: &Patchers.Phoenix.append_code_to_view_macro(&1, "import Surface", web_module),
+      patch: &FilePatchers.Phoenix.append_code_to_view_macro(&1, "import Surface", web_module),
       instructions: """
       In order to have `~F` available for any Phoenix view, you can import surface.
 

@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Surface.Init.Commands.JSHooksTest do
+defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JSHooksTest do
   use ExUnit.Case, async: true
 
   alias Mix.Tasks.Surface.Init.Patcher
-  import Mix.Tasks.Surface.Init.Commands.JsHooks
+  import Mix.Tasks.Surface.Init.ProjectPatchers.JsHooks
 
   describe "add_surface_to_mix_compilers" do
     test "add :surface to compilers" do
