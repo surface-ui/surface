@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Surface.Init.Commands.Demo do
+  alias Mix.Tasks.Surface.Init.Patcher
   alias Mix.Tasks.Surface.Init.Patchers
 
   @behaviour Mix.Tasks.Surface.Init.Command
@@ -17,6 +18,15 @@ defmodule Mix.Tasks.Surface.Init.Commands.Demo do
   def file_patchers(_assigns), do: []
 
   @impl true
+  def create_files(%{demo: true} = assigns) do
+    %{web_path: web_path} = assigns
+
+    Patcher.create_files(assigns, [
+      {"demo/hero.ex", Path.join([web_path, "components"])},
+      {"demo/demo.ex", Path.join([web_path, "live"])}
+    ])
+  end
+
   def create_files(_assigns), do: []
 
   def configure_demo_route(web_module) do

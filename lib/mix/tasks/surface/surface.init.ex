@@ -80,6 +80,17 @@ defmodule Mix.Tasks.Surface.Init do
     dep_install: true
   ]
 
+  @commands [
+    Commands.Common,
+    Commands.Formatter,
+    Commands.ErrorTag,
+    Commands.JsHooks,
+    Commands.Demo,
+    Commands.Catalogue,
+    Commands.Tailwind,
+    Commands.Layouts
+  ]
+
   @doc false
   def run(args) do
     opts = parse_opts(args)
@@ -102,21 +113,11 @@ defmodule Mix.Tasks.Surface.Init do
     end
 
     patch_files_results =
-      Patcher.patch_files([
-        Commands.Common.file_patchers(assigns),
-        Commands.Formatter.file_patchers(assigns),
-        Commands.ErrorTag.file_patchers(assigns),
-        Commands.JsHooks.file_patchers(assigns),
-        Commands.Demo.file_patchers(assigns),
-        Commands.Catalogue.file_patchers(assigns),
-        Commands.Tailwind.file_patchers(assigns)
-      ])
+      @commands
+      |> Enum.map(& &1.file_patchers(assigns))
+      |> Patcher.patch_files()
 
-    create_files_results = [
-      create_files_for(:demo, assigns),
-      create_files_for(:demo_catalogue, assigns),
-      create_files_for(:tailwind, assigns)
-    ]
+    create_files_results = Enum.map(@commands, & &1.create_files(assigns))
 
     Patcher.print_results(patch_files_results ++ create_files_results)
 
@@ -137,32 +138,6 @@ defmodule Mix.Tasks.Surface.Init do
       end
     end
   end
-
-  defp create_files_for(:demo, %{demo: true, web_path: web_path} = assigns) do
-    Patcher.create_files(assigns, [
-      {"demo/hero.ex", Path.join([web_path, "components"])},
-      {"demo/demo.ex", Path.join([web_path, "live"])}
-    ])
-  end
-
-  defp create_files_for(:demo_catalogue, %{demo: true, catalogue: true, web_module: web_module} = assigns) do
-    web_folder = web_module |> inspect() |> Macro.underscore()
-    dest = Path.join(["priv/catalogue/", web_folder])
-
-    Patcher.create_files(assigns, [
-      {"demo/example01.ex", dest},
-      {"demo/example02.ex", dest},
-      {"demo/playground.ex", dest}
-    ])
-  end
-
-  defp create_files_for(:tailwind, assigns) do
-    Patcher.create_files(assigns, [
-      {"tailwind/tailwind.config.js", "assets/"}
-    ])
-  end
-
-  defp create_files_for(_, _), do: []
 
   defp parse_opts(args) do
     {opts, _parsed} = OptionParser.parse!(args, strict: @switches)

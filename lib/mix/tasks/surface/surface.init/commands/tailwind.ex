@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
-  alias Mix.Tasks.Surface.Init.Patchers
   alias Mix.Tasks.Surface.Init.ExPatcher
+  alias Mix.Tasks.Surface.Init.Patcher
+  alias Mix.Tasks.Surface.Init.Patchers
 
   @behaviour Mix.Tasks.Surface.Init.Command
 
@@ -30,6 +31,12 @@ defmodule Mix.Tasks.Surface.Init.Commands.Tailwind do
   def file_patchers(_assigns), do: []
 
   @impl true
+  def create_files(%{tailwind: true} = assigns) do
+    Patcher.create_files(assigns, [
+      {"tailwind/tailwind.config.js", "assets/"}
+    ])
+  end
+
   def create_files(_assigns), do: []
 
   def add_tailwind_to_mix_deps() do

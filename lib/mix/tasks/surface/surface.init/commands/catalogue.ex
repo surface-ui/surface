@@ -29,7 +29,9 @@ defmodule Mix.Tasks.Surface.Init.Commands.Catalogue do
   def file_patchers(_assigns), do: []
 
   @impl true
-  def create_files(%{demo: true, catalogue: true, web_module: web_module} = assigns) do
+  def create_files(%{catalogue: true, demo: true} = assigns) do
+    %{web_module: web_module} = assigns
+
     web_folder = web_module |> inspect() |> Macro.underscore()
     dest = Path.join(["priv/catalogue/", web_folder])
 
