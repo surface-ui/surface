@@ -156,6 +156,7 @@ defmodule Mix.Tasks.Surface.Init do
     |> Map.new()
     |> Map.merge(%{
       context_app: context_app,
+      app_module: base,
       web_module: web_module,
       web_module_path: web_module_path,
       web_path: web_path,

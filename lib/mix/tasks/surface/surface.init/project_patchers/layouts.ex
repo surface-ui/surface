@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   @moduledoc false
 
   alias Mix.Tasks.Surface.Init.FilePatchers
+  alias Mix.Tasks.Surface.Init.ProjectPatcher
 
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
@@ -20,12 +21,18 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
     }
   end
 
-  def file_patchers(_assigns) do
-    # TODO
-    []
+  @impl true
+  def create_files(%{layouts: true} = assigns) do
+    %{web_path: web_path} = assigns
+
+    ProjectPatcher.create_files(assigns, [
+      {"layouts/index.sface", Path.join([web_path, "templates/page"])},
+      {"layouts/app.sface", Path.join([web_path, "templates/layout"])},
+      {"layouts/live.sface", Path.join([web_path, "templates/layout"])},
+      {"layouts/root.sface", Path.join([web_path, "templates/layout"])}
+    ])
   end
 
-  @impl true
   def create_files(_assigns), do: []
 
   def add_layout_config_to_view_macro(web_path, web_module) do
