@@ -112,20 +112,7 @@ defmodule Mix.Tasks.Surface.Init do
       end
     end
 
-    patch_files_results =
-      @project_patchers
-      |> Enum.map(& &1.file_patchers(assigns))
-      |> ProjectPatcher.patch_files()
-
-    create_files_results =
-      for project_patcher <- @project_patchers do
-        specs = project_patcher.create_files(assigns)
-        ProjectPatcher.run_file_specs(specs, assigns)
-      end
-
-    ProjectPatcher.print_results(patch_files_results ++ create_files_results)
-
-    updated_deps = ProjectPatcher.extract_updated_deps_from_results(patch_files_results)
+    {:ok, updated_deps} = ProjectPatcher.run(@project_patchers, assigns)
 
     if updated_deps != [] && assigns.dep_install do
       Mix.shell().info("\nThe following dependencies were updated/added to your project:\n")

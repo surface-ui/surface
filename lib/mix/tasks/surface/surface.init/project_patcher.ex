@@ -1,8 +1,7 @@
 defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
   @moduledoc false
 
-  @callback file_patchers(assigns :: map()) :: [map()]
-  @callback create_files(assigns :: map()) :: list()
+  @callback specs(assigns :: map()) :: list()
 
   alias Mix.Tasks.Surface.Init.Patcher
 
@@ -13,19 +12,31 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
     :cannot_read_file
   ]
 
-  def patch_files(list) do
-    list = Enum.reduce(list, fn item, acc -> Map.merge(acc, item, fn _k, a, b -> a ++ b end) end)
+  def run(project_patchers, assigns) do
+    results =
+      project_patchers
+      |> Enum.flat_map(& &1.specs(assigns))
+      |> run_specs(assigns)
 
-    for {file, patches} <- list do
-      Patcher.patch_file(file, List.wrap(patches))
-    end
+    print_results(results)
+
+    updated_deps = extract_updated_deps_from_results(results)
+
+    {:ok, updated_deps}
   end
 
-  def run_file_specs(specs, assigns) do
-    Enum.map(specs, &run_file_spec(&1, assigns))
+  defp run_specs(specs, assigns) do
+    {patch_specs, other_specs} = Enum.split_with(specs, &match?({:patch, _, _}, &1))
+
+    grouped_patch_specs =
+      patch_specs
+      |> Enum.group_by(fn {_, file, _} -> file end, fn {_, _, patches} -> patches end)
+      |> Enum.map(fn {k, v} -> {:patch, k, List.flatten(v)} end)
+
+    Enum.map(grouped_patch_specs ++ other_specs, &run_spec(&1, assigns))
   end
 
-  def run_file_spec({:create, src, dest}, assigns) do
+  defp run_spec({:create, src, dest}, assigns) do
     %{yes: yes} = assigns
 
     file_name = Path.basename(src)
@@ -33,11 +44,15 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
     Patcher.create_file(src, target, assigns, force: yes)
   end
 
-  def run_file_spec({:delete, file}, _assigns) do
+  defp run_spec({:delete, file}, _assigns) do
     Patcher.delete_file(file)
   end
 
-  def extract_updated_deps_from_results(patch_files_results) do
+  defp run_spec({:patch, file, patchers}, _assigns) do
+    Patcher.patch_file(file, List.wrap(patchers))
+  end
+
+  defp extract_updated_deps_from_results(patch_files_results) do
     patch_files_results
     |> List.flatten()
     |> Enum.map(fn
@@ -47,7 +62,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
     |> List.flatten()
   end
 
-  def print_results(results) do
+  defp print_results(results) do
     results = List.flatten(results)
     n_patches = length(results)
     n_files = Enum.map(results, fn {_, file, _} -> file end) |> Enum.uniq() |> length()

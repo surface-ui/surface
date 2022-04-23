@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(assigns) do
+  def specs(assigns) do
     %{
       context_app: context_app,
       web_module: web_module,
@@ -14,18 +14,17 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
       web_path: web_path
     } = assigns
 
-    %{
-      "config/dev.exs" => [
-        add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path)
-      ],
-      web_module_path => [
-        add_import_surface_to_view_macro(web_module)
-      ]
-    }
+    [
+      {:patch, "config/dev.exs",
+       [
+         add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path)
+       ]},
+      {:patch, web_module_path,
+       [
+         add_import_surface_to_view_macro(web_module)
+       ]}
+    ]
   end
-
-  @impl true
-  def create_files(_assigns), do: []
 
   def add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path) do
     %{

@@ -7,38 +7,20 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{tailwind: true} = assigns) do
+  def specs(%{tailwind: true} = assigns) do
     %{context_app: context_app, web_module: web_module} = assigns
 
-    %{
-      "mix.exs" => [
-        add_tailwind_to_mix_deps()
-      ],
-      "config/config.exs" => [
-        configure_tailwind()
-      ],
-      "config/dev.exs" => [
-        add_tailwind_watcher_to_endpoint_config(context_app, web_module)
-      ],
-      "assets/js/app.js" => [
-        remove_import_app_css()
-      ],
-      "assets/css/app.css" => [
-        add_tailwind_directives()
-      ]
-    }
-  end
-
-  def file_patchers(_assigns), do: []
-
-  @impl true
-  def create_files(%{tailwind: true}) do
     [
+      {:patch, "mix.exs", [add_tailwind_to_mix_deps()]},
+      {:patch, "config/config.exs", [configure_tailwind()]},
+      {:patch, "config/dev.exs", [add_tailwind_watcher_to_endpoint_config(context_app, web_module)]},
+      {:patch, "assets/js/app.js", [remove_import_app_css()]},
+      {:patch, "assets/css/app.css", [add_tailwind_directives()]},
       {:create, "tailwind/tailwind.config.js", "assets/"}
     ]
   end
 
-  def create_files(_assigns), do: []
+  def specs(_assigns), do: []
 
   def add_tailwind_to_mix_deps() do
     %{

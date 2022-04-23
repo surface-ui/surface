@@ -6,26 +6,11 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{layouts: true} = assigns) do
-    %{
-      web_module: web_module,
-      web_path: web_path,
-      web_module_path: web_module_path
-    } = assigns
-
-    %{
-      web_module_path => [
-        add_layout_config_to_view_macro(web_path, web_module)
-      ]
-    }
-  end
-
-  @impl true
-  # TODO: Rename to file_specs
-  def create_files(%{layouts: true, tailwind: true} = assigns) do
-    %{web_path: web_path} = assigns
+  def specs(%{layouts: true, tailwind: true} = assigns) do
+    %{web_module: web_module, web_path: web_path, web_module_path: web_module_path} = assigns
 
     [
+      {:patch, web_module_path, [add_layout_config_to_view_macro(web_path, web_module)]},
       {:create, "layouts/tailwind/index.sface", Path.join(web_path, "templates/page")},
       {:delete, Path.join(web_path, "templates/page/index.html.heex")},
       {:create, "layouts/tailwind/app.sface", Path.join(web_path, "templates/layout")},
@@ -37,7 +22,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
     ]
   end
 
-  def create_files(_assigns), do: []
+  def specs(%{layouts: true}) do
+    # TODO
+    []
+  end
+
+  def specs(_assigns), do: []
 
   def add_layout_config_to_view_macro(web_path, web_module) do
     %{

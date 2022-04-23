@@ -6,44 +6,50 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{catalogue: true} = assigns) do
-    %{context_app: context_app, web_module: web_module, web_path: web_path} = assigns
-
-    %{
-      "mix.exs" => [
-        add_surface_catalogue_to_mix_deps(),
-        configure_catalogue_in_mix_exs()
-      ],
-      "config/config.exs" => [
-        configure_catalogue_esbuild()
-      ],
-      "config/dev.exs" => [
-        add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module),
-        add_catalogue_esbuild_watcher_to_endpoint_config(context_app, web_module)
-      ],
-      "#{web_path}/router.ex" => [
-        configure_catalogue_route(web_module)
-      ]
-    }
-  end
-
-  def file_patchers(_assigns), do: []
-
-  @impl true
-  def create_files(%{catalogue: true, demo: true} = assigns) do
+  def specs(%{catalogue: true, demo: true} = assigns) do
     %{web_module: web_module} = assigns
 
     web_folder = web_module |> inspect() |> Macro.underscore()
     dest = Path.join(["priv/catalogue/", web_folder])
 
-    [
-      {:create, "demo/example01.ex", dest},
-      {:create, "demo/example02.ex", dest},
-      {:create, "demo/playground.ex", dest}
-    ]
+    patches(assigns) ++
+      [
+        {:create, "demo/example01.ex", dest},
+        {:create, "demo/example02.ex", dest},
+        {:create, "demo/playground.ex", dest}
+      ]
   end
 
-  def create_files(_assigns), do: []
+  def specs(%{catalogue: true} = assigns) do
+    patches(assigns)
+  end
+
+  def specs(_assigns), do: []
+
+  defp patches(assigns) do
+    %{context_app: context_app, web_module: web_module, web_path: web_path} = assigns
+
+    [
+      {:patch, "mix.exs",
+       [
+         add_surface_catalogue_to_mix_deps(),
+         configure_catalogue_in_mix_exs()
+       ]},
+      {:patch, "config/config.exs",
+       [
+         configure_catalogue_esbuild()
+       ]},
+      {:patch, "config/dev.exs",
+       [
+         add_catalogue_live_reload_pattern_to_endpoint_config(context_app, web_module),
+         add_catalogue_esbuild_watcher_to_endpoint_config(context_app, web_module)
+       ]},
+      {:patch, "#{web_path}/router.ex",
+       [
+         configure_catalogue_route(web_module)
+       ]}
+    ]
+  end
 
   def add_surface_catalogue_to_mix_deps do
     %{

@@ -6,29 +6,17 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Demo do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{demo: true} = assigns) do
+  def specs(%{demo: true} = assigns) do
     %{web_module: web_module, web_path: web_path} = assigns
 
-    %{
-      "#{web_path}/router.ex" => [
-        configure_demo_route(web_module)
-      ]
-    }
-  end
-
-  def file_patchers(_assigns), do: []
-
-  @impl true
-  def create_files(%{demo: true} = assigns) do
-    %{web_path: web_path} = assigns
-
     [
+      {:patch, "#{web_path}/router.ex", [configure_demo_route(web_module)]},
       {:create, "demo/hero.ex", Path.join([web_path, "components"])},
       {:create, "demo/demo.ex", Path.join([web_path, "live"])}
     ]
   end
 
-  def create_files(_assigns), do: []
+  def specs(_assigns), do: []
 
   def configure_demo_route(web_module) do
     %{

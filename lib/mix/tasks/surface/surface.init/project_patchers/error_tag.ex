@@ -6,20 +6,15 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.ErrorTag do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{error_tag: true, using_gettext?: true} = assigns) do
+  def specs(%{error_tag: true, using_gettext?: true} = assigns) do
     %{web_module: web_module} = assigns
 
-    %{
-      "config/config.exs" => [
-        config_error_tag(web_module)
-      ]
-    }
+    [
+      {:patch, "config/config.exs", [config_error_tag(web_module)]}
+    ]
   end
 
-  def file_patchers(_assigns), do: []
-
-  @impl true
-  def create_files(_assigns), do: []
+  def specs(_assigns), do: []
 
   def config_error_tag(web_module) do
     name = "Configure the ErrorTag component to use Gettext"

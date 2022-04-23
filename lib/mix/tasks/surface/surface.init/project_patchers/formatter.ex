@@ -6,32 +6,32 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Formatter do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{formatter: true}) do
+  def specs(%{formatter: true}) do
     if Version.match?(System.version(), ">= 1.13.0") do
-      %{
-        ".formatter.exs" => [
-          add_sface_files_to_inputs_in_formatter_config(),
-          add_surface_to_import_deps_in_formatter_config(),
-          add_formatter_plugin_to_formatter_config()
-        ]
-      }
+      [
+        {:patch, ".formatter.exs",
+         [
+           add_sface_files_to_inputs_in_formatter_config(),
+           add_surface_to_import_deps_in_formatter_config(),
+           add_formatter_plugin_to_formatter_config()
+         ]}
+      ]
     else
-      %{
-        "mix.exs" => [
-          add_surface_formatter_to_mix_deps()
-        ],
-        ".formatter.exs" => [
-          add_surface_inputs_to_formatter_config(),
-          add_surface_to_import_deps_in_formatter_config()
-        ]
-      }
+      [
+        {:patch, "mix.exs",
+         [
+           add_surface_formatter_to_mix_deps()
+         ]},
+        {:patch, ".formatter.exs",
+         [
+           add_surface_inputs_to_formatter_config(),
+           add_surface_to_import_deps_in_formatter_config()
+         ]}
+      ]
     end
   end
 
-  def file_patchers(_assigns), do: []
-
-  @impl true
-  def create_files(_assigns), do: []
+  def specs(_assigns), do: []
 
   def add_surface_formatter_to_mix_deps() do
     %{

@@ -6,29 +6,21 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JsHooks do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def file_patchers(%{js_hooks: true} = assigns) do
+  def specs(%{js_hooks: true} = assigns) do
     %{context_app: context_app, web_module: web_module} = assigns
 
-    %{
-      "mix.exs" => [
-        add_surface_to_mix_compilers()
-      ],
-      "assets/js/app.js" => [
-        js_hooks()
-      ],
-      "config/dev.exs" => [
-        add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module)
-      ],
-      ".gitignore" => [
-        add_ignore_js_hooks_to_gitignore()
-      ]
-    }
+    [
+      {:patch, "mix.exs", [add_surface_to_mix_compilers()]},
+      {:patch, "assets/js/app.js", [js_hooks()]},
+      {:patch, "config/dev.exs",
+       [
+         add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module)
+       ]},
+      {:patch, ".gitignore", [add_ignore_js_hooks_to_gitignore()]}
+    ]
   end
 
-  def file_patchers(_assigns), do: []
-
-  @impl true
-  def create_files(_assigns), do: []
+  def specs(_assigns), do: []
 
   def add_surface_to_mix_compilers() do
     %{
