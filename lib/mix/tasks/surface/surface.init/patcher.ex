@@ -25,8 +25,7 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
         {:ok, code} ->
           {updated_code, results} =
             Enum.reduce(patches, {code, []}, fn patch_spec, {code, results} ->
-              %{patch: patch} = patch_spec
-              {result, updated_code} = patch |> List.wrap() |> run_patch_funs(code)
+              {result, updated_code} = patch_code(code, patch_spec)
               {updated_code, [{result, file, patch_spec} | results]}
             end)
 
