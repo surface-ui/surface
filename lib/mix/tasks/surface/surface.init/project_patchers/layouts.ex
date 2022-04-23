@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   @moduledoc false
 
   alias Mix.Tasks.Surface.Init.FilePatchers
-  alias Mix.Tasks.Surface.Init.ProjectPatcher
 
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
@@ -22,21 +21,20 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   end
 
   @impl true
+  # TODO: Rename to file_specs
   def create_files(%{layouts: true, tailwind: true} = assigns) do
     %{web_path: web_path} = assigns
 
-    ProjectPatcher.create_files(assigns, [
-      {"layouts/tailwind/index.sface", Path.join(web_path, "templates/page")},
-      {"layouts/tailwind/app.sface", Path.join(web_path, "templates/layout")},
-      {"layouts/tailwind/live.sface", Path.join(web_path, "templates/layout")},
-      {"layouts/tailwind/root.sface", Path.join(web_path, "templates/layout")}
-    ]) ++
-    ProjectPatcher.delete_files([
-      Path.join(web_path, "templates/page/index.html.heex"),
-      Path.join(web_path, "templates/layout/app.html.heex"),
-      Path.join(web_path, "templates/layout/live.html.heex"),
-      Path.join(web_path, "templates/layout/root.html.heex")
-    ])
+    [
+      {:create, "layouts/tailwind/index.sface", Path.join(web_path, "templates/page")},
+      {:delete, Path.join(web_path, "templates/page/index.html.heex")},
+      {:create, "layouts/tailwind/app.sface", Path.join(web_path, "templates/layout")},
+      {:delete, Path.join(web_path, "templates/layout/app.html.heex")},
+      {:create, "layouts/tailwind/live.sface", Path.join(web_path, "templates/layout")},
+      {:delete, Path.join(web_path, "templates/layout/live.html.heex")},
+      {:create, "layouts/tailwind/root.sface", Path.join(web_path, "templates/layout")},
+      {:delete, Path.join(web_path, "templates/layout/root.html.heex")}
+    ]
   end
 
   def create_files(_assigns), do: []

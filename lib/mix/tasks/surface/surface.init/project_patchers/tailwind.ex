@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
   @moduledoc false
 
   alias Mix.Tasks.Surface.Init.ExPatcher
-  alias Mix.Tasks.Surface.Init.ProjectPatcher
   alias Mix.Tasks.Surface.Init.FilePatchers
 
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
@@ -33,10 +32,10 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
   def file_patchers(_assigns), do: []
 
   @impl true
-  def create_files(%{tailwind: true} = assigns) do
-    ProjectPatcher.create_files(assigns, [
-      {"tailwind/tailwind.config.js", "assets/"}
-    ])
+  def create_files(%{tailwind: true}) do
+    [
+      {:create, "tailwind/tailwind.config.js", "assets/"}
+    ]
   end
 
   def create_files(_assigns), do: []

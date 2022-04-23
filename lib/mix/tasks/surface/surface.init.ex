@@ -117,7 +117,11 @@ defmodule Mix.Tasks.Surface.Init do
       |> Enum.map(& &1.file_patchers(assigns))
       |> ProjectPatcher.patch_files()
 
-    create_files_results = Enum.map(@project_patchers, & &1.create_files(assigns))
+    create_files_results =
+      for project_patcher <- @project_patchers do
+        specs = project_patcher.create_files(assigns)
+        ProjectPatcher.run_file_specs(specs, assigns)
+      end
 
     ProjectPatcher.print_results(patch_files_results ++ create_files_results)
 

@@ -21,20 +21,20 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
     end
   end
 
-  def create_files(assigns, src_dest_list) do
-    %{yes: yes} = assigns
-
-    for {src, dest} <- src_dest_list do
-      file_name = Path.basename(src)
-      target = Path.join(dest, file_name)
-      Patcher.create_file(src, target, assigns, force: yes)
-    end
+  def run_file_specs(specs, assigns) do
+    Enum.map(specs, &run_file_spec(&1, assigns))
   end
 
-  def delete_files(list) do
-    for file <- list do
-      Patcher.delete_file(file)
-    end
+  def run_file_spec({:create, src, dest}, assigns) do
+    %{yes: yes} = assigns
+
+    file_name = Path.basename(src)
+    target = Path.join(dest, file_name)
+    Patcher.create_file(src, target, assigns, force: yes)
+  end
+
+  def run_file_spec({:delete, file}, _assigns) do
+    Patcher.delete_file(file)
   end
 
   def extract_updated_deps_from_results(patch_files_results) do

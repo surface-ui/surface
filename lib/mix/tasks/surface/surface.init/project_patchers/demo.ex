@@ -1,7 +1,6 @@
 defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Demo do
   @moduledoc false
 
-  alias Mix.Tasks.Surface.Init.ProjectPatcher
   alias Mix.Tasks.Surface.Init.FilePatchers
 
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
@@ -23,10 +22,10 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Demo do
   def create_files(%{demo: true} = assigns) do
     %{web_path: web_path} = assigns
 
-    ProjectPatcher.create_files(assigns, [
-      {"demo/hero.ex", Path.join([web_path, "components"])},
-      {"demo/demo.ex", Path.join([web_path, "live"])}
-    ])
+    [
+      {:create, "demo/hero.ex", Path.join([web_path, "components"])},
+      {:create, "demo/demo.ex", Path.join([web_path, "live"])}
+    ]
   end
 
   def create_files(_assigns), do: []

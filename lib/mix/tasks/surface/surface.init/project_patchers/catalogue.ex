@@ -1,7 +1,6 @@
 defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   @moduledoc false
 
-  alias Mix.Tasks.Surface.Init.ProjectPatcher
   alias Mix.Tasks.Surface.Init.FilePatchers
 
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
@@ -37,11 +36,11 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
     web_folder = web_module |> inspect() |> Macro.underscore()
     dest = Path.join(["priv/catalogue/", web_folder])
 
-    ProjectPatcher.create_files(assigns, [
-      {"demo/example01.ex", dest},
-      {"demo/example02.ex", dest},
-      {"demo/playground.ex", dest}
-    ])
+    [
+      {:create, "demo/example01.ex", dest},
+      {:create, "demo/example02.ex", dest},
+      {:create, "demo/playground.ex", dest}
+    ]
   end
 
   def create_files(_assigns), do: []
