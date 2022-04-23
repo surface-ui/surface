@@ -8,16 +8,16 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
 
   def add_import_to_view_macro(code, module, web_module) do
     import_str = "import #{inspect(module)}"
-    append_code_to_view_macro(code, import_str, web_module)
+    append_code_to_view_macro(code, import_str, import_str, web_module)
   end
 
-  def append_code_to_view_macro(code, text_to_append, web_module) do
+  def append_code_to_view_macro(code, text_to_append, already_pached_text, web_module) do
     code
     |> parse_string!()
     |> enter_defmodule(web_module)
     |> enter_def(:view)
     |> enter_call(:quote)
-    |> halt_if(&find_code_containing(&1, text_to_append), :already_patched)
+    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
     |> append_child_code(text_to_append)
   end
 

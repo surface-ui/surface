@@ -26,10 +26,16 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
     %{web_path: web_path} = assigns
 
     ProjectPatcher.create_files(assigns, [
-      {"layouts/tailwind/index.sface", Path.join([web_path, "templates/page"])},
-      {"layouts/tailwind/app.sface", Path.join([web_path, "templates/layout"])},
-      {"layouts/tailwind/live.sface", Path.join([web_path, "templates/layout"])},
-      {"layouts/tailwind/root.sface", Path.join([web_path, "templates/layout"])}
+      {"layouts/tailwind/index.sface", Path.join(web_path, "templates/page")},
+      {"layouts/tailwind/app.sface", Path.join(web_path, "templates/layout")},
+      {"layouts/tailwind/live.sface", Path.join(web_path, "templates/layout")},
+      {"layouts/tailwind/root.sface", Path.join(web_path, "templates/layout")}
+    ]) ++
+    ProjectPatcher.delete_files([
+      Path.join(web_path, "templates/page/index.html.heex"),
+      Path.join(web_path, "templates/layout/app.html.heex"),
+      Path.join(web_path, "templates/layout/live.html.heex"),
+      Path.join(web_path, "templates/layout/root.html.heex")
     ])
   end
 
@@ -42,6 +48,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
         &FilePatchers.Phoenix.append_code_to_view_macro(
           &1,
           ~s[use Surface.View, root: "#{web_path}/templates"],
+          "use Surface.View",
           web_module
         ),
       instructions: """

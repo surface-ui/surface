@@ -13,8 +13,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
     :cannot_read_file
   ]
 
-  @template_folder "priv/templates/surface.init"
-
   def patch_files(list) do
     list = Enum.reduce(list, fn item, acc -> Map.merge(acc, item, fn _k, a, b -> a ++ b end) end)
 
@@ -26,20 +24,17 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
   def create_files(assigns, src_dest_list) do
     %{yes: yes} = assigns
 
-    mapping =
-      Enum.map(src_dest_list, fn {src, dest} ->
-        file_name = Path.basename(src)
-        {:eex, src, Path.join(dest, file_name)}
-      end)
+    for {src, dest} <- src_dest_list do
+      file_name = Path.basename(src)
+      target = Path.join(dest, file_name)
+      Patcher.create_file(src, target, assigns, force: yes)
+    end
+  end
 
-    results = Patcher.copy_from(paths(), @template_folder, Map.to_list(assigns), mapping, force: yes)
-
-    results
-    |> Enum.zip(mapping)
-    |> Enum.map(fn
-      {true, {_, _, dest}} -> {:patched, dest, %{name: "Create #{dest}", instructions: ""}}
-      {false, {_, _, dest}} -> {:already_patched, dest, %{name: "Create #{dest}", instructions: ""}}
-    end)
+  def delete_files(list) do
+    for file <- list do
+      Patcher.delete_file(file)
+    end
   end
 
   def extract_updated_deps_from_results(patch_files_results) do
@@ -121,6 +116,4 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
       IO.ANSI.Docs.print(message, "text/markdown", print_opts)
     end)
   end
-
-  defp paths(), do: [".", :surface]
 end

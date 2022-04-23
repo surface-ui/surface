@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
   def add_import_surface_to_view_macro(web_module) do
     %{
       name: "Add `import Surface` to view config",
-      patch: &FilePatchers.Phoenix.append_code_to_view_macro(&1, "import Surface", web_module),
+      patch: &FilePatchers.Phoenix.add_import_to_view_macro(&1, Surface, web_module),
       instructions: """
       In order to have `~F` available for any Phoenix view, you can import surface.
 

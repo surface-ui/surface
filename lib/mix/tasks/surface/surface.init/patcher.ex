@@ -3,6 +3,8 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
 
   alias Mix.Tasks.Surface.Init.ExPatcher
 
+  @template_folder "priv/templates/surface.init"
+
   @result_precedence %{
     :unpatched => 0,
     :patched => 1,
@@ -18,55 +20,55 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
   end
 
   def patch_file(file, patches) do
-    Mix.shell().info([:green, "* patching ", :reset, file])
+    log(:patching, file, fn ->
+      case File.read(file) do
+        {:ok, code} ->
+          {updated_code, results} =
+            Enum.reduce(patches, {code, []}, fn patch_spec, {code, results} ->
+              %{patch: patch} = patch_spec
+              {result, updated_code} = patch |> List.wrap() |> run_patch_funs(code)
+              {updated_code, [{result, file, patch_spec} | results]}
+            end)
 
-    case File.read(file) do
-      {:ok, code} ->
-        {updated_code, results} =
-          Enum.reduce(patches, {code, []}, fn patch_spec, {code, results} ->
-            %{patch: patch} = patch_spec
-            {result, updated_code} = patch |> List.wrap() |> run_patch_funs(code)
-            {updated_code, [{result, file, patch_spec} | results]}
-          end)
+          File.write!(file, updated_code)
+          Enum.reverse(results)
 
-        File.write!(file, updated_code)
-        Enum.reverse(results)
+        {:error, :enoent} ->
+          to_results(patches, :file_not_found, file)
 
-      {:error, :enoent} ->
-        to_results(patches, :file_not_found, file)
-
-      {:error, _reason} ->
-        to_results(patches, :cannot_read_file, file)
-    end
+        {:error, _reason} ->
+          to_results(patches, :cannot_read_file, file)
+      end
+    end)
   end
 
-  # Copied from `copy_from/4` at https://github.com/phoenixframework/phoenix/blob/adfaac06992323224f94a471f5d7b95aca4c3156/lib/mix/phoenix.ex#L29
-  # so we could pass the `opts` to `create_file`.
-  def copy_from(apps, source_dir, binding, mapping, opts) when is_list(mapping) do
-    roots = Enum.map(apps, &to_app_source(&1, source_dir))
+  def delete_file(file) do
+    patch_spec = %{name: "Delete #{file}", instructions: ""}
 
-    for {format, source_file_path, target} <- mapping do
-      source =
-        Enum.find_value(roots, fn root ->
-          source = Path.join(root, source_file_path)
-          if File.exists?(source), do: source
-        end) || raise "could not find #{source_file_path} in any of the sources"
-
-      case format do
-        :text ->
-          Mix.Generator.create_file(target, File.read!(source), opts)
-
-        :eex ->
-          Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
-
-        :new_eex ->
-          if File.exists?(target) do
-            :ok
-          else
-            Mix.Generator.create_file(target, EEx.eval_file(source, binding), opts)
-          end
+    log(:deleting, file, fn ->
+      if File.exists?(file) do
+        File.rm!(file)
+        {:patched, file, patch_spec}
+      else
+        {:already_patched, file, patch_spec}
       end
-    end
+    end)
+  end
+
+  def create_file(source_file_path, target, assigns, opts) do
+    opts = Keyword.put(opts, :quiet, true)
+    root = Application.app_dir(:surface, @template_folder)
+    source = Path.join(root, source_file_path)
+
+    patch_spec = %{name: "Create #{target}", instructions: ""}
+
+    log(:creating, target, fn ->
+      if Mix.Generator.create_file(target, EEx.eval_file(source, Map.to_list(assigns)), opts) do
+        {:patched, target, patch_spec}
+      else
+        {:already_patched, target, patch_spec}
+      end
+    end)
   end
 
   defp run_patch_funs(funs, code) do
@@ -109,9 +111,30 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     end)
   end
 
-  defp to_app_source(path, source_dir) when is_binary(path),
-    do: Path.join(path, source_dir)
+  defp log(action, file, fun) do
+    prefix = "* #{action} "
+    Mix.shell().info([:green, prefix, :reset, file])
 
-  defp to_app_source(app, source_dir) when is_atom(app),
-    do: Application.app_dir(app, source_dir)
+    result = fun.()
+
+    skipped_postfix =
+      case result |> List.wrap() |> Enum.split_with(&match?({:patched, _, _}, &1)) do
+        {[], _not_patched} ->
+          [:yellow, " (skipped)", :reset]
+
+        {_patched, []} ->
+          []
+
+        {patched, not_patched} ->
+          n_not_patched = length(not_patched)
+          total = n_not_patched + length(patched)
+          [:yellow, " (skipped #{n_not_patched} of #{total} changes)", :reset]
+      end
+
+    if skipped_postfix != [] do
+      Mix.shell().info([IO.ANSI.cursor_up(), :clear_line, :yellow, prefix, :reset, file] ++ skipped_postfix)
+    end
+
+    result
+  end
 end
