@@ -112,22 +112,9 @@ defmodule Mix.Tasks.Surface.Init do
       end
     end
 
-    {:ok, updated_deps} = ProjectPatcher.run(@project_patchers, assigns)
-
-    if updated_deps != [] && assigns.dep_install do
-      Mix.shell().info("\nThe following dependencies were updated/added to your project:\n")
-
-      for dep <- updated_deps do
-        Mix.shell().info(["  * #{dep}"])
-      end
-
-      Mix.shell().info("")
-
-      if assigns.yes || Mix.shell().yes?("Do you want to fetch and install them now?") do
-        Mix.shell().cmd("mix deps.get", [])
-        Mix.shell().cmd("mix deps.compile", [])
-      end
-    end
+    @project_patchers
+    |> ProjectPatcher.run(assigns)
+    |> handle_results(assigns)
   end
 
   defp parse_opts(args) do
@@ -171,5 +158,89 @@ defmodule Mix.Tasks.Surface.Init do
     |> ExPatcher.enter_def(:translate_error)
     |> ExPatcher.find_code_containing("Gettext.dngettext")
     |> ExPatcher.valid?()
+  end
+
+  defp handle_results(results, assigns) do
+    %{
+      n_patches: n_patches,
+      n_files: n_files,
+      n_patches_applied: n_patches_applied,
+      n_patches_already_patched: n_patches_already_patched,
+      n_patches_skipped: n_patches_skipped,
+      patches_with_messages: patches_with_messages,
+      updated_deps: updated_deps
+    } = results
+
+    n_patches_with_messages = length(patches_with_messages)
+
+    Mix.shell().info(["\nFinished running #{n_patches} patches for #{n_files} files."])
+
+    if n_patches_with_messages > 0 do
+      Mix.shell().info([:yellow, "#{n_patches_with_messages} messages emitted."])
+    end
+
+    summary = "#{n_patches_applied} changes applied, #{n_patches_skipped} skipped."
+
+    if n_patches_already_patched == n_patches do
+      Mix.shell().info([:yellow, summary])
+      Mix.shell().info([:cyan, "It looks like this project has already been patched."])
+    else
+      Mix.shell().info([:green, summary])
+    end
+
+    print_opts = [doc_bold: [:yellow], doc_underline: [:italic, :yellow], width: 90]
+
+    patches_with_messages
+    |> Enum.with_index(1)
+    |> Enum.each(fn {{result, file, %{name: name, instructions: instructions}}, index} ->
+      {reason, details} =
+        case result do
+          :maybe_already_patched ->
+            {"it seems the patch has already been applied or manually set up", ""}
+
+          :cannot_patch ->
+            {"unexpected file content",
+             """
+
+             *Either the original file has changed or it has been modified by the user \
+             and it's no longer safe to automatically patch it.*
+             """}
+
+          :file_not_found ->
+            {"file not found", ""}
+
+          :cannot_read_file ->
+            {"cannot read file", ""}
+        end
+
+      IO.ANSI.Docs.print_headings(["Message ##{index}"], print_opts)
+
+      message = """
+      Patch _"#{name}"_ was not applied to `#{file}`.
+
+      Reason: *#{reason}.*
+      #{details}
+      If you believe you still need to apply this patch, you must do it manually with the following instructions:
+
+      #{instructions}
+      """
+
+      IO.ANSI.Docs.print(message, "text/markdown", print_opts)
+    end)
+
+    if updated_deps != [] && assigns.dep_install do
+      Mix.shell().info("\nThe following dependencies were updated/added to your project:\n")
+
+      for dep <- updated_deps do
+        Mix.shell().info(["  * #{dep}"])
+      end
+
+      Mix.shell().info("")
+
+      if assigns.yes || Mix.shell().yes?("Do you want to fetch and install them now?") do
+        Mix.shell().cmd("mix deps.get", [])
+        Mix.shell().cmd("mix deps.compile", [])
+      end
+    end
   end
 end
