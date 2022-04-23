@@ -1401,6 +1401,12 @@ defmodule Surface.FormatterTest do
     """)
   end
 
+  test "void tags are preserved" do
+    assert_formatter_doesnt_change("""
+    <embed>
+    """)
+  end
+
   test "indent option" do
     assert_formatter_outputs(
       """
