@@ -6,25 +6,27 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def specs(%{layouts: true, tailwind: true} = assigns) do
-    %{web_module: web_module, web_path: web_path, web_module_path: web_module_path} = assigns
+  def specs(%{layouts: true} = assigns) do
+    %{
+      web_module: web_module,
+      web_path: web_path,
+      web_module_path: web_module_path,
+      tailwind: tailwind?
+    } = assigns
+
+    subfolder = if tailwind?, do: "tailwind", else: "default"
 
     [
       {:patch, web_module_path, [add_layout_config_to_view_macro(web_path, web_module)]},
-      {:create, "layouts/tailwind/index.sface", Path.join(web_path, "templates/page")},
+      {:create, "layouts/#{subfolder}/index.sface", Path.join(web_path, "templates/page")},
       {:delete, Path.join(web_path, "templates/page/index.html.heex")},
-      {:create, "layouts/tailwind/app.sface", Path.join(web_path, "templates/layout")},
+      {:create, "layouts/#{subfolder}/app.sface", Path.join(web_path, "templates/layout")},
       {:delete, Path.join(web_path, "templates/layout/app.html.heex")},
-      {:create, "layouts/tailwind/live.sface", Path.join(web_path, "templates/layout")},
+      {:create, "layouts/#{subfolder}/live.sface", Path.join(web_path, "templates/layout")},
       {:delete, Path.join(web_path, "templates/layout/live.html.heex")},
-      {:create, "layouts/tailwind/root.sface", Path.join(web_path, "templates/layout")},
+      {:create, "layouts/#{subfolder}/root.sface", Path.join(web_path, "templates/layout")},
       {:delete, Path.join(web_path, "templates/layout/root.html.heex")}
     ]
-  end
-
-  def specs(%{layouts: true}) do
-    # TODO
-    []
   end
 
   def specs(_assigns), do: []
