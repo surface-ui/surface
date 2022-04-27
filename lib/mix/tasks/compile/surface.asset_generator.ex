@@ -49,11 +49,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   end
 
   defp get_colocated_assets() do
-    for [app] <- applications(),
-        mod <- app_modules(app),
-        module_loaded?(mod),
-        function_exported?(mod, :component_type, 0),
-        reduce: {[], [], []} do
+    for mod <- components(), module_loaded?(mod), reduce: {[], [], []} do
       {js_files, css_files, diagnostics} ->
         component_file = mod.module_info() |> get_in([:compile, :source]) |> to_string()
         base_file = component_file |> Path.rootname()
@@ -157,36 +153,53 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     unsused_files
   end
 
-  defp app_modules(app) do
-    if Application.ensure_loaded(app) == :ok do
-      app
-      |> Application.app_dir()
-      |> Path.join("ebin/Elixir.*.beam")
-      |> Path.wildcard()
-      |> Enum.map(&beam_to_module/1)
+  defp components() do
+    project_app = Mix.Project.config()[:app]
+    :ok = Application.ensure_loaded(project_app)
+    project_deps_apps = Application.spec(project_app, :applications) || []
+    opts = Application.get_env(:surface, :compiler, [])
+    only_web_namespace = Keyword.get(opts, :only_web_namespace, false)
+
+    for app <- [project_app | project_deps_apps],
+        deps_apps = Application.spec(app)[:applications] || [],
+        app in [:surface, project_app] or :surface in deps_apps,
+        prefix = app_beams_prefix(app, project_app, only_web_namespace),
+        {dir, files} = app_beams_dir_and_files(app),
+        file <- files,
+        List.starts_with?(file, prefix) do
+      :filename.join(dir, file)
+    end
+    |> Enum.chunk_every(50)
+    |> Task.async_stream(fn files ->
+      for file <- files,
+          {:ok, {_, [{_, chunk} | _]}} = :beam_lib.chunks(file, ['Attr']),
+          chunk |> :erlang.binary_to_term() |> Keyword.get(:component_type) do
+        file |> Path.basename(".beam") |> String.to_atom()
+      end
+    end)
+    |> Enum.flat_map(fn {:ok, result} -> result end)
+  end
+
+  defp app_beams_prefix(app, project_app, only_web_namespace) do
+    if only_web_namespace and app == project_app do
+      Mix.Phoenix.base()
+      |> Mix.Phoenix.web_module()
+      |> Module.concat(".")
+      |> to_charlist()
     else
-      []
+      'Elixir.'
     end
   end
 
-  defp beam_to_module(path) do
-    path |> Path.basename(".beam") |> String.to_atom()
-  end
+  defp app_beams_dir_and_files(app) do
+    dir =
+      app
+      |> Application.app_dir()
+      |> Path.join("ebin")
+      |> String.to_charlist()
 
-  defp applications do
-    # If we invoke :application.loaded_applications/0,
-    # it can error if we don't call safe_fixtable before.
-    # Since in both cases we are reaching over the
-    # application controller internals, we choose to match
-    # for performance.
-    apps = :ets.match(:ac_tab, {{:loaded, :"$1"}, :_})
-
-    # Make sure we have the project's app (it might not be there when first compiled)
-    apps = [[Mix.Project.config()[:app]] | apps]
-
-    apps
-    |> MapSet.new()
-    |> MapSet.to_list()
+    {:ok, files} = :file.list_dir(dir)
+    {dir, files}
   end
 
   defp module_loaded?(module) do

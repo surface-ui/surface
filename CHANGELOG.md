@@ -6,6 +6,16 @@
 
   * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
 
+## v0.7.4 (2022-04-18)
+
+  * Optimize the surface compiler for assets generation
+  * Improve support for JS hooks in umbrella projects (#591)
+  * Suppress `Mix.Tasks.Format` behaviour warning on Elixir < `v0.13`
+
+## v0.7.3 (2022-03-18)
+
+  * Fix loading component prop's default values
+
 ## v0.7.2 (2022-03-17)
 
   * Support more extensions other than `.js` as colocated hooks (`jsx`, `ts` and `tsx`) (#576)

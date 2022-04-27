@@ -49,7 +49,9 @@ defmodule Surface.Formatter.Plugin do
 
   """
 
-  @behaviour Mix.Tasks.Format
+  if Version.match?(System.version(), ">= 1.13.0") do
+    @behaviour Mix.Tasks.Format
+  end
 
   def features(_opts) do
     [sigils: [:F], extensions: [".sface"]]

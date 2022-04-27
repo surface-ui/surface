@@ -4,12 +4,17 @@ defmodule Surface.CompilerTest do
   defmodule Macro do
     use Surface.MacroComponent
 
-    def expand(_, _, meta) do
+    prop text, :string, required: true
+
+    def expand(attributes, _, meta) do
+      text = Surface.AST.find_attribute_value(attributes, :text).value
+      capitalized_text = String.capitalize(text)
+
       %Surface.AST.Tag{
         element: "div",
         directives: [],
         attributes: [],
-        children: ["I'm a macro"],
+        children: [capitalized_text],
         meta: meta
       }
     end
@@ -464,7 +469,7 @@ defmodule Surface.CompilerTest do
   describe "macro components" do
     test "expanded at top level" do
       code = """
-      <#Macro />
+      <#Macro text="i'm a macro" />
       """
 
       [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -474,7 +479,7 @@ defmodule Surface.CompilerTest do
 
     test "expanded within a component" do
       code = """
-      <Div><#Macro></#Macro></Div>
+      <Div><#Macro text="i'm a macro"></#Macro></Div>
       """
 
       [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -503,7 +508,7 @@ defmodule Surface.CompilerTest do
 
     test "expanded within an html tag" do
       code = """
-      <div><#Macro /></div>
+      <div><#Macro text="i'm a macro"/></div>
       """
 
       [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
@@ -516,6 +521,12 @@ defmodule Surface.CompilerTest do
                  }
                ]
              } = node
+    end
+
+    test "should render an error without required prop" do
+      code = "<#Macro />"
+      [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
+      assert %Surface.AST.Error{directives: [], message: "cannot render <#Macro> (missing required props)"} = node
     end
   end
 
@@ -826,42 +837,6 @@ defmodule Surface.CompilerSyncTest do
     assert line == 2
   end
 
-  test "warning on missing required property" do
-    code = """
-    <Column />
-    """
-
-    {:warn, line, message} = run_compile(code, __ENV__)
-
-    assert message =~ ~S(Missing required property "title" for component <Column>)
-    assert line == 1
-  end
-
-  test "warning on missing id for LiveComponent" do
-    code = """
-    <GridLive />
-    """
-
-    {:warn, line, message} = run_compile(code, __ENV__)
-
-    assert message =~ ~S"""
-           Missing required property "id" for component <GridLive>
-
-           Hint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
-           If you meant to create a stateless component, you can switch to `use Surface.Component`.
-           """
-
-    assert line == 1
-  end
-
-  test "disable warning on missing required property when :props is passed" do
-    code = """
-    <Column :props={title: "My Title"}/>
-    """
-
-    assert {:ok, _result} = run_compile(code, __ENV__)
-  end
-
   test "warning on stateful components with more than one root element" do
     id = :erlang.unique_integer([:positive]) |> to_string()
 
@@ -1044,6 +1019,29 @@ defmodule Surface.CompilerSyncTest do
 
     assert output =~ "stateful live components must have a HTML root element"
     assert extract_line(output) == 6
+  end
+
+  test "VoidTag is a valid HTML root element" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+
+    view_code = """
+    defmodule TestLiveComponent_#{id} do
+      use Surface.LiveComponent
+
+      def render(assigns) do
+        ~F"\""
+        <br />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(view_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    refute output =~ "stateful live components must have a HTML root element"
   end
 
   test "warning on component with required slot that has a default value" do

@@ -286,6 +286,11 @@ defmodule Surface.Compiler.TokenizerTest do
       assert [{:tag_open, "#Macro", [], %{self_close: true, macro?: true}}] = tokens
     end
 
+    test "void tag" do
+      tokens = tokenize!("<embed>")
+      assert [{:tag_open, "embed", [], %{void_tag?: true}}] = tokens
+    end
+
     test "compute line and column" do
       tokens =
         tokenize!("""
