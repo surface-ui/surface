@@ -1,4 +1,5 @@
 ExUnit.start()
+ExUnit.configure(exclude: [integration: true])
 
 defmodule Router do
   use Phoenix.Router

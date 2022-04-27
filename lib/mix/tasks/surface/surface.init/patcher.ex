@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     |> run_patch_funs(code)
   end
 
-  def patch_file(file, patches) do
+  def patch_file(file, patches, assigns) do
     log(:patching, file, fn ->
       case File.read(file) do
         {:ok, code} ->
@@ -29,7 +29,10 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
               {updated_code, [{result, file, patch_spec} | results]}
             end)
 
-          File.write!(file, updated_code)
+          unless assigns.dry_run do
+            File.write!(file, updated_code)
+          end
+
           Enum.reverse(results)
 
         {:error, :enoent} ->
@@ -41,12 +44,15 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     end)
   end
 
-  def delete_file(file) do
+  def delete_file(file, assigns) do
     patch_spec = %{name: "Delete #{file}", instructions: ""}
 
     log(:deleting, file, fn ->
       if File.exists?(file) do
-        File.rm!(file)
+        unless assigns.dry_run do
+          File.rm!(file)
+        end
+
         {:patched, file, patch_spec}
       else
         {:already_patched, file, patch_spec}
@@ -54,20 +60,45 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
     end)
   end
 
-  def create_file(source_file_path, target, assigns, opts) do
-    opts = Keyword.put(opts, :quiet, true)
+  def create_file(source_file_path, target, assigns) do
     root = Application.app_dir(:surface, @template_folder)
     source = Path.join(root, source_file_path)
 
     patch_spec = %{name: "Create #{target}", instructions: ""}
 
     log(:creating, target, fn ->
-      if Mix.Generator.create_file(target, EEx.eval_file(source, Map.to_list(assigns)), opts) do
+      contents = EEx.eval_file(source, Map.to_list(assigns))
+
+      if overwrite?(target, contents, assigns) do
+        unless assigns.dry_run do
+          File.mkdir_p!(Path.dirname(target))
+          File.write!(target, contents)
+        end
+
         {:patched, target, patch_spec}
       else
         {:already_patched, target, patch_spec}
       end
     end)
+  end
+
+  def overwrite?(path, contents, assigns) do
+    case File.read(path) do
+      {:ok, binary} ->
+        if binary == IO.iodata_to_binary(contents) do
+          false
+        else
+          if assigns.yes do
+            true
+          else
+            full = Path.expand(path)
+            Mix.shell().yes?(Path.relative_to_cwd(full) <> " already exists, overwrite?")
+          end
+        end
+
+      _ ->
+        true
+    end
   end
 
   defp run_patch_funs(funs, code) do

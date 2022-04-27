@@ -55,19 +55,17 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatcher do
   end
 
   defp run_spec({:create, src, dest}, assigns) do
-    %{yes: yes} = assigns
-
     file_name = Path.basename(src)
     target = Path.join(dest, file_name)
-    Patcher.create_file(src, target, assigns, force: yes)
+    Patcher.create_file(src, target, assigns)
   end
 
-  defp run_spec({:delete, file}, _assigns) do
-    Patcher.delete_file(file)
+  defp run_spec({:delete, file}, assigns) do
+    Patcher.delete_file(file, assigns)
   end
 
-  defp run_spec({:patch, file, patchers}, _assigns) do
-    Patcher.patch_file(file, List.wrap(patchers))
+  defp run_spec({:patch, file, patchers}, assigns) do
+    Patcher.patch_file(file, List.wrap(patchers), assigns)
   end
 
   defp extract_updated_deps_from_results(patch_files_results) do
