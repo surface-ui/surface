@@ -265,6 +265,20 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
     end)
   end
 
+  def prepend_list_item(patcher, string, opts \\ []) do
+    opts = Keyword.merge([preserve_indentation: false], opts)
+    node = Sourceror.parse_string!(string)
+
+    patch(patcher, opts, fn zipper ->
+      zipper
+      |> Z.down()
+      |> Z.insert_child(node)
+      |> Z.up()
+      |> Z.node()
+      |> Sourceror.to_string(to_string_opts())
+    end)
+  end
+
   def halt_if(%__MODULE__{result: result} = patcher, _predicate, _new_status) when result != :unpatched do
     patcher
   end
@@ -280,6 +294,31 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
 
   def set_result(patcher, status) do
     %__MODULE__{patcher | result: status}
+  end
+
+  def append_code(patcher, text_to_append) do
+    patch(patcher, fn zipper ->
+      zipper_append_patch(zipper, text_to_append, code(patcher))
+    end)
+  end
+
+  def append_child_code(patcher, text_to_append) do
+    patch(patcher, fn zipper ->
+      # If possible, we try to replace the last child so the whole block
+      # doesn't have to be formatted when using `Z.append_child/2`
+      case Move.last_child(zipper) do
+        nil ->
+          node = Sourceror.parse_string!(text_to_append)
+
+          zipper
+          |> Z.append_child(node)
+          |> Z.node()
+          |> Sourceror.to_string()
+
+        last_child_zipper ->
+          zipper_append_patch(last_child_zipper, text_to_append, code(patcher))
+      end
+    end)
   end
 
   def append_child(patcher, string) do
@@ -323,6 +362,27 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
       |> Sourceror.to_string()
 
     %{change: change, range: range}
+  end
+
+  defp zipper_append_patch(zipper, text_to_append, original_code) do
+    case zipper do
+      {{:., _, _}, _} ->
+        # We can't get the range of the dot call in a qualified call like
+        # `foo.bar()`, so we apply the patch to the parent. We get into this
+        # situation when the qualified call has no arguments: the first child
+        # will be a dot call of the form `{:., meta, [left, identifier]}`
+        # where `identifier` is a bare atom, like `:compilers`. The line
+        # metadata for the identifier lives in the parent call, making it
+        # impossible to generate a patch for the child call alone.
+        append_child_patch(zipper, text_to_append)
+
+      _ ->
+        range = Sourceror.get_range(Z.node(zipper))
+        node_code = get_code_by_range(original_code, range)
+        indent = Keyword.get(range.start, :column, 1) - 1
+        change = node_code <> "\n" <> add_indentation(text_to_append, indent)
+        %{change: change, range: range, preserve_indentation: false}
+    end
   end
 
   def patch(patcher, opts \\ [], fun)
@@ -402,4 +462,25 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
         pos
     end
   end
+
+  defp add_indentation(code, n_spaces) do
+    code
+    |> String.split("\n")
+    |> Enum.map(fn line ->
+      if String.trim(line) == "" do
+        ""
+      else
+        String.duplicate(" ", n_spaces) <> line
+      end
+    end)
+    |> Enum.join("\n")
+  end
+
+  # TODO: use this when opts is properly retrieved
+  # defp format_code!(code, indentation) do
+  #   opts = "mix.exs" |> Mix.Tasks.Format.formatter_opts_for_file()
+  #   opts = Keyword.update(opts, :line_length, 98, &(&1 - indentation))
+  #   formatted_code = Code.format_string!(code, opts) |> to_string()
+  #   add_indentation(formatted_code, indentation)
+  # end
 end

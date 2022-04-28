@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Surface.Init.Patchers.Component do
+defmodule Mix.Tasks.Surface.Init.FilePatchers.Component do
   @moduledoc false
 
   alias Mix.Tasks.Surface.Init.ExPatcher
@@ -17,17 +17,13 @@ defmodule Mix.Tasks.Surface.Init.Patchers.Component do
       %ExPatcher{node: nil} ->
         code
         |> parse_string!()
-        |> find_call_with_args(:config, &match?([":phoenix", ":json_library", _], &1))
-        |> last_arg()
-        |> replace(
-          &"""
-          #{&1}
+        |> find_call_with_args(:import, &(&1 == ["Config"]))
+        |> append_code("""
 
-          config :surface, :components, [
-            #{config_entry}
-          ]\
-          """
-        )
+        config :surface, :components, [
+          #{config_entry}
+        ]\
+        """)
 
       components_patcher ->
         components_patcher
