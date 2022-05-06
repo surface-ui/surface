@@ -1,18 +1,18 @@
 defmodule Mix.Tasks.Surface.Init.FilePatchers.Text do
   @moduledoc false
 
-  def append_line(code, text, already_pached_text) do
-    already_pached_regex = Regex.compile!("^#{Regex.escape(already_pached_text)}$", "m")
+  def append_line(code, text, already_patched_text) do
+    already_patched_regex = Regex.compile!("^#{Regex.escape(already_patched_text)}$", "m")
 
-    if Regex.match?(already_pached_regex, code) do
+    if Regex.match?(already_patched_regex, code) do
       {:already_patched, code}
     else
       {:patched, String.trim_trailing(code) <> "\n\n#{text}"}
     end
   end
 
-  def prepend_text(code, text, already_pached_text) do
-    if String.contains?(code, already_pached_text) do
+  def prepend_text(code, text, already_patched_text) do
+    if String.contains?(code, already_patched_text) do
       {:already_patched, code}
     else
       {:patched, "#{text}\n\n" <> String.trim_leading(code)}

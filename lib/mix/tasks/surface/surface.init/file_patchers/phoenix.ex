@@ -11,13 +11,13 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
     append_code_to_view_macro(code, import_str, import_str, web_module)
   end
 
-  def append_code_to_view_macro(code, text_to_append, already_pached_text, web_module) do
+  def append_code_to_view_macro(code, text_to_append, already_patched_text, web_module) do
     code
     |> parse_string!()
     |> enter_defmodule(web_module)
     |> enter_def(:view)
     |> enter_call(:quote)
-    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    |> halt_if(&find_code_containing(&1, already_patched_text), :already_patched)
     |> append_child_code(text_to_append)
   end
 
@@ -73,12 +73,12 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
     end
   end
 
-  def add_live_reload_pattern_to_endpoint_config(code, pattern, already_pached_text, context_app, web_module) do
+  def add_live_reload_pattern_to_endpoint_config(code, pattern, already_patched_text, context_app, web_module) do
     code
     |> parse_string!()
     |> find_endpoint_config_with_live_reload(context_app, web_module)
     |> find_keyword_value([:live_reload, :patterns])
-    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    |> halt_if(&find_code_containing(&1, already_patched_text), :already_patched)
     # Could not use `append_list_item` as it messes with the indentation of the parent node
     |> down()
     |> last_child()
@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
         code,
         pattern,
         replacement,
-        already_pached_text,
+        already_patched_text,
         context_app,
         web_module
       ) do
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
     |> parse_string!()
     |> find_endpoint_config_with_live_reload(context_app, web_module)
     |> find_keyword_value([:live_reload, :patterns])
-    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    |> halt_if(&find_code_containing(&1, already_patched_text), :already_patched)
     |> find_list_item_with_code(pattern)
     |> replace(replacement)
   end
@@ -133,7 +133,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
     end
   end
 
-  def add_watcher_to_endpoint_config(code, key, value, already_pached_text, context_app, web_module) do
+  def add_watcher_to_endpoint_config(code, key, value, already_patched_text, context_app, web_module) do
     args = [inspect(context_app), "#{inspect(web_module)}.Endpoint"]
 
     code
@@ -141,7 +141,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
     |> find_call_with_args_and_opt(:config, args, :watchers)
     |> last_arg()
     |> find_keyword_value([:watchers])
-    |> halt_if(&find_code_containing(&1, already_pached_text), :already_patched)
+    |> halt_if(&find_code_containing(&1, already_patched_text), :already_patched)
     |> last_arg()
     |> last_child()
     |> replace_code(
