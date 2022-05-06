@@ -17,7 +17,8 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
     [
       {:patch, "config/dev.exs",
        [
-         add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path)
+         add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path),
+         add_surface_live_reload_template_pattern_to_endpoint_config(context_app, web_module, web_path)
        ]},
       {:patch, web_module_path,
        [
@@ -34,12 +35,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
           &1,
           ~s[~r"#{web_path}/(live|views)/.*(ex)$"],
           ~s[~r"#{web_path}/(live|views|components)/.*(ex|sface|js)$"],
-          "sface",
+          "ex|sface|js",
           context_app,
           web_module
         ),
       instructions: """
-      Update the :reload_patterns entry to include surface-related files.
+      Update the :reload_patterns entry to include surface related files.
 
       # Example
 
@@ -48,6 +49,36 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
         live_reload: [
           patterns: [
             ~r"lib/my_app_web/(live|views|components)/.*(ex|sface|js)$",
+            ...
+          ]
+        ]
+      ```
+      """
+    }
+  end
+
+  def add_surface_live_reload_template_pattern_to_endpoint_config(context_app, web_module, web_path) do
+    %{
+      name: "Update template patterns in :reload_patterns",
+      patch:
+        &FilePatchers.Phoenix.replace_live_reload_pattern_in_endpoint_config(
+          &1,
+          ~s[~r"#{web_path}/templates/.*(eex)$"],
+          ~s[~r"#{web_path}/templates/.*(eex|sface)$"],
+          "eex|sface",
+          context_app,
+          web_module
+        ),
+      instructions: """
+      Update the :reload_patterns template entry to include surface related files.
+
+      # Example
+
+      ```
+      config :my_app, MyAppWeb.Endpoint,
+        live_reload: [
+          patterns: [
+            ~r"lib/my_app_web/templates/.*(eex|sface)$"
             ...
           ]
         ]
