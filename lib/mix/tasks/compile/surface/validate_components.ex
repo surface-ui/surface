@@ -50,19 +50,23 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
             message
           end
 
-        error(message, file, line)
+        warning(message, file, line)
       end
     end
   end
 
-  defp error(message, file, line) do
+  defp warning(message, file, line) do
+    diagnostic(message, file, line, :warning)
+  end
+
+  defp diagnostic(message, file, line, severity) do
     # TODO: Provide column information in diagnostic once we depend on Elixir v1.13+
     %Diagnostic{
       compiler_name: "Surface",
       file: file,
       message: message,
       position: line,
-      severity: :error
+      severity: severity
     }
   end
 end

@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                file: Path.expand("code"),
                message: "Missing required property \"title\" for component <RequiredPropTitle>",
                position: 0,
-               severity: :error
+               severity: :warning
              }
            ]
   end
@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                If you meant to create a stateless component, you can switch to `use Surface.Component`.
                """,
                position: 0,
-               severity: :error
+               severity: :warning
              }
            ]
   end
@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                file: Path.expand("code"),
                message: "Missing required property \"title\" for component <#Macro>",
                position: 0,
-               severity: :error
+               severity: :warning
              }
            ]
   end
@@ -161,7 +161,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                file: Path.expand("code"),
                message: "Missing required property \"list\" for component <Recursive>",
                position: 0,
-               severity: :error
+               severity: :warning
              }
            ]
   end
