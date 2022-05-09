@@ -85,7 +85,11 @@ defmodule Mix.Tasks.Compile.Surface do
     end
   end
 
-  defp print_diagnostic(message, :warning, _file, _line), do: IO.warn(message, [])
+  defp print_diagnostic(message, :warning, file, line) do
+    # Use IO.warn(message, file: ..., line: ...) on Elixir v1.14+
+    rel_file = file |> Path.relative_to_cwd() |> to_charlist()
+    IO.warn(message, [{nil, :__FILE__, 1, [file: rel_file, line: line]}])
+  end
 
   defp print_diagnostic(message, :error, file, line) do
     error = IO.ANSI.format([:red, "error: "])
