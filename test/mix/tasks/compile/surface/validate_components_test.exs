@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
   use ExUnit.Case, async: false
 
+  import Surface.LiveViewTest
+
   alias Mix.Tasks.Compile.Surface.ValidateComponents
   alias Mix.Task.Compiler.Diagnostic
 
@@ -10,47 +12,38 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     def render(assigns), do: ~F"{@title}"
   end
 
-  defmodule MissingRequiredProp do
-    use Surface.Component
-
-    def line, do: __ENV__.line + 4
-
-    def render(assigns) do
-      ~F"""
-      <RequiredPropTitle />
-      """
-    end
-  end
-
   test "should return diagnostic when missing required prop" do
-    diagnostics = ValidateComponents.validate([MissingRequiredProp])
-    file = to_string(MissingRequiredProp.module_info(:compile)[:source])
+    component =
+      quote do
+        ~F[<RequiredPropTitle />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
 
     assert diagnostics == [
              %Diagnostic{
                compiler_name: "Surface",
                details: nil,
-               file: file,
+               file: Path.expand("code"),
                message: "Missing required property \"title\" for component <RequiredPropTitle>",
-               position: MissingRequiredProp.line(),
+               position: 0,
                severity: :error
              }
            ]
   end
 
-  defmodule PropsDirective do
-    use Surface.Component
-
-    def render(assigns) do
-      ~F"""
-      <RequiredPropTitle :props={%{}}/>
-      <RequiredPropTitle {...%{}} />
-      """
-    end
-  end
-
   test "should not return diagnostic when :props directive is present" do
-    diagnostics = ValidateComponents.validate([PropsDirective])
+    component =
+      quote do
+        ~F"""
+        <RequiredPropTitle :props={%{}}/>
+        <RequiredPropTitle {...%{}} />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
     assert diagnostics == []
   end
 
@@ -59,34 +52,27 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     def render(assigns), do: ~F"<div />"
   end
 
-  defmodule MissingIdForLiveComponent do
-    use Surface.Component
-
-    def line, do: __ENV__.line + 4
-
-    def render(assigns) do
-      ~F"""
-      <LiveComponentHasRequiredIdProp />
-      """
-    end
-  end
-
   test "should return diagnostic when missing automatically define id prop for LiveComponent" do
-    diagnostics = ValidateComponents.validate([MissingIdForLiveComponent])
-    file = to_string(MissingIdForLiveComponent.module_info(:compile)[:source])
+    component =
+      quote do
+        ~F[<LiveComponentHasRequiredIdProp />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
 
     assert diagnostics == [
              %Mix.Task.Compiler.Diagnostic{
                compiler_name: "Surface",
                details: nil,
-               file: file,
+               file: Path.expand("code"),
                message: ~S"""
                Missing required property "id" for component <LiveComponentHasRequiredIdProp>
 
                Hint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
                If you meant to create a stateless component, you can switch to `use Surface.Component`.
                """,
-               position: MissingIdForLiveComponent.line(),
+               position: 0,
                severity: :error
              }
            ]
@@ -110,50 +96,37 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     end
   end
 
-  defmodule MissingRequiredPropForMacro do
-    use Surface.Component
-
-    alias MacroWithRequiredPropTitle, as: Macro
-    def line, do: __ENV__.line + 4
-
-    def render(assigns) do
-      ~F"""
-      <#Macro body="body text" />
-      """
-    end
-  end
-
   test "should return diagnostic when missing required prop for macro component" do
-    diagnostics = ValidateComponents.validate([MissingRequiredPropForMacro])
-    file = to_string(MissingRequiredPropForMacro.module_info(:compile)[:source])
+    component =
+      quote do
+        alias MacroWithRequiredPropTitle, as: Macro
+        ~F[<#Macro body="body text" />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
 
     assert diagnostics == [
              %Diagnostic{
                compiler_name: "Surface",
                details: nil,
-               file: file,
+               file: Path.expand("code"),
                message: "Missing required property \"title\" for component <#Macro>",
-               position: MissingRequiredPropForMacro.line(),
+               position: 0,
                severity: :error
              }
            ]
   end
 
-  defmodule PassingRequiredPropForMacro do
-    use Surface.Component
-
-    alias MacroWithRequiredPropTitle, as: Macro
-    def line, do: __ENV__.line + 4
-
-    def render(assigns) do
-      ~F"""
-      <#Macro title="title text" body="body text" />
-      """
-    end
-  end
-
   test "should not return diagnostic when required prop is passed to macro component" do
-    diagnostics = ValidateComponents.validate([PassingRequiredPropForMacro])
+    component =
+      quote do
+        alias MacroWithRequiredPropTitle, as: Macro
+        ~F[<#Macro title="title text" body="body text" />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
     assert diagnostics == []
   end
 
@@ -172,29 +145,22 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     def render(assigns), do: ~F""
   end
 
-  defmodule MissingRequiredPropForRecursiveComponent do
-    use Surface.Component
-
-    def line, do: __ENV__.line + 4
-
-    def render(assigns) do
-      ~F"""
-      <Recursive />
-      """
-    end
-  end
-
   test "should return diagnostic when missing required prop for recursive component" do
-    diagnostics = ValidateComponents.validate([MissingRequiredPropForRecursiveComponent])
-    file = to_string(MissingRequiredPropForRecursiveComponent.module_info(:compile)[:source])
+    component =
+      quote do
+        ~F[<Recursive />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
 
     assert diagnostics == [
              %Diagnostic{
                compiler_name: "Surface",
                details: nil,
-               file: file,
+               file: Path.expand("code"),
                message: "Missing required property \"list\" for component <Recursive>",
-               position: MissingRequiredPropForRecursiveComponent.line(),
+               position: 0,
                severity: :error
              }
            ]
