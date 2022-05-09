@@ -47,7 +47,7 @@ defmodule Mix.Tasks.Compile.Surface do
 
   @doc false
   def run(args) do
-    {compile_opts, _argv, _err} = OptionParser.parse(args, strict: @switches)
+    {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
 
     [
       Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_modules()),
