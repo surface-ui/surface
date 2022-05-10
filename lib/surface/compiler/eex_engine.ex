@@ -780,7 +780,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp to_dynamic_nested_html([
-         %AST.Container{
+         %AST.MacroComponent{
            children: children,
            meta:
              %AST.Meta{

@@ -474,7 +474,8 @@ defmodule Surface.CompilerTest do
 
       [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
-      assert %Surface.AST.Container{children: [%Surface.AST.Tag{children: ["I'm a macro"], element: "div"}]} = node
+      assert %Surface.AST.MacroComponent{children: [%Surface.AST.Tag{children: ["I'm a macro"], element: "div"}]} =
+               node
     end
 
     test "expanded within a component" do
@@ -491,7 +492,7 @@ defmodule Surface.CompilerTest do
                  default: [
                    %Surface.AST.SlotEntry{
                      children: [
-                       %Surface.AST.Container{
+                       %Surface.AST.MacroComponent{
                          children: [
                            %Surface.AST.Tag{
                              children: ["I'm a macro"],
@@ -516,7 +517,7 @@ defmodule Surface.CompilerTest do
       assert %Surface.AST.Tag{
                element: "div",
                children: [
-                 %Surface.AST.Container{
+                 %Surface.AST.MacroComponent{
                    children: [%Surface.AST.Tag{children: ["I'm a macro"], element: "div"}]
                  }
                ]
