@@ -17,10 +17,13 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     file = module.module_info() |> get_in([:compile, :source]) |> to_string()
 
     for component_call <- components_calls do
-      validate_properties(file, component_call)
+      validate_properties(file, component_call) ++
+        validate_attributes(file, component_call)
     end
     |> Enum.reject(&is_nil/1)
   end
+
+  # validates required properties with missing attributes
 
   defp validate_properties(file, component_call) do
     module = component_call.component
@@ -52,6 +55,60 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
         warning(message, file, line)
       end
+    else
+      []
+    end
+  end
+
+  # validates multiple attributes of properties without accumulate
+
+  defp validate_attributes(file, component_call) do
+    module = component_call.component
+
+    {diagnostics, _} =
+      for attr <- component_call.props,
+          function_exported?(module, :__get_prop__, 1),
+          prop = module.__get_prop__(attr.name),
+          reduce: {[], MapSet.new()} do
+        {diagnostics, attrs} ->
+          {[validate_attribute(attr, prop, component_call.node_alias, file, attrs) | diagnostics],
+           MapSet.put(attrs, attr.name)}
+      end
+
+    diagnostics
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reverse()
+  end
+
+  defp validate_attribute(attr, prop, node_alias, file, processed_attrs) do
+    attr_processed? = MapSet.member?(processed_attrs, attr.name)
+
+    if attr_processed? and !prop.opts[:accumulate] do
+      attr_line = attr.meta.line
+
+      message =
+        if prop.opts[:root] == true do
+          """
+          the prop `#{attr.name}` has been passed multiple times. Considering only the last value.
+
+          Hint: Either specify the `#{attr.name}` via the root property \(`<#{node_alias} { ... }>`\) or \
+          explicitly via the #{attr.name} property \(`<#{node_alias} #{attr.name}="...">`\), but not both.
+          """
+        else
+          """
+          the prop `#{attr.name}` has been passed multiple times. Considering only the last value.
+
+          Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+          ```
+            prop #{attr.name}, :string, accumulate: true
+          ```
+
+          This way the values will be accumulated in a list.
+          """
+        end
+
+      warning(message, file, attr_line)
     end
   end
 
