@@ -159,7 +159,7 @@ defmodule Surface.TransformTest do
 
     refute_receive {MacroDivToSpan, "transforming node"}
 
-    assert %Surface.AST.Container{} = node
+    assert %Surface.AST.MacroComponent{} = node
   end
 
   test "transform is not run on parse errors" do

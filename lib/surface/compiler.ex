@@ -686,7 +686,7 @@ defmodule Surface.Compiler do
           expanded_children = mod.expand(attributes, List.to_string(children), meta)
 
           {:ok,
-           %AST.Container{
+           %AST.MacroComponent{
              attributes: attributes,
              children: List.wrap(expanded_children),
              directives: directives,

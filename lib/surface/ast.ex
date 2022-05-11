@@ -512,11 +512,11 @@ defmodule Surface.AST.MacroComponent do
       * `:module` - the component module
       * `:attributes` - the specified attributes
       * `:directives` - any directives to be applied to this macro
-      * `:body` - the macro body
+      * `:children` - the children after the macro is expanded
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
   """
-  defstruct [:module, :name, :attributes, :body, :meta, debug: [], directives: []]
+  defstruct [:module, :name, :attributes, :children, :meta, debug: [], directives: []]
 
   @type t :: %__MODULE__{
           module: module(),
@@ -524,7 +524,7 @@ defmodule Surface.AST.MacroComponent do
           name: binary(),
           attributes: list(Surface.AST.Attribute.t()),
           directives: list(Surface.AST.Directive.t()),
-          body: iodata(),
+          children: list(Surface.AST.t()),
           meta: Surface.AST.Meta.t()
         }
 end
