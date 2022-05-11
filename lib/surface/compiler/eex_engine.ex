@@ -872,7 +872,11 @@ defmodule Surface.Compiler.EExEngine do
 
     %{caller: caller, node_alias: node_alias, line: line} = component.meta
     %{props: props, directives: directives} = component
-    store_component_call(caller.module, node_alias, mod, props, directives, line)
+
+    if type != AST.FunctionComponent do
+      store_component_call(caller.module, node_alias, mod, props, directives, line)
+    end
+
     [requires, %{component | slot_entries: slot_entries_by_name} | to_dynamic_nested_html(nodes)]
   end
 
