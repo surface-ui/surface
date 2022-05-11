@@ -165,4 +165,127 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
              }
            ]
   end
+
+  test "should return diagnostic when props are specified multiple times, but accumulate is false" do
+    component =
+      quote do
+        ~F"""
+        <RequiredPropTitle
+          title="first"
+          title="second"
+        />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: """
+               the prop `title` has been passed multiple times. Considering only the last value.
+
+               Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+               ```
+                 prop title, :string, accumulate: true
+               ```
+
+               This way the values will be accumulated in a list.
+               """,
+               position: 3,
+               severity: :warning
+             }
+           ]
+  end
+
+  defmodule RootProp do
+    use Surface.Component
+    prop text, :any, root: true
+    def render(assigns), do: ~F[<div />]
+  end
+
+  test "should return diagnostic when props are specified multiple times with root prop, but accumulate is false" do
+    component =
+      quote do
+        ~F"""
+        <RootProp
+          {"first"}
+          text="other"
+        />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: """
+               the prop `text` has been passed multiple times. Considering only the last value.
+
+               Hint: Either specify the `text` via the root property \(`<RootProp { ... }>`\) or \
+               explicitly via the text property \(`<RootProp text="...">`\), but not both.
+               """,
+               position: 3,
+               severity: :warning
+             }
+           ]
+  end
+
+  defmodule AccumulateProp do
+    use Surface.Component
+
+    prop prop, :string, accumulate: true
+
+    def render(assigns) do
+      ~F"""
+      <span :for={v <- @prop}>value: {v}</span>
+      """
+    end
+  end
+
+  test "should not return diagnostic when props are specified multiple times, and accumulate is true" do
+    component =
+      quote do
+        ~F"""
+        <AccumulateProp
+          prop="first"
+          prop="second"
+        />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+    assert diagnostics == []
+  end
+
+  defmodule AccumulateRootProp do
+    use Surface.Component
+    prop text, :any, root: true, accumulate: true
+    def render(assigns), do: ~F[<div />]
+  end
+
+  test "should not return diagnostic when props are specified multiple times with root prop, and accumulate is true" do
+    component =
+      quote do
+        ~F"""
+        <AccumulateRootProp
+          {"first"}
+          text="other"
+        />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+    assert diagnostics == []
+  end
 end

@@ -697,45 +697,6 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
-  test "warn if props are specified multiple times, but accumulate is false" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestComponentWithPropSpecifiedMultipleTimes_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Surface.Component
-
-      def render(assigns) do
-        ~F"\""
-        <StringProp
-          label="first
-          label" label="second label"
-        />
-        "\""
-      end
-    end
-    """
-
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
-
-    assert output =~ ~r"""
-           the prop `label` has been passed multiple times. Considering only the last value.
-
-           Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
-
-           ```
-             prop label, :string, accumulate: true
-           ```
-
-           This way the values will be accumulated in a list.
-
-             code.exs:8:\
-           """
-  end
-
   test "warn if attrs are specified multiple times for html tag" do
     id = :erlang.unique_integer([:positive]) |> to_string()
     module = "TestComponentWithAttrsSpecifiedMultipleTimes_#{id}"
@@ -849,34 +810,6 @@ defmodule Surface.PropertiesSyncTest do
            Hint: you can declare a root property using option `root: true`
 
              code:2:\
-           """
-  end
-
-  test "warn if tag has a root property and the property assigned normally" do
-    assigns = %{label: "root"}
-
-    code =
-      quote do
-        ~F"""
-        <RootProp
-          {@label}
-          label="toor"
-        />
-        """
-      end
-
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code, assigns)
-      end)
-
-    assert output =~ ~r"""
-           the prop `label` has been passed multiple times. Considering only the last value.
-
-           Hint: Either specify the `label` via the root property \(`<RootProp { ... }>`\) or \
-           explicitly via the label property \(`<RootProp label="...">`\), but not both.
-
-             code:3:\
            """
   end
 end

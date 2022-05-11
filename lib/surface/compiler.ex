@@ -816,48 +816,17 @@ defmodule Surface.Compiler do
     {type, type_opts} = Surface.TypeHandler.attribute_type_and_opts(mod, name, attr_meta)
 
     duplicated_attr? = Keyword.has_key?(acc, name)
-    duplicated_prop? = mod && (!Keyword.get(type_opts, :accumulate, false) and duplicated_attr?)
     duplicated_html_attr? = !mod && duplicated_attr?
-    root_prop? = Keyword.get(type_opts, :root, false)
 
-    cond do
-      duplicated_prop? && root_prop? ->
-        message = """
-        the prop `#{name}` has been passed multiple times. Considering only the last value.
+    if duplicated_html_attr? do
+      message = """
+      the attribute `#{name}` has been passed multiple times on line #{meta.line}. \
+      Considering only the last value.
 
-        Hint: Either specify the `#{name}` via the root property (`<#{meta.node_alias} { ... }>`) or \
-        explicitly via the #{name} property (`<#{meta.node_alias} #{name}="...">`), but not both.
-        """
+      Hint: remove all redundant definitions
+      """
 
-        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
-
-      duplicated_prop? && not root_prop? ->
-        message = """
-        the prop `#{name}` has been passed multiple times. Considering only the last value.
-
-        Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
-
-        ```
-          prop #{name}, :#{type}, accumulate: true
-        ```
-
-        This way the values will be accumulated in a list.
-        """
-
-        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
-
-      duplicated_html_attr? ->
-        message = """
-        the attribute `#{name}` has been passed multiple times on line #{meta.line}. \
-        Considering only the last value.
-
-        Hint: remove all redundant definitions
-        """
-
-        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
-
-      true ->
-        nil
+      IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
     end
 
     node = %AST.Attribute{
