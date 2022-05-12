@@ -82,12 +82,9 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
               diagnostics = [warning(message, file, attr.meta.line) | diagnostics]
               {diagnostics, attrs}
 
-            !is_nil(prop) ->
-              diagnostics = [validate_attribute(attr, prop, component_call.node_alias, file, attrs) | diagnostics]
-              {diagnostics, MapSet.put(attrs, prop.name)}
-
             true ->
-              {diagnostics, attrs}
+              diagnostics = [validate_attribute(attr, prop, component_call.node_alias, file, attrs) | diagnostics]
+              {diagnostics, MapSet.put(attrs, attr.name || prop.name)}
           end
       end
 
@@ -102,6 +99,11 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
   defp attr_prop(module, %Surface.AST.Attribute{} = attr) do
     module.__get_prop__(attr.name)
+  end
+
+  defp validate_attribute(attr, nil, node_alias, file, _) do
+    message = "Unknown property \"#{attr.name}\" for component <#{node_alias}>"
+    warning(message, file, attr.meta.line)
   end
 
   defp validate_attribute(attr, prop, node_alias, file, processed_attrs) do
