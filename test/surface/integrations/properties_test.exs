@@ -113,6 +113,21 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule RootGeneratorProp do
+    use Surface.Component
+
+    prop labels, :list, root: true
+    slot default, args: [label: ^labels]
+
+    def render(assigns) do
+      ~F"""
+      {#for label <- @labels}
+        <#slot :args={label: label} />
+      {/for}
+      """
+    end
+  end
+
   describe "atom" do
     test "passing an atom" do
       html =
@@ -658,6 +673,22 @@ defmodule Surface.PropertiesTest do
 
       assert html =~ """
              Label
+             """
+    end
+
+    test "component accepts root generator property" do
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp {label <- ["Label1", "Label2"]}>
+            Slot: {label}
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               Slot: Label1
+               Slot: Label2
              """
     end
   end
