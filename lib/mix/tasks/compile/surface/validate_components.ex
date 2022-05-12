@@ -67,17 +67,41 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
     {diagnostics, _} =
       for attr <- component_call.props,
-          function_exported?(module, :__get_prop__, 1),
-          prop = module.__get_prop__(attr.name),
           reduce: {[], MapSet.new()} do
         {diagnostics, attrs} ->
-          {[validate_attribute(attr, prop, component_call.node_alias, file, attrs) | diagnostics],
-           MapSet.put(attrs, attr.name)}
+          prop = attr_prop(module, attr)
+
+          cond do
+            attr.root == true and is_nil(prop) ->
+              message = """
+              no root property defined for component <#{component_call.node_alias}>
+
+              Hint: you can declare a root property using option `root: true`
+              """
+
+              diagnostics = [warning(message, file, attr.meta.line) | diagnostics]
+              {diagnostics, attrs}
+
+            !is_nil(prop) ->
+              diagnostics = [validate_attribute(attr, prop, component_call.node_alias, file, attrs) | diagnostics]
+              {diagnostics, MapSet.put(attrs, prop.name)}
+
+            true ->
+              {diagnostics, attrs}
+          end
       end
 
     diagnostics
     |> Enum.reject(&is_nil/1)
     |> Enum.reverse()
+  end
+
+  defp attr_prop(module, %Surface.AST.Attribute{root: true}) do
+    Enum.find(module.__props__(), & &1.opts[:root])
+  end
+
+  defp attr_prop(module, %Surface.AST.Attribute{} = attr) do
+    module.__get_prop__(attr.name)
   end
 
   defp validate_attribute(attr, prop, node_alias, file, processed_attrs) do

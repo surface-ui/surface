@@ -211,15 +211,17 @@ defmodule Surface.AST.Attribute do
       * `:type` - an atom representing the type of attribute. See Surface.API for the list of supported types
       * `:type_opts` - a keyword list of options for the type
       * `:name` - the name of the attribute (e.g. `:class`)
+      * `:root` - true if the attribute was defined using root notation `{ ... }`. Root attributes won't have `name`.
       * `:value` - a list of nodes that can be concatenated to form the value for this attribute. Potentially contains dynamic data
       * `:meta` - compilation meta data
   """
-  defstruct [:name, :type, :type_opts, :value, :meta]
+  defstruct [:name, :root, :type, :type_opts, :value, :meta]
 
   @type t :: %__MODULE__{
-          type: atom(),
-          type_opts: keyword(),
-          name: atom(),
+          type: atom() | nil,
+          type_opts: keyword() | nil,
+          name: atom() | nil,
+          root: boolean() | nil,
           value: Surface.AST.Literal.t() | Surface.AST.AttributeExpr.t(),
           meta: Surface.AST.Meta.t()
         }

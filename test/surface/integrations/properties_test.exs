@@ -817,30 +817,4 @@ defmodule Surface.PropertiesSyncTest do
            prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
            """
   end
-
-  test "warn if component does not accept a root property" do
-    assigns = %{label: "root"}
-
-    code =
-      quote do
-        ~F"""
-        <StringProp
-          {@label}
-        />
-        """
-      end
-
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code, assigns)
-      end)
-
-    assert output =~ ~r"""
-           no root property defined for component <StringProp>
-
-           Hint: you can declare a root property using option `root: true`
-
-             code:2:\
-           """
-  end
 end

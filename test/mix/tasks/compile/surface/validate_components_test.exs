@@ -239,6 +239,37 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
            ]
   end
 
+  defmodule StringProp do
+    use Surface.Component
+    prop text, :string
+    def render(assigns), do: ~F[{@text}]
+  end
+
+  test "should return diagnostic when passing a root prop and the component doesn't have one" do
+    component =
+      quote do
+        ~F[<StringProp {"first"} />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: """
+               no root property defined for component <StringProp>
+
+               Hint: you can declare a root property using option `root: true`
+               """,
+               position: 0,
+               severity: :warning
+             }
+           ]
+  end
+
   defmodule AccumulateProp do
     use Surface.Component
 
