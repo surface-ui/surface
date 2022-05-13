@@ -240,8 +240,7 @@ defmodule Surface.CompilerTest do
              module: Surface.CompilerTest.Button,
              props: [
                %Surface.AST.Attribute{
-                 name: :label,
-                 type: :string,
+                 root: true,
                  value: %Surface.AST.AttributeExpr{
                    original: "\"click\""
                  }

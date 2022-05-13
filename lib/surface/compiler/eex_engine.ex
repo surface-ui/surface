@@ -483,7 +483,15 @@ defmodule Surface.Compiler.EExEngine do
   defp collect_component_props(module, attrs) do
     {props, props_acc} =
       Enum.reduce(attrs, {[], %{}}, fn attr, {props, props_acc} ->
-        %AST.Attribute{name: prop_name, type: type, type_opts: type_opts, value: expr} = attr
+        %AST.Attribute{root: root, value: expr} = attr
+
+        {prop_name, type, type_opts} =
+          with true <- root,
+               root_prop when not is_nil(root_prop) <- Enum.find(module.__props__(), & &1.opts[:root]) do
+            {root_prop.name, root_prop.type, root_prop.opts}
+          else
+            _ -> {attr.name, attr.type, attr.type_opts}
+          end
 
         cond do
           module && !module.__validate_prop__(prop_name) ->

@@ -793,21 +793,25 @@ defmodule Surface.Compiler do
   end
 
   defp process_attributes(mod, [{:root, value, attr_meta} | attrs], meta, compile_meta, acc) do
-    with true <- function_exported?(mod, :__props__, 0),
-         prop when not is_nil(prop) <- Enum.find(mod.__props__(), & &1.opts[:root]) do
-      name = Atom.to_string(prop.name)
-      process_attributes(mod, [{name, value, attr_meta} | attrs], meta, compile_meta, acc)
-    else
-      _ ->
-        message = """
-        no root property defined for component <#{meta.node_alias}>
+    attr_meta = Helpers.to_meta(attr_meta, meta)
+    name = nil
 
-        Hint: you can declare a root property using option `root: true`
-        """
+    {ast_name, type} =
+      with true <- function_exported?(mod, :__props__, 0),
+           prop when not is_nil(prop) <- Enum.find(mod.__props__(), & &1.opts[:root]) do
+        {prop.name, prop.type}
+      else
+        _ -> {nil, nil}
+      end
 
-        IOHelper.warn(message, meta.caller, attr_meta.file, attr_meta.line)
-        process_attributes(mod, attrs, meta, compile_meta, acc)
-    end
+    node = %AST.Attribute{
+      root: true,
+      name: ast_name,
+      value: attr_value(name, type, value, attr_meta, compile_meta),
+      meta: attr_meta
+    }
+
+    process_attributes(mod, attrs, meta, compile_meta, [{name, node} | acc])
   end
 
   defp process_attributes(mod, [{name, value, attr_meta} | attrs], meta, compile_meta, acc) do

@@ -113,6 +113,21 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule RootGeneratorProp do
+    use Surface.Component
+
+    prop labels, :list, root: true
+    slot default, args: [label: ^labels]
+
+    def render(assigns) do
+      ~F"""
+      {#for label <- @labels}
+        <#slot :args={label: label} />
+      {/for}
+      """
+    end
+  end
+
   describe "atom" do
     test "passing an atom" do
       html =
@@ -660,6 +675,22 @@ defmodule Surface.PropertiesTest do
              Label
              """
     end
+
+    test "component accepts root generator property" do
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp {label <- ["Label1", "Label2"]}>
+            Slot: {label}
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               Slot: Label1
+               Slot: Label2
+             """
+    end
   end
 end
 
@@ -784,32 +815,6 @@ defmodule Surface.PropertiesSyncTest do
 
     assert output =~ ~S"""
            prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
-           """
-  end
-
-  test "warn if component does not accept a root property" do
-    assigns = %{label: "root"}
-
-    code =
-      quote do
-        ~F"""
-        <StringProp
-          {@label}
-        />
-        """
-      end
-
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code, assigns)
-      end)
-
-    assert output =~ ~r"""
-           no root property defined for component <StringProp>
-
-           Hint: you can declare a root property using option `root: true`
-
-             code:2:\
            """
   end
 end
