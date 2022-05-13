@@ -208,6 +208,7 @@ defmodule Surface.TypeHandler do
   def runtime_prop_value!(module, name, clauses, opts, node_alias, original, ctx) do
     {type, _opts} =
       attribute_type_and_opts(module, name, %{
+        runtime: true,
         node_alias: node_alias || module,
         caller: %Macro.Env{module: ctx.module},
         file: ctx.file,
@@ -261,12 +262,14 @@ defmodule Surface.TypeHandler do
       {prop.type, prop.opts}
     else
       _ ->
-        IOHelper.warn(
-          "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
-          meta.caller,
-          meta.file,
-          meta.line
-        )
+        if Map.get(meta, :runtime, false) do
+          IOHelper.warn(
+            "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
+            meta.caller,
+            meta.file,
+            meta.line
+          )
+        end
 
         {:string, []}
     end

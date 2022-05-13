@@ -6,6 +6,33 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
   alias Mix.Tasks.Compile.Surface.ValidateComponents
   alias Mix.Task.Compiler.Diagnostic
 
+  defmodule StringProp do
+    use Surface.Component
+    prop text, :string
+    def render(assigns), do: ~F[{@text}]
+  end
+
+  test "should return diagnostic when unkwnown prop is passed to Component" do
+    component =
+      quote do
+        ~F[<StringProp unknown />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: "Unknown property \"unknown\" for component <StringProp>",
+               position: 0,
+               severity: :warning
+             }
+           ]
+  end
+
   defmodule RequiredPropTitle do
     use Surface.Component
     prop title, :string, required: true
@@ -237,12 +264,6 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                severity: :warning
              }
            ]
-  end
-
-  defmodule StringProp do
-    use Surface.Component
-    prop text, :string
-    def render(assigns), do: ~F[{@text}]
   end
 
   test "should return diagnostic when passing a root prop and the component doesn't have one" do

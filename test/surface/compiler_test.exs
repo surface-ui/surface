@@ -797,22 +797,6 @@ defmodule Surface.CompilerSyncTest do
     assert line == 2
   end
 
-  test "warning on non-existent property" do
-    code = """
-    <div>
-      <Button
-        label="test"
-        nonExistingProp="1"
-      />
-    </div>
-    """
-
-    {:warn, line, message} = run_compile(code, __ENV__)
-
-    assert message =~ ~S(Unknown property "nonExistingProp" for component <Button>)
-    assert line == 4
-  end
-
   test "warning on undefined assign in property" do
     code = """
     <div prop={{ @assign }} />
