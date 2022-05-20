@@ -18,11 +18,13 @@ jobs:
             otp: 22.3
           - elixir: 1.11.4
             otp: 23.3
-          - elixir: 1.12.1
+          - elixir: 1.12.3
             otp: 24.0
+          - elixir: 1.13.4
+            otp: 24.0
+          - elixir: 1.13.4
+            otp: 25.0
             check_formatted: true
-          - elixir: 1.13.0
-            otp: 24.0
             run_plugin_tests: true
             warnings-as-errors: true
     env:
