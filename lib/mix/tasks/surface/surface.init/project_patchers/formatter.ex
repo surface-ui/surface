@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Formatter do
     %{
       name: "Add `surface_formatter` dependency",
       update_deps: [:surface_formatter],
-      patch: &FilePatchers.MixExs.add_dep(&1, ":surface_formatter", ~S("~> 0.6.0")),
+      patch: &FilePatchers.MixExs.add_dep(&1, ":surface_formatter", ~S("~> 0.7.4")),
       instructions: """
       Add `surface_formatter` to the list of dependencies in `mix.exs`.
 
@@ -46,7 +46,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Formatter do
       ```
       def deps do
         [
-          {:surface_formatter, "~> 0.6.0"}
+          {:surface_formatter, "~> 0.7.4"}
         ]
       end
       ```
