@@ -89,7 +89,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
       code = """
       [
         import_deps: [:phoenix, :ecto],
-        inputs: ["*.{ex,exs}", "{config,lib,test,priv}/**/*.{ex,exs}"]
+        inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs}"]
       ]
       """
 
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
              [
                import_deps: [:phoenix, :ecto],
                inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs}"],
-               surface_inputs: ["{lib,test,priv}/**/*.{ex,exs,sface}"]
+               surface_inputs: ["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"]
              ]
              """
     end
