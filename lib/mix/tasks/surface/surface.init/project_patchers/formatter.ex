@@ -57,7 +57,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Formatter do
   def add_surface_inputs_to_formatter_config() do
     %{
       name: "Add file extensions to :surface_inputs",
-      patch: &FilePatchers.Formatter.add_config(&1, :surface_inputs, ~S(["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"])),
+      patch:
+        &FilePatchers.Formatter.add_config(
+          &1,
+          :surface_inputs,
+          ~S(["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"])
+        ),
       instructions: """
       In case you'll be using `mix format`, make sure you add the required file patterns
       to your `.formatter.exs` file.
