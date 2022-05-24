@@ -492,13 +492,7 @@ defmodule Surface.Compiler.EExEngine do
           _ -> {attr.name, attr.type}
         end
 
-      cond do
-        module && !module.__validate_prop__(prop_name) ->
-          props
-
-        true ->
-          [{prop_name, to_prop_expr(expr, type)} | props]
-      end
+      [{prop_name, to_prop_expr(expr, type)} | props]
     end)
     |> Enum.reverse()
   end

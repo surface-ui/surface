@@ -228,7 +228,6 @@ defmodule Surface.API do
       |> get_props()
       |> sort_props()
 
-    props_names = for p <- props, do: p.name
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
     required_props_names = for %{name: name, opts: opts} <- props, opts[:required], do: name
 
@@ -236,11 +235,6 @@ defmodule Surface.API do
       @doc false
       def __props__() do
         unquote(Macro.escape(props))
-      end
-
-      @doc false
-      def __validate_prop__(prop) do
-        prop in unquote(props_names)
       end
 
       @doc false

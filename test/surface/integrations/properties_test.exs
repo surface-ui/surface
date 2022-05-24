@@ -834,6 +834,26 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
+  describe "unknown property" do
+    test "warns at runtime and render the component" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <StringProp label="My Label." unknown="value" />
+              """
+            end
+
+          assert html =~ """
+                 My Label.
+                 """
+        end)
+
+      assert output =~ "Unknown property \"unknown\" for component <StringProp>"
+    end
+  end
+
   defmodule AccumulateListProp do
     use Surface.Component
 
