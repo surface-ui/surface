@@ -62,17 +62,23 @@ defmodule Surface.Catalogue.Playground do
   # Subscribes to receive notification messages from the Playground.
   @doc false
   def subscribe(window_id) do
-    Phoenix.PubSub.subscribe(@pubsub, topic(window_id))
+    if running_pubsub?() do
+      Phoenix.PubSub.subscribe(@pubsub, topic(window_id))
+    end
   end
 
   defp notify_init(window_id, subject, props, events, props_values_with_events) do
-    message = {:playground_init, self(), subject, props, events, props_values_with_events}
-    Phoenix.PubSub.broadcast(@pubsub, topic(window_id), message)
+    if running_pubsub?() do
+      message = {:playground_init, self(), subject, props, events, props_values_with_events}
+      Phoenix.PubSub.broadcast(@pubsub, topic(window_id), message)
+    end
   end
 
   defp notify_event_received(window_id, event, value, props) do
-    message = {:playground_event_received, event, value, props}
-    Phoenix.PubSub.broadcast(@pubsub, topic(window_id), message)
+    if running_pubsub?() do
+      message = {:playground_event_received, event, value, props}
+      Phoenix.PubSub.broadcast(@pubsub, topic(window_id), message)
+    end
   end
 
   defp topic(window_id) do
@@ -187,5 +193,10 @@ defmodule Surface.Catalogue.Playground do
         into: %{} do
       {name, opts[:default]}
     end
+  end
+
+  defp running_pubsub? do
+    pid = Process.whereis(@pubsub)
+    pid && Process.alive?(pid)
   end
 end

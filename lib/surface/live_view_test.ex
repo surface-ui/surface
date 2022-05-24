@@ -3,6 +3,8 @@ defmodule Surface.LiveViewTest do
   Conveniences for testing Surface components.
   """
 
+  alias Surface.Catalogue
+
   defmodule BlockWrapper do
     @moduledoc false
 
@@ -174,6 +176,112 @@ defmodule Surface.LiveViewTest do
     end
   end
 
+  @doc """
+  This macro generates ExUnit test cases for catalogue examples.
+
+  The tests will automatically assert if the example was successfully rendered.
+
+  Pay attention that, by default, the generated tests don't test how the components should look like.
+  However, it makes sure the examples are not raising exceptions at runtime, for instance, due to
+  changes in the component's API.
+
+  ## Usage
+
+  The `catalogue_test/1` macro accepts a single argument which can one of:
+
+  * A component module (subject), which will generate tests for all examples/playgrounds found
+    for that component.
+  * The atom `:all`, which will generate tests for all examples/playgrounds found for ALL components
+    in the project.
+
+  Keep in mind that you should either use individual `catalogue_test/1` calls for each
+  component or use `:all`. Otherwise, you will end up with duplicated tests.
+
+  ### Options
+
+    * `except` - A list of modules that should be excluded. This option only applies when using `:all`.
+
+  ## Examples
+
+  Generating tests for components' examples:
+
+      defmodule MyProject.Components.ButtonTest do
+        use MyProject.ConnCase, async: true
+
+        catalogue_test MyProject.Components.Button
+      end
+
+  Generating tests for all avaiable components:
+
+      defmodule MyProject.Components.CatalogueTest do
+        use MyProject.ConnCase, async: true
+
+        catalogue_test :all
+      end
+
+  Generating tests for all avaiable components except `MyComponent`:
+
+      defmodule MyProject.Components.CatalogueTest do
+        use MyProject.ConnCase, async: true
+
+        catalogue_test :all, except: [MyComponent]
+      end
+
+  """
+  defmacro catalogue_test(module_or_all, opts \\ []) do
+    module_or_all = Macro.expand(module_or_all, __CALLER__)
+    except = Keyword.get(opts, :except, []) |> Enum.map(&Macro.expand(&1, __CALLER__))
+    {examples, playgrounds} = get_examples_and_playgrouds(module_or_all, except)
+
+    playground_tests =
+      for view <- playgrounds do
+        config = Catalogue.get_config(view)
+        title = Keyword.get(config, :title)
+        test_name = if title, do: "#{inspect(view)} - #{title}", else: inspect(view)
+        file = view.module_info() |> get_in([:compile, :source]) |> to_string()
+
+        quote line: 1 do
+          @file unquote(file)
+          test unquote(test_name) do
+            assert {:ok, _view, html} = live_isolated(build_conn(), unquote(view))
+          end
+        end
+      end
+
+    examples_tests =
+      for view <- examples,
+          config <- Surface.Catalogue.get_metadata(view).examples_configs do
+        func = Keyword.get(config, :func) |> to_string()
+        line = Keyword.get(config, :line) || 1
+        assert_texts = Keyword.get(config, :assert, []) |> List.wrap()
+        test_name = "#{inspect(view)}.#{func}"
+        file = view.module_info() |> get_in([:compile, :source]) |> to_string()
+
+        assert_live_ast =
+          quote line: line do
+            assert {:ok, _view, html} =
+                     live_isolated(build_conn(), unquote(view), session: %{"func" => unquote(func)})
+          end
+
+        assert_texts_ast =
+          for text <- assert_texts do
+            quote line: line do
+              assert html =~ unquote(text)
+            end
+          end
+
+        quote do
+          @file unquote(file)
+          test unquote(test_name) do
+            unquote(assert_live_ast)
+            unquote(assert_texts_ast)
+          end
+        end
+      end
+
+    playground_tests ++ examples_tests
+  end
+
   @doc false
   def generate_live_view_ast(render_code, props, env) do
     {func, _} = env.function
@@ -205,5 +313,32 @@ defmodule Surface.LiveViewTest do
     html
     |> String.replace(~r/\n+/, "\n")
     |> String.replace(~r/\n\s+\n/, "\n")
+  end
+
+  defp get_examples_and_playgrouds(module_or_all, except) do
+    components =
+      case {module_or_all, except} do
+        {:all, []} ->
+          Surface.components(only_current_project: true)
+
+        {:all, except} ->
+          Surface.components(only_current_project: true)
+          |> Enum.filter(fn c -> Surface.Catalogue.get_metadata(c)[:subject] not in except end)
+
+        {module, _} when is_atom(module) ->
+          Surface.components(only_current_project: true)
+          |> Enum.filter(fn c -> Surface.Catalogue.get_metadata(c)[:subject] == module end)
+
+        {value, _} ->
+          raise(ArgumentError, "catalogue_test/1 expects either a module or `:all`, got #{inspect(value)}")
+      end
+
+    %{playground: playgrounds, example: examples} =
+      components
+      |> Enum.group_by(&Surface.Catalogue.get_metadata(&1)[:type])
+      |> Map.put_new(:example, %{})
+      |> Map.put_new(:playground, %{})
+
+    {examples, playgrounds}
   end
 end

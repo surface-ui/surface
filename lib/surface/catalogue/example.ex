@@ -1,6 +1,6 @@
 defmodule Surface.Catalogue.Example do
   @moduledoc """
-  Experimental LiveView to create examples for catalogue tools.
+  A generic LiveView to create a single example for catalogue tools.
 
   ## Options
 
@@ -27,19 +27,22 @@ defmodule Surface.Catalogue.Example do
       the total width that the code box should take. Default is `50`. Note: This configuration
       has no effect when direction is "vertical".
 
+    * `assert` - Optional. When using `catalogue_test/1`, generates simple `=~` assertions for
+      the given text or list of texts.
+
   """
 
   defmacro __using__(opts) do
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
     quote do
+      @config unquote(opts)
+      @before_compile unquote(__MODULE__)
+
       use Surface.LiveView, unquote(opts)
 
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
-
-      @config unquote(opts)
-      @before_compile unquote(__MODULE__)
 
       import Surface, except: [sigil_F: 2]
 
@@ -56,15 +59,42 @@ defmodule Surface.Catalogue.Example do
   defmacro __before_compile__(env) do
     config = Module.get_attribute(env.module, :config)
     subject = Keyword.fetch!(config, :subject)
+    assert = Keyword.get(config, :assert, [])
+
     code = Module.get_attribute(env.module, :code)
+    line = Module.get_attribute(env.module, :line)
+
+    doc =
+      case Module.get_attribute(env.module, :moduledoc) do
+        {_, doc} -> doc
+        _ -> nil
+      end
+
+    examples_configs = [
+      [
+        func: :render,
+        code: code,
+        doc: doc,
+        line: line,
+        assert: assert
+      ]
+    ]
 
     quote do
       @moduledoc catalogue: [
                    type: :example,
                    subject: unquote(subject),
                    config: unquote(config),
-                   code: unquote(code)
+                   examples_configs: unquote(examples_configs)
                  ]
     end
+  end
+
+  def __on_definition__(env, :def, :render, [_arg], _guards, _body) do
+    Module.put_attribute(env.module, :line, env.line)
+  end
+
+  def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
+    :ok
   end
 end
