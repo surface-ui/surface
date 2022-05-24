@@ -206,16 +206,48 @@ defmodule Surface.TypeHandler do
   end
 
   def runtime_prop_value!(module, name, clauses, opts, node_alias, original, ctx) do
-    {type, _opts} =
+    caller = %Macro.Env{module: ctx.module}
+
+    {type, type_opts} =
       attribute_type_and_opts(module, name, %{
         runtime: true,
         node_alias: node_alias || module,
-        caller: %Macro.Env{module: ctx.module},
+        caller: caller,
         file: ctx.file,
         line: ctx.line
       })
 
-    expr_to_value!(type, name, clauses, opts, module, original, ctx)
+    if Keyword.get(type_opts, :accumulate, false) do
+      Enum.map(clauses, &expr_to_value!(type, name, [&1], opts, module, original, ctx))
+    else
+      if length(clauses) > 1 do
+        message =
+          if Keyword.get(type_opts, :root, false) do
+            """
+            the prop `#{name}` has been passed multiple times. Considering only the last value.
+
+            Hint: Either specify the `#{name}` via the root property (`<#{node_alias} { ... }>`) or \
+            explicitly via the #{name} property (`<#{node_alias} #{name}="...">`), but not both.
+            """
+          else
+            """
+            the prop `#{name}` has been passed multiple times. Considering only the last value.
+
+            Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+            ```
+              prop #{name}, #{inspect(type)}, accumulate: true
+            ```
+
+            This way the values will be accumulated in a list.
+            """
+          end
+
+        IOHelper.warn(message, caller, ctx.file, ctx.line)
+      end
+
+      expr_to_value!(type, name, [List.last(clauses)], opts, module, original, ctx)
+    end
   end
 
   def attribute_type_and_opts(name) do

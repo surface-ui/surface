@@ -239,19 +239,14 @@ defmodule Surface do
 
   @doc false
   def build_assigns(context, static_props, dynamic_props, module, node_alias, ctx) do
-    static_prop_names = Keyword.keys(static_props)
-
-    dynamic_props =
-      for {name, value} <- dynamic_props || [], !Enum.member?(static_prop_names, name) do
-        runtime_value = TypeHandler.runtime_prop_value!(module, name, [value], [], node_alias, nil, ctx)
-        {name, runtime_value}
-      end
+    static_prop_names = Keyword.keys(static_props) |> Enum.uniq()
+    only_dynamic_props = Enum.reject(dynamic_props, &Enum.member?(static_prop_names, elem(&1, 0)))
 
     props =
       module
       |> default_props()
-      |> Keyword.merge(dynamic_props)
-      |> Keyword.merge(static_props)
+      |> Keyword.merge(runtime_props!(static_props, module, node_alias, ctx))
+      |> Keyword.merge(runtime_props!(only_dynamic_props, module, node_alias, ctx))
 
     if module do
       Map.new([__context__: context] ++ props)
@@ -380,5 +375,14 @@ defmodule Surface do
 
       IOHelper.warn(message, caller)
     end
+  end
+
+  defp runtime_props!(props, module, node_alias, ctx) do
+    props
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> Enum.map(fn {name, values} ->
+      runtime_value = TypeHandler.runtime_prop_value!(module, name, values, [], node_alias, nil, ctx)
+      {name, runtime_value}
+    end)
   end
 end

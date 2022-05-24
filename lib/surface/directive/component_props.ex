@@ -32,7 +32,7 @@ defmodule Surface.Directive.ComponentProps do
 
   defp directive_value(value, meta) do
     AST.AttributeExpr.new(
-      Surface.TypeHandler.expr_to_quoted!(value, ":props", :map, meta),
+      Surface.TypeHandler.expr_to_quoted!(value, ":props", :keyword, meta),
       value,
       meta
     )
