@@ -481,33 +481,26 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp collect_component_props(module, attrs) do
-    {props, props_acc} =
-      Enum.reduce(attrs, {[], %{}}, fn attr, {props, props_acc} ->
-        %AST.Attribute{root: root, value: expr} = attr
+    Enum.reduce(attrs, [], fn attr, props ->
+      %AST.Attribute{root: root, value: expr} = attr
 
-        {prop_name, type, type_opts} =
-          with true <- root,
-               root_prop when not is_nil(root_prop) <- Enum.find(module.__props__(), & &1.opts[:root]) do
-            {root_prop.name, root_prop.type, root_prop.opts}
-          else
-            _ -> {attr.name, attr.type, attr.type_opts}
-          end
-
-        cond do
-          module && !module.__validate_prop__(prop_name) ->
-            {props, props_acc}
-
-          type_opts[:accumulate] ->
-            current_value = props_acc[prop_name] || []
-            updated_value = [to_prop_expr(expr, type) | current_value]
-            {props, Map.put(props_acc, prop_name, updated_value)}
-
-          true ->
-            {[{prop_name, to_prop_expr(expr, type)} | props], props_acc}
+      {prop_name, type} =
+        with true <- root,
+             root_prop when not is_nil(root_prop) <- Enum.find(module.__props__(), & &1.opts[:root]) do
+          {root_prop.name, root_prop.type}
+        else
+          _ -> {attr.name, attr.type}
         end
-      end)
 
-    Enum.reverse(props) ++ Enum.map(props_acc, fn {k, v} -> {k, Enum.reverse(v)} end)
+      cond do
+        module && !module.__validate_prop__(prop_name) ->
+          props
+
+        true ->
+          [{prop_name, to_prop_expr(expr, type)} | props]
+      end
+    end)
+    |> Enum.reverse()
   end
 
   # Function component
