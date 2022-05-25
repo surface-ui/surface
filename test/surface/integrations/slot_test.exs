@@ -299,6 +299,32 @@ defmodule Surface.SlotTest do
            """
   end
 
+  test "render Slotable and named slot with numbers" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithMultipleSlotableEntries>
+          <InnerData label={1000} />
+          <:inner label={1001} />
+        </OuterWithMultipleSlotableEntries>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             <div>
+               1000: \
+
+             </div><div>
+               1001: \
+
+             </div>
+             <div>
+             </div>
+           </div>
+           """
+  end
+
   test "render multiple slot entries with props (shorthand notation)" do
     html =
       render_surface do
@@ -1489,12 +1515,12 @@ defmodule Surface.SlotSyncTest do
 
   test "use slot entry in element that is not a component" do
     code = ~s[
-    ~F"""
-    <div>
-      <:body />
-    </div>
-    """
-    ]
+      ~F"""
+      <div>
+        <:body />
+      </div>
+      """
+      ]
 
     output =
       capture_io(:standard_error, fn ->

@@ -141,6 +141,23 @@ defmodule Surface.DirectivesTest do
              """
     end
 
+    test "using assign, static props override dynamic props" do
+      assigns = %{props: %{class: "text-xs", hidden: true, content: "dynamic props content"}}
+
+      html =
+        render_surface do
+          ~F"""
+          <DivWithProps content="static content" :props={@props} />
+          """
+        end
+
+      assert html =~ """
+             <div class="text-xs hidden">
+               static content
+             </div>
+             """
+    end
+
     test "shorthand notation `{...@props}`" do
       assigns = %{props: %{class: "text-xs", hidden: false, content: "dynamic props content"}}
 

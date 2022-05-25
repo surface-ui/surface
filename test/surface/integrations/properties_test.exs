@@ -113,6 +113,21 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule RootGeneratorProp do
+    use Surface.Component
+
+    prop labels, :list, root: true
+    slot default, args: [label: ^labels]
+
+    def render(assigns) do
+      ~F"""
+      {#for label <- @labels}
+        <#slot :args={label: label} />
+      {/for}
+      """
+    end
+  end
+
   describe "atom" do
     test "passing an atom" do
       html =
@@ -186,6 +201,21 @@ defmodule Surface.PropertiesTest do
         render_surface do
           ~F"""
           <KeywordProp prop={[option1: 1, option2: 2]}/>
+          """
+        end
+
+      assert html =~ """
+             Keyword?: true
+             <span>key: option1, value: 1</span>\
+             <span>key: option2, value: 2</span>
+             """
+    end
+
+    test "passing a map" do
+      html =
+        render_surface do
+          ~F"""
+          <KeywordProp prop={%{option1: 1, option2: 2}}/>
           """
         end
 
@@ -660,6 +690,22 @@ defmodule Surface.PropertiesTest do
              Label
              """
     end
+
+    test "component accepts root generator property" do
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp {label <- ["Label1", "Label2"]}>
+            Slot: {label}
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               Slot: Label1
+               Slot: Label2
+             """
+    end
   end
 end
 
@@ -667,8 +713,9 @@ defmodule Surface.PropertiesSyncTest do
   use Surface.ConnCase
 
   import ExUnit.CaptureIO
-  alias Surface.PropertiesTest.StringProp, warn: false
-  alias Surface.PropertiesTest.RootProp, warn: false
+  alias Surface.PropertiesTest.StringProp
+  alias Surface.PropertiesTest.RootProp
+  alias Surface.PropertiesTest.ListProp
 
   test "warn if prop is required and has default value" do
     id = :erlang.unique_integer([:positive]) |> to_string()
@@ -694,45 +741,6 @@ defmodule Surface.PropertiesSyncTest do
     assert output =~ ~r"""
            setting a default value on a required prop has no effect. Either set the default value or set the prop as required, but not both.
              code.exs:4:\
-           """
-  end
-
-  test "warn if props are specified multiple times, but accumulate is false" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-    module = "TestComponentWithPropSpecifiedMultipleTimes_#{id}"
-
-    code = """
-    defmodule #{module} do
-      use Surface.Component
-
-      def render(assigns) do
-        ~F"\""
-        <StringProp
-          label="first
-          label" label="second label"
-        />
-        "\""
-      end
-    end
-    """
-
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
-
-    assert output =~ ~r"""
-           the prop `label` has been passed multiple times. Considering only the last value.
-
-           Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
-
-           ```
-             prop label, :string, accumulate: true
-           ```
-
-           This way the values will be accumulated in a list.
-
-             code.exs:8:\
            """
   end
 
@@ -826,57 +834,192 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
-  test "warn if component does not accept a root property" do
-    assigns = %{label: "root"}
+  describe "unknown property" do
+    test "warns at runtime and render the component" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <StringProp label="My Label." unknown="value" />
+              """
+            end
 
-    code =
-      quote do
-        ~F"""
-        <StringProp
-          {@label}
-        />
-        """
-      end
+          assert html =~ """
+                 My Label.
+                 """
+        end)
 
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code, assigns)
-      end)
-
-    assert output =~ ~r"""
-           no root property defined for component <StringProp>
-
-           Hint: you can declare a root property using option `root: true`
-
-             code:2:\
-           """
+      assert output =~ "Unknown property \"unknown\" for component <StringProp>"
+    end
   end
 
-  test "warn if tag has a root property and the property assigned normally" do
-    assigns = %{label: "root"}
+  defmodule AccumulateListProp do
+    use Surface.Component
 
-    code =
-      quote do
-        ~F"""
-        <RootProp
-          {@label}
-          label="toor"
-        />
-        """
-      end
+    prop prop, :list, accumulate: true, default: [[1, 2, 3]]
 
-    output =
-      capture_io(:standard_error, fn ->
-        compile_surface(code, assigns)
-      end)
+    def render(assigns) do
+      ~F"""
+      List?: {is_list(@prop)}
+      <span :for={v <- @prop}>value: {inspect(v)}</span>
+      """
+    end
+  end
 
-    assert output =~ ~r"""
-           the prop `label` has been passed multiple times. Considering only the last value.
+  describe "accumulate with list prop" do
+    test "if true, groups all props with the same name in a single list" do
+      html =
+        render_surface do
+          ~F"""
+          <AccumulateListProp prop={[1, 2]} prop={[3, 4]} />
+          """
+        end
 
-           Hint: Either specify the `label` via the root property \(`<RootProp { ... }>`\) or \
-           explicitly via the label property \(`<RootProp label="...">`\), but not both.
+      assert html =~ """
+             List?: true
+             <span>value: [1, 2]</span>\
+             <span>value: [3, 4]</span>
+             """
+    end
 
-             code:3:\
-           """
+    test "if true and there's a single prop, it stills creates a list" do
+      html =
+        render_surface do
+          ~F"""
+          <AccumulateListProp prop={[1, 2]} />
+          """
+        end
+
+      assert html =~ """
+             List?: true
+             <span>value: [1, 2]</span>
+             """
+    end
+
+    test "without any props, takes the default value" do
+      html =
+        render_surface do
+          ~F"""
+          <AccumulateListProp />
+          """
+        end
+
+      assert html =~ """
+             List?: true
+             <span>value: [1, 2, 3]</span>
+             """
+    end
+
+    test "if not true renders only the last value" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <StringProp label="label 1" label="label 2" />
+              """
+            end
+
+          assert html =~ """
+                 label 2
+                 """
+        end)
+
+      assert output =~ """
+             the prop `label` has been passed multiple times. Considering only the last value.
+
+             Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+             ```
+               prop label, :string, accumulate: true
+             ```
+
+             This way the values will be accumulated in a list.
+             """
+    end
+
+    test "if not true renders only the last value, list prop" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <ListProp prop={[1, 2]} prop={[3, 4]}/>
+              """
+            end
+
+          assert html =~ """
+                 List?: true
+                 <span>value: 3</span>\
+                 <span>value: 4</span>
+                 """
+        end)
+
+      assert output =~ """
+             the prop `prop` has been passed multiple times. Considering only the last value.
+
+             Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+             ```
+               prop prop, :list, accumulate: true
+             ```
+
+             This way the values will be accumulated in a list.
+             """
+    end
+
+    test "if not true renders only the last value, dynamic attributes" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <ListProp {...[prop: [1, 2], prop: [3, 4]]}/>
+              """
+            end
+
+          assert html =~ """
+                 List?: true
+                 <span>value: 3</span>\
+                 <span>value: 4</span>
+                 """
+        end)
+
+      assert output =~ """
+             the prop `prop` has been passed multiple times. Considering only the last value.
+
+             Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+             ```
+               prop prop, :list, accumulate: true
+             ```
+
+             This way the values will be accumulated in a list.
+             """
+    end
+
+    test "if not true renders only the last value, root prop" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <RootProp {"root label"} label="attr label" />
+              """
+            end
+
+          assert html =~ """
+                 attr label
+                 """
+        end)
+
+      assert output =~ """
+             the prop `label` has been passed multiple times. Considering only the last value.
+
+             Hint: Either specify the `label` via the root property (`<RootProp { ... }>`) or \
+             explicitly via the label property (`<RootProp label="...">`), but not both.
+             """
+    end
   end
 end

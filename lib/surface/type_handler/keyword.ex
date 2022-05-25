@@ -10,10 +10,10 @@ defmodule Surface.TypeHandler.Keyword do
 
   @impl true
   def expr_to_value([value], [], _ctx) do
-    if is_list(value) and Keyword.keyword?(value) do
-      {:ok, value}
-    else
-      {:error, value}
+    cond do
+      is_list(value) and Keyword.keyword?(value) -> {:ok, value}
+      is_map(value) -> {:ok, Keyword.new(value)}
+      true -> {:error, value}
     end
   end
 

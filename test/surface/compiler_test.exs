@@ -240,8 +240,7 @@ defmodule Surface.CompilerTest do
              module: Surface.CompilerTest.Button,
              props: [
                %Surface.AST.Attribute{
-                 name: :label,
-                 type: :string,
+                 root: true,
                  value: %Surface.AST.AttributeExpr{
                    original: "\"click\""
                  }
@@ -474,7 +473,8 @@ defmodule Surface.CompilerTest do
 
       [node | _] = Surface.Compiler.compile(code, 1, __ENV__)
 
-      assert %Surface.AST.Container{children: [%Surface.AST.Tag{children: ["I'm a macro"], element: "div"}]} = node
+      assert %Surface.AST.MacroComponent{children: [%Surface.AST.Tag{children: ["I'm a macro"], element: "div"}]} =
+               node
     end
 
     test "expanded within a component" do
@@ -491,7 +491,7 @@ defmodule Surface.CompilerTest do
                  default: [
                    %Surface.AST.SlotEntry{
                      children: [
-                       %Surface.AST.Container{
+                       %Surface.AST.MacroComponent{
                          children: [
                            %Surface.AST.Tag{
                              children: ["I'm a macro"],
@@ -516,7 +516,7 @@ defmodule Surface.CompilerTest do
       assert %Surface.AST.Tag{
                element: "div",
                children: [
-                 %Surface.AST.Container{
+                 %Surface.AST.MacroComponent{
                    children: [%Surface.AST.Tag{children: ["I'm a macro"], element: "div"}]
                  }
                ]
@@ -795,22 +795,6 @@ defmodule Surface.CompilerSyncTest do
 
     assert message =~ "cannot render <Chars> (module List.Chars is not a component)"
     assert line == 2
-  end
-
-  test "warning on non-existent property" do
-    code = """
-    <div>
-      <Button
-        label="test"
-        nonExistingProp="1"
-      />
-    </div>
-    """
-
-    {:warn, line, message} = run_compile(code, __ENV__)
-
-    assert message =~ ~S(Unknown property "nonExistingProp" for component <Button>)
-    assert line == 4
   end
 
   test "warning on undefined assign in property" do

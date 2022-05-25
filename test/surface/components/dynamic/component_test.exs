@@ -255,6 +255,68 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              """
     end
 
+    test "renders the last attribute when passing multiple that don't accumulate, and warns" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <Component module={Stateless} label="My label 1" label="My label 2" />
+              """
+            end
+
+          assert html =~ """
+                 <div>
+                   <span>My label 2</span>
+                 </div>
+                 """
+        end)
+
+      assert output =~ """
+             the prop `label` has been passed multiple times. Considering only the last value.
+
+             Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+             ```
+               prop label, :string, accumulate: true
+             ```
+
+             This way the values will be accumulated in a list.
+             """
+    end
+
+    test "renders the last attribute when passing multiple that don't accumulate, with assign" do
+      assigns = %{label1: "My label 1", label2: "My label 2"}
+
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <Component module={Stateless} label={@label1} label={@label2} />
+              """
+            end
+
+          assert html =~ """
+                 <div>
+                   <span>My label 2</span>
+                 </div>
+                 """
+        end)
+
+      assert output =~ """
+             the prop `label` has been passed multiple times. Considering only the last value.
+
+             Hint: Either remove all redundant definitions or set option `accumulate` to `true`:
+
+             ```
+               prop label, :string, accumulate: true
+             ```
+
+             This way the values will be accumulated in a list.
+             """
+    end
+
     test "attribute values are still converted according to their types but only at runtime" do
       html =
         render_surface do

@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_formatter, "~> 0.6.0"}
+                   {:surface_formatter, "~> 0.7.4"}
                  ]
                end
              end
@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
           [
             {:phoenix, "~> 1.6.0"},
             {:surface, "~> 0.5.2"},
-            {:surface_formatter, "~> 0.6.0"},
+            {:surface_formatter, "~> 0.7.4"},
             {:plug_cowboy, "~> 2.5"}
           ]
         end
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
              [
                import_deps: [:phoenix, :ecto],
                inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs}"],
-               surface_inputs: ["{lib,test}/**/*.{ex,exs,sface}"]
+               surface_inputs: ["{lib,test,priv/catalogue}/**/*.{ex,exs,sface}"]
              ]
              """
     end
@@ -109,7 +109,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.FormatterTest do
       [
         import_deps: [:phoenix, :ecto],
         inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs}"],
-        surface_inputs: ["{lib,test}/**/*.{ex,exs,sface}"]
+        surface_inputs: ["{lib,test,priv}/**/*.{ex,exs,sface}"]
       ]
       """
 

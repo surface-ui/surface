@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
     """)
   end
 
-  def add_elixirc_paths_entry(code, env, body, already_pached_text) do
+  def add_elixirc_paths_entry(code, env, body, already_patched_text) do
     code
     |> parse_string!()
     |> enter_defmodule()
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
         patcher
         |> find_defp_with_args(:elixirc_paths, &match?([^env], &1))
         |> body()
-        |> find_code(already_pached_text)
+        |> find_code(already_patched_text)
       end,
       :already_patched
     )

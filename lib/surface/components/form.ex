@@ -16,6 +16,13 @@ defmodule Surface.Components.Form do
   import Surface.Components.Utils, only: [opts_to_phx_opts: 1]
   import Surface.Components.Form.Utils, only: [props_to_opts: 2, props_to_attr_opts: 2]
 
+  @doc """
+  The ID of the form attribute.
+  If an ID is given, all form inputs will also be prefixed by the given ID.
+  Required to enable form recovery following crashes or disconnects.
+  """
+  prop id, :string
+
   @doc "Atom or changeset to inform the form data"
   prop for, :any, required: true
 
