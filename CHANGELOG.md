@@ -2,6 +2,9 @@
 
 ## v0.8.0-dev
 
+  * Add `catalogue_test/1` macro to generate basic tests for catalogue examples and playgrounds
+  * Add `Surface.Catalogue.Examples` to allow defining multiple stateless examples in a single module
+
 ### Breaking Changes
 
   * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
