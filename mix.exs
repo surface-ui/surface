@@ -7,7 +7,7 @@ defmodule Surface.MixProject do
     [
       app: :surface,
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.12",
       description: "A component based library for Phoenix LiveView",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
