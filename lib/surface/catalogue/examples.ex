@@ -99,16 +99,16 @@ defmodule Surface.Catalogue.Examples do
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
 
-      @config unquote(opts)
+      @__example_config__ unquote(opts)
 
       import Surface, except: [sigil_F: 2]
 
       on_mount({unquote(__MODULE__), :assign_func})
 
-      Module.register_attribute(__MODULE__, :__codes__, accumulate: true)
+      Module.register_attribute(__MODULE__, :__example_codes__, accumulate: true)
 
       defmacrop sigil_F({:<<>>, _meta, [string]} = ast, opts) do
-        Module.put_attribute(__CALLER__.module, :__codes__, string)
+        Module.put_attribute(__CALLER__.module, :__example_codes__, string)
 
         quote do
           Surface.sigil_F(unquote(ast), unquote(opts))
@@ -124,9 +124,9 @@ defmodule Surface.Catalogue.Examples do
   end
 
   defmacro __before_compile__(env) do
-    config = Module.get_attribute(env.module, :config)
+    config = Module.get_attribute(env.module, :__example_config__)
     subject = Keyword.fetch!(config, :subject)
-    codes = Module.get_attribute(env.module, :__codes__)
+    codes = Module.get_attribute(env.module, :__example_codes__)
 
     examples_configs =
       Module.get_attribute(env.module, :__examples__, [[]])

@@ -36,7 +36,7 @@ defmodule Surface.Catalogue.Example do
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
     quote do
-      @config unquote(opts)
+      @__example_config__ unquote(opts)
       @before_compile unquote(__MODULE__)
 
       use Surface.LiveView, unquote(opts)
@@ -47,7 +47,7 @@ defmodule Surface.Catalogue.Example do
       import Surface, except: [sigil_F: 2]
 
       defmacrop sigil_F({:<<>>, _meta, [string]} = ast, opts) do
-        Module.put_attribute(__CALLER__.module, :code, string)
+        Module.put_attribute(__CALLER__.module, :__example_code__, string)
 
         quote do
           Surface.sigil_F(unquote(ast), unquote(opts))
@@ -57,12 +57,12 @@ defmodule Surface.Catalogue.Example do
   end
 
   defmacro __before_compile__(env) do
-    config = Module.get_attribute(env.module, :config)
+    config = Module.get_attribute(env.module, :__example_config__)
     subject = Keyword.fetch!(config, :subject)
     assert = Keyword.get(config, :assert, [])
 
-    code = Module.get_attribute(env.module, :code)
-    line = Module.get_attribute(env.module, :line)
+    code = Module.get_attribute(env.module, :__example_code__)
+    line = Module.get_attribute(env.module, :__example_line__)
 
     doc =
       case Module.get_attribute(env.module, :moduledoc) do
@@ -91,7 +91,7 @@ defmodule Surface.Catalogue.Example do
   end
 
   def __on_definition__(env, :def, :render, [_arg], _guards, _body) do
-    Module.put_attribute(env.module, :line, env.line)
+    Module.put_attribute(env.module, :__example_line__, env.line)
   end
 
   def __on_definition__(_env, _kind, _name, _args, _guards, _body) do
