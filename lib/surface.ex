@@ -201,6 +201,63 @@ defmodule Surface do
   end
 
   @doc false
+  def components(opts \\ []) do
+    only_web_namespace = Keyword.get(opts, :only_web_namespace, false)
+    only_current_project = Keyword.get(opts, :only_current_project, false)
+    project_app = Mix.Project.config()[:app]
+
+    apps =
+      if only_current_project do
+        [project_app]
+      else
+        :ok = Application.ensure_loaded(project_app)
+        project_deps_apps = Application.spec(project_app, :applications) || []
+        [project_app | project_deps_apps]
+      end
+
+    for app <- apps,
+        deps_apps = Application.spec(app)[:applications] || [],
+        app in [:surface, project_app] or :surface in deps_apps,
+        prefix = app_beams_prefix(app, project_app, only_web_namespace),
+        {dir, files} = app_beams_dir_and_files(app),
+        file <- files,
+        List.starts_with?(file, prefix) do
+      :filename.join(dir, file)
+    end
+    |> Enum.chunk_every(50)
+    |> Task.async_stream(fn files ->
+      for file <- files,
+          {:ok, {_, [{_, chunk} | _]}} = :beam_lib.chunks(file, ['Attr']),
+          chunk |> :erlang.binary_to_term() |> Keyword.get(:component_type) do
+        file |> Path.basename(".beam") |> String.to_atom()
+      end
+    end)
+    |> Enum.flat_map(fn {:ok, result} -> result end)
+  end
+
+  defp app_beams_prefix(app, project_app, only_web_namespace) do
+    if only_web_namespace and app == project_app do
+      Mix.Phoenix.base()
+      |> Mix.Phoenix.web_module()
+      |> Module.concat(".")
+      |> to_charlist()
+    else
+      'Elixir.'
+    end
+  end
+
+  defp app_beams_dir_and_files(app) do
+    dir =
+      app
+      |> Application.app_dir()
+      |> Path.join("ebin")
+      |> String.to_charlist()
+
+    {:ok, files} = :file.list_dir(dir)
+    {dir, files}
+  end
+
+  @doc false
   def default_props(module) do
     # The function_exported? call returns false if the module hasn't been loaded yet. Calling
     # module.__info__(:module) forces the module to be loaded and it turned out to be cheaper

@@ -6,7 +6,8 @@ locals_without_parens = [
   data: 3,
   data: 2,
   slot: 1,
-  slot: 2
+  slot: 2,
+  catalogue_test: 1
 ]
 
 [
