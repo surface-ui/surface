@@ -7,6 +7,7 @@
 
 ### Breaking Changes
 
+  * Drop support for Elixir < `v1.12`
   * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
 
 ## v0.7.4 (2022-04-18)
