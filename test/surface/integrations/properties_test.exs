@@ -290,6 +290,38 @@ defmodule Surface.PropertiesTest do
         end
       end)
     end
+
+    test "validate invalid values at runtime, Date" do
+      message = """
+      invalid value for property "prop". Expected a :keyword, got: ~D[2019-10-31].
+
+      Original expression: {~D[2019-10-31]}
+      """
+
+      assert_raise(RuntimeError, message, fn ->
+        render_surface do
+          ~F"""
+          <KeywordProp prop={~D[2019-10-31]} />
+          """
+        end
+      end)
+    end
+
+    test "validate invalid values at runtime, range" do
+      message = """
+      invalid value for property "prop". Expected a :keyword, got: 1..3.
+
+      Original expression: {1..3}
+      """
+
+      assert_raise(RuntimeError, message, fn ->
+        render_surface do
+          ~F"""
+          <KeywordProp prop={1..3} />
+          """
+        end
+      end)
+    end
   end
 
   describe "map" do

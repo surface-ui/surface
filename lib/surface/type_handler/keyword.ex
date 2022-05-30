@@ -12,7 +12,7 @@ defmodule Surface.TypeHandler.Keyword do
   def expr_to_value([value], [], _ctx) do
     cond do
       is_list(value) and Keyword.keyword?(value) -> {:ok, value}
-      is_map(value) -> {:ok, Keyword.new(value)}
+      is_map(value) and not is_struct(value) -> {:ok, Keyword.new(value)}
       true -> {:error, value}
     end
   end
