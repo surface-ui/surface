@@ -180,6 +180,32 @@ defmodule Surface.SlotTest do
     end
   end
 
+  defmodule PhoenixComponentWithSlots do
+    use Phoenix.Component
+
+    def my_component(assigns) do
+      assigns =
+        assigns
+        |> assign_new(:header, fn -> [] end)
+        |> assign_new(:footer, fn -> [] end)
+
+      ~H"""
+      <div>
+        <div>
+          Header: <%= render_slot(@header) %>
+        </div>
+        <div>
+          Body/Default: <%= render_slot(@inner_block) %>
+        </div>
+        <div>
+          Footer: <%= render_slot(@footer) %>
+        </div>
+      </div>
+      """
+    end
+
+  end
+
   defmodule Column do
     use Surface.Component, slot: "col"
 
@@ -748,6 +774,30 @@ defmodule Surface.SlotTest do
              Default Prop
            </div>
            """
+  end
+
+  test "phx component slot raise an error since @inner_block not available in template" do
+    html =
+      render_surface do
+        ~F"""
+        <PhoenixComponentWithSlots.my_component>
+            <:header>
+              <div>header slot</div>
+            </:header>
+            <p>body/default slot</p>
+            <:footer>
+              <div>footer slot</div>
+            </:footer>
+          </PhoenixComponentWithSlots.my_component>
+        """
+      end
+
+    assert html =~ """
+      <div>
+          Default Slot
+        Default Prop
+      </div>
+      """
   end
 
   test "render slot renaming slot args" do
