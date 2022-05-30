@@ -57,6 +57,15 @@ defmodule Surface.Component do
       @doc "Built-in assign"
       data inner_block, :fun
 
+      defmacro __using__(opts) do
+        alias_opts = Keyword.take(opts, [:as])
+
+        quote do
+          alias unquote(__MODULE__), unquote(alias_opts)
+          Module.put_attribute(__MODULE__, :__compile_time_deps__, unquote(__MODULE__))
+        end
+      end
+
       if unquote(slot_name) != nil do
         Module.put_attribute(__MODULE__, :__slot_name__, unquote(slot_name))
 

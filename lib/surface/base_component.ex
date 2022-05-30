@@ -27,6 +27,7 @@ defmodule Surface.BaseComponent do
       @behaviour unquote(__MODULE__)
 
       Module.register_attribute(__MODULE__, :__components_calls__, accumulate: true)
+      Module.register_attribute(__MODULE__, :__compile_time_deps__, accumulate: true)
 
       @before_compile unquote(__MODULE__)
 

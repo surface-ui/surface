@@ -357,4 +357,52 @@ defmodule Surface.ComponentTest do
                """
     end
   end
+
+  defmodule ComponentWithoutCompileTimeDeps do
+    use Surface.Component
+
+    def render(assigns) do
+      ~F"""
+      <Stateless label="My label" class="myclass"/>
+      <Outer>
+        <Inner/>
+      </Outer>
+      """
+    end
+
+    def __compile_time_deps__() do
+      Enum.reverse(@__compile_time_deps__)
+    end
+  end
+
+  defmodule ComponentWithCompileTimeDeps do
+    use Surface.Component
+
+    use Surface.ComponentTest.Stateless
+    use Surface.ComponentTest.Outer, as: AliasedOuter
+    use Inner
+
+    def render(assigns) do
+      ~F"""
+      <Stateless label="My label" class="myclass"/>
+      <AliasedOuter>
+        <Inner/>
+      </AliasedOuter>
+      """
+    end
+
+    def __compile_time_deps__() do
+      Enum.reverse(@__compile_time_deps__)
+    end
+  end
+
+  test "component with compile-time deps" do
+    assert ComponentWithoutCompileTimeDeps.__compile_time_deps__() == []
+
+    assert ComponentWithCompileTimeDeps.__compile_time_deps__() == [
+             Surface.ComponentTest.Stateless,
+             Surface.ComponentTest.Outer,
+             Surface.ComponentTest.Inner
+           ]
+  end
 end
