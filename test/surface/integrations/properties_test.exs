@@ -706,6 +706,36 @@ defmodule Surface.PropertiesTest do
                Slot: Label2
              """
     end
+
+    test "validate invalid values at runtime" do
+      message = """
+      invalid value for property "label". Expected a :string, got: ["label", "label2"].
+
+      Original expression: {"label",  "label2"}
+      """
+
+      assert_raise(RuntimeError, message, fn ->
+        render_surface do
+          ~F"""
+          <RootProp {"label",  "label2"} />
+          """
+        end
+      end)
+    end
+
+    test "validate invalid values at runtime, list" do
+      message = """
+      invalid value for property "labels". Expected a :list, got: "label"\
+      """
+
+      assert_raise(RuntimeError, message, fn ->
+        render_surface do
+          ~F"""
+          <RootGeneratorProp {"label"} />
+          """
+        end
+      end)
+    end
   end
 end
 

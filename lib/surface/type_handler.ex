@@ -308,6 +308,8 @@ defmodule Surface.TypeHandler do
   end
 
   defp runtime_error_message(type, name, value, module, original, details \\ nil) do
+    name = name || Enum.find(module.__props__(), & &1.opts[:root]).name
+
     details = if details, do: "\n" <> details, else: details
     {attr_name, attr_kind} = formatted_name_and_kind(name, module)
 
