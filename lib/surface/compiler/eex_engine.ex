@@ -502,7 +502,7 @@ defmodule Surface.Compiler.EExEngine do
     for {name, slot_entries} <- component.slot_entries,
         state = %{state | scope: [:slot_entry | state.scope]},
         nested_slot_entries = handle_slot_entries(component, slot_entries, buffer, state),
-        not Enum.empty?(nested_slot_entries) do
+        nested_slot_entries != [] do
       slot_name = if name == :default, do: :inner_block, else: name
 
       entries =
