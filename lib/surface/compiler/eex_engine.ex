@@ -498,44 +498,31 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   # Function component
-  defp build_slot_props(%AST.FunctionComponent{fun: fun} = component, buffer, state, _context_var)
-       when fun != nil do
-    slot_info =
-      component.slot_entries
-      |> Enum.map(fn {name, slot_entries} ->
-        state = %{state | scope: [:slot_entry | state.scope]}
+  defp build_slot_props(%AST.FunctionComponent{fun: fun} = component, buffer, state, _ctx_var) when fun != nil do
+    for {name, slot_entries} <- component.slot_entries,
+        state = %{state | scope: [:slot_entry | state.scope]},
+        nested_slot_entries = handle_slot_entries(component, slot_entries, buffer, state),
+        not Enum.empty?(nested_slot_entries) do
+      slot_name = if name == :default, do: :inner_block, else: name
 
-        nested_slot_entries = handle_slot_entries(component, slot_entries, buffer, state)
+      entries =
+        Enum.map(nested_slot_entries, fn {let, props, body} ->
+          let_clause = if let == [], do: quote(do: _), else: let
 
-        {name, nested_slot_entries}
-      end)
-
-    case slot_info do
-      [{:default, [{let, _, body}]}] ->
-        block =
-          if let == [] do
-            quote generated: true do
-              _ ->
-                unquote(body)
+          inner_block =
+            quote do
+              Phoenix.LiveView.Helpers.inner_block unquote(slot_name) do
+                unquote(let_clause) ->
+                  unquote(body)
+              end
             end
-          else
-            quote generated: true do
-              unquote(let) ->
-                unquote(body)
-            end
-          end
 
-        ast =
-          quote do
-            Phoenix.LiveView.Helpers.inner_block(:inner_block, do: unquote(block))
-          end
+          props = [__slot__: slot_name, inner_block: inner_block] ++ props
 
-        props = [__slot__: :inner_block, inner_block: ast]
+          {:%{}, [generated: true], props}
+        end)
 
-        [inner_block: {:%{}, [generated: true], props}]
-
-      _ ->
-        []
+      {slot_name, entries}
     end
   end
 
