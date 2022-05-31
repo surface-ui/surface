@@ -724,6 +724,86 @@ defmodule Surface.SlotTest do
            """
   end
 
+  defmodule PhoenixComponentWithSlots do
+    use Phoenix.Component
+
+    def my_component(assigns) do
+      assigns =
+        assigns
+        |> assign_new(:header, fn -> [] end)
+        |> assign_new(:footer, fn -> [] end)
+
+      ~H"""
+      <div>
+        Header: <%= render_slot(@header) %>
+        Default: <%= render_slot(@inner_block) %>
+        Footer: <%= render_slot(@footer) %>
+      </div>
+      """
+    end
+
+    def my_component_with_args(assigns) do
+      assigns =
+        assigns
+        |> assign_new(:header, fn -> [] end)
+        |> assign_new(:footer, fn -> [] end)
+
+      ~H"""
+      <div>
+        Header: <%= render_slot(@header, "header_arg") %>
+        Default: <%= render_slot(@inner_block, "default_arg") %>
+        Footer: <%= render_slot(@footer, "footer_arg") %>
+      </div>
+      """
+    end
+  end
+
+  test "render vanilla phoenix components with slots" do
+    html =
+      render_surface do
+        ~F"""
+        <PhoenixComponentWithSlots.my_component>
+          <:header>header</:header>
+          <p>default</p>
+          <:footer>footer</:footer>
+        </PhoenixComponentWithSlots.my_component>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Header: header
+             Default: \
+
+             <p>default</p>
+             Footer: footer
+           </div>
+           """
+  end
+
+  test "render vanilla phoenix components with slots and args" do
+    html =
+      render_surface do
+        ~F"""
+        <PhoenixComponentWithSlots.my_component_with_args :let={default_arg}>
+          <:header :let={header_arg}>header ({header_arg})</:header>
+          <p>default ({default_arg})</p>
+          <:footer :let={footer_arg}>footer ({footer_arg})</:footer>
+        </PhoenixComponentWithSlots.my_component_with_args>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Header: header (header_arg)
+             Default: \
+
+             <p>default (default_arg)</p>
+             Footer: footer (footer_arg)
+           </div>
+           """
+  end
+
   test "render slot renaming slot args" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 

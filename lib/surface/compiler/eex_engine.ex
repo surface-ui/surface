@@ -503,44 +503,31 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   # Function component
-  defp build_slot_props(%AST.FunctionComponent{fun: fun} = component, buffer, state, _context_var)
-       when fun != nil do
-    slot_info =
-      component.templates
-      |> Enum.map(fn {name, templates_for_slot} ->
-        state = %{state | scope: [:template | state.scope]}
+  defp build_slot_props(%AST.FunctionComponent{fun: fun} = component, buffer, state, _ctx_var) when fun != nil do
+    for {name, templates} <- component.templates,
+        state = %{state | scope: [:template | state.scope]},
+        nested_templates = handle_templates(component, templates, buffer, state),
+        nested_templates != [] do
+      slot_name = if name == :default, do: :inner_block, else: name
 
-        nested_templates = handle_templates(component, templates_for_slot, buffer, state)
+      entries =
+        Enum.map(nested_templates, fn {let, props, body} ->
+          let_clause = if let == [], do: quote(do: _), else: let
 
-        {name, nested_templates}
-      end)
-
-    case slot_info do
-      [{:default, [{let, _, body}]}] ->
-        block =
-          if let == [] do
-            quote generated: true do
-              _ ->
-                unquote(body)
+          inner_block =
+            quote do
+              Phoenix.LiveView.Helpers.inner_block unquote(slot_name) do
+                unquote(let_clause) ->
+                  unquote(body)
+              end
             end
-          else
-            quote generated: true do
-              unquote(let) ->
-                unquote(body)
-            end
-          end
 
-        ast =
-          quote do
-            Phoenix.LiveView.Helpers.inner_block(:inner_block, do: unquote(block))
-          end
+          props = [__slot__: slot_name, inner_block: inner_block] ++ props
 
-        props = [__slot__: :inner_block, inner_block: ast]
+          {:%{}, [generated: true], props}
+        end)
 
-        [inner_block: {:%{}, [generated: true], props}]
-
-      _ ->
-        []
+      {slot_name, entries}
     end
   end
 

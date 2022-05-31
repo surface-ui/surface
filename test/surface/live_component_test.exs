@@ -183,6 +183,31 @@ defmodule Surface.LiveComponentTest do
     assert html =~ "Assigned in update/2"
   end
 
+  test "render a stateful component inside a function component's slot" do
+    defmodule ViewWithLiveComponentInsideFunctionComponent do
+      use Surface.LiveView
+
+      defp func(assigns) do
+        ~F"""
+        <div>
+          {render_slot(@inner_block)}
+        </div>
+        """
+      end
+
+      def render(assigns) do
+        ~F"""
+        <.func>
+          <StatefulComponent id="comp" />
+        </.func>
+        """
+      end
+    end
+
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithLiveComponentInsideFunctionComponent)
+    assert html =~ "Initial stateful"
+  end
+
   # TODO: Uncomment when update to LV v0.17.6
   # test "handle events in LiveComponent (handled by the component itself)" do
   #   {:ok, view, _html} = live_isolated(build_conn(), View)
