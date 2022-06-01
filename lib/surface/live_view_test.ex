@@ -113,7 +113,7 @@ defmodule Surface.LiveViewTest do
       end)
 
   """
-  defmacro compile_surface(code, assigns \\ quote(do: %{})) do
+  defmacro compile_surface(code, assigns \\ quote(do: %{}), module_code \\ nil) do
     env = Map.take(__CALLER__, [:function, :module, :line])
 
     quote do
@@ -121,6 +121,7 @@ defmodule Surface.LiveViewTest do
         unquote(__MODULE__).generate_live_view_ast(
           unquote(code),
           unquote(assigns),
+          unquote(module_code),
           unquote(Macro.escape(env))
         )
 
@@ -283,7 +284,7 @@ defmodule Surface.LiveViewTest do
   end
 
   @doc false
-  def generate_live_view_ast(render_code, props, env) do
+  def generate_live_view_ast(render_code, props, module_code, env) do
     {func, _} = env.function
     module = Module.concat([env.module, String.replace("(#{func}) at line #{env.line}", "/", "_")])
 
@@ -297,6 +298,7 @@ defmodule Surface.LiveViewTest do
     quote do
       defmodule unquote(module) do
         use Surface.LiveView
+        unquote(module_code)
 
         unquote_splicing(props_ast)
 

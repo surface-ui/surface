@@ -62,6 +62,13 @@ defmodule Surface.Component do
 
         quote do
           alias unquote(__MODULE__), unquote(alias_opts)
+
+          # Required by tests using `render_surface` because the test module is not a component
+          # FIXME: Should `use Surface.LiveViewTest` do this?
+          if not Module.has_attribute?(__MODULE__, :__compile_time_deps__) do
+            Module.register_attribute(__MODULE__, :__compile_time_deps__, accumulate: true)
+          end
+
           Module.put_attribute(__MODULE__, :__compile_time_deps__, unquote(__MODULE__))
         end
       end

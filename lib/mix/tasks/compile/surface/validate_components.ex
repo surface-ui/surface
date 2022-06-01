@@ -82,6 +82,17 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
               diagnostics = [warning(message, file, attr.meta.line) | diagnostics]
               {diagnostics, attrs}
 
+            attr.root == true and not compile_time_dep?(attr.meta.caller.module, module) ->
+              message = """
+              no compile time dependency defined for component <#{component_call.node_alias}>,
+              root property `#{prop.name}` will be ignored
+
+              Hint: you can declare a compile time dependency with `use #{component_call.node_alias}`
+              """
+
+              diagnostics = [warning(message, file, attr.meta.line) | diagnostics]
+              {diagnostics, attrs}
+
             true ->
               diagnostics = [validate_attribute(attr, prop, component_call.node_alias, file, attrs) | diagnostics]
               {diagnostics, MapSet.put(attrs, attr.name || prop.name)}
@@ -151,5 +162,9 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
       position: line,
       severity: severity
     }
+  end
+
+  defp compile_time_dep?(caller_module, dep_module) do
+    dep_module in caller_module.__compile_time_deps__()
   end
 end

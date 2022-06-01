@@ -65,6 +65,14 @@ defmodule Surface.BaseComponent do
         end
       end
 
+    def_compile_time_deps_ast =
+      quote do
+        @docs false
+        def __compile_time_deps__() do
+          Enum.reverse(@__compile_time_deps__)
+        end
+      end
+
     components = Enum.uniq_by(components_calls, & &1.component)
 
     requires =
@@ -76,7 +84,8 @@ defmodule Surface.BaseComponent do
 
     [
       requires,
-      def_components_calls_ast
+      def_components_calls_ast,
+      def_compile_time_deps_ast
     ]
   end
 

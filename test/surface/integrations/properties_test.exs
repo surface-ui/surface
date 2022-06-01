@@ -1,3 +1,32 @@
+defmodule Surface.PropertiesTest.TestComponents do
+  defmodule RootProp do
+    use Surface.Component
+
+    prop label, :string, root: true
+
+    def render(assigns) do
+      ~F"""
+      { @label }
+      """
+    end
+  end
+
+  defmodule RootGeneratorProp do
+    use Surface.Component
+
+    prop labels, :list, root: true
+    slot default, args: [label: ^labels]
+
+    def render(assigns) do
+      ~F"""
+      {#for label <- @labels}
+        <#slot :args={label: label} />
+      {/for}
+      """
+    end
+  end
+end
+
 defmodule Surface.PropertiesTest do
   use Surface.ConnCase, async: true
 
@@ -101,32 +130,8 @@ defmodule Surface.PropertiesTest do
     end
   end
 
-  defmodule RootProp do
-    use Surface.Component
-
-    prop label, :string, root: true
-
-    def render(assigns) do
-      ~F"""
-      { @label }
-      """
-    end
-  end
-
-  defmodule RootGeneratorProp do
-    use Surface.Component
-
-    prop labels, :list, root: true
-    slot default, args: [label: ^labels]
-
-    def render(assigns) do
-      ~F"""
-      {#for label <- @labels}
-        <#slot :args={label: label} />
-      {/for}
-      """
-    end
-  end
+  use Surface.PropertiesTest.TestComponents.RootProp
+  use Surface.PropertiesTest.TestComponents.RootGeneratorProp
 
   describe "atom" do
     test "passing an atom" do
@@ -776,7 +781,7 @@ defmodule Surface.PropertiesSyncTest do
 
   import ExUnit.CaptureIO
   alias Surface.PropertiesTest.StringProp
-  alias Surface.PropertiesTest.RootProp
+  use Surface.PropertiesTest.TestComponents.RootProp
   alias Surface.PropertiesTest.ListProp
 
   test "warn if prop is required and has default value" do

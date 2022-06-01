@@ -235,7 +235,40 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     def render(assigns), do: ~F[<div />]
   end
 
+  test "should return diagnostic when root prop is used without using the component" do
+    component =
+      quote do
+        ~F"""
+        <RootProp {"first"} />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: """
+               no compile time dependency defined for component <RootProp>,
+               root property `text` will be ignored
+
+               Hint: you can declare a compile time dependency with `use RootProp`
+               """,
+               position: 1,
+               severity: :warning
+             }
+           ]
+  end
+
   test "should return diagnostic when props are specified multiple times with root prop, but accumulate is false" do
+    module_code =
+      quote do
+        use RootProp
+      end
+
     component =
       quote do
         ~F"""
@@ -245,7 +278,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
         />
         """
       end
-      |> compile_surface()
+      |> compile_surface(%{}, module_code)
 
     diagnostics = ValidateComponents.validate([component])
 
@@ -264,6 +297,59 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                severity: :warning
              }
            ]
+  end
+
+  defmodule LiveRootProp do
+    use Surface.LiveComponent
+    prop text, :any, root: true
+    def render(assigns), do: ~F[<div />]
+  end
+
+  test "should return diagnostic when root prop is used without using the live component" do
+    component =
+      quote do
+        ~F"""
+        <LiveRootProp id="123" {"first"} />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: """
+               no compile time dependency defined for component <LiveRootProp>,
+               root property `text` will be ignored
+
+               Hint: you can declare a compile time dependency with `use LiveRootProp`
+               """,
+               position: 1,
+               severity: :warning
+             }
+           ]
+  end
+
+  test "should not return diagnostic when root prop is used using the live component" do
+    module_code =
+      quote do
+        use LiveRootProp
+      end
+
+    component =
+      quote do
+        ~F"""
+        <LiveRootProp id="123" {"first"} />
+        """
+      end
+      |> compile_surface(%{}, module_code)
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == []
   end
 
   test "should return diagnostic when passing a root prop and the component doesn't have one" do
@@ -326,6 +412,11 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
   end
 
   test "should not return diagnostic when props are specified multiple times with root prop, and accumulate is true" do
+    module_code =
+      quote do
+        use AccumulateRootProp
+      end
+
     component =
       quote do
         ~F"""
@@ -335,7 +426,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
         />
         """
       end
-      |> compile_surface()
+      |> compile_surface(%{}, module_code)
 
     diagnostics = ValidateComponents.validate([component])
     assert diagnostics == []

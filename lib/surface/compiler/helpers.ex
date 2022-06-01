@@ -284,4 +284,21 @@ defmodule Surface.Compiler.Helpers do
       alias MyProject.Components.#{node_alias}
     """
   end
+
+  @doc """
+  Checks at compile time if `caller_module` declared a compile time dependency on `dep_module`.
+
+  A compile time dependency can be declared with `use DepModule`.
+
+  > #### Warning {: .warning}
+  >
+  > If you are evaluating a template at runtime with `Surface.Compiler.compile(code, 1, __ENV__)`
+  > `compile_time_deps` cannot be checked because the caller module is already closed. This usually
+  > only happens in tests.
+  """
+  def compile_time_dep?(caller_module, dep_module) do
+    if Module.open?(caller_module) do
+      dep_module in Module.get_attribute(caller_module, :__compile_time_deps__, [])
+    end
+  end
 end

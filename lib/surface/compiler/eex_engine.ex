@@ -485,14 +485,25 @@ defmodule Surface.Compiler.EExEngine do
       %AST.Attribute{root: root, value: expr} = attr
 
       {prop_name, type} =
-        with true <- root,
-             root_prop when not is_nil(root_prop) <- Enum.find(module.__props__(), & &1.opts[:root]) do
-          {root_prop.name, root_prop.type}
+        if root && module do
+          root_prop =
+            Surface.Compiler.Helpers.compile_time_dep?(attr.meta.caller.module, module) &&
+              Enum.find(module.__props__(), & &1.opts[:root])
+
+          if root_prop do
+            {root_prop.name, root_prop.type}
+          else
+            {nil, nil}
+          end
         else
-          _ -> {attr.name, attr.type}
+          {attr.name, attr.type}
         end
 
-      [{prop_name, to_prop_expr(expr, type)} | props]
+      if is_nil(prop_name) do
+        props
+      else
+        [{prop_name, to_prop_expr(expr, type)} | props]
+      end
     end)
     |> Enum.reverse()
   end
