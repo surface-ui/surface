@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
   defp check_components_calls(module) do
     components_calls = module.__components_calls__()
-    file = module.module_info() |> get_in([:compile, :source]) |> to_string()
+    file = template_file(module)
 
     for component_call <- components_calls do
       validate_properties(file, component_call) ++
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
     has_directive_props? = Enum.any?(directives, &match?(%AST.Directive{name: :props}, &1))
 
-    if not has_directive_props? and function_exported?(module, :__props__, 0) do
+    if not has_directive_props? do
       existing_props_names = Enum.map(props, & &1.name)
       required_props_names = module.__required_props_names__()
       missing_props_names = required_props_names -- existing_props_names
@@ -135,6 +135,14 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
         end
 
       warning(message, file, attr_line)
+    end
+  end
+
+  defp template_file(module) do
+    if function_exported?(module, :__template_file__, 0) do
+      module.__template_file__()
+    else
+      module.module_info() |> get_in([:compile, :source]) |> to_string()
     end
   end
 

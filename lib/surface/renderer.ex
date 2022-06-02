@@ -36,6 +36,8 @@ defmodule Surface.Renderer do
           def render(var!(assigns)) do
             unquote(ast)
           end
+
+          def __template_file__(), do: unquote(template)
         end
 
       {_, true, _} ->
