@@ -32,6 +32,7 @@ defmodule Surface.LiveView do
 
   defmacro __using__(opts) do
     quote do
+      @before_compile Surface.Renderer
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
       use Surface.API, include: [:prop, :data]
@@ -41,7 +42,6 @@ defmodule Surface.LiveView do
       alias Surface.Components.Dynamic.Component
       alias Surface.Components.Dynamic.LiveComponent
 
-      @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
 
       @doc "The id of the live view"

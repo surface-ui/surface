@@ -38,9 +38,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 
-    assert capture_io(:standard_error, fn ->
-             assert run([]) == {:noop, []}
-           end) == ""
+    assert capture_io(:standard_error, fn -> run(["--return-errors"]) end) == ""
 
     assert File.read!(@hooks_index_file) == """
            /*

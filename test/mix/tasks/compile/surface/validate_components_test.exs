@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
 
   alias Mix.Tasks.Compile.Surface.ValidateComponents
   alias Mix.Task.Compiler.Diagnostic
+  alias Mix.Tasks.Compile.Surface.ValidateComponentsTest.Components
 
   defmodule StringProp do
     use Surface.Component
@@ -155,6 +156,24 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
 
     diagnostics = ValidateComponents.validate([component])
     assert diagnostics == []
+  end
+
+  test "should return diagnostic on .sface file when missing required prop" do
+    diagnostics = ValidateComponents.validate([Components.LiveViewWithExternalTemplate])
+
+    assert diagnostics == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file:
+                 Path.expand(
+                   "test/support/mix/tasks/compile/surface/validate_components_test/live_view_with_external_template.sface"
+                 ),
+               message: "Missing required property \"value\" for component <ComponentCall>",
+               position: 1,
+               severity: :warning
+             }
+           ]
   end
 
   defmodule Recursive do
