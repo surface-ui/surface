@@ -4,6 +4,10 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
   import Mix.Tasks.Compile.Surface.AssetGenerator
   alias Mix.Task.Compiler.Diagnostic
 
+  @components [
+    Mix.Tasks.Compile.SurfaceTest.FakeButton,
+    Mix.Tasks.Compile.SurfaceTest.FakeLink
+  ]
   @hooks_rel_output_dir "tmp/_hooks"
   @hooks_output_dir Path.join(File.cwd!(), @hooks_rel_output_dir)
   @test_components_dir Path.join(File.cwd!(), "test/support/mix/tasks/compile/surface_test")
@@ -28,17 +32,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
 
   @hooks_index_file Path.join(@hooks_output_dir, "index.js")
 
-  setup_all do
-    conf_before = Application.get_env(:surface, :compiler, [])
-    Application.put_env(:surface, :compiler, hooks_output_dir: @hooks_rel_output_dir)
-
-    on_exit(fn ->
-      Application.put_env(:surface, :compiler, conf_before)
-    end)
-
-    :ok
-  end
-
   setup do
     File.write!(@button_src_hooks_file, @button_src_hooks_file_content)
     File.write!(@link_src_hooks_file, @link_src_hooks_file_content)
@@ -61,7 +54,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     refute File.exists?(@button_dest_hooks_file)
     refute File.exists?(@link_dest_hooks_file)
 
-    assert run() == []
+    assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == []
 
     assert File.read!(@button_dest_hooks_file) == """
            /*
@@ -85,7 +78,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
   test "generate index.js file for hooks" do
     refute File.exists?(@hooks_output_dir)
 
-    assert run() == []
+    assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == []
 
     assert File.read!(@hooks_index_file) =~ """
            /*
@@ -115,17 +108,27 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
   test "update dest hook file and index.js if src hook file is newer than index.js" do
     refute File.exists?(@hooks_output_dir)
 
-    assert run() == []
+    assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == []
 
     files = [@button_dest_hooks_file, @link_dest_hooks_file, @hooks_index_file]
 
-    assert files_changed?(files, fn -> assert run() == [] end) == [false, false, false]
+    assert files_changed?(files, fn -> assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == [] end) ==
+             [
+               false,
+               false,
+               false
+             ]
 
     mtime = @hooks_index_file |> get_mtime() |> inc_mtime()
     File.write!(@button_src_hooks_file, @button_src_hooks_file_content_modified)
     File.touch!(@button_src_hooks_file, mtime)
 
-    assert files_changed?(files, fn -> assert run() == [] end) == [true, false, false]
+    assert files_changed?(files, fn -> assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == [] end) ==
+             [
+               true,
+               false,
+               false
+             ]
 
     assert File.read!(@button_dest_hooks_file) =~ "let FakeButton = { mounted() {} }"
   end
@@ -133,13 +136,16 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
   test "removes unused hooks files from output dir and update index.js" do
     refute File.exists?(@hooks_output_dir)
 
-    assert run() == []
+    assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == []
 
     assert File.exists?(@link_dest_hooks_file)
 
     File.rm!(@link_src_hooks_file)
 
-    assert files_changed?([@hooks_index_file], fn -> run() end) == [true]
+    assert files_changed?([@hooks_index_file], fn -> run(@components, hooks_output_dir: @hooks_rel_output_dir) end) ==
+             [
+               true
+             ]
 
     refute File.exists?(@link_dest_hooks_file)
   end
@@ -158,7 +164,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
       * `test/support/mix/tasks/compile/surface_test/fake_link.hooks.#{second_extension}`
     """
 
-    assert run() == [
+    assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == [
              %Diagnostic{
                compiler_name: "Surface",
                details: nil,
@@ -178,7 +184,10 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
 
     File.rm!(Path.join(@test_components_dir, "fake_link.hooks.#{first_extension}"))
 
-    assert files_changed?([@hooks_index_file], fn -> assert run() == [] end) == [false]
+    assert files_changed?([@hooks_index_file], fn ->
+             assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == []
+           end) ==
+             [false]
 
     assert File.exists?(
              Path.join(@hooks_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.#{second_extension}")
@@ -187,7 +196,12 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     assert Path.wildcard(dest_glob) |> length() == 1
 
     File.rm!(Path.join(@test_components_dir, "fake_link.hooks.#{second_extension}"))
-    assert files_changed?([@hooks_index_file], fn -> assert run() == [] end) == [true]
+
+    assert files_changed?([@hooks_index_file], fn ->
+             assert run(@components, hooks_output_dir: @hooks_rel_output_dir) == []
+           end) ==
+             [true]
+
     assert Path.wildcard(dest_glob) |> length() == 0
   end
 

@@ -202,7 +202,6 @@ defmodule Surface do
 
   @doc false
   def components(opts \\ []) do
-    only_web_namespace = Keyword.get(opts, :only_web_namespace, false)
     only_current_project = Keyword.get(opts, :only_current_project, false)
     project_app = Mix.Project.config()[:app]
 
@@ -218,10 +217,9 @@ defmodule Surface do
     for app <- apps,
         deps_apps = Application.spec(app)[:applications] || [],
         app in [:surface, project_app] or :surface in deps_apps,
-        prefix = app_beams_prefix(app, project_app, only_web_namespace),
         {dir, files} = app_beams_dir_and_files(app),
         file <- files,
-        List.starts_with?(file, prefix) do
+        List.starts_with?(file, 'Elixir.') do
       :filename.join(dir, file)
     end
     |> Enum.chunk_every(50)
@@ -233,17 +231,6 @@ defmodule Surface do
       end
     end)
     |> Enum.flat_map(fn {:ok, result} -> result end)
-  end
-
-  defp app_beams_prefix(app, project_app, only_web_namespace) do
-    if only_web_namespace and app == project_app do
-      Mix.Phoenix.base()
-      |> Mix.Phoenix.web_module()
-      |> Module.concat(".")
-      |> to_charlist()
-    else
-      'Elixir.'
-    end
   end
 
   defp app_beams_dir_and_files(app) do

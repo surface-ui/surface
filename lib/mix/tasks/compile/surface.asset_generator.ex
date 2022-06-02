@@ -8,16 +8,14 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
-  def run() do
-    {js_files, _css_files, diagnostics} = get_colocated_assets()
-    generate_files(js_files)
+  def run(components, opts \\ []) do
+    hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
+    {js_files, _css_files, diagnostics} = get_colocated_assets(components)
+    generate_files(js_files, hooks_output_dir)
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
-  def generate_files(js_files) do
-    opts = Application.get_env(:surface, :compiler, [])
-
-    hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
+  def generate_files(js_files, hooks_output_dir) do
     js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
     index_file = Path.join([js_output_dir, "index.js"])
 
@@ -48,8 +46,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     end
   end
 
-  defp get_colocated_assets() do
-    for mod <- components(), module_loaded?(mod), reduce: {[], [], []} do
+  defp get_colocated_assets(components) do
+    for mod <- components, module_loaded?(mod), reduce: {[], [], []} do
       {js_files, css_files, diagnostics} ->
         component_file = mod.module_info() |> get_in([:compile, :source]) |> to_string()
         base_file = component_file |> Path.rootname()
@@ -151,55 +149,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     unsused_files = all_files -- used_files
     Enum.each(unsused_files, &File.rm!/1)
     unsused_files
-  end
-
-  defp components() do
-    project_app = Mix.Project.config()[:app]
-    :ok = Application.ensure_loaded(project_app)
-    project_deps_apps = Application.spec(project_app, :applications) || []
-    opts = Application.get_env(:surface, :compiler, [])
-    only_web_namespace = Keyword.get(opts, :only_web_namespace, false)
-
-    for app <- [project_app | project_deps_apps],
-        deps_apps = Application.spec(app)[:applications] || [],
-        app in [:surface, project_app] or :surface in deps_apps,
-        prefix = app_beams_prefix(app, project_app, only_web_namespace),
-        {dir, files} = app_beams_dir_and_files(app),
-        file <- files,
-        List.starts_with?(file, prefix) do
-      :filename.join(dir, file)
-    end
-    |> Enum.chunk_every(50)
-    |> Task.async_stream(fn files ->
-      for file <- files,
-          {:ok, {_, [{_, chunk} | _]}} = :beam_lib.chunks(file, ['Attr']),
-          chunk |> :erlang.binary_to_term() |> Keyword.get(:component_type) do
-        file |> Path.basename(".beam") |> String.to_atom()
-      end
-    end)
-    |> Enum.flat_map(fn {:ok, result} -> result end)
-  end
-
-  defp app_beams_prefix(app, project_app, only_web_namespace) do
-    if only_web_namespace and app == project_app do
-      Mix.Phoenix.base()
-      |> Mix.Phoenix.web_module()
-      |> Module.concat(".")
-      |> to_charlist()
-    else
-      'Elixir.'
-    end
-  end
-
-  defp app_beams_dir_and_files(app) do
-    dir =
-      app
-      |> Application.app_dir()
-      |> Path.join("ebin")
-      |> String.to_charlist()
-
-    {:ok, files} = :file.list_dir(dir)
-    {dir, files}
   end
 
   defp module_loaded?(module) do

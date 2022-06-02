@@ -24,14 +24,10 @@ defmodule Mix.Tasks.Compile.Surface do
   * `hooks_output_dir` - defines the folder where the compiler generates the JS hooks files.
     Default is `./assets/js/_hooks/`.
 
-  * `only_web_namespace` - instructs the compiler to only search for components defined in
-    the project's web module namespace, e.g. `MyAppWeb`. Default is `false`.
-
   ### Example
 
       config :surface, :compiler,
         hooks_output_dir: "assets/js/surface"
-        only_web_namespace: true
 
   """
 
@@ -48,10 +44,14 @@ defmodule Mix.Tasks.Compile.Surface do
   @doc false
   def run(args) do
     {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
+    opts = Application.get_env(:surface, :compiler, [])
+    asset_opts = Keyword.take(opts, [:hooks_output_dir])
+    asset_components = Surface.components()
+    project_components = Surface.components(only_current_project: true)
 
     [
-      Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_modules()),
-      Mix.Tasks.Compile.Surface.AssetGenerator.run()
+      Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
+      Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
     ]
     |> List.flatten()
     |> handle_diagnostics(compile_opts)
@@ -68,14 +68,6 @@ defmodule Mix.Tasks.Compile.Surface do
         status = status(compile_opts[:warnings_as_errors], diagnostics)
 
         {status, diagnostics}
-    end
-  end
-
-  def project_modules do
-    files = Mix.Project.compile_path() |> File.ls!() |> Enum.sort()
-
-    for file <- files, [basename, ""] <- [:binary.split(file, ".beam")] do
-      String.to_atom(basename)
     end
   end
 
