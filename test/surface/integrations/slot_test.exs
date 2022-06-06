@@ -95,13 +95,13 @@ defmodule Surface.SlotTest do
     use Surface.Component
 
     prop items, :list, required: true
-    slot default, args: [item: ^items]
+    slot default, generator: :items
 
     def render(assigns) do
       ~F"""
       <div>
         {#for item <- @items}
-          <#slot :args={item: item}/>
+          <#slot generator_value={item}/>
         {/for}
       </div>
       """
@@ -233,7 +233,7 @@ defmodule Surface.SlotTest do
 
     prop items, :list, required: true
 
-    slot col, as: :cols, args: [:info, item: ^items]
+    slot col, as: :cols, args: [:info], generator: :items
 
     def render(assigns) do
       info = "Some info from Grid"
@@ -247,7 +247,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={col <- @cols}>
-            <#slot for={col} :args={item: item, info: info}/>
+            <#slot for={col} :args={info: info} generator_value={item} />
           </td>
         </tr>
       </table>
@@ -837,8 +837,8 @@ defmodule Surface.SlotTest do
       render_surface do
         ~F"""
         <Grid items={user <- @items}>
-          <Column title="ID" :let={item: my_user}>
-            <b>Id: {my_user.id}</b>
+          <Column title="ID">
+            <b>Id: {user.id}</b>
           </Column>
           <Column title="NAME" :let={info: my_info}>
             Name: {user.name}
@@ -877,8 +877,8 @@ defmodule Surface.SlotTest do
         ~F"""
         <Grid items={user <- @items}>
           <Column title="ID"
-            :let={item: my_user, non_existing: value}>
-            <b>Id: {my_user.id}</b>
+            :let={non_existing: value}>
+            <b>Id: {user.id}</b>
           </Column>
         </Grid>
         """
@@ -887,7 +887,7 @@ defmodule Surface.SlotTest do
     message = """
     code:3: undefined argument `:non_existing` for slot `col` in `Surface.SlotTest.Grid`.
 
-    Available arguments: [:info, :item].
+    Available arguments: [:info].
 
     Hint: You can define a new slot argument using the `args` option: \
     `slot col, args: [..., :non_existing]`
@@ -1484,7 +1484,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1515,7 +1515,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1545,7 +1545,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->

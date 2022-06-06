@@ -439,21 +439,18 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :args, :as]
+    [:required, :args, :as, :generator]
   end
 
   defp validate_opt_ast!(:slot, :args, args_ast, caller) do
     Enum.map(args_ast, fn
-      {name, {:^, _, [{generator, _, context}]}} when context in [Elixir, nil] ->
-        Macro.escape(%{name: name, generator: generator})
-
       name when is_atom(name) ->
-        Macro.escape(%{name: name, generator: nil})
+        Macro.escape(%{name: name})
 
       ast ->
         message =
           "invalid slot argument #{Macro.to_string(ast)}. " <>
-            "Expected an atom or a binding to a generator as `key: ^property_name`"
+            "Expected an atom"
 
         IOHelper.compile_error(message, caller.file, caller.line)
     end)
@@ -694,30 +691,33 @@ defmodule Surface.API do
     end
   end
 
+  defp available_generators_hint(module) do
+    existing_generators_names = module.__props__() |> Enum.filter(&(&1.type == :list)) |> Enum.map(& &1.name)
+    "Available generators are #{inspect(existing_generators_names)}"
+  end
+
   defp validate_slot_props_bindings!(env) do
     for slot <- env.module.__slots__(),
-        slot_props = Keyword.get(slot.opts, :args, []),
-        %{name: name, generator: generator} <- slot_props,
-        generator != nil do
+        generator = Keyword.get(slot.opts, :generator) do
       case env.module.__get_prop__(generator) do
         nil ->
-          existing_properties_names = env.module.__props__() |> Enum.map(& &1.name)
-
           message = """
-          cannot bind slot argument `#{name}` to property `#{generator}`. \
-          Expected an existing property after `^`, \
+          cannot use property `#{generator}` as generator for slot. \
+          Expected an existing property, \
           got: an undefined property `#{generator}`.
 
-          Hint: Available properties are #{inspect(existing_properties_names)}\
+          Hint: #{available_generators_hint(env.module)}\
           """
 
           IOHelper.compile_error(message, env.file, slot.line)
 
         %{type: type} when type != :list ->
           message = """
-          cannot bind slot argument `#{name}` to property `#{generator}`. \
-          Expected a property of type :list after `^`, \
-          got: a property of type #{inspect(type)}\
+          cannot use property `#{generator}` as generator for slot. \
+          Expected a property of type :list, \
+          got: a property of type #{inspect(type)}
+
+          Hint: #{available_generators_hint(env.module)}\
           """
 
           IOHelper.compile_error(message, env.file, slot.line)

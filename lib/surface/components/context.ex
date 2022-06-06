@@ -125,7 +125,7 @@ defmodule Surface.Components.Context do
         {key, Map.get(full_context, key, nil)}
       end
 
-    {props, updated_context}
+    {props, nil, updated_context}
   end
 
   defp normalize_set(nil, key, value) do

@@ -163,6 +163,7 @@ defmodule Surface.Compiler.EExEngine do
            index: index_ast,
            for: slot_for_ast,
            args: args_expr,
+           generator_value: generator_value_ast,
            default: default,
            meta: meta
          },
@@ -209,6 +210,12 @@ defmodule Surface.Compiler.EExEngine do
         end
       end
 
+    generator_value =
+      if generator_value_ast do
+        %AST.AttributeExpr{value: generator_value} = generator_value_ast
+        generator_value
+      end
+
     # TODO: map names somehow?
     slot_content_expr =
       quote generated: true do
@@ -216,6 +223,7 @@ defmodule Surface.Compiler.EExEngine do
           unquote(slot_value),
           {
             Map.new(unquote(args_expr)),
+            unquote(generator_value),
             unquote(context_expr)
           }
         )
@@ -508,7 +516,7 @@ defmodule Surface.Compiler.EExEngine do
       slot_name = if name == :default, do: :inner_block, else: name
 
       entries =
-        Enum.map(nested_slot_entries, fn {let, props, body} ->
+        Enum.map(nested_slot_entries, fn {let, _generator, props, body} ->
           let_clause = if let == [], do: quote(do: _), else: let
 
           inner_block =
@@ -554,11 +562,12 @@ defmodule Surface.Compiler.EExEngine do
 
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
       entries =
-        Enum.map(infos, fn {let, props, body} ->
+        Enum.map(infos, fn {let, generator, props, body} ->
           block =
             quote generated: true do
               {
                 unquote({:%{}, [generated: true], let}),
+                unquote(generator),
                 unquote(context_var)
               } ->
                 unquote(body)
@@ -628,8 +637,7 @@ defmodule Surface.Compiler.EExEngine do
     props = collect_component_props(nil, props)
 
     [
-      {add_default_bindings(component, name, let), props,
-       handle_nested_block(children, buffer, nested_block_state)}
+      {let, generator_binding(component, name), props, handle_nested_block(children, buffer, nested_block_state)}
       | handle_slot_entries(component, tail, buffer, state)
     ]
   end
@@ -677,37 +685,25 @@ defmodule Surface.Compiler.EExEngine do
     }
 
     [
-      {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
+      {let, generator_binding(component, name), Keyword.merge(default_props, props),
        handle_nested_block(slot_entry, buffer, nested_block_state)}
       | handle_slot_entries(component, tail, buffer, state)
     ]
   end
 
-  defp add_default_bindings(%AST.FunctionComponent{}, _name, let) do
-    let
+  defp generator_binding(%AST.FunctionComponent{}, _name) do
+    nil
   end
 
-  defp add_default_bindings(%{module: %Surface.AST.AttributeExpr{}}, _name, let) do
-    let
+  defp generator_binding(%{module: %Surface.AST.AttributeExpr{}}, _name) do
+    nil
   end
 
-  defp add_default_bindings(%{module: module, props: props}, name, let) do
-    (module.__get_slot__(name)[:opts][:args] || [])
-    |> Enum.reject(fn
-      %{generator: nil} -> true
-      %{name: name} -> Keyword.has_key?(let, name)
-    end)
-    |> Enum.map(fn %{generator: gen, name: name} ->
-      case find_attribute_value(props, gen, nil) do
-        %AST.AttributeExpr{value: {binding, _}} ->
-          {name, binding}
-
-        _ ->
-          nil
-      end
-    end)
-    |> Enum.reject(fn value -> value == nil end)
-    |> Keyword.merge(let)
+  defp generator_binding(%{module: module, props: props}, name) do
+    with generator = Keyword.get(module.__get_slot__(name).opts, :generator),
+         %AST.AttributeExpr{value: {binding, _}} <- find_attribute_value(props, generator, nil) do
+      binding
+    end
   end
 
   defp find_attribute_value(attrs, name, default)

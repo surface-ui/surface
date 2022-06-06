@@ -351,8 +351,7 @@ defmodule Surface.APITest do
       code = "slot cols, args: [:info, {a, b}]"
 
       message = ~r"""
-      invalid slot argument {a, b}. Expected an atom or a \
-      binding to a generator as `key: \^property_name`\
+      invalid slot argument {a, b}. Expected an atom\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -362,7 +361,7 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :args, :as\]/
+      message = ~r/unknown option :a. Available options: \[:required, :args, :as, :generator\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -380,17 +379,17 @@ defmodule Surface.APITest do
         prop label, :string
         prop items, :list
 
-        slot default, args: [item: ^unknown]
+        slot default, generator: :unknown
 
         def render(assigns), do: ~F()
       end
       """
 
       message = """
-      code.exs:7: cannot bind slot argument `item` to property `unknown`. \
-      Expected an existing property after `^`, got: an undefined property `unknown`.
+      code.exs:7: cannot use property `unknown` as generator for slot. \
+      Expected an existing property, got: an undefined property `unknown`.
 
-      Hint: Available properties are [:label, :items]\
+      Hint: Available generators are [:items]\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -408,15 +407,17 @@ defmodule Surface.APITest do
 
         prop label, :string
 
-        slot default, args: [item: ^label]
+        slot default, generator: :label
 
         def render(assigns), do: ~F()
       end
       """
 
       message = """
-      code.exs:6: cannot bind slot argument `item` to property `label`. \
-      Expected a property of type :list after `^`, got: a property of type :string\
+      code.exs:6: cannot use property `label` as generator for slot. \
+      Expected a property of type :list, got: a property of type :string
+
+      Hint: Available generators are []\
       """
 
       assert_raise(CompileError, message, fn ->

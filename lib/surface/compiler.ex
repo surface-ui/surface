@@ -44,7 +44,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props ["for", "name", "index"]
+  @valid_slot_props ["for", "name", "index", "generator_value"]
 
   @directive_prefixes [":", "s-"]
 
@@ -536,6 +536,11 @@ defmodule Surface.Compiler do
       )
     end
 
+    generator_value =
+      if has_attribute?(attributes, "generator_value") do
+        attribute_value_as_ast(attributes, "generator_value", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+      end
+
     {:ok,
      %AST.Slot{
        name: name,
@@ -545,6 +550,7 @@ defmodule Surface.Compiler do
        directives: directives,
        default: to_ast(children, compile_meta),
        args: [],
+       generator_value: generator_value,
        meta: meta
      }}
   end
@@ -1339,7 +1345,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

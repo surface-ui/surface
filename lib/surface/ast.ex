@@ -326,10 +326,11 @@ defmodule Surface.AST.Slot do
       * `:for` - the slotable entry assigned for this slot
       * `:default` - a list of AST nodes representing the default content for this slot
       * `:args` - either an atom or a quoted expression representing arguments for this slot
+      * `:generator_value` - value from the `:generator` prop
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this slot
   """
-  defstruct [:name, :as, :for, :index, :args, :default, :meta, directives: []]
+  defstruct [:name, :as, :for, :index, :args, :generator_value, :default, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: binary(),
@@ -340,6 +341,7 @@ defmodule Surface.AST.Slot do
           meta: Surface.AST.Meta.t(),
           # quoted ?
           args: list(Keyword.t(any())),
+          generator_value: any(),
           default: list(Surface.AST.t())
         }
 end

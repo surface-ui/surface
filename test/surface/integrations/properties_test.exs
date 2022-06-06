@@ -117,12 +117,12 @@ defmodule Surface.PropertiesTest do
     use Surface.Component
 
     prop labels, :list, root: true
-    slot default, args: [label: ^labels]
+    slot default, generator: :labels
 
     def render(assigns) do
       ~F"""
       {#for label <- @labels}
-        <#slot :args={label: label} />
+        <#slot generator_value={label} />
       {/for}
       """
     end
