@@ -228,8 +228,10 @@ defmodule Surface.Compiler.EExEngine do
           scope: [:slot | state.scope]
       })
 
+    # :__ignore__ is a private field meant to be used only in tools like the catalogue
+    # to simulate the absence of an assigned slot based on an expression.
     quote generated: true do
-      if unquote(slot_value) do
+      if unquote(slot_value) && !unquote(slot_value)[:__ignore__] do
         unquote(slot_content_expr)
       else
         unquote(fallback_value)

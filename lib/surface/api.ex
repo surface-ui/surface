@@ -264,7 +264,7 @@ defmodule Surface.API do
     quote do
       @doc false
       def __slots__() do
-        unquote(Macro.escape(slots))
+        unquote(slots |> Enum.reverse() |> Macro.escape())
       end
 
       @doc false

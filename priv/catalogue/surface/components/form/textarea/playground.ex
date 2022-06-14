@@ -4,17 +4,10 @@ defmodule Surface.Components.Form.TextArea.Playground do
     subject: Surface.Components.Form.TextArea,
     height: "170px"
 
-  data props, :map,
-    default: %{
-      rows: "4",
-      cols: "40",
-      class: ["textarea"],
-      opts: [placeholder: "The textarea's content"]
-    }
-
-  def render(assigns) do
-    ~F"""
-    <TextArea :props={@props}/>
-    """
-  end
+  @props [
+    rows: "4",
+    cols: "40",
+    class: ["textarea"],
+    opts: [placeholder: "The textarea's content"]
+  ]
 end

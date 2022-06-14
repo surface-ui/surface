@@ -1292,7 +1292,7 @@ defmodule Surface.SlotSyncTest do
 
     Did you mean "footer"?
 
-    Available slots: "footer", "header" and "default"
+    Available slots: "default", "header" and "footer"
     """
 
     assert_raise(CompileError, message, fn ->
