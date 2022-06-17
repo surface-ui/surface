@@ -9,6 +9,7 @@ defmodule Surface.Compiler do
   alias Surface.IOHelper
   alias Surface.AST
   alias Surface.Compiler.Helpers
+  alias Surface.Compiler.CSSTranslator
 
   @tag_directive_handlers [
     Surface.Directive.TagAttrs,
@@ -67,14 +68,15 @@ defmodule Surface.Compiler do
   ]
 
   defmodule CompileMeta do
-    defstruct [:line, :file, :caller, :checks, :variables, :module]
+    defstruct [:line, :file, :caller, :checks, :variables, :module, :style]
 
     @type t :: %__MODULE__{
             line: non_neg_integer(),
             file: binary(),
             caller: Macro.Env.t(),
             variables: keyword(),
-            checks: Keyword.t(boolean())
+            checks: Keyword.t(boolean()),
+            style: map()
           }
   end
 
@@ -89,25 +91,31 @@ defmodule Surface.Compiler do
           Surface.AST.t()
         ]
   def compile(string, line, caller, file \\ "nofile", opts \\ []) do
+    tokens =
+      Parser.parse!(string,
+        file: file,
+        line: line,
+        caller: caller,
+        checks: opts[:checks] || [],
+        warnings: opts[:warnings] || [],
+        column: Keyword.get(opts, :column, 1),
+        indentation: Keyword.get(opts, :indentation, 0)
+      )
+
+    {style, tokens} = maybe_pop_style(tokens, caller.module)
+
     compile_meta = %CompileMeta{
       line: line,
       file: file,
       caller: caller,
       checks: opts[:checks] || [],
-      variables: opts[:variables]
+      variables: opts[:variables],
+      style: style
     }
 
-    string
-    |> Parser.parse!(
-      file: file,
-      line: line,
-      caller: caller,
-      checks: opts[:checks] || [],
-      warnings: opts[:warnings] || [],
-      column: Keyword.get(opts, :column, 1),
-      indentation: Keyword.get(opts, :indentation, 0)
-    )
+    tokens
     |> to_ast(compile_meta)
+    |> maybe_transform_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
   end
 
@@ -522,13 +530,16 @@ defmodule Surface.Compiler do
          children <- to_ast(children, compile_meta),
          :ok <- validate_tag_children(children) do
       {:ok,
-       %AST.Tag{
-         element: name,
-         attributes: attributes,
-         directives: directives,
-         children: children,
-         meta: meta
-       }}
+       maybe_transform_tag(
+         %AST.Tag{
+           element: name,
+           attributes: attributes,
+           directives: directives,
+           children: children,
+           meta: meta
+         },
+         compile_meta
+       )}
     else
       error -> handle_convert_node_to_ast_error(name, error, meta)
     end
@@ -1316,5 +1327,140 @@ defmodule Surface.Compiler do
       _ ->
         {:error, {"cannot render <#{name}>", meta.line}, meta}
     end
+  end
+
+  defp maybe_transform_ast(nodes, %CompileMeta{style: %{vars: vars}}) when vars != %{} do
+    Enum.map(nodes, fn
+      %AST.Tag{attributes: attributes, meta: meta} = node ->
+        vars_ast =
+          for {var, expr} <- vars do
+            {String.to_atom(var), Code.string_to_quoted!(expr)}
+          end
+
+        updated_attrs =
+          case AST.pop_attributes_as_map(attributes, [:style]) do
+            {%{style: nil}, rest} ->
+              attr = %AST.Attribute{
+                meta: meta,
+                name: :style,
+                type: :style,
+                value: %AST.AttributeExpr{
+                  meta: meta,
+                  original: inspect(vars),
+                  value: vars_ast
+                }
+              }
+
+              [attr | rest]
+
+            {%{style: %AST.Attribute{value: value} = style}, rest} ->
+              style_expr = merge_vars_into_style(value, vars_ast, meta)
+              [%AST.Attribute{style | value: style_expr} | rest]
+          end
+
+        %AST.Tag{node | attributes: updated_attrs}
+
+      node ->
+        node
+    end)
+  end
+
+  defp maybe_transform_ast(nodes, _compile_meta) do
+    nodes
+  end
+
+  defp merge_vars_into_style(%AST.AttributeExpr{value: attr_expr_value} = attr_expr, vars_ast, _meta) do
+    {p1, p2, [p3, p4, p5, value, p6, p7, p8]} = attr_expr_value
+
+    %AST.AttributeExpr{attr_expr | constant?: false, value: {p1, p2, [p3, p4, p5, value ++ vars_ast, p6, p7, p8]}}
+  end
+
+  defp merge_vars_into_style(%AST.Literal{value: value}, vars_ast, meta) do
+    {:ok, kw_list} = Surface.TypeHandler.Style.expr_to_value([value], [], nil)
+
+    %AST.AttributeExpr{
+      meta: meta,
+      original: value,
+      value: kw_list ++ vars_ast
+    }
+  end
+
+  defp maybe_transform_tag(node, %CompileMeta{style: %{scope_id: scope_id, selectors: selectors}}) do
+    %AST.Tag{element: element, attributes: attributes, meta: meta} = node
+
+    if universal_in_selectors?(selectors) or
+         element_in_selectors?(element, selectors) or
+         maybe_class_in_selectors?(element, attributes, selectors) or
+         maybe_id_in_selectors?(attributes, selectors) do
+      s_data_attr = %AST.Attribute{
+        meta: meta,
+        name: :"data-s-#{scope_id}",
+        type: :string,
+        value: %AST.Literal{value: true}
+      }
+
+      %AST.Tag{node | attributes: [s_data_attr | attributes]}
+    else
+      node
+    end
+  end
+
+  defp maybe_transform_tag(node, _compile_meta) do
+    node
+  end
+
+  defp maybe_class_in_selectors?(element, attributes, %{classes: classes, elements: elements}) do
+    {%{class: class}, _} = AST.pop_attributes_values_as_map(attributes, [:class])
+
+    case class do
+      %AST.Literal{value: value} ->
+        value
+        |> String.split()
+        |> Enum.any?(fn c ->
+          MapSet.member?(classes, c) or MapSet.member?(elements, "#{element}.#{c}")
+        end)
+
+      nil ->
+        false
+
+      _ ->
+        true
+    end
+  end
+
+  defp maybe_id_in_selectors?(attributes, %{ids: ids}) do
+    {%{id: id}, _} = AST.pop_attributes_values_as_map(attributes, [:id])
+
+    case id do
+      %AST.Literal{value: value} -> MapSet.member?(ids, value)
+      nil -> false
+      _ -> true
+    end
+  end
+
+  defp element_in_selectors?(element, %{elements: elements}) do
+    MapSet.member?(elements, element)
+  end
+
+  defp universal_in_selectors?(%{other: other}) do
+    MapSet.member?(other, "*")
+  end
+
+  defp maybe_pop_style([{"style", _attrs, content, _meta} | tokens], module) do
+    style =
+      content
+      |> to_string()
+      |> CSSTranslator.translate!(module: module)
+
+    {style, tokens}
+  end
+
+  defp maybe_pop_style(tokens, module) do
+    style =
+      if Module.open?(module) do
+        Module.get_attribute(module, :__style__)
+      end
+
+    {style, tokens}
   end
 end

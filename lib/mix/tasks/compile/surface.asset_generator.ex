@@ -4,18 +4,46 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   alias Mix.Task.Compiler.Diagnostic
 
   @default_hooks_output_dir "assets/js/_hooks"
+  @default_css_output_file "assets/css/_components.css"
   @supported_hooks_extensions ~W"js jsx ts tsx" |> Enum.join(",")
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
-    {js_files, _css_files, diagnostics} = get_colocated_assets(components)
-    generate_files(js_files, hooks_output_dir)
+    css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
+    {js_files, css_files, diagnostics} = get_colocated_assets(components)
+    generate_js_files(js_files, hooks_output_dir)
+    generate_css_file(css_files, css_output_file)
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
-  def generate_files(js_files, hooks_output_dir) do
+  def generate_css_file(css_files, css_output_file) do
+    dest_file = Path.join([File.cwd!(), css_output_file])
+
+    dest_file_time =
+      case File.stat(dest_file) do
+        {:ok, %File.Stat{mtime: time}} -> time
+        _ -> nil
+      end
+
+    {update_css?, content} =
+      for {_src_file, mod} <- css_files,
+          %{css: css} <- [mod.__style__()],
+          reduce: {false, ""} do
+        {_, content} ->
+          {true, ["\n/* ", inspect(mod), " */\n\n", css, "\n" | content]}
+      end
+
+    if !dest_file_time or update_css? do
+      File.write!(dest_file, [header(), "\n" | content])
+      # IO.puts("---")
+      # File.read!(dest_file) |> IO.puts()
+      # IO.puts("---")
+    end
+  end
+
+  def generate_js_files(js_files, hooks_output_dir) do
     js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
     index_file = Path.join([js_output_dir, "index.js"])
 
@@ -64,9 +92,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
           end
 
         css_file = "#{base_file}.css"
-        dest_css_file = "#{base_name}.css"
-
-        css_files = if File.exists?(css_file), do: [{css_file, dest_css_file} | css_files], else: css_files
+        css_files = if File.exists?(css_file), do: [{css_file, mod} | css_files], else: css_files
 
         {js_files, css_files, [new_diagnostic | diagnostics]}
     end

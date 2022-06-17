@@ -100,13 +100,14 @@ defmodule Surface.Compiler.Helpers do
     assigns
   end
 
-  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks}) do
+  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks, style: style}) do
     %AST.Meta{
       line: tree_meta.line,
       column: tree_meta.column,
       file: tree_meta.file,
       caller: caller,
-      checks: checks
+      checks: checks,
+      style: style
     }
   end
 

@@ -12,9 +12,16 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
   @hooks_index_file Path.join(@hooks_output_dir, "index.js")
 
+  @css_rel_output_file "tmp/_components.css"
+  @css_output_file Path.join(File.cwd!(), @css_rel_output_file)
+
   setup_all do
     conf_before = Application.get_env(:surface, :compiler, [])
-    Application.put_env(:surface, :compiler, hooks_output_dir: @hooks_rel_output_dir)
+
+    Application.put_env(:surface, :compiler,
+      hooks_output_dir: @hooks_rel_output_dir,
+      css_output_file: @css_rel_output_file
+    )
 
     on_exit(fn ->
       Application.put_env(:surface, :compiler, conf_before)
@@ -28,8 +35,13 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
       File.rm_rf!(@hooks_output_dir)
     end
 
+    if File.exists?(@css_output_file) do
+      File.rm_rf!(@css_output_file)
+    end
+
     on_exit(fn ->
       File.rm_rf!(@hooks_output_dir)
+      File.rm_rf!(@css_output_file)
     end)
 
     :ok

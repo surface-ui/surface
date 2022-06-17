@@ -24,10 +24,14 @@ defmodule Mix.Tasks.Compile.Surface do
   * `hooks_output_dir` - defines the folder where the compiler generates the JS hooks files.
     Default is `./assets/js/_hooks/`.
 
+  * `css_output_file` - defines the css file where the compiler generates the code.
+    Default is `./assets/css/_components.css`.
+
   ### Example
 
       config :surface, :compiler,
-        hooks_output_dir: "assets/js/surface"
+        hooks_output_dir: "assets/js/surface",
+        css_output_file: "assets/css/surface.css"
 
   """
 
@@ -45,7 +49,7 @@ defmodule Mix.Tasks.Compile.Surface do
   def run(args) do
     {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
     opts = Application.get_env(:surface, :compiler, [])
-    asset_opts = Keyword.take(opts, [:hooks_output_dir])
+    asset_opts = Keyword.take(opts, [:hooks_output_dir, :css_output_file])
     asset_components = Surface.components()
     project_components = Surface.components(only_current_project: true)
 
