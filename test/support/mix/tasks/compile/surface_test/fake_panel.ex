@@ -1,12 +1,12 @@
-defmodule Mix.Tasks.Compile.SurfaceTest.FakeLink do
+defmodule Mix.Tasks.Compile.SurfaceTest.FakePanel do
   use Surface.Component
 
   def render(assigns) do
     ~F"""
     <style>
-      .link { padding: 10px; }
+      .panel { padding: 10px; }
     </style>
-    FAKE LINK
+    FAKE PANEL
     """
   end
 end

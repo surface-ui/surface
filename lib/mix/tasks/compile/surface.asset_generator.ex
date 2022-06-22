@@ -12,38 +12,38 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
-    {js_files, css_files, diagnostics} = get_colocated_assets(components)
+    {js_files, diagnostics} = get_colocated_js_files(components)
     generate_js_files(js_files, hooks_output_dir)
-    generate_css_file(css_files, css_output_file)
+    generate_css_file(components, css_output_file)
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
-  def generate_css_file(css_files, css_output_file) do
+  defp generate_css_file(components, css_output_file) do
     dest_file = Path.join([File.cwd!(), css_output_file])
 
-    dest_file_time =
-      case File.stat(dest_file) do
-        {:ok, %File.Stat{mtime: time}} -> time
+    dest_file_content =
+      case File.read(dest_file) do
+        {:ok, content} -> content
         _ -> nil
       end
 
-    {update_css?, content} =
-      for {_src_file, mod} <- css_files,
-          %{css: css} <- [mod.__style__()],
-          reduce: {false, ""} do
-        {_, content} ->
-          {true, ["\n/* ", inspect(mod), " */\n\n", css, "\n" | content]}
+    content =
+      for mod <- Enum.sort(components, :desc),
+          function_exported?(mod, :__style__, 0),
+          %{css: css, scope_id: scope_id} <- [mod.__style__()],
+          reduce: "" do
+        content ->
+          ["\n/* ", inspect(mod), " (", scope_id, ") */\n\n", css | content]
       end
 
-    if !dest_file_time or update_css? do
-      File.write!(dest_file, [header(), "\n" | content])
-      # IO.puts("---")
-      # File.read!(dest_file) |> IO.puts()
-      # IO.puts("---")
+    content = to_string([header(), "\n" | content])
+
+    if content != dest_file_content do
+      File.write!(dest_file, content)
     end
   end
 
-  def generate_js_files(js_files, hooks_output_dir) do
+  defp generate_js_files(js_files, hooks_output_dir) do
     js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
     index_file = Path.join([js_output_dir, "index.js"])
 
@@ -74,9 +74,9 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     end
   end
 
-  defp get_colocated_assets(components) do
-    for mod <- components, module_loaded?(mod), reduce: {[], [], []} do
-      {js_files, css_files, diagnostics} ->
+  defp get_colocated_js_files(components) do
+    for mod <- components, module_loaded?(mod), reduce: {[], []} do
+      {js_files, diagnostics} ->
         component_file = mod.module_info() |> get_in([:compile, :source]) |> to_string()
         base_file = component_file |> Path.rootname()
         base_name = inspect(mod)
@@ -91,10 +91,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
             js_files
           end
 
-        css_file = "#{base_file}.css"
-        css_files = if File.exists?(css_file), do: [{css_file, mod} | css_files], else: css_files
-
-        {js_files, css_files, [new_diagnostic | diagnostics]}
+        {js_files, [new_diagnostic | diagnostics]}
     end
   end
 

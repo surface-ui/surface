@@ -1450,7 +1450,10 @@ defmodule Surface.Compiler do
     style =
       content
       |> to_string()
+      |> String.trim_leading("\n")
       |> CSSTranslator.translate!(module: module)
+
+    Module.put_attribute(module, :__style__, style)
 
     {style, tokens}
   end
