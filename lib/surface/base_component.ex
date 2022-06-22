@@ -30,7 +30,7 @@ defmodule Surface.BaseComponent do
       if File.exists?(css_file) do
         css_file
         |> File.read!()
-        |> Surface.Compiler.CSSTranslator.translate!(module: __CALLER__.module)
+        |> Surface.Compiler.CSSTranslator.translate!(module: __CALLER__.module, file: css_file)
       end
 
     Module.put_attribute(__CALLER__.module, :__style__, style)

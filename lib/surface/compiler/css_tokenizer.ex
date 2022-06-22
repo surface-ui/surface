@@ -7,9 +7,9 @@ defmodule Surface.Compiler.CSSTokenizer do
   @quotes [?', ?"]
 
   @terminator %{
-    ?{ => ?},
-    ?( => ?),
-    ?[ => ?]
+    "{" => "}",
+    "(" => ")",
+    "[" => "]"
   }
 
   def tokenize!(text, opts \\ []) do
@@ -23,15 +23,20 @@ defmodule Surface.Compiler.CSSTokenizer do
     handle_text(text, line, column, [], [], state)
   end
 
-  ## handle_text
+  ## handle text
 
   defp handle_text(<<c::utf8, _rest::binary>> = text, line, column, buffer, acc, state) when c in @ws do
     acc = text_to_acc(buffer, acc)
     handle_ws(text, line, column, [], acc, state)
   end
 
+  defp handle_text("*/" <> _, line, column, _buffer, _acc, state) do
+    raise parse_error("unexpected end of comment: */", line, column, state)
+  end
+
   defp handle_text("/*" <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
+    state = push_brace(state, {"/*", line, column})
     handle_comment(rest, line, column + 2, [], acc, state)
   end
 
@@ -83,6 +88,8 @@ defmodule Surface.Compiler.CSSTokenizer do
     raise parse_error(message, line, column, state)
   end
 
+  ## handle white spaces
+
   defp handle_ws("\r\n" <> rest, line, _column, buffer, acc, state) do
     handle_ws(rest, line + 1, state.column_offset, ["\r\n" | buffer], acc, state)
   end
@@ -104,7 +111,7 @@ defmodule Surface.Compiler.CSSTokenizer do
     handle_text(text, line, column, [], acc, state)
   end
 
-  ## handle_comment
+  ## handle comment
 
   defp handle_comment("\r\n" <> rest, line, _column, buffer, acc, state) do
     handle_comment(rest, line + 1, state.column_offset, ["\r\n" | buffer], acc, state)
@@ -115,6 +122,7 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_comment("*/" <> rest, line, column, buffer, acc, state) do
+    {{"/*", _line, _column}, state} = pop_brace(state)
     acc = comment_to_acc(buffer, acc)
     handle_text(rest, line, column + 2, [], acc, state)
   end
@@ -124,10 +132,12 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_comment(<<>>, line, column, _buffer, _acc, state) do
-    raise parse_error("expected closing `*/` for comment", line, column, state)
+    {{"/*", open_line, open_column}, state} = pop_brace(state)
+    message = "expected closing `*/` for `/*` at line #{open_line}, column #{open_column}"
+    raise parse_error(message, line, column, state)
   end
 
-  ## handle_string
+  ## handle quoted string
 
   defp handle_string("\r\n" <> rest, line, _column, buffer, acc, state) do
     handle_string(rest, line + 1, state.column_offset, ["\r\n" | buffer], acc, state)

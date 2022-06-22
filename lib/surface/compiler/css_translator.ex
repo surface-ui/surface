@@ -24,7 +24,7 @@ defmodule Surface.Compiler.CSSTranslator do
 
     {updated_tokens, state} =
       css
-      |> CSSParser.parse!()
+      |> CSSParser.parse!(opts)
       |> translate([], state)
 
     %{

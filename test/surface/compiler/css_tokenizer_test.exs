@@ -2,6 +2,7 @@ defmodule Surface.Compiler.CSSTokenizerTest do
   use ExUnit.Case, async: true
 
   alias Surface.Compiler.CSSTokenizer
+  alias Surface.Compiler.ParseError
 
   test "tokenize!" do
     css = """
@@ -97,5 +98,48 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              :semicolon,
              {:ws, "\n"}
            ]
+  end
+
+  test "raise error on unclosed `{` block" do
+    css = """
+    .a {
+      display: none;
+    """
+
+    %ParseError{message: message, line: line} = assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == ~S(unexpected EOF. The "{" at line 1 is missing terminator "}")
+
+    assert line == 3
+  end
+
+  test "raise error on unclosed comment" do
+    css = """
+    .a { display: none; }
+
+    class /* a
+
+    .b { display: none; }
+    """
+
+    %ParseError{message: message, line: line} = assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "expected closing `*/` for `/*` at line 3, column 7"
+
+    assert line == 6
+  end
+
+  test "raise error on unexpected end of comment `*/`" do
+    css = """
+    .a { display: none; }
+
+    .b */
+    """
+
+    %ParseError{message: message, line: line} = assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "unexpected end of comment: */"
+
+    assert line == 3
   end
 end
