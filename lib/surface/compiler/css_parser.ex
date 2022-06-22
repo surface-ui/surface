@@ -17,7 +17,6 @@ defmodule Surface.Compiler.CSSParser do
 
   defp handle_token(tokens, opts) do
     state = %{
-      at_rule?: false,
       candidate?: false,
       caller: opts[:caller] || __ENV__
     }
@@ -25,32 +24,9 @@ defmodule Surface.Compiler.CSSParser do
     handle_token(tokens, [[]], state)
   end
 
-  # TODO: stop using `at_rule?`. Instead, after reversing the buffer,
-  # check if the first node is a text staring with `@`
-  defp handle_token([:semicolon = token | rest], buffers, %{at_rule?: true} = state) do
-    [buffer | buffers] = buffers
-    node = {:at_rule, Enum.reverse(buffer)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    buffers = push_node_to_current_buffer(token, buffers)
-    handle_token(rest, buffers, %{state | at_rule?: false, candidate?: false})
-  end
-
-  defp handle_token([{:block_open, "{"} | rest], buffers, %{at_rule?: true} = state) do
-    [buffer | buffers] = buffers
-    node = {:at_rule, Enum.reverse(buffer)}
-    buffers = push_node_to_current_buffer(node, buffers)
-    buffers = [[] | buffers]
-    handle_token(rest, buffers, %{state | at_rule?: false, candidate?: false})
-  end
-
-  defp handle_token([{:text, "@" <> _} = token | rest], buffers, state) do
-    buffers = [[token] | buffers]
-    handle_token(rest, buffers, %{state | at_rule?: true, candidate?: true})
-  end
-
   defp handle_token([:comma = token | rest], buffers, %{candidate?: true} = state) do
     [buffer | buffers] = buffers
-    node = {:selector, Enum.reverse(buffer)}
+    node = buffer_to_node(buffer, :selector)
     buffers = push_node_to_current_buffer(node, buffers)
     buffers = push_node_to_current_buffer(token, buffers)
     handle_token(rest, buffers, %{state | candidate?: false})
@@ -58,7 +34,7 @@ defmodule Surface.Compiler.CSSParser do
 
   defp handle_token([{:block_open, "{"} | rest], buffers, %{candidate?: true} = state) do
     [buffer | buffers] = buffers
-    node = {:selector, Enum.reverse(buffer)}
+    node = buffer_to_node(buffer, :selector)
     buffers = push_node_to_current_buffer(node, buffers)
     buffers = [[] | buffers]
     handle_token(rest, buffers, %{state | candidate?: false})
@@ -71,7 +47,7 @@ defmodule Surface.Compiler.CSSParser do
 
   defp handle_token([:semicolon = token | rest], buffers, %{candidate?: true} = state) do
     [buffer | buffers] = buffers
-    node = {:declaration, Enum.reverse(buffer)}
+    node = buffer_to_node(buffer, :declaration)
     buffers = push_node_to_current_buffer(node, buffers)
     buffers = push_node_to_current_buffer(token, buffers)
     handle_token(rest, buffers, %{state | candidate?: false})
@@ -80,7 +56,7 @@ defmodule Surface.Compiler.CSSParser do
   defp handle_token([{:block_close, "}"} | rest], buffers, %{candidate?: true} = state) do
     # handle declaration
     [buffer | buffers] = buffers
-    node = {:declaration, Enum.reverse(buffer)}
+    node = buffer_to_node(buffer, :declaration)
     buffers = push_node_to_current_buffer(node, buffers)
 
     # handle end of block
@@ -110,6 +86,13 @@ defmodule Surface.Compiler.CSSParser do
 
   defp handle_token([], [buffer], _state) do
     Enum.reverse(buffer)
+  end
+
+  defp buffer_to_node(buffer, type) do
+    case Enum.reverse(buffer) do
+      [{:text, "@" <> _} | _] = value -> {:at_rule, value}
+      value -> {type, value}
+    end
   end
 
   defp push_node_to_current_buffer(node, buffers) do
