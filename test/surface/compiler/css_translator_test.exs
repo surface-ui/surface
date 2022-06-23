@@ -32,8 +32,9 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            }
 
     assert vars == %{
-             "--029d26f--css-background" => "@css.background",
-             "--c8f42e0--padding" => "@padding"
+             "--029d26f--css-background" =>
+               {"@css.background", %{column: 25, column_end: 43, line: 4, line_end: 4}},
+             "--c8f42e0--padding" => {"@padding", %{column: 18, column_end: 29, line: 8, line_end: 8}}
            }
 
     assert translated == """

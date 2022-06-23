@@ -10,9 +10,13 @@ defmodule Surface.Compiler.CSSTranslator do
   def translate!(css, opts \\ []) do
     module = Keyword.get(opts, :module)
     scope_id = Keyword.get(opts, :scope_id) || scope_id(module)
+    file = Keyword.get(opts, :file)
+    line = Keyword.get(opts, :line) || 1
 
     state = %{
       scope_id: scope_id,
+      file: file,
+      line: line,
       vars: %{},
       selectors: %{
         elements: MapSet.new(),
@@ -29,16 +33,17 @@ defmodule Surface.Compiler.CSSTranslator do
 
     %{
       scope_id: scope_id,
+      file: file,
       css: to_string(updated_tokens),
       selectors: state.selectors,
       vars: state.vars
     }
   end
 
-  defp translate([{:text, "s-bind"}, {:block, "(", arg} | rest], acc, state) do
+  defp translate([{:text, "s-bind"}, {:block, "(", arg, meta} | rest], acc, state) do
     expr = s_bind_arg_to_string(arg)
     name = var_name(state.scope_id, expr)
-    vars = Map.put(state.vars, name, expr)
+    vars = Map.put(state.vars, name, {expr, meta})
     translate(rest, ["var(#{name})" | acc], %{state | vars: vars})
   end
 
@@ -84,7 +89,7 @@ defmodule Surface.Compiler.CSSTranslator do
     translate(rest, acc, state)
   end
 
-  defp translate([{:block, symbol, tokens} | rest], acc, state) do
+  defp translate([{:block, symbol, tokens, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(tokens, [], state)
     acc = [@closing_symbol[symbol], updated_tokens, symbol | acc]
     translate(rest, acc, state)
@@ -94,7 +99,7 @@ defmodule Surface.Compiler.CSSTranslator do
     {Enum.reverse(acc), state}
   end
 
-  defp translate_selector([{:text, ":deep"}, {:block, "(", arg} | rest], acc, state) do
+  defp translate_selector([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
     acc = [updated_tokens | acc]
     translate_selector(rest, acc, state)

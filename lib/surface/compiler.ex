@@ -1329,12 +1329,16 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp maybe_transform_ast(nodes, %CompileMeta{style: %{vars: vars}}) when vars != %{} do
+  defp maybe_transform_ast(nodes, %CompileMeta{style: %{vars: vars} = style}) when vars != %{} do
+    %{file: file} = style
+
     Enum.map(nodes, fn
       %AST.Tag{attributes: attributes, meta: meta} = node ->
         vars_ast =
-          for {var, expr} <- vars do
-            {String.to_atom(var), Code.string_to_quoted!(expr)}
+          for {var, {expr, %{line: line, column: column}}} <- vars do
+            # +1 for the parenthesis, +1 for the quote
+            col = column + 2
+            {String.to_atom(var), Code.string_to_quoted!(expr, line: line, column: col, file: file)}
           end
 
         updated_attrs =
@@ -1346,7 +1350,6 @@ defmodule Surface.Compiler do
                 type: :style,
                 value: %AST.AttributeExpr{
                   meta: meta,
-                  original: inspect(vars),
                   value: vars_ast
                 }
               }
@@ -1446,11 +1449,11 @@ defmodule Surface.Compiler do
     MapSet.member?(other, "*")
   end
 
-  defp maybe_pop_style([{"style", _attrs, content, _meta} | tokens], caller, opts) do
+  defp maybe_pop_style([{"style", _attrs, content, %{line: line}} | tokens], caller, opts) do
     style =
       content
       |> to_string()
-      |> CSSTranslator.translate!([module: caller.module] ++ opts)
+      |> CSSTranslator.translate!(module: caller.module, line: line, file: opts[:file])
 
     Module.put_attribute(caller.module, :__style__, style)
 

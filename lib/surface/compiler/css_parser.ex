@@ -53,7 +53,7 @@ defmodule Surface.Compiler.CSSParser do
     handle_token(rest, buffers, %{state | candidate?: false})
   end
 
-  defp handle_token([{:block_close, "}"} | rest], buffers, %{candidate?: true} = state) do
+  defp handle_token([{:block_close, "}", meta} | rest], buffers, %{candidate?: true} = state) do
     # handle declaration
     [buffer | buffers] = buffers
     node = buffer_to_node(buffer, :declaration)
@@ -61,15 +61,15 @@ defmodule Surface.Compiler.CSSParser do
 
     # handle end of block
     [buffer | buffers] = buffers
-    node = {:block, "{", Enum.reverse(buffer)}
+    node = {:block, "{", Enum.reverse(buffer), convert_block_meta(meta)}
     buffers = push_node_to_current_buffer(node, buffers)
 
     handle_token(rest, buffers, %{state | candidate?: false})
   end
 
-  defp handle_token([{:block_close, symbol} | rest], buffers, state) do
+  defp handle_token([{:block_close, symbol, meta} | rest], buffers, state) do
     [buffer | buffers] = buffers
-    node = {:block, @opening_symbol[symbol], Enum.reverse(buffer)}
+    node = {:block, @opening_symbol[symbol], Enum.reverse(buffer), convert_block_meta(meta)}
     buffers = push_node_to_current_buffer(node, buffers)
     handle_token(rest, buffers, state)
   end
@@ -99,5 +99,14 @@ defmodule Surface.Compiler.CSSParser do
     [buffer | buffers] = buffers
     buffer = [node | buffer]
     [buffer | buffers]
+  end
+
+  defp convert_block_meta(meta) do
+    %{
+      line: meta.opening_line,
+      column: meta.opening_column,
+      line_end: meta.line,
+      column_end: meta.column
+    }
   end
 end

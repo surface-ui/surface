@@ -73,9 +73,10 @@ defmodule Surface.Compiler.CSSTokenizer do
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state)
        when c in @block_close do
-    state = pop_opening!(state, <<c::utf8>>, line, column)
+    {{_symbol, opening_line, opening_column}, state} = pop_opening!(state, <<c::utf8>>, line, column)
     acc = text_to_acc(buffer, acc)
-    handle_text(rest, line, column + 1, [], [{:block_close, <<c::utf8>>} | acc], state)
+    meta = %{line: line, column: column, opening_line: opening_line, opening_column: opening_column}
+    handle_text(rest, line, column + 1, [], [{:block_close, <<c::utf8>>, meta} | acc], state)
   end
 
   defp handle_text("*/" <> _, line, column, _buffer, _acc, state) do
@@ -128,7 +129,7 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_comment("*/" <> rest, line, column, buffer, acc, state) do
-    state = pop_opening!(state, "*/", line, column)
+    {_opening, state} = pop_opening!(state, "*/", line, column)
     acc = comment_to_acc(buffer, acc)
     handle_text(rest, line, column + 2, [], acc, state)
   end
@@ -152,13 +153,13 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_string("\"" <> rest, line, column, buffer, acc, %{openings: [{"\"", _, _} | _]} = state) do
-    state = pop_opening!(state, "\"", line, column)
+    {_opening, state} = pop_opening!(state, "\"", line, column)
     acc = string_to_acc(buffer, "\"", acc)
     handle_text(rest, line, column + 1, [], acc, state)
   end
 
   defp handle_string("\'" <> rest, line, column, buffer, acc, %{openings: [{"\'", _, _} | _]} = state) do
-    state = pop_opening!(state, "\'", line, column)
+    {_opening, state} = pop_opening!(state, "\'", line, column)
     acc = string_to_acc(buffer, "\'", acc)
 
     handle_text(rest, line, column + 1, [], acc, state)
@@ -216,7 +217,7 @@ defmodule Surface.Compiler.CSSTokenizer do
         raise parse_error("unexpected token `#{closing}`", line, column, state)
 
       true ->
-        %{state | openings: openings}
+        {opening, %{state | openings: openings}}
     end
   end
 
