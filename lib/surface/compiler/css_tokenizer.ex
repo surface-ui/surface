@@ -1,5 +1,5 @@
 defmodule Surface.Compiler.CSSTokenizer do
-  alias Surface.Compiler.ParseError
+  alias Surface.Compiler.CSSParserError
 
   @ws '\n\r\t '
   @block_open '{(['
@@ -221,6 +221,6 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp parse_error(message, line, column, state) do
-    %ParseError{message: message, file: state.file, line: line, column: column}
+    %CSSParserError{message: message, file: state.file, line: line, column: column}
   end
 end

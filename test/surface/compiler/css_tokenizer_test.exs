@@ -2,7 +2,7 @@ defmodule Surface.Compiler.CSSTokenizerTest do
   use ExUnit.Case, async: true
 
   alias Surface.Compiler.CSSTokenizer
-  alias Surface.Compiler.ParseError
+  alias Surface.Compiler.CSSParserError
 
   test "tokenize!" do
     css = """
@@ -122,8 +122,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
       display: none;
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "missing closing `}` for token `{` defined at line 1, column 4"
 
@@ -137,8 +137,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
       padding: s-bind('@padding'
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "missing closing `)` for token `(` defined at line 2, column 18"
 
@@ -152,8 +152,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .b[title="test"
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "missing closing `]` for token `[` defined at line 2, column 3"
 
@@ -170,8 +170,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .b { display: none; }
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "missing closing `*/` for token `/*` defined at line 3, column 7"
     assert line == 6
@@ -183,8 +183,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .a[title="quote
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == ~S(missing closing `"` for token `"` defined at line 1, column 10)
     assert line == 2
@@ -196,8 +196,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .a[title='quote
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "missing closing `'` for token `'` defined at line 1, column 10"
     assert line == 2
@@ -211,8 +211,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .b */
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "unexpected token `*/`"
     assert line == 3
@@ -225,8 +225,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .b  display: none; }
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "unexpected token `}`"
     assert line == 2
@@ -240,8 +240,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     }
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "unexpected token `)`"
     assert line == 2
@@ -255,8 +255,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     }
     """
 
-    %ParseError{message: message, line: line, column: column} =
-      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %CSSParserError{message: message, line: line, column: column} =
+      assert_raise CSSParserError, fn -> CSSTokenizer.tokenize!(css) end
 
     assert message == "unexpected token `]`"
     assert line == 2
