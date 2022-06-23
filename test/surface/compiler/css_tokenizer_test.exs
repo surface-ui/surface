@@ -100,20 +100,68 @@ defmodule Surface.Compiler.CSSTokenizerTest do
            ]
   end
 
-  test "raise error on unclosed `{` block" do
+  test "handle double quoted string containing single quote" do
+    css = """
+    .a[title="I'm here"]{padding: 1px}
+    """
+
+    assert [_, _, {:text, "title="}, {:string, "\"", "I'm here"}, _ | _] = CSSTokenizer.tokenize!(css)
+  end
+
+  test "handle single quoted string containing double quote" do
+    css = """
+    .a[title='quote:"']{padding: 1px}
+    """
+
+    assert [_, _, {:text, "title="}, {:string, "\'", "quote:\""}, _ | _] = CSSTokenizer.tokenize!(css)
+  end
+
+  test "raise error on missing closing `}`" do
     css = """
     .a {
       display: none;
     """
 
-    %ParseError{message: message, line: line} = assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
 
-    assert message == ~S(unexpected EOF. The "{" at line 1 is missing terminator "}")
+    assert message == "missing closing `}` for token `{` defined at line 1, column 4"
 
     assert line == 3
+    assert column == 1
   end
 
-  test "raise error on unclosed comment" do
+  test "raise error on missing closing `)`" do
+    css = """
+    .a {
+      padding: s-bind('@padding'
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "missing closing `)` for token `(` defined at line 2, column 18"
+
+    assert line == 3
+    assert column == 1
+  end
+
+  test "raise error on missing closing `]`" do
+    css = """
+    .a { padding: 1px; }
+    .b[title="test"
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "missing closing `]` for token `[` defined at line 2, column 3"
+
+    assert line == 3
+    assert column == 1
+  end
+
+  test "raise error on missing closing `*/`" do
     css = """
     .a { display: none; }
 
@@ -122,24 +170,96 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     .b { display: none; }
     """
 
-    %ParseError{message: message, line: line} = assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
 
-    assert message == "expected closing `*/` for `/*` at line 3, column 7"
-
+    assert message == "missing closing `*/` for token `/*` defined at line 3, column 7"
     assert line == 6
+    assert column == 1
   end
 
-  test "raise error on unexpected end of comment `*/`" do
+  test "raise error on missing closing `\"`" do
+    css = """
+    .a[title="quote
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == ~S(missing closing `"` for token `"` defined at line 1, column 10)
+    assert line == 2
+    assert column == 1
+  end
+
+  test "raise error on missing closing `'`" do
+    css = """
+    .a[title='quote
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "missing closing `'` for token `'` defined at line 1, column 10"
+    assert line == 2
+    assert column == 1
+  end
+
+  test "raise error on unexpected token `*/`" do
     css = """
     .a { display: none; }
 
     .b */
     """
 
-    %ParseError{message: message, line: line} = assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
 
-    assert message == "unexpected end of comment: */"
-
+    assert message == "unexpected token `*/`"
     assert line == 3
+    assert column == 4
+  end
+
+  test "raise error on unexpected token `}`" do
+    css = """
+    .a { display: none; }
+    .b  display: none; }
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "unexpected token `}`"
+    assert line == 2
+    assert column == 20
+  end
+
+  test "raise error on unexpected token `)`" do
+    css = """
+    .a {
+      padding: v-bind '@padding');
+    }
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "unexpected token `)`"
+    assert line == 2
+    assert column == 29
+  end
+
+  test "raise error on unexpected token `]`" do
+    css = """
+    .a {
+      padding]: 1px;;
+    }
+    """
+
+    %ParseError{message: message, line: line, column: column} =
+      assert_raise ParseError, fn -> CSSTokenizer.tokenize!(css) end
+
+    assert message == "unexpected token `]`"
+    assert line == 2
+    assert column == 10
   end
 end

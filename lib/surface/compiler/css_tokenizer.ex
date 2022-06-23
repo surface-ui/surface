@@ -6,10 +6,22 @@ defmodule Surface.Compiler.CSSTokenizer do
   @block_close '})]'
   @quotes [?', ?"]
 
-  @terminator %{
+  @closing_symbol %{
     "{" => "}",
     "(" => ")",
-    "[" => "]"
+    "[" => "]",
+    "/*" => "*/",
+    "\"" => "\"",
+    "\'" => "\'"
+  }
+
+  @opening_symbol %{
+    "}" => "{",
+    ")" => "(",
+    "]" => "[",
+    "*/" => "/*",
+    "\"" => "\"",
+    "\'" => "\'",
   }
 
   def tokenize!(text, opts \\ []) do
@@ -18,7 +30,7 @@ defmodule Surface.Compiler.CSSTokenizer do
     column = Keyword.get(opts, :column, 1)
     indentation = Keyword.get(opts, :indentation, 0)
 
-    state = %{file: file, column_offset: indentation + 1, braces: []}
+    state = %{file: file, column_offset: indentation + 1, openings: []}
 
     handle_text(text, line, column, [], [], state)
   end
@@ -30,13 +42,9 @@ defmodule Surface.Compiler.CSSTokenizer do
     handle_ws(text, line, column, [], acc, state)
   end
 
-  defp handle_text("*/" <> _, line, column, _buffer, _acc, state) do
-    raise parse_error("unexpected end of comment: */", line, column, state)
-  end
-
   defp handle_text("/*" <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
-    state = push_brace(state, {"/*", line, column})
+    state = push_opening(state, {"/*", line, column})
     handle_comment(rest, line, column + 2, [], acc, state)
   end
 
@@ -52,40 +60,38 @@ defmodule Surface.Compiler.CSSTokenizer do
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) when c in @quotes do
     acc = text_to_acc(buffer, acc)
-    state = push_brace(state, {<<c::utf8>>, line, column})
+    state = push_opening(state, {<<c::utf8>>, line, column})
     handle_string(rest, line, column + 1, [], acc, state)
   end
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state)
        when c in @block_open do
-    state = push_brace(state, {<<c::utf8>>, line, column})
+    state = push_opening(state, {<<c::utf8>>, line, column})
     acc = text_to_acc(buffer, acc)
     handle_text(rest, line, column + 1, [], [{:block_open, <<c::utf8>>} | acc], state)
   end
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state)
        when c in @block_close do
-    # TODO: ignore if `symbol != c`
-    {_brace, state} = pop_brace(state)
+    state = pop_opening!(state, <<c::utf8>>, line, column)
     acc = text_to_acc(buffer, acc)
     handle_text(rest, line, column + 1, [], [{:block_close, <<c::utf8>>} | acc], state)
+  end
+
+  defp handle_text("*/" <> _, line, column, _buffer, _acc, state) do
+    pop_opening!(state, "*/", line, column)
   end
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) do
     handle_text(rest, line, column + 1, [<<c::utf8>> | buffer], acc, state)
   end
 
-  defp handle_text(<<>>, _line, _column, buffer, acc, %{braces: []}) do
+  defp handle_text(<<>>, _line, _column, buffer, acc, %{openings: []}) do
     ok(text_to_acc(buffer, acc))
   end
 
   defp handle_text(<<>>, line, column, _buffer, _acc, state) do
-    {{symbol, open_line, _column}, _state} = pop_brace(state)
-
-    message =
-      ~s(unexpected EOF. The "#{symbol}" at line #{open_line} is missing terminator "#{@terminator[symbol]}")
-
-    raise parse_error(message, line, column, state)
+    pop_opening!(state, :eof, line, column)
   end
 
   ## handle white spaces
@@ -122,7 +128,7 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_comment("*/" <> rest, line, column, buffer, acc, state) do
-    {{"/*", _line, _column}, state} = pop_brace(state)
+    state = pop_opening!(state, "*/", line, column)
     acc = comment_to_acc(buffer, acc)
     handle_text(rest, line, column + 2, [], acc, state)
   end
@@ -132,9 +138,7 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_comment(<<>>, line, column, _buffer, _acc, state) do
-    {{"/*", open_line, open_column}, state} = pop_brace(state)
-    message = "expected closing `*/` for `/*` at line #{open_line}, column #{open_column}"
-    raise parse_error(message, line, column, state)
+    pop_opening!(state, :eof, line, column)
   end
 
   ## handle quoted string
@@ -147,18 +151,14 @@ defmodule Surface.Compiler.CSSTokenizer do
     handle_string(rest, line + 1, state.column_offset, ["\n" | buffer], acc, state)
   end
 
-  defp handle_string("\"" <> rest, line, column, buffer, acc, state) do
-    # TODO: raise if `symbol != "\""`
-    # {{symbol, open_line, _column}, _state}
-    {_brace, state} = pop_brace(state)
+  defp handle_string("\"" <> rest, line, column, buffer, acc, %{openings: [{"\"", _, _} | _]} = state) do
+    state = pop_opening!(state, "\"", line, column)
     acc = string_to_acc(buffer, "\"", acc)
     handle_text(rest, line, column + 1, [], acc, state)
   end
 
-  defp handle_string("\'" <> rest, line, column, buffer, acc, state) do
-    # TODO: raise if `symbol != "\'"`
-    # {{symbol, open_line, _column}, _state}
-    {_brace, state} = pop_brace(state)
+  defp handle_string("\'" <> rest, line, column, buffer, acc, %{openings: [{"\'", _, _} | _]} = state) do
+    state = pop_opening!(state, "\'", line, column)
     acc = string_to_acc(buffer, "\'", acc)
 
     handle_text(rest, line, column + 1, [], acc, state)
@@ -169,7 +169,7 @@ defmodule Surface.Compiler.CSSTokenizer do
   end
 
   defp handle_string(<<>>, line, column, _buffer, _acc, state) do
-    raise parse_error("expected closing quote for string", line, column, state)
+    pop_opening!(state, :eof, line, column)
   end
 
   ## helpers
@@ -192,13 +192,31 @@ defmodule Surface.Compiler.CSSTokenizer do
   defp ws_to_acc([], acc), do: acc
   defp ws_to_acc(buffer, acc), do: [{:ws, buffer_to_string(buffer)} | acc]
 
-  defp push_brace(state, brace) do
-    %{state | braces: [brace | state.braces]}
+  defp push_opening(state, opening) do
+    %{state | openings: [opening | state.openings]}
   end
 
-  # TODO: raise if `%{braces: []}`
-  defp pop_brace(%{braces: [pos | braces]} = state) do
-    {pos, %{state | braces: braces}}
+  defp pop_opening!(%{openings: []} = state, closing, line, column) do
+    raise parse_error("unexpected token `#{closing}`", line, column, state)
+  end
+
+  defp pop_opening!(%{openings: [opening | openings]} = state, closing, line, column) do
+    {symbol, open_line, open_column} = opening
+
+    cond do
+      closing == :eof ->
+        message = """
+        missing closing `#{@closing_symbol[symbol]}` for token `#{symbol}` \
+        defined at line #{open_line}, column #{open_column}\
+        """
+        raise parse_error(message, line, column, state)
+
+      symbol != @opening_symbol[closing] ->
+        raise parse_error("unexpected token `#{closing}`", line, column, state)
+
+      true ->
+        %{state | openings: openings}
+    end
   end
 
   defp parse_error(message, line, column, state) do
