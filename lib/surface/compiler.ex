@@ -102,7 +102,7 @@ defmodule Surface.Compiler do
         indentation: Keyword.get(opts, :indentation, 0)
       )
 
-    {style, tokens} = maybe_pop_style(tokens, caller.module)
+    {style, tokens} = maybe_pop_style(tokens, caller, [file: file, line: line] ++ opts)
 
     compile_meta = %CompileMeta{
       line: line,
@@ -1446,22 +1446,21 @@ defmodule Surface.Compiler do
     MapSet.member?(other, "*")
   end
 
-  defp maybe_pop_style([{"style", _attrs, content, _meta} | tokens], module) do
+  defp maybe_pop_style([{"style", _attrs, content, _meta} | tokens], caller, opts) do
     style =
       content
       |> to_string()
-      |> String.trim_leading("\n")
-      |> CSSTranslator.translate!(module: module)
+      |> CSSTranslator.translate!([module: caller.module] ++ opts)
 
-    Module.put_attribute(module, :__style__, style)
+    Module.put_attribute(caller.module, :__style__, style)
 
     {style, tokens}
   end
 
-  defp maybe_pop_style(tokens, module) do
+  defp maybe_pop_style(tokens, caller, _opts) do
     style =
-      if Module.open?(module) do
-        Module.get_attribute(module, :__style__)
+      if Module.open?(caller.module) do
+        Module.get_attribute(caller.module, :__style__)
       end
 
     {style, tokens}

@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
           %{css: css, scope_id: scope_id} <- [mod.__style__()],
           reduce: "" do
         content ->
+          css = String.trim_leading(css, "\n")
           ["\n/* ", inspect(mod), " (", scope_id, ") */\n\n", css | content]
       end
 

@@ -21,7 +21,7 @@ defmodule Surface.Compiler.CSSTokenizer do
     "]" => "[",
     "*/" => "/*",
     "\"" => "\"",
-    "\'" => "\'",
+    "\'" => "\'"
   }
 
   def tokenize!(text, opts \\ []) do
@@ -209,6 +209,7 @@ defmodule Surface.Compiler.CSSTokenizer do
         missing closing `#{@closing_symbol[symbol]}` for token `#{symbol}` \
         defined at line #{open_line}, column #{open_column}\
         """
+
         raise parse_error(message, line, column, state)
 
       symbol != @opening_symbol[closing] ->
