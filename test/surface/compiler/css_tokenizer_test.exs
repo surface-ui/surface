@@ -30,7 +30,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              {:ws, " "},
              {:block_open, "{"},
              {:ws, "\n  "},
-             {:text, "--custom-color:"},
+             {:text, "--custom-color"},
+             {:text, ":"},
              {:ws, " "},
              {:text, "s-bind"},
              {:block_open, "("},
@@ -55,7 +56,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              {:ws, " "},
              {:block_open, "{"},
              {:ws, "\n  "},
-             {:text, "padding:"},
+             {:text, "padding"},
+             {:text, ":"},
              {:ws, " "},
              {:text, "s-bind"},
              {:block_open, "("},
@@ -72,7 +74,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              {:text, "and"},
              {:ws, " "},
              {:block_open, "("},
-             {:text, "min-width:"},
+             {:text, "min-width"},
+             {:text, ":"},
              {:ws, " "},
              {:text, "1216px"},
              {:block_close, ")", %{column: 37, line: 11, opening_column: 19, opening_line: 11}},
@@ -83,7 +86,8 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              {:ws, " "},
              {:block_open, "{"},
              {:ws, " "},
-             {:text, "display:"},
+             {:text, "display"},
+             {:text, ":"},
              {:ws, " "},
              {:text, "block"},
              :semicolon,
@@ -114,6 +118,31 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     """
 
     assert [_, _, {:text, "title="}, {:string, "\'", "quote:\""}, _ | _] = CSSTokenizer.tokenize!(css)
+  end
+
+  test "handle pseudo classes" do
+    css = """
+    .a:has(>img) {padding: 1px}
+    """
+
+    assert CSSTokenizer.tokenize!(css) == [
+      {:text, ".a"},
+      {:text, ":has"},
+      {:block_open, "("},
+      {:text, ">"},
+      {:text, "img"},
+      {:block_close, ")",
+       %{column: 12, line: 1, opening_column: 7, opening_line: 1}},
+      {:ws, " "},
+      {:block_open, "{"},
+      {:text, "padding"},
+      {:text, ":"},
+      {:ws, " "},
+      {:text, "1px"},
+      {:block_close, "}",
+       %{column: 27, line: 1, opening_column: 14, opening_line: 1}},
+      {:ws, "\n"}
+    ]
   end
 
   test "raise error on missing closing `}`" do

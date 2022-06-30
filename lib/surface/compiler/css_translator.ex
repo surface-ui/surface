@@ -106,28 +106,32 @@ defmodule Surface.Compiler.CSSTranslator do
   end
 
   defp translate_selector([{:text, text} | rest], acc, state) do
-    # TODO: replace this with a more accurate regex for each case (class, id, element, etc.)
-    regex = ~r/^([a-zA-Z\d\*\.\#\&\-\_]+)(.*)$/
-
-    sel =
-      case Regex.run(regex, text) do
-        [_, sel, _] -> sel
-        _ -> nil
-      end
-
     %{elements: elements, classes: classes, ids: ids, other: other} = state.selectors
 
-    selectors =
-      case sel do
-        nil -> state.selectors
-        "." <> class -> %{state.selectors | classes: MapSet.put(classes, class)}
-        "#" <> id -> %{state.selectors | ids: MapSet.put(ids, id)}
-        <<first, _::binary>> when first in ?a..?z -> %{state.selectors | elements: MapSet.put(elements, sel)}
-        _ -> %{state.selectors | other: MapSet.put(other, sel)}
+    {selector?, selectors} =
+      case text do
+        "." <> class ->
+          {true, %{state.selectors | classes: MapSet.put(classes, class)}}
+
+        "#" <> id ->
+          {true, %{state.selectors | ids: MapSet.put(ids, id)}}
+
+        <<first, _::binary>> when first in ?a..?z ->
+          {true, %{state.selectors | elements: MapSet.put(elements, text)}}
+
+        c when c in ["*", "&"] ->
+          {true, %{state.selectors | other: MapSet.put(other, text)}}
+
+        _ ->
+          {false, state.selectors}
       end
 
-    updated_text = Regex.replace(regex, text, "\\1[data-s-#{state.scope_id}]\\2", global: false)
-    acc = [updated_text | acc]
+    acc =
+      if selector? do
+        ["#{text}[data-s-#{state.scope_id}]" | acc]
+      else
+        [text | acc]
+      end
 
     translate_selector(rest, acc, %{state | selectors: selectors})
   end

@@ -17,7 +17,7 @@ defmodule Surface.Compiler.CSSParserTest do
                {:block, "{",
                 [
                   {:ws, " "},
-                  {:declaration, [{:text, "padding:"}, {:ws, " "}, {:text, "1px"}]},
+                  {:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}]},
                   :semicolon,
                   {:ws, " "}
                 ], %{column: 7, column_end: 23, line: 1, line_end: 1}}
@@ -29,7 +29,7 @@ defmodule Surface.Compiler.CSSParserTest do
 
     assert CSSParser.parse!(css) == [
              {:selector, [{:text, ".root"}]},
-             {:block, "{", [{:declaration, [{:text, "padding:"}, {:ws, " "}, {:text, "1px"}]}],
+             {:block, "{", [{:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}]}],
               %{column: 6, column_end: 19, line: 1, line_end: 1}}
            ]
   end
@@ -47,10 +47,10 @@ defmodule Surface.Compiler.CSSParserTest do
              {:block, "{",
               [
                 {:ws, "\n  "},
-                {:declaration, [text: "padding:", ws: " ", text: "1px"]},
+                {:declaration, [text: "padding", text: ":", ws: " ", text: "1px"]},
                 :semicolon,
                 {:ws, "\n  "},
-                {:declaration, [text: "margin:", ws: " ", text: "1px"]},
+                {:declaration, [text: "margin", text: ":", ws: " ", text: "1px"]},
                 :semicolon,
                 {:ws, "\n"}
               ], %{column: 7, column_end: 1, line: 1, line_end: 4}}
@@ -73,7 +73,7 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:ws, " "},
                 {:text, "and"},
                 {:ws, " "},
-                {:block, "(", [{:text, "min-width:"}, {:ws, " "}, {:text, "1216px"}],
+                {:block, "(", [{:text, "min-width"}, {:text, ":"}, {:ws, " "}, {:text, "1216px"}],
                  %{column: 19, column_end: 37, line: 1, line_end: 1}},
                 {:ws, " "}
               ]},
@@ -83,7 +83,7 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:selector, [{:text, ".a"}, {:ws, " "}]},
                 {:block, "{",
                  [
-                   {:declaration, [{:text, "display:"}, {:ws, " "}, {:text, "block"}]}
+                   {:declaration, [{:text, "display"}, {:text, ":"}, {:ws, " "}, {:text, "block"}]}
                  ], %{column: 6, column_end: 21, line: 2, line_end: 2}},
                 {:ws, "\n"}
               ], %{column: 39, column_end: 1, line: 1, line_end: 3}}
@@ -95,7 +95,7 @@ defmodule Surface.Compiler.CSSParserTest do
     div.blog { display: block }
     """
 
-    assert [{:selector, [text: "div.blog", ws: " "]} | _] = CSSParser.parse!(css)
+    assert [{:selector, [{:text, "div"}, {:text, ".blog"}, {:ws, " "}]} | _] = CSSParser.parse!(css)
   end
 
   test "parse multiple css rules" do
@@ -126,7 +126,8 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:ws, "\n  "},
                 {:declaration,
                  [
-                   {:text, "--custom-color:"},
+                   {:text, "--custom-color"},
+                   {:text, ":"},
                    {:ws, " "},
                    {:text, "s-bind"},
                    {:block, "(", [{:string, "\'", "@css.background"}],
@@ -138,7 +139,8 @@ defmodule Surface.Compiler.CSSParserTest do
              {:ws, "\n\n"},
              {:selector,
               [
-                {:text, ".a:has"},
+                {:text, ".a"},
+                {:text, ":has"},
                 {:block, "(", [text: ">", ws: " ", text: "img"],
                  %{column: 7, column_end: 13, line: 7, line_end: 7}},
                 {:ws, " "},
@@ -156,7 +158,8 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:ws, "\n  "},
                 {:declaration,
                  [
-                   {:text, "padding:"},
+                   {:text, "padding"},
+                   {:text, ":"},
                    {:ws, " "},
                    {:text, "s-bind"},
                    {:block, "(", [{:string, "'", "@padding"}], %{column: 18, column_end: 29, line: 8, line_end: 8}}
@@ -173,7 +176,7 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:ws, " "},
                 {:text, "and"},
                 {:ws, " "},
-                {:block, "(", [text: "min-width:", ws: " ", text: "1216px"],
+                {:block, "(", [text: "min-width", text: ":", ws: " ", text: "1216px"],
                  %{column: 19, column_end: 37, line: 11, line_end: 11}},
                 {:ws, " "}
               ]},
@@ -184,7 +187,7 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:block, "{",
                  [
                    {:ws, " "},
-                   {:declaration, [text: "display:", ws: " ", text: "block"]},
+                   {:declaration, [text: "display", text: ":", ws: " ", text: "block"]},
                    :semicolon,
                    {:ws, " "}
                  ], %{column: 9, column_end: 27, line: 12, line_end: 12}},

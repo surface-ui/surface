@@ -5,6 +5,8 @@ defmodule Surface.Compiler.CSSTokenizer do
   @block_open '{(['
   @block_close '})]'
   @quotes [?', ?"]
+  @combinators '>+~'
+  @stop_chars ':.'
 
   @closing_symbol %{
     "{" => "}",
@@ -56,6 +58,16 @@ defmodule Surface.Compiler.CSSTokenizer do
   defp handle_text("," <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
     handle_text(rest, line, column + 1, [], [:comma | acc], state)
+  end
+
+  defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) when c in @combinators do
+    acc = text_to_acc(buffer, acc)
+    handle_text(rest, line, column + 1, [], [{:text, <<c::utf8>>} | acc], state)
+  end
+
+  defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) when c in @stop_chars do
+    acc = text_to_acc(buffer, acc)
+    handle_text(rest, line, column + 1, [<<c::utf8>>], acc, state)
   end
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) when c in @quotes do

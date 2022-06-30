@@ -64,10 +64,11 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
 
     assert translated == """
-           div.blog[data-s-myscope]:first-child { display: block }
+           div[data-s-myscope].blog[data-s-myscope]:first-child { display: block }
            """
 
-    assert selectors.elements == MapSet.new(["div.blog"])
+    assert selectors.elements == MapSet.new(["div"])
+    assert selectors.classes == MapSet.new(["blog"])
   end
 
   test ":deep" do
@@ -86,5 +87,19 @@ defmodule Surface.Compiler.CSSTranslatorTest do
              padding: 10px;
            }
            """
+  end
+
+  test "translate selector with multiple classes and pseudo-classes" do
+    css = """
+    .a[title="foo"]:first-child.b[title="bar"]:hover { display: block }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+    .a[data-s-myscope][title="foo"]:first-child.b[data-s-myscope][title="bar"]:hover { display: block }
+    """
+
+    assert selectors.classes == MapSet.new(["a", "b"])
   end
 end
