@@ -18,10 +18,12 @@ defmodule Surface.Compiler.CSSTranslator do
       file: file,
       line: line,
       vars: %{},
+      selectors_buffer: [],
       selectors: %{
         elements: MapSet.new(),
         classes: MapSet.new(),
         ids: MapSet.new(),
+        combined: MapSet.new(),
         other: MapSet.new()
       }
     }
@@ -99,6 +101,17 @@ defmodule Surface.Compiler.CSSTranslator do
     {Enum.reverse(acc), state}
   end
 
+  defp translate_selector([{:ws, ws} | rest], acc, state) do
+    state = end_selector(state)
+    translate_selector(rest, [ws | acc], state)
+  end
+
+  defp translate_selector([{:text, combinator} | rest], acc, state)
+       when combinator in [">", "~", "+"] do
+    state = end_selector(state)
+    translate_selector(rest, [combinator | acc], state)
+  end
+
   defp translate_selector([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
     acc = [updated_tokens | acc]
@@ -106,34 +119,36 @@ defmodule Surface.Compiler.CSSTranslator do
   end
 
   defp translate_selector([{:text, text} | rest], acc, state) do
-    %{elements: elements, classes: classes, ids: ids, other: other} = state.selectors
-
-    {selector?, selectors} =
+    {scoped?, state} =
       case text do
         "." <> class ->
-          {true, %{state.selectors | classes: MapSet.put(classes, class)}}
+          state = %{state | selectors_buffer: [{:classes, "." <> class, class} | state.selectors_buffer]}
+          {true, state}
 
         "#" <> id ->
-          {true, %{state.selectors | ids: MapSet.put(ids, id)}}
+          state = %{state | selectors_buffer: [{:ids, "#" <> id, id} | state.selectors_buffer]}
+          {true, state}
 
         <<first, _::binary>> when first in ?a..?z ->
-          {true, %{state.selectors | elements: MapSet.put(elements, text)}}
+          state = %{state | selectors_buffer: [{:elements, text, text} | state.selectors_buffer]}
+          {true, state}
 
         c when c in ["*", "&"] ->
-          {true, %{state.selectors | other: MapSet.put(other, text)}}
+          state = %{state | selectors_buffer: [{:other, c, c} | state.selectors_buffer]}
+          {true, state}
 
         _ ->
-          {false, state.selectors}
+          {false, state}
       end
 
     acc =
-      if selector? do
+      if scoped? do
         ["#{text}[data-s-#{state.scope_id}]" | acc]
       else
         [text | acc]
       end
 
-    translate_selector(rest, acc, %{state | selectors: selectors})
+    translate_selector(rest, acc, state)
   end
 
   defp translate_selector([token | rest], acc, state) do
@@ -142,6 +157,7 @@ defmodule Surface.Compiler.CSSTranslator do
   end
 
   defp translate_selector([], acc, state) do
+    state = end_selector(state)
     {Enum.reverse(acc), state}
   end
 
@@ -172,5 +188,28 @@ defmodule Surface.Compiler.CSSTranslator do
     :crypto.hash(:md5, text)
     |> Base.encode16(case: :lower)
     |> String.slice(0..6)
+  end
+
+  defp put_selector(state, group, selector) do
+    update_in(state, [:selectors, group], fn sels ->
+      MapSet.put(sels, selector)
+    end)
+  end
+
+  defp end_selector(%{selectors_buffer: selectors_buffer} = state) do
+    state =
+      case selectors_buffer do
+        [] ->
+          state
+
+        [{group, _text, sel}] ->
+          put_selector(state, group, sel)
+
+        list ->
+          combined = MapSet.new(list, fn {_group, text, _sel} -> text end)
+          put_selector(state, :combined, combined)
+      end
+
+    %{state | selectors_buffer: []}
   end
 end

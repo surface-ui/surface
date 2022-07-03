@@ -6,7 +6,7 @@ defmodule Surface.Compiler.CSSTokenizer do
   @block_close '})]'
   @quotes [?', ?"]
   @combinators '>+~'
-  @stop_chars ':.'
+  @stop_chars ':.#'
 
   @closing_symbol %{
     "{" => "}",

@@ -126,23 +126,42 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     """
 
     assert CSSTokenizer.tokenize!(css) == [
-      {:text, ".a"},
-      {:text, ":has"},
-      {:block_open, "("},
-      {:text, ">"},
-      {:text, "img"},
-      {:block_close, ")",
-       %{column: 12, line: 1, opening_column: 7, opening_line: 1}},
-      {:ws, " "},
-      {:block_open, "{"},
-      {:text, "padding"},
-      {:text, ":"},
-      {:ws, " "},
-      {:text, "1px"},
-      {:block_close, "}",
-       %{column: 27, line: 1, opening_column: 14, opening_line: 1}},
-      {:ws, "\n"}
-    ]
+             {:text, ".a"},
+             {:text, ":has"},
+             {:block_open, "("},
+             {:text, ">"},
+             {:text, "img"},
+             {:block_close, ")", %{column: 12, line: 1, opening_column: 7, opening_line: 1}},
+             {:ws, " "},
+             {:block_open, "{"},
+             {:text, "padding"},
+             {:text, ":"},
+             {:ws, " "},
+             {:text, "1px"},
+             {:block_close, "}", %{column: 27, line: 1, opening_column: 14, opening_line: 1}},
+             {:ws, "\n"}
+           ]
+  end
+
+  test "handle multiple selectors" do
+    css = """
+    div.a:first-child.b {padding: 1px}
+    """
+
+    assert CSSTokenizer.tokenize!(css) == [
+             {:text, "div"},
+             {:text, ".a"},
+             {:text, ":first-child"},
+             {:text, ".b"},
+             {:ws, " "},
+             {:block_open, "{"},
+             {:text, "padding"},
+             {:text, ":"},
+             {:ws, " "},
+             {:text, "1px"},
+             {:block_close, "}", %{column: 34, line: 1, opening_column: 21, opening_line: 1}},
+             {:ws, "\n"}
+           ]
   end
 
   test "raise error on missing closing `}`" do

@@ -28,7 +28,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
              elements: MapSet.new(["b", "c"]),
              classes: MapSet.new(["a", "blog", "root"]),
              ids: MapSet.new([]),
-             other: MapSet.new([])
+             other: MapSet.new([]),
+             combined: MapSet.new([])
            }
 
     assert vars == %{
@@ -67,8 +68,9 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            div[data-s-myscope].blog[data-s-myscope]:first-child { display: block }
            """
 
-    assert selectors.elements == MapSet.new(["div"])
-    assert selectors.classes == MapSet.new(["blog"])
+    assert selectors.elements == MapSet.new([])
+    assert selectors.classes == MapSet.new([])
+    assert selectors.combined == MapSet.new([MapSet.new([".blog", "div"])])
   end
 
   test ":deep" do
@@ -97,9 +99,10 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
 
     assert translated == """
-    .a[data-s-myscope][title="foo"]:first-child.b[data-s-myscope][title="bar"]:hover { display: block }
-    """
+           .a[data-s-myscope][title="foo"]:first-child.b[data-s-myscope][title="bar"]:hover { display: block }
+           """
 
-    assert selectors.classes == MapSet.new(["a", "b"])
+    assert selectors.classes == MapSet.new([])
+    assert selectors.combined == MapSet.new([MapSet.new([".a", ".b"])])
   end
 end

@@ -1393,8 +1393,7 @@ defmodule Surface.Compiler do
 
     if universal_in_selectors?(selectors) or
          element_in_selectors?(element, selectors) or
-         maybe_class_in_selectors?(element, attributes, selectors) or
-         maybe_id_in_selectors?(attributes, selectors) do
+         maybe_in_selectors?(element, attributes, selectors) do
       s_data_attr = %AST.Attribute{
         meta: meta,
         name: :"data-s-#{scope_id}",
@@ -1412,15 +1411,21 @@ defmodule Surface.Compiler do
     node
   end
 
-  defp maybe_class_in_selectors?(element, attributes, %{classes: classes, elements: elements}) do
-    {%{class: class}, _} = AST.pop_attributes_values_as_map(attributes, [:class])
+  defp maybe_in_selectors?(element, attributes, selectors) do
+    {%{id: id, class: class}, _} = AST.pop_attributes_values_as_map(attributes, [:id, :class])
 
+    maybe_in_class_selectors?(element, class, selectors) or
+      maybe_in_id_selectors?(element, id, selectors) or
+      maybe_in_combined_selectors?(element, id, class, selectors)
+  end
+
+  defp maybe_in_class_selectors?(element, class, %{classes: classes, combined: combined}) do
     case class do
       %AST.Literal{value: value} ->
         value
         |> String.split()
         |> Enum.any?(fn c ->
-          MapSet.member?(classes, c) or MapSet.member?(elements, "#{element}.#{c}")
+          MapSet.member?(classes, c) or MapSet.member?(combined, MapSet.new([element, ".#{c}"]))
         end)
 
       nil ->
@@ -1431,13 +1436,42 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp maybe_id_in_selectors?(attributes, %{ids: ids}) do
-    {%{id: id}, _} = AST.pop_attributes_values_as_map(attributes, [:id])
+  defp maybe_in_combined_selectors?(_, %AST.AttributeExpr{} = _id, _, _) do
+    true
+  end
 
+  defp maybe_in_combined_selectors?(_, _, %AST.AttributeExpr{} = _class, _) do
+    true
+  end
+
+  defp maybe_in_combined_selectors?(element, id, class, %{combined: combined}) do
+    sels =
+      case class do
+        %AST.Literal{value: value} -> value |> String.split() |> Enum.map(&".#{&1}")
+        _ -> []
+      end
+
+    sels =
+      case id do
+        %AST.Literal{value: value} -> [value | sels]
+        _ -> sels
+      end
+
+    sels_set = MapSet.new([element | sels])
+
+    Enum.any?(combined, &MapSet.subset?(&1, sels_set))
+  end
+
+  defp maybe_in_id_selectors?(element, id, %{ids: ids, combined: combined}) do
     case id do
-      %AST.Literal{value: value} -> MapSet.member?(ids, value)
-      nil -> false
-      _ -> true
+      %AST.Literal{value: value} ->
+        MapSet.member?(ids, value) or MapSet.member?(combined, MapSet.new([element, "##{value}"]))
+
+      nil ->
+        false
+
+      _ ->
+        true
     end
   end
 

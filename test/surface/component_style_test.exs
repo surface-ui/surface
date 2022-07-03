@@ -143,6 +143,79 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
+  test "inject s-data-* in elements that match the element and id selector" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          div#panel { display: block }
+        </style>
+
+        <div>ok</div>
+        <div id="panel">ok</div>
+        <span id="panel">ok</span>
+        """
+      end
+
+    assert html =~ """
+           <div>ok</div>
+           <div data-s-628eb64 id="panel">ok</div>
+           <span id="panel">ok</span>
+           """
+  end
+
+  test "inject s-data-* in elements that match all classes" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          .a.b { display: block }
+        </style>
+
+        <div>ok</div>
+        <div class="a">ok</div>
+        <div class="b">ok</div>
+        <div class="a b">ok</div>
+        <span class="b a">ok</span>
+        <span class="x a b y">ok</span>
+        """
+      end
+
+    assert html =~ """
+           <div>ok</div>
+           <div class="a">ok</div>
+           <div class="b">ok</div>
+           <div data-s-628eb64 class="a b">ok</div>
+           <span data-s-628eb64 class="b a">ok</span>
+           <span data-s-628eb64 class="x a b y">ok</span>
+           """
+  end
+
+  test "inject s-data-* in any element that matches any selector group. No matter if it doesn't match the whole selector" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          div.a.b:last-child > span.c.d { display: block }
+        </style>
+
+        <div>ok</div>
+        <div class="a b">ok</div>
+        <div class="c d">ok</div>
+        <span class="a b">ok</span>
+        <span class="c d">ok</span>
+        """
+      end
+
+    assert html =~ """
+           <div>ok</div>
+           <div data-s-628eb64 class="a b">ok</div>
+           <div class="c d">ok</div>
+           <span class="a b">ok</span>
+           <span data-s-628eb64 class="c d">ok</span>
+           """
+  end
+
   test "merge `style` variables when value is a literal string" do
     assigns = %{color: "red"}
 
