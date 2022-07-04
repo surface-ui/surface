@@ -105,4 +105,24 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.classes == MapSet.new([])
     assert selectors.combined == MapSet.new([MapSet.new([".a", ".b"])])
   end
+
+  test "name variables using only the hash when in :prod" do
+    css = """
+    .a {
+      padding: s-bind('@padding');
+    }
+    """
+
+    %{css: translated, vars: vars} = CSSTranslator.translate!(css, scope_id: "myscope", env: :prod)
+
+    assert vars == %{
+             "--c8f42e0" => {"@padding", %{column: 18, column_end: 29, line: 2, line_end: 2}}
+           }
+
+    assert translated == """
+           .a[data-s-myscope] {
+             padding: var(--c8f42e0);
+           }
+           """
+  end
 end

@@ -12,11 +12,13 @@ defmodule Surface.Compiler.CSSTranslator do
     scope_id = Keyword.get(opts, :scope_id) || scope_id(module)
     file = Keyword.get(opts, :file)
     line = Keyword.get(opts, :line) || 1
+    env = Keyword.get(opts, :env) || :dev
 
     state = %{
       scope_id: scope_id,
       file: file,
       line: line,
+      env: env,
       vars: %{},
       selectors_buffer: [],
       selectors: %{
@@ -44,7 +46,7 @@ defmodule Surface.Compiler.CSSTranslator do
 
   defp translate([{:text, "s-bind"}, {:block, "(", arg, meta} | rest], acc, state) do
     expr = s_bind_arg_to_string(arg)
-    name = var_name(state.scope_id, expr)
+    name = var_name(state.scope_id, expr, state.env)
     vars = Map.put(state.vars, name, {expr, meta})
     translate(rest, ["var(#{name})" | acc], %{state | vars: vars})
   end
@@ -172,10 +174,14 @@ defmodule Surface.Compiler.CSSTranslator do
     expr
   end
 
-  defp var_name(scope, expr) do
+  defp var_name(scope, expr, env) do
     hash = hash(scope <> expr)
-    # TODO: In prod, use only the hash
-    "--#{hash}-#{Regex.replace(~r/([^\w-])/, expr, "-")}"
+
+    if env == :prod do
+      "--#{hash}"
+    else
+      "--#{hash}-#{Regex.replace(~r/([^\w-])/, expr, "-")}"
+    end
   end
 
   defp scope_id(component) do
