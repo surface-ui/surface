@@ -102,7 +102,10 @@ defmodule Surface.Compiler do
         indentation: Keyword.get(opts, :indentation, 0)
       )
 
-    {style, tokens} = maybe_pop_style(tokens, caller, [file: file, line: line] ++ opts)
+    {style, tokens} =
+      tokens
+      |> skip_blanks()
+      |> maybe_pop_style(caller, [file: file, line: line] ++ opts)
 
     compile_meta = %CompileMeta{
       line: line,
@@ -114,6 +117,7 @@ defmodule Surface.Compiler do
     }
 
     tokens
+    |> skip_blanks()
     |> to_ast(compile_meta)
     |> maybe_transform_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
@@ -1512,5 +1516,17 @@ defmodule Surface.Compiler do
       end
 
     {style, tokens}
+  end
+
+  defp skip_blanks([]) do
+    []
+  end
+
+  defp skip_blanks([token | rest] = tokens) do
+    if Helpers.blank?(token) do
+      skip_blanks(rest)
+    else
+      tokens
+    end
   end
 end

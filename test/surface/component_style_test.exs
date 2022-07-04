@@ -264,4 +264,24 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ ~S(style="padding: 1px; --b9c15f4--color: red")
   end
+
+  test "ignore white spaces before and after the <style> section" do
+    html =
+      render_surface do
+        ~F"""
+
+
+        <style>
+          .btn { color: red }
+        </style>
+
+
+        <button class="btn">OK</button>
+        """
+      end
+
+    assert html == """
+    <button data-s-d121568 class="btn">OK</button>
+    """
+  end
 end
