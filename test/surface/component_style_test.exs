@@ -281,7 +281,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html == """
-    <button data-s-d121568 class="btn">OK</button>
-    """
+           <button data-s-d121568 class="btn">OK</button>
+           """
   end
 end
