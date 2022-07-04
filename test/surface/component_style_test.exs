@@ -12,7 +12,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button style="--c57608f--color: red" data-s-2a98af4 class="btn">
+           <button style="--59c08eb--color: red" data-s-8c9b2e4 class="btn">
              FAKE BUTTON
            </button>
            """
@@ -31,7 +31,22 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-628eb64 class="btn">OK</button>
+           <button data-s-1bd4222 class="btn">OK</button>
+           """
+  end
+
+  test "inline css style for function components" do
+    html =
+      render_surface do
+        ~F"""
+        <FakeButton.func/>
+        """
+      end
+
+    assert html =~ """
+           <button style="--81d9fb2--padding: 10px;" data-s-580c948 class="btn-func">
+             FAKE FUNCTION BUTTON
+           </button>
            """
   end
 
@@ -51,9 +66,9 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-628eb64>ok</button>
+           <button data-s-05ec951>ok</button>
            <div>ok</div>
-           <span data-s-628eb64>ok</span>
+           <span data-s-05ec951>ok</span>
            """
   end
 
@@ -73,9 +88,9 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-628eb64 class="btn1">ok</button>
+           <button data-s-597e148 class="btn1">ok</button>
            <button>ok</button>
-           <button data-s-628eb64 class="p-8 btn2">ok</button>
+           <button data-s-597e148 class="p-8 btn2">ok</button>
            """
   end
 
@@ -95,9 +110,9 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-628eb64 id="btn1">ok</button>
+           <button data-s-b461126 id="btn1">ok</button>
            <button>ok</button>
-           <button data-s-628eb64 id="btn2">ok</button>
+           <button data-s-b461126 id="btn2">ok</button>
            """
   end
 
@@ -116,9 +131,9 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <div data-s-628eb64>ok</div>
-           <span data-s-628eb64>ok</span>
-           <button data-s-628eb64 id="btn">ok</button>
+           <div data-s-b0be4f9>ok</div>
+           <span data-s-b0be4f9>ok</span>
+           <button data-s-b0be4f9 id="btn">ok</button>
            """
   end
 
@@ -138,7 +153,7 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div>ok</div>
-           <div data-s-628eb64 class="panel">ok</div>
+           <div data-s-a6137cb class="panel">ok</div>
            <span class="panel">ok</span>
            """
   end
@@ -159,7 +174,7 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div>ok</div>
-           <div data-s-628eb64 id="panel">ok</div>
+           <div data-s-79e87d1 id="panel">ok</div>
            <span id="panel">ok</span>
            """
   end
@@ -185,9 +200,9 @@ defmodule Surface.ComponentStyleTest do
            <div>ok</div>
            <div class="a">ok</div>
            <div class="b">ok</div>
-           <div data-s-628eb64 class="a b">ok</div>
-           <span data-s-628eb64 class="b a">ok</span>
-           <span data-s-628eb64 class="x a b y">ok</span>
+           <div data-s-9651d1c class="a b">ok</div>
+           <span data-s-9651d1c class="b a">ok</span>
+           <span data-s-9651d1c class="x a b y">ok</span>
            """
   end
 
@@ -209,10 +224,10 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div>ok</div>
-           <div data-s-628eb64 class="a b">ok</div>
+           <div data-s-77c06c9 class="a b">ok</div>
            <div class="c d">ok</div>
            <span class="a b">ok</span>
-           <span data-s-628eb64 class="c d">ok</span>
+           <span data-s-77c06c9 class="c d">ok</span>
            """
   end
 
@@ -230,7 +245,7 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    assert html =~ ~S(style="padding: 1px; --25b4204--color: red")
+    assert html =~ ~S(style="padding: 1px; --bfe9859--color: red")
   end
 
   test "merge `style` variables when value is an expression" do
@@ -247,6 +262,6 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    assert html =~ ~S(style="padding: 1px; --25b4204--color: red")
+    assert html =~ ~S(style="padding: 1px; --b9c15f4--color: red")
   end
 end

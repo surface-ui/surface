@@ -9,7 +9,8 @@ defmodule Surface.Compiler.CSSTranslator do
 
   def translate!(css, opts \\ []) do
     module = Keyword.get(opts, :module)
-    scope_id = Keyword.get(opts, :scope_id) || scope_id(module)
+    func = Keyword.get(opts, :func)
+    scope_id = Keyword.get(opts, :scope_id) || scope_id(module, func)
     file = Keyword.get(opts, :file)
     line = Keyword.get(opts, :line) || 1
     env = Keyword.get(opts, :env) || :dev
@@ -184,10 +185,8 @@ defmodule Surface.Compiler.CSSTranslator do
     end
   end
 
-  defp scope_id(component) do
-    component
-    |> inspect()
-    |> hash()
+  defp scope_id(component, func) do
+    hash("#{inspect(component)}.#{func}")
   end
 
   defp hash(text) do

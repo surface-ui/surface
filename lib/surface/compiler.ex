@@ -1487,17 +1487,28 @@ defmodule Surface.Compiler do
     style =
       content
       |> to_string()
-      |> CSSTranslator.translate!(module: caller.module, line: line, file: opts[:file])
+      |> CSSTranslator.translate!(
+        module: caller.module,
+        func: elem(caller.function, 0),
+        line: line,
+        file: opts[:file]
+      )
 
-    Module.put_attribute(caller.module, :__style__, style)
+    if not Module.has_attribute?(caller.module, :__style__) do
+      Module.register_attribute(caller.module, :__style__, accumulate: true)
+    end
+
+    Module.put_attribute(caller.module, :__style__, {elem(caller.function, 0), style})
 
     {style, tokens}
   end
 
   defp maybe_pop_style(tokens, caller, _opts) do
     style =
-      if Module.open?(caller.module) do
-        Module.get_attribute(caller.module, :__style__)
+      if Module.open?(caller.module) && caller.function do
+        caller.module
+        |> Module.get_attribute(:__style__, [])
+        |> Keyword.get(elem(caller.function, 0))
       end
 
     {style, tokens}

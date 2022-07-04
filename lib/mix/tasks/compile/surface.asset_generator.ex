@@ -30,11 +30,11 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     content =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          %{css: css, scope_id: scope_id} <- [mod.__style__()],
+          {func, %{css: css, scope_id: scope_id}} <- mod.__style__(),
           reduce: "" do
         content ->
           css = String.trim_leading(css, "\n")
-          ["\n/* ", inspect(mod), " (", scope_id, ") */\n\n", css | content]
+          ["\n/* ", inspect(mod), ".", to_string(func), "/1 (", scope_id, ") */\n\n", css | content]
       end
 
     content = to_string([header(), "\n" | content])
