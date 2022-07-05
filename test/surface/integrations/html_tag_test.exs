@@ -5,9 +5,9 @@ defmodule HtmlTagTest do
 
   alias Phoenix.LiveView.Rendered
 
-  defp eval(string, assigns \\ %{}) do
+  defp eval(string, caller, assigns \\ %{}) do
     string
-    |> Surface.Compiler.compile(1, __ENV__)
+    |> Surface.Compiler.compile(1, caller)
     |> Surface.Compiler.to_live_struct()
     |> Code.eval_quoted(assigns: assigns)
     |> elem(0)
@@ -284,7 +284,7 @@ defmodule HtmlTagTest do
     end
 
     test "as string literal, it's translated directly to static html" do
-      %Rendered{static: static} = eval(~S[<div class="myclass" id={"123"}/>])
+      %Rendered{static: static} = eval(~S[<div class="myclass" id={"123"}/>], __ENV__)
 
       assert static == [~S(<div class="myclass"), "></div>"]
     end

@@ -119,6 +119,28 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     assert get_mtime(@css_output_file) == mtime
   end
 
+  test "validate multiple styles", %{opts: opts} do
+    file = to_string(Mix.Tasks.Compile.SurfaceTest.DuplicatedStyle.module_info(:compile)[:source])
+
+    message = """
+    scoped CSS style already defined for Mix.Tasks.Compile.SurfaceTest.DuplicatedStyle.render/1 \
+    at test/support/mix/tasks/compile/surface_test/duplicated_style.css:1. \
+    Scoped styles must be defined either as the first <style> node in the \
+    template or in a colocated .css file.
+    """
+
+    assert run([Mix.Tasks.Compile.SurfaceTest.DuplicatedStyle], opts) == [
+             %Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: file,
+               message: message,
+               position: 6,
+               severity: :warning
+             }
+           ]
+  end
+
   test "copy hooks files to output dir and add header comment", %{opts: opts} do
     refute File.exists?(@button_dest_hooks_file)
     refute File.exists?(@link_dest_hooks_file)

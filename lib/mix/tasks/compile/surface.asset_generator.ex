@@ -12,9 +12,10 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
-    {js_files, diagnostics} = get_colocated_js_files(components)
+    {js_files, js_diagnostics} = get_colocated_js_files(components)
     generate_js_files(js_files, hooks_output_dir)
-    generate_css_file(components, css_output_file)
+    css_diagnostics = generate_css_file(components, css_output_file)
+    diagnostics = js_diagnostics ++ css_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
@@ -27,14 +28,19 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
-    content =
+    {content, _, diagnostics} =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          {func, %{css: css, scope_id: scope_id}} <- mod.__style__(),
-          reduce: "" do
-        content ->
+          {func, %{css: css, scope_id: scope_id}} = func_style <- mod.__style__(),
+          reduce: {"", nil, []} do
+        {content, last_mod_func_style, diagnostics} ->
           css = String.trim_leading(css, "\n")
-          ["\n/* ", inspect(mod), ".", to_string(func), "/1 (", scope_id, ") */\n\n", css | content]
+
+          {
+            ["\n/* ", inspect(mod), ".", to_string(func), "/1 (", scope_id, ") */\n\n", css | content],
+            {mod, func_style},
+            validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics
+          }
       end
 
     content = to_string([header(), "\n" | content])
@@ -42,6 +48,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     if content != dest_file_content do
       File.write!(dest_file, content)
     end
+
+    diagnostics
   end
 
   defp generate_js_files(js_files, hooks_output_dir) do
@@ -196,5 +204,21 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       severity: :warning,
       compiler_name: "Surface"
     }
+  end
+
+  defp validate_multiple_styles({mod, {func, style}}, {mod, {func, other_style}}) do
+    position = "#{Path.relative_to_cwd(style.file)}:#{style.line}"
+
+    message = """
+    scoped CSS style already defined for #{inspect(mod)}.#{func}/1 at #{position}. \
+    Scoped styles must be defined either as the first <style> node in \
+    the template or in a colocated .css file.
+    """
+
+    [warning(message, other_style.file, other_style.line)]
+  end
+
+  defp validate_multiple_styles(_, _) do
+    []
   end
 end

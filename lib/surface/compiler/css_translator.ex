@@ -39,6 +39,7 @@ defmodule Surface.Compiler.CSSTranslator do
     %{
       scope_id: scope_id,
       file: file,
+      line: line,
       css: to_string(updated_tokens),
       selectors: state.selectors,
       vars: state.vars
