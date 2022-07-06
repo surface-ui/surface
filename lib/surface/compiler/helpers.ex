@@ -203,19 +203,27 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
+  def get_module_attribute(module, key, default \\ nil) do
+    if Mix.env() == :test do
+      # If the template is compiled directly in a test module, get_attribute might fail,
+      # breaking some of the tests once in a while.
+      try do
+        Module.get_attribute(module, key, default)
+      rescue
+        _e in ArgumentError -> false
+      end
+    else
+      Module.get_attribute(module, key, default)
+    end
+  end
+
   def is_stateful_component(module) do
     cond do
       function_exported?(module, :component_type, 0) ->
         module.component_type() == Surface.LiveComponent
 
       Module.open?(module) ->
-        # If the template is compiled directly in a test module, get_attribute might fail,
-        # breaking some of the tests once in a while.
-        try do
-          Module.get_attribute(module, :component_type) == Surface.LiveComponent
-        rescue
-          _e in ArgumentError -> false
-        end
+        get_module_attribute(module, :component_type) == Surface.LiveComponent
 
       true ->
         false

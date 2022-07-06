@@ -1511,7 +1511,7 @@ defmodule Surface.Compiler do
     style =
       if Module.open?(caller.module) && caller.function do
         caller.module
-        |> Module.get_attribute(:__style__, [])
+        |> Helpers.get_module_attribute(:__style__, [])
         |> Keyword.get(elem(caller.function, 0))
       end
 
