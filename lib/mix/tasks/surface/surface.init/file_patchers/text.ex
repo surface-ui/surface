@@ -36,6 +36,22 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Text do
     end
   end
 
+  def replace_text(code, text, replacement, already_patched_text) do
+    already_patched? = String.contains?(code, already_patched_text)
+    patchable? = String.contains?(code, text)
+
+    cond do
+      already_patched? ->
+        {:already_patched, code}
+
+      patchable? ->
+        {:patched, String.replace(code, text, replacement)}
+
+      true ->
+        {:cannot_patch, code}
+    end
+  end
+
   def remove_text(code, text) do
     if String.contains?(code, text) do
       {:patched, String.replace(code, text, "")}

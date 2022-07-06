@@ -155,7 +155,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
              import Config
 
              config :tailwind,
-               version: "3.0.23",
+               version: "3.1.3",
                default: [
                  args: ~w(
                    --config=tailwind.config.js
@@ -182,7 +182,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       config :phoenix, :json_library, Jason
 
       config :tailwind,
-        version: "3.0.23",
+        version: "3.1.3",
         default: [
           args: ~w(
             --config=tailwind.config.js
@@ -296,17 +296,21 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       code = """
       /* This file is for your main application CSS */
       @import "./phoenix.css";
+
+      /* Alerts and form errors used by phx.new */
       """
 
       {:patched, updated_code} = Patcher.patch_code(code, add_tailwind_directives())
 
       assert updated_code == """
+             /* This file is for your main application CSS */
+             @import "./phoenix.css";
+
              @tailwind base;
              @tailwind components;
              @tailwind utilities;
 
-             /* This file is for your main application CSS */
-             @import "./phoenix.css";
+             /* Alerts and form errors used by phx.new */
              """
     end
 
