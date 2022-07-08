@@ -98,12 +98,13 @@ defmodule Surface.AST.Meta do
       * `:file` - the file from which the source was extracted
       * `:caller` - a Macro.Env struct representing the caller
       * `:function_component?` - indicates if it's a function component or not
+      * `:style` - the style info of the component, if any
   """
 
   alias Surface.Compiler.Helpers
 
   @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks, :function_component?]}
-  defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks, :function_component?]
+  defstruct [:line, :column, :module, :node_alias, :file, :caller, :checks, :function_component?, :style]
 
   @type t :: %__MODULE__{
           line: non_neg_integer(),
@@ -113,7 +114,15 @@ defmodule Surface.AST.Meta do
           caller: Macro.Env.t(),
           file: binary(),
           checks: Keyword.t(boolean()),
-          function_component?: boolean()
+          function_component?: boolean(),
+          style:
+            %{
+              scope_id: binary(),
+              css: binary(),
+              selectors: [binary()],
+              vars: %{(var :: binary()) => expr :: binary()}
+            }
+            | nil
         }
 
   @doc false
@@ -614,6 +623,21 @@ defmodule Surface.AST do
       Enum.reduce(attributes, initial, fn %AST.Attribute{name: name, value: value} = attr, {map, others} ->
         if name in names do
           {Map.put(map, name, value), others}
+        else
+          {map, [attr | others]}
+        end
+      end)
+
+    {map, Enum.reverse(others)}
+  end
+
+  def pop_attributes_as_map(attributes, names) do
+    initial = {Map.new(names, &{&1, nil}), []}
+
+    {map, others} =
+      Enum.reduce(attributes, initial, fn %AST.Attribute{name: name} = attr, {map, others} ->
+        if name in names do
+          {Map.put(map, name, attr), others}
         else
           {map, [attr | others]}
         end

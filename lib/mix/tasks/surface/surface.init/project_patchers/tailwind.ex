@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
       patch:
         &FilePatchers.Config.add_root_config(&1, :tailwind, """
         config :tailwind,
-          version: "3.0.23",
+          version: "3.1.3",
           default: [
             args: ~w(
               --config=tailwind.config.js
@@ -160,12 +160,17 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
       name: "Add tailwind directives to app.css",
       instructions: "",
       patch:
-        &FilePatchers.Text.prepend_text(
+        &FilePatchers.Text.replace_text(
           &1,
           """
+          @import "./phoenix.css";
+          """,
+          """
+          @import "./phoenix.css";
+
           @tailwind base;
           @tailwind components;
-          @tailwind utilities;\
+          @tailwind utilities;
           """,
           "@tailwind"
         )

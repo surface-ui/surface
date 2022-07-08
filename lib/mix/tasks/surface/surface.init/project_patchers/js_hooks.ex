@@ -10,7 +10,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JsHooks do
     %{context_app: context_app, web_module: web_module} = assigns
 
     [
-      {:patch, "mix.exs", [add_surface_to_mix_compilers()]},
       {:patch, "assets/js/app.js", [js_hooks()]},
       {:patch, "config/dev.exs",
        [
@@ -21,28 +20,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JsHooks do
   end
 
   def specs(_assigns), do: []
-
-  def add_surface_to_mix_compilers() do
-    %{
-      name: "Add :surface to compilers",
-      patch: &FilePatchers.MixExs.add_compiler(&1, ":surface"),
-      instructions: """
-      Append `:surface` to the list of compilers.
-
-      # Example
-
-      ```
-      def project do
-        [
-          ...
-          compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
-          ...
-        ]
-      end
-      ```
-      """
-    }
-  end
 
   def add_surface_to_reloadable_compilers_in_endpoint_config(context_app, web_module) do
     %{

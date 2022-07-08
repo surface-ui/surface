@@ -22,6 +22,26 @@ defmodule Surface.BaseComponent do
   defmacro __using__(opts) do
     type = Keyword.fetch!(opts, :type)
 
+    root = Path.dirname(__CALLER__.file)
+    css_file_name = css_filename(__CALLER__)
+    css_file = Path.join(root, css_file_name)
+
+    Module.register_attribute(__CALLER__.module, :__style__, accumulate: true)
+
+    if File.exists?(css_file) do
+      style =
+        css_file
+        |> File.read!()
+        |> Surface.Compiler.CSSTranslator.translate!(
+          module: __CALLER__.module,
+          func: :render,
+          file: css_file,
+          line: 1
+        )
+
+      Module.put_attribute(__CALLER__.module, :__style__, {:render, style})
+    end
+
     quote do
       import Surface
       @behaviour unquote(__MODULE__)
@@ -40,6 +60,8 @@ defmodule Surface.BaseComponent do
       def component_type do
         unquote(type)
       end
+
+      @external_resource unquote(css_file)
     end
   end
 
@@ -55,6 +77,17 @@ defmodule Surface.BaseComponent do
 
   defmacro __before_compile__(env) do
     components_calls = Module.get_attribute(env.module, :__components_calls__)
+    style = Module.get_attribute(env.module, :__style__)
+
+    style_ast =
+      if style do
+        quote do
+          @doc false
+          def __style__() do
+            unquote(Macro.escape(style))
+          end
+        end
+      end
 
     def_components_calls_ast =
       if components_calls != [] do
@@ -76,7 +109,8 @@ defmodule Surface.BaseComponent do
 
     [
       requires,
-      def_components_calls_ast
+      def_components_calls_ast,
+      style_ast
     ]
   end
 
@@ -99,5 +133,13 @@ defmodule Surface.BaseComponent do
         end
       end
     end
+  end
+
+  defp css_filename(env) do
+    env.module
+    |> Module.split()
+    |> List.last()
+    |> Macro.underscore()
+    |> Kernel.<>(".css")
   end
 end

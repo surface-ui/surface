@@ -15,6 +15,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
     } = assigns
 
     [
+      {:patch, "mix.exs", [add_surface_to_mix_compilers()]},
       {:patch, "config/dev.exs",
        [
          add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path),
@@ -25,6 +26,28 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
          add_import_surface_to_view_macro(web_module)
        ]}
     ]
+  end
+
+  def add_surface_to_mix_compilers() do
+    %{
+      name: "Add :surface to compilers",
+      patch: &FilePatchers.MixExs.add_compiler(&1, ":surface"),
+      instructions: """
+      Append `:surface` to the list of compilers.
+
+      # Example
+
+      ```
+      def project do
+        [
+          ...
+          compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+          ...
+        ]
+      end
+      ```
+      """
+    }
   end
 
   def add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path) do

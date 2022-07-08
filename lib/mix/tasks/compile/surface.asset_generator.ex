@@ -4,18 +4,55 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   alias Mix.Task.Compiler.Diagnostic
 
   @default_hooks_output_dir "assets/js/_hooks"
+  @default_css_output_file "assets/css/_components.css"
   @supported_hooks_extensions ~W"js jsx ts tsx" |> Enum.join(",")
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
-    {js_files, _css_files, diagnostics} = get_colocated_assets(components)
-    generate_files(js_files, hooks_output_dir)
+    css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
+    {js_files, js_diagnostics} = get_colocated_js_files(components)
+    generate_js_files(js_files, hooks_output_dir)
+    css_diagnostics = generate_css_file(components, css_output_file)
+    diagnostics = js_diagnostics ++ css_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
-  def generate_files(js_files, hooks_output_dir) do
+  defp generate_css_file(components, css_output_file) do
+    dest_file = Path.join([File.cwd!(), css_output_file])
+
+    dest_file_content =
+      case File.read(dest_file) do
+        {:ok, content} -> content
+        _ -> nil
+      end
+
+    {content, _, diagnostics} =
+      for mod <- Enum.sort(components, :desc),
+          function_exported?(mod, :__style__, 0),
+          {func, %{css: css, scope_id: scope_id}} = func_style <- mod.__style__(),
+          reduce: {"", nil, []} do
+        {content, last_mod_func_style, diagnostics} ->
+          css = String.trim_leading(css, "\n")
+
+          {
+            ["\n/* ", inspect(mod), ".", to_string(func), "/1 (", scope_id, ") */\n\n", css | content],
+            {mod, func_style},
+            validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics
+          }
+      end
+
+    content = to_string([header(), "\n" | content])
+
+    if content != dest_file_content do
+      File.write!(dest_file, content)
+    end
+
+    diagnostics
+  end
+
+  defp generate_js_files(js_files, hooks_output_dir) do
     js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
     index_file = Path.join([js_output_dir, "index.js"])
 
@@ -46,9 +83,9 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     end
   end
 
-  defp get_colocated_assets(components) do
-    for mod <- components, module_loaded?(mod), reduce: {[], [], []} do
-      {js_files, css_files, diagnostics} ->
+  defp get_colocated_js_files(components) do
+    for mod <- components, module_loaded?(mod), reduce: {[], []} do
+      {js_files, diagnostics} ->
         component_file = mod.module_info() |> get_in([:compile, :source]) |> to_string()
         base_file = component_file |> Path.rootname()
         base_name = inspect(mod)
@@ -63,12 +100,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
             js_files
           end
 
-        css_file = "#{base_file}.css"
-        dest_css_file = "#{base_name}.css"
-
-        css_files = if File.exists?(css_file), do: [{css_file, dest_css_file} | css_files], else: css_files
-
-        {js_files, css_files, [new_diagnostic | diagnostics]}
+        {js_files, [new_diagnostic | diagnostics]}
     end
   end
 
@@ -172,5 +204,21 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       severity: :warning,
       compiler_name: "Surface"
     }
+  end
+
+  defp validate_multiple_styles({mod, {func, style}}, {mod, {func, other_style}}) do
+    position = "#{Path.relative_to_cwd(style.file)}:#{style.line}"
+
+    message = """
+    scoped CSS style already defined for #{inspect(mod)}.#{func}/1 at #{position}. \
+    Scoped styles must be defined either as the first <style> node in \
+    the template or in a colocated .css file.
+    """
+
+    [warning(message, other_style.file, other_style.line)]
+  end
+
+  defp validate_multiple_styles(_, _) do
+    []
   end
 end

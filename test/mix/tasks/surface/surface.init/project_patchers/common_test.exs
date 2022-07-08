@@ -4,6 +4,150 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CommonTest do
   alias Mix.Tasks.Surface.Init.Patcher
   import Mix.Tasks.Surface.Init.ProjectPatchers.Common
 
+  describe "add_surface_to_mix_compilers" do
+    test "add :surface to compilers" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: [:gettext] ++ Mix.compilers(),
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               def project do
+                 [
+                   app: :my_app,
+                   compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+                   start_permanent: Mix.env() == :prod
+                 ]
+               end
+
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"}
+                 ]
+               end
+             end
+             """
+    end
+
+    test "add :surface to compilers when there are no other compilers" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: Mix.compilers(),
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      {:patched, updated_code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+
+      assert updated_code == """
+             defmodule MyApp.MixProject do
+               use Mix.Project
+
+               def project do
+                 [
+                   app: :my_app,
+                   compilers: Mix.compilers() ++ [:surface],
+                   start_permanent: Mix.env() == :prod
+                 ]
+               end
+
+               defp deps do
+                 [
+                   {:phoenix, "~> 1.6.0"},
+                   {:surface, "~> 0.5.2"}
+                 ]
+               end
+             end
+             """
+    end
+
+    test "don't apply it if already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      assert {:already_patched, ^code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+    end
+
+    test "don't apply it if maybe already patched" do
+      code = """
+      defmodule MyApp.MixProject do
+        use Mix.Project
+
+        def project do
+          [
+            app: :my_app,
+            compilers: [:whatever, :surface],
+            start_permanent: Mix.env() == :prod
+          ]
+        end
+
+        defp deps do
+          [
+            {:phoenix, "~> 1.6.0"},
+            {:surface, "~> 0.5.2"}
+          ]
+        end
+      end
+      """
+
+      assert {:maybe_already_patched, ^code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
+    end
+  end
+
   describe "add_surface_live_reload_pattern_to_endpoint_config" do
     test "update live_reload patterns" do
       code = """
