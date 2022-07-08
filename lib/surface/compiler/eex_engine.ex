@@ -894,24 +894,6 @@ defmodule Surface.Compiler.EExEngine do
 
   defp to_html_attributes([]), do: []
 
-  # defp to_html_attributes([
-  #        %AST.Attribute{name: :class, meta: meta, value: %AST.Literal{value: value}}
-  #        | attributes
-  #      ]) do
-  #       data_s =
-  #         case Module.open?(meta.caller.module) && Module.get_attribute(meta.caller.module, :__style__) do
-  #           %{scope_id: scope_id, selectors: _selectors} ->
-  #             [" data-s-", scope_id]
-  #           _ ->
-  #             []
-  #         end
-  #   [
-  #     [" class=", ~S("), value, ~S(")],
-  #     data_s,
-  #     to_html_attributes(attributes)
-  #   ]
-  # end
-
   defp to_html_attributes([
          %AST.Attribute{name: name, type: type, value: %AST.Literal{value: value}}
          | attributes
