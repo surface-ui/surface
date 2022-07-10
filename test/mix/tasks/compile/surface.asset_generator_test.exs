@@ -75,11 +75,20 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
 
            /* Mix.Tasks.Compile.SurfaceTest.FakeButton.render/1 (8c9b2e4) */
 
-           .btn[data-s-8c9b2e4] { padding: 10px; color: var(--59c08eb--color); }
+           /* vars:
+             --59c08eb: `@color`
+           */
+
+           .btn[data-s-8c9b2e4] { padding: 10px; color: var(--59c08eb); }
 
            /* Mix.Tasks.Compile.SurfaceTest.FakeButton.func/1 (580c948) */
 
-             .btn-func[data-s-580c948] { padding: var(--81d9fb2--padding); }
+           /* vars:
+             --81d9fb2: `@padding`
+             --e2913a0: `@color`
+           */
+
+             .btn-func[data-s-580c948] { padding: var(--81d9fb2); color: var(--e2913a0); }
 
            /* Mix.Tasks.Compile.SurfaceTest.FakeLink.render/1 (4e797dd) */
 
@@ -89,6 +98,14 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
 
              .panel[data-s-2930ca8] { padding: 10px; }
            """
+  end
+
+  test "don't generate s-bind vars comments in production", %{opts: opts} do
+    refute File.exists?(@css_output_file)
+
+    assert run(@components ++ [Mix.Tasks.Compile.SurfaceTest.FakePanel], opts ++ [env: :prod]) == []
+
+    refute File.read!(@css_output_file) =~ "vars:"
   end
 
   test "update the css file if the content changes", %{opts: opts} do

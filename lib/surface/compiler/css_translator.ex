@@ -48,7 +48,7 @@ defmodule Surface.Compiler.CSSTranslator do
 
   defp translate([{:text, "s-bind"}, {:block, "(", arg, meta} | rest], acc, state) do
     expr = s_bind_arg_to_string(arg)
-    name = var_name(state.scope_id, expr, state.env)
+    name = var_name(state.scope_id, expr)
     vars = Map.put(state.vars, name, {expr, meta})
     translate(rest, ["var(#{name})" | acc], %{state | vars: vars})
   end
@@ -176,14 +176,8 @@ defmodule Surface.Compiler.CSSTranslator do
     expr
   end
 
-  defp var_name(scope, expr, env) do
-    hash = hash(scope <> expr)
-
-    if env == :prod do
-      "--#{hash}"
-    else
-      "--#{hash}-#{Regex.replace(~r/([^\w-])/, expr, "-")}"
-    end
+  defp var_name(scope, expr) do
+    "--#{hash(scope <> expr)}"
   end
 
   defp scope_id(component, func) do

@@ -33,20 +33,19 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            }
 
     assert vars == %{
-             "--029d26f--css-background" =>
-               {"@css.background", %{column: 25, column_end: 43, line: 4, line_end: 4}},
-             "--c8f42e0--padding" => {"@padding", %{column: 18, column_end: 29, line: 8, line_end: 8}}
+             "--029d26f" => {"@css.background", %{column: 25, column_end: 43, line: 4, line_end: 4}},
+             "--c8f42e0" => {"@padding", %{column: 18, column_end: 29, line: 8, line_end: 8}}
            }
 
     assert translated == """
            /* padding: s-bind(padding); */
 
            .root[data-s-myscope] {
-             --custom-color: var(--029d26f--css-background);
+             --custom-color: var(--029d26f);
            }
 
            .a[data-s-myscope]:has(> img) > b[data-s-myscope][class="btn"], c[data-s-myscope] {
-             padding: var(--c8f42e0--padding);
+             padding: var(--c8f42e0);
            }
 
            @media screen and (min-width: 1216px) {
@@ -104,25 +103,5 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
     assert selectors.classes == MapSet.new([])
     assert selectors.combined == MapSet.new([MapSet.new([".a", ".b"])])
-  end
-
-  test "name variables using only the hash when in :prod" do
-    css = """
-    .a {
-      padding: s-bind('@padding');
-    }
-    """
-
-    %{css: translated, vars: vars} = CSSTranslator.translate!(css, scope_id: "myscope", env: :prod)
-
-    assert vars == %{
-             "--c8f42e0" => {"@padding", %{column: 18, column_end: 29, line: 2, line_end: 2}}
-           }
-
-    assert translated == """
-           .a[data-s-myscope] {
-             padding: var(--c8f42e0);
-           }
-           """
   end
 end

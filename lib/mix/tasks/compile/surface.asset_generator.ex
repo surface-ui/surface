@@ -12,14 +12,15 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
+    env = Keyword.get(opts, :env, Mix.env())
     {js_files, js_diagnostics} = get_colocated_js_files(components)
     generate_js_files(js_files, hooks_output_dir)
-    css_diagnostics = generate_css_file(components, css_output_file)
+    css_diagnostics = generate_css_file(components, css_output_file, env)
     diagnostics = js_diagnostics ++ css_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
-  defp generate_css_file(components, css_output_file) do
+  defp generate_css_file(components, css_output_file, env) do
     dest_file = Path.join([File.cwd!(), css_output_file])
 
     dest_file_content =
@@ -31,13 +32,14 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     {content, _, diagnostics} =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          {func, %{css: css, scope_id: scope_id}} = func_style <- mod.__style__(),
+          {func, %{css: css, scope_id: scope_id, vars: vars}} = func_style <- mod.__style__(),
           reduce: {"", nil, []} do
         {content, last_mod_func_style, diagnostics} ->
           css = String.trim_leading(css, "\n")
+          component_header = [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
 
           {
-            ["\n/* ", inspect(mod), ".", to_string(func), "/1 (", scope_id, ") */\n\n", css | content],
+            ["\n/* ", component_header, " */\n\n", vars_comment(vars, env), css | content],
             {mod, func_style},
             validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics
           }
@@ -220,5 +222,20 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
   defp validate_multiple_styles(_, _) do
     []
+  end
+
+  defp vars_comment(vars, env) do
+    comment =
+      vars
+      |> Enum.reverse()
+      |> Enum.reduce([], fn {var, {expr, _meta}}, acc ->
+        ["  #{var}: `#{expr}`\n" | acc]
+      end)
+
+    if comment == [] or env == :prod do
+      ""
+    else
+      ["/* vars:\n", comment, "*/\n\n"]
+    end
   end
 end

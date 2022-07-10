@@ -12,7 +12,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button style="--59c08eb--color: red" data-s-8c9b2e4 class="btn">
+           <button style="--59c08eb: red" data-s-8c9b2e4 class="btn">
              FAKE BUTTON
            </button>
            """
@@ -44,7 +44,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button style="--81d9fb2--padding: 10px;" data-s-580c948 class="btn-func">
+           <button style="--81d9fb2: 10px; --e2913a0: red" data-s-580c948 class="btn-func">
              FAKE FUNCTION BUTTON
            </button>
            """
@@ -245,7 +245,7 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    assert html =~ ~S(style="padding: 1px; --bfe9859--color: red")
+    assert html =~ ~S(style="padding: 1px; --bfe9859: red")
   end
 
   test "merge `style` variables when value is an expression" do
@@ -262,7 +262,7 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    assert html =~ ~S(style="padding: 1px; --b9c15f4--color: red")
+    assert html =~ ~S(style="padding: 1px; --b9c15f4: red")
   end
 
   test "ignore white spaces before and after the <style> section" do

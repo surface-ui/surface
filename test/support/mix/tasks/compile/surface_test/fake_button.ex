@@ -14,11 +14,14 @@ defmodule Mix.Tasks.Compile.SurfaceTest.FakeButton do
   end
 
   def func(assigns) do
-    assigns = assign(assigns, :padding, "10px;")
+    assigns =
+      assigns
+      |> assign(:padding, "10px")
+      |> assign(:color, "red")
 
     ~F"""
     <style>
-      .btn-func { padding: s-bind('@padding'); }
+      .btn-func { padding: s-bind('@padding'); color: s-bind('@color'); }
     </style>
 
     <button class="btn-func">
