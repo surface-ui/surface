@@ -635,12 +635,16 @@ defmodule Surface.AST do
     initial = {Map.new(names, &{&1, nil}), []}
 
     {map, others} =
-      Enum.reduce(attributes, initial, fn %AST.Attribute{name: name} = attr, {map, others} ->
-        if name in names do
-          {Map.put(map, name, attr), others}
-        else
+      Enum.reduce(attributes, initial, fn
+        %AST.Attribute{name: name} = attr, {map, others} ->
+          if name in names do
+            {Map.put(map, name, attr), others}
+          else
+            {map, [attr | others]}
+          end
+
+        attr, {map, others} ->
           {map, [attr | others]}
-        end
       end)
 
     {map, Enum.reverse(others)}
