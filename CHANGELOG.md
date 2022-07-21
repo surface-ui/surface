@@ -11,6 +11,10 @@
   * Drop support for Elixir < `v1.12`
   * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
 
+## v0.7.5 (2022-07-21)
+
+  * Support using vanilla phoenix function components with slots in surface templates
+
 ## v0.7.4 (2022-04-18)
 
   * Optimize the surface compiler for assets generation
