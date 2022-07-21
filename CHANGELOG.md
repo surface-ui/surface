@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.5 (2022-07-21)
+
+  * Support using vanilla phoenix function components with slots in surface templates
+
 ## v0.7.4 (2022-04-18)
 
   * Optimize the surface compiler for assets generation
