@@ -203,14 +203,14 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
-  def get_module_attribute(module, key, default \\ nil) do
+  def get_module_attribute(module, key, default) do
     if Mix.env() == :test do
       # If the template is compiled directly in a test module, get_attribute might fail,
       # breaking some of the tests once in a while.
       try do
         Module.get_attribute(module, key, default)
       rescue
-        _e in ArgumentError -> false
+        _e in ArgumentError -> default
       end
     else
       Module.get_attribute(module, key, default)
@@ -223,7 +223,7 @@ defmodule Surface.Compiler.Helpers do
         module.component_type() == Surface.LiveComponent
 
       Module.open?(module) ->
-        get_module_attribute(module, :component_type) == Surface.LiveComponent
+        get_module_attribute(module, :component_type, false) == Surface.LiveComponent
 
       true ->
         false
