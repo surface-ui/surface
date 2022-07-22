@@ -33,12 +33,12 @@ defmodule Surface.MixProject do
   defp deps do
     [
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.17.4"},
+      {:phoenix_live_view, "~> 0.17.6"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
       {:sourceror, "~> 0.9"},
       {:ecto, "~> 3.4.2", only: :test},
-      {:phx_new, "~> 1.6.7", only: :test},
+      {:phx_new, "~> 1.6.11", only: :test},
       {:ex_doc, ">= 0.19.0", only: :docs}
     ]
   end

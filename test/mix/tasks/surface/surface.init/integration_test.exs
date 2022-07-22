@@ -41,6 +41,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating priv/catalogue/surface_init_test_web/example01.ex
            * creating priv/catalogue/surface_init_test_web/example02.ex
            * creating priv/catalogue/surface_init_test_web/playground.ex
+           * deleting assets/css/phoenix.css
            * creating assets/tailwind.config.js
            * creating lib/surface_init_test_web/templates/page/index.sface
            * deleting lib/surface_init_test_web/templates/page/index.html.heex
@@ -51,8 +52,8 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating lib/surface_init_test_web/templates/layout/root.sface
            * deleting lib/surface_init_test_web/templates/layout/root.html.heex
 
-           Finished running 37 patches for 23 files.
-           37 changes applied, 0 skipped.
+           Finished running 41 patches for 24 files.
+           41 changes applied, 0 skipped.
            """
   end
 
@@ -76,6 +77,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating priv/catalogue/surface_init_test_web/example01.ex (skipped)
            * creating priv/catalogue/surface_init_test_web/example02.ex (skipped)
            * creating priv/catalogue/surface_init_test_web/playground.ex (skipped)
+           * deleting assets/css/phoenix.css (skipped)
            * creating assets/tailwind.config.js (skipped)
            * creating lib/surface_init_test_web/templates/page/index.sface (skipped)
            * deleting lib/surface_init_test_web/templates/page/index.html.heex (skipped)
@@ -86,8 +88,8 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating lib/surface_init_test_web/templates/layout/root.sface (skipped)
            * deleting lib/surface_init_test_web/templates/layout/root.html.heex (skipped)
 
-           Finished running 37 patches for 23 files.
-           0 changes applied, 37 skipped.
+           Finished running 41 patches for 24 files.
+           0 changes applied, 41 skipped.
            It looks like this project has already been patched.
            """
   end
@@ -112,7 +114,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
   end
 
   defp build_test_project_template(project_name) do
-    if project_name in ["", nil], do: raise("projec name cannot be empty")
+    if project_name in ["", nil], do: raise("project name cannot be empty")
 
     project_folder = Path.join(System.tmp_dir!(), project_name)
     project_exists? = File.exists?(project_folder)
