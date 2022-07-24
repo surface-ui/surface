@@ -1392,7 +1392,8 @@ defmodule Surface.Compiler do
     }
   end
 
-  defp maybe_transform_tag(node, %CompileMeta{style: %{scope_id: scope_id, selectors: selectors}}) do
+  defp maybe_transform_tag(node, %mod{style: %{scope_id: scope_id, selectors: selectors}})
+       when mod in [CompileMeta, AST.Meta] do
     %AST.Tag{element: element, attributes: attributes, meta: meta} = node
 
     if universal_in_selectors?(selectors) or

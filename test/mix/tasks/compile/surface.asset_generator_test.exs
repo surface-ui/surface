@@ -90,6 +90,14 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
 
              .btn-func[data-s-580c948] { padding: var(--81d9fb2); color: var(--e2913a0); }
 
+           /* Mix.Tasks.Compile.SurfaceTest.FakeButton.inner_func/1 (bd41653) */
+
+             .inner[data-s-bd41653] { padding: 2px; }
+
+           /* Mix.Tasks.Compile.SurfaceTest.FakeButton.outer_func/1 (1a5377d) */
+
+             .outer[data-s-1a5377d] { padding: 1px; }
+
            /* Mix.Tasks.Compile.SurfaceTest.FakeLink.render/1 (4e797dd) */
 
              .link[data-s-4e797dd] { padding: 10px; }

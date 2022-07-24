@@ -29,4 +29,28 @@ defmodule Mix.Tasks.Compile.SurfaceTest.FakeButton do
     </button>
     """
   end
+
+  def inner_func(assigns) do
+    ~F"""
+    <style>
+      .inner { padding: 2px; }
+    </style>
+
+    <button class="inner">
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  def outer_func(assigns) do
+    ~F"""
+    <style>
+      .outer { padding: 1px; }
+    </style>
+
+    <.inner_func>
+      <span class="outer">Ok</span>
+    </.inner_func>
+    """
+  end
 end

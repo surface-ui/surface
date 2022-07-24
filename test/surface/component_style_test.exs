@@ -231,6 +231,25 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
+  test "set the caller's scope id to s-data-* in elements passed using slots" do
+    html =
+      render_surface do
+        ~F"""
+        <FakeButton.outer_func/>
+        """
+      end
+
+    style = FakeButton.__style__()
+    assert style[:outer_func].scope_id == "1a5377d"
+    assert style[:inner_func].scope_id == "bd41653"
+
+    assert html =~ """
+           <button data-s-bd41653 class="inner">
+             <span data-s-1a5377d class="outer">Ok</span>
+           </button>
+           """
+  end
+
   test "merge `style` variables when value is a literal string" do
     assigns = %{color: "red"}
 
