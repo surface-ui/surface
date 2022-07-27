@@ -63,35 +63,63 @@ defmodule Surface.SlotTest do
     end
   end
 
-  defmodule OuterWithNamedSlotAndArgs do
+  defmodule OuterWithNamedSlotAndArg do
     use Surface.Component
 
-    slot body, args: [:info]
+    slot body, arg: %{info: :string}
 
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="body" :args={info: "Info from slot"}/>
+        <#slot name="body" :arg={info: "Info from slot"}/>
       </div>
       """
     end
   end
 
-  defmodule OuterWithDefaultSlotAndArgs do
+  defmodule OuterWithDefaultSlotAndArg do
     use Surface.Component
 
-    slot default, args: [:info]
+    slot default, arg: %{info: :string}
 
     def render(assigns) do
       ~F"""
       <div>
-        <#slot :args={info: "Info from slot"}/>
+        <#slot :arg={info: "Info from slot"}/>
       </div>
       """
     end
   end
 
-  defmodule OuterWithDefaultSlotAndArgsFromGenerator do
+  defmodule OuterWithDefaultSlotAndStringArg do
+    use Surface.Component
+
+    slot default
+
+    def render(assigns) do
+      ~F"""
+      <div>
+        <#slot :arg="Info from slot" />
+      </div>
+      """
+    end
+  end
+
+  defmodule OuterWithDefaultSlotAndKeywordArg do
+    use Surface.Component
+
+    slot default, arg: :keyword
+
+    def render(assigns) do
+      ~F"""
+      <div>
+        <#slot :arg={[name: "Jane", name: "Joe"]}/>
+      </div>
+      """
+    end
+  end
+
+  defmodule OuterWithDefaultSlotAndArgFromGenerator do
     use Surface.Component
 
     prop items, :list, required: true
@@ -233,7 +261,7 @@ defmodule Surface.SlotTest do
 
     prop items, :list, required: true
 
-    slot col, as: :cols, args: [:info], generator: :items
+    slot col, as: :cols, arg: %{info: :string}, generator: :items
 
     def render(assigns) do
       info = "Some info from Grid"
@@ -247,7 +275,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={col <- @cols}>
-            <#slot for={col} :args={info: info} generator_value={item} />
+            <#slot for={col} :arg={info: info} generator_value={item} />
           </td>
         </tr>
       </table>
@@ -255,7 +283,7 @@ defmodule Surface.SlotTest do
     end
   end
 
-  test "render slot without slot args" do
+  test "render slot without slot arg" do
     html =
       render_surface do
         ~F"""
@@ -369,15 +397,15 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign named slots with args" do
+  test "assign named slots with arg" do
     html =
       render_surface do
         ~F"""
-        <OuterWithNamedSlotAndArgs>
+        <OuterWithNamedSlotAndArg>
           <:body :let={info: my_info}>
             Info: {my_info}
           </:body>
-        </OuterWithNamedSlotAndArgs>
+        </OuterWithNamedSlotAndArg>
         """
       end
 
@@ -388,32 +416,41 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign named slots with args (shorthand notation)" do
-    html =
-      render_surface do
-        ~F"""
-        <OuterWithNamedSlotAndArgs>
-          <:body :let={info: my_info}>
-            Info: {my_info}
-          </:body>
-        </OuterWithNamedSlotAndArgs>
-        """
+  test "raises if :arg doesn't match :let" do
+    assert_raise(
+      ArgumentError,
+      "cannot match slot argument `%{info: \"Info from slot\"}` against :let pattern `%{info: my_info, b: b}`.",
+      fn ->
+        render_surface do
+          ~F"""
+          <OuterWithDefaultSlotAndArg :let={%{info: my_info, b: b}}>
+            {my_info}{b}
+          </OuterWithDefaultSlotAndArg>
+          """
+        end
       end
-
-    assert html =~ """
-           <div>
-               Info: Info from slot
-           </div>
-           """
+    )
   end
 
-  test "assign default slot with args" do
+  test "raise runtime error when using :let without slot :arg" do
+    assert_raise(ArgumentError, "cannot match slot argument `nil` against :let pattern `[wrong]`.", fn ->
+      render_surface do
+        ~F"""
+        <OuterWithNamedSlot :let={[wrong]}>
+          {wrong}
+        </OuterWithNamedSlot>
+        """
+      end
+    end)
+  end
+
+  test "assign default slot with arg" do
     html =
       render_surface do
         ~F"""
-        <OuterWithDefaultSlotAndArgs :let={info: my_info}>
+        <OuterWithDefaultSlotAndArg :let={info: my_info}>
           Info: {my_info}
-        </OuterWithDefaultSlotAndArgs>
+        </OuterWithDefaultSlotAndArg>
         """
       end
 
@@ -424,13 +461,49 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign default slot ignoring all args" do
+  test "assign default slot with string arg" do
     html =
       render_surface do
         ~F"""
-        <OuterWithDefaultSlotAndArgs>
+        <OuterWithDefaultSlotAndStringArg :let={my_info}>
+          Info: {my_info}
+        </OuterWithDefaultSlotAndStringArg>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Info: Info from slot
+           </div>
+           """
+  end
+
+  test "assign default slot with keyword arg" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithDefaultSlotAndKeywordArg :let={[name: name1, name: name2]}>
+          Name 1: {name1}
+          Name 2: {name2}
+        </OuterWithDefaultSlotAndKeywordArg>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Name 1: Jane
+             Name 2: Joe
+           </div>
+           """
+  end
+
+  test "assign default slot ignoring all arg" do
+    html =
+      render_surface do
+        ~F"""
+        <OuterWithDefaultSlotAndArg>
           Info
-        </OuterWithDefaultSlotAndArgs>
+        </OuterWithDefaultSlotAndArg>
         """
       end
 
@@ -441,13 +514,13 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign default slot with args from generator" do
+  test "assign default slot with arg from generator" do
     html =
       render_surface do
         ~F"""
-        <OuterWithDefaultSlotAndArgsFromGenerator items={i <- [1, 2]}>
+        <OuterWithDefaultSlotAndArgFromGenerator items={i <- [1, 2]}>
           Item: {i}
-        </OuterWithDefaultSlotAndArgsFromGenerator>
+        </OuterWithDefaultSlotAndArgFromGenerator>
         """
       end
 
@@ -459,7 +532,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "assign named slots without args" do
+  test "assign named slots without arg" do
     html =
       render_surface do
         ~F"""
@@ -608,7 +681,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "render slot with slot args containing parent bindings" do
+  test "render slot with slot arg containing parent bindings" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
     html =
@@ -651,7 +724,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "render slot with slot args containing parent bindings (shorthand notation)" do
+  test "render slot with slot arg containing parent bindings (shorthand notation)" do
     assigns = %{items: [%{id: 1, name: "First"}, %{id: 2, name: "Second"}]}
 
     html =
@@ -768,7 +841,7 @@ defmodule Surface.SlotTest do
       """
     end
 
-    def my_component_with_args(assigns) do
+    def my_component_with_arg(assigns) do
       assigns =
         assigns
         |> assign_new(:header, fn -> [] end)
@@ -807,15 +880,15 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "render vanilla phoenix components with slots and args" do
+  test "render vanilla phoenix components with slots and arg" do
     html =
       render_surface do
         ~F"""
-        <PhoenixComponentWithSlots.my_component_with_args :let={default_arg}>
+        <PhoenixComponentWithSlots.my_component_with_arg :let={default_arg}>
           <:header :let={header_arg}>header ({header_arg})</:header>
           <p>default ({default_arg})</p>
           <:footer :let={footer_arg}>footer ({footer_arg})</:footer>
-        </PhoenixComponentWithSlots.my_component_with_args>
+        </PhoenixComponentWithSlots.my_component_with_arg>
         """
       end
 
@@ -830,7 +903,23 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "render slot renaming slot args" do
+  test "render vanilla phoenix components with slots and arg2" do
+    assert_raise(
+      ArgumentError,
+      "cannot match slot argument `\"default_arg\"` against :let pattern `[wrong]`.",
+      fn ->
+        render_surface do
+          ~F"""
+          <PhoenixComponentWithSlots.my_component_with_arg :let={[wrong]}>
+            <p>{wrong}</p>
+          </PhoenixComponentWithSlots.my_component_with_arg>
+          """
+        end
+      end
+    )
+  end
+
+  test "render slot renaming slot arg" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
     html =
@@ -869,53 +958,24 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "raise compile error for undefined slot args" do
+  test "raise compile error for invalid :let pattern (multiple clauses)" do
     assigns = %{items: [%{id: 1, name: "First"}]}
 
     code =
       quote do
         ~F"""
-        <Grid items={user <- @items}>
-          <Column title="ID"
-            :let={non_existing: value}>
-            <b>Id: {user.id}</b>
-          </Column>
-        </Grid>
-        """
-      end
-
-    message = """
-    code:3: undefined argument `:non_existing` for slot `col` in `Surface.SlotTest.Grid`.
-
-    Available arguments: [:info].
-
-    Hint: You can define a new slot argument using the `args` option: \
-    `slot col, args: [..., :non_existing]`
-    """
-
-    assert_raise(CompileError, message, fn ->
-      compile_surface(code, assigns)
-    end)
-  end
-
-  test "raise compile error for invalid :let expression" do
-    assigns = %{items: [%{id: 1, name: "First"}]}
-
-    code =
-      quote do
-        ~F"""
-        <OuterWithNamedSlotAndArgs>
+        <OuterWithNamedSlotAndArg>
           <:body
-            :let={"a_string"}>
+            :let={"a_string", "other_string"}>
           </:body>
-        </OuterWithNamedSlotAndArgs>
+        </OuterWithNamedSlotAndArg>
         """
       end
 
     message = """
     code:3: invalid value for directive :let. \
-    Expected a keyword list of bindings, \
-    e.g. {item: user, info: info}, got: {"a_string"}.\
+    Expected a pattern to be matched by the slot argument, \
+    got: {"a_string", "other_string"}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -942,24 +1002,22 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when using :let with undefined args for default slot" do
+  test "raise compile error for invalid :let pattern (clause and opts)" do
     code =
       quote do
         ~F"""
-        <OuterWithDefaultSlotAndArgs :let={info: my_info, non_existing: value}>
+        <OuterWithDefaultSlotAndArg
+          :let={a, info: [my_info]}>
+          A: {a}
           Info: {my_info}
-        </OuterWithDefaultSlotAndArgs>
+        </OuterWithDefaultSlotAndArg>
         """
       end
 
     message = """
-    code:1: undefined argument `:non_existing` for slot `default` in \
-    `Surface.SlotTest.OuterWithDefaultSlotAndArgs`.
-
-    Available arguments: [:info].
-
-    Hint: You can define a new slot argument using the `args` option: \
-    `slot default, args: [..., :non_existing]`
+    code:2: invalid value for directive :let. \
+    Expected a pattern to be matched by the slot argument, \
+    got: {a, info: [my_info]}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -967,26 +1025,19 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when using :let with undefined slot args" do
+  test "raise compile error for invalid :arg expression (multiple clauses)" do
     code =
       quote do
         ~F"""
-        <OuterWithNamedSlotAndArgs>
-          <:body :let={non_existing: my_info}>
-            Info: {my_info}
-          </:body>
-        </OuterWithNamedSlotAndArgs>
+          <#slot
+            :arg={a, b} />
         """
       end
 
     message = """
-    code:2: undefined argument `:non_existing` for slot `body` in \
-    `Surface.SlotTest.OuterWithNamedSlotAndArgs`.
-
-    Available arguments: [:info].
-
-    Hint: You can define a new slot argument using the `args` option: \
-    `slot body, args: [..., :non_existing]`
+    code:2: invalid value for directive :arg. \
+    Expected a single expression to be given as the slot argument, \
+    got: {a, b}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -994,90 +1045,23 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error when passing invalid bindings to :let " do
+  test "raise compile error for invalid :arg expression (clause and opts)" do
     code =
       quote do
         ~F"""
-        <OuterWithDefaultSlotAndArgs
-          :let={info: [my_info]}>
-          Info: {my_info}
-        </OuterWithDefaultSlotAndArgs>
+          <#slot
+            :arg={a, info: "Info from slot"} />
         """
       end
 
     message = """
-    code:2: invalid value for directive :let. Expected a keyword list of bindings, \
-    e.g. {item: user, info: info}, got: {info: [my_info]}.\
+    code:2: invalid value for directive :arg. \
+    Expected a single expression to be given as the slot argument, \
+    got: {a, info: "Info from slot"}.\
     """
 
     assert_raise(CompileError, message, fn ->
       compile_surface(code)
-    end)
-  end
-
-  test "raise compile error when passing an undefined arg to :args" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-
-    code = """
-    defmodule TestSlotPassingUndefinedArg_#{id} do
-      use Surface.Component
-
-      slot default, args: [:item]
-
-      def render(assigns) do
-        ~F"\""
-          <span>
-            <#slot
-              :args={id: 1, name: "Joe"}/>
-            </span>
-        "\""
-      end
-    end
-    """
-
-    message = """
-    code.exs:10: undefined arguments :id and :name for slot `default`.
-
-    Defined argument: :item
-
-    Hint: You can define a new slot argument using the `args` option: \
-    `slot default, args: [..., :some_arg]`
-    """
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-    end)
-  end
-
-  test "raise compile error when passing :args but no arg is defined in `slot`" do
-    id = :erlang.unique_integer([:positive]) |> to_string()
-
-    code = """
-    defmodule TestSlotPassingUndefinedArg_#{id} do
-      use Surface.Component
-
-      slot default
-
-      def render(assigns) do
-        ~F"\""
-          <span>
-            <#slot
-              :args={id: 1}/>
-            </span>
-        "\""
-      end
-    end
-    """
-
-    message = """
-    code.exs:10: undefined argument :id for slot `default`.
-
-    Hint: You can define a new slot argument using the `args` option: \
-    `slot default, args: [..., :some_arg]`
-    """
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
 
@@ -1143,7 +1127,7 @@ defmodule Surface.SlotTest do
   end
 
   describe "Shorthand notatation for assigning slots" do
-    test "assign named slots without args" do
+    test "assign named slots without arg" do
       html =
         render_surface do
           ~F"""
@@ -1192,15 +1176,15 @@ defmodule Surface.SlotTest do
              """
     end
 
-    test "assign named slots with args" do
+    test "assign named slots with arg" do
       html =
         render_surface do
           ~F"""
-          <OuterWithNamedSlotAndArgs>
+          <OuterWithNamedSlotAndArg>
             <:body :let={info: my_info}>
               Info: {my_info}
             </:body>
-          </OuterWithNamedSlotAndArgs>
+          </OuterWithNamedSlotAndArg>
           """
         end
 
@@ -1484,7 +1468,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1515,7 +1499,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1545,7 +1529,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1555,19 +1539,74 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
-  test "outputs compile warning when adding slot args to the default slot in a slotable component" do
-    component_code = """
-    defmodule ColumnWithRenderAndSlotArgs do
-      use Surface.Component, slot: "cols"
+  test "raise on passing asd" do
+    code = """
+    defmodule ComponentWithDynamicAttrs do
+      use Surface.Component
 
-      prop title, :string, required: true
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <br>
+        <#slot
+          {...@attrs}/>
+        "\""
+      end
+    end
+    """
+
+    message = ~r"""
+    code:10: cannot pass dynamic attributes to <#slot>.
+
+    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
+    """
+
+    assert_raise(CompileError, message, fn ->
+      capture_io(:standard_error, fn ->
+        Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
+      end)
+    end)
+  end
+
+  test "outputs compile warning when using deprecated args option" do
+    component_code = """
+    defmodule UsingDeprecatedArgsOption do
+      use Surface.Component
 
       slot default, args: [:info]
 
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot :args={info: "this is a test"} />
+          <#slot :arg={info: "this is a test"} />
+        </span>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ "option :args has been deprecated. Use :arg instead."
+  end
+
+  test "outputs compile warning when adding :arg directive to the default slot in a slotable component" do
+    component_code = """
+    defmodule ColumnWithRenderAndSlotArg do
+      use Surface.Component, slot: "cols"
+
+      prop title, :string, required: true
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <span class="fancy-column">
+          <#slot :arg={info: "this is a test"} />
         </span>
         "\""
       end
@@ -1585,11 +1624,13 @@ defmodule Surface.SlotSyncTest do
            Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable and use it inside an explicit slot entry:
            ```
            <:cols>
-             <Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs :let={info: info}>
+             <Surface.SlotSyncTest.ColumnWithRenderAndSlotArg :let={...}>
                ...
-             </Surface.SlotSyncTest.ColumnWithRenderAndSlotArgs>
+             </Surface.SlotSyncTest.ColumnWithRenderAndSlotArg>
            </:cols>
            ```
+
+             code.exs:11\
            """
   end
 

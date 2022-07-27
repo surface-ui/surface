@@ -5,7 +5,7 @@ defmodule Surface.Components.Form.HiddenInputsTest do
   alias Surface.Components.Form.Inputs
   alias Surface.Components.Form.HiddenInputs
 
-  test "using generated form received as slot args" do
+  test "using generated form received as slot arg" do
     html =
       render_surface do
         ~F"""

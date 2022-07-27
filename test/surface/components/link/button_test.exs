@@ -220,7 +220,7 @@ defmodule Surface.Components.Link.ButtonTest do
                ~s[<button data-csrf="#{csrf_token}" data-method="post" data-to="/world" id="btn" class="btn rounded">hello</button>]
     end
 
-    test "button with invalid args" do
+    test "button with invalid arg" do
       msg = """
       unsupported scheme given to <Button />. In case you want to link to an
       unknown or unsafe scheme, such as javascript, use a tuple: {:javascript, rest}

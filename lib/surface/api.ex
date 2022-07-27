@@ -439,21 +439,16 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :args, :as, :generator]
+    [:required, :arg, :args, :as, :generator]
   end
 
-  defp validate_opt_ast!(:slot, :args, args_ast, caller) do
-    Enum.map(args_ast, fn
-      name when is_atom(name) ->
-        Macro.escape(%{name: name})
+  defp validate_opt_ast!(:slot, :args, _, caller) do
+    message = "option :args has been deprecated. Use :arg instead."
+    IOHelper.warn(message, caller)
+  end
 
-      ast ->
-        message =
-          "invalid slot argument #{Macro.to_string(ast)}. " <>
-            "Expected an atom"
-
-        IOHelper.compile_error(message, caller.file, caller.line)
-    end)
+  defp validate_opt_ast!(:slot, :arg, arg_ast, _caller) do
+    arg_ast
   end
 
   defp validate_opt_ast!(_func, _key, value, _caller) do
@@ -508,38 +503,6 @@ defmodule Surface.API do
   defp validate_opt(:slot, _name, _type, _opts, :as, value, _line, _caller)
        when not is_atom(value) do
     {:error, "invalid value for option :as in slot. Expected an atom, got: #{inspect(value)}"}
-  end
-
-  defp validate_opt(:slot, :default, _type, _opts, :args, value, line, env) do
-    if Module.defines?(env.module, {:__slot_name__, 0}) do
-      slot_name = Module.get_attribute(env.module, :__slot_name__)
-
-      prop_example =
-        value
-        |> Enum.map(fn %{name: name} -> "#{name}: #{name}" end)
-        |> Enum.join(", ")
-
-      component_name = Macro.to_string(env.module)
-
-      message = """
-      arguments for the default slot in a slotable component are not accessible - instead the arguments \
-      from the parent's #{slot_name} slot will be exposed via `:let={...}`.
-
-      Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
-      and use it inside an explicit slot entry:
-      ```
-      <:#{slot_name}>
-        <#{component_name} :let={#{prop_example}}>
-          ...
-        </#{component_name}>
-      </:#{slot_name}>
-      ```
-      """
-
-      IOHelper.warn(message, env, line)
-    end
-
-    :ok
   end
 
   defp validate_opt(_func, _name, _type, _opts, _key, _value, _line, _env) do

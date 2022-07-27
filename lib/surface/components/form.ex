@@ -75,7 +75,7 @@ defmodule Surface.Components.Form do
   prop auto_recover, :event
 
   @doc "The content of the `<form>`"
-  slot default, args: [:form]
+  slot default, arg: %{form: :form}
 
   def render(assigns) do
     attr_opts = props_to_attr_opts(assigns, class: get_config(:default_class))
@@ -101,7 +101,7 @@ defmodule Surface.Components.Form do
     ~F"""
     <.form :let={form} for={@for} action={@action} {...@opts}>
       <Context put={__MODULE__, form: form}>
-        <#slot :args={form: form} />
+        <#slot :arg={form: form} />
       </Context>
     </.form>
     """

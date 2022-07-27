@@ -162,7 +162,7 @@ defmodule Surface.Compiler.EExEngine do
            as: slot_as,
            index: index_ast,
            for: slot_for_ast,
-           args: args_expr,
+           arg: arg_expr,
            generator_value: generator_value_ast,
            default: default,
            meta: meta
@@ -216,13 +216,12 @@ defmodule Surface.Compiler.EExEngine do
         generator_value
       end
 
-    # TODO: map names somehow?
     slot_content_expr =
-      quote generated: true do
+      quote generated: true, line: meta.line do
         Phoenix.LiveView.Helpers.render_slot(
           unquote(slot_value),
           {
-            Map.new(unquote(args_expr)),
+            unquote(arg_expr),
             unquote(generator_value),
             unquote(context_expr)
           }
@@ -516,15 +515,24 @@ defmodule Surface.Compiler.EExEngine do
       slot_name = if name == :default, do: :inner_block, else: name
 
       entries =
-        Enum.map(nested_slot_entries, fn {let, _generator, props, body} ->
-          let_clause = if let == [], do: quote(do: _), else: let
+        Enum.map(nested_slot_entries, fn {let, _generator, props, body, slot_entry_line} ->
+          block =
+            if let == nil do
+              body
+            else
+              quote generated: true, line: slot_entry_line do
+                unquote(let) ->
+                  unquote(body)
+
+                arg ->
+                  raise ArgumentError,
+                        "cannot match slot argument `#{inspect(arg)}` against :let pattern `#{unquote(Macro.to_string(let))}`."
+              end
+            end
 
           inner_block =
             quote do
-              Phoenix.LiveView.Helpers.inner_block unquote(slot_name) do
-                unquote(let_clause) ->
-                  unquote(body)
-              end
+              Phoenix.LiveView.Helpers.inner_block(unquote(slot_name), do: unquote(block))
             end
 
           props = [__slot__: slot_name, inner_block: inner_block] ++ props
@@ -562,15 +570,30 @@ defmodule Surface.Compiler.EExEngine do
 
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
       entries =
-        Enum.map(infos, fn {let, generator, props, body} ->
+        Enum.map(infos, fn {let, generator, props, body, slot_entry_line} ->
           block =
-            quote generated: true do
-              {
-                unquote({:%{}, [generated: true], let}),
-                unquote(generator),
-                unquote(context_var)
-              } ->
-                unquote(body)
+            if let == nil do
+              quote generated: true do
+                {
+                  _,
+                  unquote(generator),
+                  unquote(context_var)
+                } ->
+                  unquote(body)
+              end
+            else
+              quote generated: true, line: slot_entry_line do
+                {
+                  unquote(let),
+                  unquote(generator),
+                  unquote(context_var)
+                } ->
+                  unquote(body)
+
+                {arg, _generator, _context_var} ->
+                  raise ArgumentError,
+                        "cannot match slot argument `#{inspect(arg)}` against :let pattern `#{unquote(Macro.to_string(let))}`."
+              end
             end
 
           ast =
@@ -621,6 +644,7 @@ defmodule Surface.Compiler.EExEngine do
              name: name,
              props: props,
              let: let,
+             meta: meta,
              children: children
            }
            | tail
@@ -637,7 +661,8 @@ defmodule Surface.Compiler.EExEngine do
     props = collect_component_props(nil, props)
 
     [
-      {let, generator_binding(component, name), props, handle_nested_block(children, buffer, nested_block_state)}
+      {let, generator_binding(component, name), props, handle_nested_block(children, buffer, nested_block_state),
+       meta.line}
       | handle_slot_entries(component, tail, buffer, state)
     ]
   end
@@ -648,6 +673,7 @@ defmodule Surface.Compiler.EExEngine do
       module: module,
       let: let,
       props: props,
+      meta: meta,
       slot_entries: %{default: default}
     } = slotable
 
@@ -686,7 +712,7 @@ defmodule Surface.Compiler.EExEngine do
 
     [
       {let, generator_binding(component, name), Keyword.merge(default_props, props),
-       handle_nested_block(slot_entry, buffer, nested_block_state)}
+       handle_nested_block(slot_entry, buffer, nested_block_state), meta.line}
       | handle_slot_entries(component, tail, buffer, state)
     ]
   end

@@ -347,21 +347,9 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "validate slot args" do
-      code = "slot cols, args: [:info, {a, b}]"
-
-      message = ~r"""
-      invalid slot argument {a, b}. Expected an atom\
-      """
-
-      assert_raise(CompileError, message, fn ->
-        eval(code)
-      end)
-    end
-
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :args, :as, :generator\]/
+      message = ~r/unknown option :a. Available options: \[:required, :arg, :args, :as, :generator\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

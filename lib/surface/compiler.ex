@@ -39,7 +39,7 @@ defmodule Surface.Compiler do
   @slot_entry_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
-    Surface.Directive.SlotArgs,
+    Surface.Directive.SlotArg,
     Surface.Directive.If,
     Surface.Directive.For
   ]
@@ -467,7 +467,7 @@ defmodule Surface.Compiler do
          children: to_ast(children, compile_meta),
          props: attributes,
          directives: directives,
-         let: [],
+         let: nil,
          meta: meta
        }}
     else
@@ -549,7 +549,7 @@ defmodule Surface.Compiler do
        for: slot_entry,
        directives: directives,
        default: to_ast(children, compile_meta),
-       args: [],
+       arg: nil,
        generator_value: generator_value,
        meta: meta
      }}
@@ -689,7 +689,7 @@ defmodule Surface.Compiler do
             module: mod,
             slot: mod.__slot_name__(),
             type: component_type,
-            let: [],
+            let: nil,
             props: attributes,
             directives: directives,
             slot_entries: slot_entries,
@@ -953,7 +953,7 @@ defmodule Surface.Compiler do
           children: default_children,
           props: [],
           directives: directives,
-          let: [],
+          let: nil,
           meta: meta
         })
 
@@ -1069,44 +1069,6 @@ defmodule Surface.Compiler do
         not component_slotable?(mod),
         slot_entry <- slot_entry_instances do
       raise_missing_parent_slot_error!(mod, slot_name, slot_entry.meta, meta)
-    end
-
-    for slot_name <- Map.keys(slot_entries),
-        slot_entry <- Map.get(slot_entries, slot_name) do
-      slot = mod.__get_slot__(slot_name)
-      args = Keyword.keys(slot_entry.let)
-
-      arg_meta =
-        Enum.find_value(slot_entry.directives, meta, fn directive ->
-          if directive.module == Surface.Directive.Let do
-            directive.meta
-          end
-        end)
-
-      case slot do
-        %{opts: opts} ->
-          non_generator_args = Enum.map(opts[:args] || [], &Map.get(&1, :name))
-
-          undefined_keys = args -- non_generator_args
-
-          if not Enum.empty?(undefined_keys) do
-            [arg | _] = undefined_keys
-
-            message = """
-            undefined argument `#{inspect(arg)}` for slot `#{slot_name}` in `#{inspect(mod)}`.
-
-            Available arguments: #{inspect(non_generator_args)}.
-
-            Hint: You can define a new slot argument using the `args` option: \
-            `slot #{slot_name}, args: [..., #{inspect(arg)}]`
-            """
-
-            IOHelper.compile_error(message, arg_meta.file, arg_meta.line)
-          end
-
-        _ ->
-          :ok
-      end
     end
 
     :ok
@@ -1345,7 +1307,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

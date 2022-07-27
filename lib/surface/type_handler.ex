@@ -388,18 +388,17 @@ defmodule Surface.TypeHandler do
   defp handler(:form), do: __MODULE__.Form
   defp handler(:map), do: __MODULE__.Map
   defp handler(:keyword), do: __MODULE__.Keyword
-  defp handler(:explict_keyword), do: __MODULE__.ExplicitKeyword
   defp handler(:css_class), do: __MODULE__.CssClass
   defp handler(:style), do: __MODULE__.Style
   defp handler(:event), do: __MODULE__.Event
   defp handler(:phx_event), do: __MODULE__.PhxEvent
   defp handler(:generator), do: __MODULE__.Generator
-  defp handler(:bindings), do: __MODULE__.Bindings
   defp handler(:list), do: __MODULE__.List
   defp handler(:static_list), do: __MODULE__.StaticList
   defp handler(:context_put), do: __MODULE__.ContextPut
   defp handler(:context_get), do: __MODULE__.ContextGet
   defp handler(:hook), do: __MODULE__.Hook
   defp handler(:dynamic), do: __MODULE__.Dynamic
+  defp handler(:let_arg), do: __MODULE__.LetArg
   defp handler(_), do: __MODULE__.Default
 end

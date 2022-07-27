@@ -325,12 +325,12 @@ defmodule Surface.AST.Slot do
       * `:index` - the index of the slotable entry assigned to this slot
       * `:for` - the slotable entry assigned for this slot
       * `:default` - a list of AST nodes representing the default content for this slot
-      * `:args` - either an atom or a quoted expression representing arguments for this slot
+      * `:arg` - quoted expression representing arguments for this slot
       * `:generator_value` - value from the `:generator` prop
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this slot
   """
-  defstruct [:name, :as, :for, :index, :args, :generator_value, :default, :meta, directives: []]
+  defstruct [:name, :as, :for, :index, :arg, :generator_value, :default, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: binary(),
@@ -339,8 +339,7 @@ defmodule Surface.AST.Slot do
           for: any(),
           directives: list(Surface.AST.Directive.t()),
           meta: Surface.AST.Meta.t(),
-          # quoted ?
-          args: list(Keyword.t(any())),
+          arg: Macro.t(),
           generator_value: any(),
           default: list(Surface.AST.t())
         }
@@ -416,7 +415,7 @@ defmodule Surface.AST.SlotEntry do
   ## Properties
       * `:name` - the slot entry name
       * `:props` - the props for slot entry tag
-      * `:let` - the bindings for this slot entry
+      * `:let` - quoted expression representing bindings for this slot entry
       * `:children` - the slot entry children
       * `:meta` - compilation meta data
       * `:debug` - keyword list indicating when debug information should be printed during compilation
@@ -429,8 +428,7 @@ defmodule Surface.AST.SlotEntry do
           children: list(Surface.AST.t()),
           directives: list(Surface.AST.Directive.t()),
           props: list(Surface.AST.Attribute.t() | Surface.AST.DynamicAttribute.t()),
-          # quoted?
-          let: list(Keyword.t(atom())),
+          let: Macro.t(),
           meta: Surface.AST.Meta.t()
         }
 end
@@ -550,7 +548,7 @@ defmodule Surface.AST.SlotableComponent do
       * `:module` - the component module
       * `:type` - the type of component (i.e. Surface.LiveComponent vs Surface.Component)
       * `:slot` - the name of the slot that this component is for
-      * `:let` - the bindings for this slotable component
+      * `:let` - quoted expression representing bindings for this slotable component
       * `:props` - the props for this component
       * `:directives` - any directives to be applied to this tag
       * `:children` - the tag children
@@ -575,7 +573,7 @@ defmodule Surface.AST.SlotableComponent do
           debug: list(atom()),
           type: module(),
           slot: atom(),
-          let: list(Keyword.t(atom())),
+          let: Macro.t(),
           props: list(Surface.AST.Attribute.t()),
           dynamic_props: Surface.AST.DynamicAttribute.t(),
           directives: list(Surface.AST.Directive.t()),
