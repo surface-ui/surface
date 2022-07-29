@@ -879,8 +879,7 @@ defmodule Surface.Compiler do
   defp validate_tag_children([]), do: :ok
 
   defp validate_tag_children([%AST.SlotEntry{name: name, meta: meta} | _]) do
-    {:error,
-     "slot entries are not allowed as children of HTML elements. Did you mean <##{name} />?", meta}
+    {:error, "slot entries are not allowed as children of HTML elements. Did you mean <##{name} />?", meta}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
