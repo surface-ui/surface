@@ -878,7 +878,8 @@ defmodule Surface.Compiler do
   defp validate_tag_children([]), do: :ok
 
   defp validate_tag_children([%AST.SlotEntry{name: name} | _]) do
-    {:error, "slot entries are only allowed as children elements of components, but found slot entry for #{name}"}
+    {:error,
+     "Slot entries are only allowed as children elements of components. No slot found named slot. Did you mean <##{name} />"}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
