@@ -1608,7 +1608,7 @@ defmodule Surface.SlotSyncTest do
       end)
 
     assert output =~ ~r"""
-           cannot render <div> \(slot entries are only allowed as children elements of components, but found slot entry for body\)
+           cannot render <div> \(Slot entries are only allowed as children elements of components. No slot found named slot. Did you mean <#body />\)
              code.exs:3:\
            """
   end
