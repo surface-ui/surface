@@ -304,8 +304,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
 
       assert updated_code == """
              /* This file is for your main application CSS */
-             @import "./phoenix.css";
-
              @tailwind base;
              @tailwind components;
              @tailwind utilities;

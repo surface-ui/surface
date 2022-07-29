@@ -11,11 +11,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
     |> enter_defmodule()
     |> enter_def(:project)
     |> find_keyword_value(:compilers)
-    |> halt_if(
-      fn patcher -> node_to_string(patcher) == "[:gettext] ++ Mix.compilers() ++ [#{compiler}]" end,
-      :already_patched
-    )
-    |> halt_if(&find_code_containing(&1, compiler), :maybe_already_patched)
+    |> halt_if(&find_code_containing(&1, compiler), :already_patched)
     |> append_child(" ++ [#{compiler}]")
   end
 

@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CommonTest do
         def project do
           [
             app: :my_app,
-            compilers: [:gettext] ++ Mix.compilers(),
+            compilers: Mix.compilers(),
             start_permanent: Mix.env() == :prod
           ]
         end
@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CommonTest do
                def project do
                  [
                    app: :my_app,
-                   compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+                   compilers: Mix.compilers() ++ [:surface],
                    start_permanent: Mix.env() == :prod
                  ]
                end
@@ -105,7 +105,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CommonTest do
         def project do
           [
             app: :my_app,
-            compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+            compilers: Mix.compilers() ++ [:surface],
             start_permanent: Mix.env() == :prod
           ]
         end
@@ -120,31 +120,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CommonTest do
       """
 
       assert {:already_patched, ^code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
-    end
-
-    test "don't apply it if maybe already patched" do
-      code = """
-      defmodule MyApp.MixProject do
-        use Mix.Project
-
-        def project do
-          [
-            app: :my_app,
-            compilers: [:whatever, :surface],
-            start_permanent: Mix.env() == :prod
-          ]
-        end
-
-        defp deps do
-          [
-            {:phoenix, "~> 1.6.0"},
-            {:surface, "~> 0.5.2"}
-          ]
-        end
-      end
-      """
-
-      assert {:maybe_already_patched, ^code} = Patcher.patch_code(code, add_surface_to_mix_compilers())
     end
   end
 
