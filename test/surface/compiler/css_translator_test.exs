@@ -104,4 +104,22 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.classes == MapSet.new([])
     assert selectors.combined == MapSet.new([MapSet.new([".a", ".b"])])
   end
+
+  test "translate selector with functions with multiple arguments" do
+    css = """
+    .test {
+      margin: min(100px, 200px);
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           .test[data-s-myscope] {
+             margin: min(100px, 200px);
+           }
+           """
+
+    assert selectors.classes == MapSet.new(["test"])
+  end
 end
