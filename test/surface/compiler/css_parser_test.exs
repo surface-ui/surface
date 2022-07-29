@@ -150,7 +150,7 @@ defmodule Surface.Compiler.CSSParserTest do
                 {:block, "[", [{:text, "class="}, {:string, "\"", "btn"}],
                  %{column: 18, column_end: 30, line: 7, line_end: 7}}
               ]},
-             :comma,
+             {:comma, nil},
              {:ws, " "},
              {:selector, [text: "c", ws: " "]},
              {:block, "{",

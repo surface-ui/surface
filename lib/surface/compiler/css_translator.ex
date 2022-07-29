@@ -57,7 +57,7 @@ defmodule Surface.Compiler.CSSTranslator do
     translate(rest, [";" | acc], state)
   end
 
-  defp translate([:comma | rest], acc, state) do
+  defp translate([{:comma, _} | rest], acc, state) do
     translate(rest, ["," | acc], state)
   end
 

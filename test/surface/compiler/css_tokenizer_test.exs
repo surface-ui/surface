@@ -17,7 +17,7 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     }
 
     @media screen and (min-width: 1216px) {
-      .blog { display: block; }
+      .blog { display: block; margin: min(100px, 200px); }
     }
 
     @tailwind utilities;
@@ -50,7 +50,7 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              {:text, "class="},
              {:string, "\"", "btn"},
              {:block_close, "]", %{column: 19, line: 7, opening_column: 7, opening_line: 7}},
-             :comma,
+             {:comma, nil},
              {:ws, " "},
              {:text, "c"},
              {:ws, " "},
@@ -92,7 +92,19 @@ defmodule Surface.Compiler.CSSTokenizerTest do
              {:text, "block"},
              :semicolon,
              {:ws, " "},
-             {:block_close, "}", %{column: 27, line: 12, opening_column: 9, opening_line: 12}},
+             {:text, "margin"},
+             {:text, ":"},
+             {:ws, " "},
+             {:text, "min"},
+             {:block_open, "("},
+             {:text, "100px"},
+             {:comma, "("},
+             {:ws, " "},
+             {:text, "200px"},
+             {:block_close, ")", %{column: 51, line: 12, opening_column: 38, opening_line: 12}},
+             :semicolon,
+             {:ws, " "},
+             {:block_close, "}", %{column: 54, line: 12, opening_column: 9, opening_line: 12}},
              {:ws, "\n"},
              {:block_close, "}", %{column: 1, line: 13, opening_column: 39, opening_line: 11}},
              {:ws, "\n\n"},

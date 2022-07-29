@@ -55,9 +55,15 @@ defmodule Surface.Compiler.CSSTokenizer do
     handle_text(rest, line, column + 1, [], [:semicolon | acc], state)
   end
 
+  defp handle_text("," <> rest, line, column, buffer, acc, %{openings: [{opening, _, _} | _]} = state)
+       when opening in ["(", "[", "{"] do
+    acc = text_to_acc(buffer, acc)
+    handle_text(rest, line, column + 1, [], [{:comma, opening} | acc], state)
+  end
+
   defp handle_text("," <> rest, line, column, buffer, acc, state) do
     acc = text_to_acc(buffer, acc)
-    handle_text(rest, line, column + 1, [], [:comma | acc], state)
+    handle_text(rest, line, column + 1, [], [{:comma, nil} | acc], state)
   end
 
   defp handle_text(<<c::utf8, rest::binary>>, line, column, buffer, acc, state) when c in @combinators do
