@@ -25,6 +25,22 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     end
   end
 
+  defmodule StatefulPhoenixLiveComponent do
+    use Phoenix.LiveComponent
+
+    def update(_assigns, socket) do
+      {:ok, assign(socket, assigned_in_update: "My assigned label")}
+    end
+
+    def render(assigns) do
+      ~H"""
+      <div>
+        <span><%= @assigned_in_update %></span>
+      </div>
+      """
+    end
+  end
+
   defmodule StatefulComponentWithDefaultSlot do
     use Surface.LiveComponent
 
@@ -71,6 +87,22 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     end
   end
 
+  defmodule ViewWithPhoenixLiveComponent do
+    use Surface.LiveView
+
+    def render(assigns) do
+      module = StatefulPhoenixLiveComponent
+
+      ~F"""
+      <LiveComponent
+        id="comp"
+        module={module}
+        label="My label"
+      />
+      """
+    end
+  end
+
   defmodule ViewWithInnerContent do
     use Surface.LiveView
     alias Surface.Components.Dynamic.LiveComponent
@@ -89,6 +121,14 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
   test "render LiveComponent" do
     {:ok, _view, html} = live_isolated(build_conn(), View)
     assert html =~ "Initial stateful"
+  end
+
+  test "render phoenix live component" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithPhoenixLiveComponent)
+
+    assert html =~ """
+           <span>My assigned label</span>\
+           """
   end
 
   test "render LiveComponent and check props" do
@@ -169,6 +209,27 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
            Unknown property "unknown_attr" for component <Surface.Components.Dynamic.LiveComponentTest.StatefulComponentWithEvent>
              #{file}:#{line}: Surface.Components.Dynamic.LiveComponentTest \(module\)\
            """
+  end
+
+  # TODO: When LV 0.18 is released, we should introduce a warning for LV >= 0.18
+  test "at runtime, does not warn on unknown attributes if module attr is a plain old phoenix live component" do
+    output =
+      capture_io(:standard_error, fn ->
+        assigns = %{mod: StatefulPhoenixLiveComponent, label: "My Label"}
+
+        render_surface do
+          ~F"""
+          <LiveComponent
+            module={@mod}
+            id="comp"
+            label="My Label"
+            unknown-attr="unknown-attr"
+          />
+          """
+        end
+      end)
+
+    assert output == ""
   end
 
   # TODO: Uncomment when update to LV v0.17.6

@@ -35,9 +35,9 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     use Phoenix.Component
 
     def show(assigns) do
-      ~F"""
+      ~H"""
       <div class={@class}>
-        <span>{@label}</span>
+        <span><%= @label %></span>
       </div>
       """
     end
@@ -425,6 +425,28 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
                #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
              """
+    end
+
+    # TODO: When LV 0.18 is released, we should introduce a warning for LV >= 0.18
+    test "at runtime, does not warn on unknown attributes if module attr is a plain old phoenix component" do
+      output =
+        capture_io(:standard_error, fn ->
+          assigns = %{mod: PhoenixFunctionComponent, label: "My Label"}
+
+          render_surface do
+            ~F"""
+            <Component
+              module={@mod}
+              function={:show}
+              label={@label}
+              class="my-class"
+              unknown-attr="unknown-attr"
+            />
+            """
+          end
+        end)
+
+      assert output == ""
     end
   end
 
