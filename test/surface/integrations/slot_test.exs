@@ -419,7 +419,7 @@ defmodule Surface.SlotTest do
   test "raises if :arg doesn't match :let" do
     assert_raise(
       ArgumentError,
-      "cannot match slot argument `%{info: \"Info from slot\"}` against :let pattern `%{info: my_info, b: b}`.",
+      "cannot match slot argument against :let. Expected a value matching `%{info: my_info, b: b}`, got: %{info: \"Info from slot\"}.",
       fn ->
         render_surface do
           ~F"""
@@ -433,15 +433,19 @@ defmodule Surface.SlotTest do
   end
 
   test "raise runtime error when using :let without slot :arg" do
-    assert_raise(ArgumentError, "cannot match slot argument `nil` against :let pattern `[wrong]`.", fn ->
-      render_surface do
-        ~F"""
-        <OuterWithNamedSlot :let={[wrong]}>
-          {wrong}
-        </OuterWithNamedSlot>
-        """
+    assert_raise(
+      ArgumentError,
+      "cannot match slot argument against :let. Expected a value matching `[wrong]`, got: nil.",
+      fn ->
+        render_surface do
+          ~F"""
+          <OuterWithNamedSlot :let={[wrong]}>
+            {wrong}
+          </OuterWithNamedSlot>
+          """
+        end
       end
-    end)
+    )
   end
 
   test "assign default slot with arg" do
@@ -906,7 +910,7 @@ defmodule Surface.SlotTest do
   test "render vanilla phoenix components with slots and arg2" do
     assert_raise(
       ArgumentError,
-      "cannot match slot argument `\"default_arg\"` against :let pattern `[wrong]`.",
+      "cannot match slot argument against :let. Expected a value matching [wrong], got: `\"default_arg\"`.",
       fn ->
         render_surface do
           ~F"""

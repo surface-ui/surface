@@ -526,7 +526,7 @@ defmodule Surface.Compiler.EExEngine do
 
                 arg ->
                   raise ArgumentError,
-                        "cannot match slot argument `#{inspect(arg)}` against :let pattern `#{unquote(Macro.to_string(let))}`."
+                        "cannot match slot argument against :let. Expected a value matching #{unquote(Macro.to_string(let))}, got: `#{inspect(arg)}`."
               end
             end
 
@@ -592,7 +592,7 @@ defmodule Surface.Compiler.EExEngine do
 
                 {arg, _generator, _context_var} ->
                   raise ArgumentError,
-                        "cannot match slot argument `#{inspect(arg)}` against :let pattern `#{unquote(Macro.to_string(let))}`."
+                        "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(let))}`, got: #{inspect(arg)}."
               end
             end
 
