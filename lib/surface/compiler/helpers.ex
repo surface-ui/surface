@@ -128,12 +128,14 @@ defmodule Surface.Compiler.Helpers do
     ""
   end
 
-  def list_to_string(singular, _plural, [item]) do
-    "#{singular} #{inspect(item)}"
+  def list_to_string(singular, plural, items, map_fun \\ &inspect/1)
+
+  def list_to_string(singular, _plural, [item], map_fun) do
+    "#{singular} #{map_fun.(item)}"
   end
 
-  def list_to_string(_singular, plural, items) do
-    [last | rest] = items |> Enum.map(&inspect/1) |> Enum.reverse()
+  def list_to_string(_singular, plural, items, map_fun) do
+    [last | rest] = items |> Enum.map(map_fun) |> Enum.reverse()
     "#{plural} #{rest |> Enum.reverse() |> Enum.join(", ")} and #{last}"
   end
 

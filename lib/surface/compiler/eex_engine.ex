@@ -570,8 +570,8 @@ defmodule Surface.Compiler.EExEngine do
 
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
       entries =
-        Enum.map(infos, fn {let, generator, props, body, slot_entry_line} ->
-          no_warnings_generator = make_bindings_ast_generated(generator)
+        Enum.map(infos, fn {let, generator_expr, props, body, slot_entry_line} ->
+          no_warnings_generator = no_warnings_generator!(component, generator_expr, let, slot_entry_line)
 
           block =
             if let == nil do
@@ -729,8 +729,8 @@ defmodule Surface.Compiler.EExEngine do
 
   defp generator_binding(%{module: module, props: props}, name) do
     with generator = Keyword.get(module.__get_slot__(name).opts, :generator),
-         %AST.AttributeExpr{value: {binding, _}} <- find_attribute_value(props, generator, nil) do
-      binding
+         %AST.AttributeExpr{} = expr <- find_attribute_value(props, generator, nil) do
+      expr
     end
   end
 
@@ -1121,16 +1121,56 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp make_bindings_ast_generated(ast) do
-    {new_ast, []} =
+    Macro.prewalk(ast, [], fn
+      {var, _meta, nil} = node, acc when is_atom(var) ->
+        generated_node = Macro.update_meta(node, fn meta -> Keyword.put(meta, :generated, true) end)
+        {generated_node, [var | acc]}
+
+      node, acc ->
+        {node, acc}
+    end)
+  end
+
+  defp extract_bindings_from_ast(ast) do
+    {_, bindings} =
       Macro.prewalk(ast, [], fn
         {var, _meta, nil} = node, acc when is_atom(var) ->
-          generated_node = Macro.update_meta(node, fn meta -> Keyword.put(meta, :generated, true) end)
-          {generated_node, acc}
+          {node, [var | acc]}
 
         node, acc ->
           {node, acc}
       end)
 
-    new_ast
+    bindings
+  end
+
+  defp no_warnings_generator!(_component, nil, _let, _slot_entry_line), do: nil
+
+  defp no_warnings_generator!(
+         component,
+         %AST.AttributeExpr{value: {generator, _}} = generator_expr,
+         let,
+         slot_entry_line
+       ) do
+    {no_warnings_generator, generator_bindings} = make_bindings_ast_generated(generator)
+    let_bindings = extract_bindings_from_ast(let)
+
+    duplicated_bindings = MapSet.intersection(MapSet.new(generator_bindings), MapSet.new(let_bindings))
+
+    if MapSet.size(duplicated_bindings) > 0 do
+      message = """
+      cannot use :let to redefine variable from the component's generator.
+
+      #{Surface.Compiler.Helpers.list_to_string("variable", "variables", duplicated_bindings, &"`#{&1}`")} \
+      already defined in `#{generator_expr.original}` \
+      at #{Path.relative_to_cwd(generator_expr.meta.file)}:#{generator_expr.meta.line}
+
+      Hint: choose a different name.\
+      """
+
+      IOHelper.compile_error(message, component.meta.file, slot_entry_line)
+    end
+
+    no_warnings_generator
   end
 end

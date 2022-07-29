@@ -771,6 +771,29 @@ defmodule Surface.SlotTest do
            """
   end
 
+  test "raises if reusing generator variable names in :let" do
+    code =
+      quote do
+        ~F"""
+        <Grid items={{i, j} <- @items}>
+          <Column title="ID" :let={info: [i, j]} />
+        </Grid>
+        """
+      end
+
+    message = """
+    code:2: cannot use :let to redefine variable from the component's generator.
+
+    variables `i` and `j` already defined in `{i, j} <- @items` at code:1
+
+    Hint: choose a different name.\
+    """
+
+    assert_raise(CompileError, message, fn ->
+      compile_surface(code)
+    end)
+  end
+
   test "rename slot with :as do not override other assigns with same name" do
     html =
       render_surface do
