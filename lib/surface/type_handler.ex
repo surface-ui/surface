@@ -295,6 +295,10 @@ defmodule Surface.TypeHandler do
          prop when not is_nil(prop) <- module.__get_prop__(name) do
       {prop.type, prop.opts}
     else
+      # The module is not loaded or it's a plain old phoenix (live) component
+      false ->
+        {:string, []}
+
       _ ->
         if Map.get(meta, :runtime, false) do
           IOHelper.warn(

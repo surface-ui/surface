@@ -31,6 +31,18 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     end
   end
 
+  defmodule PhoenixFunctionComponent do
+    use Phoenix.Component
+
+    def show(assigns) do
+      ~H"""
+      <div class={@class}>
+        <span><%= @label %></span>
+      </div>
+      """
+    end
+  end
+
   defmodule Outer do
     use Surface.Component
 
@@ -75,6 +87,18 @@ defmodule Surface.Components.Dynamic.ComponentTest do
 
       ~F"""
       <Component module={module} label="My label" class="myclass"/>
+      """
+    end
+  end
+
+  defmodule ViewWithPhoenixFunctionComponent do
+    use Surface.LiveView
+
+    def render(assigns) do
+      module = PhoenixFunctionComponent
+
+      ~F"""
+      <Component module={module} function={:show} label="My label" class="myclass"/>
       """
     end
   end
@@ -201,6 +225,14 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              </div>\
              """
     end
+
+    test "render phoenix function component" do
+      {:ok, _view, html} = live_isolated(build_conn(), ViewWithPhoenixFunctionComponent)
+
+      assert html =~ """
+             <div class="myclass"><span>My label</span></div>\
+             """
+    end
   end
 
   describe "Without LiveView" do
@@ -251,6 +283,21 @@ defmodule Surface.Components.Dynamic.ComponentTest do
       assert html =~ """
              <div>
                My info
+             </div>
+             """
+    end
+
+    test "render plain old phoenix function component" do
+      html =
+        render_surface do
+          ~F"""
+          <Component module={PhoenixFunctionComponent} function={:show} label="My label" class="myclass"/>
+          """
+        end
+
+      assert html =~ """
+             <div class="myclass">
+               <span>My label</span>
              </div>
              """
     end
@@ -378,6 +425,28 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
                #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
              """
+    end
+
+    # TODO: When LV 0.18 is released, we should introduce a warning for LV >= 0.18
+    test "at runtime, does not warn on unknown attributes if module attr is a plain old phoenix component" do
+      output =
+        capture_io(:standard_error, fn ->
+          assigns = %{mod: PhoenixFunctionComponent, label: "My Label"}
+
+          render_surface do
+            ~F"""
+            <Component
+              module={@mod}
+              function={:show}
+              label={@label}
+              class="my-class"
+              unknown-attr="unknown-attr"
+            />
+            """
+          end
+        end)
+
+      assert output == ""
     end
   end
 
