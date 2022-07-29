@@ -198,6 +198,9 @@ defmodule Surface.TypeHandler do
       {:ok, val} ->
         [{name, val}]
 
+      {:ok, :value, ""} ->
+        [{:value, ""}]
+
       {:error, message} ->
         IOHelper.runtime_error(message)
     end
