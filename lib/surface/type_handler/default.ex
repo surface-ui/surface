@@ -72,6 +72,11 @@ defmodule Surface.TypeHandler.Default do
   end
 
   @impl true
+  def value_to_opts(:value, "") do
+    {:ok, :value, ""}
+  end
+
+  @impl true
   def value_to_opts(_name, value) do
     {:ok, value}
   end
