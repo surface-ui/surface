@@ -571,12 +571,14 @@ defmodule Surface.Compiler.EExEngine do
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
       entries =
         Enum.map(infos, fn {let, generator, props, body, slot_entry_line} ->
+          no_warnings_generator = make_bindings_ast_generated(generator)
+
           block =
             if let == nil do
               quote generated: true do
                 {
                   _,
-                  unquote(generator),
+                  unquote(no_warnings_generator),
                   unquote(context_var)
                 } ->
                   unquote(body)
@@ -585,7 +587,7 @@ defmodule Surface.Compiler.EExEngine do
               quote generated: true, line: slot_entry_line do
                 {
                   unquote(let),
-                  unquote(generator),
+                  unquote(no_warnings_generator),
                   unquote(context_var)
                 } ->
                   unquote(body)
@@ -1116,5 +1118,19 @@ defmodule Surface.Compiler.EExEngine do
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
     {props_expr, dynamic_props_expr}
+  end
+
+  defp make_bindings_ast_generated(ast) do
+    {new_ast, []} =
+      Macro.prewalk(ast, [], fn
+        {var, _meta, nil} = node, acc when is_atom(var) ->
+          generated_node = Macro.update_meta(node, fn meta -> Keyword.put(meta, :generated, true) end)
+          {generated_node, acc}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    new_ast
   end
 end

@@ -1452,6 +1452,24 @@ defmodule Surface.SlotSyncTest do
     end)
   end
 
+  test "unused generator bindings don't emit warnings" do
+    code =
+      quote do
+        ~F"""
+        <Grid items={%{name: name} = user <- @items}>
+          <Column title="ID">
+            <b>Id: {user.id}</b>
+          </Column>
+          <Column title="NAME">
+            Name: {name}
+          </Column>
+        </Grid>
+        """
+      end
+
+    assert "" == capture_io(:standard_error, fn -> compile_surface(code) end)
+  end
+
   test "raise on invalid attrs/directives" do
     code = """
     defmodule ComponentWithInvalidDirective do
