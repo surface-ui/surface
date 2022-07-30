@@ -545,6 +545,7 @@ defmodule Surface.Compiler do
          compile_meta
        )}
     else
+      {:error, message, meta} -> handle_convert_node_to_ast_error(name, {:error, message}, meta)
       error -> handle_convert_node_to_ast_error(name, error, meta)
     end
   end
@@ -877,8 +878,8 @@ defmodule Surface.Compiler do
 
   defp validate_tag_children([]), do: :ok
 
-  defp validate_tag_children([%AST.SlotEntry{name: name} | _]) do
-    {:error, "slot entries are only allowed as children elements of components, but found slot entry for #{name}"}
+  defp validate_tag_children([%AST.SlotEntry{name: name, meta: meta} | _]) do
+    {:error, "slot entries are not allowed as children of HTML elements. Did you mean <##{name} />?", meta}
   end
 
   defp validate_tag_children([_ | nodes]), do: validate_tag_children(nodes)
