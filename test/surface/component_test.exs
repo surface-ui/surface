@@ -48,7 +48,7 @@ defmodule Surface.ComponentTest do
       info = "My info"
 
       ~F"""
-      <div><#slot :arg={info: info}/></div>
+      <div><#slot arg={info: info}/></div>
       """
     end
   end

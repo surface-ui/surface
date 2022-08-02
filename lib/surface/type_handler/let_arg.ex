@@ -18,7 +18,7 @@ defmodule Surface.TypeHandler.LetArg do
     end
   end
 
-  def expr_to_quoted(_type, ":arg", _clauses, _opts, _meta, _original) do
+  def expr_to_quoted(_type, "arg", _clauses, _opts, _meta, _original) do
     {:error, "Expected a single expression to be given as the slot argument"}
   end
 

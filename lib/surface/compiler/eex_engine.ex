@@ -221,7 +221,7 @@ defmodule Surface.Compiler.EExEngine do
         Phoenix.LiveView.Helpers.render_slot(
           unquote(slot_value),
           {
-            unquote(arg_expr),
+            unquote(if(arg_expr, do: arg_expr.value, else: nil)),
             unquote(generator_value),
             unquote(context_expr)
           }

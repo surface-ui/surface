@@ -53,7 +53,7 @@ defmodule Surface.DirectivesTest do
 
     def render(assigns) do
       ~F"""
-      <div><#slot :if={@show} :arg={data: "data"}/></div>
+      <div><#slot :if={@show} arg={data: "data"}/></div>
       """
     end
   end

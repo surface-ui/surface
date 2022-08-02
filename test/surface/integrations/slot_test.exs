@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="body" :arg={info: "Info from slot"}/>
+        <#slot name="body" arg={info: "Info from slot"}/>
       </div>
       """
     end
@@ -85,7 +85,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot :arg={info: "Info from slot"}/>
+        <#slot arg={info: "Info from slot"}/>
       </div>
       """
     end
@@ -99,7 +99,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot :arg="Info from slot" />
+        <#slot arg="Info from slot" />
       </div>
       """
     end
@@ -113,7 +113,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot :arg={[name: "Jane", name: "Joe"]}/>
+        <#slot arg={[name: "Jane", name: "Joe"]}/>
       </div>
       """
     end
@@ -275,7 +275,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={col <- @cols}>
-            <#slot for={col} :arg={info: info} generator_value={item} />
+            <#slot for={col} arg={info: info} arg={info: info} generator_value={item} />
           </td>
         </tr>
       </table>
@@ -416,7 +416,7 @@ defmodule Surface.SlotTest do
            """
   end
 
-  test "raises if :arg doesn't match :let" do
+  test "raises if arg doesn't match :let" do
     assert_raise(
       ArgumentError,
       "cannot match slot argument against :let. Expected a value matching `%{info: my_info, b: b}`, got: %{info: \"Info from slot\"}.",
@@ -432,7 +432,7 @@ defmodule Surface.SlotTest do
     )
   end
 
-  test "raise runtime error when using :let without slot :arg" do
+  test "raise runtime error when using :let without slot arg" do
     assert_raise(
       ArgumentError,
       "cannot match slot argument against :let. Expected a value matching `[wrong]`, got: nil.",
@@ -1052,17 +1052,17 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error for invalid :arg expression (multiple clauses)" do
+  test "raise compile error for invalid arg expression (multiple clauses)" do
     code =
       quote do
         ~F"""
           <#slot
-            :arg={a, b} />
+            arg={a, b} />
         """
       end
 
     message = """
-    code:2: invalid value for directive :arg. \
+    code:2: invalid value for attribute "arg". \
     Expected a single expression to be given as the slot argument, \
     got: {a, b}.\
     """
@@ -1072,17 +1072,17 @@ defmodule Surface.SlotTest do
     end)
   end
 
-  test "raise compile error for invalid :arg expression (clause and opts)" do
+  test "raise compile error for invalid arg expression (clause and opts)" do
     code =
       quote do
         ~F"""
           <#slot
-            :arg={a, info: "Info from slot"} />
+            arg={a, info: "Info from slot"} />
         """
       end
 
     message = """
-    code:2: invalid value for directive :arg. \
+    code:2: invalid value for attribute "arg". \
     Expected a single expression to be given as the slot argument, \
     got: {a, info: "Info from slot"}.\
     """
@@ -1513,7 +1513,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1544,7 +1544,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1574,7 +1574,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1604,7 +1604,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1624,7 +1624,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot :arg={info: "this is a test"} />
+          <#slot arg={info: "this is a test"} />
         </span>
         "\""
       end
@@ -1639,7 +1639,7 @@ defmodule Surface.SlotSyncTest do
     assert output =~ "option :args has been deprecated. Use :arg instead."
   end
 
-  test "outputs compile warning when adding :arg directive to the default slot in a slotable component" do
+  test "outputs compile warning when adding arg attribute to the default slot in a slotable component" do
     component_code = """
     defmodule ColumnWithRenderAndSlotArg do
       use Surface.Component, slot: "cols"
@@ -1651,7 +1651,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot :arg={info: "this is a test"} />
+          <#slot arg={info: "this is a test"} />
         </span>
         "\""
       end

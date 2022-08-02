@@ -101,7 +101,7 @@ defmodule Surface.Components.Form do
     ~F"""
     <.form :let={form} for={@for} action={@action} {...@opts}>
       <Context put={__MODULE__, form: form}>
-        <#slot :arg={form: form} />
+        <#slot arg={form: form} />
       </Context>
     </.form>
     """

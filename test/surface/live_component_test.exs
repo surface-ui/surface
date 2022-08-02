@@ -61,7 +61,7 @@ defmodule Surface.LiveComponentTest do
 
       ~F"""
       <div>
-        <#slot :arg={info: info}/>
+        <#slot arg={info: info}/>
       </div>
       """
     end

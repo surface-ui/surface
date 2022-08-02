@@ -39,12 +39,11 @@ defmodule Surface.Compiler do
   @slot_entry_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
-    Surface.Directive.SlotArg,
     Surface.Directive.If,
     Surface.Directive.For
   ]
 
-  @valid_slot_props ["for", "name", "index", "generator_value"]
+  @valid_slot_props ["for", "name", "index", "arg", "generator_value"]
 
   @directive_prefixes [":", "s-"]
 
@@ -522,8 +521,14 @@ defmodule Surface.Compiler do
     validate_slot_attrs!(attrs, meta.caller)
     slot = Enum.find(defined_slots, fn slot -> slot.name == name end)
 
+    arg =
+      if has_attribute?(attributes, "arg") do
+        attribute_value_as_ast(attributes, "arg", :let_arg, %Surface.AST.Literal{value: nil}, compile_meta)
+      end
+
     if slot do
       maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
+      maybe_warn_argument_for_default_slot_in_slotable_component(slot, arg, meta)
     end
 
     if name && !slot do
@@ -549,7 +554,7 @@ defmodule Surface.Compiler do
        for: slot_entry,
        directives: directives,
        default: to_ast(children, compile_meta),
-       arg: nil,
+       arg: arg,
        generator_value: generator_value,
        meta: meta
      }}
@@ -1198,6 +1203,34 @@ defmodule Surface.Compiler do
     end
   end
 
+  defp maybe_warn_argument_for_default_slot_in_slotable_component(slot, arg, meta) do
+    if arg do
+      slot_name = Module.get_attribute(meta.caller.module, :__slot_name__)
+      default_slot_of_slotable_component? = slot.name == :default && slot_name
+
+      if default_slot_of_slotable_component? do
+        component_name = Macro.to_string(meta.caller.module)
+
+        message = """
+        arguments for the default slot in a slotable component are not accessible - instead the arguments \
+        from the parent's #{slot_name} slot will be exposed via `:let={...}`.
+
+        Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
+        and use it inside an explicit slot entry:
+        ```
+        <:#{slot_name}>
+          <#{component_name} :let={...}>
+            ...
+          </#{component_name}>
+        </:#{slot_name}>
+        ```
+        """
+
+        IOHelper.warn(message, meta.caller, meta.line)
+      end
+    end
+  end
+
   defp unquote_variable!(variable, compile_meta, expr_meta) do
     validate_inside_quote_surface!(compile_meta, expr_meta)
     validate_variable!(variable, expr_meta)
@@ -1307,7 +1340,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

@@ -905,9 +905,9 @@ defmodule Surface.FormatterTest do
         """
       )
 
-      # demonstrate that <#slot :arg={@foo} /> isn't collapsed
+      # demonstrate that <#slot arg={@foo} /> isn't collapsed
       assert_formatter_doesnt_change("""
-      <#slot :arg={@foo} />
+      <#slot arg={@foo} />
       """)
     end
 
