@@ -51,11 +51,11 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="header"/>
+        <#slot for={@header}/>
         <#slot>
           Default fallback
         </#slot>
-        <#slot name="footer">
+        <#slot for={@footer}>
           Footer fallback
         </#slot>
       </div>
@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="body" arg={info: "Info from slot"}/>
+        <#slot for={@body} arg={info: "Info from slot"}/>
       </div>
       """
     end
@@ -184,7 +184,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="header" />
+        <#slot for={@default_header} />
         {@header}
       </div>
       """
@@ -1322,9 +1322,9 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
           <div>
-            <#slot name="header"/>
+            <#slot for={@header}/>
             <#slot />
-            <#slot name="footer" />
+            <#slot for={@footer} />
           </div>
         "\""
       end
@@ -1389,11 +1389,11 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
           <div>
             <header :if={slot_assigned?(:heade)}>
-              <#slot name="header"/>
+              <#slot for={@header}/>
             </header>
             <#slot />
             <footer>
-              <#slot name="footer" />
+              <#slot for={@footer} />
             </footer>
           </div>
         "\""
@@ -1429,11 +1429,11 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
           <div>
             <header :if={slot_assigned?(@heade)}>
-              <#slot name="header"/>
+              <#slot for={@header}/>
             </header>
             <#slot />
             <footer>
-              <#slot name="footer" />
+              <#slot for={@footer} />
             </footer>
           </div>
         "\""
@@ -1532,7 +1532,7 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
         <br>
         <#slot
-          name="default"
+          for={@default}
           let={info: info}
           :show={true}
           />

@@ -508,9 +508,9 @@ defmodule Surface.Compiler do
         name
       end
 
-    short_slot_syntax? = not has_attribute?(attributes, "name")
+    default_syntax? = not has_attribute?(attributes, "name") && not has_for?
 
-    slot_entry =
+    for_ast =
       if has_for? do
         attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
       end
@@ -519,7 +519,11 @@ defmodule Surface.Compiler do
 
     {:ok, directives, attrs} = collect_directives(@slot_directive_handlers, attributes, meta)
     validate_slot_attrs!(attrs, meta.caller)
-    slot = Enum.find(defined_slots, fn slot -> slot.name == name end)
+
+    slot =
+      Enum.find(defined_slots, fn slot ->
+        slot.name == name || slot.opts[:as] == name
+      end)
 
     arg =
       if has_attribute?(attributes, "arg") do
@@ -527,7 +531,13 @@ defmodule Surface.Compiler do
       end
 
     if slot do
-      maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
+      maybe_warn_required_slot_with_default_value(
+        slot,
+        children,
+        for_ast,
+        meta
+      )
+
       maybe_warn_argument_for_default_slot_in_slotable_component(slot, arg, meta)
     end
 
@@ -537,7 +547,7 @@ defmodule Surface.Compiler do
         name,
         meta,
         defined_slots,
-        short_slot_syntax?
+        default_syntax?
       )
     end
 
@@ -551,7 +561,7 @@ defmodule Surface.Compiler do
        name: name,
        as: if(slot, do: slot[:opts][:as]),
        index: index,
-       for: slot_entry,
+       for: for_ast,
        directives: directives,
        default: to_ast(children, compile_meta),
        arg: arg,
@@ -1079,7 +1089,7 @@ defmodule Surface.Compiler do
     :ok
   end
 
-  defp raise_missing_slot_error!(module, slot_name, meta, _defined_slots, true = _short_syntax?) do
+  defp raise_missing_slot_error!(module, slot_name, meta, _defined_slots, true = _default_syntax?) do
     message = """
     no slot `#{slot_name}` defined in the component `#{inspect(module)}`
 
@@ -1089,7 +1099,7 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, meta.file, meta.line)
   end
 
-  defp raise_missing_slot_error!(module, slot_name, meta, defined_slots, false = _short_syntax?) do
+  defp raise_missing_slot_error!(module, slot_name, meta, defined_slots, false = _default_syntax?) do
     defined_slot_names = Enum.map(defined_slots, & &1.name)
     similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
     existing_slots_message = existing_slots_message(defined_slot_names)
@@ -1177,9 +1187,9 @@ defmodule Surface.Compiler do
 
   defp maybe_warn_required_slot_with_default_value(_, [], _, _), do: nil
 
-  defp maybe_warn_required_slot_with_default_value(slot, _, short_syntax?, meta) do
+  defp maybe_warn_required_slot_with_default_value(slot, _, for_ast, meta) do
     if Keyword.get(slot.opts, :required, false) do
-      slot_name_tag = if short_syntax?, do: "", else: " name=\"#{slot.name}\""
+      slot_for_tag = if for_ast == nil, do: "", else: " for={#{for_ast.original}}"
 
       message = """
       setting the fallback content on a required slot has no effect.
@@ -1188,13 +1198,13 @@ defmodule Surface.Compiler do
 
         slot #{slot.name}
         ...
-        <#slot#{slot_name_tag}>Fallback content</#slot>
+        <#slot#{slot_for_tag}>Fallback content</#slot>
 
       or keep the slot as required and remove the fallback content:
 
         slot #{slot.name}, required: true`
         ...
-        <#slot#{slot_name_tag} />
+        <#slot#{slot_for_tag} />
 
       but not both.
       """
@@ -1305,26 +1315,25 @@ defmodule Surface.Compiler do
     Enum.each(attrs, &validate_slot_attr!(&1, caller))
   end
 
-  # TODO: Deprecate `name` and `index` after releasing v0.7
-  #
-  # defp validate_slot_attr!({"name", value, meta}, caller) do
-  #   message = """
-  #   properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
+  defp validate_slot_attr!({attr, value, meta}, caller) when attr in ["name", "index"] do
+    message = """
+    properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
 
-  #   Rendering the slot:
+    Rendering the slot:
 
-  #     <#slot for={@#{value}}/>
+      <#slot for={@#{value}}/>
 
-  #   Iterating over the slot items:
+    Iterating over the slot items:
 
-  #     {#for item <- @#{value}}
-  #       <#slot for={item}/>
-  #     {/for}
-  #   """
-  #   Surface.IOHelper.warn(message, caller, meta.line)
+      {#for item <- @#{value}}
+        <#slot for={item}/>
+      {/for}
+    """
 
-  #   :ok
-  # end
+    Surface.IOHelper.warn(message, caller, meta.line)
+
+    :ok
+  end
 
   defp validate_slot_attr!({name, _, _meta}, _caller) when name in @valid_slot_props do
     :ok
