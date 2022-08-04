@@ -122,7 +122,7 @@ defmodule Surface.SlotTest do
   defmodule OuterWithDefaultSlotAndArgFromGenerator do
     use Surface.Component
 
-    prop items, :list, required: true
+    prop items, :generator, required: true
     slot default, generator_prop: :items
 
     def render(assigns) do
@@ -259,7 +259,7 @@ defmodule Surface.SlotTest do
   defmodule Grid do
     use Surface.Component
 
-    prop items, :list, required: true
+    prop items, :generator, required: true
 
     slot col, as: :cols, arg: %{info: :string}, generator_prop: :items
 

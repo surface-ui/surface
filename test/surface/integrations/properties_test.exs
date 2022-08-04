@@ -116,14 +116,18 @@ defmodule Surface.PropertiesTest do
   defmodule RootGeneratorProp do
     use Surface.Component
 
-    prop labels, :list, root: true
+    prop labels, :generator, root: true
     slot default, generator_prop: :labels
 
     def render(assigns) do
       ~F"""
-      {#for label <- @labels}
-        <#slot generator_value={label} />
-      {/for}
+      {#if is_nil(@labels)}
+        No labels
+      {#else}
+        {#for label <- @labels}
+          <#slot generator_value={label} />
+        {/for}
+      {/if}
       """
     end
   end
@@ -739,6 +743,39 @@ defmodule Surface.PropertiesTest do
              """
     end
 
+    test "component accepts root generator property with assign" do
+      assigns = %{labels: ["Label1", "Label2"]}
+
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp {label <- @labels}>
+            Slot: {label}
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               Slot: Label1
+               Slot: Label2
+             """
+    end
+
+    test "generator not given works" do
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp>
+            Slot
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               No labels
+             """
+    end
+
     test "validate invalid values at runtime" do
       message = """
       invalid value for property "label". Expected a :string, got: ["label", "label2"].
@@ -755,17 +792,21 @@ defmodule Surface.PropertiesTest do
       end)
     end
 
-    test "validate invalid values at runtime, list" do
-      message = """
-      invalid value for property "labels". Expected a :list, got: "label"\
-      """
-
-      assert_raise(RuntimeError, message, fn ->
-        render_surface do
+    test "validate if not generator at compile time" do
+      code =
+        quote do
           ~F"""
-          <RootGeneratorProp {"label"} />
+          <RootGeneratorProp
+            {"label"} />
           """
         end
+
+      message = """
+      code:2: invalid value for property "labels". Expected a :generator Example: `{i <- ...}`, got: {"label"}.\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
       end)
     end
   end

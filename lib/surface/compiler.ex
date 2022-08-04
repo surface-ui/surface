@@ -1315,7 +1315,7 @@ defmodule Surface.Compiler do
     Enum.each(attrs, &validate_slot_attr!(&1, caller))
   end
 
-  defp validate_slot_attr!({attr, value, meta}, caller) when attr in ["name", "index"] do
+  defp validate_slot_attr!({"name", value, meta}, caller) do
     message = """
     properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
 
@@ -1326,6 +1326,26 @@ defmodule Surface.Compiler do
     Iterating over the slot items:
 
       {#for item <- @#{value}}
+        <#slot for={item}/>
+      {/for}
+    """
+
+    Surface.IOHelper.warn(message, caller, meta.line)
+
+    :ok
+  end
+
+  defp validate_slot_attr!({"index", _value, meta}, caller) do
+    message = """
+    properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
+
+    Rendering the slot:
+
+      <#slot for={@slot_name}/>
+
+    Iterating over the slot items:
+
+      {#for item <- @slot_name}
         <#slot for={item}/>
       {/for}
     """

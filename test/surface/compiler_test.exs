@@ -60,7 +60,7 @@ defmodule Surface.CompilerTest do
   defmodule Grid do
     use Surface.Component
 
-    prop items, :list
+    prop items, :generator
 
     slot cols, generator_prop: :items
 

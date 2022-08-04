@@ -365,7 +365,7 @@ defmodule Surface.APITest do
         use Surface.Component
 
         prop label, :string
-        prop items, :list
+        prop items, :generator
 
         slot default, generator_prop: :unknown
 
@@ -375,7 +375,7 @@ defmodule Surface.APITest do
 
       message = """
       code.exs:7: cannot use property `unknown` as generator for slot. \
-      Expected an existing property, got: an undefined property `unknown`.
+      Expected an existing property of type `:generator`, got: an undefined property `unknown`.
 
       Hint: Available generators are [:items]\
       """
@@ -403,7 +403,7 @@ defmodule Surface.APITest do
 
       message = """
       code.exs:6: cannot use property `label` as generator for slot. \
-      Expected a property of type :list, got: a property of type :string
+      Expected a property of type :generator, got: a property of type :string
 
       Hint: Available generators are []\
       """

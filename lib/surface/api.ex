@@ -35,8 +35,8 @@ defmodule Surface.API do
     :regex,
     :uri,
     :path,
-    # Private
     :generator,
+    # Private
     :context_put,
     :context_get,
     :dynamic
@@ -430,6 +430,10 @@ defmodule Surface.API do
     end)
   end
 
+  defp get_valid_opts(:prop, :generator, _opts) do
+    [:required, :root]
+  end
+
   defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :values!, :accumulate, :root, :static]
   end
@@ -655,7 +659,8 @@ defmodule Surface.API do
   end
 
   defp available_generators_hint(module) do
-    existing_generators_names = module.__props__() |> Enum.filter(&(&1.type == :list)) |> Enum.map(& &1.name)
+    existing_generators_names = module.__props__() |> Enum.filter(&(&1.type == :generator)) |> Enum.map(& &1.name)
+
     "Available generators are #{inspect(existing_generators_names)}"
   end
 
@@ -666,7 +671,7 @@ defmodule Surface.API do
         nil ->
           message = """
           cannot use property `#{generator}` as generator for slot. \
-          Expected an existing property, \
+          Expected an existing property of type `:generator`, \
           got: an undefined property `#{generator}`.
 
           Hint: #{available_generators_hint(env.module)}\
@@ -674,10 +679,10 @@ defmodule Surface.API do
 
           IOHelper.compile_error(message, env.file, slot.line)
 
-        %{type: type} when type != :list ->
+        %{type: type} when type != :generator ->
           message = """
           cannot use property `#{generator}` as generator for slot. \
-          Expected a property of type :list, \
+          Expected a property of type :generator, \
           got: a property of type #{inspect(type)}
 
           Hint: #{available_generators_hint(env.module)}\

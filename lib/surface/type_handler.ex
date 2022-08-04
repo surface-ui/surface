@@ -348,6 +348,8 @@ defmodule Surface.TypeHandler do
         {name, "directive"}
 
       module ->
+        name = name || Enum.find(module.__props__(), & &1.opts[:root]).name
+
         {inspect("#{name}"), "property"}
 
       true ->
