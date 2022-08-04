@@ -439,7 +439,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :arg, :args, :as, :generator]
+    [:required, :arg, :args, :as, :generator_prop]
   end
 
   defp validate_opt_ast!(:slot, :args, _, caller) do
@@ -661,7 +661,7 @@ defmodule Surface.API do
 
   defp validate_slot_props_bindings!(env) do
     for slot <- env.module.__slots__(),
-        generator = Keyword.get(slot.opts, :generator) do
+        generator = Keyword.get(slot.opts, :generator_prop) do
       case env.module.__get_prop__(generator) do
         nil ->
           message = """

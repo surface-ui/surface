@@ -117,7 +117,7 @@ defmodule Surface.PropertiesTest do
     use Surface.Component
 
     prop labels, :list, root: true
-    slot default, generator: :labels
+    slot default, generator_prop: :labels
 
     def render(assigns) do
       ~F"""

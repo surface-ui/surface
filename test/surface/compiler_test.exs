@@ -62,7 +62,7 @@ defmodule Surface.CompilerTest do
 
     prop items, :list
 
-    slot cols, generator: :items
+    slot cols, generator_prop: :items
 
     def render(assigns) do
       ~F"""

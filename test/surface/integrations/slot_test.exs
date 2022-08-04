@@ -123,7 +123,7 @@ defmodule Surface.SlotTest do
     use Surface.Component
 
     prop items, :list, required: true
-    slot default, generator: :items
+    slot default, generator_prop: :items
 
     def render(assigns) do
       ~F"""
@@ -261,7 +261,7 @@ defmodule Surface.SlotTest do
 
     prop items, :list, required: true
 
-    slot col, as: :cols, arg: %{info: :string}, generator: :items
+    slot col, as: :cols, arg: %{info: :string}, generator_prop: :items
 
     def render(assigns) do
       info = "Some info from Grid"

@@ -349,7 +349,7 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :arg, :args, :as, :generator\]/
+      message = ~r/unknown option :a. Available options: \[:required, :arg, :args, :as, :generator_prop\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -367,7 +367,7 @@ defmodule Surface.APITest do
         prop label, :string
         prop items, :list
 
-        slot default, generator: :unknown
+        slot default, generator_prop: :unknown
 
         def render(assigns), do: ~F()
       end
@@ -395,7 +395,7 @@ defmodule Surface.APITest do
 
         prop label, :string
 
-        slot default, generator: :label
+        slot default, generator_prop: :label
 
         def render(assigns), do: ~F()
       end

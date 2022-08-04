@@ -728,7 +728,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp generator_binding(%{module: module, props: props}, name) do
-    with generator = Keyword.get(module.__get_slot__(name).opts, :generator),
+    with generator = Keyword.get(module.__get_slot__(name).opts, :generator_prop),
          %AST.AttributeExpr{} = expr <- find_attribute_value(props, generator, nil) do
       expr
     end
