@@ -148,7 +148,7 @@ defmodule Surface.Catalogue.Playground do
 
         _ ->
           quote do
-            data props, :keyword, default: unquote(props_data)
+            data props, :keyword, default: unquote(Macro.escape(props_data))
           end
       end
 
