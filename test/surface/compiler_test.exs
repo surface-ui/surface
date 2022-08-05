@@ -756,6 +756,35 @@ defmodule Surface.CompilerSyncTest do
     assert line == 2
   end
 
+  test "warning when directive are specified multiple times" do
+    alias Components.But, warn: false
+
+    code = """
+    <div
+      :on-click="a"
+      :on-click="b"
+    ></div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+           the directive `click` has been passed multiple times. Considering only the last value.
+
+           Hint: remove all redundant definitions.
+
+             nofile:3:\
+           """
+
+    assert line == 3
+  end
+
+  test "don't warn when directive are specified multiple times in components" do
+    code = ~s[<Button :props={"a"} :props={"b"} />]
+
+    assert {:ok, _component} = run_compile(code, __ENV__)
+  end
+
   test "warning with hint when a unaliased component cannot be loaded" do
     code = """
     <div>

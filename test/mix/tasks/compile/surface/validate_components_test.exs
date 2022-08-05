@@ -106,6 +106,31 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
            ]
   end
 
+  test "should return diagnostic when directive are specified multiple times" do
+    component =
+      quote do
+        ~F[<StringProp :props={"a"} :props={"b"} />]
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == [
+             %Mix.Task.Compiler.Diagnostic{
+               compiler_name: "Surface",
+               details: nil,
+               file: Path.expand("code"),
+               message: ~S"""
+               the directive `props` has been passed multiple times. Considering only the last value.
+
+               Hint: remove all redundant definitions.
+               """,
+               position: 0,
+               severity: :warning
+             }
+           ]
+  end
+
   defmodule MacroWithRequiredPropTitle do
     use Surface.MacroComponent
     prop title, :string, required: true

@@ -18,7 +18,8 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
     for component_call <- components_calls do
       validate_properties(file, component_call) ++
-        validate_attributes(file, component_call)
+        validate_attributes(file, component_call) ++
+        validate_directives(file, component_call)
     end
     |> Enum.reject(&is_nil/1)
   end
@@ -135,6 +136,36 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
         end
 
       warning(message, file, attr_line)
+    end
+  end
+
+  defp validate_directives(file, component_call) do
+    {diagnostics, _} =
+      for directive <- component_call.directives,
+          reduce: {[], MapSet.new()} do
+        {diagnostics, directives} ->
+          diagnostics = [validate_directive(directive, file, directives) | diagnostics]
+          {diagnostics, MapSet.put(directives, directive.name)}
+      end
+
+    diagnostics
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reverse()
+  end
+
+  defp validate_directive(directive, file, processed_directives) do
+    processed_directives? = MapSet.member?(processed_directives, directive.name)
+
+    if processed_directives? do
+      directive_line = directive.meta.line
+
+      message = """
+      the directive `#{directive.name}` has been passed multiple times. Considering only the last value.
+
+      Hint: remove all redundant definitions.
+      """
+
+      warning(message, file, directive_line)
     end
   end
 
