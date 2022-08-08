@@ -282,7 +282,7 @@ defmodule Surface.Compiler do
               do: MapSet.put(processed_directives, directive.name),
               else: processed_directives
 
-          {mod.process(directive, node), MapSet.put(processed_directives, directive.name)}
+          {mod.process(directive, node), processed_directives}
       end
 
     directives
