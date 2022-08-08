@@ -13,7 +13,7 @@ defmodule Surface.TypeHandler.Default do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quoted_expr =
-      quote generated: true do
+      quote do
         Surface.TypeHandler.expr_to_value!(
           unquote(type),
           unquote(name),

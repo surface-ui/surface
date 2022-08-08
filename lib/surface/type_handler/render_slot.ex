@@ -21,7 +21,7 @@ defmodule Surface.TypeHandler.RenderSlot do
       if literal_keyword? do
         opts
       else
-        {:%{}, [generated: true], opts}
+        {:%{}, [], opts}
       end
 
     {:ok, %{slot: slot, argument: argument}}

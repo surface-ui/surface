@@ -29,7 +29,7 @@ defmodule Surface.Directive.Show do
   def process(%AST.Directive{value: %AST.Literal{value: value}}, node) do
     add_value_to_attribute(node, :style, %AST.AttributeExpr{
       value:
-        quote generated: true do
+        quote do
           unquote(value)
         end,
       original: to_string(value),
@@ -62,7 +62,7 @@ defmodule Surface.Directive.Show do
         value: %AST.AttributeExpr{
           show
           | value:
-              quote generated: true do
+              quote do
                 not unquote(value)
               end,
             constant?: false

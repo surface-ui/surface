@@ -1157,5 +1157,23 @@ defmodule Surface.PropertiesSyncTest do
              explicitly via the label property (`<RootProp label="...">`), but not both.
              """
     end
+
+    test "literal expression to list prop don't emit warnings" do
+      code =
+        quote do
+          ~F"""
+          <ListProp prop={1}/>
+          """
+        end
+
+      output = capture_io(:standard_error, fn -> compile_surface(code) end)
+
+      refute output =~ """
+             this check/guard will always yield the same result
+               code
+             """
+
+      assert output == ""
+    end
   end
 end

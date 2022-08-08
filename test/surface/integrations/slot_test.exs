@@ -1230,6 +1230,7 @@ defmodule Surface.SlotSyncTest do
   import ExUnit.CaptureIO
 
   alias Surface.SlotTest.OuterWithoutDefaultSlot, warn: false
+  alias Surface.SlotTest.OuterWithNamedSlotAndArg, warn: false
   alias Surface.SlotTest.OuterWithNamedSlot, warn: false
   alias Surface.SlotTest.InnerData, warn: false
   alias Surface.SlotTest.{Grid, Column}, warn: false
@@ -1491,6 +1492,26 @@ defmodule Surface.SlotSyncTest do
       end
 
     assert "" == capture_io(:standard_error, fn -> compile_surface(code) end)
+  end
+
+  test "function components with :let that always match don't emit warnings" do
+    code =
+      quote do
+        ~F"""
+        <PhoenixComponentWithSlots.my_component_with_arg :let={default_arg}>
+          {default_arg}
+        </PhoenixComponentWithSlots.my_component_with_arg>
+        """
+      end
+
+    output = capture_io(:standard_error, fn -> compile_surface(code) end)
+
+    refute output =~ """
+           this clause cannot match because a previous clause at line 1 always matches
+             code:1
+           """
+
+    assert output == ""
   end
 
   test "raise on invalid attrs/directives" do
