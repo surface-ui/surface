@@ -769,7 +769,7 @@ defmodule Surface.CompilerSyncTest do
     {:warn, line, message} = run_compile(code, __ENV__)
 
     assert message =~ """
-           the directive `click` has been passed multiple times. Considering only the last value.
+           the directive `:on-click` has been passed multiple times. Considering only the last value.
 
            Hint: remove all redundant definitions.
 

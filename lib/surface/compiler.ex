@@ -269,13 +269,18 @@ defmodule Surface.Compiler do
         {node, processed_directives} ->
           if MapSet.member?(processed_directives, directive.name) and match?(%AST.Tag{}, node) do
             message = """
-            the directive `#{directive.name}` has been passed multiple times. Considering only the last value.
+            the directive `:on-#{directive.name}` has been passed multiple times. Considering only the last value.
 
             Hint: remove all redundant definitions.
             """
 
             IOHelper.warn(message, meta.caller, meta.file, meta.line)
           end
+
+          processed_directives =
+            if to_string(directive.name) in Surface.Directive.Events.names(),
+              do: MapSet.put(processed_directives, directive.name),
+              else: processed_directives
 
           {mod.process(directive, node), MapSet.put(processed_directives, directive.name)}
       end
