@@ -325,7 +325,7 @@ defmodule Surface.AST.Slot do
       * `:index` - the index of the slotable entry assigned to this slot
       * `:for` - the slotable entry assigned for this slot
       * `:default` - a list of AST nodes representing the default content for this slot
-      * `:arg` - quoted expression representing arguments for this slot
+      * `:arg` - quoted expression representing the argument for this slot
       * `:generator_value` - value from the `:generator_prop` property
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this slot
