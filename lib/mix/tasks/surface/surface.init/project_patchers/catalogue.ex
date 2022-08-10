@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def specs(%{catalogue: true, demo: true} = assigns) do
+  def specs(%{catalogue: true, demo: true, tailwind: tailwind?} = assigns) do
     %{web_module: web_module} = assigns
 
     web_folder = web_module |> inspect() |> Macro.underscore()
@@ -14,8 +14,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
 
     patches(assigns) ++
       [
-        {:create, "demo/example01.ex", dest},
-        {:create, "demo/example02.ex", dest},
+        {:create, "demo/#{demo_path(tailwind?)}/examples.ex", dest},
         {:create, "demo/playground.ex", dest}
       ]
   end
@@ -76,7 +75,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
     %{
       name: "Configure `elixirc_paths` for the catalogue",
       patch: [
-        &FilePatchers.MixExs.add_elixirc_paths_entry(&1, ":dev", ~S|["lib"] ++ catalogues()|, "catalogues()"),
+        &FilePatchers.MixExs.add_elixirc_paths_entry(
+          &1,
+          ":dev",
+          ~S|["lib"] ++ catalogues()|,
+          "catalogues()"
+        ),
         &FilePatchers.MixExs.append_def(&1, "catalogues", """
           [
             "priv/catalogue"
@@ -225,4 +229,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
       """
     }
   end
+
+  defp demo_path(true), do: "tailwind"
+  defp demo_path(_), do: "default"
 end

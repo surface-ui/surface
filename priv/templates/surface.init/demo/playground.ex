@@ -1,17 +1,20 @@
-defmodule <%= inspect(web_module) %>.Components.Hero.Playground do
+defmodule <%= inspect(web_module) %>.Components.Card.Playground do
   use Surface.Catalogue.Playground,
-    subject: <%= inspect(web_module) %>.Components.Hero,
-    height: "250px",
+    subject: <%= inspect(web_module) %>.Components.Card,
+    height: "360px",
     body: [style: "padding: 1.5rem;"]
 
-  data props, :map, default: %{
-    subtitle: "Welcome to Surface!",
-    color: "info"
-  }
+    @props [
+      rounded: true
+    ]
 
-  def render(assigns) do
-    ~F"""
-    <Hero {...@props} />
-    """
-  end
+    @slots [
+      header: "Phoenix Framework",
+      default: """
+              Start building rich interactive user-interfaces, writing minimal custom Javascript.
+              Built on top of Phoenix LiveView, Surface leverages the amazing Phoenix Framework
+              to provide a fast and productive solution to build modern web applications.
+              """,
+      footer: "#surface"
+    ]
 end
