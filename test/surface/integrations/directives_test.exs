@@ -693,10 +693,12 @@ defmodule Surface.DirectivesTest do
           ~F"""
           <col :show={@show}>
           <col :show={true}>
+          <col :show>
           """
         end
 
       assert html == """
+             <col>
              <col>
              <col>
              """
