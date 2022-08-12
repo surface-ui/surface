@@ -106,10 +106,10 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
            ]
   end
 
-  test "should return diagnostic when directive are specified multiple times" do
+  test "should return diagnostic when a directive is specified multiple times in a component" do
     component =
       quote do
-        ~F[<StringProp :props={"a"} :props={"b"} />]
+        ~F[<StringProp :if={true} :props={"a"} :props={"b"} />]
       end
       |> compile_surface()
 

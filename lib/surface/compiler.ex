@@ -267,9 +267,9 @@ defmodule Surface.Compiler do
           function_exported?(mod, :process, 2),
           reduce: {node, MapSet.new()} do
         {node, processed_directives} ->
-          if MapSet.member?(processed_directives, directive.name) and match?(%AST.Tag{}, node) do
+          if match_ast_node?(node) and MapSet.member?(processed_directives, directive.name) do
             message = """
-            the directive `:on-#{directive.name}` has been passed multiple times. Considering only the last value.
+            the directive `:#{format_directive_name(directive.name)}` has been passed multiple times. Considering only the last value.
 
             Hint: remove all redundant definitions.
             """
@@ -277,18 +277,24 @@ defmodule Surface.Compiler do
             IOHelper.warn(message, meta.caller, meta.file, meta.line)
           end
 
-          processed_directives =
-            if to_string(directive.name) in Surface.Directive.Events.names(),
-              do: MapSet.put(processed_directives, directive.name),
-              else: processed_directives
-
-          {mod.process(directive, node), processed_directives}
+          {mod.process(directive, node), MapSet.put(processed_directives, directive.name)}
       end
 
     directives
   end
 
   defp process_directives(node), do: node
+
+  defp format_directive_name(directive_name) do
+    if to_string(directive_name) in Surface.Directive.Events.names(),
+      do: "on-#{directive_name}",
+      else: directive_name
+  end
+
+  defp match_ast_node?(node) do
+    # https://surface-ui.org/template_syntax#directives
+    match?(%AST.Tag{}, node) or match?(%AST.If{}, node) or match?(%AST.For{}, node)
+  end
 
   defp convert_node_to_ast(:comment, {_, _comment, %{visibility: :private}}, _), do: :ignore
 
