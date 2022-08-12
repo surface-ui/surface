@@ -262,14 +262,38 @@ defmodule Surface.Compiler do
   defp node_type(_), do: :text
 
   defp process_directives(%{directives: directives} = node) when is_list(directives) do
+    {directives, _} =
+      for %AST.Directive{module: mod, meta: meta} = directive <- directives,
+          function_exported?(mod, :process, 2),
+          reduce: {node, MapSet.new()} do
+        {node, processed_directives} ->
+          if match_ast_node?(node) and MapSet.member?(processed_directives, directive.name) do
+            message = """
+            the directive `:#{format_directive_name(directive.name)}` has been passed multiple times. Considering only the last value.
+
+            Hint: remove all redundant definitions.
+            """
+
+            IOHelper.warn(message, meta.caller, meta.file, meta.line)
+          end
+
+          {mod.process(directive, node), MapSet.put(processed_directives, directive.name)}
+      end
+
     directives
-    |> Enum.filter(fn %AST.Directive{module: mod} -> function_exported?(mod, :process, 2) end)
-    |> Enum.reduce(node, fn %AST.Directive{module: mod} = directive, node ->
-      mod.process(directive, node)
-    end)
   end
 
   defp process_directives(node), do: node
+
+  defp format_directive_name(directive_name) do
+    if to_string(directive_name) in Surface.Directive.Events.names(),
+      do: "on-#{directive_name}",
+      else: directive_name
+  end
+
+  defp match_ast_node?(node) do
+    match?(%AST.Tag{}, node) or match?(%AST.If{}, node) or match?(%AST.For{}, node)
+  end
 
   defp convert_node_to_ast(:comment, {_, _comment, %{visibility: :private}}, _), do: :ignore
 
