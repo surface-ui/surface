@@ -272,8 +272,6 @@ defmodule Surface.Compiler do
             the directive `:#{format_directive_name(directive.name)}` has been passed multiple times. Considering only the last value.
 
             Hint: remove all redundant definitions.
-
-            See the directives are supported: https://surface-ui.org/template_syntax#directives
             """
 
             IOHelper.warn(message, meta.caller, meta.file, meta.line)
