@@ -771,6 +771,8 @@ defmodule Surface.CompilerSyncTest do
 
            Hint: remove all redundant definitions.
 
+           See the directives are supported: https://surface-ui.org/template_syntax#directives
+
              nofile:3:\
            """
 
@@ -792,6 +794,8 @@ defmodule Surface.CompilerSyncTest do
            the directive `:if` has been passed multiple times. Considering only the last value.
 
            Hint: remove all redundant definitions.
+
+           See the directives are supported: https://surface-ui.org/template_syntax#directives
 
              nofile:3:\
            """
