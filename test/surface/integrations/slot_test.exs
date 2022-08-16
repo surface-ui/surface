@@ -1513,7 +1513,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1544,7 +1544,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1637,6 +1637,57 @@ defmodule Surface.SlotSyncTest do
       end)
 
     assert output =~ "option :args has been deprecated. Use :arg instead."
+  end
+
+  test "outputs compile warning when using deprecated :args directive" do
+    component_code = """
+    defmodule UsingDeprecatedArgsDirective do
+      use Surface.Component
+
+      slot default, args: [:info]
+
+      def render(assigns) do
+        ~F"\""
+        <#slot :args={arg: "slot argument"} />
+        "\""
+      end
+    end
+    """
+
+    component_output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "component.exs", line: 1})
+
+        code =
+          quote do
+            ~F"""
+            <Surface.SlotSyncTest.UsingDeprecatedArgsDirective :let={arg: arg}>
+              {arg}
+            </Surface.SlotSyncTest.UsingDeprecatedArgsDirective>
+            """
+          end
+
+        usage_output =
+          capture_io(:standard_error, fn ->
+            module = compile_surface(code)
+
+            html =
+              module.render(%{__context__: %{}})
+              |> Phoenix.HTML.Safe.to_iodata()
+              |> IO.iodata_to_binary()
+
+            assert html == """
+
+                     slot argument
+
+
+                   """
+          end)
+
+        assert usage_output == ""
+      end)
+
+    assert component_output =~ "directive :args has been deprecated. Use arg instead.\n  component.exs:8"
   end
 
   test "outputs compile warning when adding arg attribute to the default slot in a slotable component" do
