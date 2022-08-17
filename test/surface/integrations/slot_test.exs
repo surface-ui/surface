@@ -1690,6 +1690,44 @@ defmodule Surface.SlotSyncTest do
     assert component_output =~ "directive :args has been deprecated. Use arg instead.\n  component.exs:8"
   end
 
+  test "outputs compile warning when using deprecated :args generator option" do
+    component_code = """
+    defmodule UsingDeprecatedGenerator do
+      use Surface.Component
+
+      prop items, :list, root: true
+      slot default, args: [item: ^items]
+
+      def render(assigns) do
+        ~F"\""
+        {#for item <- @items}
+          <#slot :args={item: item} />
+        {/for}
+        "\""
+      end
+    end
+    """
+
+    message = """
+    component.exs:5: The API for generators has changed. Use `generator_prop: :items` instead of `args: [item: ^items]`.
+
+    Example:
+
+      prop items, :generator, root: true
+      slot default, generator_prop: :items
+
+      ...
+
+      {#for item <- @items}
+        <#slot generator_value={item} />
+      {/for}
+    """
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "component.exs", line: 1})
+    end)
+  end
+
   test "outputs compile warning when adding arg attribute to the default slot in a slotable component" do
     component_code = """
     defmodule ColumnWithRenderAndSlotArg do
