@@ -1092,8 +1092,8 @@ defmodule Surface.CompilerSyncTest do
         ~F"\""
         <div>
           <#slot>Default Content</#slot>
-          <#slot for={@header}>Default Header</#slot>
-          <#slot for={@footer}>Default Footer</#slot>
+          <#slot {@header}>Default Header</#slot>
+          <#slot {@footer}>Default Footer</#slot>
         </div>
         "\""
       end
@@ -1133,13 +1133,13 @@ defmodule Surface.CompilerSyncTest do
 
              slot header
              ...
-             <#slot for={@header}>Fallback content</#slot>
+             <#slot {@header}>Fallback content</#slot>
 
            or keep the slot as required and remove the fallback content:
 
              slot header, required: true`
              ...
-             <#slot for={@header} />
+             <#slot {@header} />
 
            but not both.
 

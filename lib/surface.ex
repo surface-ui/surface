@@ -351,7 +351,7 @@ defmodule Surface do
 
     ```
     <div :if={slot_assigned?(:header)}>
-      <#slot for={@header}/>
+      <#slot {@header}/>
     </div>
     ```
   """

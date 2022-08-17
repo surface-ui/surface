@@ -80,7 +80,7 @@ defmodule Surface.Components.ContextTest do
       ~F"""
       <Context put={field: "field from OuterWithNamedSlots"}>
         <span :for={slot <- @my_slot}>
-          <#slot for={slot} />
+          <#slot {slot} />
         </span>
       </Context>
       """

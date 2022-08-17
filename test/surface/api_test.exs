@@ -564,9 +564,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot for={@header}/>
+        <#slot {@header}/>
         <#slot/>
-        <#slot for={@footer}/>
+        <#slot {@footer}/>
       </div>
       """
     end
@@ -582,9 +582,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot for={@header}/>
+        <#slot {@header}/>
         <#slot/>
-        <#slot for={@footer}/>
+        <#slot {@footer}/>
       </div>
       """
     end

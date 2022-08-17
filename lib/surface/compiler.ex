@@ -43,7 +43,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props ["for", "name", "index", "arg", "generator_value", ":args"]
+  @valid_slot_props [:root, "for", "name", "index", "arg", "generator_value", ":args"]
 
   @directive_prefixes [":", "s-"]
 
@@ -497,22 +497,32 @@ defmodule Surface.Compiler do
 
     # TODO: Validate attributes with custom messages
 
-    has_for? = has_attribute?(attributes, "for")
-
-    name = attribute_value_as_atom(attributes, "name", nil) || extract_name_from_for(attributes)
+    has_root? = has_attribute?(attributes, :root)
+    has_for? = !has_root? and has_attribute?(attributes, "for")
 
     name =
-      if !name and !has_for? do
+      extract_name_from_root(attributes) || attribute_value_as_atom(attributes, "name", nil) ||
+        extract_name_from_for(attributes)
+
+    name =
+      if !name and !has_for? and !has_root? do
         :default
       else
         name
       end
 
-    default_syntax? = not has_attribute?(attributes, "name") && not has_for?
+    default_syntax? = not has_attribute?(attributes, "name") && not has_for? && not has_root?
 
     for_ast =
-      if has_for? do
-        attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+      cond do
+        has_for? ->
+          attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+
+        has_root? ->
+          attribute_value_as_ast(attributes, :root, :any, %Surface.AST.Literal{value: nil}, compile_meta)
+
+        true ->
+          nil
       end
 
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
@@ -807,6 +817,20 @@ defmodule Surface.Compiler do
 
   defp extract_name_from_for(attributes) do
     with value when is_binary(value) <- attribute_raw_value(attributes, "for", nil),
+         {:ok, {:@, _, [{assign_name, _, _}]}} when is_atom(assign_name) <- Code.string_to_quoted(value) do
+      assign_name
+    else
+      {:error, _} ->
+        # TODO: raise
+        nil
+
+      _ ->
+        nil
+    end
+  end
+
+  defp extract_name_from_root(attributes) do
+    with value when is_binary(value) <- attribute_raw_value(attributes, :root, nil),
          {:ok, {:@, _, [{assign_name, _, _}]}} when is_atom(assign_name) <- Code.string_to_quoted(value) do
       assign_name
     else
@@ -1200,7 +1224,7 @@ defmodule Surface.Compiler do
 
   defp maybe_warn_required_slot_with_default_value(slot, _, for_ast, meta) do
     if Keyword.get(slot.opts, :required, false) do
-      slot_for_tag = if for_ast == nil, do: "", else: " for={#{for_ast.original}}"
+      slot_for_tag = if for_ast == nil, do: "", else: " {#{for_ast.original}}"
 
       message = """
       setting the fallback content on a required slot has no effect.
@@ -1326,18 +1350,39 @@ defmodule Surface.Compiler do
     Enum.each(attrs, &validate_slot_attr!(&1, caller))
   end
 
-  defp validate_slot_attr!({"name", value, meta}, caller) do
+  defp validate_slot_attr!({"for", value, _meta}, caller) do
+    {:attribute_expr, expr, expr_meta} = value
+
     message = """
-    properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
+    property `for` has been deprecated. Please use the root prop instead. Examples:
 
     Rendering the slot:
 
-      <#slot for={@#{value}}/>
+      <#slot {#{expr}}/>
+
+    Iterating over the slot items:
+
+      {#for item <- #{expr}}
+        <#slot {item}/>
+      {/for}
+    """
+
+    Surface.IOHelper.warn(message, caller, expr_meta.line)
+    :ok
+  end
+
+  defp validate_slot_attr!({"name", value, meta}, caller) do
+    message = """
+    properties `name` and `index` have been deprecated. Please use root prop instead. Examples:
+
+    Rendering the slot:
+
+      <#slot {@#{value}}/>
 
     Iterating over the slot items:
 
       {#for item <- @#{value}}
-        <#slot for={item}/>
+        <#slot {item}/>
       {/for}
     """
 
@@ -1348,16 +1393,16 @@ defmodule Surface.Compiler do
 
   defp validate_slot_attr!({"index", _value, meta}, caller) do
     message = """
-    properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
+    properties `name` and `index` have been deprecated. Please use root prop instead. Examples:
 
     Rendering the slot:
 
-      <#slot for={@slot_name}/>
+      <#slot {@slot_name}/>
 
     Iterating over the slot items:
 
       {#for item <- @slot_name}
-        <#slot for={item}/>
+        <#slot {item}/>
       {/for}
     """
 
@@ -1380,7 +1425,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

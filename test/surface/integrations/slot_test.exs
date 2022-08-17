@@ -31,7 +31,7 @@ defmodule Surface.SlotTest do
       ~F"""
       <div>
         <div :for={data <- @inner}>
-          {data.label}: <#slot for={data} />
+          {data.label}: <#slot {data} />
         </div>
         <div>
           <#slot />
@@ -51,11 +51,11 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot for={@header}/>
+        <#slot {@header}/>
         <#slot>
           Default fallback
         </#slot>
-        <#slot for={@footer}>
+        <#slot {@footer}>
           Footer fallback
         </#slot>
       </div>
@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot for={@body} arg={info: "Info from slot"}/>
+        <#slot {@body} arg={info: "Info from slot"}/>
       </div>
       """
     end
@@ -157,7 +157,7 @@ defmodule Surface.SlotTest do
       ~F"""
       <div>
         <header :if={slot_assigned?(@header)}>
-          <#slot for={@header}/>
+          <#slot {@header}/>
         </header>
         <main :if={slot_assigned?(:default)}>
           <#slot>
@@ -165,7 +165,7 @@ defmodule Surface.SlotTest do
           </#slot>
         </main>
         <footer>
-        <#slot for={@footer}>
+        <#slot {@footer}>
           Footer fallback
         </#slot>
         </footer>
@@ -184,7 +184,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot for={@default_header} />
+        <#slot {@default_header} />
         {@header}
       </div>
       """
@@ -275,7 +275,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={col <- @cols}>
-            <#slot for={col} arg={info: info} arg={info: info} generator_value={item} />
+            <#slot {col} arg={info: info} generator_value={item} />
           </td>
         </tr>
       </table>
@@ -1322,9 +1322,9 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
           <div>
-            <#slot for={@header}/>
+            <#slot {@header}/>
             <#slot />
-            <#slot for={@footer} />
+            <#slot {@footer} />
           </div>
         "\""
       end
@@ -1389,11 +1389,11 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
           <div>
             <header :if={slot_assigned?(:heade)}>
-              <#slot for={@header}/>
+              <#slot {@header}/>
             </header>
             <#slot />
             <footer>
-              <#slot for={@footer} />
+              <#slot {@footer} />
             </footer>
           </div>
         "\""
@@ -1429,11 +1429,11 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
           <div>
             <header :if={slot_assigned?(@heade)}>
-              <#slot for={@header}/>
+              <#slot {@header}/>
             </header>
             <#slot />
             <footer>
-              <#slot for={@footer} />
+              <#slot {@footer} />
             </footer>
           </div>
         "\""
@@ -1513,7 +1513,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1532,7 +1532,7 @@ defmodule Surface.SlotSyncTest do
         ~F"\""
         <br>
         <#slot
-          for={@default}
+          {@default}
           let={info: info}
           :show={true}
           />
@@ -1544,7 +1544,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1574,7 +1574,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1604,7 +1604,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1612,6 +1612,41 @@ defmodule Surface.SlotSyncTest do
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
     end)
+  end
+
+  test "outputs compile warning when using deprecated for property" do
+    component_code = """
+    defmodule UsingDeprecatedArgsOption do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <#slot for={@default} />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           property `for` has been deprecated. Please use the root prop instead. Examples:
+
+           Rendering the slot:
+
+             <#slot {@default}/>
+
+           Iterating over the slot items:
+
+             {#for item <- @default}
+               <#slot {item}/>
+             {/for}
+           """
   end
 
   test "outputs compile warning when using deprecated args option" do
