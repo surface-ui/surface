@@ -481,10 +481,6 @@ defmodule Surface.API do
     IOHelper.warn(message, caller)
   end
 
-  defp validate_opt_ast!(:slot, :arg, arg_ast, _caller) do
-    arg_ast
-  end
-
   defp validate_opt_ast!(_func, _key, value, _caller) do
     value
   end

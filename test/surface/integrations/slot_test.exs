@@ -71,7 +71,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot {@body} arg={info: "Info from slot"}/>
+        <#slot {@body, info: "Info from slot"} />
       </div>
       """
     end
@@ -85,7 +85,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot arg={info: "Info from slot"}/>
+        <#slot {@default, info: "Info from slot"}/>
       </div>
       """
     end
@@ -99,7 +99,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot arg="Info from slot" />
+        <#slot {@default, "Info from slot"} />
       </div>
       """
     end
@@ -113,7 +113,7 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot arg={[name: "Jane", name: "Joe"]}/>
+        <#slot {@default, [name: "Jane", name: "Joe"]}/>
       </div>
       """
     end
@@ -275,7 +275,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={col <- @cols}>
-            <#slot {col} arg={info: info} generator_value={item} />
+            <#slot {col, info: info} generator_value={item} />
           </td>
         </tr>
       </table>
@@ -1057,14 +1057,14 @@ defmodule Surface.SlotTest do
       quote do
         ~F"""
           <#slot
-            arg={a, b} />
+            {@default, a, b} />
         """
       end
 
     message = """
-    code:2: invalid value for attribute "arg". \
-    Expected a single expression to be given as the slot argument, \
-    got: {a, b}.\
+    code:2: invalid value for attribute "root". \
+    Expected the slot and a single expression to be given as the slot argument, \
+    got: {@default, a, b}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1077,14 +1077,14 @@ defmodule Surface.SlotTest do
       quote do
         ~F"""
           <#slot
-            arg={a, info: "Info from slot"} />
+            {@default, a, info: "Info from slot"} />
         """
       end
 
     message = """
-    code:2: invalid value for attribute "arg". \
-    Expected a single expression to be given as the slot argument, \
-    got: {a, info: "Info from slot"}.\
+    code:2: invalid value for attribute "root". \
+    Expected the slot and a single expression to be given as the slot argument, \
+    got: {@default, a, info: "Info from slot"}.\
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1513,7 +1513,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1544,7 +1544,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1574,7 +1574,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1604,7 +1604,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: cannot pass dynamic attributes to <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1659,7 +1659,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot arg={info: "this is a test"} />
+          <#slot {@default, info: "this is a test"} />
         </span>
         "\""
       end
@@ -1722,7 +1722,7 @@ defmodule Surface.SlotSyncTest do
         assert usage_output == ""
       end)
 
-    assert component_output =~ "directive :args has been deprecated. Use arg instead.\n  component.exs:8"
+    assert component_output =~ "directive :args has been deprecated. Use the root prop instead.\n  component.exs:8"
   end
 
   test "outputs compile warning when using deprecated :args generator option" do
@@ -1775,7 +1775,7 @@ defmodule Surface.SlotSyncTest do
       def render(assigns) do
         ~F"\""
         <span class="fancy-column">
-          <#slot arg={info: "this is a test"} />
+          <#slot {@default, info: "this is a test"} />
         </span>
         "\""
       end

@@ -43,7 +43,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props [:root, "for", "name", "index", "arg", "generator_value", ":args"]
+  @valid_slot_props [:root, "for", "name", "index", "generator_value", ":args"]
 
   @directive_prefixes [":", "s-"]
 
@@ -513,13 +513,18 @@ defmodule Surface.Compiler do
 
     default_syntax? = not has_attribute?(attributes, "name") && not has_for? && not has_root?
 
+    render_slot_args =
+      if has_root? do
+        attribute_value_as_ast(attributes, :root, :render_slot, %Surface.AST.Literal{value: nil}, compile_meta)
+      end
+
     for_ast =
       cond do
         has_for? ->
           attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
 
         has_root? ->
-          attribute_value_as_ast(attributes, :root, :any, %Surface.AST.Literal{value: nil}, compile_meta)
+          render_slot_args.slot
 
         true ->
           nil
@@ -536,13 +541,17 @@ defmodule Surface.Compiler do
       end)
 
     if has_attribute?(attributes, ":args") do
-      Surface.IOHelper.warn("directive :args has been deprecated. Use arg instead.", meta.caller, meta.line)
+      Surface.IOHelper.warn(
+        "directive :args has been deprecated. Use the root prop instead.",
+        meta.caller,
+        meta.line
+      )
     end
 
     arg =
       cond do
-        has_attribute?(attributes, "arg") ->
-          attribute_value_as_ast(attributes, "arg", :let_arg, %Surface.AST.Literal{value: nil}, compile_meta)
+        has_root? ->
+          render_slot_args.argument
 
         has_attribute?(attributes, ":args") ->
           attribute_value_as_ast(attributes, ":args", :let_arg, %Surface.AST.Literal{value: nil}, compile_meta)
@@ -854,7 +863,16 @@ defmodule Surface.Compiler do
         expr_meta = Helpers.to_meta(expr_meta, meta)
         expr = Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta)
 
-        AST.AttributeExpr.new(expr, value, expr_meta)
+        if type == :render_slot do
+          %{slot: slot, argument: argument} = expr
+
+          %{
+            slot: AST.AttributeExpr.new(slot, value, expr_meta),
+            argument: AST.AttributeExpr.new(argument, value, expr_meta)
+          }
+        else
+          AST.AttributeExpr.new(expr, value, expr_meta)
+        end
 
       {^attr_name, value, attr_meta} ->
         attr_meta = Helpers.to_meta(attr_meta, meta)
@@ -1425,7 +1443,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `arg`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

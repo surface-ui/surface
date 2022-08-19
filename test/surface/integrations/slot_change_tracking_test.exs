@@ -13,7 +13,7 @@ defmodule Surface.SlotChangeTrackingTest do
 
     def render(assigns) do
       ~F"""
-      <div><#slot arg={param: "Param from Outer"}/></div>
+      <div><#slot {@default, param: "Param from Outer"}/></div>
       """
     end
   end
@@ -55,7 +55,7 @@ defmodule Surface.SlotChangeTrackingTest do
       ~F"""
       <div>
         Value in the Counter: {@value}
-        <#slot arg={value: @value}/>
+        <#slot {@default, value: @value}/>
         <button id="incButton" :on-click="inc">+</button>
       </div>
       """

@@ -402,5 +402,6 @@ defmodule Surface.TypeHandler do
   defp handler(:hook), do: __MODULE__.Hook
   defp handler(:dynamic), do: __MODULE__.Dynamic
   defp handler(:let_arg), do: __MODULE__.LetArg
+  defp handler(:render_slot), do: __MODULE__.RenderSlot
   defp handler(_), do: __MODULE__.Default
 end
