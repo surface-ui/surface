@@ -937,6 +937,39 @@ defmodule Surface.PropertiesSyncTest do
            """
   end
 
+  test "warn if generator_value property is missing" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithDefaultValueThatDoesntExistInValues_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      prop labels, :generator, root: true
+      slot default, generator_prop: :labels
+
+      def render(assigns) do
+        ~F"\""
+        {#for label <- @labels}
+          {label}
+          <#slot />
+        {/for}
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           `generator_value` is missing for slot `default`
+             code.exs:11\
+           """
+  end
+
   describe "unknown property" do
     test "warns at runtime and render the component" do
       output =

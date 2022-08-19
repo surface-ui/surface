@@ -537,7 +537,7 @@ defmodule Surface.Compiler do
 
     slot =
       Enum.find(defined_slots, fn slot ->
-        slot.name == name || slot.opts[:as] == name
+        slot.name == name || (Keyword.has_key?(slot.opts, :as) and slot.opts[:as] == name)
       end)
 
     if has_attribute?(attributes, ":args") do
@@ -582,8 +582,27 @@ defmodule Surface.Compiler do
     end
 
     generator_value =
-      if has_attribute?(attributes, "generator_value") do
-        attribute_value_as_ast(attributes, "generator_value", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+      cond do
+        has_attribute?(attributes, "generator_value") ->
+          attribute_value_as_ast(
+            attributes,
+            "generator_value",
+            :any,
+            %Surface.AST.Literal{value: nil},
+            compile_meta
+          )
+
+        slot && Keyword.has_key?(slot.opts, :generator_prop) ->
+          Surface.IOHelper.warn(
+            "`generator_value` is missing for slot `#{slot.name}`",
+            meta.caller,
+            meta.line
+          )
+
+          nil
+
+        true ->
+          nil
       end
 
     {:ok,
@@ -840,7 +859,8 @@ defmodule Surface.Compiler do
 
   defp extract_name_from_root(attributes) do
     with value when is_binary(value) <- attribute_raw_value(attributes, :root, nil),
-         {:ok, {:@, _, [{assign_name, _, _}]}} when is_atom(assign_name) <- Code.string_to_quoted(value) do
+         {:ok, [{:@, _, [{assign_name, _, _}]} | _rest]} <-
+           Code.string_to_quoted("[#{value}]") do
       assign_name
     else
       {:error, _} ->
