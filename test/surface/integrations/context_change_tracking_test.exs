@@ -89,6 +89,8 @@ defmodule Surface.ContextChangeTrackingTest do
     assert_receive {:updated, "1"}
 
     # TODO: Components not using the context assigns should not be updated
+    #       See test/surface/integrations/lv_change_tracking_test.exs
+    #
     # refute_receive {:updated, "2"}
     refute_receive {:updated, "3"}
     refute_receive {:updated, "4"}

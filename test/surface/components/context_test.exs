@@ -215,6 +215,45 @@ defmodule Surface.Components.ContextTest do
       assert html =~ "field from OuterWithNamedSlots"
     end
 
+    defmodule Recursive do
+      use Surface.Component
+
+      alias Surface.Components.ContextTest
+
+      prop list, :list
+      prop count, :integer, default: 1
+
+      def render(%{list: [item | rest]} = assigns) do
+        ~F"""
+        <Context get={ContextTest.Outer, field: field}>
+          {@count}. {item} - {field}
+          <Context put={ContextTest.Outer, field: "#{field} #{@count}"}>
+            <Recursive list={rest} count={@count + 1}/>
+          </Context>
+        </Context>
+        """
+      end
+
+      def render(assigns), do: ~F""
+    end
+
+    test "context propagation in recursive components" do
+      html =
+        render_surface do
+          ~F"""
+          <Outer>
+            <Recursive list={["a", "b", "c"]}/>
+          </Outer>
+          """
+        end
+
+      assert html =~ """
+             1. a - field from Outer
+               2. b - field from Outer 1
+               3. c - field from Outer 1 2
+             """
+    end
+
     test "using form and field stored in the context" do
       alias Surface.Components.Form
 

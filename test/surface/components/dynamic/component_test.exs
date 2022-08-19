@@ -287,6 +287,41 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              """
     end
 
+    defmodule ContextComp do
+      use Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"""
+        <Context get={form: form}>
+          <Context put={field: "#{form} + field"}>
+            <#slot/>
+          </Context>
+        </Context>
+        """
+      end
+    end
+
+    test "context propagation" do
+      alias Surface.Components.Context
+
+      html =
+        render_surface do
+          ~F"""
+          <Context put={form: :fake_form}>
+            <Component module={ContextComp}>
+              <Context get={field: field}>
+                {field}
+              </Context>
+            </Component>
+          </Context>
+          """
+        end
+
+      assert html =~ "fake_form + field"
+    end
+
     test "render plain old phoenix function component" do
       html =
         render_surface do
