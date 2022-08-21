@@ -184,14 +184,15 @@ defmodule Surface.Compiler.EExEngine do
 
     parent_context_var = context_name(state.context_vars.count - 1, meta.caller)
 
+    # TODO: don't merge @__context__ if the component is not registered in :put
     context_expr =
       if is_child_component?(state) do
         quote generated: true do
-          unquote(parent_context_var)
+          Enum.reduce([unquote(parent_context_var), @__context__], &Map.merge/2)
         end
       else
         quote do
-          %{}
+          @__context__
         end
       end
 
@@ -1041,22 +1042,21 @@ defmodule Surface.Compiler.EExEngine do
     caller_is_module_component? =
       Module.get_attribute(caller.module, :component_type) && caller.function == {:render, 1}
 
-    gets_context? =
-      (function_exported?(module, :__gets_context__?, 1) and module.__gets_context__?({fun, 1})) or
-        (module == Context and AST.has_attribute?(props, :get))
+    # NOTE: Using this is not optimized as it will always assume the component propagates
+    # context into into its slots.
+    #
+    # TODO: Force using directive :propagates_context in dynamic components and remove the
+    # `dynamic_component?` condition.
+    dynamic_component? = module == nil and fun == nil
+
+    propagate_context_to_slots_set =
+      Module.get_attribute(caller.module, :propagate_context_to_slots_set) ||
+        Surface.BaseComponent.build_propagate_context_to_slots_set()
 
     changes_context? =
-      (function_exported?(module, :__changes_context__?, 1) and module.__changes_context__?({fun, 1}) and
-         module.__slots__() != []) or
-        (module == Context and AST.has_attribute?(props, :put))
-
-    if gets_context? do
-      Module.put_attribute(caller.module, :gets_context?, caller.function)
-    end
-
-    if changes_context? do
-      Module.put_attribute(caller.module, :changes_context?, caller.function)
-    end
+      MapSet.member?(propagate_context_to_slots_set, {module, fun}) or
+        (module == Context and AST.has_attribute?(props, :put)) or
+        dynamic_component?
 
     initial_context =
       if caller_is_module_component? do
@@ -1066,15 +1066,10 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     context_expr =
-      cond do
-        function_exported?(module, :__slots__?, 0) and module.__slots__() == [] and not gets_context? ->
-          quote do: %{}
-
-        state.context_vars.changed != [] && gets_context? ->
-          quote do: Enum.reduce([unquote_splicing(state.context_vars.changed ++ [initial_context])], &Map.merge/2)
-
-        true ->
-          initial_context
+      if state.context_vars.changed != [] do
+        quote do: Enum.reduce([unquote_splicing(state.context_vars.changed ++ [initial_context])], &Map.merge/2)
+      else
+        initial_context
       end
 
     context_var = context_name(state.context_vars.count, caller)

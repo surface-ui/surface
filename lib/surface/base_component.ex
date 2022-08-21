@@ -62,7 +62,19 @@ defmodule Surface.BaseComponent do
       end
 
       @external_resource unquote(css_file)
+
+      @propagate_context_to_slots_set unquote(__MODULE__).build_propagate_context_to_slots_set()
     end
+  end
+
+  @doc false
+  def build_propagate_context_to_slots_set() do
+    Application.get_env(:surface, :propagate_context_to_slots, [])
+    |> Enum.map(fn
+      {mod, fun} -> {mod, fun}
+      mod -> {mod, :render}
+    end)
+    |> MapSet.new()
   end
 
   @doc false

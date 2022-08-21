@@ -1,6 +1,8 @@
 defmodule Surface.ContextThroughSlotTest do
   use Surface.ConnCase, async: true
 
+  register_context_propagation([__MODULE__.Parent])
+
   defmodule Parent.ContextProvider do
     use Surface.Component
 
@@ -8,11 +10,8 @@ defmodule Surface.ContextThroughSlotTest do
     slot default
 
     def render(assigns) do
-      ~F"""
-      <Context put={foo: @foo}>
-        <#slot />
-      </Context>
-      """
+      assigns = Context.put(assigns, foo: assigns.foo)
+      ~F[<#slot />]
     end
   end
 

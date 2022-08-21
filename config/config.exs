@@ -4,6 +4,13 @@ import Config
 
 config :phoenix, :json_library, Jason
 
+config :surface, :propagate_context_to_slots, [
+  Surface.Components.Form,
+  Surface.Components.Form.Field,
+  Surface.Components.Form.FieldContext,
+  Surface.Components.Form.Inputs
+]
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

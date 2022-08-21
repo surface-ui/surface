@@ -3,6 +3,14 @@ defmodule Surface.Components.ContextTest do
 
   alias Surface.Components.Context
   alias Surface.ContextTest.Components.ComponentWithExternalTemplateUsingContext
+  alias Phoenix.LiveView.Socket
+
+  import ExUnit.CaptureIO
+
+  register_context_propagation([
+    __MODULE__.Outer,
+    __MODULE__.OuterWithNamedSlots
+  ])
 
   defmodule Outer do
     use Surface.Component
@@ -100,6 +108,78 @@ defmodule Surface.Components.ContextTest do
         </Field>
       </Inputs>
       """
+    end
+  end
+
+  describe "put/3 and get/3" do
+    test "puts/gets values to/from the socket's context" do
+      socket = %Socket{}
+      socket = Context.put(socket, value1: 1, value2: 2)
+
+      assert Context.get(socket, :value1) == 1
+      assert Context.get(socket, :value2) == 2
+    end
+
+    test "puts/gets values to/from the socket's context with scope" do
+      socket = %Socket{}
+      socket = Context.put(socket, SomeScope, value1: 1, value2: 2)
+
+      assert Context.get(socket, SomeScope, :value1) == 1
+      assert Context.get(socket, SomeScope, :value2) == 2
+    end
+
+    test "puts/gets values to/from the assigns's context" do
+      assigns = %{__changed__: %{}}
+      assigns = Context.put(assigns, value1: 1, value2: 2)
+
+      assert Context.get(assigns, :value1) == 1
+      assert Context.get(assigns, :value2) == 2
+    end
+
+    test "puts/gets values to/from the assigns's context with scope" do
+      assigns = %{__changed__: %{}}
+      assigns = Context.put(assigns, SomeScope, value1: 1, value2: 2)
+
+      assert Context.get(assigns, SomeScope, :value1) == 1
+      assert Context.get(assigns, SomeScope, :value2) == 2
+    end
+
+    test "values in different scopes don't conflict (socket)" do
+      socket = %Socket{}
+      socket = Context.put(socket, value: 1)
+      socket = Context.put(socket, SomeScope, value: 2)
+      socket = Context.put(socket, OtherScope, value: 3)
+
+      assert Context.get(socket, :value) == 1
+      assert Context.get(socket, SomeScope, :value) == 2
+      assert Context.get(socket, OtherScope, :value) == 3
+    end
+
+    test "values in different scopes don't conflict (assigns)" do
+      assigns = %{__changed__: %{}}
+      assigns = Context.put(assigns, value: 1)
+      assigns = Context.put(assigns, SomeScope, value: 2)
+      assigns = Context.put(assigns, OtherScope, value: 3)
+
+      assert Context.get(assigns, :value) == 1
+      assert Context.get(assigns, SomeScope, :value) == 2
+      assert Context.get(assigns, OtherScope, :value) == 3
+    end
+
+    test "put/3 throws ArgumentError argument error if the subject is not a socket/assigns" do
+      msg = "put/3 expects a socket or an assigns map from a function component as first argument, got: %{}"
+
+      assert_raise ArgumentError, msg, fn ->
+        Context.put(%{}, SomeScope, value: 1)
+      end
+    end
+
+    test "get/3 throws ArgumentError if the subject is not a socket/assigns" do
+      msg = "get/3 expects a socket or an assigns map from a function component as first argument, got: %{}"
+
+      assert_raise ArgumentError, msg, fn ->
+        Context.get(%{}, SomeScope, :value1)
+      end
     end
   end
 
@@ -478,5 +558,45 @@ defmodule Surface.Components.ContextTest do
       assert Phoenix.View.render_to_string(DeadViewNamedSlots, "index.html", []) =~
                "field from OuterWithNamedSlots"
     end
+  end
+
+  test "warn on <Context put={expr}> where `expr` is not a literal nor has any variable" do
+    code =
+      quote do
+        ~F"""
+        <div>
+          {#if var = 1}
+            <Context
+              put={var: var}
+              put={__MODULE__, var: var}
+              put={literal: "literal"}
+              put={__MODULE__, literal: "literal"}
+              put={assign: @assign}
+            >
+              "Hello"
+            </Context>
+          {/if}
+        </div>
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
+
+    assert output =~ ~r"""
+           using <Context put=\{...\}> to store values that don't depend on variables is not recommended.
+
+           Hint: If the values you're storing in the context depend only on the component's assigns, use `Context.put/3` instead.
+
+           # On live components or live views
+           socket = Context.put\(socket, timezone: "UTC"\)
+
+           # On components
+           assigns = Context.put\(assigns, timezone: "UTC"\)
+
+             code:8:\
+           """
   end
 end
