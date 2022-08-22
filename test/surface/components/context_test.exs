@@ -748,9 +748,7 @@ defmodule Surface.Components.ContextTest do
           {#if var = 1}
             <Context
               put={var: var}
-              put={__MODULE__, var: var}
               put={literal: "literal"}
-              put={__MODULE__, literal: "literal"}
               put={assign: @assign}
             >
               "Hello"
@@ -776,7 +774,45 @@ defmodule Surface.Components.ContextTest do
            # On components
            assigns = Context.put\(assigns, timezone: "UTC"\)
 
-             code:8:\
+             code:6:\
+           """
+  end
+
+  test "warn on <Context put={scope, expr}> where `expr` is not a literal nor has any variable" do
+    code =
+      quote do
+        ~F"""
+        <div>
+          {#if var = 1}
+            <Context
+              put={__MODULE__, var: var}
+              put={__MODULE__, literal: "literal"}
+              put={__MODULE__, assign: @assign}
+            >
+              "Hello"
+            </Context>
+          {/if}
+        </div>
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
+
+    assert output =~ ~r"""
+           using <Context put=\{...\}> to store values that don't depend on variables is not recommended.
+
+           Hint: If the values you're storing in the context depend only on the component's assigns, use `Context.put/3` instead.
+
+           # On live components or live views
+           socket = Context.put\(socket, timezone: "UTC"\)
+
+           # On components
+           assigns = Context.put\(assigns, timezone: "UTC"\)
+
+             code:6:\
            """
   end
 end

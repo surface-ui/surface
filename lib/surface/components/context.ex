@@ -344,7 +344,10 @@ defmodule Surface.Components.Context do
         {:@, _meta, _args}, acc ->
           {[], acc}
 
-        {name, _meta, ctx}, _acc when is_atom(name) and ctx in [Elixir, nil] ->
+        {name, _meta, _args}, acc when name in [:__MODULE__, :__ENV__, :__STACKTRACE__, :__DIR__] ->
+          {[], acc}
+
+        {name, _meta, ctx}, _acc when is_atom(name) and is_atom(ctx) ->
           {[], true}
 
         expr, acc ->
@@ -366,7 +369,7 @@ defmodule Surface.Components.Context do
   defp maybe_warn_on_context_put(node) do
     puts = Enum.filter(node.props, fn %{name: name} -> name == :put end)
 
-    for %AST.Attribute{value: %AST.AttributeExpr{value: expr, meta: meta}} <- puts do
+    for %AST.Attribute{value: %AST.AttributeExpr{value: {_scope, expr}, meta: meta}} <- puts do
       unless Macro.quoted_literal?(expr) or has_vars?(expr) do
         message = """
         using <Context put={...}> to store values that don't depend on variables is not recommended.
