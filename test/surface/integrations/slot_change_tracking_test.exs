@@ -9,11 +9,11 @@ defmodule Surface.SlotChangeTrackingTest do
   defmodule Outer do
     use Surface.LiveComponent
 
-    slot default, args: [:param]
+    slot default, arg: %{param: :string}
 
     def render(assigns) do
       ~F"""
-      <div><#slot :args={param: "Param from Outer"}/></div>
+      <div><#slot {@default, param: "Param from Outer"}/></div>
       """
     end
   end
@@ -47,7 +47,7 @@ defmodule Surface.SlotChangeTrackingTest do
   defmodule Counter do
     use Surface.LiveComponent
 
-    slot default, args: [:value]
+    slot default, arg: %{value: :integer}
 
     data value, :integer, default: 0
 
@@ -55,7 +55,7 @@ defmodule Surface.SlotChangeTrackingTest do
       ~F"""
       <div>
         Value in the Counter: {@value}
-        <#slot :args={value: @value}/>
+        <#slot {@default, value: @value}/>
         <button id="incButton" :on-click="inc">+</button>
       </div>
       """
@@ -78,21 +78,20 @@ defmodule Surface.SlotChangeTrackingTest do
     end
   end
 
-  # TODO: Uncomment when update to LV v0.17.6
-  # test "changing a slot arg updates any view/component using it" do
-  #   {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
+  test "changing a slot arg updates any view/component using it" do
+    {:ok, view, html} = live_isolated(build_conn(), ViewWithCounter)
 
-  #   assert html =~ "Value in the Counter: 0"
-  #   assert html =~ "Value in the View: 0"
+    assert html =~ "Value in the Counter: 0"
+    assert html =~ "Value in the View: 0"
 
-  #   html =
-  #     view
-  #     |> element("#incButton", "+")
-  #     |> render_click()
+    html =
+      view
+      |> element("#incButton", "+")
+      |> render_click()
 
-  #   assert html =~ "Value in the Counter: 1"
-  #   assert html =~ "Value in the View: 1"
-  # end
+    assert html =~ "Value in the Counter: 1"
+    assert html =~ "Value in the View: 1"
+  end
 
   test "change tracking is disabled if a child component uses a passed slot arg" do
     {:ok, view, html} =
@@ -107,7 +106,7 @@ defmodule Surface.SlotChangeTrackingTest do
 
     assert html =~ "Count: 1"
 
-    # Component using slot args should be updated
+    # Component using slot arg should be updated
     assert_receive {:updated, "1"}
 
     # Component not using the slot arg should not be updated

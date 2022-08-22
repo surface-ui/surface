@@ -213,7 +213,7 @@ defmodule Surface.Components.LinkTest do
       assert html =~ ~s[<a href="javascript:alert(<1>)">foo</a>]
     end
 
-    test "link with invalid args" do
+    test "link with invalid arg" do
       msg = "<Link /> requires a label prop or contents in the default slot"
 
       assert_raise ArgumentError, msg, fn ->

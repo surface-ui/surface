@@ -16,6 +16,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
       {:patch, "config/dev.exs", [add_tailwind_watcher_to_endpoint_config(context_app, web_module)]},
       {:patch, "assets/js/app.js", [remove_import_app_css()]},
       {:patch, "assets/css/app.css", [add_tailwind_directives()]},
+      {:delete, "assets/css/phoenix.css"},
       {:create, "tailwind/tailwind.config.js", "assets/"}
     ]
   end
@@ -166,8 +167,6 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
           @import "./phoenix.css";
           """,
           """
-          @import "./phoenix.css";
-
           @tailwind base;
           @tailwind components;
           @tailwind utilities;

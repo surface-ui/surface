@@ -54,20 +54,20 @@ defmodule Surface.LiveComponentTest do
   defmodule InfoProvider do
     use Surface.Component
 
-    slot default, args: [:info]
+    slot default, arg: %{info: :string}
 
     def render(assigns) do
       info = "Hi there!"
 
       ~F"""
       <div>
-        <#slot :args={info: info}/>
+        <#slot {@default, info: info}/>
       </div>
       """
     end
   end
 
-  defmodule InfoProviderWithoutSlotArgs do
+  defmodule InfoProviderWithoutSlotArg do
     use Surface.Component
 
     slot default
@@ -105,13 +105,13 @@ defmodule Surface.LiveComponentTest do
     end
   end
 
-  test "render content without slot args" do
+  test "render content without slot arg" do
     html =
       render_surface do
         ~F"""
-        <InfoProviderWithoutSlotArgs>
+        <InfoProviderWithoutSlotArg>
           <span>Hi there!</span>
-        </InfoProviderWithoutSlotArgs>
+        </InfoProviderWithoutSlotArg>
         """
       end
 
@@ -122,7 +122,7 @@ defmodule Surface.LiveComponentTest do
            """
   end
 
-  test "render content with slot args" do
+  test "render content with slot arg" do
     html =
       render_surface do
         ~F"""
@@ -183,9 +183,8 @@ defmodule Surface.LiveComponentTest do
     assert html =~ "Assigned in update/2"
   end
 
-  # TODO: Uncomment when update to LV v0.17.6
-  # test "handle events in LiveComponent (handled by the component itself)" do
-  #   {:ok, view, _html} = live_isolated(build_conn(), View)
-  #   assert render_click(element(view, "#theDiv")) =~ "Updated stateful"
-  # end
+  test "handle events in LiveComponent (handled by the component itself)" do
+    {:ok, view, _html} = live_isolated(build_conn(), View)
+    assert render_click(element(view, "#theDiv")) =~ "Updated stateful"
+  end
 end

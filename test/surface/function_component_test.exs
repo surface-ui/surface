@@ -64,7 +64,7 @@ defmodule Surface.FunctionComponentTest do
     """
   end
 
-  defp priv_func_with_inner_block_and_args(assigns) do
+  defp priv_func_with_inner_block_and_arg(assigns) do
     ~F"""
     <div>
       {render_slot(@inner_block, "my_item")}
@@ -100,10 +100,18 @@ defmodule Surface.FunctionComponentTest do
     """
   end
 
-  def public_func_with_inner_block_and_args(assigns) do
+  def public_func_with_inner_block_and_map_arg(assigns) do
     ~F"""
     <div>
-      {render_slot(@inner_block, item: "my_item")}
+      {render_slot(@inner_block, %{item: "my_item", count: 1})}
+    </div>
+    """
+  end
+
+  def public_func_with_inner_block_and_keyword_arg(assigns) do
+    ~F"""
+    <div>
+      {render_slot(@inner_block, item: "my_item_1", item: "my_item_2")}
     </div>
     """
   end
@@ -191,13 +199,13 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
-  test "render private function component with inner block and args" do
+  test "render private function component with inner block and arg" do
     html =
       render_surface do
         ~F"""
-        <.priv_func_with_inner_block_and_args :let={item}>
+        <.priv_func_with_inner_block_and_arg :let={item}>
           Arg: {item}
-        </.priv_func_with_inner_block_and_args>
+        </.priv_func_with_inner_block_and_arg>
         """
       end
 
@@ -291,13 +299,13 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
-  test "render public function component with inner block and args" do
+  test "render public function component with inner block and map arg" do
     html =
       render_surface do
         ~F"""
-        <Surface.FunctionComponentTest.public_func_with_inner_block_and_args :let={item: item}>
+        <Surface.FunctionComponentTest.public_func_with_inner_block_and_map_arg :let={item: item}>
           Arg: {item}
-        </Surface.FunctionComponentTest.public_func_with_inner_block_and_args>
+        </Surface.FunctionComponentTest.public_func_with_inner_block_and_map_arg>
         """
       end
 
@@ -308,16 +316,35 @@ defmodule Surface.FunctionComponentTest do
            """
   end
 
+  test "render public function component with inner block and keyword arg" do
+    html =
+      render_surface do
+        ~F"""
+        <Surface.FunctionComponentTest.public_func_with_inner_block_and_keyword_arg :let={[item: item1, item: item2]}>
+          Arg 1: {item1}
+          Arg 2: {item2}
+        </Surface.FunctionComponentTest.public_func_with_inner_block_and_keyword_arg>
+        """
+      end
+
+    assert html =~ """
+           <div>
+             Arg 1: my_item_1
+             Arg 2: my_item_2
+           </div>
+           """
+  end
+
   describe "dynamic function components" do
     alias Surface.Components.Dynamic.Component
 
-    test "render dynamic public function component with inner block and args" do
+    test "render dynamic public function component with inner block and arg" do
       html =
         render_surface do
           ~F"""
           <Component
             module={Surface.FunctionComponentTest}
-            function={:public_func_with_inner_block_and_args}
+            function={:public_func_with_inner_block_and_map_arg}
             :let={item: item}
           >
             Arg: {item}
@@ -328,6 +355,26 @@ defmodule Surface.FunctionComponentTest do
       assert html =~ """
              <div>
                Arg: my_item
+             </div>
+             """
+    end
+
+    test "render dynamic public function component with inner block and arg without :let" do
+      html =
+        render_surface do
+          ~F"""
+          <Component
+            module={Surface.FunctionComponentTest}
+            function={:public_func_with_inner_block_and_map_arg}
+          >
+            Arg
+          </Component>
+          """
+        end
+
+      assert html =~ """
+             <div>
+               Arg
              </div>
              """
     end

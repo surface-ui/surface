@@ -44,8 +44,15 @@ defmodule Surface.Catalogue.PlaygroundTest do
   test "merge default values with custom props" do
     {:ok, _view, html} = live_isolated(build_conn(), FakePlayground)
 
-    assert html =~ "color: white"
-    assert html =~ "label: My label"
-    assert html =~ "type: button"
+    assert html =~ html_escape(~S(color: "white"))
+    assert html =~ html_escape(~S(label: "My label"))
+    assert html =~ html_escape(~S(type: "button"))
+    assert html =~ html_escape(~S(map: %{info: "info"}))
+  end
+
+  defp html_escape(string) do
+    string
+    |> Phoenix.HTML.Engine.html_escape()
+    |> to_string()
   end
 end

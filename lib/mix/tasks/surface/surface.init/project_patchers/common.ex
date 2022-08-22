@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
       def project do
         [
           ...
-          compilers: [:gettext] ++ Mix.compilers() ++ [:surface],
+          compilers: Mix.compilers() ++ [:surface],
           ...
         ]
       end

@@ -87,8 +87,8 @@ defmodule Surface.Components.ContextTest do
     def render(assigns) do
       ~F"""
       <Context put={field: "field from OuterWithNamedSlots"}>
-        <span :for={{_slot, index} <- Enum.with_index(@my_slot)}>
-          <#slot name="my_slot" index={index}/>
+        <span :for={slot <- @my_slot}>
+          <#slot {slot} />
         </span>
       </Context>
       """

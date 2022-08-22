@@ -4,13 +4,14 @@ defmodule Surface.Catalogue.FakePlayground do
     catalogue: Surface.Components.FakeCatalogue
 
   @props [
-    label: "My label"
+    label: "My label",
+    map: %{info: "info"}
   ]
 
   def render(assigns) do
     ~F"""
     {#for {prop, value} <- @props}
-      {prop}: {value}
+      {prop}: {inspect(value)}
     {/for}
     """
   end

@@ -162,7 +162,8 @@ defmodule Surface.Compiler.EExEngine do
            as: slot_as,
            index: index_ast,
            for: slot_for_ast,
-           args: args_expr,
+           arg: arg_expr,
+           generator_value: generator_value_ast,
            default: default,
            meta: meta
          },
@@ -210,13 +211,19 @@ defmodule Surface.Compiler.EExEngine do
         end
       end
 
-    # TODO: map names somehow?
+    generator_value =
+      if generator_value_ast do
+        %AST.AttributeExpr{value: generator_value} = generator_value_ast
+        generator_value
+      end
+
     slot_content_expr =
-      quote generated: true do
+      quote generated: true, line: meta.line do
         Phoenix.LiveView.Helpers.render_slot(
           unquote(slot_value),
           {
-            Map.new(unquote(args_expr)),
+            unquote(if(arg_expr, do: arg_expr.value, else: nil)),
+            unquote(generator_value),
             unquote(context_expr)
           }
         )
@@ -509,15 +516,24 @@ defmodule Surface.Compiler.EExEngine do
       slot_name = if name == :default, do: :inner_block, else: name
 
       entries =
-        Enum.map(nested_slot_entries, fn {let, props, body} ->
-          let_clause = if let == [], do: quote(do: _), else: let
+        Enum.map(nested_slot_entries, fn {let, _generator, props, body, slot_entry_line} ->
+          block =
+            if let == nil do
+              body
+            else
+              quote generated: true, line: slot_entry_line do
+                unquote(let) ->
+                  unquote(body)
+
+                arg ->
+                  raise ArgumentError,
+                        "cannot match slot argument against :let. Expected a value matching #{unquote(Macro.to_string(let))}, got: `#{inspect(arg)}`."
+              end
+            end
 
           inner_block =
             quote do
-              Phoenix.LiveView.Helpers.inner_block unquote(slot_name) do
-                unquote(let_clause) ->
-                  unquote(body)
-              end
+              Phoenix.LiveView.Helpers.inner_block(unquote(slot_name), do: unquote(block))
             end
 
           props = [__slot__: slot_name, inner_block: inner_block] ++ props
@@ -555,14 +571,32 @@ defmodule Surface.Compiler.EExEngine do
 
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
       entries =
-        Enum.map(infos, fn {let, props, body} ->
+        Enum.map(infos, fn {let, generator_expr, props, body, slot_entry_line} ->
+          no_warnings_generator = no_warnings_generator!(component, generator_expr, let, slot_entry_line)
+
           block =
-            quote generated: true do
-              {
-                unquote({:%{}, [generated: true], let}),
-                unquote(context_var)
-              } ->
-                unquote(body)
+            if let == nil do
+              quote generated: true do
+                {
+                  _,
+                  unquote(no_warnings_generator),
+                  unquote(context_var)
+                } ->
+                  unquote(body)
+              end
+            else
+              quote generated: true, line: slot_entry_line do
+                {
+                  unquote(let),
+                  unquote(no_warnings_generator),
+                  unquote(context_var)
+                } ->
+                  unquote(body)
+
+                {arg, _generator, _context_var} ->
+                  raise ArgumentError,
+                        "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(let))}`, got: #{inspect(arg)}."
+              end
             end
 
           ast =
@@ -613,6 +647,7 @@ defmodule Surface.Compiler.EExEngine do
              name: name,
              props: props,
              let: let,
+             meta: meta,
              children: children
            }
            | tail
@@ -629,8 +664,8 @@ defmodule Surface.Compiler.EExEngine do
     props = collect_component_props(nil, props)
 
     [
-      {add_default_bindings(component, name, let), props,
-       handle_nested_block(children, buffer, nested_block_state)}
+      {let, generator_binding(component, name), props, handle_nested_block(children, buffer, nested_block_state),
+       meta.line}
       | handle_slot_entries(component, tail, buffer, state)
     ]
   end
@@ -641,6 +676,7 @@ defmodule Surface.Compiler.EExEngine do
       module: module,
       let: let,
       props: props,
+      meta: meta,
       slot_entries: %{default: default}
     } = slotable
 
@@ -678,37 +714,25 @@ defmodule Surface.Compiler.EExEngine do
     }
 
     [
-      {add_default_bindings(component, name, let), Keyword.merge(default_props, props),
-       handle_nested_block(slot_entry, buffer, nested_block_state)}
+      {let, generator_binding(component, name), Keyword.merge(default_props, props),
+       handle_nested_block(slot_entry, buffer, nested_block_state), meta.line}
       | handle_slot_entries(component, tail, buffer, state)
     ]
   end
 
-  defp add_default_bindings(%AST.FunctionComponent{}, _name, let) do
-    let
+  defp generator_binding(%AST.FunctionComponent{}, _name) do
+    nil
   end
 
-  defp add_default_bindings(%{module: %Surface.AST.AttributeExpr{}}, _name, let) do
-    let
+  defp generator_binding(%{module: %Surface.AST.AttributeExpr{}}, _name) do
+    nil
   end
 
-  defp add_default_bindings(%{module: module, props: props}, name, let) do
-    (module.__get_slot__(name)[:opts][:args] || [])
-    |> Enum.reject(fn
-      %{generator: nil} -> true
-      %{name: name} -> Keyword.has_key?(let, name)
-    end)
-    |> Enum.map(fn %{generator: gen, name: name} ->
-      case find_attribute_value(props, gen, nil) do
-        %AST.AttributeExpr{value: {binding, _}} ->
-          {name, binding}
-
-        _ ->
-          nil
-      end
-    end)
-    |> Enum.reject(fn value -> value == nil end)
-    |> Keyword.merge(let)
+  defp generator_binding(%{module: module, props: props}, name) do
+    with generator = Keyword.get(module.__get_slot__(name).opts, :generator_prop),
+         %AST.AttributeExpr{} = expr <- find_attribute_value(props, generator, nil) do
+      expr
+    end
   end
 
   defp find_attribute_value(attrs, name, default)
@@ -1089,5 +1113,59 @@ defmodule Surface.Compiler.EExEngine do
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
     {props_expr, dynamic_props_expr}
+  end
+
+  defp make_bindings_ast_generated(ast) do
+    Macro.prewalk(ast, [], fn
+      {var, _meta, nil} = node, acc when is_atom(var) ->
+        generated_node = Macro.update_meta(node, fn meta -> Keyword.put(meta, :generated, true) end)
+        {generated_node, [var | acc]}
+
+      node, acc ->
+        {node, acc}
+    end)
+  end
+
+  defp extract_bindings_from_ast(ast) do
+    {_, bindings} =
+      Macro.prewalk(ast, [], fn
+        {var, _meta, nil} = node, acc when is_atom(var) ->
+          {node, [var | acc]}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    bindings
+  end
+
+  defp no_warnings_generator!(_component, nil, _let, _slot_entry_line), do: nil
+
+  defp no_warnings_generator!(
+         component,
+         %AST.AttributeExpr{value: {generator, _}} = generator_expr,
+         let,
+         slot_entry_line
+       ) do
+    {no_warnings_generator, generator_bindings} = make_bindings_ast_generated(generator)
+    let_bindings = extract_bindings_from_ast(let)
+
+    duplicated_bindings = MapSet.intersection(MapSet.new(generator_bindings), MapSet.new(let_bindings))
+
+    if MapSet.size(duplicated_bindings) > 0 do
+      message = """
+      cannot use :let to redefine variable from the component's generator.
+
+      #{Surface.Compiler.Helpers.list_to_string("variable", "variables", duplicated_bindings, &"`#{&1}`")} \
+      already defined in `#{generator_expr.original}` \
+      at #{Path.relative_to_cwd(generator_expr.meta.file)}:#{generator_expr.meta.line}
+
+      Hint: choose a different name.\
+      """
+
+      IOHelper.compile_error(message, component.meta.file, slot_entry_line)
+    end
+
+    no_warnings_generator
   end
 end
