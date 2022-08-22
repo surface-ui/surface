@@ -200,16 +200,100 @@ defmodule Surface.Components.Context do
     raise ArgumentError, expects_socket_or_assigns_message("get/3", socket_or_assigns)
   end
 
+  @doc """
+  Copies a value from the context directly into `socket_or_assigns`.
+
+  The value will be saved using the same `key`.
+
+  ## Usage
+
+      Context.maybe_copy_assign(socket_or_assigns, scope, key)
+
+  """
+  def maybe_copy_assign(socket_or_assigns, scope \\ nil, key) do
+    cond do
+      get_assigns(socket_or_assigns)[key] != nil ->
+        socket_or_assigns
+
+      value = get(socket_or_assigns, scope, key) ->
+        Phoenix.LiveView.assign(socket_or_assigns, key, value)
+
+      true ->
+        socket_or_assigns
+    end
+  end
+
+  @doc """
+  Copies a value from the context directly into `socket_or_assigns`.
+
+  It raises a runtime error in case the value is still `nil` after
+  after the operation. This is useful whenever you expect a non-nil
+  value coming either explicitly passed a `prop` or inplictly through
+  the context.
+
+  The value will be saved using the same `key`.
+
+  ## Usage
+
+      Context.maybe_copy_assign!(socket_or_assigns, scope, key)
+
+  """
+  def maybe_copy_assign!(socket_or_assigns, scope \\ nil, key) do
+    socket_or_assigns = maybe_copy_assign(socket_or_assigns, scope, key)
+
+    if get_assigns(socket_or_assigns)[key] != nil do
+      socket_or_assigns
+    else
+      scope_and_key = if scope, do: "#{inspect(scope)}, #{key}", else: key
+
+      message = """
+      expected assign #{inspect(key)} to have a value, got: `nil`.
+
+      If you're expecting a value from a prop, make sure you're passing it.
+
+      ## Example
+
+          <YourComponent #{key}={...}>
+
+      If you expecting a value from the context, make sure you have used `Context.put/3` \
+      to store the value in a parent component.
+
+      ## Example
+
+          Context.put(socket_or_assigns, #{scope_and_key}: ...)
+
+      If you expecting the value to come from a parent component's slot, make sure you add \
+      the parent component to the `:propagate_context_to_slots` list in your config.
+
+      ## Example
+
+          config :surface, :propagate_context_to_slots, [
+            # For module components
+            ModuleComponentStoringTheValue,
+            # For function components
+            {FunctionComponentStoringTheValue, :func}
+            ...
+          ]
+      """
+
+      raise message
+    end
+  end
+
   defp expects_socket_or_assigns_message(fun, value) do
     "#{fun} expects a socket or an assigns map from a function component as first argument, got: #{inspect(value)}"
   end
 
-  defp get_assigns_context(%Socket{} = socket) do
-    socket.assigns[:__context__] || %{}
+  defp get_assigns_context(socket_or_assigns) do
+    get_assigns(socket_or_assigns)[:__context__] || %{}
   end
 
-  defp get_assigns_context(assigns) do
-    assigns[:__context__] || %{}
+  defp get_assigns(%Socket{} = socket) do
+    socket.assigns
+  end
+
+  defp get_assigns(assigns) do
+    assigns
   end
 
   defp context_map(context, puts, gets) do

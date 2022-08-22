@@ -4,6 +4,7 @@ import Config
 
 config :phoenix, :json_library, Jason
 
+# TODO: Move this list to the engine
 config :surface, :propagate_context_to_slots, [
   Surface.Components.Form,
   Surface.Components.Form.Field,

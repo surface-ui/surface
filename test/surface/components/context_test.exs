@@ -183,6 +183,186 @@ defmodule Surface.Components.ContextTest do
     end
   end
 
+  describe "maybe_copy_assign/3" do
+    test "copy a value from the context if it hasn't been assigned yet (socket)" do
+      socket =
+        %Socket{}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign(:field)
+
+      assert socket.assigns.form == :fake_form
+      assert socket.assigns.field == :fake_field
+    end
+
+    test "don't copy the value if it's already been assigned (socket)" do
+      socket =
+        %Socket{}
+        |> Phoenix.LiveView.assign(:form, :existing_form)
+        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Context.put(Form, form: :form_from_context)
+        |> Context.put(field: :field_from_context)
+        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign(:field)
+
+      assert socket.assigns.form == :existing_form
+      assert socket.assigns.field == :existing_field
+    end
+
+    test "copy a value from the context if it hasn't been assigned yet (assigns)" do
+      assigns =
+        %{__changed__: %{}}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign(:field)
+
+      assert assigns.form == :fake_form
+      assert assigns.field == :fake_field
+    end
+
+    test "don't copy the value if it's already been assigned (assigns)" do
+      assigns =
+        %{__changed__: %{}}
+        |> Phoenix.LiveView.assign(:form, :existing_form)
+        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Context.put(Form, form: :form_from_context)
+        |> Context.put(field: :field_from_context)
+        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign(:field)
+
+      assert assigns.form == :existing_form
+      assert assigns.field == :existing_field
+    end
+  end
+
+  describe "maybe_copy_assign!/3" do
+    test "copy a value from the context if it hasn't been assigned yet (socket)" do
+      socket =
+        %Socket{}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!(:field)
+
+      assert socket.assigns.form == :fake_form
+      assert socket.assigns.field == :fake_field
+    end
+
+    test "don't copy the value if it's already been assigned (socket)" do
+      socket =
+        %Socket{}
+        |> Phoenix.LiveView.assign(:form, :existing_form)
+        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Context.put(Form, form: :form_from_context)
+        |> Context.put(field: :field_from_context)
+        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!(:field)
+
+      assert socket.assigns.form == :existing_form
+      assert socket.assigns.field == :existing_field
+    end
+
+    test "copy a value from the context if it hasn't been assigned yet (assigns)" do
+      assigns =
+        %{__changed__: %{}}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!(:field)
+
+      assert assigns.form == :fake_form
+      assert assigns.field == :fake_field
+    end
+
+    test "don't copy the value if it's already been assigned (assigns)" do
+      assigns =
+        %{__changed__: %{}}
+        |> Phoenix.LiveView.assign(:form, :existing_form)
+        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Context.put(Form, form: :form_from_context)
+        |> Context.put(field: :field_from_context)
+        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!(:field)
+
+      assert assigns.form == :existing_form
+      assert assigns.field == :existing_field
+    end
+
+    test "raise an error if the value is still `nil` after trying to copy it (with scope)" do
+      message = """
+      expected assign :form to have a value, got: `nil`.
+
+      If you're expecting a value from a prop, make sure you're passing it.
+
+      ## Example
+
+          <YourComponent form={...}>
+
+      If you expecting a value from the context, make sure you have used `Context.put/3` \
+      to store the value in a parent component.
+
+      ## Example
+
+          Context.put(socket_or_assigns, Form, form: ...)
+
+      If you expecting the value to come from a parent component's slot, make sure you add \
+      the parent component to the `:propagate_context_to_slots` list in your config.
+
+      ## Example
+
+          config :surface, :propagate_context_to_slots, [
+            # For module components
+            ModuleComponentStoringTheValue,
+            # For function components
+            {FunctionComponentStoringTheValue, :func}
+            ...
+          ]
+      """
+
+      assert_raise(RuntimeError, message, fn ->
+        Context.maybe_copy_assign!(%Socket{}, Form, :form)
+      end)
+    end
+
+    test "raise an error if the value is still `nil` after trying to copy it (without scope)" do
+      message = """
+      expected assign :form to have a value, got: `nil`.
+
+      If you're expecting a value from a prop, make sure you're passing it.
+
+      ## Example
+
+          <YourComponent form={...}>
+
+      If you expecting a value from the context, make sure you have used `Context.put/3` \
+      to store the value in a parent component.
+
+      ## Example
+
+          Context.put(socket_or_assigns, form: ...)
+
+      If you expecting the value to come from a parent component's slot, make sure you add \
+      the parent component to the `:propagate_context_to_slots` list in your config.
+
+      ## Example
+
+          config :surface, :propagate_context_to_slots, [
+            # For module components
+            ModuleComponentStoringTheValue,
+            # For function components
+            {FunctionComponentStoringTheValue, :func}
+            ...
+          ]
+      """
+
+      assert_raise(RuntimeError, message, fn ->
+        Context.maybe_copy_assign!(%Socket{}, :form)
+      end)
+    end
+  end
+
   describe "in components" do
     test "pass context to child component" do
       html =
@@ -350,7 +530,7 @@ defmodule Surface.Components.ContextTest do
              <form action="#" method="post">
                  <input name="_csrf_token" type="hidden" value="test">
                <div>
-               <input id="parent_children_name" name="parent[children][name]" type="text">
+                 <input id="parent_children_name" name="parent[children][name]" type="text">
              </div>
              </form>
              """

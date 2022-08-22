@@ -1,6 +1,10 @@
 defmodule Surface.Components.Form.Input do
   @moduledoc false
 
+  alias Surface.Components.Context
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Field
+
   defmacro __using__(_) do
     quote do
       use Surface.Component
@@ -43,6 +47,13 @@ defmodule Surface.Components.Form.Input do
     config[component][:default_class] || config[__MODULE__][:default_class]
   end
 
+  def maybe_copy_input_assigns_from_context(assigns) do
+    assigns
+    |> Context.maybe_copy_assign(Form, :form)
+    |> Context.maybe_copy_assign(Field, :field)
+  end
+
+  # TODO: deprecate this component in favor of maybe_copy_input_assigns_from_context/1
   defmodule InputContext do
     use Surface.Component
 

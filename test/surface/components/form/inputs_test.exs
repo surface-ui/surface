@@ -45,8 +45,8 @@ defmodule Surface.Components.Form.InputsTest do
     assert html =~ """
            <form action="#" method="post">
                <input name="_csrf_token" type="hidden" value="test">
-             <input id="parent_children_name" name="parent[children][name]" type="text">
-             <input id="parent_children_email" name="parent[children][email]" type="text">
+               <input id="parent_children_name" name="parent[children][name]" type="text">
+               <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
            """
   end
@@ -90,8 +90,8 @@ defmodule Surface.Components.Form.InputsTest do
     assert html =~ """
            <form action="#" method="post">
                <input name="_csrf_token" type="hidden" value="test">
-             <input id="parent_children_name" name="parent[children][name]" type="text">
-             <input id="parent_children_email" name="parent[children][email]" type="text">
+               <input id="parent_children_name" name="parent[children][name]" type="text">
+               <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
            """
   end
@@ -112,8 +112,8 @@ defmodule Surface.Components.Form.InputsTest do
     assert html =~ """
            <form action="#" method="post">
                <input name="_csrf_token" type="hidden" value="test">
-             <input id="parent_children_name" name="custom_name[name]" type="text">
-             <input id="parent_children_email" name="custom_name[email]" type="text">
+               <input id="parent_children_name" name="custom_name[name]" type="text">
+               <input id="parent_children_email" name="custom_name[email]" type="text">
            </form>
            """
   end
@@ -137,8 +137,8 @@ defmodule Surface.Components.Form.InputsTest do
            <form action="#" method="post">
                <input name="_csrf_token" type="hidden" value="test">
              <div>
-             <input id="parent_children_name" name="parent[children][name]" type="text">
-             <input id="parent_children_email" name="parent[children][email]" type="text">
+                 <input id="parent_children_name" name="parent[children][name]" type="text">
+                 <input id="parent_children_email" name="parent[children][email]" type="text">
            </div>
            </form>
            """
@@ -160,8 +160,8 @@ defmodule Surface.Components.Form.InputsTest do
     assert html =~ """
            <form action="#" method="post">
                <input name="_csrf_token" type="hidden" value="test">
-             <input id="parent_children_name" name="parent[children][name]" type="text">
-             <input id="parent_children_email" name="parent[children][email]" type="text">
+               <input id="parent_children_name" name="parent[children][name]" type="text">
+               <input id="parent_children_email" name="parent[children][email]" type="text">
            </form>
            """
   end
