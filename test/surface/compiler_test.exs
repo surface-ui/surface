@@ -60,9 +60,9 @@ defmodule Surface.CompilerTest do
   defmodule Grid do
     use Surface.Component
 
-    prop items, :list
+    prop items, :generator
 
-    slot cols, args: [item: ^items]
+    slot cols, generator_prop: :items
 
     def render(assigns) do
       ~F"""
@@ -1092,8 +1092,8 @@ defmodule Surface.CompilerSyncTest do
         ~F"\""
         <div>
           <#slot>Default Content</#slot>
-          <#slot name="header">Default Header</#slot>
-          <#slot name="footer">Default Footer</#slot>
+          <#slot {@header}>Default Header</#slot>
+          <#slot {@footer}>Default Footer</#slot>
         </div>
         "\""
       end
@@ -1133,13 +1133,13 @@ defmodule Surface.CompilerSyncTest do
 
              slot header
              ...
-             <#slot name="header">Fallback content</#slot>
+             <#slot {@header}>Fallback content</#slot>
 
            or keep the slot as required and remove the fallback content:
 
              slot header, required: true`
              ...
-             <#slot name="header" />
+             <#slot {@header} />
 
            but not both.
 

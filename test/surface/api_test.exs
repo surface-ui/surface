@@ -347,22 +347,9 @@ defmodule Surface.APITest do
       end)
     end
 
-    test "validate slot args" do
-      code = "slot cols, args: [:info, {a, b}]"
-
-      message = ~r"""
-      invalid slot argument {a, b}. Expected an atom or a \
-      binding to a generator as `key: \^property_name`\
-      """
-
-      assert_raise(CompileError, message, fn ->
-        eval(code)
-      end)
-    end
-
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :args, :as\]/
+      message = ~r/unknown option :a. Available options: \[:required, :arg, :args, :as, :generator_prop\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -378,19 +365,19 @@ defmodule Surface.APITest do
         use Surface.Component
 
         prop label, :string
-        prop items, :list
+        prop items, :generator
 
-        slot default, args: [item: ^unknown]
+        slot default, generator_prop: :unknown
 
         def render(assigns), do: ~F()
       end
       """
 
       message = """
-      code.exs:7: cannot bind slot argument `item` to property `unknown`. \
-      Expected an existing property after `^`, got: an undefined property `unknown`.
+      code.exs:7: cannot use property `unknown` as generator for slot. \
+      Expected an existing property of type `:generator`, got: an undefined property `unknown`.
 
-      Hint: Available properties are [:label, :items]\
+      Hint: Available generators are [:items]\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -408,15 +395,17 @@ defmodule Surface.APITest do
 
         prop label, :string
 
-        slot default, args: [item: ^label]
+        slot default, generator_prop: :label
 
         def render(assigns), do: ~F()
       end
       """
 
       message = """
-      code.exs:6: cannot bind slot argument `item` to property `label`. \
-      Expected a property of type :list after `^`, got: a property of type :string\
+      code.exs:6: cannot use property `label` as generator for slot. \
+      Expected a property of type :generator, got: a property of type :string
+
+      Hint: Available generators are []\
       """
 
       assert_raise(CompileError, message, fn ->
@@ -575,9 +564,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="header"/>
+        <#slot {@header}/>
         <#slot/>
-        <#slot name="footer"/>
+        <#slot {@footer}/>
       </div>
       """
     end
@@ -593,9 +582,9 @@ defmodule Surface.APISyncTest do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="header"/>
+        <#slot {@header}/>
         <#slot/>
-        <#slot name="footer"/>
+        <#slot {@footer}/>
       </div>
       """
     end

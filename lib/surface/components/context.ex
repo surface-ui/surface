@@ -125,7 +125,7 @@ defmodule Surface.Components.Context do
         {key, Map.get(full_context, key, nil)}
       end
 
-    {props, updated_context}
+    {props, nil, updated_context}
   end
 
   defp normalize_set(nil, key, value) do
@@ -140,7 +140,7 @@ defmodule Surface.Components.Context do
     updated =
       node.slot_entries
       |> Map.get(slot_entry_name, [])
-      |> Enum.map(fn slot_entry -> %{slot_entry | let: let} end)
+      |> Enum.map(fn slot_entry -> %{slot_entry | let: {:%{}, [generated: true], let}} end)
 
     slot_entries = Map.put(node.slot_entries, slot_entry_name, updated)
 

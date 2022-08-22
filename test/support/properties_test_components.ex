@@ -23,7 +23,7 @@ defmodule Surface.PropertiesTest.Components do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="default" />
+        <#slot {@default} />
       </div>
       """
     end
@@ -57,7 +57,7 @@ defmodule Surface.PropertiesTest.Components do
     def render(assigns) do
       ~F"""
       <div>
-        <#slot name="default" />
+        <#slot {@default} />
       </div>
       """
     end
