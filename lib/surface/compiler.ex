@@ -593,13 +593,7 @@ defmodule Surface.Compiler do
           )
 
         slot && Keyword.has_key?(slot.opts, :generator_prop) ->
-          Surface.IOHelper.warn(
-            "`generator_value` is missing for slot `#{slot.name}`",
-            meta.caller,
-            meta.line
-          )
-
-          nil
+          IOHelper.compile_error("`generator_value` is missing for slot `#{slot.name}`", meta.file, meta.line)
 
         true ->
           nil

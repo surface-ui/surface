@@ -959,15 +959,11 @@ defmodule Surface.PropertiesSyncTest do
     end
     """
 
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+    message = "code.exs:11: `generator_value` is missing for slot `default`"
 
-    assert output =~ """
-           `generator_value` is missing for slot `default`
-             code.exs:11\
-           """
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   describe "unknown property" do
