@@ -287,6 +287,8 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              """
     end
 
+    register_propagate_context_to_slots([__MODULE__.ContextComp])
+
     defmodule ContextComp do
       use Surface.Component
 

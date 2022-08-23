@@ -1,7 +1,10 @@
 defmodule Surface.ContextThroughSlotTest do
   use Surface.ConnCase, async: true
 
-  register_context_propagation([__MODULE__.Parent])
+  register_propagate_context_to_slots([
+    __MODULE__.Parent,
+    __MODULE__.Parent.ContextProvider
+  ])
 
   defmodule Parent.ContextProvider do
     use Surface.Component

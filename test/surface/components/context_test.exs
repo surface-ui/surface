@@ -7,8 +7,9 @@ defmodule Surface.Components.ContextTest do
 
   import ExUnit.CaptureIO
 
-  register_context_propagation([
+  register_propagate_context_to_slots([
     __MODULE__.Outer,
+    __MODULE__.OuterUsingPropContextPut,
     __MODULE__.OuterWithNamedSlots
   ])
 
@@ -22,6 +23,18 @@ defmodule Surface.Components.ContextTest do
       <Context put={__MODULE__, field: "field from Outer"}>
         <div><#slot/></div>
       </Context>
+      """
+    end
+  end
+
+  defmodule OuterUsingPropContextPut do
+    use Surface.Component
+
+    slot default
+
+    def render(assigns) do
+      ~F"""
+      <div><#slot context_put={Surface.Components.ContextTest.Outer, field: "field from Outer"}/></div>
       """
     end
   end
@@ -371,6 +384,21 @@ defmodule Surface.Components.ContextTest do
           <Outer>
             <Inner/>
           </Outer>
+          """
+        end
+
+      assert html =~ """
+             <span id="field">field from Outer</span>\
+             """
+    end
+
+    test "pass context to child component using the put_context prop" do
+      html =
+        render_surface do
+          ~F"""
+          <OuterUsingPropContextPut>
+            <Inner/>
+          </OuterUsingPropContextPut>
           """
         end
 
@@ -763,16 +791,22 @@ defmodule Surface.Components.ContextTest do
         compile_surface(code)
       end)
 
-    assert output =~ ~r"""
-           using <Context put=\{...\}> to store values that don't depend on variables is not recommended.
+    assert output =~ """
+           using <Context put=...> without depending on any variable has been deprecated.
 
-           Hint: If the values you're storing in the context depend only on the component's assigns, use `Context.put/3` instead.
+           If you're storing values in the context only to propagate them through slots, \
+           use the `context_put` property instead.
 
-           # On live components or live views
-           socket = Context.put\(socket, timezone: "UTC"\)
+           # Example
 
-           # On components
-           assigns = Context.put\(assigns, timezone: "UTC"\)
+               <#slot context_put={assign: @assign} ... />
+
+           If the values must be available to all other child components in the template, \
+           use `Context.put/3` instead.
+
+           # Example
+
+               socket_or_assigns = Context.put(socket_or_assigns, timezone: "UTC")
 
              code:6:\
            """
@@ -801,18 +835,160 @@ defmodule Surface.Components.ContextTest do
         compile_surface(code)
       end)
 
-    assert output =~ ~r"""
-           using <Context put=\{...\}> to store values that don't depend on variables is not recommended.
+    assert output =~ """
+           using <Context put=...> without depending on any variable has been deprecated.
 
-           Hint: If the values you're storing in the context depend only on the component's assigns, use `Context.put/3` instead.
+           If you're storing values in the context only to propagate them through slots, \
+           use the `context_put` property instead.
 
-           # On live components or live views
-           socket = Context.put\(socket, timezone: "UTC"\)
+           # Example
 
-           # On components
-           assigns = Context.put\(assigns, timezone: "UTC"\)
+               <#slot context_put={__MODULE__, assign: @assign} ... />
+
+           If the values must be available to all other child components in the template, \
+           use `Context.put/3` instead.
+
+           # Example
+
+               socket_or_assigns = Context.put(socket_or_assigns, timezone: "UTC")
 
              code:6:\
+           """
+  end
+
+  test "warn on using <#slot context_put=...>" do
+    code = """
+    defmodule Elixir.Surface.Components.ContextTest.WarnOnSlotPropContextPut do
+      use Elixir.Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F[<#slot context_put={form: :fake_form}/>]
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           components propagating context values through slots must be configured \
+           as `propagate_context_to_slots: true`.
+
+           In case you don't want to propagate any value, you need to explicitly \
+           set `propagate_context_to_slots` to `false`.
+
+           # Example
+
+           config :surface, :components, [
+             {Surface.Components.ContextTest.WarnOnSlotPropContextPut, propagate_context_to_slots: true},
+             ...
+           ]
+
+           This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+           it's placed inside a parent component that propagates context values through its slots.
+
+             code.exs:7:\
+           """
+  end
+
+  test "warn on using <#slot ...> inside a <Context put=...>" do
+    code = """
+    defmodule Elixir.Surface.Components.ContextTest.WarnOnContextPut do
+      use Elixir.Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <Context put={form: :fake_form}>
+          <#slot context_put={form: :fake_form}/>]
+        </Context>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           components propagating context values through slots must be configured \
+           as `propagate_context_to_slots: true`.
+
+           In case you don't want to propagate any value, you need to explicitly \
+           set `propagate_context_to_slots` to `false`.
+
+           # Example
+
+           config :surface, :components, [
+             {Surface.Components.ContextTest.WarnOnContextPut, propagate_context_to_slots: true},
+             ...
+           ]
+
+           This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+           it's placed inside a parent component that propagates context values through its slots.
+
+           Current parent components propagating context values:
+
+               * `Surface.Components.Context` at line 8
+
+             code.exs:9:\
+           """
+  end
+
+  test "warn on using <#slot ...> inside components that propagate context through slots" do
+    code = """
+    defmodule Elixir.Surface.Components.ContextTest.WarnOnSlotInsideComponentPropagating do
+      use Elixir.Surface.Component
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <Outer>
+          <OuterUsingPropContextPut>
+            <#slot context_put={form: :fake_form}/>]
+          </OuterUsingPropContextPut>
+        </Outer>
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    assert output =~ """
+           components propagating context values through slots must be configured \
+           as `propagate_context_to_slots: true`.
+
+           In case you don't want to propagate any value, you need to explicitly \
+           set `propagate_context_to_slots` to `false`.
+
+           # Example
+
+           config :surface, :components, [
+             {Surface.Components.ContextTest.WarnOnSlotInsideComponentPropagating, propagate_context_to_slots: true},
+             ...
+           ]
+
+           This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+           it's placed inside a parent component that propagates context values through its slots.
+
+           Current parent components propagating context values:
+
+               * `Surface.Components.ContextTest.Outer` at line 8
+               * `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
+
+             code.exs:10:\
            """
   end
 end

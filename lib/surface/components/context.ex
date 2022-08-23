@@ -319,11 +319,12 @@ defmodule Surface.Components.Context do
     {props, nil, updated_context}
   end
 
-  defp normalize_key(nil, key) do
+  @doc false
+  def normalize_key(nil, key) do
     key
   end
 
-  defp normalize_key(scope, key) do
+  def normalize_key(scope, key) do
     {scope, key}
   end
 
@@ -369,19 +370,24 @@ defmodule Surface.Components.Context do
   defp maybe_warn_on_context_put(node) do
     puts = Enum.filter(node.props, fn %{name: name} -> name == :put end)
 
-    for %AST.Attribute{value: %AST.AttributeExpr{value: {_scope, expr}, meta: meta}} <- puts do
+    for %AST.Attribute{value: %AST.AttributeExpr{value: {_scope, expr}, meta: meta, original: original}} <- puts do
       unless Macro.quoted_literal?(expr) or has_vars?(expr) do
         message = """
-        using <Context put={...}> to store values that don't depend on variables is not recommended.
+        using <Context put=...> without depending on any variable has been deprecated.
 
-        Hint: If the values you're storing in the context depend only on the component's assigns, \
+        If you're storing values in the context only to propagate them through slots, \
+        use the `context_put` property instead.
+
+        # Example
+
+            <#slot context_put={#{original}} ... />
+
+        If the values must be available to all other child components in the template, \
         use `Context.put/3` instead.
 
-        # On live components or live views
-        socket = Context.put(socket, timezone: "UTC")
+        # Example
 
-        # On components
-        assigns = Context.put(assigns, timezone: "UTC")
+            socket_or_assigns = Context.put(socket_or_assigns, timezone: "UTC")
         """
 
         IOHelper.warn(message, meta.caller, meta.file, meta.line)

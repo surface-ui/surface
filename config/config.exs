@@ -5,11 +5,11 @@ import Config
 config :phoenix, :json_library, Jason
 
 # TODO: Move this list to the engine
-config :surface, :propagate_context_to_slots, [
-  Surface.Components.Form,
-  Surface.Components.Form.Field,
-  Surface.Components.Form.FieldContext,
-  Surface.Components.Form.Inputs
+config :surface, :components, [
+  {Surface.Components.Form, propagate_context_to_slots: true},
+  {Surface.Components.Form.Field, propagate_context_to_slots: true},
+  {Surface.Components.Form.FieldContext, propagate_context_to_slots: true},
+  {Surface.Components.Form.Inputs, propagate_context_to_slots: true}
 ]
 
 # This configuration is loaded before any dependency and is restricted

@@ -69,12 +69,24 @@ defmodule Surface.BaseComponent do
 
   @doc false
   def build_propagate_context_to_slots_set() do
-    Application.get_env(:surface, :propagate_context_to_slots, [])
-    |> Enum.map(fn
-      {mod, fun} -> {mod, fun}
-      mod -> {mod, :render}
+    components_config = Application.get_env(:surface, :components, [])
+
+    Enum.reduce(components_config, MapSet.new(), fn entry, acc ->
+      {component, opts} =
+        case entry do
+          {mod, fun, opts} ->
+            {{mod, fun}, opts}
+
+          {mod, opts} ->
+            {{mod, :render}, opts}
+        end
+
+      if Keyword.get(opts, :propagate_context_to_slots, false) do
+        MapSet.put(acc, component)
+      else
+        acc
+      end
     end)
-    |> MapSet.new()
   end
 
   @doc false

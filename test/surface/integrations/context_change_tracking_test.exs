@@ -7,7 +7,7 @@ defmodule Surface.ContextChangeTrackingTest do
 
   @endpoint Endpoint
 
-  register_context_propagation([__MODULE__.ContextSetter])
+  register_propagate_context_to_slots([__MODULE__.ContextSetter])
 
   defmodule ContextSetter do
     use Surface.Component
