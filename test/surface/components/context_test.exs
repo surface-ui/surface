@@ -54,14 +54,18 @@ defmodule Surface.Components.ContextTest do
 
     alias Surface.Components.ContextTest
 
+    data field, :any
+    data other_field, :any
+
     def render(assigns) do
+      assigns =
+        assigns
+        |> Context.copy_assign({ContextTest.Outer, :field})
+        |> Context.copy_assign({ContextTest.InnerWrapper, :field}, as: :other_field)
+
       ~F"""
-      <Context
-        get={ContextTest.Outer, field: field}
-        get={ContextTest.InnerWrapper, field: other_field}>
-        <span id="field">{field}</span>
-        <span id="other_field">{other_field}</span>
-      </Context>
+      <span id="field">{@field}</span>
+      <span id="other_field">{@other_field}</span>
       """
     end
   end
@@ -73,20 +77,6 @@ defmodule Surface.Components.ContextTest do
       ~F"""
       <Context put={__MODULE__, field: "field from InnerWrapper"}>
         <Inner />
-      </Context>
-      """
-    end
-  end
-
-  defmodule InnerWithOptionAs do
-    use Surface.Component
-
-    alias Surface.Components.ContextTest
-
-    def render(assigns) do
-      ~F"""
-      <Context get={ContextTest.Outer, field: my_field}>
-        <span>{my_field}</span>
       </Context>
       """
     end
@@ -193,6 +183,72 @@ defmodule Surface.Components.ContextTest do
       assert_raise ArgumentError, msg, fn ->
         Context.get(%{}, SomeScope, :value1)
       end
+    end
+  end
+
+  describe "copy_assign/3" do
+    test "copy a value from the context into the assigns (socket)" do
+      socket =
+        %Socket{}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.copy_assign({Form, :form})
+        |> Context.copy_assign(:field)
+
+      assert socket.assigns.form == :fake_form
+      assert socket.assigns.field == :fake_field
+    end
+
+    test "overrides a value if already exists (socket)" do
+      socket =
+        %Socket{}
+        |> Phoenix.LiveView.assign(:form, :existing_form)
+        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.copy_assign({Form, :form})
+        |> Context.copy_assign(:field)
+
+      assert socket.assigns.form == :fake_form
+      assert socket.assigns.field == :fake_field
+    end
+
+    test "copy a value from the context into the assigns (assigns)" do
+      assigns =
+        %{__changed__: %{}}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.copy_assign({Form, :form})
+        |> Context.copy_assign(:field)
+
+      assert assigns.form == :fake_form
+      assert assigns.field == :fake_field
+    end
+
+    test "overrides a value if already exists (assigns)" do
+      assigns =
+        %{__changed__: %{}}
+        |> Phoenix.LiveView.assign(:form, :existing_form)
+        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.copy_assign({Form, :form})
+        |> Context.copy_assign(:field)
+
+      assert assigns.form == :fake_form
+      assert assigns.field == :fake_field
+    end
+
+    test "copy a value from the context using option :as to store it under a different assign" do
+      socket =
+        %Socket{}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.copy_assign({Form, :form}, as: :my_form)
+        |> Context.copy_assign(:field, as: :my_field)
+
+      assert socket.assigns.my_form == :fake_form
+      assert socket.assigns.my_field == :fake_field
     end
   end
 
@@ -422,23 +478,6 @@ defmodule Surface.Components.ContextTest do
              """
     end
 
-    test "pass context to child component using :as option" do
-      html =
-        render_surface do
-          ~F"""
-          <Outer>
-            <InnerWithOptionAs/>
-          </Outer>
-          """
-        end
-
-      assert html =~ """
-             <div>
-               <span>field from Outer</span>
-             </div>
-             """
-    end
-
     test "pass context down the tree of components" do
       html =
         render_surface do
@@ -466,7 +505,7 @@ defmodule Surface.Components.ContextTest do
 
       assert html =~ """
              <span id="field">field from Outer</span>
-               <span id="other_field">field from InnerWrapper</span>
+             <span id="other_field">field from InnerWrapper</span>
              """
     end
 
@@ -511,13 +550,15 @@ defmodule Surface.Components.ContextTest do
       prop list, :list
       prop count, :integer, default: 1
 
+      data field, :any
+
       def render(%{list: [item | rest]} = assigns) do
+        assigns = Context.copy_assign(assigns, {ContextTest.Outer, :field})
+
         ~F"""
-        <Context get={ContextTest.Outer, field: field}>
-          {@count}. {item} - {field}
-          <Context put={ContextTest.Outer, field: "#{field} #{@count}"}>
-            <Recursive list={rest} count={@count + 1}/>
-          </Context>
+        {@count}. {item} - {@field}
+        <Context put={ContextTest.Outer, field: "#{@field} #{@count}"}>
+          <Recursive list={rest} count={@count + 1}/>
         </Context>
         """
       end
@@ -989,6 +1030,43 @@ defmodule Surface.Components.ContextTest do
                * `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
 
              code.exs:10:\
+           """
+  end
+
+  test "warn on <Context get...> to tetrieve values generated outside the template" do
+    code =
+      quote do
+        ~F"""
+        <div>
+          <Context
+            get={Surface.Components.Form, form: form}
+          >
+            Hello!
+          </Context>
+        </div>
+        """
+      end
+
+    output =
+      capture_io(:standard_error, fn ->
+        compile_surface(code)
+      end)
+
+    assert output =~ """
+           using <Context get=.../> to retrieve values generated outside the template \
+           has been deprecated. Use `Context.get/3` instead.
+
+           # Examples
+
+               # In live components
+               form = Context.get(socket, Form, :form)
+               other = Context.get(socket, :other)
+
+               # In function components
+               form = Context.get(assigns, Form, :form)
+               other = Context.get(assigns, :other)
+
+             code:2:\
            """
   end
 end

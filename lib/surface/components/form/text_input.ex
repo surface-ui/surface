@@ -35,7 +35,7 @@ defmodule Surface.Components.Form.TextInput do
     assigns =
       assigns
       |> assign(:opts, opts)
-      |> maybe_copy_input_assigns_from_context()
+      |> maybe_copy_form_and_field_from_context()
 
     ~F[{text_input(@form, @field, @opts)}]
   end

@@ -294,12 +294,14 @@ defmodule Surface.Components.Dynamic.ComponentTest do
 
       slot default
 
+      data form, :form
+
       def render(assigns) do
+        assigns = Context.copy_assign(assigns, :form)
+
         ~F"""
-        <Context get={form: form}>
-          <Context put={field: "#{form} + field"}>
-            <#slot/>
-          </Context>
+        <Context put={field: "#{@form} + field"}>
+          <#slot/>
         </Context>
         """
       end

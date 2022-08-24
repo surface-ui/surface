@@ -37,12 +37,14 @@ defmodule Surface.ContextThroughSlotTest do
   defmodule Child do
     use Surface.Component
 
+    data foo, :any
+
     def render(assigns) do
       # @foo is nil here
+      assigns = Context.copy_assign(assigns, :foo)
+
       ~F"""
-      <Context get={foo: foo}>
-        <div>{foo}</div>
-      </Context>
+      <div>{@foo}</div>
       """
     end
   end

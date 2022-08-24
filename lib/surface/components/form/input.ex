@@ -47,13 +47,13 @@ defmodule Surface.Components.Form.Input do
     config[component][:default_class] || config[__MODULE__][:default_class]
   end
 
-  def maybe_copy_input_assigns_from_context(assigns) do
+  def maybe_copy_form_and_field_from_context(assigns) do
     assigns
     |> Context.maybe_copy_assign(Form, :form)
     |> Context.maybe_copy_assign(Field, :field)
   end
 
-  # TODO: deprecate this component in favor of maybe_copy_input_assigns_from_context/1
+  # TODO: deprecate this component in favor of maybe_copy_form_and_field_from_context/1
   defmodule InputContext do
     use Surface.Component
 
@@ -64,12 +64,11 @@ defmodule Surface.Components.Form.Input do
     slot default, arg: %{form: :form, field: :any}
 
     def render(assigns) do
+      form = Context.get(assigns, Surface.Components.Form, :form)
+      field = Context.get(assigns, Surface.Components.Form.Field, :field)
+
       ~F"""
-      <Context
-        get={Surface.Components.Form, form: form}
-        get={Surface.Components.Form.Field, field: field}>
-        <#slot {@default, form: @assigns[:form] || form, field: @assigns[:field] || field}/>
-      </Context>
+      <#slot {@default, form: @assigns[:form] || form, field: @assigns[:field] || field}/>
       """
     end
   end

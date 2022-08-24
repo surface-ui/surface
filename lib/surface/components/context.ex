@@ -203,6 +203,40 @@ defmodule Surface.Components.Context do
   @doc """
   Copies a value from the context directly into `socket_or_assigns`.
 
+  ## Usage
+
+      # Simple key
+      Context.copy_assign(socket_or_assigns, key)
+
+      # Simple key with options
+      Context.copy_assign(socket_or_assigns, key, opts)
+
+      # Key with scope
+      Context.copy_assign(socket_or_assigns, {scope, key})
+
+      # Key with scope + options
+      Context.copy_assign(socket_or_assigns, {scope, key}, opts)
+
+  ## Options
+
+    * `:as` - Optional. The key to store the value. Default is the `key` without the scope.
+
+  """
+  def copy_assign(socket_or_assigns, key, opts \\ []) do
+    {scope, key} =
+      case key do
+        {k, v} -> {k, v}
+        k -> {nil, k}
+      end
+
+    value = get(socket_or_assigns, scope, key)
+    Phoenix.LiveView.assign(socket_or_assigns, opts[:as] || key, value)
+  end
+
+  @doc """
+  Copies a value from the context directly into `socket_or_assigns`
+  if the value hasn't already been set or if it's `nil`.
+
   The value will be saved using the same `key`.
 
   ## Usage

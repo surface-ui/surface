@@ -32,13 +32,15 @@ defmodule Surface.ContextChangeTrackingTest do
 
     slot default
 
+    data field, :any
+
     def render(assigns) do
+      assigns = Context.copy_assign(assigns, :field)
+
       ~F"""
-      <Context get={field: field}>
-        <CheckUpdated id="1" dest={@test_pid} content={field}/>
-        <CheckUpdated id="2" dest={@test_pid}/>
-        <div><#slot/></div>
-      </Context>
+      <CheckUpdated id="1" dest={@test_pid} content={@field}/>
+      <CheckUpdated id="2" dest={@test_pid}/>
+      <div><#slot/></div>
       """
     end
   end

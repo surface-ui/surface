@@ -1056,9 +1056,28 @@ defmodule Surface.Compiler.EExEngine do
     # NOTE: Using this is not optimized as it will always assume the component propagates
     # context into into its slots.
     #
-    # TODO: Force using directive :propagates_context in dynamic components and remove the
+    # TODO: Force using directive :propagate_context_to_slots in dynamic components and remove the
     # `dynamic_component?` condition.
     dynamic_component? = module == nil and fun == nil
+
+    if module == Context and AST.has_attribute?(props, :get) and state.context_vars.changed == [] do
+      message = """
+      using <Context get=.../> to retrieve values generated outside the template \
+      has been deprecated. Use `Context.get/3` instead.
+
+      # Examples
+
+          # In live components
+          form = Context.get(socket, Form, :form)
+          other = Context.get(socket, :other)
+
+          # In function components
+          form = Context.get(assigns, Form, :form)
+          other = Context.get(assigns, :other)
+      """
+
+      IOHelper.warn(message, component.meta.caller, component.meta.file, component.meta.line)
+    end
 
     changes_context? =
       propagate_context_to_slots?(caller, module, fun) or

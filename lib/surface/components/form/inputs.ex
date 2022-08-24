@@ -8,6 +8,9 @@ defmodule Surface.Components.Form.Inputs do
 
   use Surface.Component
 
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Field
+
   import Phoenix.HTML.Form
 
   @doc """
@@ -32,18 +35,18 @@ defmodule Surface.Components.Form.Inputs do
   @doc "The code containing the input controls"
   slot default, arg: %{form: :form, index: :integer}
 
+  data field, :any
+
   def render(assigns) do
+    assigns =
+      assigns
+      |> Context.maybe_copy_assign!(Form, :form)
+      |> Context.copy_assign({Field, :field})
+
     ~F"""
-    <Context
-      get={Surface.Components.Form, form: form}
-      get={Surface.Components.Form.Field, field: field}
-    >
-      <Context
-        :for={{f, index}  <- Enum.with_index(inputs_for(@form || form, @for || field, @opts))}
-        put={Surface.Components.Form, form: f}>
-        <#slot {@default, form: f, index: index}/>
-      </Context>
-    </Context>
+    {#for {f, index}  <- Enum.with_index(inputs_for(@form, @for || @field, @opts))}
+      <#slot {@default, form: f, index: index} context_put={Form, form: f}/>
+    {/for}
     """
   end
 end
