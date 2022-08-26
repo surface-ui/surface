@@ -55,6 +55,22 @@ defmodule Surface.Components.Form.Input do
     @doc "The code containing the input control"
     slot default, arg: %{form: :form, field: :any}
 
+    @impl Surface.BaseComponent
+    def transform(node) do
+      message = """
+      Component <InputContext> has been deprecated.
+
+      Use option `from_context` instead. Example:
+
+          prop form, :form, from_context: {Form, :form}
+
+      """
+
+      Surface.IOHelper.warn(message, node.meta.caller, node.meta.file, node.meta.line)
+
+      node
+    end
+
     def render(assigns) do
       form = Context.get(assigns, Surface.Components.Form, :form)
       field = Context.get(assigns, Surface.Components.Form.Field, :field)
