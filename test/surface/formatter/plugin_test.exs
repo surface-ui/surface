@@ -22,8 +22,8 @@ defmodule Surface.Formatter.PluginTest do
     assert File.read!(ex_path) == expected
   end
 
-  defp assert_formatter_doesnt_change(filename, dot_formatter_opts \\ [], input_ex, expected) do
-    assert_formatter_output(filename, dot_formatter_opts, input_ex, expected)
+  defp assert_formatter_doesnt_change(filename, dot_formatter_opts \\ [], code) do
+    assert_formatter_output(filename, dot_formatter_opts, code, code)
   end
 
   test ".sface files are formatted" do
@@ -114,9 +114,6 @@ defmodule Surface.Formatter.PluginTest do
   test ":hook directive without any attribute" do
     assert_formatter_doesnt_change(
       "sface_files.sface",
-      """
-      <div :hook />
-      """,
       """
       <div :hook />
       """
