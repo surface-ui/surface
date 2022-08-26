@@ -115,7 +115,7 @@ defmodule Surface.Components.ContextTest do
   end
 
   describe "option :form_context in function components" do
-    defmodule UsingFromContext do
+    defmodule ComponentUsingFromContext do
       use Surface.Component
 
       alias Surface.Components.ContextTest.Outer
@@ -141,10 +141,10 @@ defmodule Surface.Components.ContextTest do
         render_surface do
           ~F"""
           <Outer>
-            <UsingFromContext/>
+            <ComponentUsingFromContext/>
           </Outer>
           <Context put={field: "field without scope"}>
-            <UsingFromContext/>
+            <ComponentUsingFromContext/>
           </Context>
           """
         end
@@ -160,7 +160,151 @@ defmodule Surface.Components.ContextTest do
         render_surface do
           ~F"""
           <Outer>
-            <UsingFromContext
+            <ComponentUsingFromContext
+              field_with_scope="field from prop with scope"
+              field_without_scope="field from prop without scope"
+            />
+          </Outer>
+          """
+        end
+
+      assert html =~ "Prop with scope: field from prop with scope"
+      assert html =~ "Prop without scope: field from prop without scope"
+    end
+  end
+
+  describe "option :form_context in live components" do
+    defmodule LiveComponentUsingFromContext do
+      use Surface.LiveComponent
+
+      alias Surface.Components.ContextTest.Outer
+
+      prop field_with_scope, :any, from_context: {Outer, :field}
+      prop field_without_scope, :any, from_context: :field
+
+      data data_with_scope, :any, from_context: {Outer, :field}
+      data data_without_scope, :any, from_context: :field
+
+      def render(assigns) do
+        ~F"""
+        <div>
+          Prop with scope: {@field_with_scope}
+          Prop without scope: {@field_without_scope}
+          Data with scope: {@data_with_scope}
+          Data without scope: {@data_without_scope}
+        </div>
+        """
+      end
+    end
+
+    test "use a value from the context as default value" do
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <Outer>
+              <LiveComponentUsingFromContext id="1"/>
+            </Outer>
+            <Context put={field: "field without scope"}>
+              <LiveComponentUsingFromContext id="2"/>
+            </Context>
+          </div>
+          """
+        end
+
+      assert html =~ "Prop with scope: field from Outer"
+      assert html =~ "Prop without scope: field without scope"
+      assert html =~ "Data with scope: field from Outer"
+      assert html =~ "Data without scope: field without scope"
+    end
+
+    test "passing the prop overrides the value from the context" do
+      html =
+        render_surface do
+          ~F"""
+          <Outer>
+            <LiveComponentUsingFromContext
+              id="1"
+              field_with_scope="field from prop with scope"
+              field_without_scope="field from prop without scope"
+            />
+          </Outer>
+          """
+        end
+
+      assert html =~ "Prop with scope: field from prop with scope"
+      assert html =~ "Prop without scope: field from prop without scope"
+    end
+  end
+
+  describe "option :form_context in live components with update/2" do
+    defmodule LiveComponentUsingFromContextWithUpdate do
+      use Surface.LiveComponent
+
+      alias Surface.Components.ContextTest.Outer
+
+      prop field_with_scope, :any, from_context: {Outer, :field}
+      prop field_without_scope, :any, from_context: :field
+
+      data data_with_scope, :any, from_context: {Outer, :field}
+      data data_without_scope, :any, from_context: :field
+
+      data computed_value, :any
+
+      @impl true
+      def update(assigns, socket) do
+        computed_value = [
+          String.upcase(assigns.field_with_scope || ""),
+          String.upcase(assigns.field_without_scope || ""),
+          String.upcase(assigns.data_with_scope || ""),
+          String.upcase(assigns.data_without_scope || "")
+        ]
+
+        {:ok, assign(socket, :computed_value, computed_value)}
+      end
+
+      @impl true
+      def render(assigns) do
+        ~F"""
+        <div>
+          Prop with scope: {@field_with_scope}
+          Prop without scope: {@field_without_scope}
+          Data with scope: {@data_with_scope}
+          Data without scope: {@data_without_scope}
+          Computed value: {inspect(@computed_value)}
+        </div>
+        """
+      end
+    end
+
+    test "use a value from the context as default value" do
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <Outer>
+              <LiveComponentUsingFromContextWithUpdate id="1"/>
+            </Outer>
+            <Context put={field: "field without scope"}>
+              <LiveComponentUsingFromContextWithUpdate id="2"/>
+            </Context>
+          </div>
+          """
+        end
+
+      assert html =~ "Prop with scope: field from Outer"
+      assert html =~ "Prop without scope: field without scope"
+      assert html =~ "Data with scope: field from Outer"
+      assert html =~ "Data without scope: field without scope"
+    end
+
+    test "passing the prop overrides the value from the context" do
+      html =
+        render_surface do
+          ~F"""
+          <Outer>
+            <LiveComponentUsingFromContextWithUpdate
+              id="1"
               field_with_scope="field from prop with scope"
               field_without_scope="field from prop without scope"
             />
