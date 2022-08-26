@@ -454,24 +454,33 @@ defmodule Surface.API do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
   end
 
-  defp validate_opt(_func, _name, _type, _opts, :from_context, value, _line, _env) do
-    case value do
-      {scope, key} when is_atom(scope) and is_atom(key) ->
-        :ok
+  defp validate_opt(_func, _name, _type, opts, :from_context, value, _line, env) do
+    cond do
+      Module.get_attribute(env.module, :component_type) == Surface.LiveView ->
+        {:error, "option :from_context is not supported for Surface.Liveview"}
 
-      key when is_atom(key) ->
-        :ok
+      Keyword.has_key?(opts, :default) ->
+        {:error, "using option :from_context along with :default is currently not allowed"}
 
-      _ ->
-        message = """
-        invalid value for option :from_context.
+      true ->
+        case value do
+          {scope, key} when is_atom(scope) and is_atom(key) ->
+            :ok
 
-        Expected: a `key when is_atom(key)` or a tuple `{scope, key} when is_atom(scope) and is_atom(key)`.
+          key when is_atom(key) ->
+            :ok
 
-        Got: #{inspect(value)}
-        """
+          _ ->
+            message = """
+            invalid value for option :from_context.
 
-        {:error, message}
+            Expected: a `key when is_atom(key)` or a tuple `{scope, key} when is_atom(scope) and is_atom(key)`.
+
+            Got: #{inspect(value)}
+            """
+
+            {:error, message}
+        end
     end
   end
 

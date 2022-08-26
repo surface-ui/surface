@@ -90,6 +90,42 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
 
+  test "validate :from_context type" do
+    message = ~r"""
+    invalid value for option :from_context.
+
+    Expected: a `key when is_atom\(key\)` or a tuple `{scope, key} when is_atom\(scope\) and is_atom\(key\)`.
+
+    Got: 123
+    """
+
+    code = "prop field, :any, from_context: 123"
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = "data field, :any, from_context: 123"
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate :from_context with :default" do
+    message = ~r/using option :from_context along with :default is currently not allowed/
+
+    code = "prop field, :any, from_context: :field, default: :my_field"
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    code = "data field, :any, from_context: :field, default: :my_field"
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
+  test "validate :from_context in LiveView" do
+    message = ~r/option :from_context is not supported for Surface.Liveview/
+
+    code = "prop field, :any, from_context: :field"
+    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+
+    code = "data field, :any, from_context: :field"
+    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
