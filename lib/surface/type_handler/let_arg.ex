@@ -14,7 +14,7 @@ defmodule Surface.TypeHandler.LetArg do
     if original |> String.trim() |> String.starts_with?("[") do
       {:ok, opts}
     else
-      {:ok, {:%{}, [generated: true], opts}}
+      {:ok, {:%{}, [], opts}}
     end
   end
 

@@ -959,15 +959,11 @@ defmodule Surface.PropertiesSyncTest do
     end
     """
 
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+    message = "code.exs:11: `generator_value` is missing for slot `default`"
 
-    assert output =~ """
-           `generator_value` is missing for slot `default`
-             code.exs:11\
-           """
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   describe "unknown property" do
@@ -1156,6 +1152,24 @@ defmodule Surface.PropertiesSyncTest do
              Hint: Either specify the `label` via the root property (`<RootProp { ... }>`) or \
              explicitly via the label property (`<RootProp label="...">`), but not both.
              """
+    end
+
+    test "literal expression to list prop don't emit warnings" do
+      code =
+        quote do
+          ~F"""
+          <ListProp prop={1}/>
+          """
+        end
+
+      output = capture_io(:standard_error, fn -> compile_surface(code) end)
+
+      refute output =~ """
+             this check/guard will always yield the same result
+               code
+             """
+
+      assert output == ""
     end
   end
 end

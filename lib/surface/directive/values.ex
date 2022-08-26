@@ -26,7 +26,7 @@ defmodule Surface.Directive.Values do
     attr_names = for %AST.Attribute{name: name} <- attributes, do: name
 
     new_expr =
-      quote generated: true do
+      quote do
         for {name, value} <- unquote(value) || [],
             attr_name = :"phx-value-#{name}",
             not Enum.member?(unquote(Macro.escape(attr_names)), attr_name) do

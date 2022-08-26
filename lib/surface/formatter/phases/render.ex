@@ -329,6 +329,10 @@ defmodule Surface.Formatter.Phases.Render do
     {:do_not_indent_newlines, rendered}
   end
 
+  # Only for :hook directive return itself since isn't an boolean directive
+  # and could be defined without value and assuming the `"default"`.
+  defp render_attribute({":hook" = name, true, _meta}, _opts), do: "#{name}"
+
   # For `true` boolean attributes, simply including the name of the attribute
   # without `=true` is shorthand for `=true`.
   defp render_attribute({":" <> _ = name, true, _meta}, _opts),

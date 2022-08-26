@@ -103,7 +103,7 @@ defmodule Surface.Compiler.EExEngine do
 
     generator_expr = generator ++ [[do: buffer]]
 
-    {:for, [generated: true], generator_expr}
+    {:for, [], generator_expr}
     |> maybe_print_expression(comprehension)
   end
 
@@ -130,7 +130,7 @@ defmodule Surface.Compiler.EExEngine do
           scope: [:if | state.scope]
       })
 
-    {:if, [generated: true], [condition, [do: if_buffer, else: else_buffer]]}
+    {:if, [], [condition, [do: if_buffer, else: else_buffer]]}
     |> maybe_print_expression(conditional)
   end
 
@@ -207,7 +207,7 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     slot_content_expr =
-      quote generated: true, line: meta.line do
+      quote line: meta.line do
         Phoenix.LiveView.Helpers.render_slot(
           unquote(slot_value),
           {
@@ -227,7 +227,7 @@ defmodule Surface.Compiler.EExEngine do
 
     # :__ignore__ is a private field meant to be used only in tools like the catalogue
     # to simulate the absence of an assigned slot based on an expression.
-    quote generated: true do
+    quote do
       if unquote(slot_value) && !unquote(slot_value)[:__ignore__] do
         unquote(slot_content_expr)
       else
@@ -254,10 +254,10 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
     {context_expr, context_var, state} = process_context(nil, nil, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], slot_props}
+    slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &apply(unquote(module_expr), unquote(fun_expr), [&1]),
         Map.merge(
@@ -283,10 +283,10 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
     {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], slot_props}
+    slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &(unquote(Macro.var(fun, __MODULE__)) / 1),
         Map.merge(
@@ -312,7 +312,7 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
     {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], slot_props}
+    slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     # For now, we can only retrieve props and slots information from module components,
@@ -320,7 +320,7 @@ defmodule Surface.Compiler.EExEngine do
     # we pass the module, otherwise, we pass `nil`.
     module_for_build_assigns = if fun == :render, do: module
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &(unquote(module).unquote(fun) / 1),
         Map.merge(
@@ -346,10 +346,10 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], slot_props}
+    slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &unquote(module).render/1,
         Map.merge(
@@ -375,10 +375,10 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], slot_props}
+    slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &unquote(module).render/1,
         Map.merge(
@@ -404,10 +404,10 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], [{:module, module} | slot_props]}
+    slot_props_map = {:%{}, [], [{:module, module} | slot_props]}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &Phoenix.LiveView.Helpers.live_component/1,
         Map.merge(
@@ -437,10 +437,10 @@ defmodule Surface.Compiler.EExEngine do
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
     {context_expr, context_var, state} = process_context(nil, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [generated: true], [{:module, module_expr} | slot_props]}
+    slot_props_map = {:%{}, [], [{:module, module_expr} | slot_props]}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
-    quote generated: true do
+    quote do
       Phoenix.LiveView.Helpers.component(
         &Phoenix.LiveView.Helpers.live_component/1,
         Map.merge(
@@ -467,7 +467,7 @@ defmodule Surface.Compiler.EExEngine do
       collect_component_props(module, props)
       |> Enum.reject(fn {_, value} -> is_nil(value) end)
 
-    quote generated: true do
+    quote do
       live_render(@socket, unquote(module), unquote(props_expr))
     end
     |> maybe_print_expression(component)
@@ -507,17 +507,25 @@ defmodule Surface.Compiler.EExEngine do
       entries =
         Enum.map(nested_slot_entries, fn {let, _generator, props, body, slot_entry_line} ->
           block =
-            if let == nil do
-              body
-            else
-              quote generated: true, line: slot_entry_line do
-                unquote(let) ->
-                  unquote(body)
+            case let do
+              nil ->
+                body
 
-                arg ->
-                  raise ArgumentError,
-                        "cannot match slot argument against :let. Expected a value matching #{unquote(Macro.to_string(let))}, got: `#{inspect(arg)}`."
-              end
+              {name, _, nil} when is_atom(name) ->
+                quote line: slot_entry_line do
+                  unquote(let) ->
+                    unquote(body)
+                end
+
+              _ ->
+                quote line: slot_entry_line do
+                  unquote(let) ->
+                    unquote(body)
+
+                  arg ->
+                    raise ArgumentError,
+                          "cannot match slot argument against :let. Expected a value matching #{unquote(Macro.to_string(let))}, got: `#{inspect(arg)}`."
+                end
             end
 
           inner_block =
@@ -527,7 +535,7 @@ defmodule Surface.Compiler.EExEngine do
 
           props = [__slot__: slot_name, inner_block: inner_block] ++ props
 
-          {:%{}, [generated: true], props}
+          {:%{}, [], props}
         end)
 
       {slot_name, entries}
@@ -565,7 +573,7 @@ defmodule Surface.Compiler.EExEngine do
 
           block =
             if let == nil do
-              quote generated: true do
+              quote do
                 {
                   _,
                   unquote(no_warnings_generator),
@@ -574,7 +582,7 @@ defmodule Surface.Compiler.EExEngine do
                   unquote(body)
               end
             else
-              quote generated: true, line: slot_entry_line do
+              quote line: slot_entry_line do
                 {
                   unquote(let),
                   unquote(no_warnings_generator),
@@ -595,7 +603,7 @@ defmodule Surface.Compiler.EExEngine do
 
           props = [__slot__: name, inner_block: ast] ++ props
 
-          {:%{}, [generated: true], props}
+          {:%{}, [], props}
         end)
 
       {name, entries}
@@ -949,7 +957,7 @@ defmodule Surface.Compiler.EExEngine do
          %AST.DynamicAttribute{expr: %AST.AttributeExpr{value: expr_value} = expr} | attributes
        ]) do
     value =
-      quote generated: true do
+      quote do
         for {name, {type, value}} <- unquote(expr_value) do
           Phoenix.HTML.raw(Surface.TypeHandler.attr_to_html!(type, name, value))
         end
@@ -983,7 +991,7 @@ defmodule Surface.Compiler.EExEngine do
          | attributes
        ]) do
     value =
-      quote generated: true do
+      quote do
         Phoenix.HTML.raw(
           Surface.TypeHandler.attr_to_html!(unquote(type), unquote(to_string(name)), unquote(expr_value))
         )
@@ -1021,7 +1029,7 @@ defmodule Surface.Compiler.EExEngine do
   defp require_expr(module, line) do
     %AST.Expr{
       value:
-        quote generated: true, line: line do
+        quote line: line do
           require(unquote(module)).__info__(:module)
         end,
       meta: %AST.Meta{}

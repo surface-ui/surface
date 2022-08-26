@@ -918,6 +918,19 @@ defmodule Surface.DirectivesTest do
   end
 
   describe ":hook" do
+    test "generate a default phx-hook with __MODULE__ as default namespace" do
+      html =
+        render_surface do
+          ~F"""
+          <div :hook></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#default"></div>
+             """
+    end
+
     test "generate phx-hook with __MODULE__ as default namespace" do
       html =
         render_surface do
