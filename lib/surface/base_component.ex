@@ -146,12 +146,14 @@ defmodule Surface.BaseComponent do
         end
       end
 
+    quoted_assigns = {:__block__, [], quoted_assigns}
+
     if Module.defines?(env.module, {:render, 1}) do
       quote do
         defoverridable render: 1
 
         def render(var!(assigns)) do
-          unquote_splicing(quoted_assigns)
+          unquote(quoted_assigns)
 
           super(var!(assigns))
         end

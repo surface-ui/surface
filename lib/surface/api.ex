@@ -389,11 +389,11 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate, :root, :static]
+    [:required, :default, :values, :values!, :accumulate, :root, :static, :from_context]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
-    [:default, :values, :values!]
+    [:default, :values, :values!, :from_context]
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
@@ -452,6 +452,27 @@ defmodule Surface.API do
   defp validate_opt(_func, _name, _type, _opts, :required, value, _line, _env)
        when not is_boolean(value) do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(_func, _name, _type, _opts, :from_context, value, _line, _env) do
+    case value do
+      {scope, key} when is_atom(scope) and is_atom(key) ->
+        :ok
+
+      key when is_atom(key) ->
+        :ok
+
+      _ ->
+        message = """
+        invalid value for option :from_context.
+
+        Expected: a `key when is_atom(key)` or a tuple `{scope, key} when is_atom(scope) and is_atom(key)`.
+
+        Got: #{inspect(value)}
+        """
+
+        {:error, message}
+    end
   end
 
   defp validate_opt(:prop, name, _type, opts, :default, value, line, env) do

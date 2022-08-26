@@ -329,7 +329,7 @@ defmodule Surface.APITest do
       code = "prop label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static, :from_context\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -431,7 +431,7 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "data label, :string, a: 1"
-      message = ~r/unknown option :a. Available options: \[:default, :values, :values!\]/
+      message = ~r/unknown option :a. Available options: \[:default, :values, :values!, :from_context\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

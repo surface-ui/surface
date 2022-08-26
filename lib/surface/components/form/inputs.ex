@@ -40,7 +40,7 @@ defmodule Surface.Components.Form.Inputs do
   def render(assigns) do
     assigns =
       assigns
-      |> Context.maybe_copy_assign!(Form, :form)
+      |> Context.maybe_copy_assign!({Form, :form})
       |> Context.copy_assign({Field, :field})
 
     ~F"""

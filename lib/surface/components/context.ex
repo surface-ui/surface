@@ -223,14 +223,10 @@ defmodule Surface.Components.Context do
 
   """
   def copy_assign(socket_or_assigns, key, opts \\ []) do
-    {scope, key} =
-      case key do
-        {k, v} -> {k, v}
-        k -> {nil, k}
-      end
-
+    {scope, key, to_key} = process_key(key, opts)
     value = get(socket_or_assigns, scope, key)
-    Phoenix.LiveView.assign(socket_or_assigns, opts[:as] || key, value)
+
+    Phoenix.LiveView.assign(socket_or_assigns, to_key, value)
   end
 
   @doc """
@@ -244,13 +240,15 @@ defmodule Surface.Components.Context do
       Context.maybe_copy_assign(socket_or_assigns, scope, key)
 
   """
-  def maybe_copy_assign(socket_or_assigns, scope \\ nil, key) do
+  def maybe_copy_assign(socket_or_assigns, key, opts \\ []) do
+    {scope, key, to_key} = process_key(key, opts)
+
     cond do
-      get_assigns(socket_or_assigns)[key] != nil ->
+      get_assigns(socket_or_assigns)[to_key] != nil ->
         socket_or_assigns
 
       value = get(socket_or_assigns, scope, key) ->
-        Phoenix.LiveView.assign(socket_or_assigns, key, value)
+        Phoenix.LiveView.assign(socket_or_assigns, to_key, value)
 
       true ->
         socket_or_assigns
@@ -272,10 +270,12 @@ defmodule Surface.Components.Context do
       Context.maybe_copy_assign!(socket_or_assigns, scope, key)
 
   """
-  def maybe_copy_assign!(socket_or_assigns, scope \\ nil, key) do
-    socket_or_assigns = maybe_copy_assign(socket_or_assigns, scope, key)
+  def maybe_copy_assign!(socket_or_assigns, key, opts \\ []) do
+    socket_or_assigns = maybe_copy_assign(socket_or_assigns, key, opts)
 
-    if get_assigns(socket_or_assigns)[key] != nil do
+    {scope, key, to_key} = process_key(key, opts)
+
+    if get_assigns(socket_or_assigns)[to_key] != nil do
       socket_or_assigns
     else
       scope_and_key = if scope, do: "#{inspect(scope)}, #{key}", else: key
@@ -360,6 +360,16 @@ defmodule Surface.Components.Context do
 
   def normalize_key(scope, key) do
     {scope, key}
+  end
+
+  defp process_key(key, opts) do
+    {scope, key} =
+      case key do
+        {k, v} -> {k, v}
+        k -> {nil, k}
+      end
+
+    {scope, key, opts[:as] || key}
   end
 
   defp update_let_for_slot_entry(node, slot_entry_name, let) do

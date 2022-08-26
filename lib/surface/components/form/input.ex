@@ -49,8 +49,8 @@ defmodule Surface.Components.Form.Input do
 
   def maybe_copy_form_and_field_from_context(assigns) do
     assigns
-    |> Context.maybe_copy_assign(Form, :form)
-    |> Context.maybe_copy_assign(Field, :field)
+    |> Context.maybe_copy_assign({Form, :form})
+    |> Context.maybe_copy_assign({Field, :field})
   end
 
   # TODO: deprecate this component in favor of maybe_copy_form_and_field_from_context/1

@@ -114,6 +114,65 @@ defmodule Surface.Components.ContextTest do
     end
   end
 
+  describe "option :form_context in function components" do
+    defmodule UsingFromContext do
+      use Surface.Component
+
+      alias Surface.Components.ContextTest.Outer
+
+      prop field_with_scope, :any, from_context: {Outer, :field}
+      prop field_without_scope, :any, from_context: :field
+
+      data data_with_scope, :any, from_context: {Outer, :field}
+      data data_without_scope, :any, from_context: :field
+
+      def render(assigns) do
+        ~F"""
+        Prop with scope: {@field_with_scope}
+        Prop without scope: {@field_without_scope}
+        Data with scope: {@data_with_scope}
+        Data without scope: {@data_without_scope}
+        """
+      end
+    end
+
+    test "use a value from the context as default value" do
+      html =
+        render_surface do
+          ~F"""
+          <Outer>
+            <UsingFromContext/>
+          </Outer>
+          <Context put={field: "field without scope"}>
+            <UsingFromContext/>
+          </Context>
+          """
+        end
+
+      assert html =~ "Prop with scope: field from Outer"
+      assert html =~ "Prop without scope: field without scope"
+      assert html =~ "Data with scope: field from Outer"
+      assert html =~ "Data without scope: field without scope"
+    end
+
+    test "passing the prop overrides the value from the context" do
+      html =
+        render_surface do
+          ~F"""
+          <Outer>
+            <UsingFromContext
+              field_with_scope="field from prop with scope"
+              field_without_scope="field from prop without scope"
+            />
+          </Outer>
+          """
+        end
+
+      assert html =~ "Prop with scope: field from prop with scope"
+      assert html =~ "Prop without scope: field from prop without scope"
+    end
+  end
+
   describe "put/3 and get/3" do
     test "puts/gets values to/from the socket's context" do
       socket = %Socket{}
@@ -239,7 +298,7 @@ defmodule Surface.Components.ContextTest do
       assert assigns.field == :fake_field
     end
 
-    test "copy a value from the context using option :as to store it under a different assign" do
+    test "option :as to store the value using a different key" do
       socket =
         %Socket{}
         |> Context.put(Form, form: :fake_form)
@@ -258,7 +317,7 @@ defmodule Surface.Components.ContextTest do
         %Socket{}
         |> Context.put(Form, form: :fake_form)
         |> Context.put(field: :fake_field)
-        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign({Form, :form})
         |> Context.maybe_copy_assign(:field)
 
       assert socket.assigns.form == :fake_form
@@ -272,7 +331,7 @@ defmodule Surface.Components.ContextTest do
         |> Phoenix.LiveView.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
-        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign({Form, :form})
         |> Context.maybe_copy_assign(:field)
 
       assert socket.assigns.form == :existing_form
@@ -284,7 +343,7 @@ defmodule Surface.Components.ContextTest do
         %{__changed__: %{}}
         |> Context.put(Form, form: :fake_form)
         |> Context.put(field: :fake_field)
-        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign({Form, :form})
         |> Context.maybe_copy_assign(:field)
 
       assert assigns.form == :fake_form
@@ -298,11 +357,23 @@ defmodule Surface.Components.ContextTest do
         |> Phoenix.LiveView.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
-        |> Context.maybe_copy_assign(Form, :form)
+        |> Context.maybe_copy_assign({Form, :form})
         |> Context.maybe_copy_assign(:field)
 
       assert assigns.form == :existing_form
       assert assigns.field == :existing_field
+    end
+
+    test "option :as to store the value using a different key" do
+      socket =
+        %Socket{}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.maybe_copy_assign({Form, :form}, as: :my_form)
+        |> Context.maybe_copy_assign(:field, as: :my_field)
+
+      assert socket.assigns.my_form == :fake_form
+      assert socket.assigns.my_field == :fake_field
     end
   end
 
@@ -312,7 +383,7 @@ defmodule Surface.Components.ContextTest do
         %Socket{}
         |> Context.put(Form, form: :fake_form)
         |> Context.put(field: :fake_field)
-        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!({Form, :form})
         |> Context.maybe_copy_assign!(:field)
 
       assert socket.assigns.form == :fake_form
@@ -326,7 +397,7 @@ defmodule Surface.Components.ContextTest do
         |> Phoenix.LiveView.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
-        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!({Form, :form})
         |> Context.maybe_copy_assign!(:field)
 
       assert socket.assigns.form == :existing_form
@@ -338,7 +409,7 @@ defmodule Surface.Components.ContextTest do
         %{__changed__: %{}}
         |> Context.put(Form, form: :fake_form)
         |> Context.put(field: :fake_field)
-        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!({Form, :form})
         |> Context.maybe_copy_assign!(:field)
 
       assert assigns.form == :fake_form
@@ -352,11 +423,23 @@ defmodule Surface.Components.ContextTest do
         |> Phoenix.LiveView.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
-        |> Context.maybe_copy_assign!(Form, :form)
+        |> Context.maybe_copy_assign!({Form, :form})
         |> Context.maybe_copy_assign!(:field)
 
       assert assigns.form == :existing_form
       assert assigns.field == :existing_field
+    end
+
+    test "option :as to store the value using a different key" do
+      socket =
+        %Socket{}
+        |> Context.put(Form, form: :fake_form)
+        |> Context.put(field: :fake_field)
+        |> Context.maybe_copy_assign!({Form, :form}, as: :my_form)
+        |> Context.maybe_copy_assign!(:field, as: :my_field)
+
+      assert socket.assigns.my_form == :fake_form
+      assert socket.assigns.my_field == :fake_field
     end
 
     test "raise an error if the value is still `nil` after trying to copy it (with scope)" do
@@ -391,7 +474,7 @@ defmodule Surface.Components.ContextTest do
       """
 
       assert_raise(RuntimeError, message, fn ->
-        Context.maybe_copy_assign!(%Socket{}, Form, :form)
+        Context.maybe_copy_assign!(%Socket{}, {Form, :form})
       end)
     end
 
