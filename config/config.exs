@@ -4,14 +4,6 @@ import Config
 
 config :phoenix, :json_library, Jason
 
-# TODO: Move this list to the engine
-config :surface, :components, [
-  {Surface.Components.Form, propagate_context_to_slots: true},
-  {Surface.Components.Form.Field, propagate_context_to_slots: true},
-  {Surface.Components.Form.FieldContext, propagate_context_to_slots: true},
-  {Surface.Components.Form.Inputs, propagate_context_to_slots: true}
-]
-
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

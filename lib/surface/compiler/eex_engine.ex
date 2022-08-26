@@ -1199,7 +1199,9 @@ defmodule Surface.Compiler.EExEngine do
         #{parents_text}\
         """
 
-        IOHelper.warn(message, caller, meta.file, meta.line)
+        if emit_propagate_context_to_slots_warning?(caller, module, fun) do
+          IOHelper.warn(message, caller, meta.file, meta.line)
+        end
       end
 
       quote(do: %{})
@@ -1268,10 +1270,17 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp propagate_context_to_slots?(caller, module, fun) do
-    propagate_context_to_slots_set =
-      Module.get_attribute(caller.module, :propagate_context_to_slots_set) ||
-        Surface.BaseComponent.build_propagate_context_to_slots_set()
+    propagate_context_to_slots_map = get_propagate_context_to_slots_map(caller)
+    Map.get(propagate_context_to_slots_map, {module, fun}, false)
+  end
 
-    MapSet.member?(propagate_context_to_slots_set, {module, fun})
+  defp emit_propagate_context_to_slots_warning?(caller, module, fun) do
+    propagate_context_to_slots_map = get_propagate_context_to_slots_map(caller)
+    not Map.has_key?(propagate_context_to_slots_map, {module, fun})
+  end
+
+  defp get_propagate_context_to_slots_map(caller) do
+    Module.get_attribute(caller.module, :propagate_context_to_slots_map) ||
+      Surface.BaseComponent.build_propagate_context_to_slots_map()
   end
 end
