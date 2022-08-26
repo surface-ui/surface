@@ -1824,6 +1824,29 @@ defmodule Surface.SlotSyncTest do
            """
   end
 
+  test "don't output compile warning to default slot without argument in a slotable component" do
+    component_code = """
+    defmodule ColumnWithRender do
+      use Surface.Component, slot: "cols"
+
+      slot default
+
+      def render(assigns) do
+        ~F"\""
+        <#slot {@default} />
+        "\""
+      end
+    end
+    """
+
+    output =
+      capture_io(:standard_error, fn ->
+        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
+      end)
+
+    refute output =~ "arguments for the default slot in a slotable component are not accessible"
+  end
+
   test "use slot entry in element that is not a component" do
     code =
       quote do
