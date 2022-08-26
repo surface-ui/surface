@@ -8,7 +8,10 @@
 ### Breaking Changes
 
   * Drop support for Elixir < `v1.12`
-  * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
+  * Slots
+    * New option `:generator` use `slot default, generator: :items` instead of `slot default, args: [item: ^items]`
+    * New attribute `generator_value` use `<#slot generator_value={item} />` instead of `<#slot :args={item: item} />`
+    * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
 
 ## v0.7.5 (2022-07-21)
 

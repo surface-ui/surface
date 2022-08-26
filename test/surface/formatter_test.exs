@@ -905,9 +905,9 @@ defmodule Surface.FormatterTest do
         """
       )
 
-      # demonstrate that <#slot :args={@foo} /> isn't collapsed
+      # demonstrate that <#slot arg={@foo} /> isn't collapsed
       assert_formatter_doesnt_change("""
-      <#slot :args={@foo} />
+      <#slot arg={@foo} />
       """)
     end
 
@@ -1368,7 +1368,7 @@ defmodule Surface.FormatterTest do
       assert_formatter_outputs(
         """
         <div class="mx-6 my-4">
-          <#slot name="header">
+          <#slot {@header}>
             <h1 :if={@title} class="lg:hidden text-md text-neutral-600 mt-4 mb-2 font-semibold leading-loose tracking-wide">
               {@title}
             </h1>
@@ -1379,7 +1379,7 @@ defmodule Surface.FormatterTest do
         """,
         """
         <div class="mx-6 my-4">
-          <#slot name="header">
+          <#slot {@header}>
             <h1
               :if={@title}
               class="lg:hidden text-md text-neutral-600 mt-4 mb-2 font-semibold leading-loose tracking-wide"

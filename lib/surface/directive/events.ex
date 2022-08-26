@@ -48,7 +48,7 @@ defmodule Surface.Directive.Events do
       )
       when type in [AST.Tag, AST.VoidTag] do
     value =
-      quote generated: true do
+      quote do
         [{unquote("phx-#{event_name}"), {:event, unquote(value)}}]
       end
 

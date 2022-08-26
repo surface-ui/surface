@@ -31,7 +31,7 @@ defmodule Surface.Directive.Let do
 
   defp directive_value(value, meta) do
     AST.AttributeExpr.new(
-      Surface.TypeHandler.expr_to_quoted!(value, ":let", :bindings, meta),
+      Surface.TypeHandler.expr_to_quoted!(value, ":let", :let_arg, meta),
       value,
       meta
     )

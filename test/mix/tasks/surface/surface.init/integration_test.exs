@@ -24,7 +24,11 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
   test "surfice.init on a fresh project applies all changes", %{project_folder: project_folder} do
     opts = [cd: project_folder]
 
-    output = cmd("mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install --dry-run", opts)
+    output =
+      cmd(
+        "mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
+        opts
+      )
 
     assert output == """
            * patching .formatter.exs
@@ -60,7 +64,11 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
   test "surfice.init on an already patched project applies no changes", %{project_folder_patched: project_folder} do
     opts = [cd: project_folder]
 
-    output = cmd("mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install --dry-run", opts)
+    output =
+      cmd(
+        "mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
+        opts
+      )
 
     assert compact_output(output) == """
            * patching .formatter.exs (skipped)

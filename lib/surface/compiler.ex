@@ -39,12 +39,11 @@ defmodule Surface.Compiler do
   @slot_entry_directive_handlers [Surface.Directive.Let]
 
   @slot_directive_handlers [
-    Surface.Directive.SlotArgs,
     Surface.Directive.If,
     Surface.Directive.For
   ]
 
-  @valid_slot_props ["for", "name", "index"]
+  @valid_slot_props [:root, "for", "name", "index", "generator_value", ":args"]
 
   @directive_prefixes [":", "s-"]
 
@@ -467,7 +466,7 @@ defmodule Surface.Compiler do
          children: to_ast(children, compile_meta),
          props: attributes,
          directives: directives,
-         let: [],
+         let: nil,
          meta: meta
        }}
     else
@@ -498,32 +497,78 @@ defmodule Surface.Compiler do
 
     # TODO: Validate attributes with custom messages
 
-    has_for? = has_attribute?(attributes, "for")
-
-    name = attribute_value_as_atom(attributes, "name", nil) || extract_name_from_for(attributes)
+    has_root? = has_attribute?(attributes, :root)
+    has_for? = !has_root? and has_attribute?(attributes, "for")
 
     name =
-      if !name and !has_for? do
+      extract_name_from_root(attributes) || attribute_value_as_atom(attributes, "name", nil) ||
+        extract_name_from_for(attributes)
+
+    name =
+      if !name and !has_for? and !has_root? do
         :default
       else
         name
       end
 
-    short_slot_syntax? = not has_attribute?(attributes, "name")
+    default_syntax? = not has_attribute?(attributes, "name") && not has_for? && not has_root?
 
-    slot_entry =
-      if has_for? do
-        attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+    render_slot_args =
+      if has_root? do
+        attribute_value_as_ast(attributes, :root, :render_slot, %Surface.AST.Literal{value: nil}, compile_meta)
+      end
+
+    for_ast =
+      cond do
+        has_for? ->
+          attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
+
+        has_root? ->
+          render_slot_args.slot
+
+        true ->
+          nil
       end
 
     index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
     {:ok, directives, attrs} = collect_directives(@slot_directive_handlers, attributes, meta)
     validate_slot_attrs!(attrs, meta.caller)
-    slot = Enum.find(defined_slots, fn slot -> slot.name == name end)
+
+    slot =
+      Enum.find(defined_slots, fn slot ->
+        slot.name == name || (Keyword.has_key?(slot.opts, :as) and slot.opts[:as] == name)
+      end)
+
+    if has_attribute?(attributes, ":args") do
+      Surface.IOHelper.warn(
+        "directive :args has been deprecated. Use the root prop instead.",
+        meta.caller,
+        meta.line
+      )
+    end
+
+    arg =
+      cond do
+        has_root? ->
+          render_slot_args.argument
+
+        has_attribute?(attributes, ":args") ->
+          attribute_value_as_ast(attributes, ":args", :let_arg, %Surface.AST.Literal{value: nil}, compile_meta)
+
+        true ->
+          nil
+      end
 
     if slot do
-      maybe_warn_required_slot_with_default_value(slot, children, short_slot_syntax?, meta)
+      maybe_warn_required_slot_with_default_value(
+        slot,
+        children,
+        for_ast,
+        meta
+      )
+
+      maybe_warn_argument_for_default_slot_in_slotable_component(slot, arg, meta)
     end
 
     if name && !slot do
@@ -532,19 +577,38 @@ defmodule Surface.Compiler do
         name,
         meta,
         defined_slots,
-        short_slot_syntax?
+        default_syntax?
       )
     end
+
+    generator_value =
+      cond do
+        has_attribute?(attributes, "generator_value") ->
+          attribute_value_as_ast(
+            attributes,
+            "generator_value",
+            :any,
+            %Surface.AST.Literal{value: nil},
+            compile_meta
+          )
+
+        slot && Keyword.has_key?(slot.opts, :generator_prop) ->
+          IOHelper.compile_error("`generator_value` is missing for slot `#{slot.name}`", meta.file, meta.line)
+
+        true ->
+          nil
+      end
 
     {:ok,
      %AST.Slot{
        name: name,
        as: if(slot, do: slot[:opts][:as]),
        index: index,
-       for: slot_entry,
+       for: for_ast,
        directives: directives,
        default: to_ast(children, compile_meta),
-       args: [],
+       arg: arg,
+       generator_value: generator_value,
        meta: meta
      }}
   end
@@ -683,7 +747,7 @@ defmodule Surface.Compiler do
             module: mod,
             slot: mod.__slot_name__(),
             type: component_type,
-            let: [],
+            let: nil,
             props: attributes,
             directives: directives,
             slot_entries: slot_entries,
@@ -787,6 +851,21 @@ defmodule Surface.Compiler do
     end
   end
 
+  defp extract_name_from_root(attributes) do
+    with value when is_binary(value) <- attribute_raw_value(attributes, :root, nil),
+         {:ok, [{:@, _, [{assign_name, _, _}]} | _rest]} <-
+           Code.string_to_quoted("[#{value}]") do
+      assign_name
+    else
+      {:error, _} ->
+        # TODO: raise
+        nil
+
+      _ ->
+        nil
+    end
+  end
+
   defp has_attribute?([], _), do: false
 
   defp has_attribute?(attributes, attr_name),
@@ -798,7 +877,16 @@ defmodule Surface.Compiler do
         expr_meta = Helpers.to_meta(expr_meta, meta)
         expr = Surface.TypeHandler.expr_to_quoted!(value, attr_name, type, expr_meta)
 
-        AST.AttributeExpr.new(expr, value, expr_meta)
+        if type == :render_slot do
+          %{slot: slot, argument: argument} = expr
+
+          %{
+            slot: AST.AttributeExpr.new(slot, value, expr_meta),
+            argument: AST.AttributeExpr.new(argument, value, expr_meta)
+          }
+        else
+          AST.AttributeExpr.new(expr, value, expr_meta)
+        end
 
       {^attr_name, value, attr_meta} ->
         attr_meta = Helpers.to_meta(attr_meta, meta)
@@ -947,7 +1035,7 @@ defmodule Surface.Compiler do
           children: default_children,
           props: [],
           directives: directives,
-          let: [],
+          let: nil,
           meta: meta
         })
 
@@ -1065,48 +1153,10 @@ defmodule Surface.Compiler do
       raise_missing_parent_slot_error!(mod, slot_name, slot_entry.meta, meta)
     end
 
-    for slot_name <- Map.keys(slot_entries),
-        slot_entry <- Map.get(slot_entries, slot_name) do
-      slot = mod.__get_slot__(slot_name)
-      args = Keyword.keys(slot_entry.let)
-
-      arg_meta =
-        Enum.find_value(slot_entry.directives, meta, fn directive ->
-          if directive.module == Surface.Directive.Let do
-            directive.meta
-          end
-        end)
-
-      case slot do
-        %{opts: opts} ->
-          non_generator_args = Enum.map(opts[:args] || [], &Map.get(&1, :name))
-
-          undefined_keys = args -- non_generator_args
-
-          if not Enum.empty?(undefined_keys) do
-            [arg | _] = undefined_keys
-
-            message = """
-            undefined argument `#{inspect(arg)}` for slot `#{slot_name}` in `#{inspect(mod)}`.
-
-            Available arguments: #{inspect(non_generator_args)}.
-
-            Hint: You can define a new slot argument using the `args` option: \
-            `slot #{slot_name}, args: [..., #{inspect(arg)}]`
-            """
-
-            IOHelper.compile_error(message, arg_meta.file, arg_meta.line)
-          end
-
-        _ ->
-          :ok
-      end
-    end
-
     :ok
   end
 
-  defp raise_missing_slot_error!(module, slot_name, meta, _defined_slots, true = _short_syntax?) do
+  defp raise_missing_slot_error!(module, slot_name, meta, _defined_slots, true = _default_syntax?) do
     message = """
     no slot `#{slot_name}` defined in the component `#{inspect(module)}`
 
@@ -1116,7 +1166,7 @@ defmodule Surface.Compiler do
     IOHelper.compile_error(message, meta.file, meta.line)
   end
 
-  defp raise_missing_slot_error!(module, slot_name, meta, defined_slots, false = _short_syntax?) do
+  defp raise_missing_slot_error!(module, slot_name, meta, defined_slots, false = _default_syntax?) do
     defined_slot_names = Enum.map(defined_slots, & &1.name)
     similar_slot_message = similar_slot_message(slot_name, defined_slot_names)
     existing_slots_message = existing_slots_message(defined_slot_names)
@@ -1204,9 +1254,9 @@ defmodule Surface.Compiler do
 
   defp maybe_warn_required_slot_with_default_value(_, [], _, _), do: nil
 
-  defp maybe_warn_required_slot_with_default_value(slot, _, short_syntax?, meta) do
+  defp maybe_warn_required_slot_with_default_value(slot, _, for_ast, meta) do
     if Keyword.get(slot.opts, :required, false) do
-      slot_name_tag = if short_syntax?, do: "", else: " name=\"#{slot.name}\""
+      slot_for_tag = if for_ast == nil, do: "", else: " {#{for_ast.original}}"
 
       message = """
       setting the fallback content on a required slot has no effect.
@@ -1215,18 +1265,46 @@ defmodule Surface.Compiler do
 
         slot #{slot.name}
         ...
-        <#slot#{slot_name_tag}>Fallback content</#slot>
+        <#slot#{slot_for_tag}>Fallback content</#slot>
 
       or keep the slot as required and remove the fallback content:
 
         slot #{slot.name}, required: true`
         ...
-        <#slot#{slot_name_tag} />
+        <#slot#{slot_for_tag} />
 
       but not both.
       """
 
       IOHelper.warn(message, meta.caller, meta.file, meta.line)
+    end
+  end
+
+  defp maybe_warn_argument_for_default_slot_in_slotable_component(slot, arg, meta) do
+    if arg do
+      slot_name = Module.get_attribute(meta.caller.module, :__slot_name__)
+      default_slot_of_slotable_component? = slot.name == :default && slot_name
+
+      if default_slot_of_slotable_component? do
+        component_name = Macro.to_string(meta.caller.module)
+
+        message = """
+        arguments for the default slot in a slotable component are not accessible - instead the arguments \
+        from the parent's #{slot_name} slot will be exposed via `:let={...}`.
+
+        Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
+        and use it inside an explicit slot entry:
+        ```
+        <:#{slot_name}>
+          <#{component_name} :let={...}>
+            ...
+          </#{component_name}>
+        </:#{slot_name}>
+        ```
+        """
+
+        IOHelper.warn(message, meta.caller, meta.line)
+      end
     end
   end
 
@@ -1304,26 +1382,66 @@ defmodule Surface.Compiler do
     Enum.each(attrs, &validate_slot_attr!(&1, caller))
   end
 
-  # TODO: Deprecate `name` and `index` after releasing v0.7
-  #
-  # defp validate_slot_attr!({"name", value, meta}, caller) do
-  #   message = """
-  #   properties `name` and `index` have been deprecated. Please use prop `for` instead. Examples:
+  defp validate_slot_attr!({"for", value, _meta}, caller) do
+    {:attribute_expr, expr, expr_meta} = value
 
-  #   Rendering the slot:
+    message = """
+    property `for` has been deprecated. Please use the root prop instead. Examples:
 
-  #     <#slot for={@#{value}}/>
+    Rendering the slot:
 
-  #   Iterating over the slot items:
+      <#slot {#{expr}}/>
 
-  #     {#for item <- @#{value}}
-  #       <#slot for={item}/>
-  #     {/for}
-  #   """
-  #   Surface.IOHelper.warn(message, caller, meta.line)
+    Iterating over the slot items:
 
-  #   :ok
-  # end
+      {#for item <- #{expr}}
+        <#slot {item}/>
+      {/for}
+    """
+
+    Surface.IOHelper.warn(message, caller, expr_meta.line)
+    :ok
+  end
+
+  defp validate_slot_attr!({"name", value, meta}, caller) do
+    message = """
+    properties `name` and `index` have been deprecated. Please use root prop instead. Examples:
+
+    Rendering the slot:
+
+      <#slot {@#{value}}/>
+
+    Iterating over the slot items:
+
+      {#for item <- @#{value}}
+        <#slot {item}/>
+      {/for}
+    """
+
+    Surface.IOHelper.warn(message, caller, meta.line)
+
+    :ok
+  end
+
+  defp validate_slot_attr!({"index", _value, meta}, caller) do
+    message = """
+    properties `name` and `index` have been deprecated. Please use root prop instead. Examples:
+
+    Rendering the slot:
+
+      <#slot {@slot_name}/>
+
+    Iterating over the slot items:
+
+      {#for item <- @slot_name}
+        <#slot {item}/>
+      {/for}
+    """
+
+    Surface.IOHelper.warn(message, caller, meta.line)
+
+    :ok
+  end
 
   defp validate_slot_attr!({name, _, _meta}, _caller) when name in @valid_slot_props do
     :ok
@@ -1339,7 +1457,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept `for`, `name`, `index`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)

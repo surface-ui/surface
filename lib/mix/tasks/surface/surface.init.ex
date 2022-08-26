@@ -52,6 +52,8 @@ defmodule Mix.Tasks.Surface.Init do
 
     * `--no-install` - do not fetch and install added/updated dependencies.
 
+    * `--web-module` - Configures the name of the Web module. Defaults to `MyAppWeb`.
+
   """
 
   use Mix.Task
@@ -71,7 +73,8 @@ defmodule Mix.Tasks.Surface.Init do
     scoped_css: :boolean,
     error_tag: :boolean,
     install: :boolean,
-    dry_run: :boolean
+    dry_run: :boolean,
+    web_module: :string
   ]
 
   @default_opts [
@@ -85,7 +88,8 @@ defmodule Mix.Tasks.Surface.Init do
     scoped_css: true,
     error_tag: true,
     install: true,
-    dry_run: false
+    dry_run: false,
+    web_module: nil
   ]
 
   @project_patchers [
@@ -135,7 +139,7 @@ defmodule Mix.Tasks.Surface.Init do
     context_app = Mix.Phoenix.context_app()
     web_path = Mix.Phoenix.web_path(context_app)
     base = Module.concat([Mix.Phoenix.base()])
-    web_module = Mix.Phoenix.web_module(base)
+    web_module = web_module_name(base, opts[:web_module])
     web_module_path = web_module_path(context_app)
     using_gettext? = using_gettext?(web_path, web_module)
 
@@ -149,6 +153,14 @@ defmodule Mix.Tasks.Surface.Init do
       web_path: web_path,
       using_gettext?: using_gettext?
     })
+  end
+
+  defp web_module_name(base, nil) do
+    Mix.Phoenix.web_module(base)
+  end
+
+  defp web_module_name(_base, web_module) do
+    Module.concat([web_module])
   end
 
   defp web_module_path(ctx_app) do
