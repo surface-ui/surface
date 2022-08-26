@@ -116,14 +116,18 @@ defmodule Surface.PropertiesTest do
   defmodule RootGeneratorProp do
     use Surface.Component
 
-    prop labels, :list, root: true
-    slot default, args: [label: ^labels]
+    prop labels, :generator, root: true
+    slot default, generator_prop: :labels
 
     def render(assigns) do
       ~F"""
-      {#for label <- @labels}
-        <#slot :args={label: label} />
-      {/for}
+      {#if is_nil(@labels)}
+        No labels
+      {#else}
+        {#for label <- @labels}
+          <#slot generator_value={label} />
+        {/for}
+      {/if}
       """
     end
   end
@@ -739,6 +743,39 @@ defmodule Surface.PropertiesTest do
              """
     end
 
+    test "component accepts root generator property with assign" do
+      assigns = %{labels: ["Label1", "Label2"]}
+
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp {label <- @labels}>
+            Slot: {label}
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               Slot: Label1
+               Slot: Label2
+             """
+    end
+
+    test "generator not given works" do
+      html =
+        render_surface do
+          ~F"""
+          <RootGeneratorProp>
+            Slot
+          </RootGeneratorProp>
+          """
+        end
+
+      assert html =~ """
+               No labels
+             """
+    end
+
     test "validate invalid values at runtime" do
       message = """
       invalid value for property "label". Expected a :string, got: ["label", "label2"].
@@ -755,17 +792,21 @@ defmodule Surface.PropertiesTest do
       end)
     end
 
-    test "validate invalid values at runtime, list" do
-      message = """
-      invalid value for property "labels". Expected a :list, got: "label"\
-      """
-
-      assert_raise(RuntimeError, message, fn ->
-        render_surface do
+    test "validate if not generator at compile time" do
+      code =
+        quote do
           ~F"""
-          <RootGeneratorProp {"label"} />
+          <RootGeneratorProp
+            {"label"} />
           """
         end
+
+      message = """
+      code:2: invalid value for property "labels". Expected a :generator Example: `{i <- ...}`, got: {"label"}.\
+      """
+
+      assert_raise(CompileError, message, fn ->
+        compile_surface(code)
       end)
     end
   end
@@ -894,6 +935,35 @@ defmodule Surface.PropertiesSyncTest do
     assert output =~ ~S"""
            prop `invalid_acc2` default value `3` must be a list when `accumulate: true`
            """
+  end
+
+  test "warn if generator_value property is missing" do
+    id = :erlang.unique_integer([:positive]) |> to_string()
+    module = "TestComponentWithDefaultValueThatDoesntExistInValues_#{id}"
+
+    code = """
+    defmodule #{module} do
+      use Surface.Component
+
+      prop labels, :generator, root: true
+      slot default, generator_prop: :labels
+
+      def render(assigns) do
+        ~F"\""
+        {#for label <- @labels}
+          {label}
+          <#slot />
+        {/for}
+        "\""
+      end
+    end
+    """
+
+    message = "code.exs:11: `generator_value` is missing for slot `default`"
+
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   describe "unknown property" do
@@ -1082,6 +1152,24 @@ defmodule Surface.PropertiesSyncTest do
              Hint: Either specify the `label` via the root property (`<RootProp { ... }>`) or \
              explicitly via the label property (`<RootProp label="...">`), but not both.
              """
+    end
+
+    test "literal expression to list prop don't emit warnings" do
+      code =
+        quote do
+          ~F"""
+          <ListProp prop={1}/>
+          """
+        end
+
+      output = capture_io(:standard_error, fn -> compile_surface(code) end)
+
+      refute output =~ """
+             this check/guard will always yield the same result
+               code
+             """
+
+      assert output == ""
     end
   end
 end

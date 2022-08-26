@@ -29,7 +29,7 @@ defmodule Surface.Directive.TagAttrs do
       |> Enum.map(fn %AST.Attribute{name: name} -> name end)
 
     new_expr =
-      quote generated: true do
+      quote do
         for {name, value} <- unquote(value) || [],
             not Enum.member?(unquote(Macro.escape(attr_names)), name) do
           {name, {Surface.TypeHandler.attribute_type_and_opts(name), value}}

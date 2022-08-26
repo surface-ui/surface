@@ -11,7 +11,7 @@ defmodule Surface.TypeHandler.Dynamic do
   @impl true
   def expr_to_quoted(_type, _name, clauses, opts, _meta, original) do
     quoted_expr =
-      quote generated: true do
+      quote do
         {unquote(clauses), unquote(opts), unquote(original)}
       end
 

@@ -49,11 +49,11 @@ defmodule Surface.DirectivesTest do
     use Surface.Component
 
     prop show, :boolean
-    slot default, args: [:data]
+    slot default, arg: %{data: :string}
 
     def render(assigns) do
       ~F"""
-      <div><#slot :if={@show} :args={data: "data"}/></div>
+      <div><#slot :if={@show} {@default, data: "data"}/></div>
       """
     end
   end
@@ -693,10 +693,12 @@ defmodule Surface.DirectivesTest do
           ~F"""
           <col :show={@show}>
           <col :show={true}>
+          <col :show>
           """
         end
 
       assert html == """
+             <col>
              <col>
              <col>
              """
@@ -916,6 +918,19 @@ defmodule Surface.DirectivesTest do
   end
 
   describe ":hook" do
+    test "generate a default phx-hook with __MODULE__ as default namespace" do
+      html =
+        render_surface do
+          ~F"""
+          <div :hook></div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-hook="Surface.DirectivesTest#default"></div>
+             """
+    end
+
     test "generate phx-hook with __MODULE__ as default namespace" do
       html =
         render_surface do

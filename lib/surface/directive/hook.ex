@@ -18,7 +18,7 @@ defmodule Surface.Directive.Hook do
       )
       when type in [AST.Tag, AST.VoidTag] do
     new_expr =
-      quote generated: true do
+      quote do
         [{"phx-hook", {:string, unquote(__MODULE__).hook_name(unquote(value))}}]
       end
 

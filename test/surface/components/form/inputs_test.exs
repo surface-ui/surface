@@ -29,7 +29,7 @@ defmodule Surface.Components.Form.InputsTest do
         |> Ecto.Changeset.cast_embed(:children)
   end
 
-  test "using generated form received as slot args" do
+  test "using generated form received as slot arg" do
     html =
       render_surface do
         ~F"""

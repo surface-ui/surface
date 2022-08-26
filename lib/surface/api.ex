@@ -35,8 +35,8 @@ defmodule Surface.API do
     :regex,
     :uri,
     :path,
-    # Private
     :generator,
+    # Private
     :context_put,
     :context_get,
     :dynamic
@@ -430,6 +430,10 @@ defmodule Surface.API do
     end)
   end
 
+  defp get_valid_opts(:prop, :generator, _opts) do
+    [:required, :root]
+  end
+
   defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :values!, :accumulate, :root, :static]
   end
@@ -439,24 +443,42 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :args, :as]
+    [:required, :arg, :args, :as, :generator_prop]
   end
 
   defp validate_opt_ast!(:slot, :args, args_ast, caller) do
-    Enum.map(args_ast, fn
+    Enum.each(args_ast, fn
       {name, {:^, _, [{generator, _, context}]}} when context in [Elixir, nil] ->
-        Macro.escape(%{name: name, generator: generator})
+        message = """
+        The API for generators has changed. Use `generator_prop: :#{generator}` instead of `args: [#{name}: ^#{generator}]`.
 
-      name when is_atom(name) ->
-        Macro.escape(%{name: name, generator: nil})
+        Example:
 
-      ast ->
-        message =
-          "invalid slot argument #{Macro.to_string(ast)}. " <>
-            "Expected an atom or a binding to a generator as `key: ^property_name`"
+          prop #{generator}, :generator, root: true
+          slot default, generator_prop: :#{generator}
+
+          ...
+
+          {#for #{name} <- @#{generator}}
+            <#slot generator_value={#{name}} />
+          {/for}
+        """
 
         IOHelper.compile_error(message, caller.file, caller.line)
+
+      _ ->
+        nil
     end)
+
+    message = """
+    option :args has been deprecated. Use :arg instead.
+
+    Example:
+
+    slot default, arg: %{name: :string, age: :number}
+    """
+
+    IOHelper.warn(message, caller)
   end
 
   defp validate_opt_ast!(_func, _key, value, _caller) do
@@ -511,38 +533,6 @@ defmodule Surface.API do
   defp validate_opt(:slot, _name, _type, _opts, :as, value, _line, _caller)
        when not is_atom(value) do
     {:error, "invalid value for option :as in slot. Expected an atom, got: #{inspect(value)}"}
-  end
-
-  defp validate_opt(:slot, :default, _type, _opts, :args, value, line, env) do
-    if Module.defines?(env.module, {:__slot_name__, 0}) do
-      slot_name = Module.get_attribute(env.module, :__slot_name__)
-
-      prop_example =
-        value
-        |> Enum.map(fn %{name: name} -> "#{name}: #{name}" end)
-        |> Enum.join(", ")
-
-      component_name = Macro.to_string(env.module)
-
-      message = """
-      arguments for the default slot in a slotable component are not accessible - instead the arguments \
-      from the parent's #{slot_name} slot will be exposed via `:let={...}`.
-
-      Hint: You can remove these arguments, pull them up to the parent component, or make this component not slotable \
-      and use it inside an explicit slot entry:
-      ```
-      <:#{slot_name}>
-        <#{component_name} :let={#{prop_example}}>
-          ...
-        </#{component_name}>
-      </:#{slot_name}>
-      ```
-      """
-
-      IOHelper.warn(message, env, line)
-    end
-
-    :ok
   end
 
   defp validate_opt(_func, _name, _type, _opts, _key, _value, _line, _env) do
@@ -694,30 +684,34 @@ defmodule Surface.API do
     end
   end
 
+  defp available_generators_hint(module) do
+    existing_generators_names = module.__props__() |> Enum.filter(&(&1.type == :generator)) |> Enum.map(& &1.name)
+
+    "Available generators are #{inspect(existing_generators_names)}"
+  end
+
   defp validate_slot_props_bindings!(env) do
     for slot <- env.module.__slots__(),
-        slot_props = Keyword.get(slot.opts, :args, []),
-        %{name: name, generator: generator} <- slot_props,
-        generator != nil do
+        generator = Keyword.get(slot.opts, :generator_prop) do
       case env.module.__get_prop__(generator) do
         nil ->
-          existing_properties_names = env.module.__props__() |> Enum.map(& &1.name)
-
           message = """
-          cannot bind slot argument `#{name}` to property `#{generator}`. \
-          Expected an existing property after `^`, \
+          cannot use property `#{generator}` as generator for slot. \
+          Expected an existing property of type `:generator`, \
           got: an undefined property `#{generator}`.
 
-          Hint: Available properties are #{inspect(existing_properties_names)}\
+          Hint: #{available_generators_hint(env.module)}\
           """
 
           IOHelper.compile_error(message, env.file, slot.line)
 
-        %{type: type} when type != :list ->
+        %{type: type} when type != :generator ->
           message = """
-          cannot bind slot argument `#{name}` to property `#{generator}`. \
-          Expected a property of type :list after `^`, \
-          got: a property of type #{inspect(type)}\
+          cannot use property `#{generator}` as generator for slot. \
+          Expected a property of type :generator, \
+          got: a property of type #{inspect(type)}
+
+          Hint: #{available_generators_hint(env.module)}\
           """
 
           IOHelper.compile_error(message, env.file, slot.line)

@@ -60,9 +60,9 @@ defmodule Surface.CompilerTest do
   defmodule Grid do
     use Surface.Component
 
-    prop items, :list
+    prop items, :generator
 
-    slot cols, args: [item: ^items]
+    slot cols, generator_prop: :items
 
     def render(assigns) do
       ~F"""
@@ -756,6 +756,55 @@ defmodule Surface.CompilerSyncTest do
     assert line == 2
   end
 
+  test "warning when a directive is specified multiple times in an HTML element" do
+    code = """
+    <div
+      :on-click="a"
+      :on-click="b"
+    ></div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+           the directive `:on-click` has been passed multiple times. Considering only the last value.
+
+           Hint: remove all redundant definitions.
+
+             nofile:3:\
+           """
+
+    assert line == 3
+  end
+
+  test "warning when any directive is specified multiple times in an HTML element and not only events" do
+    code = """
+    <div
+      :if={true}
+      :if={true}
+      :on-click="a"
+    ></div>
+    """
+
+    {:warn, line, message} = run_compile(code, __ENV__)
+
+    assert message =~ """
+           the directive `:if` has been passed multiple times. Considering only the last value.
+
+           Hint: remove all redundant definitions.
+
+             nofile:3:\
+           """
+
+    assert line == 3
+  end
+
+  test "don't warn when directive is specified multiple times in components" do
+    code = ~s[<Button :props={"a"} :props={"b"} />]
+
+    assert {:ok, _component} = run_compile(code, __ENV__)
+  end
+
   test "warning with hint when a unaliased component cannot be loaded" do
     code = """
     <div>
@@ -1043,8 +1092,8 @@ defmodule Surface.CompilerSyncTest do
         ~F"\""
         <div>
           <#slot>Default Content</#slot>
-          <#slot name="header">Default Header</#slot>
-          <#slot name="footer">Default Footer</#slot>
+          <#slot {@header}>Default Header</#slot>
+          <#slot {@footer}>Default Footer</#slot>
         </div>
         "\""
       end
@@ -1084,13 +1133,13 @@ defmodule Surface.CompilerSyncTest do
 
              slot header
              ...
-             <#slot name="header">Fallback content</#slot>
+             <#slot {@header}>Fallback content</#slot>
 
            or keep the slot as required and remove the fallback content:
 
              slot header, required: true`
              ...
-             <#slot name="header" />
+             <#slot {@header} />
 
            but not both.
 

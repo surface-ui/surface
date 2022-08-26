@@ -19,6 +19,9 @@ defmodule Surface.Directive.Events do
 
   @phx_events Enum.map(@events, &"phx-#{&1}")
 
+  @doc false
+  def names(), do: @events
+
   def phx_events(), do: @phx_events
 
   def extract({":on-" <> event_name, value, attr_meta}, meta)
@@ -45,7 +48,7 @@ defmodule Surface.Directive.Events do
       )
       when type in [AST.Tag, AST.VoidTag] do
     value =
-      quote generated: true do
+      quote do
         [{unquote("phx-#{event_name}"), {:event, unquote(value)}}]
       end
 
