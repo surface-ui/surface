@@ -13,6 +13,16 @@ defmodule Surface.TypeHandler.Hook do
      )}
   end
 
+  @impl true
+  def literal_to_ast_node(type, name, true, meta) do
+    {:ok,
+     Surface.AST.AttributeExpr.new(
+       Surface.TypeHandler.expr_to_quoted!(Macro.to_string("default"), name, type, meta),
+       true,
+       meta
+     )}
+  end
+
   def literal_to_ast_node(_type, _name, _value, _meta) do
     :error
   end
