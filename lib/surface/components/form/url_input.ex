@@ -34,10 +34,6 @@ defmodule Surface.Components.Form.UrlInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {url_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{url_input(@form, @field, @opts)}]
   end
 end

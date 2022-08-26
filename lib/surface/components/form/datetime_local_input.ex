@@ -35,10 +35,6 @@ defmodule Surface.Components.Form.DateTimeLocalInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {datetime_local_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{datetime_local_input(@form, @field, @opts)}]
   end
 end

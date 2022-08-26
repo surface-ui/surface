@@ -41,10 +41,7 @@ defmodule Surface.Components.Form.Checkbox do
       |> Keyword.merge(attr_opts)
       |> Keyword.merge(event_opts)
 
-    assigns =
-      assigns
-      |> assign(:opts, opts)
-      |> maybe_copy_form_and_field_from_context()
+    assigns = assign(assigns, :opts, opts)
 
     ~F[{checkbox(@form, @field, @opts)}]
   end

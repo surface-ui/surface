@@ -23,13 +23,12 @@ defmodule Surface.Components.Form.TimeSelect do
 
   import Phoenix.HTML.Form, only: [time_select: 3]
   import Surface.Components.Form.Utils
-  alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
-  prop form, :form
+  prop form, :form, from_context: {Surface.Components.Form, :form}
 
   @doc "The field name"
-  prop field, :string
+  prop field, :any, from_context: {Surface.Components.Form.Field, :field}
 
   @doc "The id prefix for underlying select fields"
   prop id, :string
@@ -75,10 +74,6 @@ defmodule Surface.Components.Form.TimeSelect do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {time_select(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{time_select(@form, @field, @opts)}]
   end
 end

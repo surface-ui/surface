@@ -12,13 +12,12 @@ defmodule Surface.Components.Form.Select do
 
   import Phoenix.HTML.Form, only: [select: 4]
   import Surface.Components.Form.Utils
-  alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
-  prop form, :form
+  prop form, :form, from_context: {Surface.Components.Form, :form}
 
   @doc "The field name"
-  prop field, :string
+  prop field, :any, from_context: {Surface.Components.Form.Field, :field}
 
   @doc "The id of the corresponding select field"
   prop id, :string
@@ -52,10 +51,6 @@ defmodule Surface.Components.Form.Select do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {select(form, field, @options, @opts)}
-    </InputContext>
-    """
+    ~F[{select(@form, @field, @options, @opts)}]
   end
 end

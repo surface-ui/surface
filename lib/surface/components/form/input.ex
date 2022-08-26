@@ -2,8 +2,6 @@ defmodule Surface.Components.Form.Input do
   @moduledoc false
 
   alias Surface.Components.Context
-  alias Surface.Components.Form
-  alias Surface.Components.Form.Field
 
   defmacro __using__(_) do
     quote do
@@ -14,10 +12,10 @@ defmodule Surface.Components.Form.Input do
       alias Surface.Components.Form.Input.InputContext
 
       @doc "An identifier for the form"
-      prop form, :form
+      prop form, :form, from_context: {Surface.Components.Form, :form}
 
       @doc "An identifier for the input"
-      prop field, :any
+      prop field, :any, from_context: {Surface.Components.Form.Field, :field}
 
       @doc "The id of the corresponding input field"
       prop id, :string
@@ -47,13 +45,7 @@ defmodule Surface.Components.Form.Input do
     config[component][:default_class] || config[__MODULE__][:default_class]
   end
 
-  def maybe_copy_form_and_field_from_context(assigns) do
-    assigns
-    |> Context.maybe_copy_assign({Form, :form})
-    |> Context.maybe_copy_assign({Field, :field})
-  end
-
-  # TODO: deprecate this component in favor of maybe_copy_form_and_field_from_context/1
+  # TODO: deprecate this component in favor of `from_context` option
   defmodule InputContext do
     use Surface.Component
 

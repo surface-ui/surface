@@ -35,10 +35,6 @@ defmodule Surface.Components.Form.TimeInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {time_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{time_input(@form, @field, @opts)}]
   end
 end

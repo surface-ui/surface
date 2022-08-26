@@ -35,10 +35,6 @@ defmodule Surface.Components.Form.DateInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {date_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{date_input(@form, @field, @opts)}]
   end
 end

@@ -18,12 +18,12 @@ defmodule Surface.Components.Form.Inputs do
 
   It should either be a `Phoenix.HTML.Form` emitted by `form_for` or an atom.
   """
-  prop form, :form
+  prop form, :form, from_context: {Form, :form}
 
   @doc """
   An atom or string representing the field related to the child inputs.
   """
-  prop for, :any
+  prop for, :any, from_context: {Field, :field}
 
   @doc """
   Extra options for `inputs_for/3`.
@@ -38,11 +38,6 @@ defmodule Surface.Components.Form.Inputs do
   data field, :any
 
   def render(assigns) do
-    assigns =
-      assigns
-      |> Context.maybe_copy_assign!({Form, :form})
-      |> Context.copy_assign({Field, :field})
-
     ~F"""
     {#for {f, index}  <- Enum.with_index(inputs_for(@form, @for || @field, @opts))}
       <#slot {@default, form: f, index: index} context_put={Form, form: f}/>

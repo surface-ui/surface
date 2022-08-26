@@ -34,10 +34,6 @@ defmodule Surface.Components.Form.HiddenInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {hidden_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{hidden_input(@form, @field, @opts)}]
   end
 end

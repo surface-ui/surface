@@ -33,10 +33,7 @@ defmodule Surface.Components.Form.ColorInput do
       |> Keyword.merge(attr_opts)
       |> Keyword.merge(event_opts)
 
-    assigns =
-      assigns
-      |> assign(:opts, opts)
-      |> maybe_copy_form_and_field_from_context()
+    assigns = assign(assigns, :opts, opts)
 
     ~F[{color_input(@form, @field, @opts)}]
   end

@@ -37,10 +37,6 @@ defmodule Surface.Components.Form.RadioButton do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {radio_button(form, field, assigns[:value], @opts)}
-    </InputContext>
-    """
+    ~F"{radio_button(@form, @field, assigns[:value], @opts)}"
   end
 end

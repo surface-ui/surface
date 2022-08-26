@@ -40,10 +40,6 @@ defmodule Surface.Components.Form.TextArea do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {textarea(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{textarea(@form, @field, @opts)}]
   end
 end
