@@ -30,7 +30,7 @@
 ### Breaking Changes
 
   * Drop support for Elixir < `v1.12`
-  * Context values are no longer automatizally propagated through slots. Components that need to
+  * Context values are no longer automatically propagated through slots. Components that need to
     pass values to the parent scope via slots must explicitly set `propagate_context_to_slots: true`
     in their configuration
   * Slots
