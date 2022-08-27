@@ -34,10 +34,6 @@ defmodule Surface.Components.Form.NumberInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {number_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{number_input(@form, @field, @opts)}]
   end
 end

@@ -44,10 +44,6 @@ defmodule Surface.Components.Form.RangeInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {range_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{range_input(@form, @field, @opts)}]
   end
 end

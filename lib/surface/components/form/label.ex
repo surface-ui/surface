@@ -17,13 +17,12 @@ defmodule Surface.Components.Form.Label do
 
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
-  alias Surface.Components.Form.Input.InputContext
 
   @doc "The form identifier"
-  prop form, :form
+  prop form, :form, from_context: {Surface.Components.Form, :form}
 
   @doc "The field name"
-  prop field, :any
+  prop field, :any, from_context: {Surface.Components.Form.Field, :field}
 
   @doc "The CSS class for the underlying tag"
   prop class, :css_class
@@ -55,11 +54,9 @@ defmodule Surface.Components.Form.Label do
     assigns = assign(assigns, opts: opts)
 
     ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      <label :attrs={input_id(form, field) ++ @opts}>
-        <#slot>{@text || Phoenix.Naming.humanize(field)}</#slot>
-      </label>
-    </InputContext>
+    <label :attrs={input_id(@form, @field) ++ @opts}>
+      <#slot>{@text || Phoenix.Naming.humanize(@field)}</#slot>
+    </label>
     """
   end
 

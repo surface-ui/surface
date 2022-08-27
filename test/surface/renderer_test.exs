@@ -2,8 +2,11 @@ defmodule Surface.RendererTest do
   use Surface.ConnCase, async: true
 
   alias Surface.RendererTest.Components.ComponentWithExternalTemplate
+  alias Surface.RendererTest.Components.ComponentWithExternalTemplateAndRenderSface
   alias Surface.RendererTest.Components.LiveComponentWithExternalTemplate
+  alias Surface.RendererTest.Components.LiveComponentWithExternalTemplateAndRenderSface
   alias Surface.RendererTest.Components.LiveViewWithExternalTemplate
+  alias Surface.RendererTest.Components.LiveViewWithExternalTemplateAndRenderSface
 
   defmodule View do
     use Surface.LiveView
@@ -11,8 +14,11 @@ defmodule Surface.RendererTest do
     def render(assigns) do
       ~F"""
       <ComponentWithExternalTemplate/>
+      <ComponentWithExternalTemplateAndRenderSface/>
       <LiveComponentWithExternalTemplate id="live_component"/>
+      <LiveComponentWithExternalTemplateAndRenderSface id="live_component_render_sface"/>
       <LiveViewWithExternalTemplate id="live_view" />
+      <LiveViewWithExternalTemplateAndRenderSface id="live_view_render_sface" />
       """
     end
   end
@@ -22,14 +28,29 @@ defmodule Surface.RendererTest do
     assert html =~ "the rendered content of the component"
   end
 
+  test "Component rendering external template with render_sface", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, View)
+    assert html =~ "the rendered content of the component (render_sface)"
+  end
+
   test "LiveComponent rendering external template", %{conn: conn} do
     {:ok, _view, html} = live_isolated(conn, View)
     assert html =~ "the rendered content of the live component"
   end
 
+  test "LiveComponent rendering external template with render_sface", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, View)
+    assert html =~ "the rendered content of the live component (render_sface)"
+  end
+
   test "LiveView rendering external template", %{conn: conn} do
     {:ok, _view, html} = live_isolated(conn, View)
     assert html =~ "the rendered content of the live view"
+  end
+
+  test "LiveView rendering external template with render_sface", %{conn: conn} do
+    {:ok, _view, html} = live_isolated(conn, View)
+    assert html =~ "the rendered content of the live view (render_sface)"
   end
 end
 

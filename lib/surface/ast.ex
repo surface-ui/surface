@@ -327,10 +327,11 @@ defmodule Surface.AST.Slot do
       * `:default` - a list of AST nodes representing the default content for this slot
       * `:arg` - quoted expression representing the argument for this slot
       * `:generator_value` - value from the `:generator_prop` property
+      * `:context_put` - value from the `:generator_prop` property
       * `:meta` - compilation meta data
       * `:directives` - directives associated with this slot
   """
-  defstruct [:name, :as, :for, :index, :arg, :generator_value, :default, :meta, directives: []]
+  defstruct [:name, :as, :for, :index, :arg, :generator_value, :context_put, :default, :meta, directives: []]
 
   @type t :: %__MODULE__{
           name: binary(),
@@ -341,6 +342,7 @@ defmodule Surface.AST.Slot do
           meta: Surface.AST.Meta.t(),
           arg: Macro.t(),
           generator_value: any(),
+          context_put: list(Surface.AST.AttributeExpr.t()),
           default: list(Surface.AST.t())
         }
 end

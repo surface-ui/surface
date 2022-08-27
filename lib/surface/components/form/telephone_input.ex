@@ -37,10 +37,6 @@ defmodule Surface.Components.Form.TelephoneInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {telephone_input(form, field,  @opts)}
-    </InputContext>
-    """
+    ~F[{telephone_input(@form, @field,  @opts)}]
   end
 end

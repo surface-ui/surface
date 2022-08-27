@@ -50,6 +50,7 @@ defmodule Surface.Component do
       import Phoenix.HTML
 
       @before_compile {Surface.BaseComponent, :__before_compile_init_slots__}
+      @before_compile {unquote(__MODULE__), :__before_compile_handle_from_context__}
 
       alias Surface.Components.{Context, Raw}
       alias Surface.Components.Dynamic.Component
@@ -85,6 +86,40 @@ defmodule Surface.Component do
 
   defmacro __before_compile__(env) do
     quoted_render(env)
+  end
+
+  defmacro __before_compile_handle_from_context__(env) do
+    props_specs = env.module |> Surface.API.get_props() |> Enum.reverse()
+    data_specs = env.module |> Surface.API.get_data() |> Enum.reverse()
+
+    quoted_props_assigns =
+      for %{name: name, opts: opts} <- props_specs, key = opts[:from_context] do
+        quote do
+          var!(assigns) =
+            Surface.Components.Context.maybe_copy_assign(var!(assigns), unquote(key), as: unquote(name))
+        end
+      end
+
+    quoted_data_assigns =
+      for %{name: name, opts: opts} <- data_specs, key = opts[:from_context] do
+        quote do
+          var!(assigns) = Surface.Components.Context.copy_assign(var!(assigns), unquote(key), as: unquote(name))
+        end
+      end
+
+    quoted_assigns = {:__block__, [], quoted_data_assigns ++ quoted_props_assigns}
+
+    if Module.defines?(env.module, {:render, 1}) do
+      quote do
+        defoverridable render: 1
+
+        def render(var!(assigns)) do
+          unquote(quoted_assigns)
+
+          super(var!(assigns))
+        end
+      end
+    end
   end
 
   defp quoted_render(env) do

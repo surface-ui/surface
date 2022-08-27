@@ -60,9 +60,6 @@ defmodule Surface.API do
       # Any caller component can hold other components with slots
       Module.register_attribute(__MODULE__, :assigned_slots_by_parent, accumulate: false)
 
-      Module.register_attribute(__MODULE__, :changes_context?, accumulate: true)
-      Module.register_attribute(__MODULE__, :gets_context?, accumulate: true)
-
       for func <- unquote(include) do
         Module.register_attribute(__MODULE__, func, accumulate: true)
       end
@@ -75,8 +72,7 @@ defmodule Surface.API do
     [
       quoted_prop_funcs(env),
       quoted_slot_funcs(env),
-      quoted_data_funcs(env),
-      quoted_context_funcs(env)
+      quoted_data_funcs(env)
     ]
   end
 
@@ -289,48 +285,6 @@ defmodule Surface.API do
     end
   end
 
-  defp quoted_context_funcs(env) do
-    funs_changing =
-      env.module
-      |> Module.get_attribute(:changes_context?, [])
-      |> MapSet.new()
-
-    funs_getting =
-      env.module
-      |> Module.get_attribute(:gets_context?, [])
-      |> MapSet.new()
-
-    quoted_changing =
-      for fun <- funs_changing do
-        quote do
-          @doc false
-          def __changes_context__?(unquote(fun)), do: true
-        end
-      end
-
-    quoted_changing_fallback =
-      quote do
-        @doc false
-        def __changes_context__?(_fun), do: false
-      end
-
-    quoted_getting =
-      for fun <- funs_getting do
-        quote do
-          @doc false
-          def __gets_context__?(unquote(fun)), do: true
-        end
-      end
-
-    quoted_getting_fallback =
-      quote do
-        @doc false
-        def __gets_context__?(_fun), do: false
-      end
-
-    List.flatten([quoted_changing, quoted_changing_fallback, quoted_getting, quoted_getting_fallback])
-  end
-
   defp validate_assigns!(env) do
     assigns = Module.get_attribute(env.module, :assigns, [])
 
@@ -435,11 +389,11 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate, :root, :static]
+    [:required, :default, :values, :values!, :accumulate, :root, :static, :from_context]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
-    [:default, :values, :values!]
+    [:default, :values, :values!, :from_context]
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
@@ -498,6 +452,36 @@ defmodule Surface.API do
   defp validate_opt(_func, _name, _type, _opts, :required, value, _line, _env)
        when not is_boolean(value) do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(_func, _name, _type, opts, :from_context, value, _line, env) do
+    cond do
+      Module.get_attribute(env.module, :component_type) == Surface.LiveView ->
+        {:error, "option :from_context is not supported for Surface.Liveview"}
+
+      Keyword.has_key?(opts, :default) ->
+        {:error, "using option :from_context along with :default is currently not allowed"}
+
+      true ->
+        case value do
+          {scope, key} when is_atom(scope) and is_atom(key) ->
+            :ok
+
+          key when is_atom(key) ->
+            :ok
+
+          _ ->
+            message = """
+            invalid value for option :from_context.
+
+            Expected: a `key when is_atom(key)` or a tuple `{scope, key} when is_atom(scope) and is_atom(key)`.
+
+            Got: #{inspect(value)}
+            """
+
+            {:error, message}
+        end
+    end
   end
 
   defp validate_opt(:prop, name, _type, opts, :default, value, line, env) do

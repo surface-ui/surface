@@ -287,6 +287,45 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              """
     end
 
+    register_propagate_context_to_slots([__MODULE__.ContextComp])
+
+    defmodule ContextComp do
+      use Surface.Component
+
+      slot default
+
+      data form, :form
+
+      def render(assigns) do
+        assigns = Context.copy_assign(assigns, :form)
+
+        ~F"""
+        <Context put={field: "#{@form} + field"}>
+          <#slot/>
+        </Context>
+        """
+      end
+    end
+
+    test "context propagation" do
+      alias Surface.Components.Context
+
+      html =
+        render_surface do
+          ~F"""
+          <Context put={form: :fake_form}>
+            <Component module={ContextComp}>
+              <Context get={field: field}>
+                {field}
+              </Context>
+            </Component>
+          </Context>
+          """
+        end
+
+      assert html =~ "fake_form + field"
+    end
+
     test "render plain old phoenix function component" do
       html =
         render_surface do

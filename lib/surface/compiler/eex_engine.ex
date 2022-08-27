@@ -164,6 +164,7 @@ defmodule Surface.Compiler.EExEngine do
            for: slot_for_ast,
            arg: arg_expr,
            generator_value: generator_value_ast,
+           context_put: context_put_list,
            default: default,
            meta: meta
          },
@@ -183,18 +184,7 @@ defmodule Surface.Compiler.EExEngine do
         _ -> nil
       end
 
-    parent_context_var = context_name(state.context_vars.count - 1, meta.caller)
-
-    context_expr =
-      if is_child_component?(state) do
-        quote do
-          unquote(parent_context_var)
-        end
-      else
-        quote do
-          %{}
-        end
-      end
+    context_expr = build_render_slot_context_expr(context_put_list, state, meta)
 
     slot_value =
       if slot_for do
@@ -262,7 +252,7 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
-    {context_expr, context_var, state} = process_context(nil, nil, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(nil, nil, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -291,7 +281,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
-    {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -320,7 +310,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
-    {context_expr, context_var, state} = process_context(module, fun, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -354,7 +344,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.Component{module: module, props: props, meta: meta} = component
 
     {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
-    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -383,7 +373,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.SlotableComponent{module: module, props: props, meta: meta} = component
 
     {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
-    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -412,7 +402,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.Component{module: module, props: props, meta: meta} = component
 
     {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
-    {context_expr, context_var, state} = process_context(module, :render, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], [{:module, module} | slot_props]}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -445,7 +435,7 @@ defmodule Surface.Compiler.EExEngine do
     } = component
 
     {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
-    {context_expr, context_var, state} = process_context(nil, :render, props, meta.caller, state)
+    {context_expr, context_var, state} = process_context(nil, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], [{:module, module_expr} | slot_props]}
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
@@ -1046,10 +1036,6 @@ defmodule Surface.Compiler.EExEngine do
     }
   end
 
-  defp is_child_component?(state) do
-    state.depth > 0 and Enum.member?(state.scope, :slot_entry)
-  end
-
   defp escape_message(message) do
     {:safe, message_iodata} = Phoenix.HTML.html_escape(message)
     IO.iodata_to_binary(message_iodata)
@@ -1069,26 +1055,42 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp process_context(module, fun, props, caller, state) do
+  defp process_context(module, fun, props, component, state) do
+    caller = component.meta.caller
+
     caller_is_module_component? =
       Module.get_attribute(caller.module, :component_type) && caller.function == {:render, 1}
 
-    gets_context? =
-      (function_exported?(module, :__gets_context__?, 1) and module.__gets_context__?({fun, 1})) or
-        (module == Context and AST.has_attribute?(props, :get))
+    # NOTE: Using this is not optimized as it will always assume the component propagates
+    # context into into its slots.
+    #
+    # TODO: Force using directive :propagate_context_to_slots in dynamic components and remove the
+    # `dynamic_component?` condition.
+    dynamic_component? = module == nil and fun == nil
+
+    if module == Context and AST.has_attribute?(props, :get) and state.context_vars.changed == [] do
+      message = """
+      using <Context get=.../> to retrieve values generated outside the template \
+      has been deprecated. Use `Context.get/3` instead.
+
+      # Examples
+
+          # In live components
+          form = Context.get(socket, Form, :form)
+          other = Context.get(socket, :other)
+
+          # In function components
+          form = Context.get(assigns, Form, :form)
+          other = Context.get(assigns, :other)
+      """
+
+      IOHelper.warn(message, component.meta.caller, component.meta.file, component.meta.line)
+    end
 
     changes_context? =
-      (function_exported?(module, :__changes_context__?, 1) and module.__changes_context__?({fun, 1}) and
-         module.__slots__() != []) or
-        (module == Context and AST.has_attribute?(props, :put))
-
-    if gets_context? do
-      Module.put_attribute(caller.module, :gets_context?, caller.function)
-    end
-
-    if changes_context? do
-      Module.put_attribute(caller.module, :changes_context?, caller.function)
-    end
+      propagate_context_to_slots?(caller, module, fun) or
+        (module == Context and AST.has_attribute?(props, :put)) or
+        dynamic_component?
 
     initial_context =
       if caller_is_module_component? do
@@ -1098,27 +1100,112 @@ defmodule Surface.Compiler.EExEngine do
       end
 
     context_expr =
-      cond do
-        function_exported?(module, :__slots__?, 0) and module.__slots__() == [] and not gets_context? ->
-          quote do: %{}
-
-        state.context_vars.changed != [] && gets_context? ->
-          quote do: Enum.reduce([unquote_splicing(state.context_vars.changed ++ [initial_context])], &Map.merge/2)
-
-        true ->
-          initial_context
+      if state.context_vars.changed != [] do
+        changed_context_vars = Enum.map(state.context_vars.changed, fn {var, _component} -> var end)
+        quote do: Enum.reduce([unquote_splicing(changed_context_vars ++ [initial_context])], &Map.merge/2)
+      else
+        initial_context
       end
 
     context_var = context_name(state.context_vars.count, caller)
 
     state =
       if changes_context? do
-        %{state | context_vars: %{state.context_vars | changed: [context_var | state.context_vars.changed]}}
+        %{
+          state
+          | context_vars: %{state.context_vars | changed: [{context_var, component} | state.context_vars.changed]}
+        }
       else
         state
       end
 
     {context_expr, context_var, state}
+  end
+
+  defp build_render_slot_context_expr(context_put_list, state, meta) do
+    caller = meta.caller
+    module = caller.module
+    fun = elem(caller.function, 0)
+
+    if propagate_context_to_slots?(caller, module, fun) do
+      # Top context
+      context_expr = [quote(do: @__context__)]
+
+      # Context variables from parent components
+      context_expr =
+        if state.context_vars.changed != [] do
+          changed_context_vars = Enum.map(state.context_vars.changed, fn {var, _component} -> var end)
+          quote(do: [unquote_splicing(changed_context_vars)]) ++ context_expr
+        else
+          context_expr
+        end
+
+      # Context values from `context_put`
+      context_expr =
+        if context_put_list != [] do
+          context_kw =
+            for %AST.AttributeExpr{value: {scope, items}} <- context_put_list, {key, value} <- items do
+              {Context.normalize_key(scope, key), value}
+            end
+
+          [{:%{}, [], context_kw} | context_expr]
+        else
+          context_expr
+        end
+
+      case context_expr do
+        [top_context] ->
+          top_context
+
+        _ ->
+          quote do
+            Enum.reduce(unquote(context_expr), &Map.merge/2)
+          end
+      end
+    else
+      if state.context_vars.changed != [] or context_put_list != [] do
+        parents = state.context_vars.changed |> Enum.reverse() |> Enum.map(&elem(&1, 1))
+
+        parents_text =
+          if parents != [] do
+            """
+
+            Current parent components propagating context values:
+
+                * #{Enum.map_join(parents, "\n    * ", fn c -> "`#{inspect(c.module)}` at line #{c.meta.line}" end)}
+            """
+          else
+            ""
+          end
+
+        config_key = if fun == :render, do: inspect(module), else: "#{inspect(module)}, #{inspect(fun)}"
+
+        message = """
+        components propagating context values through slots must be configured \
+        as `propagate_context_to_slots: true`.
+
+        In case you don't want to propagate any value, you need to explicitly \
+        set `propagate_context_to_slots` to `false`.
+
+        # Example
+
+        config :surface, :components, [
+          {#{config_key}, propagate_context_to_slots: true},
+          ...
+        ]
+
+        This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+        it's placed inside a parent component that propagates context values through its slots.
+        #{parents_text}\
+        """
+
+        if emit_propagate_context_to_slots_warning?(caller, module, fun) do
+          IOHelper.warn(message, caller, meta.file, meta.line)
+        end
+      end
+
+      quote(do: %{})
+    end
   end
 
   defp build_props_expressions(module, %{props: props, dynamic_props: dynamic_props}) do
@@ -1180,5 +1267,20 @@ defmodule Surface.Compiler.EExEngine do
     end
 
     no_warnings_generator
+  end
+
+  defp propagate_context_to_slots?(caller, module, fun) do
+    propagate_context_to_slots_map = get_propagate_context_to_slots_map(caller)
+    Map.get(propagate_context_to_slots_map, {module, fun}, false)
+  end
+
+  defp emit_propagate_context_to_slots_warning?(caller, module, fun) do
+    propagate_context_to_slots_map = get_propagate_context_to_slots_map(caller)
+    not Map.has_key?(propagate_context_to_slots_map, {module, fun})
+  end
+
+  defp get_propagate_context_to_slots_map(caller) do
+    Module.get_attribute(caller.module, :propagate_context_to_slots_map) ||
+      Surface.BaseComponent.build_propagate_context_to_slots_map()
   end
 end
