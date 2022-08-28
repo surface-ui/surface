@@ -89,13 +89,68 @@ defmodule Surface.LiveComponent do
   end
 
   defp quoted_update(env) do
+    props_specs = env.module |> Surface.API.get_props() |> Enum.reverse()
+    data_specs = env.module |> Surface.API.get_data() |> Enum.reverse()
+
+    quoted_props_assigns =
+      for %{name: name, opts: opts} <- props_specs, key = opts[:from_context] do
+        quote do
+          updated_assigns =
+            Map.put(
+              updated_assigns,
+              unquote(name),
+              var!(assigns)[unquote(name)] || var!(assigns)[:__context__][unquote(key)]
+            )
+        end
+      end
+
+    quoted_data_assigns =
+      for %{name: name, opts: opts} <- data_specs, key = opts[:from_context] do
+        quote do
+          updated_assigns = Map.put(updated_assigns, unquote(name), var!(assigns)[:__context__][unquote(key)])
+        end
+      end
+
+    quoted_updated_assigns =
+      quote do
+        updated_assigns =
+          if Map.has_key?(var!(assigns), :__context__) do
+            updated_assigns = %{}
+            unquote({:__block__, [], quoted_data_assigns ++ quoted_props_assigns})
+            updated_assigns
+          else
+            %{}
+          end
+      end
+
     if Module.defines?(env.module, {:update, 2}) do
       quote do
         defoverridable update: 2
 
-        def update(assigns, socket) do
-          {:ok, socket} = super(assigns, socket)
-          {:ok, BaseComponent.restore_private_assigns(socket, assigns)}
+        def update(var!(assigns), socket) do
+          unquote(quoted_updated_assigns)
+
+          {:ok, socket} = super(Map.merge(var!(assigns), updated_assigns), socket)
+
+          socket =
+            socket
+            |> BaseComponent.restore_private_assigns(var!(assigns))
+            |> Phoenix.LiveView.assign(updated_assigns)
+
+          {:ok, socket}
+        end
+      end
+    else
+      quote do
+        def update(var!(assigns), socket) do
+          unquote(quoted_updated_assigns)
+
+          socket =
+            socket
+            |> Phoenix.LiveView.assign(var!(assigns))
+            |> Phoenix.LiveView.assign(updated_assigns)
+
+          {:ok, socket}
         end
       end
     end

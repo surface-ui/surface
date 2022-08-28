@@ -8,20 +8,15 @@ defmodule Surface.Components.Form.HiddenInputs do
   use Surface.Component
 
   import Phoenix.HTML.Form
-  alias Surface.Components.Form.Input.InputContext
 
   @doc """
   The form.
 
   It should either be a `Phoenix.HTML.Form` emitted by `form_for`, `inputs_for` or an atom.
   """
-  prop for, :form
+  prop for, :form, from_context: {Surface.Components.Form, :form}
 
   def render(assigns) do
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form}>
-      {hidden_inputs_for(form)}
-    </InputContext>
-    """
+    ~F[{hidden_inputs_for(@for)}]
   end
 end

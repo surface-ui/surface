@@ -1,5 +1,30 @@
 # Migrating from `v0.7.x` to `v0.8.x`
 
+## The new Context API
+
+The context API have been extended and fully redesigned to improve its use and make it more friendly for
+diff tracking. The compiler is able now to detect many cases where the use of contexts might impact
+performance and suggest one or more alternative approaches to achieve the same goal. We recommend you
+to carefully read each warning with care and follow the instructions that best suit you perticular case.
+
+Aside from the warnings, the only breaking change is that context values are no longer automatically
+propagated through slots. Components that need to pass values to the parent scope via slots must
+explicitly set `propagate_context_to_slots: true` in `config.exs`:
+
+```elixir
+config :surface, :components, [
+  {Surface.Components.Form, propagate_context_to_slots: true},
+]
+```
+
+The compile will emit a warning whenever it finds a component that can potentially propagate context
+values through slots. If you don't want to use contexts at all, you need to set `propagate_context_to_slots`
+to `false` to suppress the warning for that component.
+
+> **NOTE:** The following built-in Surface components are already configured to propagate context to slots:
+> `Surface.Components.Form,`, `Surface.Components.Form.Field`, `Surface.Components.Form.FieldContext` and
+> `Surface.Components.Form.Inputs`.
+
 ## Expected changes
 
 | Subject                       | Examples (Old syntax -> New syntax)                                                           |
@@ -24,7 +49,7 @@ defmodule StatelessComponent do
 
  @impl true
  def mount(socket) do
-   socket = 
+   socket =
      socket
      |> assign(:count_mount, socket.assigns.count + 1)
 
@@ -33,7 +58,7 @@ defmodule StatelessComponent do
 
  @impl true
  def update(assigns, socket) do
-   socket = 
+   socket =
      socket
      |> assign(assigns)
      |> assign(:count_updated, assigns.count + 2)
@@ -71,7 +96,7 @@ defmodule StatelessComponent do
   end
 end
 ```
-## `@socket`  is no longer available in the `render` function and the `.sface` files 
+## `@socket`  is no longer available in the `render` function and the `.sface` files
 
 If you were using the `@socket` assign to render routes, you should now use the application `Endpoint` instead.
 

@@ -34,10 +34,6 @@ defmodule Surface.Components.Form.PasswordInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {password_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{password_input(@form, @field, @opts)}]
   end
 end

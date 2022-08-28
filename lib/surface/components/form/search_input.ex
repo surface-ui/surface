@@ -34,10 +34,6 @@ defmodule Surface.Components.Form.SearchInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      {search_input(form, field, @opts)}
-    </InputContext>
-    """
+    ~F[{search_input(@form, @field, @opts)}]
   end
 end

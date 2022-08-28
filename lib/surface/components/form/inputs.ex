@@ -8,6 +8,9 @@ defmodule Surface.Components.Form.Inputs do
 
   use Surface.Component
 
+  alias Surface.Components.Form
+  alias Surface.Components.Form.Field
+
   import Phoenix.HTML.Form
 
   @doc """
@@ -15,12 +18,12 @@ defmodule Surface.Components.Form.Inputs do
 
   It should either be a `Phoenix.HTML.Form` emitted by `form_for` or an atom.
   """
-  prop form, :form
+  prop form, :form, from_context: {Form, :form}
 
   @doc """
   An atom or string representing the field related to the child inputs.
   """
-  prop for, :any
+  prop for, :any, from_context: {Field, :field}
 
   @doc """
   Extra options for `inputs_for/3`.
@@ -32,18 +35,13 @@ defmodule Surface.Components.Form.Inputs do
   @doc "The code containing the input controls"
   slot default, arg: %{form: :form, index: :integer}
 
+  data field, :any
+
   def render(assigns) do
     ~F"""
-    <Context
-      get={Surface.Components.Form, form: form}
-      get={Surface.Components.Form.Field, field: field}
-    >
-      <Context
-        :for={{f, index}  <- Enum.with_index(inputs_for(@form || form, @for || field, @opts))}
-        put={Surface.Components.Form, form: f}>
-        <#slot {@default, form: f, index: index}/>
-      </Context>
-    </Context>
+    {#for {f, index}  <- Enum.with_index(inputs_for(@form, @for || @field, @opts))}
+      <#slot {@default, form: f, index: index} context_put={Form, form: f}/>
+    {/for}
     """
   end
 end

@@ -1,6 +1,8 @@
 defmodule Surface.Components.Form.Input do
   @moduledoc false
 
+  alias Surface.Components.Context
+
   defmacro __using__(_) do
     quote do
       use Surface.Component
@@ -10,10 +12,10 @@ defmodule Surface.Components.Form.Input do
       alias Surface.Components.Form.Input.InputContext
 
       @doc "An identifier for the form"
-      prop form, :form
+      prop form, :form, from_context: {Surface.Components.Form, :form}
 
       @doc "An identifier for the input"
-      prop field, :any
+      prop field, :any, from_context: {Surface.Components.Form.Field, :field}
 
       @doc "The id of the corresponding input field"
       prop id, :string
@@ -43,6 +45,7 @@ defmodule Surface.Components.Form.Input do
     config[component][:default_class] || config[__MODULE__][:default_class]
   end
 
+  # TODO: deprecate this component in favor of `from_context` option
   defmodule InputContext do
     use Surface.Component
 
@@ -52,13 +55,28 @@ defmodule Surface.Components.Form.Input do
     @doc "The code containing the input control"
     slot default, arg: %{form: :form, field: :any}
 
+    @impl Surface.BaseComponent
+    def transform(node) do
+      message = """
+      Component <InputContext> has been deprecated.
+
+      Use option `from_context` instead. Example:
+
+          prop form, :form, from_context: {Form, :form}
+
+      """
+
+      Surface.IOHelper.warn(message, node.meta.caller, node.meta.file, node.meta.line)
+
+      node
+    end
+
     def render(assigns) do
+      form = Context.get(assigns, Surface.Components.Form, :form)
+      field = Context.get(assigns, Surface.Components.Form.Field, :field)
+
       ~F"""
-      <Context
-        get={Surface.Components.Form, form: form}
-        get={Surface.Components.Form.Field, field: field}>
-        <#slot {@default, form: @assigns[:form] || form, field: @assigns[:field] || field}/>
-      </Context>
+      <#slot {@default, form: @assigns[:form] || form, field: @assigns[:field] || field}/>
       """
     end
   end

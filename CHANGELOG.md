@@ -2,12 +2,37 @@
 
 ## v0.8.0-dev
 
+  * Support Elixir `v1.14`
+  * Support scoped CSS styles for components using either inline `<style>` tags or colocated
+    `.css` files (#621)
+  * Add `render_sface/1` to allow overriding `render/1` and compute/update assigns when using
+    external `.sface` files
+  * Add `--tailwind` option to `mix surface.init` to bootstrap a project with TailwindCSS support
+  * Add `--layouts` option to `mix surface.init` to replace `.heex` layout files with corresponding
+    `.sface` files
+  * Add `--web-module` option to `mix surface.init` to override the default web module (#638)
+  * Support using the `:hook` directive to point to the `default` hook exported in the `.hooks.js` file
+  * Add option `from_context` to `prop` and `data` to allow setting values directly from the context
+  * Add `Context.put/3` and `Context.get/2` to allow manipulating the context inside
+    lifecycle callbacks and `render/1`
+  * Add prop `context_put` to `<#slot>` to pass context values directly to a slot without propagating
+    context values to other components
+  * Add config `:propagate_context_to_slots` to restrict context propagatiion, optimizing diff tracking
+  * Add functions `Context.copy_assign/3`, `Context.maybe_copy_assign/3` and `Context.maybe_copy_assign!/3`
   * Add `catalogue_test/1` macro to generate basic tests for catalogue examples and playgrounds
-  * Add `Surface.Catalogue.Examples` to allow defining multiple stateless examples in a single module
+  * Add module `Surface.Catalogue.Examples` to allow defining multiple stateless examples
+    in a single module
+  * Support editing slot values as text in playgrounds (Catalogue)
+  * Fix context propagation in dynamic components
+  * Fix context propagation in recursive components
+  * Deprecate `<InputContext>` in favor of declarative option `from_context`
 
 ### Breaking Changes
 
   * Drop support for Elixir < `v1.12`
+  * Context values are no longer automatically propagated through slots. Components that need to
+    pass values to the parent scope via slots must explicitly set `propagate_context_to_slots: true`
+    in their configuration
   * Slots
     * New option `:generator` use `slot default, generator: :items` instead of `slot default, args: [item: ^items]`
     * New attribute `generator_value` use `<#slot generator_value={item} />` instead of `<#slot :args={item: item} />`

@@ -8,33 +8,51 @@ defmodule Surface.Renderer do
     filename = template_filename(env)
     template = Path.join(root, filename)
 
+    template_ast =
+      if File.exists?(template) do
+        env = Map.put(env, :function, {:render, 1})
+
+        template
+        |> File.read!()
+        |> Surface.Compiler.compile(1, env, template)
+        |> Surface.Compiler.to_live_struct()
+      else
+        nil
+      end
+
     case {render?, slotable?, File.exists?(template)} do
       {true, _, true} ->
-        IO.warn(
-          "ignoring template #{inspect(template)} because the component " <>
-            "#{inspect(env.module)} defines a render/1 function",
-          Macro.Env.stacktrace(env)
-        )
+        quote do
+          @doc """
+          Renders the colocated .sface file with the given `assigns`
 
-        :ok
+          Use this function when you need to override assigns for colocated
+          templates.
+
+          ## Example
+
+              def render(assigns) do
+                assigns = assign(assigns, value: "123")
+                render_sface(assigns)
+              end
+
+          """
+          @file unquote(template)
+          @external_resource unquote(template)
+          def render_sface(var!(assigns)) do
+            unquote(template_ast)
+          end
+        end
 
       {true, _, false} ->
         :ok
 
       {false, _, true} ->
-        env = Map.put(env, :function, {:render, 1})
-
-        ast =
-          template
-          |> File.read!()
-          |> Surface.Compiler.compile(1, env, template)
-          |> Surface.Compiler.to_live_struct()
-
         quote do
           @file unquote(template)
           @external_resource unquote(template)
           def render(var!(assigns)) do
-            unquote(ast)
+            unquote(template_ast)
           end
 
           def __template_file__(), do: unquote(template)

@@ -177,6 +177,23 @@ defmodule Surface.LiveViewTest do
   end
 
   @doc """
+  Registers components that propagates context into its slots.
+  """
+  def register_propagate_context_to_slots(components) do
+    :global.set_lock(__ENV__.function)
+    existing_components_config = Application.get_env(:surface, :components, [])
+
+    components_config =
+      Enum.map(components, fn
+        {mod, fun} -> {mod, fun, propagate_context_to_slots: true}
+        mod -> {mod, propagate_context_to_slots: true}
+      end)
+
+    Application.put_env(:surface, :components, existing_components_config ++ components_config)
+    :global.del_lock(__ENV__.function)
+  end
+
+  @doc """
   This macro generates ExUnit test cases for catalogue examples.
 
   The tests will automatically assert if the example was successfully rendered.

@@ -58,13 +58,11 @@ defmodule Surface.Components.Form.ErrorTag do
 
   import Phoenix.HTML.Form, only: [input_name: 2]
 
-  alias Surface.Components.Form.Input.InputContext
-
   @doc "An identifier for the form"
-  prop form, :form
+  prop form, :form, from_context: {Surface.Components.Form, :form}
 
   @doc "An identifier for the associated field"
-  prop field, :any
+  prop field, :any, from_context: {Surface.Components.Form.Field, :field}
 
   @doc """
   Classes to apply to each error tag <span>.
@@ -109,13 +107,11 @@ defmodule Surface.Components.Form.ErrorTag do
     class = assigns.class || get_config(:default_class)
 
     ~F"""
-    <InputContext assigns={assigns} :let={form: form, field: field}>
-      <span
-        :for={error <- Keyword.get_values(form.errors, field)}
-        class={class}
-        phx-feedback-for={@feedback_for || input_name(form, field)}
-      >{translate_error.(error)}</span>
-    </InputContext>
+    <span
+      :for={error <- Keyword.get_values(@form.errors, @field)}
+      class={class}
+      phx-feedback-for={@feedback_for || input_name(@form, @field)}
+    >{translate_error.(error)}</span>
     """
   end
 

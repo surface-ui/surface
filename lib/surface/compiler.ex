@@ -43,7 +43,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props [:root, "for", "name", "index", "generator_value", ":args"]
+  @valid_slot_props [:root, "for", "name", "index", "generator_value", ":args", "context_put"]
 
   @directive_prefixes [":", "s-"]
 
@@ -599,6 +599,13 @@ defmodule Surface.Compiler do
           nil
       end
 
+    context_put =
+      for {"context_put", {:attribute_expr, value, expr_meta}, _attr_meta} <- attributes do
+        expr_meta = Helpers.to_meta(expr_meta, meta)
+        expr = Surface.TypeHandler.expr_to_quoted!(value, "context_put", :context_put, expr_meta)
+        AST.AttributeExpr.new(expr, value, expr_meta)
+      end
+
     {:ok,
      %AST.Slot{
        name: name,
@@ -609,6 +616,7 @@ defmodule Surface.Compiler do
        default: to_ast(children, compile_meta),
        arg: arg,
        generator_value: generator_value,
+       context_put: context_put,
        meta: meta
      }}
   end

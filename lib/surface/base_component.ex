@@ -19,6 +19,13 @@ defmodule Surface.BaseComponent do
 
   @optional_callbacks transform: 1
 
+  @default_propagate_context_to_slots_map %{
+    {Surface.Components.Form, :render} => true,
+    {Surface.Components.Form.Field, :render} => true,
+    {Surface.Components.Form.FieldContext, :render} => true,
+    {Surface.Components.Form.Inputs, :render} => true
+  }
+
   defmacro __using__(opts) do
     type = Keyword.fetch!(opts, :type)
 
@@ -62,7 +69,33 @@ defmodule Surface.BaseComponent do
       end
 
       @external_resource unquote(css_file)
+
+      @propagate_context_to_slots_map unquote(__MODULE__).build_propagate_context_to_slots_map()
     end
+  end
+
+  @doc false
+  def build_propagate_context_to_slots_map() do
+    components_config = Application.get_env(:surface, :components, [])
+
+    Enum.reduce(components_config, @default_propagate_context_to_slots_map, fn entry, acc ->
+      {component, opts} =
+        case entry do
+          {mod, fun, opts} ->
+            {{mod, fun}, opts}
+
+          {mod, opts} ->
+            {{mod, :render}, opts}
+        end
+
+      case Keyword.get(opts, :propagate_context_to_slots) do
+        nil ->
+          acc
+
+        propagate_context_to_slots ->
+          Map.put(acc, component, propagate_context_to_slots)
+      end
+    end)
   end
 
   @doc false
@@ -122,12 +155,14 @@ defmodule Surface.BaseComponent do
         end
       end
 
+    quoted_assigns = {:__block__, [], quoted_assigns}
+
     if Module.defines?(env.module, {:render, 1}) do
       quote do
         defoverridable render: 1
 
         def render(var!(assigns)) do
-          unquote_splicing(quoted_assigns)
+          unquote(quoted_assigns)
 
           super(var!(assigns))
         end
