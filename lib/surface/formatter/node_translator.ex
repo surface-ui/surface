@@ -1,4 +1,5 @@
 defmodule Surface.Formatter.NodeTranslator do
+  @moduledoc false
   @behaviour Surface.Compiler.NodeTranslator
 
   def handle_init(state), do: state

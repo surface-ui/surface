@@ -1,8 +1,8 @@
 defmodule Surface.Formatter.Phases.Render do
   @moduledoc """
-  Render the formatted Surface code after it has run through the other
-  transforming phases.
-  """
+             Render the formatted Surface code after it has run through the other
+             transforming phases.
+             """ && false
 
   @behaviour Surface.Formatter.Phase
   alias Surface.Formatter

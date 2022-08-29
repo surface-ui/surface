@@ -1,13 +1,13 @@
 defmodule Surface.Formatter.Phases.SpacesToNewlines do
   @moduledoc """
-  In a variety of scenarios, converts :space nodes to :newline nodes.
+             In a variety of scenarios, converts :space nodes to :newline nodes.
 
-  (Below, "element" means an HTML element or a Surface component.)
+             (Below, "element" means an HTML element or a Surface component.)
 
-  1. If an element contains other elements as children, surround it with newlines.
-  1. If there is a space after an opening tag or before a closing tag, convert it to a newline.
-  1. If there is a closing tag on its own line, ensure there's a newline before the next sibling node.
-  """
+             1. If an element contains other elements as children, surround it with newlines.
+             1. If there is a space after an opening tag or before a closing tag, convert it to a newline.
+             1. If there is a closing tag on its own line, ensure there's a newline before the next sibling node.
+             """ && false
 
   @behaviour Surface.Formatter.Phase
   alias Surface.{Formatter, Formatter.Phase}

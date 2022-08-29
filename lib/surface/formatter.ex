@@ -1,5 +1,5 @@
 defmodule Surface.Formatter do
-  @moduledoc "Functions for formatting Surface code snippets."
+  @moduledoc "Functions for formatting Surface code snippets." && false
 
   alias Surface.Formatter.Phases
 

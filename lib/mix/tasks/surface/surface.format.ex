@@ -2,8 +2,10 @@ defmodule Mix.Tasks.Surface.Format do
   @shortdoc "Formats Surface ~F sigils and .sface files in the given files/patterns"
 
   @moduledoc """
-  **To format Surface code using Elixir 1.13 or later, use
-  `Surface.Formatter.Plugin`.**
+  > #### Formatter Plugin Preferred {: .tip}
+  >
+  > To format Surface code using Elixir 1.13 or later, use
+  > `Surface.Formatter.Plugin`.
 
   Formats Surface `~F` sigils and `.sface` files in the given files and patterns.
 

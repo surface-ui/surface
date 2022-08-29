@@ -1,10 +1,10 @@
 defmodule Surface.Formatter.Phases.TagWhitespace do
   @moduledoc """
-  Inspects all text nodes and "tags" leading and trailing whitespace
-  by converting it into a `:space` atom or a list of `:newline` atoms.
+             Inspects all text nodes and "tags" leading and trailing whitespace
+             by converting it into a `:space` atom or a list of `:newline` atoms.
 
-  This is the first phase of formatting, and all other phases depend on it.
-  """
+             This is the first phase of formatting, and all other phases depend on it.
+             """ && false
 
   @behaviour Surface.Formatter.Phase
   alias Surface.Formatter
