@@ -1,4 +1,5 @@
 defmodule Surface.Compiler.Helpers do
+  @moduledoc false
   alias Surface.AST
   alias Surface.Compiler.CompileMeta
   alias Surface.IOHelper

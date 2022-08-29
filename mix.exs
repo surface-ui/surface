@@ -39,7 +39,7 @@ defmodule Surface.MixProject do
       {:sourceror, "~> 0.9"},
       {:ecto, "~> 3.4.2", only: :test},
       {:phx_new, "~> 1.6.11", only: :test},
-      {:ex_doc, ">= 0.19.0", only: :docs}
+      {:ex_doc, ">= 0.28.5", only: :docs}
     ]
   end
 
@@ -49,21 +49,25 @@ defmodule Surface.MixProject do
       source_ref: "v#{@version}",
       source_url: "https://github.com/surface-ui/surface",
       groups_for_modules: [
+        Components: ~r/Surface.Components/,
+        Catalogue: ~r/Catalogue/,
         Compiler: ~r/Compiler/,
-        Components: ~r/Surface.Component/,
         Directives: ~r/Surface.Directive/,
         AST: ~r/AST/,
-        Catalogue: ~r/Catalogue/
+        Formatter: [~r/Formatter$/, ~r/Formatter.Phase/]
       ],
       nest_modules_by_prefix: [
         Surface.AST,
         Surface.Catalogue,
         Surface.Compiler,
         Surface.Components,
-        Surface.Directive
+        Surface.Components.Form,
+        Surface.Directive,
+        Surface.Formatter.Phases
       ],
       extras: [
         "CHANGELOG.md",
+        "MIGRATING.md",
         "LICENSE.md"
       ]
     ]

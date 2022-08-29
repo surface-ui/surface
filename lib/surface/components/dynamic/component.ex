@@ -23,6 +23,7 @@ defmodule Surface.Components.Dynamic.Component do
   """
   slot default
 
+  @doc false
   def transform(node) do
     %AST.Component{props: props, directives: directives, slot_entries: slot_entries, meta: meta} = node
 

@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.Submit do
   @moduledoc """
   Defines a submit button to send the form.
 
-  All options are forwarded to the underlying `Phoenix.HTML.Form.submit/3`
+  All options are forwarded to the underlying `<button type="submit" />`
   """
 
   use Surface.Component
@@ -16,7 +16,7 @@ defmodule Surface.Components.Form.Submit do
   @doc "Class or classes to apply to the button"
   prop class, :css_class
 
-  @doc "Keyword list with options to be passed down to `submit/3`"
+  @doc "Keyword list with options to be passed down to `<button/>`"
   prop opts, :keyword, default: []
 
   @doc "Slot used for having children other than plain text in the button"
@@ -34,7 +34,7 @@ defmodule Surface.Components.Form.Submit do
     assigns = assign(assigns, opts: opts)
 
     ~F"""
-    <button type="submit" :attrs={@opts}><#slot>{@label}</#slot></button>
+    <button type="submit" {...@opts}><#slot>{@label}</#slot></button>
     """
   end
 end

@@ -149,10 +149,11 @@ mix compile
 
 | Subject                       | Examples (Old syntax -> New syntax)                                                           |
 | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| Slot Entry                    | &bull; `<#template>` -> `<:default>` <br> &bull; `<#template slot="header">` -> `<:header>`   |
-| `<#slot>` for                 | &bull; `<#slot for={@name}>` -> `<#slot {@name}>`                                             |
-| `<#slot>` name                | &bull; `<#slot name="name">` -> `<#slot {@name}>`                                             |
-| `<#slot>` :args               | &bull; `<#slot :args={name: "Joe", age: "32"}>` -> `<#slot {@default, name: "Joe", age: 35}>` |
+| Slot Entry                    | `<#template>` -> `<:default>`   |
+| Slot Entry                    | `<#template slot="header">` -> `<:header>`   |
+| `<#slot for>`                  | `<#slot for={@name}>` -> `<#slot {@name}>`                                             |
+| `<#slot name>`                 | `<#slot name="name">` -> `<#slot {@name}>`                                             |
+| `<#slot :args>`                | `<#slot :args={name: "Joe", age: "32"}>` -> `<#slot {@default, name: "Joe", age: 35}>` |
 
 ## Reporting issues
 

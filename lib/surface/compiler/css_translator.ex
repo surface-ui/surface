@@ -1,4 +1,5 @@
 defmodule Surface.Compiler.CSSTranslator do
+  @moduledoc false
   alias Surface.Compiler.CSSParser
 
   @closing_symbol %{
