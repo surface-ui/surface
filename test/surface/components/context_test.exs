@@ -1137,30 +1137,27 @@ defmodule Surface.Components.ContextTest do
     end
     """
 
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+    message = """
+    code.exs:7: components propagating context values through slots must be configured \
+    as `propagate_context_to_slots: true`.
 
-    assert output =~ """
-           components propagating context values through slots must be configured \
-           as `propagate_context_to_slots: true`.
+    In case you don't want to propagate any value, you need to explicitly \
+    set `propagate_context_to_slots` to `false`.
 
-           In case you don't want to propagate any value, you need to explicitly \
-           set `propagate_context_to_slots` to `false`.
+    # Example
 
-           # Example
+    config :surface, :components, [
+      {Surface.Components.ContextTest.WarnOnSlotPropContextPut, propagate_context_to_slots: true},
+      ...
+    ]
 
-           config :surface, :components, [
-             {Surface.Components.ContextTest.WarnOnSlotPropContextPut, propagate_context_to_slots: true},
-             ...
-           ]
+    This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+    it's placed inside a parent component that propagates context values through its slots.
+    """
 
-           This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
-           it's placed inside a parent component that propagates context values through its slots.
-
-             code.exs:7:\
-           """
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   test "warn on using <#slot ...> inside a <Context put=...>" do
@@ -1180,34 +1177,31 @@ defmodule Surface.Components.ContextTest do
     end
     """
 
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+    message = """
+    code.exs:9: components propagating context values through slots must be configured \
+    as `propagate_context_to_slots: true`.
 
-    assert output =~ """
-           components propagating context values through slots must be configured \
-           as `propagate_context_to_slots: true`.
+    In case you don't want to propagate any value, you need to explicitly \
+    set `propagate_context_to_slots` to `false`.
 
-           In case you don't want to propagate any value, you need to explicitly \
-           set `propagate_context_to_slots` to `false`.
+    # Example
 
-           # Example
+    config :surface, :components, [
+      {Surface.Components.ContextTest.WarnOnContextPut, propagate_context_to_slots: true},
+      ...
+    ]
 
-           config :surface, :components, [
-             {Surface.Components.ContextTest.WarnOnContextPut, propagate_context_to_slots: true},
-             ...
-           ]
+    This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+    it's placed inside a parent component that propagates context values through its slots.
 
-           This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
-           it's placed inside a parent component that propagates context values through its slots.
+    Current parent components propagating context values:
 
-           Current parent components propagating context values:
+        * `Surface.Components.Context` at line 8
+    """
 
-               * `Surface.Components.Context` at line 8
-
-             code.exs:9:\
-           """
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   test "warn on using <#slot ...> inside components that propagate context through slots" do
@@ -1229,35 +1223,32 @@ defmodule Surface.Components.ContextTest do
     end
     """
 
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
+    message = """
+    code.exs:10: components propagating context values through slots must be configured \
+    as `propagate_context_to_slots: true`.
 
-    assert output =~ """
-           components propagating context values through slots must be configured \
-           as `propagate_context_to_slots: true`.
+    In case you don't want to propagate any value, you need to explicitly \
+    set `propagate_context_to_slots` to `false`.
 
-           In case you don't want to propagate any value, you need to explicitly \
-           set `propagate_context_to_slots` to `false`.
+    # Example
 
-           # Example
+    config :surface, :components, [
+      {Surface.Components.ContextTest.WarnOnSlotInsideComponentPropagating, propagate_context_to_slots: true},
+      ...
+    ]
 
-           config :surface, :components, [
-             {Surface.Components.ContextTest.WarnOnSlotInsideComponentPropagating, propagate_context_to_slots: true},
-             ...
-           ]
+    This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
+    it's placed inside a parent component that propagates context values through its slots.
 
-           This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
-           it's placed inside a parent component that propagates context values through its slots.
+    Current parent components propagating context values:
 
-           Current parent components propagating context values:
+        * `Surface.Components.ContextTest.Outer` at line 8
+        * `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
+    """
 
-               * `Surface.Components.ContextTest.Outer` at line 8
-               * `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
-
-             code.exs:10:\
-           """
+    assert_raise(CompileError, message, fn ->
+      {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+    end)
   end
 
   test "warn on <Context get...> to tetrieve values generated outside the template" do
@@ -1281,17 +1272,17 @@ defmodule Surface.Components.ContextTest do
 
     assert output =~ """
            using <Context get=.../> to retrieve values generated outside the template \
-           has been deprecated. Use `Context.get/3` instead.
+           has been deprecated. Use `from_context` instead and access the related assigns directly in the template.
 
            # Examples
 
-               # In live components
-               form = Context.get(socket, Form, :form)
-               other = Context.get(socket, :other)
+               # as default value for an existing prop
+               prop form, :form, from_context: {Form, :form}
+               prop other, :any, from_context: :other
 
-               # In function components
-               form = Context.get(assigns, Form, :form)
-               other = Context.get(assigns, :other)
+               # as internal state
+               data form, :form, from_context: {Form, :form}
+               data other, :any, from_context: :other
 
              code:2:\
            """

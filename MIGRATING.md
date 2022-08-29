@@ -23,9 +23,9 @@ config :surface, :components, [
 ]
 ```
 
-The compiler will emit a warning whenever it finds a component that can potentially propagate context
+The compiler will raise an error whenever it finds a component that can potentially propagate context
 values through slots. If you don't want to use contexts at all, you need to set `propagate_context_to_slots`
-to `false` to suppress the warning for that component.
+to `false` to suppress the error for that component.
 
 > **NOTE:** The following built-in Surface components are already configured to propagate context to slots:
 > `Surface.Components.Form,`, `Surface.Components.Form.Field`, `Surface.Components.Form.FieldContext` and
