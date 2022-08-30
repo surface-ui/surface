@@ -1,21 +1,21 @@
 defmodule Surface.Formatter.Phase do
   @moduledoc """
-  A phase implementing a single "rule" for formatting code. These work as middleware
-  between `Surface.Compiler.Parser.parse` and `Surface.Formatter.Render.node/2`
-  to modify node lists before they are rendered.
+             A phase implementing a single "rule" for formatting code. These work as middleware
+             between `Surface.Compiler.Parser.parse` and `Surface.Formatter.Render.node/2`
+             to modify node lists before they are rendered.
 
-  Some phases rely on other phases; `@moduledoc`s should make this explicit.
+             Some phases rely on other phases; `@moduledoc`s should make this explicit.
 
-  For reference, the formatter operates by running these phases in the following order:
+             For reference, the formatter operates by running these phases in the following order:
 
-    - `Surface.Formatter.Phases.TagWhitespace`
-    - `Surface.Formatter.Phases.Newlines`
-    - `Surface.Formatter.Phases.SpacesToNewlines`
-    - `Surface.Formatter.Phases.Indent`
-    - `Surface.Formatter.Phases.FinalNewline`
-    - `Surface.Formatter.Phases.BlockExceptions`
-    - `Surface.Formatter.Phases.Render`
-  """
+               - `Surface.Formatter.Phases.TagWhitespace`
+               - `Surface.Formatter.Phases.Newlines`
+               - `Surface.Formatter.Phases.SpacesToNewlines`
+               - `Surface.Formatter.Phases.Indent`
+               - `Surface.Formatter.Phases.FinalNewline`
+               - `Surface.Formatter.Phases.BlockExceptions`
+               - `Surface.Formatter.Phases.Render`
+             """ && false
 
   alias Surface.Formatter
 
