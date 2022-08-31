@@ -155,7 +155,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
              import Config
 
              config :tailwind,
-               version: "3.1.3",
+               version: "3.1.8",
                default: [
                  args: ~w(
                    --config=tailwind.config.js
@@ -182,7 +182,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       config :phoenix, :json_library, Jason
 
       config :tailwind,
-        version: "3.1.3",
+        version: "3.1.8",
         default: [
           args: ~w(
             --config=tailwind.config.js

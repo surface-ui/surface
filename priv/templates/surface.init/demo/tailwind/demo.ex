@@ -7,7 +7,7 @@ defmodule <%= inspect(web_module) %>.Demo do
     ~F"""
     <style>
       .tag {
-        @apply inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2;
+        @apply bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2;
       }
     </style>
 

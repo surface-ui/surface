@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
       patch:
         &FilePatchers.Config.add_root_config(&1, :tailwind, """
         config :tailwind,
-          version: "3.1.3",
+          version: "3.1.8",
           default: [
             args: ~w(
               --config=tailwind.config.js

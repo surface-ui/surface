@@ -10,12 +10,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
     %{web_module: web_module} = assigns
 
     web_folder = web_module |> inspect() |> Macro.underscore()
-    dest = Path.join(["priv/catalogue/", web_folder])
+    dest = Path.join(["priv/catalogue/", web_folder, "components"])
 
     patches(assigns) ++
       [
-        {:create, "demo/#{demo_path(tailwind?)}/examples.ex", dest},
-        {:create, "demo/playground.ex", dest}
+        {:create, "demo/#{demo_path(tailwind?)}/card_examples.ex", dest},
+        {:create, "demo/card_playground.ex", dest}
       ]
   end
 
@@ -81,6 +81,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
           ~S|["lib"] ++ catalogues()|,
           "catalogues()"
         ),
+        &FilePatchers.MixExs.update_elixirc_paths_entry(
+          &1,
+          ":test",
+          fn code -> "#{code} ++ catalogues()" end,
+          "catalogues()"
+        ),
         &FilePatchers.MixExs.append_def(&1, "catalogues", """
           [
             "priv/catalogue"
@@ -96,6 +102,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
 
       ```
       defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
+      defp elixirc_paths(:test), do: ["lib"] ++ catalogues()
 
       ...
 

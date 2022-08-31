@@ -50,13 +50,13 @@ defmodule <%= inspect(web_module) %>.Components.Card do
 
     <div class={"card", "rounded-lg": @rounded}>
       <div class="header">
-        <#slot name="header" />
+        <#slot {@header} />
       </div>
       <div class="content">
         <#slot />
       </div>
       <div class="footer">
-        <#slot name="footer" />
+        <#slot {@footer} />
       </div>
     </div>
     """

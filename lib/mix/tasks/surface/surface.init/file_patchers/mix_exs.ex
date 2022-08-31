@@ -7,12 +7,30 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
 
   def add_compiler(code, compiler) do
     code
+    |> maybe_remove_gettext_compile()
     |> parse_string!()
     |> enter_defmodule()
     |> enter_def(:project)
     |> find_keyword_value(:compilers)
     |> halt_if(&find_code_containing(&1, compiler), :already_patched)
     |> append_child(" ++ [#{compiler}]")
+  end
+
+  # TODO: Remove this when phx.new stops generating `[:gettext] ++`
+  def maybe_remove_gettext_compile(code) do
+    gettext_version = Application.spec(:gettext, :vsn)
+
+    if gettext_version && Version.compare(to_string(gettext_version), "0.20.0") != :lt do
+      code
+      |> parse_string!()
+      |> enter_defmodule()
+      |> enter_def(:project)
+      |> find_keyword_value(:compilers)
+      |> replace(fn code -> String.replace(code, "[:gettext] ++ ", "") end)
+      |> code()
+    else
+      code
+    end
   end
 
   def add_dep(code, dep, opts) do
@@ -56,6 +74,16 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
     )
     |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
     |> replace(&"defp elixirc_paths(#{env}), do: #{body}\n  #{&1}")
+  end
+
+  def update_elixirc_paths_entry(code, env, update_fun, already_patched_text) do
+    code
+    |> parse_string!()
+    |> enter_defmodule()
+    |> find_defp_with_args(:elixirc_paths, &match?([^env], &1))
+    |> body()
+    |> halt_if(&find_code(&1, already_patched_text), :already_patched)
+    |> replace(update_fun)
   end
 
   def update_alias(code, key, already_patched_text, maybe_already_patched, fun) do

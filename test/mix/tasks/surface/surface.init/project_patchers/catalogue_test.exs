@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
                use Mix.Project
 
                # Specifies which paths to compile per environment.
-               defp elixirc_paths(:test), do: ["lib", "test/support"]
+               defp elixirc_paths(:test), do: ["lib", "test/support"] ++ catalogues()
                defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
                defp elixirc_paths(_), do: ["lib"]
 

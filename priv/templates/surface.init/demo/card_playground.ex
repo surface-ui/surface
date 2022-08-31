@@ -1,4 +1,4 @@
-defmodule <%= inspect(web_module) %>.Components.Card.Playground do
+defmodule <%= inspect(web_module) %>.Components.CardPlayground do
   use Surface.Catalogue.Playground,
     subject: <%= inspect(web_module) %>.Components.Card,
     height: "360px",

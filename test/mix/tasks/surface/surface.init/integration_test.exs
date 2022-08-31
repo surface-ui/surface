@@ -40,11 +40,11 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * patching lib/surface_init_test_web.ex
            * patching lib/surface_init_test_web/router.ex
            * patching mix.exs
-           * creating lib/surface_init_test_web/components/hero.ex
+           * creating lib/surface_init_test_web/components/card.ex
+           * creating test/surface_init_test_web/components/card_test.exs
            * creating lib/surface_init_test_web/live/demo.ex
-           * creating priv/catalogue/surface_init_test_web/example01.ex
-           * creating priv/catalogue/surface_init_test_web/example02.ex
-           * creating priv/catalogue/surface_init_test_web/playground.ex
+           * creating priv/catalogue/surface_init_test_web/components/card_examples.ex
+           * creating priv/catalogue/surface_init_test_web/components/card_playground.ex
            * deleting assets/css/phoenix.css
            * creating assets/tailwind.config.js
            * creating lib/surface_init_test_web/templates/page/index.sface
@@ -80,11 +80,11 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * patching lib/surface_init_test_web.ex (skipped)
            * patching lib/surface_init_test_web/router.ex (skipped)
            * patching mix.exs (skipped)
-           * creating lib/surface_init_test_web/components/hero.ex (skipped)
+           * creating lib/surface_init_test_web/components/card.ex (skipped)
+           * creating test/surface_init_test_web/components/card_test.exs (skipped)
            * creating lib/surface_init_test_web/live/demo.ex (skipped)
-           * creating priv/catalogue/surface_init_test_web/example01.ex (skipped)
-           * creating priv/catalogue/surface_init_test_web/example02.ex (skipped)
-           * creating priv/catalogue/surface_init_test_web/playground.ex (skipped)
+           * creating priv/catalogue/surface_init_test_web/components/card_examples.ex (skipped)
+           * creating priv/catalogue/surface_init_test_web/components/card_playground.ex (skipped)
            * deleting assets/css/phoenix.css (skipped)
            * creating assets/tailwind.config.js (skipped)
            * creating lib/surface_init_test_web/templates/page/index.sface (skipped)

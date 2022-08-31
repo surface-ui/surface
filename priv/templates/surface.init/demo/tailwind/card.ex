@@ -29,19 +29,19 @@ defmodule <%= inspect(web_module) %>.Components.Card do
         @apply w-full bg-gray-100 p-6;
       }
       .footer {
-        @apply px-6 pt-4 pb-2;
+        @apply px-6 py-4;
       }
     </style>
 
     <div class={"card", "rounded-lg": @rounded}>
       <div class="header">
-        <#slot name="header"/>
+        <#slot {@header}/>
       </div>
       <div class="content">
         <#slot/>
       </div>
       <div class="footer">
-        <#slot name="footer"/>
+        <#slot {@footer}/>
       </div>
     </div>
     """

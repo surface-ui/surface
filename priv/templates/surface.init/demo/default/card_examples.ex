@@ -1,4 +1,4 @@
-defmodule <%= inspect(web_module) %>.Components.Card.Examples do
+defmodule <%= inspect(web_module) %>.Components.CardExamples do
   @moduledoc """
   Example using the `rounded` property and slots.
   """
@@ -19,9 +19,14 @@ defmodule <%= inspect(web_module) %>.Components.Card.Examples do
   def rounded_card_example(assigns) do
     ~F"""
     <style>
-    .tag {
-      @apply inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2;
-    }
+      .tag {
+        display: inline-block;
+        background-color: #ddd;
+        border-radius: 9999px;
+        padding: 10px 8px;
+        color: #888;
+        font-weight: 500;
+      }
     </style>
 
     <Card rounded>
@@ -53,9 +58,14 @@ defmodule <%= inspect(web_module) %>.Components.Card.Examples do
   def card_example(assigns) do
     ~F"""
     <style>
-      .tag {
-        @apply inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2;
-      }
+    .tag {
+      display: inline-block;
+      background-color: #ddd;
+      border-radius: 9999px;
+      padding: 10px 8px;
+      color: #888;
+      font-weight: 500;
+    }
     </style>
 
     <Card>
