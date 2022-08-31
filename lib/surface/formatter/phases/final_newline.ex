@@ -1,5 +1,7 @@
 defmodule Surface.Formatter.Phases.FinalNewline do
-  @moduledoc "Add a newline after all of the nodes if one was present on the original input"
+  @moduledoc """
+             Add a newline after all of the nodes if one was present on the original input
+             """ && false
 
   @behaviour Surface.Formatter.Phase
 

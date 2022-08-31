@@ -1,7 +1,7 @@
 defmodule Surface.Formatter.Phases.BlockExceptions do
   @moduledoc """
-  Handle exceptional case for blocks.
-  """
+             Handle exceptional case for blocks.
+             """ && false
 
   @behaviour Surface.Formatter.Phase
   alias Surface.Formatter.Phase

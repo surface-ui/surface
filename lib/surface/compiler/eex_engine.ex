@@ -1071,17 +1071,17 @@ defmodule Surface.Compiler.EExEngine do
     if module == Context and AST.has_attribute?(props, :get) and state.context_vars.changed == [] do
       message = """
       using <Context get=.../> to retrieve values generated outside the template \
-      has been deprecated. Use `Context.get/3` instead.
+      has been deprecated. Use `from_context` instead and access the related assigns directly in the template.
 
       # Examples
 
-          # In live components
-          form = Context.get(socket, Form, :form)
-          other = Context.get(socket, :other)
+          # as default value for an existing prop
+          prop form, :form, from_context: {Form, :form}
+          prop other, :any, from_context: :other
 
-          # In function components
-          form = Context.get(assigns, Form, :form)
-          other = Context.get(assigns, :other)
+          # as internal state
+          data form, :form, from_context: {Form, :form}
+          data other, :any, from_context: :other
       """
 
       IOHelper.warn(message, component.meta.caller, component.meta.file, component.meta.line)
@@ -1200,7 +1200,7 @@ defmodule Surface.Compiler.EExEngine do
         """
 
         if emit_propagate_context_to_slots_warning?(caller, module, fun) do
-          IOHelper.warn(message, caller, meta.file, meta.line)
+          IOHelper.compile_error(message, meta.file, meta.line)
         end
       end
 

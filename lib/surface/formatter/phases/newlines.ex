@@ -1,10 +1,10 @@
 defmodule Surface.Formatter.Phases.Newlines do
   @moduledoc """
-  Standardizes usage of newlines.
+             Standardizes usage of newlines.
 
-  - Prevents more than 1 empty line in a row.
-  - Prevents an empty line separating an opening/closing tag from the contents inside.
-  """
+             - Prevents more than 1 empty line in a row.
+             - Prevents an empty line separating an opening/closing tag from the contents inside.
+             """ && false
 
   @behaviour Surface.Formatter.Phase
   alias Surface.Formatter.Phase

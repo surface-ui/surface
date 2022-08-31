@@ -1,4 +1,5 @@
 defmodule Surface.Compiler.CSSTokenizer do
+  @moduledoc false
   alias Surface.Compiler.CSSParserError
 
   @ws '\n\r\t '

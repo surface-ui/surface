@@ -1,4 +1,5 @@
 defmodule Surface.Compiler.CSSParser do
+  @moduledoc false
   alias Surface.Compiler.CSSTokenizer
 
   @other_blocks ["(", "["]

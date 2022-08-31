@@ -1,8 +1,8 @@
 defmodule Mix.Tasks.Surface.Convert do
-  @shortdoc "Converts .sface files and ~H sigils from pre-v0.5 to v0.5 syntax"
+  @shortdoc "Converts .sface files and ~F sigils from v0.7 to v0.8 syntax"
 
   @moduledoc """
-  Converts .sface files and ~H sigils from pre-v0.5 to v0.5 syntax.
+  Converts .sface files and ~F sigils from v0.7 to v0.8 syntax.
 
       mix surface.convert "lib/**/*.{ex,exs,sface}" "test/**/*.{ex,exs}"
 
@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Surface.Convert do
   end
 
   #
-  # Functions unique to surface.format (Everything else is taken from Mix.Tasks.Format)
+  # Functions unique to surface.convert (Everything else is taken from Mix.Tasks.Format)
   #
 
   @doc false
@@ -69,28 +69,18 @@ defmodule Mix.Tasks.Surface.Convert do
   end
 
   defp convert_ex_string!(input, converter) do
-    string =
-      Regex.replace(~r/( *)~H"\""(.*?)"""(\s)/s, input, fn _match, indent, code, space_after ->
-        "#{indent}~H\"\"\"#{format_string(code, converter)}\"\"\"#{space_after}"
-      end)
-
-    string =
-      Regex.replace(~r/~H\"([^\"].*?)\"/s, string, fn _match, code ->
-        "~H\"#{format_string(code, converter)}\""
-      end)
-
-    string =
-      Regex.replace(~r/~H\[(.*?)\]/s, string, fn _match, code ->
-        "~H[#{format_string(code, converter)}]"
-      end)
-
-    string =
-      Regex.replace(~r/~H\((.*?)\)/s, string, fn _match, code ->
-        "~H(#{format_string(code, converter)})"
-      end)
-
-    Regex.replace(~r/~H\{(.*?)\}/s, string, fn _match, code ->
-      "~H{#{format_string(code, converter)}}"
+    [
+      {~r/( *)~F"\""(.*?)"""(\s)/s,
+       fn _match, indent, code, space_after ->
+         "#{indent}~F\"\"\"#{format_string(code, converter)}\"\"\"#{space_after}"
+       end},
+      {~r/~F\"([^\"].*?)\"/s, fn _match, code -> "~F\"#{format_string(code, converter)}\"" end},
+      {~r/~F\[(.*?)\]/s, fn _match, code -> "~F[#{format_string(code, converter)}]" end},
+      {~r/~F\((.*?)\)/s, fn _match, code -> "~F(#{format_string(code, converter)})" end},
+      {~r/~F\{(.*?)\}/s, fn _match, code -> "~F{#{format_string(code, converter)}}" end}
+    ]
+    |> Enum.reduce(input, fn {regex, replacement}, code ->
+      Regex.replace(regex, code, replacement)
     end)
   end
 

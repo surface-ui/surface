@@ -1289,7 +1289,7 @@ defmodule Surface.Compiler do
   end
 
   defp maybe_warn_argument_for_default_slot_in_slotable_component(slot, arg, meta) do
-    if arg do
+    if arg && arg.value do
       slot_name = Module.get_attribute(meta.caller.module, :__slot_name__)
       default_slot_of_slotable_component? = slot.name == :default && slot_name
 

@@ -1,4 +1,5 @@
 defmodule Surface.Compiler.ParseTreeTranslator do
+  @moduledoc false
   @behaviour Surface.Compiler.NodeTranslator
 
   alias Surface.IOHelper

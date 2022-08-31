@@ -25,7 +25,20 @@
   * Support editing slot values as text in playgrounds (Catalogue)
   * Fix context propagation in dynamic components
   * Fix context propagation in recursive components
+  * New API for Slot arguments and generator (#613)
+
+### Deprecations
+
   * Deprecate `<InputContext>` in favor of declarative option `from_context`
+  * Slots (#613)
+    * Option `:args` has been deprecated, use
+      * `slot arg: :string` instead of `slot args: [:name]`
+      * `slot arg: %{name: :string, age: number}` instead of `slot args: [:name, :age]`
+    * Attribute `for` has been deprecated, use `<#slot {@header}>` instead of`<#slot for={@header}>`
+    * Attributes `name` and `index` have been deprecated, use `<#slot {col}>` instead of`<#slot name={"col"} index={index}>`
+    * Directive `:args` has been deprecated, use
+      * `<#slot {@default, name}>` instead of `<#slot :args={name: name}>`
+      * `<#slot {@default, name: name, age: age}>` instead of `<#slot :args={name: name, age: age}>`
 
 ### Breaking Changes
 
@@ -33,8 +46,8 @@
   * Context values are no longer automatically propagated through slots. Components that need to
     pass values to the parent scope via slots must explicitly set `propagate_context_to_slots: true`
     in their configuration
-  * Slots
-    * New option `:generator` use `slot default, generator: :items` instead of `slot default, args: [item: ^items]`
+  * Slots (#613)
+    * New option `:generator_prop` use `slot default, generator_prop: :items` instead of `slot default, args: [item: ^items]`, associated prop `:items` must be of type `:generator`
     * New attribute `generator_value` use `<#slot generator_value={item} />` instead of `<#slot :args={item: item} />`
     * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
 
