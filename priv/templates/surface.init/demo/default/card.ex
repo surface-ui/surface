@@ -17,11 +17,15 @@ defmodule <%= inspect(web_module) %>.Components.Card do
   @doc "The background color"
   prop rounded, :boolean, default: false
 
+  @doc """
+  The max width.
+  """
+  prop max_width, :string, values: ["sm", "md", "lg"]
+
   def render(assigns) do
     ~F"""
     <style>
       .card {
-        max-width: 384px;
         overflow: hidden;
         border: 1px solid #ddd;
       }
@@ -37,18 +41,23 @@ defmodule <%= inspect(web_module) %>.Components.Card do
         width: 100%;
         background-color: #ddd;
         padding: 24px;
+        font-size: 1.5em;
+        font-weight: 400;
+        color: #0d9488;
       }
 
-      .footer {
-        padding: 24px 16px;
-      }
+      .footer { padding: 1rem 1.5rem }
 
-      .rounded-lg {
-        border-radius: 8px;
-      }
+      .rounded-lg { border-radius: 1rem }
+
+      .sm { max-width: 34rem }
+
+      .md { max-width: 44rem }
+
+      .lg { max-width: 54rem }
     </style>
 
-    <div class={"card", "rounded-lg": @rounded}>
+    <div class={"card", @max_width, "rounded-lg": @rounded}>
       <div class="header">
         <#slot {@header} />
       </div>

@@ -26,21 +26,23 @@ defmodule <%= inspect(web_module) %>.Demo do
         display: inline-block;
         background-color: #ddd;
         border-radius: 9999px;
-        padding: 10px 8px;
+        padding: 3px 10px;
         color: #888;
         font-weight: 500;
       }
     </style>
 
     <div class="flex items-center justify-center h-screen">
-      <Card rounded>
+      <Card max_width="lg" rounded>
         <:header>
           Surface UI
         </:header>
+
         Start building rich interactive user-interfaces, writing minimal custom Javascript.
         Built on top of Phoenix LiveView, <strong>Surface</strong> leverages the amazing
         <strong>Phoenix Framework</strong> to provide a fast and productive solution to
         build modern web applications.
+
         <:footer>
           <span class="tag">#surface</span>
           <span class="tag">#phoenix</span>

@@ -4,6 +4,21 @@
 </section>
 
 <section class="row">
+  {#if Code.ensure_loaded?(<%= inspect(web_module) %>.Demo)}
+    <article class="column">
+      <h2>Demo</h2>
+      <ul>
+        <li>
+          <a href="/demo">Card</a>
+        </li>
+        {#if Application.spec(:surface_catalogue)}
+          <li>
+            <a href="/catalogue/components/<%= inspect(web_module) %>.Components.Card/example">Examples</a>
+          </li>
+        {/if}
+      </ul>
+    </article>
+  {/if}
   <article class="column">
     <h2>Resources</h2>
     <ul>
