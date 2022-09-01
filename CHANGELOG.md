@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0-dev
+## v0.8.0
 
   * Support Elixir `v1.14`
   * Support scoped CSS styles for components using either inline `<style>` tags or colocated
