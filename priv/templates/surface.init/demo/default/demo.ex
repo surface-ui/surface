@@ -35,11 +35,12 @@ defmodule <%= inspect(web_module) %>.Demo do
     <div class="flex items-center justify-center h-screen">
       <Card rounded>
         <:header>
-          <img src="/images/phoenix.png">
+          Surface UI
         </:header>
         Start building rich interactive user-interfaces, writing minimal custom Javascript.
-        Built on top of Phoenix LiveView, Surface leverages the amazing Phoenix Framework
-        to provide a fast and productive solution to build modern web applications.
+        Built on top of Phoenix LiveView, <strong>Surface</strong> leverages the amazing
+        <strong>Phoenix Framework</strong> to provide a fast and productive solution to
+        build modern web applications.
         <:footer>
           <span class="tag">#surface</span>
           <span class="tag">#phoenix</span>

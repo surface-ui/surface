@@ -6,16 +6,20 @@
       </h1>
       <p class="mb-8 leading-relaxed">
         Start building rich interactive user-interfaces, writing minimal custom Javascript.
-        Built on top of Phoenix LiveView, Surface leverages the amazing <strong>Phoenix Framework</strong> to provide a fast and productive solution to build modern web applications.
+        Built on top of Phoenix LiveView, <strong>Surface</strong> leverages the amazing <strong>Phoenix Framework</strong> to provide a fast and productive solution to build modern web applications.
       </p>
-      <div class="flex justify-center">
-        <a href="https://surface-ui.org/components_basics" target="_blank" class="inline-flex text-white bg-teal-500 border-0 py-2 px-6 focus:outline-none hover:bg-teal-600 rounded text-lg">
-          Components Basics
-        </a>
-        <a href="https://surface-ui.org/template_syntax" target="_blank" class="ml-4 inline-flex text-gray-700 bg-gray-200 border-0 py-2 px-6 focus:outline-none hover:bg-gray-300 rounded text-lg">
-          Template Syntax
-        </a>
-      </div>
+      {#if Code.ensure_loaded?(<%= inspect(web_module) %>.Demo)}
+        <div class="flex justify-center">
+          <a href="/demo" class="inline-flex text-white bg-teal-500 border-0 py-2 px-6 focus:outline-none hover:bg-teal-600 rounded text-lg">
+            Card demo
+          </a>
+          {#if Application.spec(:surface_catalogue)}
+            <a href="/catalogue/components/<%= inspect(web_module) %>.Components.Card/example" class="ml-4 inline-flex text-gray-700 bg-gray-200 border-0 py-2 px-6 focus:outline-none hover:bg-gray-300 rounded text-lg">
+              Card examples
+            </a>
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
 </section>

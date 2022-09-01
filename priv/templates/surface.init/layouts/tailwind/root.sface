@@ -14,16 +14,15 @@
       <section class="container mx-auto">
         <nav class="flex items-center justify-between flex-wrap p-6">
           <div class="flex items-center flex-shrink-0 text-white mr-6">
-            <span class="font-semibold text-xl tracking-tight">Surface UI</span>
+            <a href="/" class="font-semibold text-xl tracking-tight">Surface UI</a>
           </div>
           <div class="w-full block flex-grow md:flex md:items-center md:w-auto">
             <div class="text-sm md:flex-grow">
-              <a href="/catalogue" class="block mt-4 md:inline-block md:mt-0 text-teal-200 hover:text-white mr-4">
-                Catalogue
-              </a>
-              <a href="/demo" class="block mt-4 md:inline-block md:mt-0 text-teal-200 hover:text-white mr-4">
-                Demo
-              </a>
+              {#if Application.spec(:surface_catalogue)}
+                <a href="/catalogue" class="block mt-4 md:inline-block md:mt-0 text-teal-200 hover:text-white mr-4">
+                  Catalogue
+                </a>
+              {/if}
               {#if function_exported?(Routes, :live_dashboard_path, 2)}
                 {link "Live Dashboard", to: Routes.live_dashboard_path(@conn, :home), class: "block mt-4 md:inline-block md:mt-0 text-teal-200 hover:text-white mr-4"}
               {/if}

@@ -5,11 +5,12 @@ defmodule <%= inspect(web_module) %>.Components.CardPlayground do
     body: [style: "padding: 1.5rem;"]
 
     @props [
-      rounded: true
+      rounded: true,
+      max_width: "lg"
     ]
 
     @slots [
-      header: "Phoenix Framework",
+      header: "The header",
       default: """
               Start building rich interactive user-interfaces, writing minimal custom Javascript.
               Built on top of Phoenix LiveView, Surface leverages the amazing Phoenix Framework
