@@ -138,6 +138,7 @@ defmodule Mix.Tasks.Surface.Init do
   defp init_assigns(opts) do
     context_app = Mix.Phoenix.context_app()
     web_path = Mix.Phoenix.web_path(context_app)
+    web_test_path = Mix.Phoenix.web_test_path(context_app)
     base = Module.concat([Mix.Phoenix.base()])
     web_module = web_module_name(base, opts[:web_module])
     web_module_path = web_module_path(context_app)
@@ -151,6 +152,7 @@ defmodule Mix.Tasks.Surface.Init do
       web_module: web_module,
       web_module_path: web_module_path,
       web_path: web_path,
+      web_test_path: web_test_path,
       using_gettext?: using_gettext?
     })
   end

@@ -70,7 +70,8 @@ defmodule Surface.Catalogue.Examples do
   @example [
     title: "Example and Code split vertically",
     direction: "vertical",
-    height: "110px"
+    height: "110px",
+    assert: ["Small", "Medium", "Large"]
   ]
   def vertical(assigns) do
     ~F"""

@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_catalogue, "~> 0.4.0"}
+                   {:surface_catalogue, "~> 0.5.0"}
                  ]
                end
              end
@@ -113,7 +113,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
                use Mix.Project
 
                # Specifies which paths to compile per environment.
-               defp elixirc_paths(:test), do: ["lib", "test/support"]
+               defp elixirc_paths(:test), do: ["lib", "test/support"] ++ catalogues()
                defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
                defp elixirc_paths(_), do: ["lib"]
 
