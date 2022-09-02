@@ -1498,9 +1498,9 @@ defmodule Surface.SlotSyncTest do
     code =
       quote do
         ~F"""
-        <PhoenixComponentWithSlots.my_component_with_arg :let={default_arg}>
+        <Surface.SlotTest.PhoenixComponentWithSlots.my_component_with_arg :let={default_arg}>
           {default_arg}
-        </PhoenixComponentWithSlots.my_component_with_arg>
+        </Surface.SlotTest.PhoenixComponentWithSlots.my_component_with_arg>
         """
       end
 
