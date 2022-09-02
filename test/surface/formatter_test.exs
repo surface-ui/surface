@@ -1739,4 +1739,16 @@ defmodule Surface.FormatterTest do
     </div>
     """)
   end
+
+  test ":hook directive without value" do
+    assert_formatter_doesnt_change(~S"""
+    <div :hook />
+    """)
+  end
+
+  test ":debug directive without value" do
+    assert_formatter_doesnt_change(~S"""
+    <div :debug />
+    """)
+  end
 end

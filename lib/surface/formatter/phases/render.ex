@@ -331,7 +331,7 @@ defmodule Surface.Formatter.Phases.Render do
 
   # Only for :hook directive return itself since isn't an boolean directive
   # and could be defined without value and assuming the `"default"`.
-  defp render_attribute({":hook" = name, true, _meta}, _opts), do: "#{name}"
+  defp render_attribute({name, true, _meta}, _opts) when name in [":hook", ":debug"], do: "#{name}"
 
   # For `true` boolean attributes, simply including the name of the attribute
   # without `=true` is shorthand for `=true`.
