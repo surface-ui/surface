@@ -47,6 +47,10 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     :ok
   end
 
+  test "do nothing when receivning --from-mix-deps-compile" do
+    assert run(["--from-mix-deps-compile"]) == {:noop, []}
+  end
+
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 
