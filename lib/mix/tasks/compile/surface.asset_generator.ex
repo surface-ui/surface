@@ -48,6 +48,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     content = to_string([header(), "\n" | content])
 
     if content != dest_file_content do
+      dest_file |> Path.dirname() |> File.mkdir_p!()
       File.write!(dest_file, content)
     end
 
