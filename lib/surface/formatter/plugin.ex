@@ -23,7 +23,7 @@ defmodule Surface.Formatter.Plugin do
       [
         ...,
         import_deps: [:surface],
-        plugins: [Surface.Formatter.Plugin]
+        plugins: [Surface.Formatter.Plugin],
 
         # add patterns matching all .sface files and all .ex files with ~F sigils
         inputs: ["*.{ex,exs}", "{config,lib,test}/**/*.{ex,exs,sface}"],
