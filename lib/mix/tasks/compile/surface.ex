@@ -47,18 +47,23 @@ defmodule Mix.Tasks.Compile.Surface do
 
   @doc false
   def run(args) do
-    {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
-    opts = Application.get_env(:surface, :compiler, [])
-    asset_opts = Keyword.take(opts, [:hooks_output_dir, :css_output_file])
-    asset_components = Surface.components()
-    project_components = Surface.components(only_current_project: true)
+    # Do nothing if it's a dependency. We only have to run it once for the main project
+    if "--from-mix-deps-compile" in args do
+      {:noop, []}
+    else
+      {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
+      opts = Application.get_env(:surface, :compiler, [])
+      asset_opts = Keyword.take(opts, [:hooks_output_dir, :css_output_file])
+      asset_components = Surface.components()
+      project_components = Surface.components(only_current_project: true)
 
-    [
-      Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
-      Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
-    ]
-    |> List.flatten()
-    |> handle_diagnostics(compile_opts)
+      [
+        Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
+        Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
+      ]
+      |> List.flatten()
+      |> handle_diagnostics(compile_opts)
+    end
   end
 
   @doc false

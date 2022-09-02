@@ -37,7 +37,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
 
   # CSS
 
-  @css_rel_output_file "tmp/_components.css"
+  @css_output_dir "tmp/css"
+  @css_rel_output_file Path.join(@css_output_dir, "_components.css")
   @css_output_file Path.join(File.cwd!(), @css_rel_output_file)
 
   setup do
@@ -48,8 +49,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
       File.rm_rf!(@hooks_output_dir)
     end
 
-    if File.exists?(@css_output_file) do
-      File.rm_rf!(@css_output_file)
+    if File.exists?(@css_output_dir) do
+      File.rm_rf!(@css_output_dir)
     end
 
     on_exit(fn ->
