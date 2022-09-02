@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.1 (2022-09-02)
+
+  * Fix surface compiler when setting a different `css_output_file` (#646)
+  * Fix formatter for `:debug`
+
 ## v0.8.0 (2022-09-01)
 
   * Support Elixir `v1.14`

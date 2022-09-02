@@ -76,7 +76,7 @@ Add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.8.0"}
+    {:surface, "~> 0.8.1"}
   ]
 end
 ```
