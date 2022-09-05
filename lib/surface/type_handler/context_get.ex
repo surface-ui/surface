@@ -13,7 +13,7 @@ defmodule Surface.TypeHandler.ContextGet do
   def expr_to_quoted(_type, _name, clauses, bindings, _meta, _original) do
     with {:ok, scope} <- TypesHelper.extract_scope(clauses),
          true <- TypesHelper.is_bindings?(bindings) do
-      {:ok, {scope, bindings}}
+      {:ok, {:__context_get__, scope, bindings}}
     else
       _ ->
         message = """
@@ -23,10 +23,5 @@ defmodule Surface.TypeHandler.ContextGet do
 
         {:error, message}
     end
-  end
-
-  @impl true
-  def update_prop_expr({scope, values}, _meta) do
-    {scope, Enum.map(values, fn {key, {name, _, _}} -> {key, name} end)}
   end
 end

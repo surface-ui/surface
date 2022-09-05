@@ -251,7 +251,7 @@ defmodule Surface.Compiler.EExEngine do
         %AST.AttributeExpr{value: expr} -> expr
       end
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(nil, nil, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
@@ -280,7 +280,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.FunctionComponent{type: :local} = component, buffer, state) do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
@@ -309,7 +309,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.FunctionComponent{type: :remote} = component, buffer, state) do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
@@ -343,7 +343,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Component{type: Surface.Component} = component, buffer, state) do
     %AST.Component{module: module, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
@@ -372,7 +372,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.SlotableComponent{} = component, buffer, state) do
     %AST.SlotableComponent{module: module, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], slot_props}
@@ -401,7 +401,7 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Component{type: Surface.LiveComponent} = component, buffer, state) do
     %AST.Component{module: module, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(module, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], [{:module, module} | slot_props]}
@@ -434,7 +434,7 @@ defmodule Surface.Compiler.EExEngine do
       meta: meta
     } = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(nil, component)
+    {props_expr, dynamic_props_expr} = build_props_expressions(component)
     {context_expr, context_var, state} = process_context(nil, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
     slot_props_map = {:%{}, [], [{:module, module_expr} | slot_props]}
@@ -464,7 +464,7 @@ defmodule Surface.Compiler.EExEngine do
     %AST.Component{module: module, props: props} = component
 
     props_expr =
-      collect_component_props(module, props)
+      collect_component_props(props)
       |> Enum.reject(fn {_, value} -> is_nil(value) end)
 
     quote do
@@ -479,19 +479,18 @@ defmodule Surface.Compiler.EExEngine do
     expr
   end
 
-  defp collect_component_props(module, attrs) do
+  defp collect_component_props(attrs) do
     Enum.reduce(attrs, [], fn attr, props ->
       %AST.Attribute{root: root, value: expr} = attr
 
-      {prop_name, type} =
-        with true <- root,
-             root_prop when not is_nil(root_prop) <- Enum.find(module.__props__(), & &1.opts[:root]) do
-          {root_prop.name, root_prop.type}
+      prop_name =
+        if root do
+          :__root__
         else
-          _ -> {attr.name, attr.type}
+          attr.name
         end
 
-      [{prop_name, to_prop_expr(expr, type)} | props]
+      [{prop_name, to_prop_expr(expr)} | props]
     end)
     |> Enum.reverse()
   end
@@ -658,7 +657,7 @@ defmodule Surface.Compiler.EExEngine do
         context_vars: %{state.context_vars | count: state.context_vars.count + 1}
     }
 
-    props = collect_component_props(nil, props)
+    props = collect_component_props(props)
 
     [
       {let, generator_binding(component, name), props, handle_nested_block(children, buffer, nested_block_state),
@@ -701,7 +700,7 @@ defmodule Surface.Compiler.EExEngine do
           children
       end
 
-    props = collect_component_props(module, props)
+    props = collect_component_props(props)
     default_props = Surface.default_props(module)
 
     nested_block_state = %{
@@ -726,27 +725,38 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp generator_binding(%{module: module, props: props}, name) do
-    with generator = Keyword.get(module.__get_slot__(name).opts, :generator_prop),
-         %AST.AttributeExpr{} = expr <- find_attribute_value(props, generator, nil) do
+    with generator when not is_nil(generator) <- Keyword.get(module.__get_slot__(name).opts, :generator_prop),
+         prop when not is_nil(prop) <- module.__get_prop__(generator),
+         %AST.AttributeExpr{} = expr <- find_attribute_value(props, generator, prop.opts[:root], nil) do
       expr
     end
   end
 
-  defp find_attribute_value(attrs, name, default)
-  defp find_attribute_value([], _, default), do: default
+  defp find_attribute_value(attrs, name, root, default)
+  defp find_attribute_value([], _, _, default), do: default
+  defp find_attribute_value([%AST.Attribute{root: true, value: value} | _], _, true, _), do: value
 
-  defp find_attribute_value([%AST.Attribute{name: attr_name, value: value} | _], name, _)
+  defp find_attribute_value([%AST.Attribute{name: attr_name, value: value} | _], name, _root, _)
        when attr_name == name,
        do: value
 
-  defp find_attribute_value([_ | tail], name, default),
-    do: find_attribute_value(tail, name, default)
+  defp find_attribute_value([_ | tail], name, root, default),
+    do: find_attribute_value(tail, name, root, default)
 
-  defp to_prop_expr(%AST.AttributeExpr{value: value, meta: meta}, type) do
-    Surface.TypeHandler.update_prop_expr(type, value, meta)
+  defp to_prop_expr(%AST.AttributeExpr{} = expr) do
+    case expr.value do
+      {:__context_get__, scope, values} ->
+        {scope, Enum.map(values, fn {key, {name, _, _}} -> {key, name} end)}
+
+      {:__generator__, _, value} ->
+        value
+
+      value ->
+        value
+    end
   end
 
-  defp to_prop_expr(%AST.Literal{value: value}, _) do
+  defp to_prop_expr(%AST.Literal{value: value}) do
     value
   end
 
@@ -1208,8 +1218,8 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp build_props_expressions(module, %{props: props, dynamic_props: dynamic_props}) do
-    props_expr = collect_component_props(module, props)
+  defp build_props_expressions(%{props: props, dynamic_props: dynamic_props}) do
+    props_expr = collect_component_props(props)
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
     {props_expr, dynamic_props_expr}
@@ -1243,7 +1253,7 @@ defmodule Surface.Compiler.EExEngine do
 
   defp no_warnings_generator!(
          component,
-         %AST.AttributeExpr{value: {generator, _}} = generator_expr,
+         %AST.AttributeExpr{value: {:__generator__, generator, _value}} = generator_expr,
          let,
          slot_entry_line
        ) do

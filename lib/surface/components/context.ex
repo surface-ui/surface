@@ -96,7 +96,7 @@ defmodule Surface.Components.Context do
       node.props
       |> Enum.filter(fn %{name: name} -> name == :get end)
       |> Enum.map(fn %{value: %{value: value}} -> value end)
-      |> Enum.flat_map(fn {scope, values} ->
+      |> Enum.flat_map(fn {:__context_get__, scope, values} ->
         if scope == nil do
           values
         else

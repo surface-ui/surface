@@ -13,19 +13,10 @@ defmodule Surface.TypeHandler.Generator do
   end
 
   def expr_to_quoted(_type, _name, [{:<-, _, [binding, value]}], [], _meta, _original) do
-    {:ok, {binding, value}}
+    {:ok, {:__generator__, binding, value}}
   end
 
   def expr_to_quoted(_type, _attribute_name, _clauses, _opts, _meta, _original) do
     {:error, "Expected a :generator Example: `{i <- ...}`"}
-  end
-
-  @impl true
-  def update_prop_expr({_, value}, _meta) do
-    value
-  end
-
-  def update_prop_expr(value, _meta) do
-    value
   end
 end

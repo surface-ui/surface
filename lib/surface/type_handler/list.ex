@@ -22,10 +22,6 @@ defmodule Surface.TypeHandler.List do
     :error
   end
 
-  defp handle_list_expr(_name, {:<-, _, [binding, value]}, _module) do
-    {binding, value}
-  end
-
   defp handle_list_expr(_name, expr, _module) when is_list(expr), do: expr
 
   defp handle_list_expr(name, expr, module) do
@@ -40,14 +36,5 @@ defmodule Surface.TypeHandler.List do
           raise "invalid value for property \"#{unquote(name)}\". Expected a :list, got: #{inspect(value)}"
       end
     end
-  end
-
-  @impl true
-  def update_prop_expr({_, value}, _meta) do
-    value
-  end
-
-  def update_prop_expr(value, _meta) do
-    value
   end
 end
