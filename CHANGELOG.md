@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.6 (2022-09-05)
+
+  * Support Elixir `v1.14`
+
 ## v0.7.5 (2022-07-21)
 
   * Support using vanilla phoenix function components with slots in surface templates
