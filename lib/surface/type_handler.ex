@@ -35,15 +35,12 @@ defmodule Surface.TypeHandler do
   @callback value_to_opts(name :: atom(), value :: any()) ::
               {:ok, any()} | {:error, String.t()}
 
-  @callback update_prop_expr(expr :: Macro.t(), meta :: Surface.AST.Meta.t()) :: Macro.t()
-
   @optional_callbacks [
     literal_to_ast_node: 4,
     expr_to_quoted: 6,
     expr_to_value: 3,
     value_to_html: 2,
-    value_to_opts: 2,
-    update_prop_expr: 2
+    value_to_opts: 2
   ]
 
   @boolean_tag_attributes [
@@ -96,15 +93,12 @@ defmodule Surface.TypeHandler do
         defdelegate value_to_html(name, value), to: @default_handler
         @impl true
         defdelegate value_to_opts(name, value), to: @default_handler
-        @impl true
-        defdelegate update_prop_expr(expr, meta), to: @default_handler
 
         defoverridable literal_to_ast_node: 4,
                        expr_to_quoted: 6,
                        expr_to_value: 3,
                        value_to_html: 2,
-                       value_to_opts: 2,
-                       update_prop_expr: 2
+                       value_to_opts: 2
       end
     end
   end
@@ -204,10 +198,6 @@ defmodule Surface.TypeHandler do
       {:error, message} ->
         IOHelper.runtime_error(message)
     end
-  end
-
-  def update_prop_expr(type, value, meta) do
-    handler(type).update_prop_expr(value, meta)
   end
 
   def runtime_prop_value!(module, name, clauses, opts, node_alias, original, ctx) do

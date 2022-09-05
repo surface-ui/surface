@@ -412,10 +412,32 @@ defmodule Surface do
 
   defp runtime_props!(props, module, node_alias, ctx) do
     props
+    |> Enum.map(fn
+      {:__root__, value} -> maybe_root_prop(module, node_alias, ctx, value)
+      {name, value} -> {name, value}
+    end)
+    |> Enum.reject(&is_nil/1)
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     |> Enum.map(fn {name, values} ->
       runtime_value = TypeHandler.runtime_prop_value!(module, name, values, [], node_alias, nil, ctx)
       {name, runtime_value}
     end)
+  end
+
+  defp maybe_root_prop(module, node_alias, ctx, value) do
+    case Enum.find(module.__props__(), & &1.opts[:root]) do
+      nil ->
+        message = """
+        no root property defined for component <#{node_alias}>
+
+        Hint: you can declare a root property using option `root: true`
+        """
+
+        IOHelper.warn(message, %Macro.Env{module: ctx.module}, ctx.file, ctx.line)
+        nil
+
+      root_prop ->
+        {root_prop.name, value}
+    end
   end
 end

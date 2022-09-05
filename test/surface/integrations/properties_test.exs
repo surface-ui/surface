@@ -1154,6 +1154,27 @@ defmodule Surface.PropertiesSyncTest do
              """
     end
 
+    test "warns without root prop" do
+      output =
+        capture_io(:standard_error, fn ->
+          html =
+            render_surface do
+              ~F"""
+              <StringProp {"root label"} />
+              """
+            end
+
+          assert html =~ """
+                 """
+        end)
+
+      assert output =~ """
+             no root property defined for component <StringProp>
+
+             Hint: you can declare a root property using option `root: true`
+             """
+    end
+
     test "literal expression to list prop don't emit warnings" do
       code =
         quote do
