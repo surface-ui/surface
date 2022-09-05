@@ -7,7 +7,6 @@
 
 ## v0.8.0 (2022-09-01)
 
-  * Support Elixir `v1.14`
   * Support scoped CSS styles for components using either inline `<style>` tags or colocated
     `.css` files (#621)
   * Add `render_sface/1` to allow overriding `render/1` and compute/update assigns when using
@@ -55,6 +54,10 @@
     * New option `:generator_prop` use `slot default, generator_prop: :items` instead of `slot default, args: [item: ^items]`, associated prop `:items` must be of type `:generator`
     * New attribute `generator_value` use `<#slot generator_value={item} />` instead of `<#slot :args={item: item} />`
     * `<#template slot="slot_name">` has been removed in favor of `<:slot_name>` (#575)
+
+## v0.7.6 (2022-09-05)
+
+  * Support Elixir `v1.14`
 
 ## v0.7.5 (2022-07-21)
 
