@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - v0.7
 
 jobs:
   mix_test:
@@ -20,11 +20,13 @@ jobs:
             otp: 23.3
           - elixir: 1.12.1
             otp: 24.0
-            check_formatted: true
           - elixir: 1.13.0
             otp: 24.0
+          - elixir: 1.14.0
+            otp: 25.0
             run_plugin_tests: true
             warnings-as-errors: true
+            check_formatted: true
     env:
       MIX_ENV: test
     steps:
