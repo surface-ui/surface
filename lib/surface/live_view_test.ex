@@ -358,4 +358,98 @@ defmodule Surface.LiveViewTest do
 
     {examples, playgrounds}
   end
+
+  @doc false
+  defmacro assert_raise_with_line(exception, message, relative_line, function) do
+    {:fn, _, [{:->, [line: function_start_line], _}]} = function
+    expected_line = function_start_line + relative_line
+    expected_file = __CALLER__.file |> Path.relative_to_cwd()
+
+    quote do
+      unquote(__MODULE__).__assert_raise_with_line__(
+        unquote(exception),
+        unquote(message),
+        unquote(function),
+        unquote(expected_file),
+        unquote(expected_line)
+      )
+    end
+  end
+
+  @doc false
+  def __assert_raise_with_line__(exception, message, function, expected_file, expected_line) do
+    {_, stacktrace} = result = assert_raise_stacktrace(exception, message, function)
+
+    location = stacktrace |> List.first() |> elem(3)
+    actual_line = Keyword.get(location, :line)
+    actual_file = Keyword.get(location, :file) |> List.to_string()
+
+    unless actual_file == expected_file && actual_line == expected_line do
+      message =
+        "Wrong stacktrace for #{inspect(exception)}\n" <>
+          "expected:\n  #{expected_file}:#{expected_line}\n" <>
+          "actual:\n" <> "  #{actual_file}:#{actual_line}"
+
+      ExUnit.Assertions.flunk(message)
+    end
+
+    result
+  end
+
+  defp assert_raise_stacktrace(exception, message, function) when is_function(function) do
+    {error, _} = result = assert_raise_stacktrace(exception, function)
+
+    match? =
+      cond do
+        is_binary(message) -> Exception.message(error) == message
+        is_struct(message, Regex) -> Exception.message(error) =~ message
+      end
+
+    message =
+      "Wrong message for #{inspect(exception)}\n" <>
+        "expected:\n  #{inspect(message)}\n" <>
+        "actual:\n" <> "  #{inspect(Exception.message(error))}"
+
+    unless match?, do: ExUnit.Assertions.flunk(message)
+
+    result
+  end
+
+  defp assert_raise_stacktrace(exception, function) when is_function(function) do
+    try do
+      function.()
+    rescue
+      error ->
+        name = error.__struct__
+
+        cond do
+          name == exception ->
+            check_error_message(name, error)
+            {error, __STACKTRACE__}
+
+          name == ExUnit.AssertionError ->
+            reraise(error, __STACKTRACE__)
+
+          true ->
+            message =
+              "Expected exception #{inspect(exception)} " <>
+                "but got #{inspect(name)} (#{Exception.message(error)})"
+
+            reraise ExUnit.AssertionError, [message: message], __STACKTRACE__
+        end
+    else
+      _ -> ExUnit.Assertions.flunk("Expected exception #{inspect(exception)} but nothing was raised")
+    end
+  end
+
+  defp check_error_message(module, error) do
+    module.message(error)
+  catch
+    kind, reason ->
+      message =
+        "Got exception #{inspect(module)} but it failed to produce a message with:\n\n" <>
+          Exception.format(kind, reason, __STACKTRACE__)
+
+      ExUnit.Assertions.flunk(message)
+  end
 end

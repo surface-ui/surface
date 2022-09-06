@@ -507,7 +507,7 @@ defmodule Surface.Compiler.EExEngine do
         Enum.map(nested_slot_entries, fn {let, _generator, props, body, slot_entry_line} ->
           block =
             case let do
-              nil ->
+              :__undefined_let__ ->
                 body
 
               {name, _, nil} when is_atom(name) ->
@@ -570,29 +570,43 @@ defmodule Surface.Compiler.EExEngine do
         Enum.map(infos, fn {let, generator_expr, props, body, slot_entry_line} ->
           no_warnings_generator = no_warnings_generator!(component, generator_expr, let, slot_entry_line)
 
-          block =
-            if let == nil do
-              quote do
-                {
-                  _,
-                  unquote(no_warnings_generator),
-                  unquote(context_var)
-                } ->
-                  unquote(body)
-              end
+          generator_line =
+            if generator_expr do
+              generator_expr.meta.line
             else
-              quote line: slot_entry_line do
-                {
-                  unquote(let),
-                  unquote(no_warnings_generator),
-                  unquote(context_var)
-                } ->
-                  unquote(body)
+              slot_entry_line
+            end
 
-                {arg, _generator, _context_var} ->
+          let = if(let == :__undefined_let__, do: quote(do: _), else: let)
+          {no_warnings_let, _} = make_bindings_ast_generated(let)
+
+          block =
+            quote generated: true, line: slot_entry_line do
+              {
+                unquote(let),
+                unquote(no_warnings_generator),
+                unquote(context_var)
+              } ->
+                unquote(body)
+
+              {
+                argument,
+                generator_value,
+                unquote(context_var)
+              } ->
+                if !match?(unquote(no_warnings_let), argument) do
                   raise ArgumentError,
-                        "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(let))}`, got: #{inspect(arg)}."
-              end
+                        "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(no_warnings_let))}`, got: #{inspect(argument)}."
+                end
+
+                unquote(
+                  quote line: generator_line do
+                    if !match?(unquote(no_warnings_generator), generator_value) do
+                      raise ArgumentError,
+                            "cannot match generator value against generator binding. Expected a value matching `#{unquote(Macro.to_string(no_warnings_generator))}`, got: #{inspect(generator_value)}."
+                    end
+                  end
+                )
             end
 
           ast =

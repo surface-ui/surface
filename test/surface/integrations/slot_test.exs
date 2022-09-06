@@ -417,13 +417,16 @@ defmodule Surface.SlotTest do
   end
 
   test "raises if arg doesn't match :let" do
-    assert_raise(
+    # FIXME: line should be 4, fix after storing Surface's AST instead of Elixir's
+    assert_raise_with_line(
       ArgumentError,
       "cannot match slot argument against :let. Expected a value matching `%{info: my_info, b: b}`, got: %{info: \"Info from slot\"}.",
+      3,
       fn ->
         render_surface do
           ~F"""
-          <OuterWithDefaultSlotAndArg :let={%{info: my_info, b: b}}>
+          <OuterWithDefaultSlotAndArg
+            :let={%{info: my_info, b: b}}>
             {my_info}{b}
           </OuterWithDefaultSlotAndArg>
           """

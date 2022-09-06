@@ -776,6 +776,23 @@ defmodule Surface.PropertiesTest do
              """
     end
 
+    test "generator with invalid match without :let" do
+      message = """
+      cannot match generator value against generator binding. Expected a value matching `[label]`, got: "Label1".\
+      """
+
+      assert_raise_with_line(ArgumentError, message, 4, fn ->
+        render_surface do
+          ~F"""
+          <RootGeneratorProp
+            {[label] <- ["Label1", "Label2"]}>
+            Slot: {label}
+          </RootGeneratorProp>
+          """
+        end
+      end)
+    end
+
     test "validate invalid values at runtime" do
       message = """
       invalid value for property "label". Expected a :string, got: ["label", "label2"].

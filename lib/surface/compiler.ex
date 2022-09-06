@@ -466,7 +466,7 @@ defmodule Surface.Compiler do
          children: to_ast(children, compile_meta),
          props: attributes,
          directives: directives,
-         let: nil,
+         let: :__undefined_let__,
          meta: meta
        }}
     else
@@ -755,7 +755,7 @@ defmodule Surface.Compiler do
             module: mod,
             slot: mod.__slot_name__(),
             type: component_type,
-            let: nil,
+            let: :__undefined_let__,
             props: attributes,
             directives: directives,
             slot_entries: slot_entries,
@@ -1043,7 +1043,7 @@ defmodule Surface.Compiler do
           children: default_children,
           props: [],
           directives: directives,
-          let: nil,
+          let: :__undefined_let__,
           meta: meta
         })
 
