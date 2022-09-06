@@ -376,7 +376,9 @@ defmodule Surface.Components.Context do
     updated =
       node.slot_entries
       |> Map.get(slot_entry_name, [])
-      |> Enum.map(fn slot_entry -> %{slot_entry | let: {:%{}, [], let}} end)
+      |> Enum.map(fn slot_entry ->
+        %{slot_entry | let: %AST.AttributeExpr{meta: node.meta, value: {:%{}, [], let}}}
+      end)
 
     slot_entries = Map.put(node.slot_entries, slot_entry_name, updated)
 

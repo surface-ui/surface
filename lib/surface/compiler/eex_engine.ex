@@ -504,26 +504,30 @@ defmodule Surface.Compiler.EExEngine do
       slot_name = if name == :default, do: :inner_block, else: name
 
       entries =
-        Enum.map(nested_slot_entries, fn {let, _generator, props, body, slot_entry_line} ->
+        Enum.map(nested_slot_entries, fn {let_expr, _generator, props, body, slot_entry_line} ->
           block =
-            case let do
-              :__undefined_let__ ->
+            case let_expr do
+              nil ->
                 body
 
-              {name, _, nil} when is_atom(name) ->
+              %AST.AttributeExpr{value: {binding, _, nil} = let} when is_atom(binding) ->
                 quote line: slot_entry_line do
                   unquote(let) ->
                     unquote(body)
                 end
 
-              _ ->
+              %AST.AttributeExpr{value: let} ->
                 quote line: slot_entry_line do
                   unquote(let) ->
                     unquote(body)
 
                   arg ->
-                    raise ArgumentError,
-                          "cannot match slot argument against :let. Expected a value matching #{unquote(Macro.to_string(let))}, got: `#{inspect(arg)}`."
+                    unquote(
+                      quote line: let_expr.meta.line do
+                        raise ArgumentError,
+                              "cannot match slot argument against :let. Expected a value matching #{unquote(Macro.to_string(let))}, got: `#{inspect(arg)}`."
+                      end
+                    )
                 end
             end
 
@@ -567,7 +571,8 @@ defmodule Surface.Compiler.EExEngine do
 
     for {name, infos} <- slot_info, not Enum.empty?(infos) do
       entries =
-        Enum.map(infos, fn {let, generator_expr, props, body, slot_entry_line} ->
+        Enum.map(infos, fn {let_expr, generator_expr, props, body, slot_entry_line} ->
+          let = if(let_expr == nil, do: quote(do: _), else: let_expr.value)
           no_warnings_generator = no_warnings_generator!(component, generator_expr, let, slot_entry_line)
 
           generator_line =
@@ -577,7 +582,13 @@ defmodule Surface.Compiler.EExEngine do
               slot_entry_line
             end
 
-          let = if(let == :__undefined_let__, do: quote(do: _), else: let)
+          let_line =
+            if let_expr do
+              let_expr.meta.line
+            else
+              slot_entry_line
+            end
+
           {no_warnings_let, _} = make_bindings_ast_generated(let)
 
           block =
@@ -594,10 +605,14 @@ defmodule Surface.Compiler.EExEngine do
                 generator_value,
                 unquote(context_var)
               } ->
-                if !match?(unquote(no_warnings_let), argument) do
-                  raise ArgumentError,
-                        "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(no_warnings_let))}`, got: #{inspect(argument)}."
-                end
+                unquote(
+                  quote line: let_line do
+                    if !match?(unquote(no_warnings_let), argument) do
+                      raise ArgumentError,
+                            "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(no_warnings_let))}`, got: #{inspect(argument)}."
+                    end
+                  end
+                )
 
                 unquote(
                   quote line: generator_line do

@@ -417,11 +417,10 @@ defmodule Surface.SlotTest do
   end
 
   test "raises if arg doesn't match :let" do
-    # FIXME: line should be 4, fix after storing Surface's AST instead of Elixir's
     assert_raise_with_line(
       ArgumentError,
       "cannot match slot argument against :let. Expected a value matching `%{info: my_info, b: b}`, got: %{info: \"Info from slot\"}.",
-      3,
+      4,
       fn ->
         render_surface do
           ~F"""
@@ -934,13 +933,15 @@ defmodule Surface.SlotTest do
   end
 
   test "render vanilla phoenix components with slots and arg2" do
-    assert_raise(
+    assert_raise_with_line(
       ArgumentError,
       "cannot match slot argument against :let. Expected a value matching [wrong], got: `\"default_arg\"`.",
+      4,
       fn ->
         render_surface do
           ~F"""
-          <PhoenixComponentWithSlots.my_component_with_arg :let={[wrong]}>
+          <PhoenixComponentWithSlots.my_component_with_arg
+            :let={[wrong]}>
             <p>{wrong}</p>
           </PhoenixComponentWithSlots.my_component_with_arg>
           """
