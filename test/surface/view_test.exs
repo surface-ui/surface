@@ -21,6 +21,20 @@ defmodule Surface.ViewTest do
       assert result == "Hello world!\n"
     end
 
+    test "don't process component-scoped CSS for <style> in layouts" do
+      result =
+        MyAppWeb.FooView.render("with_style.html", %{})
+        |> Phoenix.HTML.Safe.to_iodata()
+        |> IO.iodata_to_binary()
+
+      assert result == """
+             <style>
+               .a {padding: 1px}
+             </style>
+             <div class="a">Hello!</div>
+             """
+    end
+
     test "supports nested views" do
       result =
         MyAppWeb.Nested.FooView.render("index.html", %{name: "world"})

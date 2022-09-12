@@ -1,0 +1,4 @@
+<style>
+  .a {padding: 1px}
+</style>
+<div class="a">Hello!</div>

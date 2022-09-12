@@ -1639,7 +1639,8 @@ defmodule Surface.Compiler do
     MapSet.member?(other, "*")
   end
 
-  defp maybe_pop_style([{"style", _attrs, content, %{line: line}} | tokens], caller, opts) do
+  defp maybe_pop_style([{"style", _attrs, content, %{line: line}} | tokens], %{function: fun} = caller, opts)
+       when fun != nil do
     style =
       content
       |> to_string()
