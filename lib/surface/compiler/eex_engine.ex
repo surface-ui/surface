@@ -1089,9 +1089,26 @@ defmodule Surface.Compiler.EExEngine do
   defp store_component_call(module, node_alias, component, props, directives, line) do
     # No need to store dynamic modules
     if !match?(%Surface.AST.AttributeExpr{}, component) do
-      call = %{node_alias: node_alias, component: component, props: props, directives: directives, line: line}
+      call = %{
+        node_alias: node_alias,
+        component: component,
+        props: map_attrs(props),
+        directives: map_attrs(directives),
+        line: line
+      }
+
       Module.put_attribute(module, :__components_calls__, call)
     end
+  end
+
+  defp map_attrs(attrs) do
+    Enum.map(attrs, fn
+      %AST.Attribute{} = attr ->
+        %{name: attr.name, root: attr.root, line: attr.meta.line}
+
+      %AST.Directive{} = attr ->
+        %{name: attr.name, line: attr.meta.line}
+    end)
   end
 
   defp process_context(module, fun, props, component, state) do
