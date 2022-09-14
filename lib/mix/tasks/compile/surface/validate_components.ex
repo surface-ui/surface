@@ -1,6 +1,5 @@
 defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
   alias Mix.Task.Compiler.Diagnostic
-  alias Surface.AST
   alias Surface.Compiler.Helpers
 
   def validate(modules) do
@@ -33,7 +32,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     line = component_call.line
     directives = component_call.directives
 
-    has_directive_props? = Enum.any?(directives, &match?(%AST.Directive{name: :props}, &1))
+    has_directive_props? = Enum.any?(directives, &match?(%{name: :props}, &1))
 
     if not has_directive_props? do
       existing_props_names = Enum.map(props, & &1.name)
@@ -80,7 +79,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
               Hint: you can declare a root property using option `root: true`
               """
 
-              diagnostics = [warning(message, file, attr.meta.line) | diagnostics]
+              diagnostics = [warning(message, file, attr.line) | diagnostics]
               {diagnostics, attrs}
 
             true ->
@@ -94,24 +93,24 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     |> Enum.reverse()
   end
 
-  defp attr_prop(module, %Surface.AST.Attribute{root: true}) do
+  defp attr_prop(module, %{root: true}) do
     Enum.find(module.__props__(), & &1.opts[:root])
   end
 
-  defp attr_prop(module, %Surface.AST.Attribute{} = attr) do
+  defp attr_prop(module, attr) do
     module.__get_prop__(attr.name)
   end
 
   defp validate_attribute(attr, nil, node_alias, file, _) do
     message = "Unknown property \"#{attr.name}\" for component <#{node_alias}>"
-    warning(message, file, attr.meta.line)
+    warning(message, file, attr.line)
   end
 
   defp validate_attribute(attr, prop, node_alias, file, processed_attrs) do
     attr_processed? = MapSet.member?(processed_attrs, attr.name)
 
     if attr_processed? and !prop.opts[:accumulate] do
-      attr_line = attr.meta.line
+      attr_line = attr.line
 
       message =
         if prop.opts[:root] == true do
@@ -157,7 +156,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     processed_directives? = MapSet.member?(processed_directives, directive.name)
 
     if processed_directives? do
-      directive_line = directive.meta.line
+      directive_line = directive.line
 
       message = """
       the directive `#{directive.name}` has been passed multiple times. Considering only the last value.
