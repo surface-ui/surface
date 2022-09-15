@@ -837,7 +837,7 @@ defmodule Surface.Compiler.EExEngine do
        ])
        when not is_nil(mod) do
     %{attributes: attributes, directives: directives, meta: %{node_alias: node_alias}} = component
-    store_component_call(meta.caller.module, node_alias, mod, attributes, directives, line)
+    store_component_call(meta.caller.module, node_alias, mod, attributes, directives, line, :compile)
     [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
 
@@ -919,7 +919,8 @@ defmodule Surface.Compiler.EExEngine do
     %{props: props, directives: directives} = component
 
     if type != AST.FunctionComponent do
-      store_component_call(caller.module, node_alias, mod, props, directives, line)
+      dep_type = if is_atom(mod) and function_exported?(mod, :transform, 1), do: :compile, else: :export
+      store_component_call(caller.module, node_alias, mod, props, directives, line, dep_type)
     end
 
     [requires, %{component | slot_entries: slot_entries_by_name} | to_dynamic_nested_html(nodes)]
@@ -931,7 +932,7 @@ defmodule Surface.Compiler.EExEngine do
        ])
        when not is_nil(module) do
     %{attributes: attributes, directives: directives} = component
-    store_component_call(meta.caller.module, node_alias, module, attributes, directives, meta.line)
+    store_component_call(meta.caller.module, node_alias, module, attributes, directives, meta.line, :compile)
 
     [
       ~S(<span style="color: red; border: 2px solid red; padding: 3px"> Error: ),
@@ -1086,7 +1087,8 @@ defmodule Surface.Compiler.EExEngine do
     |> Macro.var(caller.module)
   end
 
-  defp store_component_call(module, node_alias, component, props, directives, line) do
+  defp store_component_call(module, node_alias, component, props, directives, line, dep_type)
+       when dep_type in [:compile, :export] do
     # No need to store dynamic modules
     if !match?(%Surface.AST.AttributeExpr{}, component) do
       call = %{
@@ -1094,7 +1096,8 @@ defmodule Surface.Compiler.EExEngine do
         component: component,
         props: map_attrs(props),
         directives: map_attrs(directives),
-        line: line
+        line: line,
+        dep_type: dep_type
       }
 
       Module.put_attribute(module, :__components_calls__, call)
