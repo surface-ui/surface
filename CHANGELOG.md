@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.2 (2022-09-16)
+
+  * Remove compile-time deps from components, avoiding unnecessary recompilation
+    of extra files due to transitive deps (#653)
+  * Fix components oversized beam files (#651)
+  * Fix error on layout templates containing `<style>`
+
 ## v0.8.1 (2022-09-02)
 
   * Fix surface compiler when setting a different `css_output_file` (#646)

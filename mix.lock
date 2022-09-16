@@ -20,6 +20,6 @@
   "phx_new": {:hex, :phx_new, "1.6.11", "96d254395e28f2cea218f91477709869becae31cd02a98cd4fa96cd7f55a58ba", [:mix], [], "hexpm", "65ea5009f5ffff87cbea1ec0fcc362573d98441d8a861b6e7ec51ba7077ef154"},
   "plug": {:hex, :plug, "1.13.6", "187beb6b67c6cec50503e940f0434ea4692b19384d47e5fdfd701e93cadb4cc2", [:mix], [{:mime, "~> 1.0 or ~> 2.0", [hex: :mime, repo: "hexpm", optional: false]}, {:plug_crypto, "~> 1.1.1 or ~> 1.2", [hex: :plug_crypto, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4.3 or ~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "02b9c6b9955bce92c829f31d6284bf53c591ca63c4fb9ff81dfd0418667a34ff"},
   "plug_crypto": {:hex, :plug_crypto, "1.2.2", "05654514ac717ff3a1843204b424477d9e60c143406aa94daf2274fdd280794d", [:mix], [], "hexpm", "87631c7ad914a5a445f0a3809f99b079113ae4ed4b867348dd9eec288cecb6db"},
-  "sourceror": {:hex, :sourceror, "0.11.1", "1b80efe84330beefb6b3da95b75c1e1cdefe9dc785bf4c5064fae251a8af615c", [:mix], [], "hexpm", "22b6828ee5572f6cec75cc6357f3ca6c730a02954cef0302c428b3dba31e5e74"},
+  "sourceror": {:hex, :sourceror, "0.11.2", "549ce48be666421ac60cfb7f59c8752e0d393baa0b14d06271d3f6a8c1b027ab", [:mix], [], "hexpm", "9ab659118896a36be6eec68ff7b0674cba372fc8e210b1e9dc8cf2b55bb70dfb"},
   "telemetry": {:hex, :telemetry, "0.4.3", "a06428a514bdbc63293cd9a6263aad00ddeb66f608163bdec7c8995784080818", [:rebar3], [], "hexpm", "eb72b8365ffda5bed68a620d1da88525e326cb82a75ee61354fc24b844768041"},
 }
