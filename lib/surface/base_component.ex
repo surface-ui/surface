@@ -133,18 +133,96 @@ defmodule Surface.BaseComponent do
 
     components = Enum.uniq_by(components_calls, & &1.component)
 
-    requires =
-      for %{component: mod, line: line} <- components, mod != env.module do
-        quote line: line do
-          require(unquote(mod)).__info__(:module)
+    {imports, requires} =
+      for %{component: mod, line: line, dep_type: dep_type} <- components, mod != env.module, reduce: {[], []} do
+        {imports, requires} ->
+          case dep_type do
+            :export ->
+              {[
+                 quote line: line do
+                   import unquote(mod), warn: false
+                 end
+                 | imports
+               ], requires}
+
+            :compile ->
+              {imports,
+               [
+                 quote line: line do
+                   require(unquote(mod)).__info__(:module)
+                 end
+                 | requires
+               ]}
+          end
+      end
+
+    imports_block =
+      quote do
+        if true do
+          unquote(imports)
         end
+      end
+
+    sig_func = signature_func(env.module)
+
+    component_signature =
+      quote do
+        @doc false
+        def unquote(sig_func)(), do: nil
+
+        @doc false
+        def __surface_sig__(), do: unquote(sig_func)
       end
 
     [
       requires,
+      component_signature,
+      imports_block,
       def_components_calls_ast,
       style_ast
     ]
+  end
+
+  defp signature_func(mod) do
+    # The component type changes the signature
+    component_type = Module.get_attribute(mod, :component_type)
+    entries = [{:component_type, component_type}]
+
+    # The list of props changes the signature
+    entries = Surface.API.get_props(mod) |> Enum.reduce(entries, &[prop_signature_entry(&1) | &2])
+
+    # The list of slots changes the signature
+    entries = Surface.API.get_slots(mod) |> Enum.reduce(entries, &[slot_signature_entry(&1) | &2])
+
+    # The slot_name (slotable components) changes the signature
+    entries =
+      case Module.get_attribute(mod, :__slot_name__) do
+        nil -> entries
+        slot_name -> [{:slot_name, slot_name} | entries]
+      end
+
+    String.to_atom("__surface_sig_#{generate_signature(entries)}__")
+  end
+
+  defp prop_signature_entry(prop) do
+    {prop.func, prop.name, prop.opts, prop.type}
+  end
+
+  defp slot_signature_entry(slot) do
+    {slot.func, slot.name, slot.opts, slot.type}
+  end
+
+  defp generate_signature(entries) do
+    entries
+    |> Enum.sort()
+    |> :erlang.term_to_binary()
+    |> hash()
+    |> Base.encode16(case: :lower)
+    |> String.slice(0..6)
+  end
+
+  defp hash(bin) do
+    :crypto.hash(:md5, bin)
   end
 
   defmacro __before_compile_init_slots__(env) do
