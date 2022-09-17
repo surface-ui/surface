@@ -84,7 +84,7 @@ defmodule Surface.Compiler.CSSTranslator do
     translate(rest, acc, state)
   end
 
-  defp translate([{:selector, tokens} | rest], acc, state) do
+  defp translate([{:selector_list, tokens} | rest], acc, state) do
     {updated_tokens, state} = translate_selector(tokens, [], state)
     acc = [updated_tokens | acc]
     translate(rest, acc, state)
