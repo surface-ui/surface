@@ -203,7 +203,6 @@ defmodule Surface.Compiler.CSSTokenizer do
   defp text_to_acc([], acc), do: acc
   defp text_to_acc(buffer, acc), do: [{:text, buffer_to_string(buffer)} | acc]
 
-  defp string_to_acc([], _delimiter, acc), do: acc
   defp string_to_acc(buffer, delimiter, acc), do: [{:string, delimiter, buffer_to_string(buffer)} | acc]
 
   defp comment_to_acc([], acc), do: acc
