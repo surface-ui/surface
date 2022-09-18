@@ -81,10 +81,37 @@ defmodule Surface.Compiler.CSSParser do
     Enum.reverse(buffer)
   end
 
-  defp buffer_to_node(buffer, type) do
+  defp buffer_to_node(buffer, :selector_list) do
+    {reversed, items, list} =
+      Enum.reduce(buffer, {[], [], []}, fn
+        {:comma, _} = comma, {reversed, [{:ws, _} = space | items], list} ->
+          {[comma | reversed], [comma, space], [items | list]}
+
+        {:comma, _} = token, {reversed, items, list} ->
+          {[token | reversed], [token], [items | list]}
+
+        token, {reversed, items, list} ->
+          {[token | reversed], [token | items], list}
+      end)
+
+    list = [items | list]
+
+    case reversed do
+      [{:text, "@" <> _} | _] ->
+        {:at_rule, reversed}
+
+      _ ->
+        {:selector_list, list}
+    end
+  end
+
+  defp buffer_to_node(buffer, :declaration) do
     case Enum.reverse(buffer) do
-      [{:text, "@" <> _} | _] = value -> {:at_rule, value}
-      value -> {type, value}
+      [{:text, "@" <> _} | _] = value ->
+        {:at_rule, value}
+
+      value ->
+        {:declaration, value}
     end
   end
 
