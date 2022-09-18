@@ -25,15 +25,6 @@ defmodule Surface.Compiler.CSSParser do
     handle_token(tokens, [[]], state)
   end
 
-  defp handle_token([{:comma, opening} = token | rest], buffers, %{candidate?: true} = state)
-       when opening != "(" do
-    [buffer | buffers] = buffers
-    node = buffer_to_node(buffer, :selector_list)
-    buffers = push_node_to_current_buffer(node, buffers)
-    buffers = push_node_to_current_buffer(token, buffers)
-    handle_token(rest, buffers, %{state | candidate?: false})
-  end
-
   defp handle_token([{:block_open, "{"} | rest], buffers, %{candidate?: true} = state) do
     [buffer | buffers] = buffers
     node = buffer_to_node(buffer, :selector_list)

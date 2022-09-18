@@ -100,32 +100,40 @@ defmodule Surface.Compiler.CSSParserTest do
 
   test "parse multiple selector blocks" do
     css = """
-      .a{padding: 1px}
-      .b{padding: 1px}
-      """
+    .a{padding: 1px}
+    .b{padding: 1px}
+    """
 
-      assert [
-        {:selector_list, [text: ".a"]},
-        {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], _},
-        {:ws, "\n"},
-        {:selector_list, [text: ".b"]},
-        {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], _},
-        {:ws, "\n"}
-      ] = CSSParser.parse!(css)
+    assert [
+             {:selector_list, [text: ".a"]},
+             {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], _},
+             {:ws, "\n"},
+             {:selector_list, [text: ".b"]},
+             {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], _},
+             {:ws, "\n"}
+           ] = CSSParser.parse!(css)
   end
 
   test "parse multiple selector items" do
-    css = """
-    .a > .b, .c {padding: 1px}
-    """
+    css = ".a > .b, .c {padding: 1px}"
 
     assert CSSParser.parse!(css) == [
-      {:selector_list, [text: ".a", ws: " ", text: ">", ws: " ", text: ".b"]},
-      {:comma, nil},
-      {:ws, " "},
-      {:selector_list, [text: ".c", ws: " "]},
-      {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], %{column: 13, column_end: 26, line: 1, line_end: 1}},
-      {:ws, "\n"}
-    ]
+             {:selector_list,
+              [
+                {:text, ".a"},
+                {:ws, " "},
+                {:text, ">"},
+                {:ws, " "},
+                {:text, ".b"},
+                {:comma, nil},
+                {:ws, " "},
+                {:text, ".c"},
+                {:ws, " "}
+              ]},
+             {:block, "{",
+              [
+                {:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}]}
+              ], %{column: 13, column_end: 26, line: 1, line_end: 1}}
+           ]
   end
 end

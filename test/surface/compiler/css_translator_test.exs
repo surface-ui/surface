@@ -122,4 +122,44 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
     assert selectors.classes == MapSet.new(["test"])
   end
+
+  test "translate declaration with value containing commas" do
+    css = """
+    .Input [data-input] {
+      font-feature-settings: 'case', 'cpsp' 0, 'dlig' 0, 'ccmp', 'kern';
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           .Input[data-s-myscope] [data-input] {
+             font-feature-settings: 'case', 'cpsp' 0, 'dlig' 0, 'ccmp', 'kern';
+           }
+           """
+
+    assert selectors.classes == MapSet.new(["Input"])
+  end
+
+  test "translate declaration with variants" do
+    css = """
+    a {
+      @apply bg-sky-500 hover:bg-sky-700;
+      @apply lg:[&:nth-child(3)]:hover:underline;
+      @apply [&_p]:mt-4;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           a[data-s-myscope] {
+             @apply bg-sky-500 hover:bg-sky-700;
+             @apply lg:[&:nth-child(3)]:hover:underline;
+             @apply [&_p]:mt-4;
+           }
+           """
+
+    assert selectors.elements == MapSet.new(["a"])
+  end
 end
