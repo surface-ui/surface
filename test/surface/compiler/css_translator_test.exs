@@ -56,7 +56,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            """
   end
 
-  test "translate selector with element, class and pseudo-classe " do
+  test "translate selector with element, class and pseudo-class" do
     css = """
     div.blog:first-child { display: block }
     """
@@ -70,6 +70,26 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.elements == MapSet.new([])
     assert selectors.classes == MapSet.new([])
     assert selectors.combined == MapSet.new([MapSet.new([".blog", "div"])])
+  end
+
+  test "translate selector with pseudo-class with multiple arguments" do
+    css = """
+    :fake(div, 'whatever') {
+      display: block;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           :fake(div, 'whatever') {
+             display: block;
+           }
+           """
+
+    assert selectors.elements == MapSet.new([])
+    assert selectors.classes == MapSet.new([])
+    assert selectors.combined == MapSet.new([])
   end
 
   test ":deep" do
@@ -143,7 +163,9 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
   test "translate declaration with variants" do
     css = """
-    a {
+    a .external-link {
+      padding: :theme(hover:underline);
+      @apply hover:underline;
       @apply bg-sky-500 hover:bg-sky-700;
       @apply lg:[&:nth-child(3)]:hover:underline;
       @apply [&_p]:mt-4;
@@ -153,7 +175,9 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
 
     assert translated == """
-           a[data-s-myscope] {
+           a[data-s-myscope] .external-link[data-s-myscope] {
+             padding: :theme(hover:underline);
+             @apply hover:underline;
              @apply bg-sky-500 hover:bg-sky-700;
              @apply lg:[&:nth-child(3)]:hover:underline;
              @apply [&_p]:mt-4;
@@ -161,5 +185,6 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            """
 
     assert selectors.elements == MapSet.new(["a"])
+    assert selectors.classes == MapSet.new(["external-link"])
   end
 end
