@@ -606,7 +606,7 @@ defmodule Surface.Compiler.EExEngine do
                 unquote(context_var)
               } ->
                 unquote(
-                  quote line: let_line do
+                  quote line: let_line, generated: true do
                     if !match?(unquote(no_warnings_let), argument) do
                       raise ArgumentError,
                             "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(no_warnings_let))}`, got: #{inspect(argument)}."
@@ -615,7 +615,7 @@ defmodule Surface.Compiler.EExEngine do
                 )
 
                 unquote(
-                  quote line: generator_line do
+                  quote line: generator_line, generated: true do
                     if !match?(unquote(no_warnings_generator), generator_value) do
                       raise ArgumentError,
                             "cannot match generator value against generator binding. Expected a value matching `#{unquote(Macro.to_string(no_warnings_generator))}`, got: #{inspect(generator_value)}."
