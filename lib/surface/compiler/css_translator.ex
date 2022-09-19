@@ -23,6 +23,7 @@ defmodule Surface.Compiler.CSSTranslator do
       env: env,
       vars: %{},
       selectors_buffer: [],
+      requires_data_attrs_on_root: false,
       selectors: %{
         elements: MapSet.new(),
         classes: MapSet.new(),
@@ -43,7 +44,8 @@ defmodule Surface.Compiler.CSSTranslator do
       line: line,
       css: to_string(updated_tokens),
       selectors: state.selectors,
-      vars: state.vars
+      vars: state.vars,
+      requires_data_attrs_on_root: state.requires_data_attrs_on_root
     }
   end
 
@@ -89,7 +91,7 @@ defmodule Surface.Compiler.CSSTranslator do
   end
 
   defp translate([{:selector_list, [tokens | list]} | rest], acc, state) do
-    {updated_tokens, state} = translate_selector(tokens, [], state)
+    {updated_tokens, state} = translate_selector_list(tokens, [], state)
     acc = [updated_tokens | acc]
     translate([{:selector_list, list} | rest], acc, state)
   end
@@ -110,6 +112,23 @@ defmodule Surface.Compiler.CSSTranslator do
     {Enum.reverse(acc), state}
   end
 
+  defp translate_selector_list([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
+    {updated_tokens, state} = translate(arg, [], state)
+    state = %{state | requires_data_attrs_on_root: true}
+    acc = [updated_tokens, "[data-s-self][data-s-#{state.scope_id}] " | acc]
+    translate_selector(rest, acc, state)
+  end
+
+  defp translate_selector_list(tokens, acc, state) do
+    translate_selector(tokens, acc, state)
+  end
+
+  defp translate_selector([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
+    {updated_tokens, state} = translate(arg, [], state)
+    acc = [updated_tokens | acc]
+    translate_selector(rest, acc, state)
+  end
+
   defp translate_selector([{:ws, ws} | rest], acc, state) do
     state = end_selector(state)
     translate_selector(rest, [ws | acc], state)
@@ -119,12 +138,6 @@ defmodule Surface.Compiler.CSSTranslator do
        when combinator in [">", "~", "+"] do
     state = end_selector(state)
     translate_selector(rest, [combinator | acc], state)
-  end
-
-  defp translate_selector([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
-    {updated_tokens, state} = translate(arg, [], state)
-    acc = [updated_tokens | acc]
-    translate_selector(rest, acc, state)
   end
 
   defp translate_selector([{:text, text} | rest], acc, state) do

@@ -187,4 +187,34 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.elements == MapSet.new(["a"])
     assert selectors.classes == MapSet.new(["external-link"])
   end
+
+  test "add self and scope data when selector starts with :deep" do
+    css = """
+    :deep(div > .link) {
+      @apply hover:underline;
+    }
+
+    :deep(.a .link), :deep(.b .link) {
+      @apply hover:underline;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           [data-s-self][data-s-myscope] div > .link {
+             @apply hover:underline;
+           }
+
+           [data-s-self][data-s-myscope] .a .link, [data-s-self][data-s-myscope] .b .link {
+             @apply hover:underline;
+           }
+           """
+
+    assert selectors.elements == MapSet.new([])
+    assert selectors.classes == MapSet.new([])
+    assert selectors.ids == MapSet.new([])
+    assert selectors.other == MapSet.new([])
+    assert selectors.combined == MapSet.new([])
+  end
 end

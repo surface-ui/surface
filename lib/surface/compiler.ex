@@ -1487,7 +1487,7 @@ defmodule Surface.Compiler do
   defp maybe_transform_ast(nodes, %CompileMeta{style: style}) do
     Enum.map(nodes, fn node ->
       node
-      |> maybe_add_data_s_comp_attr(style)
+      |> maybe_add_data_s_attrs(style)
       |> maybe_add_or_update_style_attr(style)
     end)
   end
@@ -1496,21 +1496,29 @@ defmodule Surface.Compiler do
     nodes
   end
 
-  # TODO: to be used when handling `:component()`
-  # defp maybe_add_data_s_comp_attr(%AST.Tag{attributes: attributes, meta: meta} = node, style)
-  #      when style != nil do
-  #   attr =
-  #     %AST.Attribute{
-  #       meta: meta,
-  #       name: :"data-s-comp",
-  #       type: :string,
-  #       value: %AST.Literal{value: true}
-  #     }
+  defp maybe_add_data_s_attrs(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style)
+       when style != nil do
+    %AST.Tag{attributes: attributes, meta: meta} = node
+    %{scope_id: scope_id} = style
 
-  #   %AST.Tag{node | attributes: [attr | attributes]}
-  # end
+    data_self_attr = %AST.Attribute{
+      meta: meta,
+      name: :"data-s-self",
+      type: :string,
+      value: %AST.Literal{value: true}
+    }
 
-  defp maybe_add_data_s_comp_attr(node, _style) do
+    data_scope_attr = %AST.Attribute{
+      meta: meta,
+      name: :"data-s-#{scope_id}",
+      type: :string,
+      value: %AST.Literal{value: true}
+    }
+
+    %AST.Tag{node | attributes: [data_self_attr, data_scope_attr | attributes]}
+  end
+
+  defp maybe_add_data_s_attrs(node, _style) do
     node
   end
 
@@ -1568,9 +1576,10 @@ defmodule Surface.Compiler do
     }
   end
 
-  defp maybe_transform_tag(node, %mod{style: %{scope_id: scope_id, selectors: selectors}})
+  defp maybe_transform_tag(node, %mod{style: %{requires_data_attrs_on_root: false} = style})
        when mod in [CompileMeta, AST.Meta] do
     %AST.Tag{element: element, attributes: attributes, meta: meta} = node
+    %{scope_id: scope_id, selectors: selectors} = style
 
     if universal_in_selectors?(selectors) or
          element_in_selectors?(element, selectors) or
