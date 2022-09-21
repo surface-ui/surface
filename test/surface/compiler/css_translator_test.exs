@@ -156,6 +156,56 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.combined == MapSet.new([])
   end
 
+  test ":global removes the scope of any selector" do
+    css = """
+    :global(.a) {
+      padding: 10px;
+    }
+
+    :global(.b) .c {
+      padding: 10px;
+    }
+
+    :global(.d).e {
+      padding: 10px;
+    }
+
+    .a:global(.f) {
+      padding: 10px;
+    }
+
+    :global(.g > .h) {
+      padding: 10px;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert selectors.classes == MapSet.new(["a", "c", "e"])
+
+    assert translated == """
+           .a {
+             padding: 10px;
+           }
+
+           .b .c[data-s-myscope] {
+             padding: 10px;
+           }
+
+           .d.e[data-s-myscope] {
+             padding: 10px;
+           }
+
+           .a[data-s-myscope].f {
+             padding: 10px;
+           }
+
+           .g > .h {
+             padding: 10px;
+           }
+           """
+  end
+
   test "translate selector with multiple classes and pseudo-classes" do
     css = """
     .a[title="foo"]:first-child.b[title="bar"]:hover { display: block }

@@ -112,6 +112,7 @@ defmodule Surface.Compiler.CSSTranslator do
     {Enum.reverse(acc), state}
   end
 
+  # :deep as the first selector
   defp translate_selector_list([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
     state = %{state | requires_data_attrs_on_root: true}
@@ -123,7 +124,14 @@ defmodule Surface.Compiler.CSSTranslator do
     translate_selector(tokens, acc, state)
   end
 
+  # TODO: check if it's maybe better to just always add [data-s-self][data-s-xxxxxx]
   defp translate_selector([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
+    {updated_tokens, state} = translate(arg, [], state)
+    acc = [updated_tokens | acc]
+    translate_selector(rest, acc, state)
+  end
+
+  defp translate_selector([{:text, ":global"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
     acc = [updated_tokens | acc]
     translate_selector(rest, acc, state)
