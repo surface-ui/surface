@@ -56,7 +56,7 @@ defmodule Surface.LiveComponent do
     quote do
       @before_compile Surface.Renderer
       use Phoenix.LiveComponent
-      import Phoenix.LiveView.Helpers, except: [slot: 2]
+      import Phoenix.Component, except: [slot: 1, slot: 2]
 
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
@@ -135,7 +135,7 @@ defmodule Surface.LiveComponent do
           socket =
             socket
             |> BaseComponent.restore_private_assigns(var!(assigns))
-            |> Phoenix.LiveView.assign(updated_assigns)
+            |> Phoenix.Component.assign(updated_assigns)
 
           {:ok, socket}
         end
@@ -147,8 +147,8 @@ defmodule Surface.LiveComponent do
 
           socket =
             socket
-            |> Phoenix.LiveView.assign(var!(assigns))
-            |> Phoenix.LiveView.assign(updated_assigns)
+            |> Phoenix.Component.assign(var!(assigns))
+            |> Phoenix.Component.assign(updated_assigns)
 
           {:ok, socket}
         end

@@ -46,11 +46,16 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp generate_buffer([], buffer, state) do
-    state.engine.handle_body(buffer, root: true)
+    ast = state.engine.handle_body(buffer, root: true)
+
+    quote do
+      require Phoenix.LiveView.HTMLEngine
+      unquote(ast)
+    end
   end
 
   defp generate_buffer([{:text, chars} | tail], buffer, state) do
-    buffer = state.engine.handle_text(buffer, chars)
+    buffer = state.engine.handle_text(buffer, nil, chars)
     generate_buffer(tail, buffer, state)
   end
 
@@ -208,7 +213,7 @@ defmodule Surface.Compiler.EExEngine do
 
     slot_content_expr =
       quote line: meta.line do
-        Phoenix.LiveView.Helpers.render_slot(
+        Phoenix.Component.render_slot(
           unquote(slot_value),
           {
             unquote(if(arg_expr, do: arg_expr.value, else: nil)),
@@ -258,7 +263,7 @@ defmodule Surface.Compiler.EExEngine do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote do
-      Phoenix.LiveView.Helpers.component(
+      Phoenix.LiveView.HTMLEngine.component(
         &apply(unquote(module_expr), unquote(fun_expr), [&1]),
         Map.merge(
           Surface.build_dynamic_assigns(
@@ -270,7 +275,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -287,7 +293,7 @@ defmodule Surface.Compiler.EExEngine do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote do
-      Phoenix.LiveView.Helpers.component(
+      Phoenix.LiveView.HTMLEngine.component(
         &(unquote(Macro.var(fun, __MODULE__)) / 1),
         Map.merge(
           Surface.build_assigns(
@@ -299,7 +305,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -321,7 +328,7 @@ defmodule Surface.Compiler.EExEngine do
     module_for_build_assigns = if fun == :render, do: module
 
     quote do
-      Phoenix.LiveView.Helpers.component(
+      Phoenix.LiveView.HTMLEngine.component(
         &(unquote(module).unquote(fun) / 1),
         Map.merge(
           Surface.build_assigns(
@@ -333,7 +340,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -350,7 +358,7 @@ defmodule Surface.Compiler.EExEngine do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote do
-      Phoenix.LiveView.Helpers.component(
+      Phoenix.LiveView.HTMLEngine.component(
         &unquote(module).render/1,
         Map.merge(
           Surface.build_assigns(
@@ -362,7 +370,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -379,7 +388,7 @@ defmodule Surface.Compiler.EExEngine do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote do
-      Phoenix.LiveView.Helpers.component(
+      Phoenix.LiveView.HTMLEngine.component(
         &unquote(module).render/1,
         Map.merge(
           Surface.build_assigns(
@@ -391,7 +400,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -408,8 +418,8 @@ defmodule Surface.Compiler.EExEngine do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote do
-      Phoenix.LiveView.Helpers.component(
-        &Phoenix.LiveView.Helpers.live_component/1,
+      Phoenix.LiveView.HTMLEngine.component(
+        &Phoenix.Component.live_component/1,
         Map.merge(
           Surface.build_assigns(
             unquote(context_expr),
@@ -420,7 +430,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -441,8 +452,8 @@ defmodule Surface.Compiler.EExEngine do
     ctx = Surface.AST.Meta.quoted_caller_context(meta)
 
     quote do
-      Phoenix.LiveView.Helpers.component(
-        &Phoenix.LiveView.Helpers.live_component/1,
+      Phoenix.LiveView.HTMLEngine.component(
+        &Phoenix.Component.live_component/1,
         Map.merge(
           Surface.build_dynamic_assigns(
             unquote(context_expr),
@@ -453,7 +464,8 @@ defmodule Surface.Compiler.EExEngine do
             unquote(ctx)
           ),
           unquote(slot_props_map)
-        )
+        ),
+        {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
     |> maybe_print_expression(component)
@@ -533,7 +545,7 @@ defmodule Surface.Compiler.EExEngine do
 
           inner_block =
             quote do
-              Phoenix.LiveView.Helpers.inner_block(unquote(slot_name), do: unquote(block))
+              Phoenix.LiveView.HTMLEngine.inner_block(unquote(slot_name), do: unquote(block))
             end
 
           props = [__slot__: slot_name, inner_block: inner_block] ++ props
@@ -626,7 +638,7 @@ defmodule Surface.Compiler.EExEngine do
 
           ast =
             quote do
-              Phoenix.LiveView.Helpers.inner_block(unquote(name), do: unquote(block))
+              Phoenix.LiveView.HTMLEngine.inner_block(unquote(name), do: unquote(block))
             end
 
           props = [__slot__: name, inner_block: ast] ++ props
@@ -644,7 +656,7 @@ defmodule Surface.Compiler.EExEngine do
     buffer =
       Enum.reduce(block, buffer, fn
         {:text, chars}, buffer ->
-          state.engine.handle_text(buffer, chars)
+          state.engine.handle_text(buffer, nil, chars)
 
         %AST.Expr{} = expr, buffer ->
           state.engine.handle_expr(buffer, "", to_expression(expr, buffer, state))

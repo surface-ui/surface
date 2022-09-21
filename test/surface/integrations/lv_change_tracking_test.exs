@@ -4,7 +4,7 @@ defmodule Surface.LVChangeTrackingTest do
 
   use ExUnit.Case, async: true
 
-  import Phoenix.LiveView.Helpers
+  import Phoenix.Component
 
   alias Phoenix.LiveView.{Socket, Diff}
 

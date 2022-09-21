@@ -31,6 +31,24 @@ defmodule Surface.Components.FormTest do
     end
   end
 
+  defmodule ViewWithFormWithMethodPut do
+    use Surface.LiveView
+
+    data changeset, :any
+
+    def render(assigns) do
+      ~F"""
+      <Form for={@changeset} action="#" csrf_token="test" as={:user} method="put">
+        <TextInput field={:name} />
+      </Form>
+      """
+    end
+
+    def mount(_params, session, socket) do
+      {:ok, assign(socket, changeset: session["changeset"])}
+    end
+  end
+
   test "form as an atom" do
     html =
       render_surface do
@@ -152,7 +170,7 @@ defmodule Surface.Components.FormTest do
 
     assigns = %{"changeset" => changeset}
 
-    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+    {:ok, _view, html} = live_isolated(conn, ViewWithFormWithMethodPut, session: assigns)
 
     assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
   end

@@ -46,6 +46,7 @@ defmodule Surface.Catalogue.Playground do
   """
 
   import Phoenix.LiveView
+  import Phoenix.Component, except: [slot: 1, slot: 2]
 
   @pubsub Surface.Catalogue.PubSub
 

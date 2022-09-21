@@ -108,6 +108,7 @@ defmodule Surface.Components.LiveRedirectTest do
   defp actual_content(text, opts) do
     text
     |> Phoenix.LiveView.Helpers.live_redirect(opts)
+    |> Phoenix.HTML.html_escape()
     |> Phoenix.HTML.safe_to_string()
   end
 

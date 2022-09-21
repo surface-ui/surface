@@ -101,7 +101,7 @@ defmodule Surface.BaseComponent do
   @doc false
   def restore_private_assigns(socket, %{__context__: context}) do
     socket
-    |> Phoenix.LiveView.assign(:__context__, context)
+    |> Phoenix.Component.assign(:__context__, context)
   end
 
   def restore_private_assigns(socket, _assigns) do

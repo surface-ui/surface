@@ -1,7 +1,7 @@
 defmodule Surface.FunctionComponentTest do
   use Surface.ConnCase, async: true
 
-  import Phoenix.LiveView.Helpers
+  import Phoenix.Component
 
   defmodule NotAComponent do
     def func(assigns) do

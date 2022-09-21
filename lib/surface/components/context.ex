@@ -151,7 +151,7 @@ defmodule Surface.Components.Context do
       |> get_assigns_context()
       |> put_values(scope, values)
 
-    Phoenix.LiveView.assign(socket_or_assigns, :__context__, context)
+    Phoenix.Component.assign(socket_or_assigns, :__context__, context)
   end
 
   def put(socket_or_assigns, _scope, _values) do
@@ -226,7 +226,7 @@ defmodule Surface.Components.Context do
     {scope, key, to_key} = process_key(key, opts)
     value = get(socket_or_assigns, scope, key)
 
-    Phoenix.LiveView.assign(socket_or_assigns, to_key, value)
+    Phoenix.Component.assign(socket_or_assigns, to_key, value)
   end
 
   @doc """
@@ -248,7 +248,7 @@ defmodule Surface.Components.Context do
         socket_or_assigns
 
       value = get(socket_or_assigns, scope, key) ->
-        Phoenix.LiveView.assign(socket_or_assigns, to_key, value)
+        Phoenix.Component.assign(socket_or_assigns, to_key, value)
 
       true ->
         socket_or_assigns

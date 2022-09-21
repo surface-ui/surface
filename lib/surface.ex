@@ -95,7 +95,6 @@ defmodule Surface do
   You can visit the documentation of each type of component for further explanation and examples.
   """
 
-  alias Phoenix.LiveView
   alias Surface.API
   alias Surface.Compiler.Helpers
   alias Surface.IOHelper
@@ -197,7 +196,7 @@ defmodule Surface do
   @doc "Initialize surface state in the socket"
   def init(socket) do
     socket
-    |> LiveView.assign_new(:__context__, fn -> %{} end)
+    |> Phoenix.Component.assign_new(:__context__, fn -> %{} end)
   end
 
   @doc false

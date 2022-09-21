@@ -108,7 +108,7 @@ defmodule Surface.Components.Form.ErrorTag do
 
     ~F"""
     <span
-      :for={error <- Keyword.get_values(@form.errors, @field)}
+      :for={error <- Keyword.get_values(@form.errors || [], @field)}
       class={class}
       phx-feedback-for={@feedback_for || input_name(@form, @field)}
     >{translate_error.(error)}</span>

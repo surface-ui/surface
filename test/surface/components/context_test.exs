@@ -405,8 +405,8 @@ defmodule Surface.Components.ContextTest do
     test "overrides a value if already exists (socket)" do
       socket =
         %Socket{}
-        |> Phoenix.LiveView.assign(:form, :existing_form)
-        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Phoenix.Component.assign(:form, :existing_form)
+        |> Phoenix.Component.assign(:field, :existing_field)
         |> Context.put(Form, form: :fake_form)
         |> Context.put(field: :fake_field)
         |> Context.copy_assign({Form, :form})
@@ -431,8 +431,8 @@ defmodule Surface.Components.ContextTest do
     test "overrides a value if already exists (assigns)" do
       assigns =
         %{__changed__: %{}}
-        |> Phoenix.LiveView.assign(:form, :existing_form)
-        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Phoenix.Component.assign(:form, :existing_form)
+        |> Phoenix.Component.assign(:field, :existing_field)
         |> Context.put(Form, form: :fake_form)
         |> Context.put(field: :fake_field)
         |> Context.copy_assign({Form, :form})
@@ -471,8 +471,8 @@ defmodule Surface.Components.ContextTest do
     test "don't copy the value if it's already been assigned (socket)" do
       socket =
         %Socket{}
-        |> Phoenix.LiveView.assign(:form, :existing_form)
-        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Phoenix.Component.assign(:form, :existing_form)
+        |> Phoenix.Component.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
         |> Context.maybe_copy_assign({Form, :form})
@@ -497,8 +497,8 @@ defmodule Surface.Components.ContextTest do
     test "don't copy the value if it's already been assigned (assigns)" do
       assigns =
         %{__changed__: %{}}
-        |> Phoenix.LiveView.assign(:form, :existing_form)
-        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Phoenix.Component.assign(:form, :existing_form)
+        |> Phoenix.Component.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
         |> Context.maybe_copy_assign({Form, :form})
@@ -537,8 +537,8 @@ defmodule Surface.Components.ContextTest do
     test "don't copy the value if it's already been assigned (socket)" do
       socket =
         %Socket{}
-        |> Phoenix.LiveView.assign(:form, :existing_form)
-        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Phoenix.Component.assign(:form, :existing_form)
+        |> Phoenix.Component.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
         |> Context.maybe_copy_assign!({Form, :form})
@@ -563,8 +563,8 @@ defmodule Surface.Components.ContextTest do
     test "don't copy the value if it's already been assigned (assigns)" do
       assigns =
         %{__changed__: %{}}
-        |> Phoenix.LiveView.assign(:form, :existing_form)
-        |> Phoenix.LiveView.assign(:field, :existing_field)
+        |> Phoenix.Component.assign(:form, :existing_form)
+        |> Phoenix.Component.assign(:field, :existing_field)
         |> Context.put(Form, form: :form_from_context)
         |> Context.put(field: :field_from_context)
         |> Context.maybe_copy_assign!({Form, :form})
