@@ -44,15 +44,35 @@ defmodule Surface.LiveView do
 
       @before_compile unquote(__MODULE__)
 
-      @doc "The id of the live view"
+      @doc """
+      Both the DOM ID and the ID to uniquely identify a LiveView. An `:id` is automatically generated
+      when rendering root LiveViews but it is a required option when rendering a child LiveView.
+      """
       prop id, :string, required: true
 
       @doc """
-      The request info necessary for the view, such as params, cookie session info, etc.
-      The session is signed and stored on the client, then provided back to the server
-      when the client connects, or reconnects to the stateful view.
+      An optional tuple for the HTML tag and DOM attributes to be used for the LiveView container.
+      For example: `{:li, style: "color: blue;"}`. By default it uses the module definition container.
+      """
+      prop container, :tuple
+
+      @doc """
+      A map of binary keys with extra session data to be serialized and sent to the client.
+      All session data currently in the connection is automatically available in LiveViews.
+      You can use this option to provide extra data. Remember all session data is serialized
+      and sent to the client, so you should always keep the data in the session to a minimum.
+      For example, instead of storing a User struct, you should store the "user_id" and load
+      the User when the LiveView mounts.
       """
       prop session, :map
+
+      @doc """
+      An optional flag to maintain the LiveView across live redirects, even if it is nested
+      within another LiveView. If you are rendering the sticky view within your live layout,
+      make sure that the sticky view itself does not use the same layout. You can do so by
+      returning `{:ok, socket, layout: false}` from mount.
+      """
+      prop sticky, :boolean
 
       @doc "Built-in assign"
       data socket, :struct
