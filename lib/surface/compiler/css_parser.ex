@@ -25,18 +25,9 @@ defmodule Surface.Compiler.CSSParser do
     handle_token(tokens, [[]], state)
   end
 
-  defp handle_token([{:comma, opening} = token | rest], buffers, %{candidate?: true} = state)
-       when opening != "(" do
-    [buffer | buffers] = buffers
-    node = buffer_to_node(buffer, :selector)
-    buffers = push_node_to_current_buffer(node, buffers)
-    buffers = push_node_to_current_buffer(token, buffers)
-    handle_token(rest, buffers, %{state | candidate?: false})
-  end
-
   defp handle_token([{:block_open, "{"} | rest], buffers, %{candidate?: true} = state) do
     [buffer | buffers] = buffers
-    node = buffer_to_node(buffer, :selector)
+    node = buffer_to_node(buffer, :selector_list)
     buffers = push_node_to_current_buffer(node, buffers)
     buffers = [[] | buffers]
     handle_token(rest, buffers, %{state | candidate?: false})
@@ -90,10 +81,37 @@ defmodule Surface.Compiler.CSSParser do
     Enum.reverse(buffer)
   end
 
-  defp buffer_to_node(buffer, type) do
+  defp buffer_to_node(buffer, :selector_list) do
+    {reversed, items, list} =
+      Enum.reduce(buffer, {[], [], []}, fn
+        {:comma, _} = comma, {reversed, [{:ws, _} = space | items], list} ->
+          {[comma | reversed], [comma, space], [items | list]}
+
+        {:comma, _} = token, {reversed, items, list} ->
+          {[token | reversed], [token], [items | list]}
+
+        token, {reversed, items, list} ->
+          {[token | reversed], [token | items], list}
+      end)
+
+    list = [items | list]
+
+    case reversed do
+      [{:text, "@" <> _} | _] ->
+        {:at_rule, reversed}
+
+      _ ->
+        {:selector_list, list}
+    end
+  end
+
+  defp buffer_to_node(buffer, :declaration) do
     case Enum.reverse(buffer) do
-      [{:text, "@" <> _} | _] = value -> {:at_rule, value}
-      value -> {type, value}
+      [{:text, "@" <> _} | _] = value ->
+        {:at_rule, value}
+
+      value ->
+        {:declaration, value}
     end
   end
 

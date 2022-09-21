@@ -132,6 +132,53 @@ defmodule Surface.Compiler.CSSTokenizerTest do
     assert [_, _, {:text, "title="}, {:string, "\'", "quote:\""}, _ | _] = CSSTokenizer.tokenize!(css)
   end
 
+  test "handle empty strings" do
+    css = "div{content:''}"
+
+    assert [
+             {:text, "div"},
+             {:block_open, "{"},
+             {:text, "content"},
+             {:text, ":"},
+             {:string, "'", ""},
+             {:block_close, "}", _}
+           ] = CSSTokenizer.tokenize!(css)
+
+    css = ~S(div{content:""})
+
+    assert [
+             {:text, "div"},
+             {:block_open, "{"},
+             {:text, "content"},
+             {:text, ":"},
+             {:string, "\"", ""},
+             {:block_close, "}", _}
+           ] = CSSTokenizer.tokenize!(css)
+  end
+
+  test "handle empty {} blocks" do
+    css = "div{}"
+
+    assert [
+             {:text, "div"},
+             {:block_open, "{"},
+             {:block_close, "}", _}
+           ] = CSSTokenizer.tokenize!(css)
+  end
+
+  test "handle empty () blocks" do
+    css = "div{foo()}"
+
+    assert [
+             {:text, "div"},
+             {:block_open, "{"},
+             {:text, "foo"},
+             {:block_open, "("},
+             {:block_close, ")", _},
+             {:block_close, "}", _}
+           ] = CSSTokenizer.tokenize!(css)
+  end
+
   test "handle pseudo classes" do
     css = """
     .a:has(>img) {padding: 1px}

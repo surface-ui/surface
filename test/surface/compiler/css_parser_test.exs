@@ -13,7 +13,7 @@ defmodule Surface.Compiler.CSSParserTest do
 
     assert CSSParser.parse!(css) ==
              [
-               {:selector, [text: ".root", ws: " "]},
+               {:selector_list, [[text: ".root", ws: " "]]},
                {:block, "{",
                 [
                   {:ws, " "},
@@ -28,7 +28,7 @@ defmodule Surface.Compiler.CSSParserTest do
     css = ".root{padding: 1px}"
 
     assert CSSParser.parse!(css) == [
-             {:selector, [{:text, ".root"}]},
+             {:selector_list, [[{:text, ".root"}]]},
              {:block, "{", [{:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}]}],
               %{column: 6, column_end: 19, line: 1, line_end: 1}}
            ]
@@ -43,7 +43,7 @@ defmodule Surface.Compiler.CSSParserTest do
     """
 
     assert CSSParser.parse!(css) == [
-             {:selector, [text: ".root", ws: " "]},
+             {:selector_list, [[text: ".root", ws: " "]]},
              {:block, "{",
               [
                 {:ws, "\n  "},
@@ -80,7 +80,7 @@ defmodule Surface.Compiler.CSSParserTest do
              {:block, "{",
               [
                 {:ws, "\n  "},
-                {:selector, [{:text, ".a"}, {:ws, " "}]},
+                {:selector_list, [[{:text, ".a"}, {:ws, " "}]]},
                 {:block, "{",
                  [
                    {:declaration, [{:text, "display"}, {:text, ":"}, {:ws, " "}, {:text, "block"}]}
@@ -95,108 +95,55 @@ defmodule Surface.Compiler.CSSParserTest do
     div.blog { display: block }
     """
 
-    assert [{:selector, [{:text, "div"}, {:text, ".blog"}, {:ws, " "}]} | _] = CSSParser.parse!(css)
+    assert [{:selector_list, [[{:text, "div"}, {:text, ".blog"}, {:ws, " "}]]} | _] = CSSParser.parse!(css)
   end
 
-  test "parse multiple css rules" do
+  test "parse multiple selector blocks" do
     css = """
-    /* padding: s-bind(padding); */
-
-    .root {
-      --custom-color: s-bind('@css.background');
-    }
-
-    .a:has(> img) > b[class="btn"], c {
-      padding: s-bind('@padding');
-    }
-
-    @media screen and (min-width: 1216px) {
-      .blog { display: block; }
-    }
-
-    @tailwind utilities;
+    .a{padding: 1px}
+    .b{padding: 1px}
     """
 
-    assert CSSParser.parse!(css) == [
-             {:comment, " padding: s-bind(padding); "},
-             {:ws, "\n\n"},
-             {:selector, [text: ".root", ws: " "]},
-             {:block, "{",
-              [
-                {:ws, "\n  "},
-                {:declaration,
-                 [
-                   {:text, "--custom-color"},
-                   {:text, ":"},
-                   {:ws, " "},
-                   {:text, "s-bind"},
-                   {:block, "(", [{:string, "\'", "@css.background"}],
-                    %{column: 25, column_end: 43, line: 4, line_end: 4}}
-                 ]},
-                :semicolon,
-                {:ws, "\n"}
-              ], %{column: 7, column_end: 1, line: 3, line_end: 5}},
-             {:ws, "\n\n"},
-             {:selector,
-              [
-                {:text, ".a"},
-                {:text, ":has"},
-                {:block, "(", [text: ">", ws: " ", text: "img"],
-                 %{column: 7, column_end: 13, line: 7, line_end: 7}},
-                {:ws, " "},
-                {:text, ">"},
-                {:ws, " "},
-                {:text, "b"},
-                {:block, "[", [{:text, "class="}, {:string, "\"", "btn"}],
-                 %{column: 18, column_end: 30, line: 7, line_end: 7}}
-              ]},
-             {:comma, nil},
-             {:ws, " "},
-             {:selector, [text: "c", ws: " "]},
-             {:block, "{",
-              [
-                {:ws, "\n  "},
-                {:declaration,
-                 [
-                   {:text, "padding"},
-                   {:text, ":"},
-                   {:ws, " "},
-                   {:text, "s-bind"},
-                   {:block, "(", [{:string, "'", "@padding"}], %{column: 18, column_end: 29, line: 8, line_end: 8}}
-                 ]},
-                :semicolon,
-                {:ws, "\n"}
-              ], %{column: 35, column_end: 1, line: 7, line_end: 9}},
-             {:ws, "\n\n"},
-             {:at_rule,
-              [
-                {:text, "@media"},
-                {:ws, " "},
-                {:text, "screen"},
-                {:ws, " "},
-                {:text, "and"},
-                {:ws, " "},
-                {:block, "(", [text: "min-width", text: ":", ws: " ", text: "1216px"],
-                 %{column: 19, column_end: 37, line: 11, line_end: 11}},
-                {:ws, " "}
-              ]},
-             {:block, "{",
-              [
-                {:ws, "\n  "},
-                {:selector, [text: ".blog", ws: " "]},
-                {:block, "{",
-                 [
-                   {:ws, " "},
-                   {:declaration, [text: "display", text: ":", ws: " ", text: "block"]},
-                   :semicolon,
-                   {:ws, " "}
-                 ], %{column: 9, column_end: 27, line: 12, line_end: 12}},
-                {:ws, "\n"}
-              ], %{column: 39, column_end: 1, line: 11, line_end: 13}},
-             {:ws, "\n\n"},
-             {:at_rule, [text: "@tailwind", ws: " ", text: "utilities"]},
-             :semicolon,
+    assert [
+             {:selector_list, [[text: ".a"]]},
+             {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], _},
+             {:ws, "\n"},
+             {:selector_list, [[text: ".b"]]},
+             {:block, "{", [declaration: [text: "padding", text: ":", ws: " ", text: "1px"]], _},
              {:ws, "\n"}
+           ] = CSSParser.parse!(css)
+  end
+
+  test "parse multiple selector items" do
+    css = ".a > .b, .c ,  .d {padding: 1px}"
+
+    assert CSSParser.parse!(css) == [
+             {:selector_list,
+              [
+                [
+                  {:text, ".a"},
+                  {:ws, " "},
+                  {:text, ">"},
+                  {:ws, " "},
+                  {:text, ".b"},
+                  {:comma, nil},
+                  {:ws, " "}
+                ],
+                [
+                  {:text, ".c"},
+                  {:ws, " "},
+                  {:comma, nil},
+                  {:ws, "  "}
+                ],
+                [
+                  {:text, ".d"},
+                  {:ws, " "}
+                ]
+              ]},
+             {:block, "{",
+              [
+                {:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}]}
+              ], %{column: 19, column_end: 32, line: 1, line_end: 1}}
            ]
   end
 end

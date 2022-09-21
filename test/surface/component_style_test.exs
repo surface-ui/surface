@@ -206,6 +206,31 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
+  test "inject s-data-* on the root node if :deep is used at the begining" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          :deep(a) .link {
+            @apply hover:underline;
+          }
+        </style>
+
+        <div>
+          <div>ok</div>
+        </div>
+        <div class="a">ok</div>
+        """
+      end
+
+    assert html =~ """
+           <div data-s-self data-s-03cb861>
+             <div>ok</div>
+           </div>
+           <div data-s-self data-s-03cb861 class="a">ok</div>
+           """
+  end
+
   test "inject s-data-* in any element that matches any selector group. No matter if it doesn't match the whole selector" do
     html =
       render_surface do

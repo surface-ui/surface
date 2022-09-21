@@ -56,7 +56,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            """
   end
 
-  test "translate selector with element, class and pseudo-classe " do
+  test "translate selector with element, class and pseudo-class" do
     css = """
     div.blog:first-child { display: block }
     """
@@ -72,19 +72,135 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.combined == MapSet.new([MapSet.new([".blog", "div"])])
   end
 
-  test ":deep" do
+  test "translate selector with pseudo-class with multiple arguments" do
+    css = """
+    :fake(div, 'whatever') {
+      display: block;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           :fake(div, 'whatever') {
+             display: block;
+           }
+           """
+
+    assert selectors.elements == MapSet.new([])
+    assert selectors.classes == MapSet.new([])
+    assert selectors.combined == MapSet.new([])
+  end
+
+  test ":deep removes the scope when placed after the first selector" do
     css = """
     .a :deep(.b) {
+      padding: 10px;
+    }
+
+    .c:deep(.d) {
       padding: 10px;
     }
     """
 
     %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
 
-    assert selectors.classes == MapSet.new(["a"])
+    assert selectors.classes == MapSet.new(["a", "c"])
 
     assert translated == """
            .a[data-s-myscope] .b {
+             padding: 10px;
+           }
+
+           .c[data-s-myscope].d {
+             padding: 10px;
+           }
+           """
+  end
+
+  test ":deep adds [data-s-self][data-s-xxxxxx] if it't the first selector" do
+    css = """
+    :deep(div > .link) {
+      @apply hover:underline;
+    }
+
+    :deep(.a .link), :deep(.b .link) {
+      @apply hover:underline;
+    }
+
+    :deep(.b).link, .c {
+      @apply hover:underline;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           [data-s-self][data-s-myscope] div > .link {
+             @apply hover:underline;
+           }
+
+           [data-s-self][data-s-myscope] .a .link, [data-s-self][data-s-myscope] .b .link {
+             @apply hover:underline;
+           }
+
+           [data-s-self][data-s-myscope] .b.link[data-s-myscope], .c[data-s-myscope] {
+             @apply hover:underline;
+           }
+           """
+
+    assert selectors.elements == MapSet.new([])
+    assert selectors.classes == MapSet.new(["c", "link"])
+    assert selectors.ids == MapSet.new([])
+    assert selectors.other == MapSet.new([])
+    assert selectors.combined == MapSet.new([])
+  end
+
+  test ":global removes the scope of any selector" do
+    css = """
+    :global(.a) {
+      padding: 10px;
+    }
+
+    :global(.b) .c {
+      padding: 10px;
+    }
+
+    :global(.d).e {
+      padding: 10px;
+    }
+
+    .a:global(.f) {
+      padding: 10px;
+    }
+
+    :global(.g > .h) {
+      padding: 10px;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert selectors.classes == MapSet.new(["a", "c", "e"])
+
+    assert translated == """
+           .a {
+             padding: 10px;
+           }
+
+           .b .c[data-s-myscope] {
+             padding: 10px;
+           }
+
+           .d.e[data-s-myscope] {
+             padding: 10px;
+           }
+
+           .a[data-s-myscope].f {
+             padding: 10px;
+           }
+
+           .g > .h {
              padding: 10px;
            }
            """
@@ -121,5 +237,50 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            """
 
     assert selectors.classes == MapSet.new(["test"])
+  end
+
+  test "translate declaration with value containing commas" do
+    css = """
+    .Input [data-input] {
+      font-feature-settings: 'case', 'cpsp' 0, 'dlig' 0, 'ccmp', 'kern';
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           .Input[data-s-myscope] [data-input] {
+             font-feature-settings: 'case', 'cpsp' 0, 'dlig' 0, 'ccmp', 'kern';
+           }
+           """
+
+    assert selectors.classes == MapSet.new(["Input"])
+  end
+
+  test "translate declaration with variants" do
+    css = """
+    a .external-link {
+      padding: :theme(hover:underline);
+      @apply hover:underline;
+      @apply bg-sky-500 hover:bg-sky-700;
+      @apply lg:[&:nth-child(3)]:hover:underline;
+      @apply [&_p]:mt-4;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           a[data-s-myscope] .external-link[data-s-myscope] {
+             padding: :theme(hover:underline);
+             @apply hover:underline;
+             @apply bg-sky-500 hover:bg-sky-700;
+             @apply lg:[&:nth-child(3)]:hover:underline;
+             @apply [&_p]:mt-4;
+           }
+           """
+
+    assert selectors.elements == MapSet.new(["a"])
+    assert selectors.classes == MapSet.new(["external-link"])
   end
 end
