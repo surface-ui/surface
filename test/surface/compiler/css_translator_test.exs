@@ -92,22 +92,68 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     assert selectors.combined == MapSet.new([])
   end
 
-  test ":deep" do
+  test ":deep removes the scope when placed after the first selector" do
     css = """
     .a :deep(.b) {
+      padding: 10px;
+    }
+
+    .c:deep(.d) {
       padding: 10px;
     }
     """
 
     %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
 
-    assert selectors.classes == MapSet.new(["a"])
+    assert selectors.classes == MapSet.new(["a", "c"])
 
     assert translated == """
            .a[data-s-myscope] .b {
              padding: 10px;
            }
+
+           .c[data-s-myscope].d {
+             padding: 10px;
+           }
            """
+  end
+
+  test ":deep adds [data-s-self][data-s-xxxxxx] if it't the first selector" do
+    css = """
+    :deep(div > .link) {
+      @apply hover:underline;
+    }
+
+    :deep(.a .link), :deep(.b .link) {
+      @apply hover:underline;
+    }
+
+    :deep(.b).link, .c {
+      @apply hover:underline;
+    }
+    """
+
+    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+
+    assert translated == """
+           [data-s-self][data-s-myscope] div > .link {
+             @apply hover:underline;
+           }
+
+           [data-s-self][data-s-myscope] .a .link, [data-s-self][data-s-myscope] .b .link {
+             @apply hover:underline;
+           }
+
+           [data-s-self][data-s-myscope] .b.link[data-s-myscope], .c[data-s-myscope] {
+             @apply hover:underline;
+           }
+           """
+
+    assert selectors.elements == MapSet.new([])
+    assert selectors.classes == MapSet.new(["c", "link"])
+    assert selectors.ids == MapSet.new([])
+    assert selectors.other == MapSet.new([])
+    assert selectors.combined == MapSet.new([])
   end
 
   test "translate selector with multiple classes and pseudo-classes" do
@@ -186,35 +232,5 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
     assert selectors.elements == MapSet.new(["a"])
     assert selectors.classes == MapSet.new(["external-link"])
-  end
-
-  test "add self and scope data when selector starts with :deep" do
-    css = """
-    :deep(div > .link) {
-      @apply hover:underline;
-    }
-
-    :deep(.a .link), :deep(.b .link) {
-      @apply hover:underline;
-    }
-    """
-
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
-
-    assert translated == """
-           [data-s-self][data-s-myscope] div > .link {
-             @apply hover:underline;
-           }
-
-           [data-s-self][data-s-myscope] .a .link, [data-s-self][data-s-myscope] .b .link {
-             @apply hover:underline;
-           }
-           """
-
-    assert selectors.elements == MapSet.new([])
-    assert selectors.classes == MapSet.new([])
-    assert selectors.ids == MapSet.new([])
-    assert selectors.other == MapSet.new([])
-    assert selectors.combined == MapSet.new([])
   end
 end
