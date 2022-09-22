@@ -1503,6 +1503,21 @@ defmodule Surface.Compiler do
        when style != nil do
     %AST.Tag{attributes: attributes, meta: meta} = node
     %{scope_id: scope_id} = style
+    data_s_scope = :"data-s-#{scope_id}"
+
+    attributes =
+      if not AST.has_attribute?(attributes, data_s_scope) do
+        data_scope_attr = %AST.Attribute{
+          meta: meta,
+          name: data_s_scope,
+          type: :string,
+          value: %AST.Literal{value: true}
+        }
+
+        [data_scope_attr | attributes]
+      else
+        attributes
+      end
 
     data_self_attr = %AST.Attribute{
       meta: meta,
@@ -1511,14 +1526,7 @@ defmodule Surface.Compiler do
       value: %AST.Literal{value: true}
     }
 
-    data_scope_attr = %AST.Attribute{
-      meta: meta,
-      name: :"data-s-#{scope_id}",
-      type: :string,
-      value: %AST.Literal{value: true}
-    }
-
-    %AST.Tag{node | attributes: [data_self_attr, data_scope_attr | attributes]}
+    %AST.Tag{node | attributes: [data_self_attr | attributes]}
   end
 
   defp maybe_add_data_s_attrs_to_root_node(node, _style) do
@@ -1587,8 +1595,7 @@ defmodule Surface.Compiler do
     %{element: element, attributes: attributes, meta: meta} = node
     %{scope_id: scope_id, selectors: selectors} = style
 
-    if (style.requires_data_attrs_on_root == false and
-          universal_in_selectors?(selectors)) or
+    if universal_in_selectors?(selectors) or
          element_in_selectors?(element, selectors) or
          maybe_in_selectors?(element, attributes, selectors) do
       s_data_attr = %AST.Attribute{
