@@ -112,30 +112,6 @@ defmodule Surface.LVChangeTrackingTest do
     assert has_dynamic_part?(full_render, "INNER WITH ARG")
   end
 
-  test "ttt" do
-    assigns = %{socket: %Socket{}, tmp: 1, some_assign: "SOME_ASSIGN", other_assign: "OTHER_ASSIGN"}
-
-    comp = fn assigns ->
-      ~H"""
-      <%= if arg = true do %>
-        <%= @some_assign %>
-        <.inner label="INNER WITH ARG" content={arg}/>
-      <% end %>
-      """
-    end
-
-    {socket, full_render, components} = render(comp.(assigns))
-
-    assert has_dynamic_part?(full_render, "INNER WITH ARG")
-
-    assigns = Map.put(assigns, :__changed__, %{some_assign: true})
-
-    {_, full_render, _} = render(comp.(assigns), socket.fingerprints, components)
-
-    # TODO: Why "INNER WITH ARG" is resent? It shouldn't!
-    assert has_dynamic_part?(full_render, "INNER WITH ARG")
-  end
-
   defp render(
          rendered,
          fingerprints \\ Diff.new_fingerprints(),

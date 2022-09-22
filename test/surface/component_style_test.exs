@@ -94,6 +94,23 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
+  test "inject s-data-* in void elements" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          .input { padding: 10px; }
+        </style>
+
+        <input class="input"/>
+        """
+      end
+
+    assert html =~ """
+           <input data-s-ec11bd3 class="input">
+           """
+  end
+
   test "inject s-data-* when the id is present in the selectors" do
     html =
       render_surface do
@@ -206,28 +223,34 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
-  test "inject s-data-* on the root node if :deep is used at the begining" do
+  test "inject s-data-* on the root nodes if :deep is used at the begining" do
     html =
       render_surface do
         ~F"""
         <style>
-          :deep(a) .link {
+          .main {
+            @apply bg-blue-100;
+          }
+
+          :deep(.a) .link {
             @apply hover:underline;
           }
         </style>
 
-        <div>
-          <div>ok</div>
+        <div class="main">
+          <div class="link">ok</div>
+          <div class="a">ok</div>
         </div>
         <div class="a">ok</div>
         """
       end
 
     assert html =~ """
-           <div data-s-self data-s-03cb861>
-             <div>ok</div>
+           <div data-s-self data-s-3d94ab6 class="main">
+             <div data-s-3d94ab6 class="link">ok</div>
+             <div class="a">ok</div>
            </div>
-           <div data-s-self data-s-03cb861 class="a">ok</div>
+           <div data-s-self data-s-3d94ab6 class="a">ok</div>
            """
   end
 

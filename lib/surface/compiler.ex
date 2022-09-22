@@ -655,12 +655,15 @@ defmodule Surface.Compiler do
          # a void element containing content is an error
          [] <- to_ast(children, compile_meta) do
       {:ok,
-       %AST.VoidTag{
-         element: name,
-         attributes: attributes,
-         directives: directives,
-         meta: meta
-       }}
+       maybe_transform_tag(
+         %AST.VoidTag{
+           element: name,
+           attributes: attributes,
+           directives: directives,
+           meta: meta
+         },
+         compile_meta
+       )}
     else
       error -> handle_convert_node_to_ast_error(name, error, meta)
     end
@@ -1487,8 +1490,8 @@ defmodule Surface.Compiler do
   defp maybe_transform_ast(nodes, %CompileMeta{style: style}) do
     Enum.map(nodes, fn node ->
       node
-      |> maybe_add_data_s_attrs(style)
-      |> maybe_add_or_update_style_attr(style)
+      |> maybe_add_data_s_attrs_to_root_node(style)
+      |> maybe_add_or_update_style_attr_of_root_node(style)
     end)
   end
 
@@ -1496,10 +1499,25 @@ defmodule Surface.Compiler do
     nodes
   end
 
-  defp maybe_add_data_s_attrs(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style)
+  defp maybe_add_data_s_attrs_to_root_node(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style)
        when style != nil do
     %AST.Tag{attributes: attributes, meta: meta} = node
     %{scope_id: scope_id} = style
+    data_s_scope = :"data-s-#{scope_id}"
+
+    attributes =
+      if not AST.has_attribute?(attributes, data_s_scope) do
+        data_scope_attr = %AST.Attribute{
+          meta: meta,
+          name: data_s_scope,
+          type: :string,
+          value: %AST.Literal{value: true}
+        }
+
+        [data_scope_attr | attributes]
+      else
+        attributes
+      end
 
     data_self_attr = %AST.Attribute{
       meta: meta,
@@ -1508,21 +1526,17 @@ defmodule Surface.Compiler do
       value: %AST.Literal{value: true}
     }
 
-    data_scope_attr = %AST.Attribute{
-      meta: meta,
-      name: :"data-s-#{scope_id}",
-      type: :string,
-      value: %AST.Literal{value: true}
-    }
-
-    %AST.Tag{node | attributes: [data_self_attr, data_scope_attr | attributes]}
+    %AST.Tag{node | attributes: [data_self_attr | attributes]}
   end
 
-  defp maybe_add_data_s_attrs(node, _style) do
+  defp maybe_add_data_s_attrs_to_root_node(node, _style) do
     node
   end
 
-  defp maybe_add_or_update_style_attr(%AST.Tag{attributes: attributes, meta: meta} = node, %{vars: vars} = style)
+  defp maybe_add_or_update_style_attr_of_root_node(
+         %AST.Tag{attributes: attributes, meta: meta} = node,
+         %{vars: vars} = style
+       )
        when vars != %{} do
     %{file: file} = style
 
@@ -1556,7 +1570,7 @@ defmodule Surface.Compiler do
     %AST.Tag{node | attributes: updated_attrs}
   end
 
-  defp maybe_add_or_update_style_attr(node, _style) do
+  defp maybe_add_or_update_style_attr_of_root_node(node, _style) do
     node
   end
 
@@ -1576,9 +1590,9 @@ defmodule Surface.Compiler do
     }
   end
 
-  defp maybe_transform_tag(node, %mod{style: %{requires_data_attrs_on_root: false} = style})
+  defp maybe_transform_tag(node, %mod{style: %{} = style})
        when mod in [CompileMeta, AST.Meta] do
-    %AST.Tag{element: element, attributes: attributes, meta: meta} = node
+    %{element: element, attributes: attributes, meta: meta} = node
     %{scope_id: scope_id, selectors: selectors} = style
 
     if universal_in_selectors?(selectors) or
@@ -1591,7 +1605,7 @@ defmodule Surface.Compiler do
         value: %AST.Literal{value: true}
       }
 
-      %AST.Tag{node | attributes: [s_data_attr | attributes]}
+      %{node | attributes: [s_data_attr | attributes]}
     else
       node
     end
