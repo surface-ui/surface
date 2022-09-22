@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.3 (2022-09-22)
+
+  * Add `:global` pseudo-class to the Scoped CSS's API
+  * Declare props `container`, `session` and `sticky` on `Surface.LiveView`
+  * Fix CSS tokenizer not handling empty strings
+  * Fix CSS parser for declarations with commas or variants
+  * Fix scoped styles on void elements
+  * Fix dialyzer issue in EExEngine (#655)
+
 ## v0.8.2 (2022-09-16)
 
   * Remove compile-time deps from components, avoiding unnecessary recompilation
