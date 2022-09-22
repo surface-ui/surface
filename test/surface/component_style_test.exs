@@ -94,6 +94,23 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
+  test "inject s-data-* in void elements" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          .input { padding: 10px; }
+        </style>
+
+        <input class="input"/>
+        """
+      end
+
+    assert html =~ """
+           <input data-s-ec11bd3 class="input">
+           """
+  end
+
   test "inject s-data-* when the id is present in the selectors" do
     html =
       render_surface do
@@ -217,7 +234,7 @@ defmodule Surface.ComponentStyleTest do
         </style>
 
         <div>
-          <div>ok</div>
+          <div class="link">ok</div>
         </div>
         <div class="a">ok</div>
         """
@@ -225,7 +242,7 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div data-s-self data-s-03cb861>
-             <div>ok</div>
+             <div data-s-03cb861 class="link">ok</div>
            </div>
            <div data-s-self data-s-03cb861 class="a">ok</div>
            """
