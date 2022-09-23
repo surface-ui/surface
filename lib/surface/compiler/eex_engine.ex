@@ -594,14 +594,27 @@ defmodule Surface.Compiler.EExEngine do
               slot_entry_line
             end
 
-          let_line =
+          {no_warnings_let, _} = make_bindings_ast_generated(let)
+
+          validate_let_ast =
             if let_expr do
-              let_expr.meta.line
-            else
-              slot_entry_line
+              quote line: let_expr.meta.line do
+                if !match?(unquote(no_warnings_let), argument) do
+                  raise ArgumentError,
+                        "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(no_warnings_let))}`, got: #{inspect(argument)}."
+                end
+              end
             end
 
-          {no_warnings_let, _} = make_bindings_ast_generated(let)
+          validate_generator_ast =
+            if !match?({var, _, ctx} when is_atom(var) and is_atom(ctx), no_warnings_generator) do
+              quote line: generator_line do
+                if !match?(unquote(no_warnings_generator), generator_value) do
+                  raise ArgumentError,
+                        "cannot match generator value against generator binding. Expected a value matching `#{unquote(Macro.to_string(no_warnings_generator))}`, got: #{inspect(generator_value)}."
+                end
+              end
+            end
 
           block =
             quote generated: true, line: slot_entry_line do
@@ -617,23 +630,8 @@ defmodule Surface.Compiler.EExEngine do
                 generator_value,
                 unquote(context_var)
               } ->
-                unquote(
-                  quote line: let_line, generated: true do
-                    if !match?(unquote(no_warnings_let), argument) do
-                      raise ArgumentError,
-                            "cannot match slot argument against :let. Expected a value matching `#{unquote(Macro.to_string(no_warnings_let))}`, got: #{inspect(argument)}."
-                    end
-                  end
-                )
-
-                unquote(
-                  quote line: generator_line, generated: true do
-                    if !match?(unquote(no_warnings_generator), generator_value) do
-                      raise ArgumentError,
-                            "cannot match generator value against generator binding. Expected a value matching `#{unquote(Macro.to_string(no_warnings_generator))}`, got: #{inspect(generator_value)}."
-                    end
-                  end
-                )
+                unquote(validate_let_ast)
+                unquote(validate_generator_ast)
             end
 
           ast =
