@@ -28,7 +28,7 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      html =~ actual_content("user", to: "/users/1")
+      assert html =~ actual_content("user", to: "/users/1")
     end
 
     test "creates a link without label" do
