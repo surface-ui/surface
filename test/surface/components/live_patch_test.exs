@@ -110,6 +110,7 @@ defmodule Surface.Components.LivePatchTest do
   defp actual_content(text, opts) do
     text
     |> Phoenix.LiveView.Helpers.live_patch(opts)
+    |> Phoenix.HTML.html_escape()
     |> Phoenix.HTML.safe_to_string()
   end
 

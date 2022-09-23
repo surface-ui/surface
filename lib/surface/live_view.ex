@@ -86,7 +86,7 @@ defmodule Surface.LiveView do
       @doc "Built-in assign"
       data uploads, :list
 
-      use Phoenix.LiveView, unquote(opts)
+      use Phoenix.LiveView, unquote(Keyword.put_new(opts, :log, false))
     end
   end
 

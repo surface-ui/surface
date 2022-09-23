@@ -42,10 +42,10 @@ defmodule Surface.Components.LivePatch do
   def render(assigns) do
     ~F"""
     <a
+      href={@to}
       class={@class}
       data-phx-link="patch"
       data-phx-link-state={if @replace, do: "replace", else: "push"}
-      href={@to}
       :attrs={@opts}
     ><#slot>{@label}</#slot></a>
     """

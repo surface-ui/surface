@@ -166,7 +166,7 @@ defmodule Surface.Catalogue.Examples do
   @doc false
   def on_mount(:assign_func, _params, session, socket) do
     func = session["func"] |> String.to_existing_atom()
-    {:cont, Phoenix.LiveView.assign(socket, __func__: func)}
+    {:cont, Phoenix.Component.assign(socket, __func__: func)}
   end
 
   defp init_config(nil, _name, _env), do: nil
