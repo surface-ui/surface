@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.0 (2022-09-23)
+
+  * Support Liveview `v0.18`
+
 ## v0.8.3 (2022-09-22)
 
   * Add `:global` pseudo-class to the Scoped CSS's API
