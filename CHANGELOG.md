@@ -1,8 +1,16 @@
 # Changelog
 
+## v0.9.1 (2022-09-26)
+
+  * Fix dialyzer errors
+
 ## v0.9.0 (2022-09-23)
 
   * Support Liveview `v0.18`
+
+## v0.8.4 (2022-09-26)
+
+  * Fix dialyzer errors
 
 ## v0.8.3 (2022-09-22)
 
