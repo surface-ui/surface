@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8.4 (2022-09-26)
+
+  * Fix dialyzer errors
+
 ## v0.8.3 (2022-09-22)
 
   * Add `:global` pseudo-class to the Scoped CSS's API
