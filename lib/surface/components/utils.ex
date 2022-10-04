@@ -88,6 +88,7 @@ defmodule Surface.Components.Utils do
     [
       event_to_opts(assigns.capture_click, :phx_capture_click),
       event_to_opts(assigns.click, :phx_click),
+      event_to_opts(assigns.click_away, :phx_click_away),
       event_to_opts(assigns.window_focus, :phx_window_focus),
       event_to_opts(assigns.window_blur, :phx_window_blur),
       event_to_opts(assigns.focus, :phx_focus),
