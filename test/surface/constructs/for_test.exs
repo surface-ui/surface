@@ -9,7 +9,9 @@ defmodule Surface.Constructs.ForTest do
     def render(assigns) do
       ~F"""
       List?: {is_list(@prop)}
-      <span :for={v <- @prop}>value: {inspect(v)}</span>
+      {#for v <- @prop}
+        <span>value: {inspect(v)}</span>
+      {/for}
       """
     end
   end

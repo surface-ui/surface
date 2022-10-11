@@ -33,7 +33,7 @@ defmodule Surface.PropertiesTest do
     def render(assigns) do
       ~F"""
       Map?: {is_map(@prop)}
-      <span :for={{k, v} <- @prop}>key: {k}, value: {v}</span>
+      {#for {k,v} <- @prop}<span>key: {k}, value: {v}</span>{/for}
       """
     end
   end
@@ -46,7 +46,7 @@ defmodule Surface.PropertiesTest do
     def render(assigns) do
       ~F"""
       List?: {is_list(@prop)}
-      <span :for={v <- @prop}>value: {inspect(v)}</span>
+      {#for v <- @prop}<span>value: {inspect(v)}</span>{/for}
       """
     end
   end
@@ -59,7 +59,7 @@ defmodule Surface.PropertiesTest do
     def render(assigns) do
       ~F"""
       Keyword?: {Keyword.keyword?(@prop)}
-      <span :for={{k, v} <- @prop}>key: {k}, value: {v}</span>
+      {#for {k,v} <- @prop}<span>key: {k}, value: {v}</span>{/for}
       """
     end
   end
@@ -83,7 +83,7 @@ defmodule Surface.PropertiesTest do
 
     def render(assigns) do
       ~F"""
-      <div :for={c <- @prop}>{c}</div>
+      {#for c <- @prop}<div>{c}</div>{/for}
       """
     end
   end
@@ -96,7 +96,7 @@ defmodule Surface.PropertiesTest do
     def render(assigns) do
       ~F"""
       List?: {is_list(@prop)}
-      <span :for={v <- @prop}>value: {v}</span>
+      {#for v <- @prop}<span>value: {v}</span>{/for}
       """
     end
   end
@@ -124,9 +124,7 @@ defmodule Surface.PropertiesTest do
       {#if is_nil(@labels)}
         No labels
       {#else}
-        {#for label <- @labels}
-          <#slot generator_value={label} />
-        {/for}
+        {#for label <- @labels}<#slot generator_value={label} />{/for}
       {/if}
       """
     end
@@ -1011,7 +1009,7 @@ defmodule Surface.PropertiesSyncTest do
     def render(assigns) do
       ~F"""
       List?: {is_list(@prop)}
-      <span :for={v <- @prop}>value: {inspect(v)}</span>
+      {#for v <- @prop}<span>value: {inspect(v)}</span>{/for}
       """
     end
   end

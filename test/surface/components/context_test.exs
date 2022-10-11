@@ -90,9 +90,11 @@ defmodule Surface.Components.ContextTest do
     def render(assigns) do
       ~F"""
       <Context put={field: "field from OuterWithNamedSlots"}>
-        <span :for={slot <- @my_slot}>
-          <#slot {slot} />
-        </span>
+        {#for slot <- @my_slot}
+          <span>
+            <#slot {slot} />
+          </span>
+        {/for}
       </Context>
       """
     end

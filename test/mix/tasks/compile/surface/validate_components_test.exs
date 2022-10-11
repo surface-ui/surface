@@ -342,7 +342,9 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
 
     def render(assigns) do
       ~F"""
-      <span :for={v <- @prop}>value: {v}</span>
+      {#for v <- @prop}
+        <span>value: {v}</span>
+      {/for}
       """
     end
   end

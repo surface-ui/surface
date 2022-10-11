@@ -30,9 +30,11 @@ defmodule Surface.SlotTest do
     def render(assigns) do
       ~F"""
       <div>
-        <div :for={data <- @inner}>
+        {#for data <- @inner}
+        <div>
           {data.label}: <#slot {data} />
         </div>
+        {/for}
         <div>
           <#slot />
         </div>
@@ -269,15 +271,21 @@ defmodule Surface.SlotTest do
       ~F"""
       <table>
         <tr>
-          <th :for={col <- @cols}>
+          {#for col <- @cols}
+          <th>
             {col.title}
           </th>
+          {/for}
         </tr>
-        <tr :for={item <- @items}>
-          <td :for={col <- @cols}>
+        {#for item <- @items}
+        <tr>
+          {#for col <- @cols}
+          <td>
             <#slot {col, info: info} generator_value={item} />
           </td>
+          {/for}
         </tr>
+        {/for}
       </table>
       """
     end
@@ -311,7 +319,8 @@ defmodule Surface.SlotTest do
 
                <b>content 1</b>
                <div>Stateful</div>
-             </div><div>
+             </div>
+             <div>
                label 2: \
 
                <b>content 2</b>
@@ -343,7 +352,8 @@ defmodule Surface.SlotTest do
              <div>
                1000: \
 
-             </div><div>
+             </div>
+             <div>
                1001: \
 
              </div>
@@ -381,7 +391,8 @@ defmodule Surface.SlotTest do
 
                <b>content 1</b>
                <div>Stateful</div>
-             </div><div>
+             </div>
+             <div>
                label 2: \
 
                <b>content 2</b>
@@ -604,7 +615,8 @@ defmodule Surface.SlotTest do
                <td>
                <b>Id: 1</b>
                </td>
-             </tr><tr>
+             </tr>
+             <tr>
                <td>
                <b>Id: 2</b>
                </td>
@@ -640,7 +652,8 @@ defmodule Surface.SlotTest do
                <b>Id: 1</b>
            </span>
                </td>
-             </tr><tr>
+             </tr>
+             <tr>
                <td>
                  <span class="fancy-column">
                <b>Id: 2</b>
@@ -676,7 +689,8 @@ defmodule Surface.SlotTest do
                default title
            </span>
                </td>
-             </tr><tr>
+             </tr>
+             <tr>
                <td>
                  <span class="fancy-column">
                default title
@@ -709,20 +723,24 @@ defmodule Surface.SlotTest do
              <tr>
                <th>
                  ID
-               </th><th>
+               </th>
+               <th>
                  NAME
                </th>
              </tr>
              <tr>
                <td>
                <b>Id: 1</b>
-               </td><td>
+               </td>
+               <td>
                Name: First
                </td>
-             </tr><tr>
+             </tr>
+             <tr>
                <td>
                <b>Id: 2</b>
-               </td><td>
+               </td>
+               <td>
                Name: Second
                </td>
              </tr>
@@ -752,20 +770,24 @@ defmodule Surface.SlotTest do
              <tr>
                <th>
                  ID
-               </th><th>
+               </th>
+               <th>
                  NAME
                </th>
              </tr>
              <tr>
                <td>
                <b>Id: 1</b>
-               </td><td>
+               </td>
+               <td>
                Name: First
                </td>
-             </tr><tr>
+             </tr>
+             <tr>
                <td>
                <b>Id: 2</b>
-               </td><td>
+               </td>
+               <td>
                Name: Second
                </td>
              </tr>
@@ -973,14 +995,16 @@ defmodule Surface.SlotTest do
              <tr>
                <th>
                  ID
-               </th><th>
+               </th>
+               <th>
                  NAME
                </th>
              </tr>
              <tr>
                <td>
                <b>Id: 1</b>
-               </td><td>
+               </td>
+               <td>
                Name: First
                Info: Some info from Grid
                </td>
