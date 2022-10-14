@@ -256,11 +256,11 @@ defmodule Surface.Compiler.EExEngine do
         %AST.AttributeExpr{value: expr} -> expr
       end
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(nil, nil, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], slot_props}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], slot_props ++ static_props}
 
     quote do
       Phoenix.LiveView.HTMLEngine.component(
@@ -274,7 +274,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -286,11 +286,11 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.FunctionComponent{type: :local} = component, buffer, state) do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], slot_props}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], slot_props ++ static_props}
 
     quote do
       Phoenix.LiveView.HTMLEngine.component(
@@ -304,7 +304,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -316,11 +316,11 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.FunctionComponent{type: :remote} = component, buffer, state) do
     %AST.FunctionComponent{module: module, fun: fun, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(module, fun, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], slot_props}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], slot_props ++ static_props}
 
     # For now, we can only retrieve props and slots information from module components,
     # not function components, so if we're dealing with dynamic or recursive module components,
@@ -339,7 +339,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -351,11 +351,11 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Component{type: Surface.Component} = component, buffer, state) do
     %AST.Component{module: module, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], slot_props}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], static_props ++ slot_props}
 
     quote do
       Phoenix.LiveView.HTMLEngine.component(
@@ -369,7 +369,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -381,11 +381,11 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.SlotableComponent{} = component, buffer, state) do
     %AST.SlotableComponent{module: module, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], slot_props}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], slot_props ++ static_props}
 
     quote do
       Phoenix.LiveView.HTMLEngine.component(
@@ -399,7 +399,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -411,11 +411,11 @@ defmodule Surface.Compiler.EExEngine do
   defp to_expression(%AST.Component{type: Surface.LiveComponent} = component, buffer, state) do
     %AST.Component{module: module, props: props, meta: meta} = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(module, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], [{:module, module} | slot_props]}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], [{:module, module} | slot_props] ++ static_props}
 
     quote do
       Phoenix.LiveView.HTMLEngine.component(
@@ -429,7 +429,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -445,11 +445,11 @@ defmodule Surface.Compiler.EExEngine do
       meta: meta
     } = component
 
-    {props_expr, dynamic_props_expr} = build_props_expressions(component)
+    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    {static_props, props_expr, dynamic_props_expr} = build_props_expressions(component, ctx)
     {context_expr, context_var, state} = process_context(nil, :render, props, component, state)
     slot_props = build_slot_props(component, buffer, state, context_var)
-    slot_props_map = {:%{}, [], [{:module, module_expr} | slot_props]}
-    ctx = Surface.AST.Meta.quoted_caller_context(meta)
+    static_props_map = {:%{}, [], [{:module, module_expr} | slot_props] ++ static_props}
 
     quote do
       Phoenix.LiveView.HTMLEngine.component(
@@ -463,7 +463,7 @@ defmodule Surface.Compiler.EExEngine do
             unquote(meta.node_alias),
             unquote(ctx)
           ),
-          unquote(slot_props_map)
+          unquote(static_props_map)
         ),
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
@@ -1277,11 +1277,62 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp build_props_expressions(%{props: props, dynamic_props: dynamic_props}) do
-    props_expr = collect_component_props(props)
+  defp build_props_expressions(%{module: module, props: attrs, dynamic_props: dynamic_props, meta: meta}, ctx) do
+    module_expr =
+      case module do
+        %AST.AttributeExpr{value: module_expr} -> module_expr
+        _ -> module
+      end
+
     dynamic_props_expr = handle_dynamic_props(dynamic_props)
 
-    {props_expr, dynamic_props_expr}
+    {props_expr, props_with_dynamic_value} =
+      Enum.reduce(attrs, {[], MapSet.new()}, fn attr, {props, props_with_dynamic_value} ->
+        %AST.Attribute{root: root, value: expr} = attr
+        value = to_prop_expr(expr)
+        prop_name = if root, do: :__root__, else: attr.name
+
+        # We consider a prop as dynamic if it has at least one dynamic value
+        # TODO: use `Macro.quoted_literal?/1` instead
+        props_with_dynamic_value =
+          if is_binary(value) do
+            props_with_dynamic_value
+          else
+            MapSet.put(props_with_dynamic_value, prop_name)
+          end
+
+        {[{prop_name, value} | props], props_with_dynamic_value}
+      end)
+
+    # We can't have this in the reduce above as we need the final `props_with_dynamic_value`
+    {props_expr, static_props} =
+      Enum.reduce(props_expr, {[], %{}}, fn {k, v}, {dynamic, static} ->
+        if MapSet.member?(props_with_dynamic_value, k) do
+          {[{k, v} | dynamic], static}
+        else
+          {dynamic, Map.put(static, k, [v | static[k] || []])}
+        end
+      end)
+
+    static_props =
+      for {k, v} <- static_props do
+        ast =
+          quote do
+            Surface.TypeHandler.runtime_prop_value!(
+              unquote(module_expr),
+              unquote(k),
+              unquote(v),
+              [],
+              unquote(meta.node_alias),
+              nil,
+              unquote(ctx)
+            )
+          end
+
+        {k, ast}
+      end
+
+    {static_props, props_expr, dynamic_props_expr}
   end
 
   defp make_bindings_ast_generated(ast) do

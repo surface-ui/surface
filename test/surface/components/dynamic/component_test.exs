@@ -418,7 +418,7 @@ defmodule Surface.Components.Dynamic.ComponentTest do
              """
     end
 
-    test "at runtime, warn on unknown attributes at the component definition's file/line " do
+    test "at runtime, warn on unknown attributes with dynamic values at the component definition's file/line " do
       file = Path.relative_to_cwd(__ENV__.file)
       line = __ENV__.line + 8
 
@@ -430,7 +430,7 @@ defmodule Surface.Components.Dynamic.ComponentTest do
             ~F"""
             <Component
               module={@mod}
-              unknown_attr="123"
+              unknown_attr={"123"}
             />
             """
           end
