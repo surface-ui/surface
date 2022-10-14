@@ -112,6 +112,29 @@ defmodule Surface.LVChangeTrackingTest do
     assert has_dynamic_part?(full_render, "INNER WITH ARG")
   end
 
+  test "static surface props are not resent after first rendering" do
+    import Surface
+
+    assigns = %{socket: %Socket{}, content: "DYN CONTENT"}
+
+    comp = fn assigns ->
+      ~F"""
+      <.inner label="STATIC LABEL" content={@content} {...dyn: 1}/>
+      """
+    end
+
+    {socket, full_render, components} = render(comp.(assigns))
+
+    assert has_dynamic_part?(full_render, "STATIC LABEL")
+
+    assigns = Map.put(assigns, :__changed__, %{content: true})
+
+    {_, full_render, _} = render(comp.(assigns), socket.fingerprints, components)
+
+    assert has_dynamic_part?(full_render, "DYN CONTENT")
+    refute has_dynamic_part?(full_render, "STATIC LABEL")
+  end
+
   defp render(
          rendered,
          fingerprints \\ Diff.new_fingerprints(),
