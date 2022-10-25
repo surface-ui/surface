@@ -101,9 +101,8 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     module.__get_prop__(attr.name)
   end
 
-  # TODO: add a test for this case
-  defp validate_attribute(:__caller_scope_id__, _prop, _node_alias, _file, _processed_attrs) do
-    :ok
+  defp validate_attribute(%{name: :__caller_scope_id__}, _prop, _node_alias, _file, _processed_attrs) do
+    nil
   end
 
   defp validate_attribute(attr, nil, node_alias, file, _) do
