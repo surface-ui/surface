@@ -867,7 +867,10 @@ defmodule Surface.Compiler do
         # Quoted expression for ["data-s-#{@__caller_scope_id__}": !!@__caller_scope_id__]
         expr =
           quote do
-            ["data-s-#{var!(assigns)[:__caller_scope_id__]}": {{:boolean, []}, !!var!(assigns)[:__caller_scope_id__]}]
+            [
+              "data-s-#{var!(assigns)[:__caller_scope_id__]}":
+                {{:boolean, []}, !!var!(assigns)[:__caller_scope_id__]}
+            ]
           end
 
         data_caller_scope_id_attr = %AST.DynamicAttribute{
