@@ -101,6 +101,7 @@ defmodule Surface.BaseComponent do
   @doc false
   def restore_private_assigns(socket, %{__context__: context}) do
     socket
+    # TODO: Do we need to add :__caller_scope_id__ here?
     |> Phoenix.Component.assign(:__context__, context)
   end
 

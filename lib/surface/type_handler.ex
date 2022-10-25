@@ -283,6 +283,10 @@ defmodule Surface.TypeHandler do
     {:dynamic, []}
   end
 
+  def attribute_type_and_opts(_, :__caller_scope_id__, _meta) do
+    {:string, []}
+  end
+
   def attribute_type_and_opts(module, name, meta) do
     with true <- function_exported?(module, :__get_prop__, 1),
          prop when not is_nil(prop) <- module.__get_prop__(name) do

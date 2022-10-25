@@ -254,6 +254,67 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
+  defmodule MyLink do
+    use Surface.Component
+
+    prop class, :css_class
+
+    def render(assigns) do
+      ~F"""
+      <a href="#" class={@class}>caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  test "inject caller's scope id as s-data-* on the root nodes of a child component" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          .link {
+            @apply hover:underline;
+          }
+        </style>
+        <MyLink class="link" />
+        """
+      end
+
+    assert html =~ """
+           <a data-s-5c4a203 href="#" class="link">caller_scope_id: 5c4a203</a>
+           """
+  end
+
+  test "inject caller's scope id as s-data-* without interfering with other dynamic props" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+          .link {
+            @apply hover:underline;
+          }
+        </style>
+        <MyLink class="link" {...class: "link"}/>
+        """
+      end
+
+    assert html =~ """
+           <a data-s-6f0c12a href="#" class="link">caller_scope_id: 6f0c12a</a>
+           """
+  end
+
+  test "don't inject caller's scope id as s-data-* if the caller doesn't define styles" do
+    html =
+      render_surface do
+        ~F"""
+        <MyLink class="link" />
+        """
+      end
+
+    assert html =~ """
+           <a href="#" class="link">caller_scope_id: </a>
+           """
+  end
+
   test "inject s-data-* in any element that matches any selector group. No matter if it doesn't match the whole selector" do
     html =
       render_surface do
@@ -292,7 +353,7 @@ defmodule Surface.ComponentStyleTest do
     assert style[:inner_func].scope_id == "bd41653"
 
     assert html =~ """
-           <button data-s-bd41653 class="inner">
+           <button data-s-1a5377d data-s-bd41653 class="inner">
              <span data-s-1a5377d class="outer">Ok</span>
            </button>
            """

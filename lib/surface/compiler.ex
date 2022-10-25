@@ -690,7 +690,7 @@ defmodule Surface.Compiler do
         meta: meta
       }
 
-      {:ok, ast}
+      {:ok, maybe_transform_component_ast(ast, compile_meta)}
     else
       error -> handle_convert_node_to_ast_error(name, error, meta)
     end
@@ -727,7 +727,7 @@ defmodule Surface.Compiler do
         meta: meta
       }
 
-      {:ok, maybe_call_transform(ast)}
+      {:ok, maybe_transform_component_ast(ast, compile_meta)}
     else
       error -> handle_convert_node_to_ast_error(name, error, meta)
     end
@@ -775,7 +775,7 @@ defmodule Surface.Compiler do
           }
         end
 
-      {:ok, maybe_call_transform(result)}
+      {:ok, maybe_transform_component_ast(result, compile_meta)}
     else
       error -> handle_convert_node_to_ast_error(name, error, meta)
     end
@@ -822,12 +822,69 @@ defmodule Surface.Compiler do
     end
   end
 
+  defp maybe_transform_component_ast(%AST.FunctionComponent{} = node, compile_meta) do
+    maybe_add_caller_scope_id_prop(node, compile_meta)
+  end
+
+  defp maybe_transform_component_ast(node, compile_meta) do
+    node
+    |> maybe_call_transform()
+    |> maybe_add_caller_scope_id_prop(compile_meta)
+  end
+
   defp maybe_call_transform(%{module: module} = node) do
     if function_exported?(module, :transform, 1) do
       module.transform(node)
     else
       node
     end
+  end
+
+  defp maybe_add_caller_scope_id_prop(node, %mod{style: %{} = style})
+       when mod in [CompileMeta, AST.Meta] do
+    %{meta: meta, props: props} = node
+    %{scope_id: scope_id} = style
+
+    prop = %AST.Attribute{
+      meta: meta,
+      name: :__caller_scope_id__,
+      type: :string,
+      value: %AST.Literal{value: scope_id}
+    }
+
+    %{node | props: [prop | props]}
+  end
+
+  defp maybe_add_caller_scope_id_prop(node, _compile_meta) do
+    node
+  end
+
+  defp maybe_add_caller_scope_id_attr_to_root_node(%type{} = node, _style) when type in [AST.Tag, AST.VoidTag] do
+    is_caller_a_component? = Helpers.get_module_attribute(node.meta.caller.module, :component_type, nil)
+
+    attributes =
+      if is_caller_a_component? do
+        # Quoted expression for ["data-s-#{@__caller_scope_id__}": !!@__caller_scope_id__]
+        expr =
+          quote do
+            ["data-s-#{var!(assigns)[:__caller_scope_id__]}": {{:boolean, []}, !!var!(assigns)[:__caller_scope_id__]}]
+          end
+
+        data_caller_scope_id_attr = %AST.DynamicAttribute{
+          meta: node.meta,
+          expr: AST.AttributeExpr.new(expr, "", node.meta)
+        }
+
+        [data_caller_scope_id_attr | node.attributes]
+      else
+        node.attributes
+      end
+
+    %{node | attributes: attributes}
+  end
+
+  defp maybe_add_caller_scope_id_attr_to_root_node(node, _style) do
+    node
   end
 
   defp attribute_value_as_atom(attributes, attr_name, default) do
@@ -1492,6 +1549,7 @@ defmodule Surface.Compiler do
       node
       |> maybe_add_data_s_attrs_to_root_node(style)
       |> maybe_add_or_update_style_attr_of_root_node(style)
+      |> maybe_add_caller_scope_id_attr_to_root_node(style)
     end)
   end
 
@@ -1499,8 +1557,7 @@ defmodule Surface.Compiler do
     nodes
   end
 
-  defp maybe_add_data_s_attrs_to_root_node(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style)
-       when style != nil do
+  defp maybe_add_data_s_attrs_to_root_node(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style) do
     %AST.Tag{attributes: attributes, meta: meta} = node
     %{scope_id: scope_id} = style
     data_s_scope = :"data-s-#{scope_id}"
