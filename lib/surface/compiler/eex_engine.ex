@@ -14,6 +14,8 @@ defmodule Surface.Compiler.EExEngine do
   # while this should technically work with other engines, the main use case is integration with Phoenix.LiveView.Engine
   @default_engine Phoenix.LiveView.Engine
 
+  @phx_events Surface.Directive.Events.phx_events() |> Enum.map(&String.to_atom/1)
+
   @string_types [:string, :css_class]
 
   @spec translate(
@@ -971,6 +973,14 @@ defmodule Surface.Compiler.EExEngine do
          | attributes
        ])
        when type in @string_types and is_binary(value) do
+    [[" ", to_string(name), "=", ~S("), value, ~S(")], to_html_attributes(attributes)]
+  end
+
+  defp to_html_attributes([
+         %AST.Attribute{name: name, value: %AST.Literal{value: value}}
+         | attributes
+       ])
+       when name in @phx_events and is_binary(value) do
     [[" ", to_string(name), "=", ~S("), value, ~S(")], to_html_attributes(attributes)]
   end
 

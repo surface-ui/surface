@@ -135,6 +135,28 @@ defmodule Surface.LVChangeTrackingTest do
     refute has_dynamic_part?(full_render, "STATIC LABEL")
   end
 
+  test "phx-* attributes with string values are static so they're not resent after first rendering" do
+    import Surface
+
+    assigns = %{socket: %Socket{}, content: "DYN CONTENT"}
+
+    comp = fn assigns ->
+      ~F"""
+      <button phx-click="click">{@content}</button>
+      """
+    end
+
+    {socket, full_render, components} = render(comp.(assigns))
+
+    assert full_render[:s] == ["<button phx-click=\"click\">", "</button>\n"]
+
+    assigns = Map.put(assigns, :__changed__, %{content: true})
+
+    {_, full_render, _} = render(comp.(assigns), socket.fingerprints, components)
+
+    assert full_render == %{0 => "DYN CONTENT"}
+  end
+
   defp render(
          rendered,
          fingerprints \\ Diff.new_fingerprints(),
