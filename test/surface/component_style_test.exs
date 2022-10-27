@@ -261,26 +261,35 @@ defmodule Surface.ComponentStyleTest do
 
     def render(assigns) do
       ~F"""
-      <a href="#" class={@class}>caller_scope_id: {@__caller_scope_id__}</a>
+      <a href="#">caller_scope_id: {@__caller_scope_id__}</a>
       """
     end
   end
 
-  test "inject caller's scope id as s-data-* on the root nodes of a child component" do
+  defmodule MyLinkWithoutCssClassProp do
+    use Surface.Component
+
+    def render(assigns) do
+      ~F"""
+      <a href="#">caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  test "inject caller's scope id on the root nodes of a child components that define at least one :css_class prop" do
     html =
       render_surface do
         ~F"""
         <style>
-          .link {
-            @apply hover:underline;
-          }
         </style>
-        <MyLink class="link" />
+        <MyLink />
+        <MyLinkWithoutCssClassProp />
         """
       end
 
     assert html =~ """
-           <a data-s-5c4a203 href="#" class="link">caller_scope_id: 5c4a203</a>
+           <a data-s-88cfb67 href="#">caller_scope_id: 88cfb67</a>
+           <a href="#">caller_scope_id: 88cfb67</a>
            """
   end
 
@@ -289,16 +298,13 @@ defmodule Surface.ComponentStyleTest do
       render_surface do
         ~F"""
         <style>
-          .link {
-            @apply hover:underline;
-          }
         </style>
-        <MyLink class="link" {...class: "link"}/>
+        <MyLink {...class: "link"}/>
         """
       end
 
     assert html =~ """
-           <a data-s-6f0c12a href="#" class="link">caller_scope_id: 6f0c12a</a>
+           <a data-s-6f0c12a href="#">caller_scope_id: 6f0c12a</a>
            """
   end
 
@@ -306,12 +312,12 @@ defmodule Surface.ComponentStyleTest do
     html =
       render_surface do
         ~F"""
-        <MyLink class="link" />
+        <MyLink/>
         """
       end
 
     assert html =~ """
-           <a href="#" class="link">caller_scope_id: </a>
+           <a href="#">caller_scope_id: </a>
            """
   end
 

@@ -860,10 +860,14 @@ defmodule Surface.Compiler do
   end
 
   defp maybe_add_caller_scope_id_attr_to_root_node(%type{} = node, _style) when type in [AST.Tag, AST.VoidTag] do
-    is_caller_a_component? = Helpers.get_module_attribute(node.meta.caller.module, :component_type, nil)
+    is_caller_a_component? = !!Helpers.get_module_attribute(node.meta.caller.module, :component_type, nil)
+    props = Helpers.get_module_attribute(node.meta.caller.module, :prop, [])
+    has_css_class_prop? = Enum.any?(props, &(&1.type == :css_class))
+    # TODO: when support for `attr` is added, check for :css_class types instead
+    function_component? = node.meta.caller.function != {:render, 1}
 
     attributes =
-      if is_caller_a_component? do
+      if is_caller_a_component? and (has_css_class_prop? or function_component?) do
         # Quoted expression for ["data-s-#{@__caller_scope_id__}": !!@__caller_scope_id__]
         expr =
           quote do
