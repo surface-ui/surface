@@ -868,11 +868,12 @@ defmodule Surface.Compiler do
 
     attributes =
       if is_caller_a_component? and (has_css_class_prop? or function_component?) do
-        # Quoted expression for ["data-s-#{@__caller_scope_id__}": !!@__caller_scope_id__]
+        prefix = CSSTranslator.scope_attr_prefix()
+        # Quoted expression for ["the-prefix-#{@__caller_scope_id__}": !!@__caller_scope_id__]
         expr =
           quote do
             [
-              "data-s-#{var!(assigns)[:__caller_scope_id__]}":
+              "#{unquote(prefix)}#{var!(assigns)[:__caller_scope_id__]}":
                 {{:boolean, []}, !!var!(assigns)[:__caller_scope_id__]}
             ]
           end
@@ -1567,7 +1568,7 @@ defmodule Surface.Compiler do
   defp maybe_add_data_s_attrs_to_root_node(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style) do
     %AST.Tag{attributes: attributes, meta: meta} = node
     %{scope_id: scope_id} = style
-    data_s_scope = :"data-s-#{scope_id}"
+    data_s_scope = :"#{CSSTranslator.scope_attr_prefix()}#{scope_id}"
 
     attributes =
       if not AST.has_attribute?(attributes, data_s_scope) do
@@ -1585,7 +1586,7 @@ defmodule Surface.Compiler do
 
     data_self_attr = %AST.Attribute{
       meta: meta,
-      name: :"data-s-self",
+      name: :"#{CSSTranslator.self_attr()}",
       type: :string,
       value: %AST.Literal{value: true}
     }
@@ -1664,7 +1665,7 @@ defmodule Surface.Compiler do
          maybe_in_selectors?(element, attributes, selectors) do
       s_data_attr = %AST.Attribute{
         meta: meta,
-        name: :"data-s-#{scope_id}",
+        name: :"#{CSSTranslator.scope_attr_prefix()}#{scope_id}",
         type: :string,
         value: %AST.Literal{value: true}
       }

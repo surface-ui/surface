@@ -2,6 +2,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
   use ExUnit.Case, async: true
 
   alias Surface.Compiler.CSSTranslator
+  import Surface.Compiler.CSSTranslator, only: [var_name: 2]
 
   test "translate CSS" do
     css = """
@@ -22,7 +23,11 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     @tailwind utilities;
     """
 
-    %{css: translated, selectors: selectors, vars: vars} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors, vars: vars} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+
+    css_background_var = var_name("myscope", "@css.background")
+    padding_var = var_name("myscope", "@padding")
 
     assert selectors == %{
              elements: MapSet.new(["b", "c"]),
@@ -33,19 +38,19 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            }
 
     assert vars == %{
-             "--029d26f" => {"@css.background", %{column: 25, column_end: 43, line: 4, line_end: 4}},
-             "--c8f42e0" => {"@padding", %{column: 18, column_end: 29, line: 8, line_end: 8}}
+             css_background_var => {"@css.background", %{column: 25, column_end: 43, line: 4, line_end: 4}},
+             padding_var => {"@padding", %{column: 18, column_end: 29, line: 8, line_end: 8}}
            }
 
     assert translated == """
            /* padding: s-bind(padding); */
 
            .root[data-s-myscope] {
-             --custom-color: var(--029d26f);
+             --custom-color: var(#{css_background_var});
            }
 
            .a[data-s-myscope]:has(> img) > b[data-s-myscope][class="btn"], c[data-s-myscope] {
-             padding: var(--c8f42e0);
+             padding: var(#{padding_var});
            }
 
            @media screen and (min-width: 1216px) {
@@ -61,7 +66,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     div.blog:first-child { display: block }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            div[data-s-myscope].blog[data-s-myscope]:first-child { display: block }
@@ -79,7 +85,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            :fake(div, 'whatever') {
@@ -103,7 +110,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert selectors.classes == MapSet.new(["a", "c"])
 
@@ -118,7 +126,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
            """
   end
 
-  test ":deep adds [data-s-self][data-s-xxxxxx] if it't the first selector" do
+  test ":deep adds [the-self-attr][the-scope-attr] if it't the first selector" do
     css = """
     :deep(div > .link) {
       @apply hover:underline;
@@ -133,7 +141,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            [data-s-self][data-s-myscope] div > .link {
@@ -179,7 +188,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert selectors.classes == MapSet.new(["a", "c", "e"])
 
@@ -211,7 +221,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     .a[title="foo"]:first-child.b[title="bar"]:hover { display: block }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            .a[data-s-myscope][title="foo"]:first-child.b[data-s-myscope][title="bar"]:hover { display: block }
@@ -228,7 +239,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            .test[data-s-myscope] {
@@ -246,7 +258,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            .Input[data-s-myscope] [data-input] {
@@ -268,7 +281,8 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     }
     """
 
-    %{css: translated, selectors: selectors} = CSSTranslator.translate!(css, scope_id: "myscope")
+    %{css: translated, selectors: selectors} =
+      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            a[data-s-myscope] .external-link[data-s-myscope] {
@@ -282,5 +296,26 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
     assert selectors.elements == MapSet.new(["a"])
     assert selectors.classes == MapSet.new(["external-link"])
+  end
+
+  describe "var_name/2" do
+    test "generate a unique CSS var name based on the scope and the expression" do
+      assert CSSTranslator.var_name("my_scope_id1", "Enum.at(@list, 0)") == "--aeed0c3"
+      assert CSSTranslator.var_name("my_scope_id2", "Enum.at(@list, 0)") == "--de4fcc5"
+    end
+  end
+
+  describe "scope_id/2" do
+    test "generate a unique scope_id for a component" do
+      assert CSSTranslator.scope_id(MyLib.MyButton, :render) == "ae5261e"
+      assert CSSTranslator.scope_id(MyLib.MyButton, :func) == "2fc2da8"
+    end
+  end
+
+  describe "scope_attr/2" do
+    test "generate a unique attribute name for a component based on a prefix and the scope id" do
+      assert CSSTranslator.scope_attr(MyLib.MyButton, :render) == "data-s-ae5261e"
+      assert CSSTranslator.scope_attr(MyLib.MyButton, :func) == "data-s-2fc2da8"
+    end
   end
 end
