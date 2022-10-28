@@ -276,12 +276,12 @@ defmodule Surface.ComponentStyleTest do
 
     def render(assigns) do
       ~F"""
-      <a href="#">caller_scope_id: {@__caller_scope_id__}</a>
+      <a href="#" class={"a"}>caller_scope_id: {@__caller_scope_id__}</a>
       """
     end
   end
 
-  defmodule MyLinkWithoutCssClassProp do
+  defmodule MyLinkNotUsingClass do
     use Surface.Component
 
     def render(assigns) do
@@ -291,20 +291,46 @@ defmodule Surface.ComponentStyleTest do
     end
   end
 
-  test "inject caller's scope id on the root nodes of a child components that define at least one :css_class prop" do
+  defmodule MyLinkOnlyDefiningClass do
+    use Surface.Component
+
+    prop class, :css_class
+
+    def render(assigns) do
+      ~F"""
+      <a href="#">caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  defmodule MyLinkOnlyPassingClassExpr do
+    use Surface.Component
+
+    def render(assigns) do
+      ~F"""
+      <a href="#" class={"a"}>caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  test "inject caller's scope id on the root nodes of a child components that define a :css_class prop and pass a class attr as expression" do
     html =
       render_surface do
         ~F"""
         <style>
         </style>
         <MyLink />
-        <MyLinkWithoutCssClassProp />
+        <MyLinkNotUsingClass />
+        <MyLinkOnlyDefiningClass />
+        <MyLinkOnlyPassingClassExpr />
         """
       end
 
     assert html =~ """
-           <a #{scope_attr()} href="#">caller_scope_id: #{scope_id()}</a>
+           <a #{scope_attr()} href="#" class="a">caller_scope_id: #{scope_id()}</a>
            <a href="#">caller_scope_id: #{scope_id()}</a>
+           <a href="#">caller_scope_id: #{scope_id()}</a>
+           <a href="#" class="a">caller_scope_id: #{scope_id()}</a>
            """
   end
 
@@ -319,7 +345,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <a #{scope_attr()} href="#">caller_scope_id: #{scope_id()}</a>
+           <a #{scope_attr()} href="#" class="a">caller_scope_id: #{scope_id()}</a>
            """
   end
 
@@ -327,12 +353,12 @@ defmodule Surface.ComponentStyleTest do
     html =
       render_surface do
         ~F"""
-        <MyLink/>
+        <MyLink />
         """
       end
 
     assert html =~ """
-           <a href="#">caller_scope_id: </a>
+           <a href="#" class="a">caller_scope_id: </a>
            """
   end
 

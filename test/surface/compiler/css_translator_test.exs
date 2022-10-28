@@ -145,15 +145,15 @@ defmodule Surface.Compiler.CSSTranslatorTest do
       CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
-           [data-s-self][data-s-myscope] div > .link {
+           [s-self][data-s-myscope] div > .link {
              @apply hover:underline;
            }
 
-           [data-s-self][data-s-myscope] .a .link, [data-s-self][data-s-myscope] .b .link {
+           [s-self][data-s-myscope] .a .link, [s-self][data-s-myscope] .b .link {
              @apply hover:underline;
            }
 
-           [data-s-self][data-s-myscope] .b.link[data-s-myscope], .c[data-s-myscope] {
+           [s-self][data-s-myscope] .b.link[data-s-myscope], .c[data-s-myscope] {
              @apply hover:underline;
            }
            """
@@ -300,22 +300,22 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
   describe "var_name/2" do
     test "generate a unique CSS var name based on the scope and the expression" do
-      assert CSSTranslator.var_name("my_scope_id1", "Enum.at(@list, 0)") == "--aeed0c3"
-      assert CSSTranslator.var_name("my_scope_id2", "Enum.at(@list, 0)") == "--de4fcc5"
+      assert CSSTranslator.var_name("my_scope_id1", "Enum.at(@list, 0)") == "--v3wqy"
+      assert CSSTranslator.var_name("my_scope_id2", "Enum.at(@list, 0)") == "--3zh4y"
     end
   end
 
   describe "scope_id/2" do
     test "generate a unique scope_id for a component" do
-      assert CSSTranslator.scope_id(MyLib.MyButton, :render) == "ae5261e"
-      assert CSSTranslator.scope_id(MyLib.MyButton, :func) == "2fc2da8"
+      assert CSSTranslator.scope_id(MyLib.MyButton, :render) == "vzjgd"
+      assert CSSTranslator.scope_id(MyLib.MyButton, :func) == "f7bnv"
     end
   end
 
   describe "scope_attr/2" do
     test "generate a unique attribute name for a component based on a prefix and the scope id" do
-      assert CSSTranslator.scope_attr(MyLib.MyButton, :render) == "data-s-ae5261e"
-      assert CSSTranslator.scope_attr(MyLib.MyButton, :func) == "data-s-2fc2da8"
+      assert CSSTranslator.scope_attr(MyLib.MyButton, :render) == "s-vzjgd"
+      assert CSSTranslator.scope_attr(MyLib.MyButton, :func) == "s-f7bnv"
     end
   end
 end

@@ -8,10 +8,10 @@ defmodule Surface.Compiler.CSSTranslator do
     "[" => "]"
   }
 
-  @scope_attr_prefix "data-s-"
-  @self_attr "data-s-self"
-  @scope_id_length 7
-  @var_name_length 7
+  @scope_attr_prefix "s-"
+  @self_attr "s-self"
+  @scope_id_length 5
+  @var_name_length 5
 
   def scope_attr(component, func) do
     @scope_attr_prefix <> scope_id(component, func)
@@ -243,7 +243,7 @@ defmodule Surface.Compiler.CSSTranslator do
 
   defp hash(text, length) do
     :crypto.hash(:md5, text)
-    |> Base.encode16(case: :lower)
+    |> Base.encode32(case: :lower, padding: false)
     |> String.slice(0, length)
   end
 
