@@ -197,8 +197,6 @@ defmodule Surface do
   def init(socket) do
     socket
     |> Phoenix.Component.assign_new(:__context__, fn -> %{} end)
-    # TODO: add a test for this case
-    |> Phoenix.Component.assign_new(:__caller_scope_id__, fn -> nil end)
   end
 
   @doc false

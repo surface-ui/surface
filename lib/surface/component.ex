@@ -113,7 +113,6 @@ defmodule Surface.Component do
       end
 
     quoted_assigns = {:__block__, [], [quoted_caller_scope_id] ++ quoted_data_assigns ++ quoted_props_assigns}
-    # quoted_assigns = {:__block__, [], quoted_data_assigns ++ quoted_props_assigns}
 
     if Module.defines?(env.module, {:render, 1}) do
       quote do

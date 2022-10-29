@@ -313,7 +313,7 @@ defmodule Surface.ComponentStyleTest do
     end
   end
 
-  test "inject caller's scope id on the root nodes of a child components that define a :css_class prop and pass a class attr as expression" do
+  test "inject caller's scope attribute on the root nodes of a child components that define a :css_class prop and pass a class attr as expression" do
     html =
       render_surface do
         ~F"""
@@ -359,6 +359,48 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <a href="#" class="a">caller_scope_id: </a>
+           """
+  end
+
+  defmodule LiveComponentWithUpdate do
+    use Surface.LiveComponent
+
+    prop class, :css_class
+
+    @impl true
+    def update(_assigns, socket) do
+      {:ok, assign(socket, assigned_in_update: "Assigned in update/2")}
+    end
+
+    @impl true
+    def render(assigns) do
+      ~F"""
+      <a href="#" class={"a"}>link</a>
+      """
+    end
+  end
+
+  defmodule ViewWithLiveComponentWithUpdate do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~F"""
+      <style>
+      </style>
+      <LiveComponentWithUpdate id="comp" />
+      """
+    end
+  end
+
+  test "inject caller's scope attribute on live components implementing update/2, i.e. @__caller_scope_id__ is still there" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithLiveComponentWithUpdate)
+
+    attr = scope_attr(ViewWithLiveComponentWithUpdate, :render)
+
+    # We need to use `attr="attr"` instead of just `attr` here because it seems live_isolated/2
+    # renders attributes differently. Maybe because it relies on `<.dynamic_tag/>`?
+    assert html =~ """
+           <a data-phx-component=\"1\" #{attr}="#{attr}" href="#" class="a">link</a>\
            """
   end
 
