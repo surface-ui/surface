@@ -8,16 +8,55 @@ defmodule Surface.Compiler.CSSTranslator do
     "[" => "]"
   }
 
+  @scope_attr_prefix "s-"
+  @self_attr "s-self"
+  @scope_id_length 5
+  @var_name_length 5
+
+  def scope_attr(component, func) do
+    @scope_attr_prefix <> scope_id(component, func)
+  end
+
+  def scope_id(component, func) do
+    hash("#{inspect(component)}.#{func}", @scope_id_length)
+  end
+
+  def var_name(scope, expr) do
+    "--#{hash(scope <> expr, @var_name_length)}"
+  end
+
+  def scope_attr_prefix do
+    @scope_attr_prefix
+  end
+
+  def self_attr do
+    @self_attr
+  end
+
+  defmacro scope_id do
+    mod = __CALLER__.module
+    {func, _} = __CALLER__.function
+    Surface.Compiler.CSSTranslator.scope_id(mod, func)
+  end
+
+  defmacro scope_attr do
+    mod = __CALLER__.module
+    {func, _} = __CALLER__.function
+    Surface.Compiler.CSSTranslator.scope_attr(mod, func)
+  end
+
   def translate!(css, opts \\ []) do
     module = Keyword.get(opts, :module)
     func = Keyword.get(opts, :func)
     scope_id = Keyword.get(opts, :scope_id) || scope_id(module, func)
+    scope_attr_prefix = Keyword.get(opts, :scope_attr_prefix) || @scope_attr_prefix
     file = Keyword.get(opts, :file)
     line = Keyword.get(opts, :line) || 1
     env = Keyword.get(opts, :env) || :dev
 
     state = %{
       scope_id: scope_id,
+      scope_attr_prefix: scope_attr_prefix,
       file: file,
       line: line,
       env: env,
@@ -116,7 +155,7 @@ defmodule Surface.Compiler.CSSTranslator do
   defp translate_selector_list([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
     state = %{state | requires_data_attrs_on_root: true}
-    acc = [updated_tokens, "[data-s-self][data-s-#{state.scope_id}] " | acc]
+    acc = [updated_tokens, "[#{@self_attr}][#{state.scope_attr_prefix}#{state.scope_id}] " | acc]
     translate_selector(rest, acc, state)
   end
 
@@ -124,7 +163,7 @@ defmodule Surface.Compiler.CSSTranslator do
     translate_selector(tokens, acc, state)
   end
 
-  # TODO: check if it's maybe better to just always add [data-s-self][data-s-xxxxxx]
+  # TODO: check if it's maybe better to just always add [the-prefix-self][the-prefix-xxxxxx]
   defp translate_selector([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
     acc = [updated_tokens | acc]
@@ -173,7 +212,7 @@ defmodule Surface.Compiler.CSSTranslator do
 
     acc =
       if scoped? do
-        ["#{text}[data-s-#{state.scope_id}]" | acc]
+        ["#{text}[#{state.scope_attr_prefix}#{state.scope_id}]" | acc]
       else
         [text | acc]
       end
@@ -202,18 +241,10 @@ defmodule Surface.Compiler.CSSTranslator do
     expr
   end
 
-  defp var_name(scope, expr) do
-    "--#{hash(scope <> expr)}"
-  end
-
-  defp scope_id(component, func) do
-    hash("#{inspect(component)}.#{func}")
-  end
-
-  defp hash(text) do
+  defp hash(text, length) do
     :crypto.hash(:md5, text)
-    |> Base.encode16(case: :lower)
-    |> String.slice(0..6)
+    |> Base.encode32(case: :lower, padding: false)
+    |> String.slice(0, length)
   end
 
   defp put_selector(state, group, selector) do

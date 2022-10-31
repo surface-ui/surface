@@ -1,6 +1,16 @@
 defmodule Surface.ComponentStyleTest do
   use Surface.ConnCase, async: true
 
+  import Surface.Compiler.CSSTranslator,
+    only: [
+      scope_attr: 0,
+      scope_attr: 2,
+      scope_id: 0,
+      scope_id: 2,
+      self_attr: 0,
+      var_name: 2
+    ]
+
   alias Mix.Tasks.Compile.SurfaceTest.FakeButton
 
   test "colocated css file" do
@@ -11,8 +21,10 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
+    color_var = var_name(scope_id(FakeButton, :render), "@color")
+
     assert html =~ """
-           <button style="--59c08eb: red" data-s-8c9b2e4 class="btn">
+           <button style="#{color_var}: red" #{scope_attr(FakeButton, :render)} class="btn">
              FAKE BUTTON
            </button>
            """
@@ -31,7 +43,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-1bd4222 class="btn">OK</button>
+           <button #{scope_attr()} class="btn">OK</button>
            """
   end
 
@@ -43,14 +55,17 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
+    padding_var = var_name(scope_id(FakeButton, :func), "@padding")
+    color_var = var_name(scope_id(FakeButton, :func), "@color")
+
     assert html =~ """
-           <button style="--81d9fb2: 10px; --e2913a0: red" data-s-580c948 class="btn-func">
+           <button style="#{padding_var}: 10px; #{color_var}: red" #{scope_attr(FakeButton, :func)} class="btn-func">
              FAKE FUNCTION BUTTON
            </button>
            """
   end
 
-  test "inject s-data-* when the element is present in the selectors" do
+  test "inject scope attribute when the element is present in the selectors" do
     html =
       render_surface do
         ~F"""
@@ -66,13 +81,13 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-05ec951>ok</button>
+           <button #{scope_attr()}>ok</button>
            <div>ok</div>
-           <span data-s-05ec951>ok</span>
+           <span #{scope_attr()}>ok</span>
            """
   end
 
-  test "inject s-data-* when the class is present in the selectors" do
+  test "inject scope attribute when the class is present in the selectors" do
     html =
       render_surface do
         ~F"""
@@ -88,13 +103,13 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-597e148 class="btn1">ok</button>
+           <button #{scope_attr()} class="btn1">ok</button>
            <button>ok</button>
-           <button data-s-597e148 class="p-8 btn2">ok</button>
+           <button #{scope_attr()} class="p-8 btn2">ok</button>
            """
   end
 
-  test "inject s-data-* in void elements" do
+  test "inject scope attribute in void elements" do
     html =
       render_surface do
         ~F"""
@@ -107,11 +122,11 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <input data-s-ec11bd3 class="input">
+           <input #{scope_attr()} class="input">
            """
   end
 
-  test "inject s-data-* when the id is present in the selectors" do
+  test "inject scope attribute when the id is present in the selectors" do
     html =
       render_surface do
         ~F"""
@@ -127,13 +142,13 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-s-b461126 id="btn1">ok</button>
+           <button #{scope_attr()} id="btn1">ok</button>
            <button>ok</button>
-           <button data-s-b461126 id="btn2">ok</button>
+           <button #{scope_attr()} id="btn2">ok</button>
            """
   end
 
-  test "inject s-data-* in all elements if the universal selector `*` is present" do
+  test "inject scope attribute in all elements if the universal selector `*` is present" do
     html =
       render_surface do
         ~F"""
@@ -148,13 +163,13 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <div data-s-b0be4f9>ok</div>
-           <span data-s-b0be4f9>ok</span>
-           <button data-s-b0be4f9 id="btn">ok</button>
+           <div #{scope_attr()}>ok</div>
+           <span #{scope_attr()}>ok</span>
+           <button #{scope_attr()} id="btn">ok</button>
            """
   end
 
-  test "inject s-data-* in elements that match the element and class selector" do
+  test "inject scope attribute in elements that match the element and class selector" do
     html =
       render_surface do
         ~F"""
@@ -170,12 +185,12 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div>ok</div>
-           <div data-s-a6137cb class="panel">ok</div>
+           <div #{scope_attr()} class="panel">ok</div>
            <span class="panel">ok</span>
            """
   end
 
-  test "inject s-data-* in elements that match the element and id selector" do
+  test "inject scope attribute in elements that match the element and id selector" do
     html =
       render_surface do
         ~F"""
@@ -191,12 +206,12 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div>ok</div>
-           <div data-s-79e87d1 id="panel">ok</div>
+           <div #{scope_attr()} id="panel">ok</div>
            <span id="panel">ok</span>
            """
   end
 
-  test "inject s-data-* in elements that match all classes" do
+  test "inject scope attribute in elements that match all classes" do
     html =
       render_surface do
         ~F"""
@@ -217,13 +232,13 @@ defmodule Surface.ComponentStyleTest do
            <div>ok</div>
            <div class="a">ok</div>
            <div class="b">ok</div>
-           <div data-s-9651d1c class="a b">ok</div>
-           <span data-s-9651d1c class="b a">ok</span>
-           <span data-s-9651d1c class="x a b y">ok</span>
+           <div #{scope_attr()} class="a b">ok</div>
+           <span #{scope_attr()} class="b a">ok</span>
+           <span #{scope_attr()} class="x a b y">ok</span>
            """
   end
 
-  test "inject s-data-* on the root nodes if :deep is used at the begining" do
+  test "inject scope attribute on the root nodes if :deep is used at the begining" do
     html =
       render_surface do
         ~F"""
@@ -246,15 +261,150 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <div data-s-self data-s-3d94ab6 class="main">
-             <div data-s-3d94ab6 class="link">ok</div>
+           <div #{self_attr()} #{scope_attr()} class="main">
+             <div #{scope_attr()} class="link">ok</div>
              <div class="a">ok</div>
            </div>
-           <div data-s-self data-s-3d94ab6 class="a">ok</div>
+           <div #{self_attr()} #{scope_attr()} class="a">ok</div>
            """
   end
 
-  test "inject s-data-* in any element that matches any selector group. No matter if it doesn't match the whole selector" do
+  defmodule MyLink do
+    use Surface.Component
+
+    prop class, :css_class
+
+    def render(assigns) do
+      ~F"""
+      <a href="#" class={"a"}>caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  defmodule MyLinkNotUsingClass do
+    use Surface.Component
+
+    def render(assigns) do
+      ~F"""
+      <a href="#">caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  defmodule MyLinkOnlyDefiningClass do
+    use Surface.Component
+
+    prop class, :css_class
+
+    def render(assigns) do
+      ~F"""
+      <a href="#">caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  defmodule MyLinkOnlyPassingClassExpr do
+    use Surface.Component
+
+    def render(assigns) do
+      ~F"""
+      <a href="#" class={"a"}>caller_scope_id: {@__caller_scope_id__}</a>
+      """
+    end
+  end
+
+  test "inject caller's scope attribute on the root nodes of a child components that define a :css_class prop and pass a class attr as expression" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+        </style>
+        <MyLink />
+        <MyLinkNotUsingClass />
+        <MyLinkOnlyDefiningClass />
+        <MyLinkOnlyPassingClassExpr />
+        """
+      end
+
+    assert html =~ """
+           <a #{scope_attr()} href="#" class="a">caller_scope_id: #{scope_id()}</a>
+           <a href="#">caller_scope_id: #{scope_id()}</a>
+           <a href="#">caller_scope_id: #{scope_id()}</a>
+           <a href="#" class="a">caller_scope_id: #{scope_id()}</a>
+           """
+  end
+
+  test "inject caller's scope attribute without interfering with other dynamic props" do
+    html =
+      render_surface do
+        ~F"""
+        <style>
+        </style>
+        <MyLink {...class: "link"}/>
+        """
+      end
+
+    assert html =~ """
+           <a #{scope_attr()} href="#" class="a">caller_scope_id: #{scope_id()}</a>
+           """
+  end
+
+  test "don't inject caller's scope attribute if the caller doesn't define styles" do
+    html =
+      render_surface do
+        ~F"""
+        <MyLink />
+        """
+      end
+
+    assert html =~ """
+           <a href="#" class="a">caller_scope_id: </a>
+           """
+  end
+
+  defmodule LiveComponentWithUpdate do
+    use Surface.LiveComponent
+
+    prop class, :css_class
+
+    @impl true
+    def update(_assigns, socket) do
+      {:ok, assign(socket, assigned_in_update: "Assigned in update/2")}
+    end
+
+    @impl true
+    def render(assigns) do
+      ~F"""
+      <a href="#" class={"a"}>link</a>
+      """
+    end
+  end
+
+  defmodule ViewWithLiveComponentWithUpdate do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~F"""
+      <style>
+      </style>
+      <LiveComponentWithUpdate id="comp" />
+      """
+    end
+  end
+
+  test "inject caller's scope attribute on live components implementing update/2, i.e. @__caller_scope_id__ is still there" do
+    {:ok, _view, html} = live_isolated(build_conn(), ViewWithLiveComponentWithUpdate)
+
+    attr = scope_attr(ViewWithLiveComponentWithUpdate, :render)
+
+    # We need to use `attr="attr"` instead of just `attr` here because it seems live_isolated/2
+    # renders attributes differently. Maybe because it relies on `<.dynamic_tag/>`?
+    assert html =~ """
+           <a data-phx-component=\"1\" #{attr}="#{attr}" href="#" class="a">link</a>\
+           """
+  end
+
+  test "inject scope attribute in any element that matches any selector group. No matter if it doesn't match the whole selector" do
     html =
       render_surface do
         ~F"""
@@ -272,14 +422,14 @@ defmodule Surface.ComponentStyleTest do
 
     assert html =~ """
            <div>ok</div>
-           <div data-s-77c06c9 class="a b">ok</div>
+           <div #{scope_attr()} class="a b">ok</div>
            <div class="c d">ok</div>
            <span class="a b">ok</span>
-           <span data-s-77c06c9 class="c d">ok</span>
+           <span #{scope_attr()} class="c d">ok</span>
            """
   end
 
-  test "set the caller's scope id to s-data-* in elements passed using slots" do
+  test "set the caller's scope attribute in elements passed using slots" do
     html =
       render_surface do
         ~F"""
@@ -287,13 +437,9 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    style = FakeButton.__style__()
-    assert style[:outer_func].scope_id == "1a5377d"
-    assert style[:inner_func].scope_id == "bd41653"
-
     assert html =~ """
-           <button data-s-bd41653 class="inner">
-             <span data-s-1a5377d class="outer">Ok</span>
+           <button #{scope_attr(FakeButton, :outer_func)} #{scope_attr(FakeButton, :inner_func)} class="inner">
+             <span #{scope_attr(FakeButton, :outer_func)} class="outer">Ok</span>
            </button>
            """
   end
@@ -312,7 +458,9 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    assert html =~ ~S(style="padding: 1px; --bfe9859: red")
+    color_var = var_name(scope_id(), "@color")
+
+    assert html =~ ~s(style="padding: 1px; #{color_var}: red")
   end
 
   test "merge `style` variables when value is an expression" do
@@ -329,7 +477,9 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    assert html =~ ~S(style="padding: 1px; --b9c15f4: red")
+    color_var = var_name(scope_id(), "@color")
+
+    assert html =~ ~s(style="padding: 1px; #{color_var}: red")
   end
 
   test "ignore white spaces before and after the <style> section" do
@@ -348,7 +498,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html == """
-           <button data-s-d121568 class="btn">OK</button>
+           <button #{scope_attr()} class="btn">OK</button>
            """
   end
 end

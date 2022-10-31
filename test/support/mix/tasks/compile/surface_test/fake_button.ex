@@ -36,7 +36,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest.FakeButton do
       .inner { padding: 2px; }
     </style>
 
-    <button class="inner">
+    <button class={"inner"}>
       {render_slot(@inner_block)}
     </button>
     """
