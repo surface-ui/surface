@@ -5,7 +5,8 @@ defmodule Surface.Compiler.Helpers do
   alias Surface.IOHelper
 
   @builtin_common_assigns [
-    :__context__
+    :__context__,
+    :__caller_scope_id__
   ]
 
   @builtin_component_assigns [:inner_block] ++ @builtin_common_assigns

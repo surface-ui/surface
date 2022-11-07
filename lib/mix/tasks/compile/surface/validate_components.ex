@@ -101,6 +101,10 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     module.__get_prop__(attr.name)
   end
 
+  defp validate_attribute(%{name: :__caller_scope_id__}, _prop, _node_alias, _file, _processed_attrs) do
+    nil
+  end
+
   defp validate_attribute(attr, nil, node_alias, file, _) do
     message = "Unknown property \"#{attr.name}\" for component <#{node_alias}>"
     warning(message, file, attr.line)

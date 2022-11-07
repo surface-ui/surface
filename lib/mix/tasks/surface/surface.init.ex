@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Surface.Init do
+  @shortdoc "Configures Surface on an phoenix project"
+
   @moduledoc """
   Configures Surface on an phoenix project.
 

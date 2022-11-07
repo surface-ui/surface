@@ -99,12 +99,21 @@ defmodule Surface.BaseComponent do
   end
 
   @doc false
-  def restore_private_assigns(socket, %{__context__: context}) do
-    socket
-    |> Phoenix.Component.assign(:__context__, context)
-  end
+  def restore_private_assigns(socket, assigns) do
+    socket =
+      if Map.has_key?(assigns, :__context__) do
+        Phoenix.Component.assign(socket, :__context__, assigns[:__context__])
+      else
+        socket
+      end
 
-  def restore_private_assigns(socket, _assigns) do
+    socket =
+      if Map.has_key?(assigns, :__caller_scope_id__) do
+        Phoenix.Component.assign(socket, :__caller_scope_id__, assigns[:__caller_scope_id__])
+      else
+        socket
+      end
+
     socket
   end
 

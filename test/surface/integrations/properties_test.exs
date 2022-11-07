@@ -834,7 +834,6 @@ defmodule Surface.PropertiesSyncTest do
 
   import ExUnit.CaptureIO
   alias Surface.PropertiesTest.StringProp
-  alias Surface.PropertiesTest.RootProp
   alias Surface.PropertiesTest.ListProp
 
   test "warn if prop is required and has default value" do
@@ -983,6 +982,7 @@ defmodule Surface.PropertiesSyncTest do
     end)
   end
 
+  # TODO: remove it when start using `attr` from LV
   describe "unknown property" do
     test "warns at runtime and render the component" do
       output =
@@ -1145,29 +1145,6 @@ defmodule Surface.PropertiesSyncTest do
              ```
 
              This way the values will be accumulated in a list.
-             """
-    end
-
-    test "if not true renders only the last value, root prop" do
-      output =
-        capture_io(:standard_error, fn ->
-          html =
-            render_surface do
-              ~F"""
-              <RootProp {"root label"} label="attr label" />
-              """
-            end
-
-          assert html =~ """
-                 attr label
-                 """
-        end)
-
-      assert output =~ """
-             the prop `label` has been passed multiple times. Considering only the last value.
-
-             Hint: Either specify the `label` via the root property (`<RootProp { ... }>`) or \
-             explicitly via the label property (`<RootProp label="...">`), but not both.
              """
     end
 

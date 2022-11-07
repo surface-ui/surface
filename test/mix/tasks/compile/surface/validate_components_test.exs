@@ -34,6 +34,23 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
            ]
   end
 
+  test "should not validate __caller_scope_id__ as unkwnown prop" do
+    component =
+      quote do
+        ~F"""
+        <style>
+          .p {}
+        </style>
+        <StringProp />
+        """
+      end
+      |> compile_surface()
+
+    diagnostics = ValidateComponents.validate([component])
+
+    assert diagnostics == []
+  end
+
   defmodule RequiredPropTitle do
     use Surface.Component
     prop title, :string, required: true
