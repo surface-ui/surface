@@ -2,22 +2,115 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @moduledoc false
 
   alias Mix.Task.Compiler.Diagnostic
+  require Logger
 
+  @env Mix.env()
   @default_hooks_output_dir "assets/js/_hooks"
   @default_css_output_file "assets/css/_components.css"
   @supported_hooks_extensions ~W"js jsx ts tsx" |> Enum.join(",")
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
+  @default_wait_assets_timeout 2000
+  @wait_assets_delay 25
+
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
-    env = Keyword.get(opts, :env, Mix.env())
+    code_reload_config = Keyword.get(opts, :code_reload, [])
+
+    wait_for_assets_timeout =
+      Keyword.get(code_reload_config, :wait_for_assets_timeout, @default_wait_assets_timeout)
+
+    assets_depending_on_css_output = Keyword.get(code_reload_config, :assets_depending_on_css_output, [])
+    assets_depending_on_hooks_output = Keyword.get(code_reload_config, :assets_depending_on_hooks_output, [])
+    env = Keyword.get(opts, :env, @env)
     {js_files, js_diagnostics} = get_colocated_js_files(components)
-    generate_js_files(js_files, hooks_output_dir)
-    css_diagnostics = generate_css_file(components, css_output_file, env)
+    js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
+    index_js_file = Path.join([js_output_dir, "index.js"])
+
+    generate_js_files(js_files, js_output_dir, index_js_file)
+    {css_diagnostics, signatures} = generate_css_file(components, css_output_file, env)
+
+    maybe_wait_for_assets_to_rebuild(
+      css_output_file,
+      index_js_file,
+      wait_for_assets_timeout,
+      assets_depending_on_css_output,
+      assets_depending_on_hooks_output
+    )
+
     diagnostics = js_diagnostics ++ css_diagnostics
-    diagnostics |> Enum.reject(&is_nil/1)
+    {Enum.reject(diagnostics, &is_nil/1), signatures}
+  end
+
+  defp maybe_wait_for_assets_to_rebuild(css_output_file, index_js_file, timeout, css_files, js_files) do
+    if on_code_reload?() do
+      max_tries = Integer.floor_div(timeout, @wait_assets_delay)
+      wait_for_assets_to_rebuild(css_output_file, index_js_file, css_files, js_files, max_tries, max_tries)
+    end
+  end
+
+  defp wait_for_assets_to_rebuild(css_output_file, index_js_file, css_files, js_files, max_tries, n_tries) do
+    outdated_css_files = outdated_files(css_output_file, css_files)
+    outdated_js_files = outdated_files(index_js_file, js_files)
+
+    if outdated_css_files != [] or outdated_js_files != [] do
+      if n_tries == max_tries do
+        Logger.info("Waiting for assets to be rebuilt...")
+      end
+
+      if n_tries > 0 do
+        Process.sleep(@wait_assets_delay)
+
+        wait_for_assets_to_rebuild(
+          css_output_file,
+          index_js_file,
+          outdated_css_files,
+          outdated_js_files,
+          max_tries,
+          n_tries - 1
+        )
+      else
+        files = Enum.map_join(outdated_css_files ++ outdated_js_files, "\n", &"  * #{&1}")
+
+        message = """
+        the following assets were not rebuilt:
+
+        #{files}
+
+        Make sure you have your phoenix watchers properly set up for development so those assets \
+        are rebuilt on code changes, otherwise they may be outdated after code reloading.
+
+        If you don't want the surface compiler to wait for assets during development, remove the \
+        files from the :assets_depending_on_css_output and :assets_depending_on_hooks_output options in \
+        your surface's compiler config.
+        """
+
+        Logger.warn(message)
+      end
+    end
+  end
+
+  defp outdated_files(source_file, files) do
+    if File.exists?(source_file) do
+      Enum.filter(files, fn file -> file_outdated?(source_file, file) end)
+    else
+      []
+    end
+  end
+
+  defp file_outdated?(source_file, dest_file) do
+    with {:ok, %File.Stat{mtime: source_time}} <- File.stat(source_file),
+         {:ok, %File.Stat{mtime: dest_time}} <- File.stat(dest_file) do
+      dest_time < source_time
+    else
+      _ -> true
+    end
+  end
+
+  defp on_code_reload? do
+    Process.whereis(Phoenix.CodeReloader.Server) != nil
   end
 
   defp generate_css_file(components, css_output_file, env) do
@@ -29,19 +122,29 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
-    {content, _, diagnostics} =
+    # TODO: after implementing scoped styles per file (instead of per module), if on_code_reload?,
+    # re-read the css file so we don't need to introspect the module.
+    {content, _, diagnostics, signatures} =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          {func, %{css: css, scope_id: scope_id, vars: vars}} = func_style <- mod.__style__(),
-          reduce: {"", nil, []} do
-        {content, last_mod_func_style, diagnostics} ->
+          {func, %{css: css, scope_id: scope_id, vars: vars, file: file} = style} = func_style <- mod.__style__(),
+          reduce: {"", nil, [], %{}} do
+        {content, last_mod_func_style, diagnostics, signatures} ->
           css = String.trim_leading(css, "\n")
           component_header = [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
+
+          signatures =
+            if Path.extname(file) == ".css" and not Map.has_key?(signatures, file) do
+              Map.put(signatures, file, Surface.Compiler.CSSTranslator.structure_signature(style))
+            else
+              signatures
+            end
 
           {
             ["\n/* ", component_header, " */\n\n", vars_comment(vars, env), css | content],
             {mod, func_style},
-            validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics
+            validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics,
+            signatures
           }
       end
 
@@ -52,13 +155,10 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       File.write!(dest_file, content)
     end
 
-    diagnostics
+    {diagnostics, signatures}
   end
 
-  defp generate_js_files(js_files, hooks_output_dir) do
-    js_output_dir = Path.join([File.cwd!(), hooks_output_dir])
-    index_file = Path.join([js_output_dir, "index.js"])
-
+  defp generate_js_files(js_files, js_output_dir, index_file) do
     File.mkdir_p!(js_output_dir)
 
     unused_hooks_files = delete_unused_hooks_files!(js_output_dir, js_files)

@@ -1,7 +1,8 @@
 defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
   use ExUnit.Case, async: false
+  import ExUnit.CaptureLog
 
-  import Mix.Tasks.Compile.Surface.AssetGenerator
+  # import Mix.Tasks.Compile.Surface.AssetGenerator
   import Surface.Compiler.CSSTranslator, only: [scope_id: 2, scope_attr: 2, var_name: 2]
   alias Mix.Task.Compiler.Diagnostic
   alias Mix.Tasks.Compile.SurfaceTest.FakeButton
@@ -271,6 +272,90 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     refute File.exists?(@link_dest_hooks_file)
   end
 
+  test "don't wait for assets if the :code_reload option is not defined", %{opts: opts} do
+    output =
+      capture_log(fn ->
+        assert run(@components, opts) == []
+      end)
+
+    refute output =~ "Waiting"
+  end
+
+  test "wait for assets in :assets_depending_on_css_output", %{opts: opts} do
+    code_reload_opts = [
+      code_reload: [
+        assets_depending_on_css_output: ["tmp/fake_app_bundle.css"]
+      ]
+    ]
+
+    spawn(fn ->
+      Process.sleep(80)
+      File.write!("tmp/fake_app_bundle.css", "fake")
+    end)
+
+    output =
+      capture_log(fn ->
+        {time, []} = run_time(fn -> run(@components, code_reload_opts ++ opts) end)
+        assert time > 80
+      end)
+
+    assert output =~ "Waiting for assets to be rebuilt..."
+  end
+
+  test "wait for assets in :assets_depending_on_hooks_output", %{opts: opts} do
+    code_reload_opts = [
+      code_reload: [
+        assets_depending_on_hooks_output: ["tmp/fake_app_bundle.js"]
+      ]
+    ]
+
+    spawn(fn ->
+      Process.sleep(80)
+      File.write!("tmp/fake_app_bundle.js", "fake")
+    end)
+
+    output =
+      capture_log(fn ->
+        {time, []} = run_time(fn -> run(@components, code_reload_opts ++ opts) end)
+        assert time > 80
+      end)
+
+    assert output =~ "Waiting for assets to be rebuilt..."
+  end
+
+  test "warn on assets build timeout", %{opts: opts} do
+    File.rm("tmp/fake_app_bundle.css")
+    File.rm("tmp/fake_app_bundle.js")
+
+    code_reload_opts = [
+      code_reload: [
+        wait_for_assets_timeout: 1,
+        assets_depending_on_css_output: ["tmp/fake_app_bundle.css"],
+        assets_depending_on_hooks_output: ["tmp/fake_app_bundle.js"]
+      ]
+    ]
+
+    output =
+      capture_log(fn ->
+        assert run(@components, code_reload_opts ++ opts) == []
+      end)
+
+    assert output =~ """
+           [warning] the following assets were not rebuilt:
+
+             * tmp/fake_app_bundle.css
+             * tmp/fake_app_bundle.js
+
+           Make sure you have your phoenix watchers properly set up for development \
+           so those assets are rebuilt on code changes, otherwise they may be outdated \
+           after code reloading.
+
+           If you don't want the surface compiler to wait for assets during development, \
+           remove the files from the :assets_depending_on_css_output and :assets_depending_on_hooks_output \
+           options in your surface's compiler config.
+           """
+  end
+
   test "returns diagnostic if component has more then 1 hook and uses the first one", %{opts: opts} do
     File.write!(@other_link_src_hooks_file, @link_src_hooks_file_content)
     refute File.exists?(@hooks_output_dir)
@@ -350,5 +435,15 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     fun.()
     new_contents = Enum.map(files, &File.read!/1)
     old_contents |> Enum.zip(new_contents) |> Enum.map(fn {old, new} -> old != new end)
+  end
+
+  defp run(components, opts) do
+    {diagnostics, _signatures} = Mix.Tasks.Compile.Surface.AssetGenerator.run(components, opts)
+    diagnostics
+  end
+
+  defp run_time(fun) do
+    {time, result} = :timer.tc(fun)
+    {time / 1_000, result}
   end
 end

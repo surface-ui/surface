@@ -318,4 +318,33 @@ defmodule Surface.Compiler.CSSTranslatorTest do
       assert CSSTranslator.scope_attr(MyLib.MyButton, :func) == "s-f7bnv"
     end
   end
+
+  describe "structure_signature/1" do
+    test "generate a unique signature for the style data structure" do
+      css = """
+      /* padding: s-bind(padding); */
+
+      .root {
+        --custom-color: s-bind('@css.background');
+      }
+
+      .a:has(> img) > b[class="btn"], c {
+        padding: s-bind('@padding');
+      }
+
+      @media screen and (min-width: 1216px) {
+        .blog{display:block;}
+      }
+
+      @tailwind utilities;
+      """
+
+      sig =
+        css
+        |> CSSTranslator.translate!(scope_id: "myscope", scope_attr_prefix: "data-s-")
+        |> CSSTranslator.structure_signature()
+
+      assert sig == "dcfb1a5616443b1079d7e5e53cada8fe"
+    end
+  end
 end

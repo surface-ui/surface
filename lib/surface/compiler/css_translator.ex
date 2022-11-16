@@ -13,6 +13,37 @@ defmodule Surface.Compiler.CSSTranslator do
   @scope_id_length 5
   @var_name_length 5
 
+  def structure_signature(style) do
+    %{
+      vars: vars,
+      requires_data_attrs_on_root: requires_data_attrs_on_root,
+      selectors: %{
+        classes: classes,
+        combined: combined,
+        elements: elements,
+        ids: ids,
+        other: other
+      }
+    } = style
+
+    [
+      {:requires_data_attrs_on_root, requires_data_attrs_on_root},
+      {:expressions, vars |> Map.values() |> Enum.sort()},
+      {:classes, Enum.sort(classes)},
+      {:combined, Enum.sort(combined)},
+      {:elements, Enum.sort(elements)},
+      {:ids, Enum.sort(ids)},
+      {:other, Enum.sort(other)}
+    ]
+    |> :erlang.term_to_binary()
+    |> hash()
+    |> Base.encode16(case: :lower)
+  end
+
+  defp hash(bin) do
+    :crypto.hash(:md5, bin)
+  end
+
   def scope_attr(component, func) do
     @scope_attr_prefix <> scope_id(component, func)
   end
