@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @moduledoc false
 
   alias Mix.Task.Compiler.Diagnostic
+  alias Surface.Compiler.CSSTranslator
   require Logger
 
   @env Mix.env()
@@ -122,26 +123,28 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
-    # TODO: after implementing scoped styles per file (instead of per module), if on_code_reload?,
-    # re-read the css file so we don't need to introspect the module.
+    on_code_reload? = on_code_reload?()
+    # TODO: only re-read the file if on_code_reload? and the module belongs to the app.
     {content, _, diagnostics, signatures} =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          {func, %{css: css, scope_id: scope_id, vars: vars, file: file} = style} = func_style <- mod.__style__(),
+          {_func, %{vars: vars, file: file} = style} = func_style <- mod.__style__(),
           reduce: {"", nil, [], %{}} do
         {content, last_mod_func_style, diagnostics, signatures} ->
-          css = String.trim_leading(css, "\n")
-          component_header = [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
+          css =
+            style
+            |> get_css(mod, on_code_reload?)
+            |> String.trim_leading("\n")
 
           signatures =
             if Path.extname(file) == ".css" and not Map.has_key?(signatures, file) do
-              Map.put(signatures, file, Surface.Compiler.CSSTranslator.structure_signature(style))
+              Map.put(signatures, file, CSSTranslator.structure_signature(style))
             else
               signatures
             end
 
           {
-            ["\n/* ", component_header, " */\n\n", vars_comment(vars, env), css | content],
+            ["\n/* ", scope_header(mod, func_style), " */\n\n", vars_comment(vars, env), css | content],
             {mod, func_style},
             validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics,
             signatures
@@ -156,6 +159,26 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     end
 
     {diagnostics, signatures}
+  end
+
+  defp get_css(%{css: css, inline?: inline?}, _module, on_code_reload?)
+       when inline? or not on_code_reload? do
+    css
+  end
+
+  defp get_css(%{file: file}, module, _on_code_reload?) do
+    file
+    |> File.read!()
+    |> CSSTranslator.translate!(file: file, line: 1, scope: module)
+    |> Map.get(:css)
+  end
+
+  defp scope_header(mod, {:__file__, %{scope_id: scope_id}}) do
+    [inspect(mod), " (", scope_id, ")"]
+  end
+
+  defp scope_header(mod, {func, %{scope_id: scope_id}}) do
+    [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
   end
 
   defp generate_js_files(js_files, js_output_dir, index_file) do

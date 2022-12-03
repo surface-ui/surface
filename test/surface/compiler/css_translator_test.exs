@@ -24,7 +24,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors, vars: vars} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     css_background_var = var_name("myscope", "@css.background")
     padding_var = var_name("myscope", "@padding")
@@ -67,7 +67,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            div[data-s-myscope].blog[data-s-myscope]:first-child { display: block }
@@ -86,7 +86,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            :fake(div, 'whatever') {
@@ -111,7 +111,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert selectors.classes == MapSet.new(["a", "c"])
 
@@ -142,7 +142,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            [s-self][data-s-myscope] div > .link {
@@ -189,7 +189,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert selectors.classes == MapSet.new(["a", "c", "e"])
 
@@ -222,7 +222,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            .a[data-s-myscope][title="foo"]:first-child.b[data-s-myscope][title="bar"]:hover { display: block }
@@ -240,7 +240,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            .test[data-s-myscope] {
@@ -259,7 +259,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            .Input[data-s-myscope] [data-input] {
@@ -282,7 +282,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
     """
 
     %{css: translated, selectors: selectors} =
-      CSSTranslator.translate!(css, scope_id: "myscope", scope_attr_prefix: "data-s-")
+      CSSTranslator.translate!(css, scope: "myscope", scope_attr_prefix: "data-s-")
 
     assert translated == """
            a[data-s-myscope] .external-link[data-s-myscope] {
@@ -341,7 +341,7 @@ defmodule Surface.Compiler.CSSTranslatorTest do
 
       sig =
         css
-        |> CSSTranslator.translate!(scope_id: "myscope", scope_attr_prefix: "data-s-")
+        |> CSSTranslator.translate!(scope: "myscope", scope_attr_prefix: "data-s-")
         |> CSSTranslator.structure_signature()
 
       assert sig == "dcfb1a5616443b1079d7e5e53cada8fe"

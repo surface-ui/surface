@@ -1560,11 +1560,11 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp maybe_transform_ast(nodes, %CompileMeta{style: style}) do
+  defp maybe_transform_ast(nodes, %CompileMeta{style: style, caller: caller}) do
     Enum.map(nodes, fn node ->
       node
       |> maybe_add_data_s_attrs_to_root_node(style)
-      |> maybe_add_or_update_style_attr_of_root_node(style)
+      |> maybe_add_or_update_style_attr_of_root_node(style, caller.function)
       |> maybe_add_caller_scope_id_attr_to_root_node(style)
     end)
   end
@@ -1608,9 +1608,10 @@ defmodule Surface.Compiler do
 
   defp maybe_add_or_update_style_attr_of_root_node(
          %AST.Tag{attributes: attributes, meta: meta} = node,
-         %{vars: vars} = style
+         %{vars: vars, inline?: inline?} = style,
+         func
        )
-       when vars != %{} do
+       when vars != %{} and (func == {:render, 1} or inline?) do
     %{file: file} = style
 
     vars_ast =
@@ -1643,7 +1644,7 @@ defmodule Surface.Compiler do
     %AST.Tag{node | attributes: updated_attrs}
   end
 
-  defp maybe_add_or_update_style_attr_of_root_node(node, _style) do
+  defp maybe_add_or_update_style_attr_of_root_node(node, _style, _func) do
     node
   end
 
@@ -1766,10 +1767,10 @@ defmodule Surface.Compiler do
       content
       |> to_string()
       |> CSSTranslator.translate!(
-        module: caller.module,
-        func: elem(caller.function, 0),
         line: line,
-        file: opts[:file]
+        file: opts[:file],
+        inline?: true,
+        scope: {caller.module, elem(caller.function, 0)}
       )
 
     if not Module.has_attribute?(caller.module, :__style__) do
@@ -1786,7 +1787,7 @@ defmodule Surface.Compiler do
       if Module.open?(caller.module) && caller.function do
         caller.module
         |> Helpers.get_module_attribute(:__style__, [])
-        |> Keyword.get(elem(caller.function, 0))
+        |> Keyword.get(:__file__)
       end
 
     {style, tokens}

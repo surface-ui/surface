@@ -26,6 +26,8 @@ defmodule Surface.BaseComponent do
     {Surface.Components.Form.Inputs, :render} => true
   }
 
+  alias Surface.Compiler.CSSTranslator
+
   defmacro __using__(opts) do
     type = Keyword.fetch!(opts, :type)
 
@@ -39,14 +41,9 @@ defmodule Surface.BaseComponent do
       style =
         css_file
         |> File.read!()
-        |> Surface.Compiler.CSSTranslator.translate!(
-          module: __CALLER__.module,
-          func: :render,
-          file: css_file,
-          line: 1
-        )
+        |> CSSTranslator.translate!(file: css_file,line: 1,scope: __CALLER__.module)
 
-      Module.put_attribute(__CALLER__.module, :__style__, {:render, style})
+      Module.put_attribute(__CALLER__.module, :__style__, {:__file__, style})
     end
 
     quote do
