@@ -42,7 +42,7 @@ defmodule Surface.Components.Form.CheckboxTest do
 
     assert html =~ """
            <form action="#" method="post">
-               <input name="_csrf_token" type="hidden" value="test">
+               <input name="_csrf_token" type="hidden" hidden value="test">
              <input name="user[admin]" type="hidden" value="false">\
            <input id="user_admin" name="user[admin]" type="checkbox" value="true">
            </form>

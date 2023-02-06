@@ -42,7 +42,7 @@ defmodule Surface.Components.Form.FileInputTest do
 
     assert html =~ """
            <form enctype="multipart/form-data" action="#" method="post">
-               <input name="_csrf_token" type="hidden" value="test">
+               <input name="_csrf_token" type="hidden" hidden value="test">
              <input id="user_picture" name="user[picture]" type="file">
            </form>
            """
