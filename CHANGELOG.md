@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.2 (2023-02-06)
+
+  * Compatibility with Liveview >= `v0.18.5`
+  * Optimize static props for diff tracking
+  * Fix child components' root DOM element not belonging to the parent's scope (#670)
+  * Fix missing shortdoc on `surface.init` prevents task discovery from `mix help` (#666)
+
 ## v0.9.1 (2022-09-26)
 
   * Fix dialyzer errors
