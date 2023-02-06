@@ -114,7 +114,7 @@ defmodule Surface.Components.FormTest do
     {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
 
     assert html =~ """
-           <form action="#" method="post">\
+           <form action="#" method="post" errors="">\
            <input name="_csrf_token" type="hidden" value="test"/>\
            <input id="user_name" name="user[name]" type="text" value="myname"/>\
            </form>\

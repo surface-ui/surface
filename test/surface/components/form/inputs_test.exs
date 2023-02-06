@@ -66,7 +66,7 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post">
+           <form action="#" method="post" errors="">
                <input name="_csrf_token" type="hidden" value="test">
                <div>index: <span>0</span></div>
                <div>index: <span>1</span></div>
