@@ -281,6 +281,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -311,6 +312,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -346,6 +348,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -376,6 +379,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -406,6 +410,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -436,6 +441,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -470,6 +476,7 @@ defmodule Surface.Compiler.EExEngine do
         {__MODULE__, __ENV__.function, __ENV__.file, unquote(meta.line)}
       )
     end
+    |> tag_slots(component)
     |> maybe_print_expression(component)
   end
 
@@ -1412,5 +1419,21 @@ defmodule Surface.Compiler.EExEngine do
   defp get_propagate_context_to_slots_map(caller) do
     Module.get_attribute(caller.module, :propagate_context_to_slots_map) ||
       Surface.BaseComponent.build_propagate_context_to_slots_map()
+  end
+
+  defp tag_slots({call, meta, args}, %AST.FunctionComponent{slot_entries: slot_entries}) do
+    slots =
+      Enum.map(slot_entries, fn
+        {:default, _} -> :inner_block
+        {name, _} -> name
+      end)
+
+    {call, [slots: slots] ++ meta, args}
+  end
+
+  defp tag_slots({call, meta, args}, %{slot_entries: slot_entries}) do
+    slots = Enum.map(slot_entries, fn {name, _} -> name end)
+
+    {call, [slots: slots] ++ meta, args}
   end
 end
