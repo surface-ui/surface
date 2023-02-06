@@ -824,7 +824,7 @@ defmodule Surface.Components.ContextTest do
 
       assert html =~ """
              <form action="#" method="post">
-                 <input name="_csrf_token" type="hidden" value="test">
+                 <input name="_csrf_token" type="hidden" hidden value="test">
                <div>
                  <input id="parent_children_name" name="parent[children][name]" type="text">
              </div>

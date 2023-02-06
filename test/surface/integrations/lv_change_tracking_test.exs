@@ -21,7 +21,7 @@ defmodule Surface.LVChangeTrackingTest do
 
     comp = fn assigns ->
       ~H"""
-      <.wrapper let={_arg}>
+      <.wrapper :let={_arg}>
         <%= @some_assign %>
         <.inner label="INNER WITH ARG" content={@other_assign}/>
       </.wrapper>
@@ -46,7 +46,7 @@ defmodule Surface.LVChangeTrackingTest do
     comp = fn assigns ->
       ~H"""
       <%= @some_assign %>
-      <.wrapper let={arg}>
+      <.wrapper :let={arg}>
         <.inner label="INNER WITH ARG" content={arg}/>
       </.wrapper>
       """
@@ -69,7 +69,7 @@ defmodule Surface.LVChangeTrackingTest do
 
     comp = fn assigns ->
       ~H"""
-      <.wrapper let={arg}>
+      <.wrapper :let={arg}>
         <%= @some_assign %>
         <.inner label="INNER WITH ARG" content={arg}/>
       </.wrapper>
@@ -93,7 +93,7 @@ defmodule Surface.LVChangeTrackingTest do
 
     comp = fn assigns ->
       ~H"""
-      <.wrapper let={arg}>
+      <.wrapper :let={arg}>
         <.inner label="INNER WITH AS SIGN" content={@some_assign}/>
         <.inner label="INNER WITH ARG" content={arg}/>
       </.wrapper>

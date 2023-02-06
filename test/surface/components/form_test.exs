@@ -60,7 +60,7 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ """
            <form action="#" method="post">
-               <input name="_csrf_token" type="hidden" value="test">
+               <input name="_csrf_token" type="hidden" hidden value="test">
            </form>
            """
   end
@@ -77,7 +77,7 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ """
            <form action="#" method="post">
-               <input name="_csrf_token" type="hidden" value="test">
+               <input name="_csrf_token" type="hidden" hidden value="test">
              <input id="user_name" name="user[name]" type="text">
            </form>
            """
@@ -95,7 +95,7 @@ defmodule Surface.Components.FormTest do
 
     assert html =~ """
            <form action="#" method="post">
-               <input name="_csrf_token" type="hidden" value="test">
+               <input name="_csrf_token" type="hidden" hidden value="test">
              <input id="user_name" name="user[name]" type="text">
            </form>
            """
@@ -114,8 +114,8 @@ defmodule Surface.Components.FormTest do
     {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
 
     assert html =~ """
-           <form action="#" method="post">\
-           <input name="_csrf_token" type="hidden" value="test"/>\
+           <form action="#" method="post" errors="">\
+           <input name="_csrf_token" type="hidden" hidden="hidden" value="test"/>\
            <input id="user_name" name="user[name]" type="text" value="myname"/>\
            </form>\
            """
@@ -159,7 +159,7 @@ defmodule Surface.Components.FormTest do
         """
       end
 
-    assert html =~ ~s(<input name="_method" type="hidden" value="put">)
+    assert html =~ ~s(<input name="_method" type="hidden" hidden value="put">)
   end
 
   test "form generates method input for changeset", %{conn: conn} do
@@ -172,7 +172,7 @@ defmodule Surface.Components.FormTest do
 
     {:ok, _view, html} = live_isolated(conn, ViewWithFormWithMethodPut, session: assigns)
 
-    assert html =~ ~s(><input name="_method" type="hidden" value="put"/>)
+    assert html =~ ~s(><input name="_method" type="hidden" hidden="hidden" value="put"/>)
   end
 
   test "setting the class" do
