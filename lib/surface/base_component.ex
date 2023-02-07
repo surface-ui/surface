@@ -40,13 +40,12 @@ defmodule Surface.BaseComponent do
         css_file
         |> File.read!()
         |> Surface.Compiler.CSSTranslator.translate!(
-          module: __CALLER__.module,
-          func: :render,
           file: css_file,
-          line: 1
+          line: 1,
+          scope: __CALLER__.module
         )
 
-      Module.put_attribute(__CALLER__.module, :__style__, {:render, style})
+      Module.put_attribute(__CALLER__.module, :__style__, {:__module__, style})
     end
 
     quote do

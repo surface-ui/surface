@@ -29,19 +29,17 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
-    {content, _, diagnostics} =
+    {content, diagnostics} =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          {func, %{css: css, scope_id: scope_id, vars: vars}} = func_style <- mod.__style__(),
-          reduce: {"", nil, []} do
-        {content, last_mod_func_style, diagnostics} ->
+          {_func, %{css: css, vars: vars}} = func_style <- mod.__style__(),
+          reduce: {"", []} do
+        {content, diagnostics} ->
           css = String.trim_leading(css, "\n")
-          component_header = [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
 
           {
-            ["\n/* ", component_header, " */\n\n", vars_comment(vars, env), css | content],
-            {mod, func_style},
-            validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics
+            ["\n/* ", scope_header(mod, func_style), " */\n\n", vars_comment(vars, env), css | content],
+            diagnostics
           }
       end
 
@@ -53,6 +51,14 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     end
 
     diagnostics
+  end
+
+  defp scope_header(mod, {:__module__, %{scope_id: scope_id}}) do
+    [inspect(mod), " (", scope_id, ")"]
+  end
+
+  defp scope_header(mod, {func, %{scope_id: scope_id}}) do
+    [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
   end
 
   defp generate_js_files(js_files, hooks_output_dir) do
@@ -207,22 +213,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       severity: :warning,
       compiler_name: "Surface"
     }
-  end
-
-  defp validate_multiple_styles({mod, {func, style}}, {mod, {func, other_style}}) do
-    position = "#{Path.relative_to_cwd(style.file)}:#{style.line}"
-
-    message = """
-    scoped CSS style already defined for #{inspect(mod)}.#{func}/1 at #{position}. \
-    Scoped styles must be defined either as the first <style> node in \
-    the template or in a colocated .css file.
-    """
-
-    [warning(message, other_style.file, other_style.line)]
-  end
-
-  defp validate_multiple_styles(_, _) do
-    []
   end
 
   defp vars_comment(vars, env) do

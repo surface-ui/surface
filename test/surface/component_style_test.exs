@@ -4,14 +4,17 @@ defmodule Surface.ComponentStyleTest do
   import Surface.Compiler.CSSTranslator,
     only: [
       scope_attr: 0,
+      scope_attr: 1,
       scope_attr: 2,
       scope_id: 0,
+      scope_id: 1,
       scope_id: 2,
       self_attr: 0,
       var_name: 2
     ]
 
   alias Mix.Tasks.Compile.SurfaceTest.FakeButton
+  alias Mix.Tasks.Compile.SurfaceTest.MultipleStyles
 
   test "colocated css file" do
     html =
@@ -21,12 +24,42 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    color_var = var_name(scope_id(FakeButton, :render), "@color")
+    color_var = var_name(scope_id(FakeButton), "@color")
 
     assert html =~ """
-           <button style="#{color_var}: red" #{scope_attr(FakeButton, :render)} class="btn">
+           <button style="#{color_var}: red" #{scope_attr(FakeButton)} class="btn">
              FAKE BUTTON
            </button>
+           """
+  end
+
+  test "function component without inline styles gets the file's scope and no style vars" do
+    html =
+      render_surface do
+        ~F"""
+        <FakeButton.func_without_inline_style/>
+        """
+      end
+
+    assert html =~ """
+           <button #{scope_attr(FakeButton)} class="btn">
+             FAKE BUTTON WITHOUT STYLE
+           </button>
+           """
+  end
+
+  test "the inline style is applied when both (inline and css file) are present" do
+    html =
+      render_surface do
+        ~F"""
+        <MultipleStyles/>
+        """
+      end
+
+    assert html =~ """
+           <div #{scope_attr(MultipleStyles, :render)} class="panel">
+           FAKE PANEL
+           </div>
            """
   end
 

@@ -13,12 +13,28 @@ defmodule Surface.Compiler.CSSTranslator do
   @scope_id_length 5
   @var_name_length 5
 
-  def scope_attr(component, func) do
-    @scope_attr_prefix <> scope_id(component, func)
+  def scope_attr(module) do
+    @scope_attr_prefix <> scope_id(module)
   end
 
-  def scope_id(component, func) do
-    hash("#{inspect(component)}.#{func}", @scope_id_length)
+  def scope_attr(module, func) do
+    @scope_attr_prefix <> scope_id(module, func)
+  end
+
+  def scope_id(scope) when is_binary(scope) do
+    scope
+  end
+
+  def scope_id({module, func}) do
+    scope_id(module, func)
+  end
+
+  def scope_id(module) do
+    hash(inspect(module), @scope_id_length)
+  end
+
+  def scope_id(module, func) do
+    hash("#{inspect(module)}.#{func}", @scope_id_length)
   end
 
   def var_name(scope, expr) do
@@ -46,12 +62,12 @@ defmodule Surface.Compiler.CSSTranslator do
   end
 
   def translate!(css, opts \\ []) do
-    module = Keyword.get(opts, :module)
-    func = Keyword.get(opts, :func)
-    scope_id = Keyword.get(opts, :scope_id) || scope_id(module, func)
+    scope = Keyword.fetch!(opts, :scope)
+    scope_id = scope_id(scope)
     scope_attr_prefix = Keyword.get(opts, :scope_attr_prefix) || @scope_attr_prefix
     file = Keyword.get(opts, :file)
     line = Keyword.get(opts, :line) || 1
+    inline? = Keyword.get(opts, :inline?, false)
     env = Keyword.get(opts, :env) || :dev
 
     state = %{
@@ -81,6 +97,7 @@ defmodule Surface.Compiler.CSSTranslator do
       scope_id: scope_id,
       file: file,
       line: line,
+      inline?: inline?,
       css: to_string(updated_tokens),
       selectors: state.selectors,
       vars: state.vars,
