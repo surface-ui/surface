@@ -66,8 +66,16 @@ defmodule Surface.Compiler do
     "wbr"
   ]
 
+  # TODO: Add all relevant information from the caller (when it's a component), e.g. props, data, style, etc.
+  # Make the compiler use this struct instead of calls to Surface.API.*(caller.module)
+  defmodule CallerSpec do
+    defstruct [:type]
+
+    @type t :: %__MODULE__{type: module()}
+  end
+
   defmodule CompileMeta do
-    defstruct [:line, :file, :caller, :checks, :variables, :module, :style]
+    defstruct [:line, :file, :caller, :checks, :variables, :module, :style, :caller_spec]
 
     @type t :: %__MODULE__{
             line: non_neg_integer(),
@@ -75,6 +83,7 @@ defmodule Surface.Compiler do
             caller: Macro.Env.t(),
             variables: keyword(),
             checks: Keyword.t(boolean()),
+            caller_spec: CallerSpec.t(),
             style: map()
           }
   end
@@ -112,7 +121,8 @@ defmodule Surface.Compiler do
       caller: caller,
       checks: opts[:checks] || [],
       variables: opts[:variables],
-      style: style
+      style: style,
+      caller_spec: opts[:caller_spec] || %CallerSpec{}
     }
 
     tokens
@@ -859,8 +869,10 @@ defmodule Surface.Compiler do
     node
   end
 
-  defp maybe_add_caller_scope_id_attr_to_root_node(%type{} = node, _style) when type in [AST.Tag, AST.VoidTag] do
-    is_caller_a_component? = !!Helpers.get_module_attribute(node.meta.caller.module, :component_type, nil)
+  defp maybe_add_caller_scope_id_attr_to_root_node(%type{} = node, _style, %CallerSpec{} = caller_spec)
+       when type in [AST.Tag, AST.VoidTag] do
+    is_caller_a_component? = caller_spec.type != nil
+
     # TODO: when support for `attr` is added, check for :css_class types instead
     function_component? = node.meta.caller.function != {:render, 1}
 
@@ -899,7 +911,7 @@ defmodule Surface.Compiler do
     %{node | attributes: attributes}
   end
 
-  defp maybe_add_caller_scope_id_attr_to_root_node(node, _style) do
+  defp maybe_add_caller_scope_id_attr_to_root_node(node, _style, _caller_spec) do
     node
   end
 
@@ -1560,12 +1572,12 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp maybe_transform_ast(nodes, %CompileMeta{style: style}) do
+  defp maybe_transform_ast(nodes, %CompileMeta{style: style, caller_spec: caller_spec}) do
     Enum.map(nodes, fn node ->
       node
       |> maybe_add_data_s_attrs_to_root_node(style)
       |> maybe_add_or_update_style_attr_of_root_node(style)
-      |> maybe_add_caller_scope_id_attr_to_root_node(style)
+      |> maybe_add_caller_scope_id_attr_to_root_node(style, caller_spec)
     end)
   end
 

@@ -207,6 +207,7 @@ defmodule Surface.Compiler.Helpers do
     end
   end
 
+  # TODO: remove this function and use the `caller_spec` field on the `CompileMeta` struct instead
   def get_module_attribute(module, key, default) do
     if Mix.env() == :test do
       # If the template is compiled directly in a test module, get_attribute might fail,

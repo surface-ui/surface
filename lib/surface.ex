@@ -109,13 +109,17 @@ defmodule Surface do
     indentation = meta[:indentation] || 0
     column = meta[:column] || 1
 
-    caller_is_surface_component =
-      Module.open?(__CALLER__.module) &&
-        Module.get_attribute(__CALLER__.module, :component_type) != nil
+    component_type =
+      if Module.open?(__CALLER__.module) do
+        Module.get_attribute(__CALLER__.module, :component_type)
+      end
+
+    caller_is_surface_component = component_type != nil
 
     string
     |> Surface.Compiler.compile(line, __CALLER__, __CALLER__.file,
       checks: [no_undefined_assigns: caller_is_surface_component],
+      caller_spec: %Surface.Compiler.CallerSpec{type: component_type},
       indentation: indentation,
       column: column
     )
@@ -131,7 +135,7 @@ defmodule Surface do
 
   The code must be passed with the `do` block using the `~F` sigil.
 
-  Optional `line` and `file` metadata can be passed using `opts`.
+  Optional `line`, `file` and `caller` metadata can be passed using `opts`.
 
   ## Example
 
@@ -161,10 +165,11 @@ defmodule Surface do
 
     line = Keyword.get(opts, :line, default_line)
     file = Keyword.get(opts, :file, __CALLER__.file)
+    caller = Keyword.get(opts, :caller, quote(do: __ENV__))
     indentation = Keyword.get(string_meta, :indentation, 0)
 
     quote do
-      Surface.Compiler.compile(unquote(code), unquote(line), __ENV__, unquote(file),
+      Surface.Compiler.compile(unquote(code), unquote(line), unquote(var!(caller)), unquote(file),
         checks: [no_undefined_assigns: false],
         indentation: unquote(indentation),
         column: 1,
