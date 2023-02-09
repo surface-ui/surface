@@ -14,6 +14,7 @@ defmodule Surface.ComponentStyleTest do
     ]
 
   alias Mix.Tasks.Compile.SurfaceTest.FakeButton
+  alias Mix.Tasks.Compile.SurfaceTest.FakeButtonWithVariant
   alias Mix.Tasks.Compile.SurfaceTest.MultipleStyles
 
   test "colocated css file" do
@@ -314,6 +315,18 @@ defmodule Surface.ComponentStyleTest do
     end
   end
 
+  defmodule UsingMyLinkWithVariant do
+    use Surface.Component
+
+    prop live, :boolean, css_variant: true
+
+    def render(assigns) do
+      ~F"""
+      <MyLink class="live:text-sm"/>
+      """
+    end
+  end
+
   defmodule MyLinkNotUsingClass do
     use Surface.Component
 
@@ -344,6 +357,32 @@ defmodule Surface.ComponentStyleTest do
       <a href="#" class={"a"}>caller_scope_id: {@__caller_scope_id__}</a>
       """
     end
+  end
+
+  test "don't inject caller's scope attribute if no style nor variants are defined" do
+    html =
+      render_surface do
+        ~F"""
+        <MyLink />
+        """
+      end
+
+    assert html =~ """
+           <a href="#" class="a">caller_scope_id: </a>
+           """
+  end
+
+  test "inject caller's scope attribute if variants are defined" do
+    html =
+      render_surface do
+        ~F"""
+        <UsingMyLinkWithVariant/>
+        """
+      end
+
+    assert html =~ """
+           <a #{scope_attr(UsingMyLinkWithVariant)} href="#" class="a">caller_scope_id: #{scope_id(UsingMyLinkWithVariant)}</a>
+           """
   end
 
   test "inject caller's scope attribute on the root nodes of a child components that define a :css_class prop and pass a class attr as expression" do
@@ -532,6 +571,25 @@ defmodule Surface.ComponentStyleTest do
 
     assert html == """
            <button #{scope_attr()} class="btn">OK</button>
+           """
+  end
+
+  test "if there are variants, add s-scope and data-[variant_name] to the root and s-scope to any children that may be using them" do
+    html =
+      render_surface do
+        ~F"""
+        <FakeButtonWithVariant prop_true={true} prop_false={false}/>
+        """
+      end
+
+    assert html =~ """
+           <button data-prop_true data-data_true #{scope_attr(FakeButtonWithVariant)}>
+             <span>no scope</span>
+             <span class="class-not-using-variants">no scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="data_true:text-xs">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="data_false:text-xs">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="dynamic">with scope</span>
+           </button>
            """
   end
 end

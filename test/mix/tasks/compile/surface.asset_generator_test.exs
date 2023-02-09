@@ -2,7 +2,10 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
   use ExUnit.Case, async: false
 
   import Mix.Tasks.Compile.Surface.AssetGenerator
-  import Surface.Compiler.CSSTranslator, only: [scope_id: 1, scope_id: 2, scope_attr: 1, scope_attr: 2, var_name: 2]
+
+  import Surface.Compiler.CSSTranslator,
+    only: [scope_id: 1, scope_id: 2, scope_attr: 1, scope_attr: 2, var_name: 2]
+
   alias Mix.Task.Compiler.Diagnostic
   alias Mix.Tasks.Compile.SurfaceTest.FakeButton
   alias Mix.Tasks.Compile.SurfaceTest.FakeLink

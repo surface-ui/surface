@@ -78,7 +78,7 @@ defmodule Surface.Compiler.CSSTranslator do
       env: env,
       vars: %{},
       selectors_buffer: [],
-      requires_data_attrs_on_root: false,
+      use_deep_at_the_beginning?: false,
       selectors: %{
         elements: MapSet.new(),
         classes: MapSet.new(),
@@ -101,7 +101,7 @@ defmodule Surface.Compiler.CSSTranslator do
       css: to_string(updated_tokens),
       selectors: state.selectors,
       vars: state.vars,
-      requires_data_attrs_on_root: state.requires_data_attrs_on_root
+      use_deep_at_the_beginning?: state.use_deep_at_the_beginning?
     }
   end
 
@@ -171,7 +171,7 @@ defmodule Surface.Compiler.CSSTranslator do
   # :deep as the first selector
   defp translate_selector_list([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
-    state = %{state | requires_data_attrs_on_root: true}
+    state = %{state | use_deep_at_the_beginning?: true}
     acc = [updated_tokens, "[#{@self_attr}][#{state.scope_attr_prefix}#{state.scope_id}] " | acc]
     translate_selector(rest, acc, state)
   end

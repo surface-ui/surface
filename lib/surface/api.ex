@@ -388,8 +388,16 @@ defmodule Surface.API do
     [:required, :root]
   end
 
+  defp get_valid_opts(:prop, :boolean, _opts) do
+    [:required, :default, :values, :values!, :accumulate, :root, :static, :from_context, :css_variant]
+  end
+
   defp get_valid_opts(:prop, _type, _opts) do
     [:required, :default, :values, :values!, :accumulate, :root, :static, :from_context]
+  end
+
+  defp get_valid_opts(:data, :boolean, _opts) do
+    [:default, :values, :values!, :from_context, :css_variant]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
@@ -452,6 +460,11 @@ defmodule Surface.API do
   defp validate_opt(_func, _name, _type, _opts, :required, value, _line, _env)
        when not is_boolean(value) do
     {:error, "invalid value for option :required. Expected a boolean, got: #{inspect(value)}"}
+  end
+
+  defp validate_opt(_func, _name, _type, _opts, :css_variant, value, _line, _env)
+       when not is_boolean(value) do
+    {:error, "invalid value for option :css_variant. Expected a boolean, got: #{inspect(value)}"}
   end
 
   defp validate_opt(_func, _name, _type, opts, :from_context, value, _line, env) do

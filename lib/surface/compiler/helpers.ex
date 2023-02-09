@@ -102,14 +102,15 @@ defmodule Surface.Compiler.Helpers do
     assigns
   end
 
-  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks, style: style}) do
+  def to_meta(tree_meta, %CompileMeta{caller: caller, checks: checks, style: style, caller_spec: caller_spec}) do
     %AST.Meta{
       line: tree_meta.line,
       column: tree_meta.column,
       file: tree_meta.file,
       caller: caller,
       checks: checks,
-      style: style
+      style: style,
+      caller_spec: caller_spec
     }
   end
 
@@ -209,17 +210,17 @@ defmodule Surface.Compiler.Helpers do
 
   # TODO: remove this function and use the `caller_spec` field on the `CompileMeta` struct instead
   def get_module_attribute(module, key, default) do
-    if Mix.env() == :test do
-      # If the template is compiled directly in a test module, get_attribute might fail,
-      # breaking some of the tests once in a while.
-      try do
-        Module.get_attribute(module, key, default)
-      rescue
-        _e in ArgumentError -> default
-      end
-    else
-      Module.get_attribute(module, key, default)
-    end
+    # if Mix.env() == :test do
+    #   # If the template is compiled directly in a test module, get_attribute might fail,
+    #   # breaking some of the tests once in a while.
+    #   try do
+    #     Module.get_attribute(module, key, default)
+    #   rescue
+    #     _e in ArgumentError -> default
+    #   end
+    # else
+    Module.get_attribute(module, key, default)
+    # end
   end
 
   def is_stateful_component(module) do

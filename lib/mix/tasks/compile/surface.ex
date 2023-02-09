@@ -27,11 +27,18 @@ defmodule Mix.Tasks.Compile.Surface do
   * `css_output_file` - defines the css file where the compiler generates the code.
     Default is `./assets/css/_components.css`.
 
+  * `enable_tailwind_variants` - instructs the compiler to generate tailwind variants based
+    on props/data. Default is `false`.
+
+  * `tailwind_variants_output_file` - defines the config file where the compiler generates the
+    scoped tailwind variants. Default is `./assets/css/_tailwind.variants.js`.
+
   ### Example
 
       config :surface, :compiler,
         hooks_output_dir: "assets/js/surface",
         css_output_file: "assets/css/surface.css"
+        enable_tailwind_variants: true
 
   """
 
@@ -45,6 +52,13 @@ defmodule Mix.Tasks.Compile.Surface do
     warnings_as_errors: :boolean
   ]
 
+  @assets_opts [
+    :hooks_output_dir,
+    :css_output_file,
+    :enable_tailwind_variants,
+    :tailwind_variants_output_file
+  ]
+
   @doc false
   def run(args) do
     # Do nothing if it's a dependency. We only have to run it once for the main project
@@ -53,7 +67,7 @@ defmodule Mix.Tasks.Compile.Surface do
     else
       {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
       opts = Application.get_env(:surface, :compiler, [])
-      asset_opts = Keyword.take(opts, [:hooks_output_dir, :css_output_file])
+      asset_opts = Keyword.take(opts, @assets_opts)
       asset_components = Surface.components()
       project_components = Surface.components(only_current_project: true)
 
