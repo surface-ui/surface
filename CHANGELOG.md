@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.3 (2023-02-09)
+
+  * Fix error when trying to add the caller's scope_id attr to a MacroComponent
+
 ## v0.9.2 (2023-02-06)
 
   * Compatibility with Liveview >= `v0.18.5`
