@@ -87,6 +87,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
             for spec <- specs, spec.opts[:css_variant] do
               """
                   plugin(({ addVariant }) => addVariant("#{spec.name}", ["&[#{scope_attr}][data-#{spec.name}]", "[#{scope_attr}][data-#{spec.name}] &[#{scope_attr}]"])),
+                  plugin(({ addVariant }) => addVariant("not-#{spec.name}", ["&[s-self][#{scope_attr}]:not([data-#{spec.name}])", "[s-self][#{scope_attr}]:not([data-#{spec.name}]) &[#{scope_attr}]"])),
               """
             end
 

@@ -574,7 +574,7 @@ defmodule Surface.ComponentStyleTest do
            """
   end
 
-  test "if there are variants, add s-scope and data-[variant_name] to the root and s-scope to any children that may be using them" do
+  test "if there are variants, add s-self, s-scope and data-[variant_name] to the root and s-scope to any children that may be using them" do
     html =
       render_surface do
         ~F"""
@@ -583,7 +583,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-prop_true data-data_true #{scope_attr(FakeButtonWithVariant)}>
+           <button data-prop_true data-data_true #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
              <span>no scope</span>
              <span class="class-not-using-variants">no scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="data_true:text-xs">with scope</span>

@@ -178,12 +178,15 @@ defmodule Surface.Compiler do
           to_string(spec.name)
         end
 
+      define_variants? = variants != []
+
       %CallerSpec{
         caller_spec
         | props: props,
           variants: variants,
-          requires_s_scope_on_root?: caller_spec.requires_s_scope_on_root? or variants != [],
-          has_style_or_variants?: caller_spec.has_style_or_variants? or variants != []
+          requires_s_self_on_root?: caller_spec.requires_s_self_on_root? or define_variants?,
+          requires_s_scope_on_root?: caller_spec.requires_s_scope_on_root? or define_variants?,
+          has_style_or_variants?: caller_spec.has_style_or_variants? or define_variants?
       }
     else
       caller_spec
