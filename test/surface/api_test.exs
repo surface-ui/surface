@@ -126,6 +126,34 @@ defmodule Surface.APITest do
     assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
   end
 
+  test "validate :css_variant type + options" do
+    # type :boolean
+    code = "prop field, :boolean, css_variant: true"
+    assert {:ok, _} = eval(code)
+    # type :list
+    code = "prop field, :list, css_variant: true"
+    assert {:ok, _} = eval(code)
+    # other type with :values
+    code = "prop field, :string, values: [:a, :b], css_variant: true"
+    assert {:ok, _} = eval(code)
+    # other type with :values!
+    code = "prop field, :string, values!: [:a, :b], css_variant: true"
+    assert {:ok, _} = eval(code)
+
+    # invalid value
+    code = "prop field, :string, css_variant: 123"
+    message = ~r/invalid value for option :css_variant. Expected a boolean, got: 123/
+    assert_raise(CompileError, message, fn -> eval(code) end)
+
+    # invalid type
+    code = "prop field, :string, css_variant: true"
+
+    message =
+      ~r/invalid use of :css_variant. Type must be either a :boolean, a :list or a type defining :values or :values!/
+
+    assert_raise(CompileError, message, fn -> eval(code) end)
+  end
+
   test "validate duplicate assigns" do
     code = """
     prop label, :string
@@ -365,7 +393,7 @@ defmodule Surface.APITest do
       code = "prop label, :string, a: 1"
 
       message =
-        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static, :from_context\]/
+        ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static, :from_context, :css_variant\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)
@@ -467,7 +495,9 @@ defmodule Surface.APITest do
 
     test "validate unknown type options" do
       code = "data label, :string, a: 1"
-      message = ~r/unknown option :a. Available options: \[:default, :values, :values!, :from_context\]/
+
+      message =
+        ~r/unknown option :a. Available options: \[:default, :values, :values!, :from_context, :css_variant\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

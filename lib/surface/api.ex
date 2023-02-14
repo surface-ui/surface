@@ -388,40 +388,12 @@ defmodule Surface.API do
     [:required, :root]
   end
 
-  defp get_valid_opts(:prop, :boolean, opts) do
-    [:css_variant | get_valid_opts(:prop, :any, opts)]
-  end
-
-  defp get_valid_opts(:prop, type, opts) when type in [:atom, :string] do
-    common_opts = get_valid_opts(:prop, :any, opts)
-
-    if opts[:values] || opts[:values!] do
-      [:css_variant | common_opts]
-    else
-      common_opts
-    end
-  end
-
   defp get_valid_opts(:prop, _type, _opts) do
-    [:required, :default, :values, :values!, :accumulate, :root, :static, :from_context]
-  end
-
-  defp get_valid_opts(:data, :boolean, opts) do
-    [:css_variant | get_valid_opts(:data, :any, opts)]
-  end
-
-  defp get_valid_opts(:data, type, opts) when type in [:boolean, :atom, :string] do
-    common_opts = get_valid_opts(:data, :any, opts)
-
-    if opts[:values] || opts[:values!] do
-      [:css_variant | common_opts]
-    else
-      common_opts
-    end
+    [:required, :default, :values, :values!, :accumulate, :root, :static, :from_context, :css_variant]
   end
 
   defp get_valid_opts(:data, _type, _opts) do
-    [:default, :values, :values!, :from_context]
+    [:default, :values, :values!, :from_context, :css_variant]
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
@@ -465,6 +437,20 @@ defmodule Surface.API do
 
   defp validate_opt_ast!(_func, _key, value, _caller) do
     value
+  end
+
+  defp validate_opt(_func, _name, type, opts, :css_variant, value, _line, _env) do
+    cond do
+      not is_boolean(value) ->
+        {:error, "invalid value for option :css_variant. Expected a boolean, got: #{inspect(value)}"}
+
+      type not in [:boolean, :list] and (!opts[:values] and !opts[:values!]) ->
+        {:error,
+         "invalid use of :css_variant. Type must be either a :boolean, a :list or a type defining :values or :values!"}
+
+      true ->
+        :ok
+    end
   end
 
   defp validate_opt(:prop, _name, _type, _opts, :root, value, _line, _env)
