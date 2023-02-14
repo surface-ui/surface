@@ -53,7 +53,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" csrf_token="test">
+        <Form for={%{}} as={:user} action="#" csrf_token="test">
         </Form>
         """
       end
@@ -69,7 +69,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" csrf_token="test">
+        <Form for={%{}} as={:user} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
         """
@@ -87,7 +87,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" csrf_token="test">
+        <Form for={%{}} as={:user} action="#" csrf_token="test">
           <TextInput field="name" />
         </Form>
         """
@@ -114,7 +114,7 @@ defmodule Surface.Components.FormTest do
     {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
 
     assert html =~ """
-           <form action="#" method="post" errors="">\
+           <form action="#" method="post">\
            <input name="_csrf_token" type="hidden" hidden="hidden" value="test"/>\
            <input id="user_name" name="user[name]" type="text" value="myname"/>\
            </form>\
@@ -125,7 +125,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" change="change" submit="submit" auto_recover="recover">
+        <Form for={%{}} as={:user} action="#" change="change" submit="submit" auto_recover="recover">
         </Form>
         """
       end
@@ -154,7 +154,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" method="put" csrf_token="test">
+        <Form for={%{}} as={:user} action="#" method="put" csrf_token="test">
         </Form>
         """
       end
@@ -179,7 +179,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" class="form">
+        <Form for={%{}} as={:user} action="#" class="form">
         </Form>
         """
       end
@@ -191,7 +191,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" class="form form-user">
+        <Form for={%{}} as={:user} action="#" class="form form-user">
         </Form>
         """
       end
@@ -203,7 +203,7 @@ defmodule Surface.Components.FormTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} action="#" class={"form", "form-user": true}>
+        <Form for={%{}} as={:user} action="#" class={"form", "form-user": true}>
         </Form>
         """
       end
@@ -212,10 +212,10 @@ defmodule Surface.Components.FormTest do
   end
 
   test "setting the trigger_action" do
-    html = render_surface(do: ~F[<Form for={:user} />])
+    html = render_surface(do: ~F[<Form for={%{}} as={:user} />])
     refute html =~ ~r/phx-trigger-action/
 
-    html = render_surface(do: ~F[<Form for={:user} trigger_action={true} />])
+    html = render_surface(do: ~F[<Form for={%{}} as={:user} trigger_action={true} />])
     assert html =~ ~r/phx-trigger-action/
   end
 end
@@ -230,7 +230,7 @@ defmodule Surface.Components.Form.FormTestConfigTest do
       html =
         render_surface do
           ~F"""
-          <Form for={:user} action="#" />
+          <Form for={%{}} as={:user} action="#" />
           """
         end
 

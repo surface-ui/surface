@@ -108,7 +108,7 @@ defmodule Surface.Components.Form.ErrorTagTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user}>
+        <Form for={%{}} as={:user}>
           <Field name={:name}>
             <ErrorTag />
           </Field>

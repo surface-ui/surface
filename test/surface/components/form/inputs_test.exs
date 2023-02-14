@@ -33,7 +33,7 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:parent} opts={csrf_token: "test"}>
+        <Form for={%{}} as={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children} :let={form: f}>
             <TextInput form={f} field="name" />
             <TextInput form={f} field="email" />
@@ -66,7 +66,7 @@ defmodule Surface.Components.Form.InputsTest do
       end
 
     assert html =~ """
-           <form action="#" method="post" errors="">
+           <form action="#" method="post">
                <input name="_csrf_token" type="hidden" hidden value="test">
                <div>index: <span>0</span></div>
                <div>index: <span>1</span></div>
@@ -78,7 +78,7 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:parent} opts={csrf_token: "test"}>
+        <Form for={%{}} as={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children}>
             <TextInput field="name" />
             <TextInput field="email" />
@@ -100,7 +100,7 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:parent} opts={csrf_token: "test"}>
+        <Form for={%{}} as={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children} opts={as: "custom_name"}>
             <TextInput field="name" />
             <TextInput field="email" />
@@ -122,7 +122,7 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:parent} opts={csrf_token: "test"}>
+        <Form for={%{}} as={:parent} opts={csrf_token: "test"}>
           <Field name={:children}>
             <Inputs>
               <TextInput field="name" />
@@ -148,7 +148,7 @@ defmodule Surface.Components.Form.InputsTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:parent} opts={csrf_token: "test"}>
+        <Form for={%{}} as={:parent} opts={csrf_token: "test"}>
           <Inputs for="children">
             <TextInput field="name" />
             <TextInput field="email" />

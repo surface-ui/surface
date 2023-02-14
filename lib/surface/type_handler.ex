@@ -177,7 +177,7 @@ defmodule Surface.TypeHandler do
         {:ok, [~S( ), to_string(name)]}
 
       {:ok, val} ->
-        {:ok, Phoenix.HTML.Tag.attributes_escape([{name, val}])}
+        {:ok, Phoenix.HTML.attributes_escape([{name, val}])}
 
       {:error, message} ->
         {:error, message}

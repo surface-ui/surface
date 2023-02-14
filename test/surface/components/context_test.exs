@@ -816,7 +816,7 @@ defmodule Surface.Components.ContextTest do
       html =
         render_surface do
           ~F"""
-          <Form for={:parent} opts={csrf_token: "test"}>
+          <Form for={%{}} as={:parent} opts={csrf_token: "test"}>
             <InputsWithNestedField/>
           </Form>
           """

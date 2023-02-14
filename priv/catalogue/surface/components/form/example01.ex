@@ -11,7 +11,7 @@ defmodule Surface.Components.Form.Example01 do
 
   def render(assigns) do
     ~F"""
-    <Form for={:user} change="change" submit="submit" opts={autocomplete: "off"}>
+    <Form for={%{}} as={:user} change="change" submit="submit" opts={autocomplete: "off"}>
       <Field class="field" name="name">
         <Label class="label"/>
         <div class="control">

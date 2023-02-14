@@ -23,7 +23,7 @@ defmodule Surface.Components.Form.DateTimeSelectTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user}>
+        <Form for={%{}} as={:user}>
           <DateTimeSelect field={:born_at} />
         </Form>
         """
