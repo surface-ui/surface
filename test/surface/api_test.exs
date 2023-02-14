@@ -130,13 +130,16 @@ defmodule Surface.APITest do
     # type :boolean
     code = "prop field, :boolean, css_variant: true"
     assert {:ok, _} = eval(code)
+
     # type :list
     code = "prop field, :list, css_variant: true"
     assert {:ok, _} = eval(code)
-    # other type with :values
+
+    # other types with :values
     code = "prop field, :string, values: [:a, :b], css_variant: true"
     assert {:ok, _} = eval(code)
-    # other type with :values!
+
+    # other types with :values!
     code = "prop field, :string, values!: [:a, :b], css_variant: true"
     assert {:ok, _} = eval(code)
 

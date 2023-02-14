@@ -165,7 +165,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     assert get_mtime(@css_output_file) == mtime
   end
 
-  test "generate variant file and add header comment", %{opts: opts} do
+  test "generate variants file and add header comment", %{opts: opts} do
     refute File.exists?(@variants_output_file)
 
     assert run(@components ++ [FakeButtonWithVariant], opts) == []
@@ -191,6 +191,15 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
                /* prop prop_values */
                plugin(({ addVariant }) => addVariant('prop-values-on', ['&[#{s_attr}][data-prop-values="on"]', '[#{s_attr}][data-prop-values="on"] &[#{s_attr}]'])),
                plugin(({ addVariant }) => addVariant('prop-values-off', ['&[#{s_attr}][data-prop-values="off"]', '[#{s_attr}][data-prop-values="off"] &[#{s_attr}]'])),
+               /* data nil_items */
+               plugin(({ addVariant }) => addVariant('has-nil-items', ['&[#{s_attr}][data-nil-items]', '[#{s_attr}][data-nil-items] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('no-nil-items', ['&[s-self][#{s_attr}]:not([data-nil-items])', '[s-self][#{s_attr}]:not([data-nil-items]) &[#{s_attr}]'])),
+               /* data empty_items */
+               plugin(({ addVariant }) => addVariant('has-empty-items', ['&[#{s_attr}][data-empty-items]', '[#{s_attr}][data-empty-items] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('no-empty-items', ['&[s-self][#{s_attr}]:not([data-empty-items])', '[s-self][#{s_attr}]:not([data-empty-items]) &[#{s_attr}]'])),
+               /* data items */
+               plugin(({ addVariant }) => addVariant('has-items', ['&[#{s_attr}][data-items]', '[#{s_attr}][data-items] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('no-items', ['&[s-self][#{s_attr}]:not([data-items])', '[s-self][#{s_attr}]:not([data-items]) &[#{s_attr}]'])),
                /* data data_values! */
                plugin(({ addVariant }) => addVariant('data-values-small', ['&[#{s_attr}][data-data-values="small"]', '[#{s_attr}][data-data-values="small"] &[#{s_attr}]'])),
                plugin(({ addVariant }) => addVariant('data-values-large', ['&[#{s_attr}][data-data-values="large"]', '[#{s_attr}][data-data-values="large"] &[#{s_attr}]'])),
@@ -203,6 +212,22 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
              ]
            };
            """
+  end
+
+  test "don't generate variants file if `enable_variants` is not defined or is `false`", %{opts: opts} do
+    refute File.exists?(@variants_output_file)
+
+    opts = Keyword.delete(opts, :enable_variants)
+
+    assert run(@components ++ [FakeButtonWithVariant], opts) == []
+
+    refute File.exists?(@variants_output_file)
+
+    opts = Keyword.put(opts, :enable_variants, false)
+
+    assert run(@components ++ [FakeButtonWithVariant], opts) == []
+
+    refute File.exists?(@variants_output_file)
   end
 
   test "copy hooks files to output dir and add header comment", %{opts: opts} do

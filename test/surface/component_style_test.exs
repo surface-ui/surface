@@ -583,13 +583,16 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-data-true data-data-values="small" data-prop-true #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
+           <button data-data-true data-data-values="small" data-items data-prop-true #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
              <span>no scope</span>
              <span class="class-not-using-variants">no scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="data-true:text-xs">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="data-false:text-xs">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="prop-values-small:text-xs">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="data-values-small:text-xs">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="has-items:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-empty-items:hidden">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-nil-items:hidden">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="dynamic">with scope</span>
            </button>
            """

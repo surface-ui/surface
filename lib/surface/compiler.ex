@@ -71,7 +71,7 @@ defmodule Surface.Compiler do
   defmodule CallerSpec do
     defstruct type: nil,
               props: [],
-              variant_to_assign: %{},
+              variant_to_assign_spec: %{},
               variants: [],
               requires_s_self_on_root?: false,
               requires_s_scope_on_root?: false,
@@ -82,7 +82,7 @@ defmodule Surface.Compiler do
             type: module(),
             props: list(),
             variants: list(),
-            variant_to_assign: map(),
+            variant_to_assign_spec: map(),
             requires_s_self_on_root?: boolean(),
             requires_s_scope_on_root?: boolean(),
             has_style_or_variants?: boolean(),
@@ -175,9 +175,9 @@ defmodule Surface.Compiler do
           {[], []}
         end
 
-      {variants, variant_to_assign} =
+      {variants, variant_to_assign_spec} =
         for spec <- props ++ datas, spec.opts[:css_variant], reduce: {[], %{}} do
-          {variants, variant_to_assign} ->
+          {variants, variant_to_assign_spec} ->
             variant =
               spec.name
               |> to_string()
@@ -186,7 +186,7 @@ defmodule Surface.Compiler do
                 _ -> ""
               end)
 
-            {[variant | variants], Map.put(variant_to_assign, variant, spec.name)}
+            {[variant | variants], Map.put(variant_to_assign_spec, variant, spec)}
         end
 
       define_variants? = variants != []
@@ -195,7 +195,7 @@ defmodule Surface.Compiler do
         caller_spec
         | props: props,
           variants: variants,
-          variant_to_assign: variant_to_assign,
+          variant_to_assign_spec: variant_to_assign_spec,
           requires_s_self_on_root?: caller_spec.requires_s_self_on_root? or define_variants?,
           requires_s_scope_on_root?: caller_spec.requires_s_scope_on_root? or define_variants?,
           has_style_or_variants?: caller_spec.has_style_or_variants? or define_variants?
@@ -1746,17 +1746,31 @@ defmodule Surface.Compiler do
 
   defp maybe_add_data_variants_to_root_node(%AST.Tag{} = node, caller_spec) do
     %AST.Tag{attributes: attributes, meta: meta} = node
-    %CallerSpec{variants: variants, variant_to_assign: variant_to_assign} = caller_spec
+    %CallerSpec{variants: variants, variant_to_assign_spec: variant_to_assign_spec} = caller_spec
 
     variants_attributes =
       for variant <- variants do
+        assign_spec = Map.fetch!(variant_to_assign_spec, variant)
+        assign_ast = {:@, [], [{assign_spec.name, [], nil}]}
+
+        expr_ast =
+          case assign_spec.type do
+            :list ->
+              quote do
+                unquote(assign_ast) != nil and unquote(assign_ast) != []
+              end
+
+            _ ->
+              assign_ast
+          end
+
         %AST.Attribute{
           meta: meta,
           name: "data-#{variant}",
           type: :string,
           value: %AST.AttributeExpr{
             meta: meta,
-            value: {:@, [], [{Map.fetch!(variant_to_assign, variant), [], nil}]}
+            value: expr_ast
           }
         }
       end

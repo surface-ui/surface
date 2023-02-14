@@ -15,16 +15,14 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
     enable_variants = Keyword.get(opts, :enable_variants, false)
 
-    variants_output_file =
-      Keyword.get(opts, :variants_output_file, @default_variants_output_file)
+    variants_output_file = Keyword.get(opts, :variants_output_file, @default_variants_output_file)
 
     env = Keyword.get(opts, :env, Mix.env())
     {js_files, js_diagnostics} = get_colocated_js_files(components)
     generate_js_files(js_files, hooks_output_dir)
     css_diagnostics = generate_css_file(components, css_output_file, env)
 
-    variants_diagnostics =
-      generate_variants_file(components, enable_variants, variants_output_file)
+    variants_diagnostics = generate_variants_file(components, enable_variants, variants_output_file)
 
     diagnostics = js_diagnostics ++ css_diagnostics ++ variants_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
@@ -99,6 +97,13 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
                       /* #{spec.func} #{spec.name} */
                       plugin(({ addVariant }) => addVariant('#{variant_name}', ['&[#{scope_attr}][data-#{variant_name}]', '[#{scope_attr}][data-#{variant_name}] &[#{scope_attr}]'])),
                       plugin(({ addVariant }) => addVariant('not-#{variant_name}', ['&[s-self][#{scope_attr}]:not([data-#{variant_name}])', '[s-self][#{scope_attr}]:not([data-#{variant_name}]) &[#{scope_attr}]'])),
+                  """
+
+                {:list, _} ->
+                  """
+                      /* #{spec.func} #{spec.name} */
+                      plugin(({ addVariant }) => addVariant('has-#{variant_name}', ['&[#{scope_attr}][data-#{variant_name}]', '[#{scope_attr}][data-#{variant_name}] &[#{scope_attr}]'])),
+                      plugin(({ addVariant }) => addVariant('no-#{variant_name}', ['&[s-self][#{scope_attr}]:not([data-#{variant_name}])', '[s-self][#{scope_attr}]:not([data-#{variant_name}]) &[#{scope_attr}]'])),
                   """
 
                 {type, [_ | _] = values} when type in [:atom, :string] ->
