@@ -5,7 +5,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
   @default_hooks_output_dir "assets/js/_hooks"
   @default_css_output_file "assets/css/_components.css"
-  @default_tailwind_variants_output_file "assets/css/_tailwind.variants.js"
+  @default_variants_output_file "assets/css/_variants.js"
   @supported_hooks_extensions ~W"js jsx ts tsx" |> Enum.join(",")
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
@@ -13,10 +13,10 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   def run(components, opts \\ []) do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
-    enable_tailwind_variants = Keyword.get(opts, :enable_tailwind_variants, false)
+    enable_variants = Keyword.get(opts, :enable_variants, false)
 
-    tailwind_variants_output_file =
-      Keyword.get(opts, :tailwind_variants_output_file, @default_tailwind_variants_output_file)
+    variants_output_file =
+      Keyword.get(opts, :variants_output_file, @default_variants_output_file)
 
     env = Keyword.get(opts, :env, Mix.env())
     {js_files, js_diagnostics} = get_colocated_js_files(components)
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     css_diagnostics = generate_css_file(components, css_output_file, env)
 
     variants_diagnostics =
-      generate_variants_file(components, enable_tailwind_variants, tailwind_variants_output_file)
+      generate_variants_file(components, enable_variants, variants_output_file)
 
     diagnostics = js_diagnostics ++ css_diagnostics ++ variants_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
@@ -67,7 +67,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     []
   end
 
-  defp generate_variants_file(components, _enable_tailwind_variants, output_file) do
+  defp generate_variants_file(components, _enable_variants, output_file) do
     dest_file = Path.join([File.cwd!(), output_file])
 
     dest_file_content =

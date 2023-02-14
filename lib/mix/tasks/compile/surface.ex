@@ -27,18 +27,19 @@ defmodule Mix.Tasks.Compile.Surface do
   * `css_output_file` - defines the css file where the compiler generates the code.
     Default is `./assets/css/_components.css`.
 
-  * `enable_tailwind_variants` - instructs the compiler to generate tailwind variants based
-    on props/data. Default is `false`.
+  * `enable_variants` - instructs the compiler to generate tailwind variants based
+    on props/data. Currently, only Tailwind variants are supported. Default is `false`.
 
-  * `tailwind_variants_output_file` - defines the config file where the compiler generates the
-    scoped tailwind variants. Default is `./assets/css/_tailwind.variants.js`.
+  * `variants_output_file` - if `enable_variants` is `true`, defines the config file where
+    the compiler generates the scoped variants. Currently, only Tailwind variants are supported.
+    Default is `./assets/css/_variants.js`.
 
   ### Example
 
       config :surface, :compiler,
         hooks_output_dir: "assets/js/surface",
         css_output_file: "assets/css/surface.css"
-        enable_tailwind_variants: true
+        enable_variants: true
 
   """
 
@@ -55,8 +56,8 @@ defmodule Mix.Tasks.Compile.Surface do
   @assets_opts [
     :hooks_output_dir,
     :css_output_file,
-    :enable_tailwind_variants,
-    :tailwind_variants_output_file
+    :enable_variants,
+    :variants_output_file
   ]
 
   @doc false
