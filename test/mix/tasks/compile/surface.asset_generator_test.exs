@@ -182,15 +182,15 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
            module.exports = {
              plugins: [
                /* Mix.Tasks.Compile.SurfaceTest.FakeButtonWithVariant */
-               /* prop prop_true */
-               plugin(({ addVariant }) => addVariant('prop-true', ['&[#{s_attr}][data-prop-true]', '[#{s_attr}][data-prop-true] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('not-prop-true', ['&[s-self][#{s_attr}]:not([data-prop-true])', '[s-self][#{s_attr}]:not([data-prop-true]) &[#{s_attr}]'])),
-               /* prop prop_false */
-               plugin(({ addVariant }) => addVariant('prop-false', ['&[#{s_attr}][data-prop-false]', '[#{s_attr}][data-prop-false] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('not-prop-false', ['&[s-self][#{s_attr}]:not([data-prop-false])', '[s-self][#{s_attr}]:not([data-prop-false]) &[#{s_attr}]'])),
-               /* prop prop_values */
-               plugin(({ addVariant }) => addVariant('prop-values-on', ['&[#{s_attr}][data-prop-values="on"]', '[#{s_attr}][data-prop-values="on"] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('prop-values-off', ['&[#{s_attr}][data-prop-values="off"]', '[#{s_attr}][data-prop-values="off"] &[#{s_attr}]'])),
+               /* prop loading? */
+               plugin(({ addVariant }) => addVariant('loading', ['&[#{s_attr}][data-loading]', '[#{s_attr}][data-loading] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('not-loading', ['&[s-self][#{s_attr}]:not([data-loading])', '[s-self][#{s_attr}]:not([data-loading]) &[#{s_attr}]'])),
+               /* prop rounded */
+               plugin(({ addVariant }) => addVariant('rounded', ['&[#{s_attr}][data-rounded]', '[#{s_attr}][data-rounded] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('not-rounded', ['&[s-self][#{s_attr}]:not([data-rounded])', '[s-self][#{s_attr}]:not([data-rounded]) &[#{s_attr}]'])),
+               /* prop status */
+               plugin(({ addVariant }) => addVariant('status-on', ['&[#{s_attr}][data-status="on"]', '[#{s_attr}][data-status="on"] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('status-off', ['&[#{s_attr}][data-status="off"]', '[#{s_attr}][data-status="off"] &[#{s_attr}]'])),
                /* data nil_items */
                plugin(({ addVariant }) => addVariant('has-nil-items', ['&[#{s_attr}][data-nil-items]', '[#{s_attr}][data-nil-items] &[#{s_attr}]'])),
                plugin(({ addVariant }) => addVariant('no-nil-items', ['&[s-self][#{s_attr}]:not([data-nil-items])', '[s-self][#{s_attr}]:not([data-nil-items]) &[#{s_attr}]'])),
@@ -200,15 +200,15 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
                /* data items */
                plugin(({ addVariant }) => addVariant('has-items', ['&[#{s_attr}][data-items]', '[#{s_attr}][data-items] &[#{s_attr}]'])),
                plugin(({ addVariant }) => addVariant('no-items', ['&[s-self][#{s_attr}]:not([data-items])', '[s-self][#{s_attr}]:not([data-items]) &[#{s_attr}]'])),
-               /* data data_values! */
-               plugin(({ addVariant }) => addVariant('data-values-small', ['&[#{s_attr}][data-data-values="small"]', '[#{s_attr}][data-data-values="small"] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('data-values-large', ['&[#{s_attr}][data-data-values="large"]', '[#{s_attr}][data-data-values="large"] &[#{s_attr}]'])),
-               /* data data_false */
-               plugin(({ addVariant }) => addVariant('data-false', ['&[#{s_attr}][data-data-false]', '[#{s_attr}][data-data-false] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('not-data-false', ['&[s-self][#{s_attr}]:not([data-data-false])', '[s-self][#{s_attr}]:not([data-data-false]) &[#{s_attr}]'])),
-               /* data data_true */
-               plugin(({ addVariant }) => addVariant('data-true', ['&[#{s_attr}][data-data-true]', '[#{s_attr}][data-data-true] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('not-data-true', ['&[s-self][#{s_attr}]:not([data-data-true])', '[s-self][#{s_attr}]:not([data-data-true]) &[#{s_attr}]'])),
+               /* data size! */
+               plugin(({ addVariant }) => addVariant('size-small', ['&[#{s_attr}][data-size="small"]', '[#{s_attr}][data-size="small"] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('size-large', ['&[#{s_attr}][data-size="large"]', '[#{s_attr}][data-size="large"] &[#{s_attr}]'])),
+               /* data visible */
+               plugin(({ addVariant }) => addVariant('visible', ['&[#{s_attr}][data-visible]', '[#{s_attr}][data-visible] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('not-visible', ['&[s-self][#{s_attr}]:not([data-visible])', '[s-self][#{s_attr}]:not([data-visible]) &[#{s_attr}]'])),
+               /* data live */
+               plugin(({ addVariant }) => addVariant('live', ['&[#{s_attr}][data-live]', '[#{s_attr}][data-live] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('not-live', ['&[s-self][#{s_attr}]:not([data-live])', '[s-self][#{s_attr}]:not([data-live]) &[#{s_attr}]'])),
              ]
            };
            """
