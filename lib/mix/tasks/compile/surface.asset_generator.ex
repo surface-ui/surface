@@ -85,22 +85,45 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
           variants =
             for spec <- specs, spec.opts[:css_variant] do
-              """
-                  plugin(({ addVariant }) => addVariant("#{spec.name}", ["&[#{scope_attr}][data-#{spec.name}]", "[#{scope_attr}][data-#{spec.name}] &[#{scope_attr}]"])),
-                  plugin(({ addVariant }) => addVariant("not-#{spec.name}", ["&[s-self][#{scope_attr}]:not([data-#{spec.name}])", "[s-self][#{scope_attr}]:not([data-#{spec.name}]) &[#{scope_attr}]"])),
-              """
+              variant_name =
+                spec.name
+                |> to_string()
+                |> String.replace(["_", "!", "?"], fn
+                  "_" -> "-"
+                  _ -> ""
+                end)
+
+              case {spec.type, spec.opts[:values] || spec.opts[:values!]} do
+                {:boolean, _} ->
+                  """
+                      /* #{spec.func} #{spec.name} */
+                      plugin(({ addVariant }) => addVariant('#{variant_name}', ['&[#{scope_attr}][data-#{variant_name}]', '[#{scope_attr}][data-#{variant_name}] &[#{scope_attr}]'])),
+                      plugin(({ addVariant }) => addVariant('not-#{variant_name}', ['&[s-self][#{scope_attr}]:not([data-#{variant_name}])', '[s-self][#{scope_attr}]:not([data-#{variant_name}]) &[#{scope_attr}]'])),
+                  """
+
+                {type, [_ | _] = values} when type in [:atom, :string] ->
+                  [
+                    "    /* #{spec.func} #{spec.name} */\n",
+                    for value <- values do
+                      """
+                          plugin(({ addVariant }) => addVariant('#{variant_name}-#{value}', ['&[#{scope_attr}][data-#{variant_name}="#{value}"]', '[#{scope_attr}][data-#{variant_name}="#{value}"] &[#{scope_attr}]'])),
+                      """
+                    end
+                  ]
+              end
             end
 
           if variants != [] do
             ["    /* ", inspect(mod), " */\n", variants | content]
           else
-            []
+            content
           end
       end
 
     content = [
       header(),
       """
+
 
       const plugin = require("tailwindcss/plugin");
 

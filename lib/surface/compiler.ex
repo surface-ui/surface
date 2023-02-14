@@ -71,6 +71,7 @@ defmodule Surface.Compiler do
   defmodule CallerSpec do
     defstruct type: nil,
               props: [],
+              variant_to_assign: %{},
               variants: [],
               requires_s_self_on_root?: false,
               requires_s_scope_on_root?: false,
@@ -81,6 +82,7 @@ defmodule Surface.Compiler do
             type: module(),
             props: list(),
             variants: list(),
+            variant_to_assign: map(),
             requires_s_self_on_root?: boolean(),
             requires_s_scope_on_root?: boolean(),
             has_style_or_variants?: boolean(),
@@ -173,9 +175,18 @@ defmodule Surface.Compiler do
           {[], []}
         end
 
-      variants =
-        for spec <- props ++ datas, spec.opts[:css_variant] do
-          to_string(spec.name)
+      {variants, variant_to_assign} =
+        for spec <- props ++ datas, spec.opts[:css_variant], reduce: {[], %{}} do
+          {variants, variant_to_assign} ->
+            variant =
+              spec.name
+              |> to_string()
+              |> String.replace(["_", "!", "?"], fn
+                "_" -> "-"
+                _ -> ""
+              end)
+
+            {[variant | variants], Map.put(variant_to_assign, variant, spec.name)}
         end
 
       define_variants? = variants != []
@@ -184,6 +195,7 @@ defmodule Surface.Compiler do
         caller_spec
         | props: props,
           variants: variants,
+          variant_to_assign: variant_to_assign,
           requires_s_self_on_root?: caller_spec.requires_s_self_on_root? or define_variants?,
           requires_s_scope_on_root?: caller_spec.requires_s_scope_on_root? or define_variants?,
           has_style_or_variants?: caller_spec.has_style_or_variants? or define_variants?
@@ -1639,7 +1651,7 @@ defmodule Surface.Compiler do
       |> maybe_add_s_self_to_root_node(caller_spec)
       |> maybe_add_vars_to_style_attr_on_root(style, caller.function)
       |> maybe_add_caller_scope_id_attr_to_root_node(caller_spec)
-      |> maybe_add_data_variants_to_root_node(caller_spec.variants)
+      |> maybe_add_data_variants_to_root_node(caller_spec)
     end)
   end
 
@@ -1732,8 +1744,9 @@ defmodule Surface.Compiler do
     node
   end
 
-  defp maybe_add_data_variants_to_root_node(%AST.Tag{} = node, variants) do
+  defp maybe_add_data_variants_to_root_node(%AST.Tag{} = node, caller_spec) do
     %AST.Tag{attributes: attributes, meta: meta} = node
+    %CallerSpec{variants: variants, variant_to_assign: variant_to_assign} = caller_spec
 
     variants_attributes =
       for variant <- variants do
@@ -1743,7 +1756,7 @@ defmodule Surface.Compiler do
           type: :string,
           value: %AST.AttributeExpr{
             meta: meta,
-            value: {:@, [], [{String.to_atom(variant), [], nil}]}
+            value: {:@, [], [{Map.fetch!(variant_to_assign, variant), [], nil}]}
           }
         }
       end
