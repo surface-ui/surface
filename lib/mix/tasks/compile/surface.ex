@@ -30,6 +30,19 @@ defmodule Mix.Tasks.Compile.Surface do
   * `enable_variants` - instructs the compiler to generate tailwind variants based
     on props/data. Currently, only Tailwind variants are supported. Default is `false`.
 
+    It requires updating the project's `tailwind.config.js` to add the `variants_output_file` as
+    a preset. Example:
+
+        module.exports = {
+          presets: [
+            require('./css/_variants.js')
+          ],
+          ...
+        }
+
+    > **NOTE**: This feature is still experimental and available for tests and feedback.
+    > Therefore, it might not be included in the next Surface minor version.
+
   * `variants_output_file` - if `enable_variants` is `true`, defines the config file where
     the compiler generates the scoped variants. Currently, only Tailwind variants are supported.
     Default is `./assets/css/_variants.js`.
@@ -38,7 +51,7 @@ defmodule Mix.Tasks.Compile.Surface do
 
       config :surface, :compiler,
         hooks_output_dir: "assets/js/surface",
-        css_output_file: "assets/css/surface.css"
+        css_output_file: "assets/css/surface.css",
         enable_variants: true
 
   """
