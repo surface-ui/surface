@@ -178,14 +178,7 @@ defmodule Surface.Compiler do
       {variants, variant_to_assign_spec} =
         for spec <- props ++ datas, spec.opts[:css_variant], reduce: {[], %{}} do
           {variants, variant_to_assign_spec} ->
-            variant =
-              spec.name
-              |> to_string()
-              |> String.replace(["_", "!", "?"], fn
-                "_" -> "-"
-                _ -> ""
-              end)
-
+            variant = Helpers.normalize_variant_name(spec.name)
             {[variant | variants], Map.put(variant_to_assign_spec, variant, spec)}
         end
 

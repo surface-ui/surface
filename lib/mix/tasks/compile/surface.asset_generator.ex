@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @moduledoc false
 
   alias Mix.Task.Compiler.Diagnostic
+  alias Surface.Compiler.Helpers
 
   @default_hooks_output_dir "assets/js/_hooks"
   @default_css_output_file "assets/css/_components.css"
@@ -83,13 +84,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
           variants =
             for spec <- specs, spec.opts[:css_variant] do
-              variant_name =
-                spec.name
-                |> to_string()
-                |> String.replace(["_", "!", "?"], fn
-                  "_" -> "-"
-                  _ -> ""
-                end)
+              variant_name = Helpers.normalize_variant_name(spec.name)
 
               case {spec.type, spec.opts[:values] || spec.opts[:values!]} do
                 {:boolean, _} ->

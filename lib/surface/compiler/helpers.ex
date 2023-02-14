@@ -288,6 +288,15 @@ defmodule Surface.Compiler.Helpers do
     line
   end
 
+  def normalize_variant_name(name) when is_atom(name) do
+    name
+    |> to_string()
+    |> String.replace(["_", "!", "?"], fn
+      "_" -> "-"
+      _ -> ""
+    end)
+  end
+
   defp hint_for_unloaded_module(node_alias) do
     """
     Hint: Make sure module `#{node_alias}` can be successfully compiled.
