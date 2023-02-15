@@ -34,7 +34,7 @@ defmodule Surface.Components.Form.FileInputTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} csrf_token="test" multipart={true} >
+        <Form for={%{}} as={:user} csrf_token="test" multipart={true} >
           <FileInput field={:picture} />
         </Form>
         """

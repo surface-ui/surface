@@ -177,7 +177,7 @@ defmodule Surface.TypeHandler do
         {:ok, [~S( ), to_string(name)]}
 
       {:ok, val} ->
-        {:ok, Phoenix.HTML.Tag.attributes_escape([{name, val}])}
+        {:ok, Phoenix.HTML.attributes_escape([{name, val}])}
 
       {:error, message} ->
         {:error, message}
@@ -209,7 +209,8 @@ defmodule Surface.TypeHandler do
         node_alias: node_alias || module,
         caller: caller,
         file: ctx.file,
-        line: ctx.line
+        line: ctx.line,
+        function_component?: ctx.function_component?
       })
 
     if Keyword.get(type_opts, :accumulate, false) do
@@ -288,7 +289,10 @@ defmodule Surface.TypeHandler do
   end
 
   def attribute_type_and_opts(module, name, meta) do
-    with true <- function_exported?(module, :__get_prop__, 1),
+    function_component? = Map.get(meta, :function_component?) || false
+
+    with false <- function_component?,
+         true <- function_exported?(module, :__get_prop__, 1),
          prop when not is_nil(prop) <- module.__get_prop__(name) do
       {prop.type, prop.opts}
     else
@@ -297,7 +301,7 @@ defmodule Surface.TypeHandler do
         {:string, []}
 
       _ ->
-        if Map.get(meta, :runtime, false) do
+        if Map.get(meta, :runtime, false) and not function_component? do
           IOHelper.warn(
             "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
             meta.caller,

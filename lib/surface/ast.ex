@@ -139,7 +139,8 @@ defmodule Surface.AST.Meta do
         cid: unquote(quoted_cid),
         file: unquote(meta.file),
         line: unquote(meta.line),
-        module: unquote(meta.caller.module)
+        module: unquote(meta.caller.module),
+        function_component?: unquote(meta.function_component?)
       }
     end
   end

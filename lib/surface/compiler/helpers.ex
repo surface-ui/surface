@@ -22,6 +22,8 @@ defmodule Surface.Compiler.Helpers do
     Surface.LiveView => @builtin_live_view_assigns
   }
 
+  @env Mix.env()
+
   def builtin_assigns_by_type(type) do
     @builtin_assigns_by_type[type]
   end
@@ -209,7 +211,7 @@ defmodule Surface.Compiler.Helpers do
 
   # TODO: remove this function and use the `caller_spec` field on the `CompileMeta` struct instead
   def get_module_attribute(module, key, default) do
-    if Mix.env() == :test do
+    if @env == :test do
       # If the template is compiled directly in a test module, get_attribute might fail,
       # breaking some of the tests once in a while.
       try do
