@@ -55,6 +55,6 @@ defmodule Surface.LiveView.LiveViewTest do
     assert html =~ ~S(id="123")
     assert html =~ ~S(<span class="lv")
     assert html =~ "User id from session: USER_ID"
-    assert html =~ ~S(data-phx-sticky="true")
+    assert html =~ ~S(data-phx-sticky="data-phx-sticky")
   end
 end

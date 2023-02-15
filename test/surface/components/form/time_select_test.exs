@@ -20,7 +20,7 @@ defmodule Surface.Components.Form.TimeSelectTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:alarm}>
+        <Form for={%{}} as={:alarm}>
           <TimeSelect field={:time} />
         </Form>
         """

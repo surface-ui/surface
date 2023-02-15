@@ -34,7 +34,7 @@ defmodule Surface.Components.Form.CheckboxTest do
     html =
       render_surface do
         ~F"""
-        <Form for={:user} csrf_token="test">
+        <Form for={%{}} as={:user} csrf_token="test">
           <Checkbox field={:admin} />
         </Form>
         """

@@ -2,6 +2,32 @@ defmodule Surface.FunctionComponentTest do
   use Surface.ConnCase, async: true
 
   import Phoenix.Component
+  import ExUnit.CaptureIO
+
+  defmodule ComponentWithFunc do
+    use Surface.Component
+
+    def render(assigns) do
+      ~F"""
+      <.func id="123"/>
+      <ComponentWithFunc.func id="123"/>
+      """
+    end
+
+    def func(assigns) do
+      ~F[{@id}]
+    end
+  end
+
+  defmodule ViewWithComponentWithFunc do
+    use Surface.LiveView
+
+    def render(assigns) do
+      ~F"""
+      <ComponentWithFunc/>
+      """
+    end
+  end
 
   defmodule NotAComponent do
     def func(assigns) do
@@ -396,5 +422,14 @@ defmodule Surface.FunctionComponentTest do
            Label: my label
            my content
            """
+  end
+
+  test "don't warn on unknown attributes of function components" do
+    output =
+      capture_io(:standard_error, fn ->
+        {:ok, _view, _html} = live_isolated(build_conn(), ViewWithComponentWithFunc)
+      end)
+
+    assert output == ""
   end
 end
