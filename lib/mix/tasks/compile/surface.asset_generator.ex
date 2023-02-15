@@ -38,21 +38,34 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
-    {content, diagnostics} =
+    {content, diagnostics, imports_set} =
       for mod <- Enum.sort(components, :desc),
           function_exported?(mod, :__style__, 0),
-          {_func, %{css: css, vars: vars}} = func_style <- mod.__style__(),
-          reduce: {"", []} do
-        {content, diagnostics} ->
+          {_func, %{css: css, vars: vars, imports: imports}} = func_style <- mod.__style__(),
+          reduce: {"", [], MapSet.new()} do
+        {content, diagnostics, imports_set} ->
           css = String.trim_leading(css, "\n")
 
           {
             ["\n/* ", scope_header(mod, func_style), " */\n\n", vars_comment(vars, env), css | content],
-            diagnostics
+            diagnostics,
+            Enum.reduce(imports, imports_set, fn i, acc -> MapSet.put(acc, i) end)
           }
       end
 
-    content = to_string([header(), "\n" | content])
+    # We move all @import entries to the top of the file to adhere to the CSS spec
+    imports_content =
+      if MapSet.size(imports_set) > 0 do
+        """
+
+        /* Extracted CSS imports from components */
+        #{Enum.join(imports_set, "\n")}
+        """
+      else
+        ""
+      end
+
+    content = to_string([header(), "\n", imports_content | content])
 
     if content != dest_file_content do
       dest_file |> Path.dirname() |> File.mkdir_p!()

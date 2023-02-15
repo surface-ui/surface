@@ -40,9 +40,8 @@ defmodule Surface.Compiler.CSSParser do
 
   defp handle_token([:semicolon = token | rest], buffers, %{candidate?: true} = state) do
     [buffer | buffers] = buffers
-    node = buffer_to_node(buffer, :declaration)
+    node = buffer_to_node([token | buffer], :declaration)
     buffers = push_node_to_current_buffer(node, buffers)
-    buffers = push_node_to_current_buffer(token, buffers)
     handle_token(rest, buffers, %{state | candidate?: false})
   end
 

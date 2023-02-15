@@ -17,8 +17,7 @@ defmodule Surface.Compiler.CSSParserTest do
                {:block, "{",
                 [
                   {:ws, " "},
-                  {:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}]},
-                  :semicolon,
+                  {:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}, :semicolon]},
                   {:ws, " "}
                 ], %{column: 7, column_end: 23, line: 1, line_end: 1}}
              ]
@@ -47,11 +46,9 @@ defmodule Surface.Compiler.CSSParserTest do
              {:block, "{",
               [
                 {:ws, "\n  "},
-                {:declaration, [text: "padding", text: ":", ws: " ", text: "1px"]},
-                :semicolon,
+                {:declaration, [{:text, "padding"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}, :semicolon]},
                 {:ws, "\n  "},
-                {:declaration, [text: "margin", text: ":", ws: " ", text: "1px"]},
-                :semicolon,
+                {:declaration, [{:text, "margin"}, {:text, ":"}, {:ws, " "}, {:text, "1px"}, :semicolon]},
                 {:ws, "\n"}
               ], %{column: 7, column_end: 1, line: 1, line_end: 4}}
            ]

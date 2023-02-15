@@ -77,6 +77,7 @@ defmodule Surface.Compiler.CSSTranslator do
       line: line,
       env: env,
       vars: %{},
+      imports: [],
       selectors_buffer: [],
       use_deep_at_the_beginning?: false,
       selectors: %{
@@ -101,6 +102,7 @@ defmodule Surface.Compiler.CSSTranslator do
       css: to_string(updated_tokens),
       selectors: state.selectors,
       vars: state.vars,
+      imports: state.imports,
       use_deep_at_the_beginning?: state.use_deep_at_the_beginning?
     }
   end
@@ -134,6 +136,19 @@ defmodule Surface.Compiler.CSSTranslator do
 
   defp translate([{:comment, text} | rest], acc, state) do
     translate(rest, ["*/", text, "/*" | acc], state)
+  end
+
+  defp translate([{:at_rule, [{:text, "@import"} | _] = tokens} | rest], acc, state) do
+    {updated_tokens, state} = translate(tokens, [], state)
+
+    rest =
+      case rest do
+        [{:ws, _} | rest_with_no_leading_ws] -> rest_with_no_leading_ws
+        _ -> rest
+      end
+
+    state = %{state | imports: [to_string(updated_tokens) | state.imports]}
+    translate(rest, acc, state)
   end
 
   defp translate([{:at_rule, tokens} | rest], acc, state) do
