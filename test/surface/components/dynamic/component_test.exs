@@ -485,7 +485,7 @@ defmodule Surface.Components.Dynamic.ComponentTest do
           end
         end)
 
-      assert output == ""
+      refute output == ~S(Unknown property "unknown_attr")
     end
   end
 

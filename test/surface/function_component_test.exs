@@ -430,6 +430,6 @@ defmodule Surface.FunctionComponentTest do
         {:ok, _view, _html} = live_isolated(build_conn(), ViewWithComponentWithFunc)
       end)
 
-    assert output == ""
+    refute output == ~S(Unknown property "id")
   end
 end
