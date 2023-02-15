@@ -2,7 +2,7 @@
 
 ## v0.9.4 (2023-02-15)
 
-  * Update `phoenix_live_view` to `v0.18.14
+  * Update `phoenix_live_view` to `v0.18.14`
   * Fix warnings on forms
   * Fix warning on unknown props of function components
   * Remove dependency on `Mix.env()` on re-compiling components at runtime
