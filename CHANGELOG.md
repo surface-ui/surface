@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.4 (2023-02-15)
+
+  * Update `phoenix_live_view` to `v0.18.14`
+  * Fix warnings on forms
+  * Fix warning on unknown props of function components
+  * Remove dependency on `Mix.env()` on re-compiling components at runtime
+
 ## v0.9.3 (2023-02-09)
 
   * Fix error when trying to add the caller's scope_id attr to a MacroComponent
