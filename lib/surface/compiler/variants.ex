@@ -2,6 +2,7 @@ defmodule Surface.Compiler.Variants do
   @moduledoc false
 
   @enum_types [:list, :keyword, :map, :mapset]
+  @choice_types [:string, :atom, :integer]
 
   def generate(specs) do
     for spec <- Enum.reverse(specs), css_variant = spec.opts[:css_variant], reduce: {[], []} do
@@ -32,7 +33,7 @@ defmodule Surface.Compiler.Variants do
                  {:data_not_present, no_items_name}
                ]}
 
-            {type, [_ | _] = values} when type in [:atom, :string, :integer] ->
+            {type, [_ | _] = values} when type in @choice_types ->
               prefix = variant_opts[:prefix] || "#{data_name}-"
 
               {variants_names, variants_specs} =
@@ -61,6 +62,7 @@ defmodule Surface.Compiler.Variants do
   end
 
   def enum_types, do: @enum_types
+  def choice_types, do: @choice_types
 
   defp normalize_variant_name(name) when is_atom(name) do
     name

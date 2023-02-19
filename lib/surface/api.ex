@@ -43,6 +43,7 @@ defmodule Surface.API do
   ]
 
   @enum_types Surface.Compiler.Variants.enum_types()
+  @choice_types Surface.Compiler.Variants.choice_types()
 
   defmacro __using__(include: include) do
     arities = %{
@@ -778,7 +779,7 @@ defmodule Surface.API do
 
   defp valid_opts_for_css_variant(type, _) do
     values_message =
-      if type in [:string, :atom, :integer] do
+      if type in @choice_types do
         """
 
         or, if you use the `values` or `values!` options:
