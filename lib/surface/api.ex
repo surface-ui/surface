@@ -42,6 +42,8 @@ defmodule Surface.API do
     :dynamic
   ]
 
+  @enum_types Surface.Compiler.Variants.enum_types()
+
   defmacro __using__(include: include) do
     arities = %{
       prop: [2, 3],
@@ -761,7 +763,7 @@ defmodule Surface.API do
     """
   end
 
-  defp valid_opts_for_css_variant(:list, _) do
+  defp valid_opts_for_css_variant(type, _) when type in @enum_types do
     """
       * :has_items - the name of the variant when the value list has items. Default is `has-[assign-name]`
       * :no_items - the name of the variant when the value is empty or `nil`. Default is `no-[assign-name]`

@@ -175,7 +175,7 @@ defmodule Surface.Compiler do
           {[], []}
         end
 
-      {variants, data_variants} = Helpers.generate_variants(props ++ datas)
+      {variants, data_variants} = Surface.Compiler.Variants.generate(props ++ datas)
 
       define_variants? = variants != []
 

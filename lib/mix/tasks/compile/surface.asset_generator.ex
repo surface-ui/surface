@@ -2,7 +2,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @moduledoc false
 
   alias Mix.Task.Compiler.Diagnostic
-  alias Surface.Compiler.Helpers
 
   @default_hooks_output_dir "assets/js/_hooks"
   @default_css_output_file "assets/css/_components.css"
@@ -97,7 +96,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
           specs = sort_spec.(mod.__props__()) ++ sort_spec.(mod.__data__())
           scope_attr = Surface.Compiler.CSSTranslator.scope_attr(mod)
 
-          {_variants, data_variants} = Helpers.generate_variants(specs)
+          {_variants, data_variants} = Surface.Compiler.Variants.generate(specs)
 
           variants =
             for {_type, assign_func, assign_name, data_name, _assign_ast, variants_specs} <- data_variants do
