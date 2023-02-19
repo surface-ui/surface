@@ -211,6 +211,18 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
                plugin(({ addVariant }) => addVariant('has-items', ['&[#{s_attr}][data-items]', '[#{s_attr}][data-items] &[#{s_attr}]'])),
                plugin(({ addVariant }) => addVariant('no-items', ['&[s-self][#{s_attr}]:not([data-items])', '[s-self][#{s_attr}]:not([data-items]) &[#{s_attr}]'])),
 
+               /* data keyword */
+               plugin(({ addVariant }) => addVariant('has-keyword', ['&[#{s_attr}][data-keyword]', '[#{s_attr}][data-keyword] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('no-keyword', ['&[s-self][#{s_attr}]:not([data-keyword])', '[s-self][#{s_attr}]:not([data-keyword]) &[#{s_attr}]'])),
+
+               /* data map */
+               plugin(({ addVariant }) => addVariant('has-map', ['&[#{s_attr}][data-map]', '[#{s_attr}][data-map] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('no-map', ['&[s-self][#{s_attr}]:not([data-map])', '[s-self][#{s_attr}]:not([data-map]) &[#{s_attr}]'])),
+
+               /* data mapset */
+               plugin(({ addVariant }) => addVariant('has-mapset', ['&[#{s_attr}][data-mapset]', '[#{s_attr}][data-mapset] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('no-mapset', ['&[s-self][#{s_attr}]:not([data-mapset])', '[s-self][#{s_attr}]:not([data-mapset]) &[#{s_attr}]'])),
+
                /* data nil_items */
                plugin(({ addVariant }) => addVariant('has-nil-items', ['&[#{s_attr}][data-nil-items]', '[#{s_attr}][data-nil-items] &[#{s_attr}]'])),
                plugin(({ addVariant }) => addVariant('no-nil-items', ['&[s-self][#{s_attr}]:not([data-nil-items])', '[s-self][#{s_attr}]:not([data-nil-items]) &[#{s_attr}]'])),

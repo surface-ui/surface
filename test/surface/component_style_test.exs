@@ -583,7 +583,7 @@ defmodule Surface.ComponentStyleTest do
       end
 
     assert html =~ """
-           <button data-dark data-visible data-other data-items data-status="on" data-size="small" #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
+           <button data-dark data-visible data-other data-mapset data-keyword data-map data-items data-status="on" data-size="small" #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
              <span>no scope</span>
              <span class="class-not-using-variants">no scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="visible:block">with scope</span>
@@ -597,6 +597,12 @@ defmodule Surface.ComponentStyleTest do
              <span #{scope_attr(FakeButtonWithVariant)} class="off:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="has-items:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="no-items:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="has-map:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-map:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="has-keyword:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-keyword:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="has-mapset:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-mapset:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="valid:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="invalid:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="other:block">with scope</span>

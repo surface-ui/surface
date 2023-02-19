@@ -230,7 +230,7 @@ defmodule Surface.Compiler.Helpers do
                ]}
 
             # TODO: Include the other Enumerable
-            {:list, _} ->
+            {type, _} when type in [:list, :keyword, :map, :mapset] ->
               has_items_name = variant_opts[:has_items] || "has-#{data_name}"
               no_items_name = variant_opts[:no_items] || "no-#{data_name}"
 
