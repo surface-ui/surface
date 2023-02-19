@@ -578,21 +578,29 @@ defmodule Surface.ComponentStyleTest do
     html =
       render_surface do
         ~F"""
-        <FakeButtonWithVariant loading?={true} rounded={false}/>
+        <FakeButtonWithVariant visible={true} active={false} dark?={true}/>
         """
       end
 
     assert html =~ """
-           <button data-live data-size="small" data-items data-loading #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
+           <button data-dark data-visible data-other data-items data-status="on" data-size="small" #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
              <span>no scope</span>
              <span class="class-not-using-variants">no scope</span>
-             <span #{scope_attr(FakeButtonWithVariant)} class="live:text-xs">with scope</span>
-             <span #{scope_attr(FakeButtonWithVariant)} class="visible:text-xs">with scope</span>
-             <span #{scope_attr(FakeButtonWithVariant)} class="status-on:text-xs">with scope</span>
-             <span #{scope_attr(FakeButtonWithVariant)} class="size-small:text-xs">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="visible:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="not-visible:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="active:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="inactive:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="is-dark:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="is-light:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="size-small:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="on:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="off:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="has-items:block">with scope</span>
-             <span #{scope_attr(FakeButtonWithVariant)} class="no-empty-items:hidden">with scope</span>
-             <span #{scope_attr(FakeButtonWithVariant)} class="no-nil-items:hidden">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-items:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="valid:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="invalid:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="other:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="no-other:block">with scope</span>
              <span #{scope_attr(FakeButtonWithVariant)} class="dynamic">with scope</span>
            </button>
            """

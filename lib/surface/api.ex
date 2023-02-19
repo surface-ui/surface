@@ -77,7 +77,6 @@ defmodule Surface.API do
   end
 
   def __after_compile__(env, _) do
-    validate_assigns!(env)
     validate_duplicated_assigns!(env)
     validate_slot_props_bindings!(env)
     validate_duplicate_root_props!(env)
@@ -136,6 +135,10 @@ defmodule Surface.API do
       opts_ast: opts_ast,
       line: line
     }
+
+    # We cannot wait to validate this in __after_compile__ as template compilation,
+    # e.g. `~F`, may need to access the assign's spec before that.
+    validate_assign!(assign, caller)
 
     Module.put_attribute(caller.module, :assigns, assign)
     Module.put_attribute(caller.module, assign.func, assign)
@@ -282,14 +285,6 @@ defmodule Surface.API do
       def __required_slots_names__() do
         unquote(Macro.escape(required_slots_names))
       end
-    end
-  end
-
-  defp validate_assigns!(env) do
-    assigns = Module.get_attribute(env.module, :assigns, [])
-
-    for assign <- assigns do
-      validate_assign!(assign, env)
     end
   end
 
@@ -440,16 +435,22 @@ defmodule Surface.API do
   end
 
   defp validate_opt(_func, _name, type, opts, :css_variant, value, _line, _env) do
-    cond do
-      not is_boolean(value) ->
-        {:error, "invalid value for option :css_variant. Expected a boolean, got: #{inspect(value)}"}
+    values? = (opts[:values] || opts[:values!] || []) != []
 
-      type not in [:boolean, :list] and (!opts[:values] and !opts[:values!]) ->
-        {:error,
-         "invalid use of :css_variant. Type must be either a :boolean, a :list or a type defining :values or :values!"}
+    if is_boolean(value) or
+         (Keyword.keyword?(value) and
+            Enum.all?(value, fn {k, v} -> css_variant_opt_valid?(type, k, v, values?) end)) do
+      :ok
+    else
+      message = """
+      invalid value for :css_variant. Expected either a boolean or a keyword list of options, got: #{inspect(value)}.
 
-      true ->
-        :ok
+      Valid options for type #{inspect(type)} are:
+
+      #{valid_opts_for_css_variant(type, values?)}\
+      """
+
+      {:error, message}
     end
   end
 
@@ -751,5 +752,63 @@ defmodule Surface.API do
           ] do
       Surface.API.put_assign(__ENV__, func, name, type, opts, opts_ast, line)
     end
+  end
+
+  defp valid_opts_for_css_variant(:boolean, _) do
+    """
+      * :true - the name of the variant when the value is `true`. Default is the assign name.
+      * :false - the name of the variant when the value is `false` or `nil`. Default is `not-[assign-name]`.
+    """
+  end
+
+  defp valid_opts_for_css_variant(:list, _) do
+    """
+      * :has_items - the name of the variant when the value list has items. Default is `has-[assign-name]`
+      * :no_items - the name of the variant when the value is empty or `nil`. Default is `no-[assign-name]`
+    """
+  end
+
+  defp valid_opts_for_css_variant(_, true = _values?) do
+    """
+      * :prefix - the prefix of the variant name for each value listed in `values` or `values!`. Default is `[assign-name]-`.
+    """
+  end
+
+  defp valid_opts_for_css_variant(type, _) do
+    values_message =
+      if type in [:string, :atom, :integer] do
+        """
+
+        or, if you use the `values` or `values!` options:
+
+        #{valid_opts_for_css_variant(type, true)}\
+        """
+      end
+
+    """
+      * :not_nil - the name of the variant when the value is not `nil`. Default is the assign name.
+      * :nil - the name of the variant when the value is `nil`. Default is `no-[assign-name]`.
+    #{values_message}\
+    """
+  end
+
+  defp css_variant_opt_valid?(_type, _opt, opt_value, _values?) when not is_binary(opt_value) do
+    false
+  end
+
+  defp css_variant_opt_valid?(:boolean, opt_name, _opt_value, _values?) do
+    opt_name in [true, false]
+  end
+
+  defp css_variant_opt_valid?(type, opt_name, _opt_value, _values?) when type in [:list, :map, :mapset, :range] do
+    opt_name in [:has_items, :no_items]
+  end
+
+  defp css_variant_opt_valid?(_type, opt_name, _opt_value, true = _values?) do
+    opt_name == :prefix
+  end
+
+  defp css_variant_opt_valid?(_type, opt_name, _opt_value, _values?) do
+    opt_name in [nil, :not_nil]
   end
 end

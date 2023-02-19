@@ -88,42 +88,25 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
+    sort_spec = &Enum.sort_by(&1, fn spec -> spec.name end)
+
     # TODO: move the sort outside
     content =
       for mod <- Enum.sort(components, :desc), reduce: [] do
         content ->
-          specs = mod.__props__() ++ mod.__data__()
+          specs = sort_spec.(mod.__props__()) ++ sort_spec.(mod.__data__())
           scope_attr = Surface.Compiler.CSSTranslator.scope_attr(mod)
 
+          {_variants, data_variants} = Helpers.generate_variants(specs)
+
           variants =
-            for spec <- specs, spec.opts[:css_variant] do
-              variant_name = Helpers.normalize_variant_name(spec.name)
-
-              case {spec.type, spec.opts[:values] || spec.opts[:values!]} do
-                {:boolean, _} ->
-                  """
-                      /* #{spec.func} #{spec.name} */
-                      plugin(({ addVariant }) => addVariant('#{variant_name}', ['&[#{scope_attr}][data-#{variant_name}]', '[#{scope_attr}][data-#{variant_name}] &[#{scope_attr}]'])),
-                      plugin(({ addVariant }) => addVariant('not-#{variant_name}', ['&[s-self][#{scope_attr}]:not([data-#{variant_name}])', '[s-self][#{scope_attr}]:not([data-#{variant_name}]) &[#{scope_attr}]'])),
-                  """
-
-                {:list, _} ->
-                  """
-                      /* #{spec.func} #{spec.name} */
-                      plugin(({ addVariant }) => addVariant('has-#{variant_name}', ['&[#{scope_attr}][data-#{variant_name}]', '[#{scope_attr}][data-#{variant_name}] &[#{scope_attr}]'])),
-                      plugin(({ addVariant }) => addVariant('no-#{variant_name}', ['&[s-self][#{scope_attr}]:not([data-#{variant_name}])', '[s-self][#{scope_attr}]:not([data-#{variant_name}]) &[#{scope_attr}]'])),
-                  """
-
-                {type, [_ | _] = values} when type in [:atom, :string] ->
-                  [
-                    "    /* #{spec.func} #{spec.name} */\n",
-                    for value <- values do
-                      """
-                          plugin(({ addVariant }) => addVariant('#{variant_name}-#{value}', ['&[#{scope_attr}][data-#{variant_name}="#{value}"]', '[#{scope_attr}][data-#{variant_name}="#{value}"] &[#{scope_attr}]'])),
-                      """
-                    end
-                  ]
-              end
+            for {_type, assign_func, assign_name, data_name, _assign_ast, variants_specs} <- data_variants do
+              [
+                "\n    /* #{assign_func} #{assign_name} */\n",
+                for variant_spec <- variants_specs do
+                  "    #{generate_variant(variant_spec, data_name, scope_attr)}"
+                end
+              ]
             end
 
           if variants != [] do
@@ -159,6 +142,24 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
     # TODO: implement disgnostics, if needed
     []
+  end
+
+  defp generate_variant({:data_present, name}, data_name, scope_attr) do
+    """
+    plugin(({ addVariant }) => addVariant('#{name}', ['&[#{scope_attr}][data-#{data_name}]', '[#{scope_attr}][data-#{data_name}] &[#{scope_attr}]'])),
+    """
+  end
+
+  defp generate_variant({:data_not_present, name}, data_name, scope_attr) do
+    """
+    plugin(({ addVariant }) => addVariant('#{name}', ['&[s-self][#{scope_attr}]:not([data-#{data_name}])', '[s-self][#{scope_attr}]:not([data-#{data_name}]) &[#{scope_attr}]'])),
+    """
+  end
+
+  defp generate_variant({:data_with_value, name, value}, data_name, scope_attr) do
+    """
+    plugin(({ addVariant }) => addVariant('#{name}', ['&[#{scope_attr}][data-#{data_name}="#{value}"]', '[#{scope_attr}][data-#{data_name}="#{value}"] &[#{scope_attr}]'])),
+    """
   end
 
   defp scope_header(mod, {:__module__, %{scope_id: scope_id}}) do

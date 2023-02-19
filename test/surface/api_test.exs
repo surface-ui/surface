@@ -145,14 +145,19 @@ defmodule Surface.APITest do
 
     # invalid value
     code = "prop field, :string, css_variant: 123"
-    message = ~r/invalid value for option :css_variant. Expected a boolean, got: 123/
-    assert_raise(CompileError, message, fn -> eval(code) end)
 
-    # invalid type
-    code = "prop field, :string, css_variant: true"
+    message = """
+    code:4: invalid value for :css_variant. Expected either a boolean or a keyword list of options, got: 123.
 
-    message =
-      ~r/invalid use of :css_variant. Type must be either a :boolean, a :list or a type defining :values or :values!/
+    Valid options for type :string are:
+
+      * :not_nil - the name of the variant when the value is not `nil`. Default is the assign name.
+      * :nil - the name of the variant when the value is `nil`. Default is `no-[assign-name]`.
+
+    or, if you use the `values` or `values!` options:
+
+      * :prefix - the prefix of the variant name for each value listed in `values` or `values!`. Default is `[assign-name]-`.
+    """
 
     assert_raise(CompileError, message, fn -> eval(code) end)
   end
