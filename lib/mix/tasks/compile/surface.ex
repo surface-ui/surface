@@ -27,23 +27,11 @@ defmodule Mix.Tasks.Compile.Surface do
   * `css_output_file` - defines the css file where the compiler generates the code.
     Default is `./assets/css/_components.css`.
 
-  * `enable_variants` - instructs the compiler to generate tailwind variants based
+  * `enable_variants` [experimental] - instructs the compiler to generate tailwind variants based
     on props/data. Currently, only Tailwind variants are supported. Default is `false`.
+    See more in the "Enabling CSS variants" section below.
 
-    It requires updating the project's `tailwind.config.js` to add the `variants_output_file` as
-    a preset. Example:
-
-        module.exports = {
-          presets: [
-            require('./css/_variants.js')
-          ],
-          ...
-        }
-
-    > **NOTE**: This feature is still experimental and available for tests and feedback.
-    > Therefore, it might not be included in the next Surface minor version.
-
-  * `variants_output_file` - if `enable_variants` is `true`, defines the config file where
+  * `variants_output_file` [experimental] - if `enable_variants` is `true`, defines the config file where
     the compiler generates the scoped variants. Currently, only Tailwind variants are supported.
     Default is `./assets/css/_variants.js`.
 
@@ -53,6 +41,91 @@ defmodule Mix.Tasks.Compile.Surface do
         hooks_output_dir: "assets/js/surface",
         css_output_file: "assets/css/surface.css",
         enable_variants: true
+
+  ### Enabling CSS variants
+
+  By setting `enable_variants` to `true`, we instruct the compiler to generate tailwind
+  variants based on props/data. All variants are generated in the `variants_output_file`,
+  which defaults to `./assets/css/_variants.js`.
+
+  > **NOTE**: This feature is still experimental and available for feedback.
+  > Therefore, the API might change in the next Surface minor version. It's also
+  > currently only available for Tailwind.
+
+  To make the generated variants available in your templates, you need to set up the
+  project's `tailwind.config.js` to add the `variants_output_file` as
+  a preset. Example:
+
+      module.exports = {
+        presets: [
+          require('./css/_variants.js')
+        ],
+        ...
+      }
+
+  ## Defining CSS variants
+
+  In order to define CSS variants for your templates, you can use the `css_variant`
+  option, which is available for both, `prop` and `data`.
+
+  ### Example
+
+      prop loading, :boolean, css_variant: true
+      prop size, :string, values: ["small", "medium", "large"], css_variant: true
+
+  Depending on the type of the assign you're defining, a set of default variants will
+  be automatically available in your tamplates and be used directly in any `class`
+  attribute.
+
+  ### Example
+
+      <button class="loading:opacity-75 size-small:text-sm size-medium:text-base size-large:text-lg">
+        Submit
+      </button>
+
+  ## Customizing variants' names
+
+  Most of the time, you probably want to stick with the default variant naming convension,
+  however there are cases when renaming them may be more intuitive. For instance:
+
+      # Use `inactive` instead of `not-active`
+      prop active, :boolean, css_variant: [false: "inactive"]
+
+      # Use `valid` and `invalid` instead of `has-errors` and `no-errors`
+      data errors, :list, css_variant: [has_items: "invalid", no_items: "valid"]
+
+      # Use `small`, `medium` and `large` instead of `size-small`, `size-medium` and `size-large`
+      prop size, :string, values: ["small", "medium", "large"], css_variant: [prefix: ""]
+
+  As you can see, the value of `css_variant` can be either a boolean or a keyword list of options.
+
+  By passing `true`, the compiler generates variants according to the default values
+  for each option based to the name and type of the related assign. All available options for each type
+  are listed below.
+
+  ### Options for `:boolean`
+
+  * `:true` - the name of the variant when the value is truthy. Default is the assign name.
+  * `:false` - the name of the variant when the value is falsy. Default is `not-[assign-name]`.
+
+  ### Options for enumerables, e.g. `:list`, `:map` and `:mapset`
+
+  * `:has_items` - the name of the variant when the value list has items.
+    Default is `has-[assign-name]`
+  * `:no_items` - the name of the variant when the value is empty or `nil`.
+    Default is `no-[assign-name]`
+
+  ### Options for `:string`, `:atom` and `:integer` defining `values` or `values!`
+
+  * `:prefix` - the prefix of the variant name generated for each value listed in `values` or `values!`.
+    Default is `[assign-name]-`.
+
+  ### Options for other types
+
+  * `:not_nil` - the name of the variant when the value is not `nil`.
+    Default is the assign name.
+  * `:nil` - the name of the variant when the value is `nil`.
+    Default is `no-[assign-name]`.
 
   """
 
