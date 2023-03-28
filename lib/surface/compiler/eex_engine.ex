@@ -1145,7 +1145,7 @@ defmodule Surface.Compiler.EExEngine do
     caller = component.meta.caller
 
     caller_is_module_component? =
-      Module.get_attribute(caller.module, :component_type) && caller.function == {:render, 1}
+      get_module_attribute(caller.module, :component_type) && caller.function == {:render, 1}
 
     # NOTE: Using this is not optimized as it will always assume the component propagates
     # context into into its slots.
@@ -1417,7 +1417,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp get_propagate_context_to_slots_map(caller) do
-    Module.get_attribute(caller.module, :propagate_context_to_slots_map) ||
+    get_module_attribute(caller.module, :propagate_context_to_slots_map) ||
       Surface.BaseComponent.build_propagate_context_to_slots_map()
   end
 
@@ -1436,4 +1436,13 @@ defmodule Surface.Compiler.EExEngine do
 
     {call, [slots: slots] ++ meta, args}
   end
+
+  defp get_module_attribute(module, attribute) do
+    if function_exported?(module, :__info__, 1) do
+      module.__info__(:attributes)[attribute]
+    else
+      Module.get_attribute(module, attribute)
+    end
+  end
+
 end
