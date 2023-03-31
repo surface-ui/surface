@@ -214,8 +214,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
              return updatedHooks
            }
 
-           import * as c1 from "./Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks"
-           import * as c2 from "./Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks"
+           import * as c1 from "./Mix.Tasks.Compile.SurfaceTest.FakeButton.hooks.#{@hook_extension}"
+           import * as c2 from "./Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.#{@hook_extension}"
 
            let hooks = Object.assign(
              ns(c1, "Mix.Tasks.Compile.SurfaceTest.FakeButton"),
@@ -308,7 +308,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     assert files_changed?([@hooks_index_file], fn ->
              assert run(@components, opts) == []
            end) ==
-             [false]
+             [true]
 
     assert File.exists?(
              Path.join(@hooks_output_dir, "Mix.Tasks.Compile.SurfaceTest.FakeLink.hooks.#{second_extension}")
