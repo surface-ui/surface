@@ -22,7 +22,7 @@ defmodule Surface.LiveViewTest do
       import Phoenix.LiveView.Helpers, only: [live_component: 2, live_component: 3]
       import Surface, only: [sigil_F: 2]
       import Surface.LiveViewTest
-      require Phoenix.LiveView.HTMLEngine
+      require Phoenix.LiveView.TagEngine
     end
   end
 
@@ -61,7 +61,7 @@ defmodule Surface.LiveViewTest do
       quote do
         %{
           __slot__: :inner_block,
-          inner_block: Phoenix.LiveView.HTMLEngine.inner_block(:inner_block, do: unquote(clauses))
+          inner_block: Phoenix.LiveView.TagEngine.inner_block(:inner_block, do: unquote(clauses))
         }
       end
 
