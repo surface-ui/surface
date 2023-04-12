@@ -243,6 +243,21 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
            """
   end
 
+  test "prefix variants names using the :variants_prefix option", %{opts: opts} do
+    opts = Keyword.put(opts, :variants_prefix, "s-")
+
+    refute File.exists?(@variants_output_file)
+
+    assert run([FakeButtonWithVariant], opts) == []
+
+    s_attr = scope_attr(FakeButtonWithVariant)
+
+    assert File.read!(@variants_output_file) =~ """
+               plugin(({ addVariant }) => addVariant('s-active', ['&[#{s_attr}][data-active]', '[#{s_attr}][data-active] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('s-inactive', ['&[s-self][#{s_attr}]:not([data-active])', '[s-self][#{s_attr}]:not([data-active]) &[#{s_attr}]'])),\
+           """
+  end
+
   test "don't generate variants file if `enable_variants` is not defined or is `false`", %{opts: opts} do
     refute File.exists?(@variants_output_file)
 
