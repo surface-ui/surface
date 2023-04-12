@@ -51,27 +51,27 @@ defmodule Mix.Tasks.Compile.SurfaceTest.FakeButtonWithVariant do
     <button>
       <span>no scope</span>
       <span class="class-not-using-variants">no scope</span>
-      <span class="visible:block">with scope</span>
-      <span class="not-visible:block">with scope</span>
-      <span class="active:block">with scope</span>
-      <span class="inactive:block">with scope</span>
-      <span class="is-dark:block">with scope</span>
-      <span class="is-light:block">with scope</span>
-      <span class="size-small:block">with scope</span>
-      <span class="on:block">with scope</span>
-      <span class="off:block">with scope</span>
-      <span class="has-items:block">with scope</span>
-      <span class="no-items:block">with scope</span>
-      <span class="has-map:block">with scope</span>
-      <span class="no-map:block">with scope</span>
-      <span class="has-keyword:block">with scope</span>
-      <span class="no-keyword:block">with scope</span>
-      <span class="has-mapset:block">with scope</span>
-      <span class="no-mapset:block">with scope</span>
-      <span class="valid:block">with scope</span>
-      <span class="invalid:block">with scope</span>
-      <span class="other:block">with scope</span>
-      <span class="no-other:block">with scope</span>
+      <span class="@visible:block">with scope</span>
+      <span class="@not-visible:block">with scope</span>
+      <span class="@active:block">with scope</span>
+      <span class="@inactive:block">with scope</span>
+      <span class="@is-dark:block">with scope</span>
+      <span class="@is-light:block">with scope</span>
+      <span class="@size-small:block">with scope</span>
+      <span class="@on:block">with scope</span>
+      <span class="@off:block">with scope</span>
+      <span class="@has-items:block">with scope</span>
+      <span class="@no-items:block">with scope</span>
+      <span class="@has-map:block">with scope</span>
+      <span class="@no-map:block">with scope</span>
+      <span class="@has-keyword:block">with scope</span>
+      <span class="@no-keyword:block">with scope</span>
+      <span class="@has-mapset:block">with scope</span>
+      <span class="@no-mapset:block">with scope</span>
+      <span class="@valid:block">with scope</span>
+      <span class="@invalid:block">with scope</span>
+      <span class="@other:block">with scope</span>
+      <span class="@no-other:block">with scope</span>
       <span class={@dynamic}>with scope</span>
     </button>
     """

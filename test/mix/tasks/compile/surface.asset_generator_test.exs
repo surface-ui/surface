@@ -188,56 +188,56 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
                /* Mix.Tasks.Compile.SurfaceTest.FakeButtonWithVariant */
 
                /* prop active */
-               plugin(({ addVariant }) => addVariant('active', ['&[#{s_attr}][data-active]', '[#{s_attr}][data-active] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('inactive', ['&[s-self][#{s_attr}]:not([data-active])', '[s-self][#{s_attr}]:not([data-active]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@active', ['&[#{s_attr}][data-active]', '[#{s_attr}][data-active] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@inactive', ['&[s-self][#{s_attr}]:not([data-active])', '[s-self][#{s_attr}]:not([data-active]) &[#{s_attr}]'])),
 
                /* prop dark? */
-               plugin(({ addVariant }) => addVariant('is-dark', ['&[#{s_attr}][data-dark]', '[#{s_attr}][data-dark] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('is-light', ['&[s-self][#{s_attr}]:not([data-dark])', '[s-self][#{s_attr}]:not([data-dark]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@is-dark', ['&[#{s_attr}][data-dark]', '[#{s_attr}][data-dark] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@is-light', ['&[s-self][#{s_attr}]:not([data-dark])', '[s-self][#{s_attr}]:not([data-dark]) &[#{s_attr}]'])),
 
                /* prop visible */
-               plugin(({ addVariant }) => addVariant('visible', ['&[#{s_attr}][data-visible]', '[#{s_attr}][data-visible] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('not-visible', ['&[s-self][#{s_attr}]:not([data-visible])', '[s-self][#{s_attr}]:not([data-visible]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@visible', ['&[#{s_attr}][data-visible]', '[#{s_attr}][data-visible] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@not-visible', ['&[s-self][#{s_attr}]:not([data-visible])', '[s-self][#{s_attr}]:not([data-visible]) &[#{s_attr}]'])),
 
                /* data empty_items */
-               plugin(({ addVariant }) => addVariant('has-empty-items', ['&[#{s_attr}][data-empty-items]', '[#{s_attr}][data-empty-items] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-empty-items', ['&[s-self][#{s_attr}]:not([data-empty-items])', '[s-self][#{s_attr}]:not([data-empty-items]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@has-empty-items', ['&[#{s_attr}][data-empty-items]', '[#{s_attr}][data-empty-items] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-empty-items', ['&[s-self][#{s_attr}]:not([data-empty-items])', '[s-self][#{s_attr}]:not([data-empty-items]) &[#{s_attr}]'])),
 
                /* data errors */
-               plugin(({ addVariant }) => addVariant('invalid', ['&[#{s_attr}][data-errors]', '[#{s_attr}][data-errors] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('valid', ['&[s-self][#{s_attr}]:not([data-errors])', '[s-self][#{s_attr}]:not([data-errors]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@invalid', ['&[#{s_attr}][data-errors]', '[#{s_attr}][data-errors] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@valid', ['&[s-self][#{s_attr}]:not([data-errors])', '[s-self][#{s_attr}]:not([data-errors]) &[#{s_attr}]'])),
 
                /* data items */
-               plugin(({ addVariant }) => addVariant('has-items', ['&[#{s_attr}][data-items]', '[#{s_attr}][data-items] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-items', ['&[s-self][#{s_attr}]:not([data-items])', '[s-self][#{s_attr}]:not([data-items]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@has-items', ['&[#{s_attr}][data-items]', '[#{s_attr}][data-items] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-items', ['&[s-self][#{s_attr}]:not([data-items])', '[s-self][#{s_attr}]:not([data-items]) &[#{s_attr}]'])),
 
                /* data keyword */
-               plugin(({ addVariant }) => addVariant('has-keyword', ['&[#{s_attr}][data-keyword]', '[#{s_attr}][data-keyword] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-keyword', ['&[s-self][#{s_attr}]:not([data-keyword])', '[s-self][#{s_attr}]:not([data-keyword]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@has-keyword', ['&[#{s_attr}][data-keyword]', '[#{s_attr}][data-keyword] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-keyword', ['&[s-self][#{s_attr}]:not([data-keyword])', '[s-self][#{s_attr}]:not([data-keyword]) &[#{s_attr}]'])),
 
                /* data map */
-               plugin(({ addVariant }) => addVariant('has-map', ['&[#{s_attr}][data-map]', '[#{s_attr}][data-map] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-map', ['&[s-self][#{s_attr}]:not([data-map])', '[s-self][#{s_attr}]:not([data-map]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@has-map', ['&[#{s_attr}][data-map]', '[#{s_attr}][data-map] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-map', ['&[s-self][#{s_attr}]:not([data-map])', '[s-self][#{s_attr}]:not([data-map]) &[#{s_attr}]'])),
 
                /* data mapset */
-               plugin(({ addVariant }) => addVariant('has-mapset', ['&[#{s_attr}][data-mapset]', '[#{s_attr}][data-mapset] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-mapset', ['&[s-self][#{s_attr}]:not([data-mapset])', '[s-self][#{s_attr}]:not([data-mapset]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@has-mapset', ['&[#{s_attr}][data-mapset]', '[#{s_attr}][data-mapset] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-mapset', ['&[s-self][#{s_attr}]:not([data-mapset])', '[s-self][#{s_attr}]:not([data-mapset]) &[#{s_attr}]'])),
 
                /* data nil_items */
-               plugin(({ addVariant }) => addVariant('has-nil-items', ['&[#{s_attr}][data-nil-items]', '[#{s_attr}][data-nil-items] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-nil-items', ['&[s-self][#{s_attr}]:not([data-nil-items])', '[s-self][#{s_attr}]:not([data-nil-items]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@has-nil-items', ['&[#{s_attr}][data-nil-items]', '[#{s_attr}][data-nil-items] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-nil-items', ['&[s-self][#{s_attr}]:not([data-nil-items])', '[s-self][#{s_attr}]:not([data-nil-items]) &[#{s_attr}]'])),
 
                /* data other */
-               plugin(({ addVariant }) => addVariant('other', ['&[#{s_attr}][data-other]', '[#{s_attr}][data-other] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('no-other', ['&[s-self][#{s_attr}]:not([data-other])', '[s-self][#{s_attr}]:not([data-other]) &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@other', ['&[#{s_attr}][data-other]', '[#{s_attr}][data-other] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@no-other', ['&[s-self][#{s_attr}]:not([data-other])', '[s-self][#{s_attr}]:not([data-other]) &[#{s_attr}]'])),
 
                /* data size */
-               plugin(({ addVariant }) => addVariant('size-small', ['&[#{s_attr}][data-size="small"]', '[#{s_attr}][data-size="small"] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('size-large', ['&[#{s_attr}][data-size="large"]', '[#{s_attr}][data-size="large"] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@size-small', ['&[#{s_attr}][data-size="small"]', '[#{s_attr}][data-size="small"] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@size-large', ['&[#{s_attr}][data-size="large"]', '[#{s_attr}][data-size="large"] &[#{s_attr}]'])),
 
                /* data status */
-               plugin(({ addVariant }) => addVariant('on', ['&[#{s_attr}][data-status="on"]', '[#{s_attr}][data-status="on"] &[#{s_attr}]'])),
-               plugin(({ addVariant }) => addVariant('off', ['&[#{s_attr}][data-status="off"]', '[#{s_attr}][data-status="off"] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@on', ['&[#{s_attr}][data-status="on"]', '[#{s_attr}][data-status="on"] &[#{s_attr}]'])),
+               plugin(({ addVariant }) => addVariant('@off', ['&[#{s_attr}][data-status="off"]', '[#{s_attr}][data-status="off"] &[#{s_attr}]'])),
              ]
            };
            """

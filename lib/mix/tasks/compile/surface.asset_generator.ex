@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @default_hooks_output_dir "assets/js/_hooks"
   @default_css_output_file "assets/css/_components.css"
   @default_variants_output_file "assets/css/_variants.js"
+  @default_variants_prefix "@"
   @supported_hooks_extensions ~W"js jsx ts tsx" |> Enum.join(",")
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
@@ -14,6 +15,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
     enable_variants = Keyword.get(opts, :enable_variants, false)
+    variants_prefix = Keyword.get(opts, :variants_prefix, @default_variants_prefix)
 
     variants_output_file = Keyword.get(opts, :variants_output_file, @default_variants_output_file)
 
@@ -22,7 +24,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     generate_js_files(js_files, hooks_output_dir)
     css_diagnostics = generate_css_file(components, css_output_file, env)
 
-    variants_diagnostics = generate_variants_file(components, enable_variants, variants_output_file)
+    variants_diagnostics =
+      generate_variants_file(components, enable_variants, variants_output_file, variants_prefix)
 
     diagnostics = js_diagnostics ++ css_diagnostics ++ variants_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
@@ -74,11 +77,11 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     diagnostics
   end
 
-  defp generate_variants_file(_components, false, _output_file) do
+  defp generate_variants_file(_components, false, _output_file, _variants_prefix) do
     []
   end
 
-  defp generate_variants_file(components, _enable_variants, output_file) do
+  defp generate_variants_file(components, _enable_variants, output_file, variants_prefix) do
     dest_file = Path.join([File.cwd!(), output_file])
 
     dest_file_content =
@@ -103,7 +106,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
               [
                 "\n    /* #{assign_func} #{assign_name} */\n",
                 for variant_spec <- variants_specs do
-                  "    #{generate_variant(variant_spec, data_name, scope_attr)}"
+                  "    #{generate_variant(variant_spec, data_name, scope_attr, variants_prefix)}"
                 end
               ]
             end
@@ -143,21 +146,21 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     []
   end
 
-  defp generate_variant({:data_present, name}, data_name, scope_attr) do
+  defp generate_variant({:data_present, name}, data_name, scope_attr, variants_prefix) do
     """
-    plugin(({ addVariant }) => addVariant('#{name}', ['&[#{scope_attr}][data-#{data_name}]', '[#{scope_attr}][data-#{data_name}] &[#{scope_attr}]'])),
-    """
-  end
-
-  defp generate_variant({:data_not_present, name}, data_name, scope_attr) do
-    """
-    plugin(({ addVariant }) => addVariant('#{name}', ['&[s-self][#{scope_attr}]:not([data-#{data_name}])', '[s-self][#{scope_attr}]:not([data-#{data_name}]) &[#{scope_attr}]'])),
+    plugin(({ addVariant }) => addVariant('#{variants_prefix}#{name}', ['&[#{scope_attr}][data-#{data_name}]', '[#{scope_attr}][data-#{data_name}] &[#{scope_attr}]'])),
     """
   end
 
-  defp generate_variant({:data_with_value, name, value}, data_name, scope_attr) do
+  defp generate_variant({:data_not_present, name}, data_name, scope_attr, variants_prefix) do
     """
-    plugin(({ addVariant }) => addVariant('#{name}', ['&[#{scope_attr}][data-#{data_name}="#{value}"]', '[#{scope_attr}][data-#{data_name}="#{value}"] &[#{scope_attr}]'])),
+    plugin(({ addVariant }) => addVariant('#{variants_prefix}#{name}', ['&[s-self][#{scope_attr}]:not([data-#{data_name}])', '[s-self][#{scope_attr}]:not([data-#{data_name}]) &[#{scope_attr}]'])),
+    """
+  end
+
+  defp generate_variant({:data_with_value, name, value}, data_name, scope_attr, variants_prefix) do
+    """
+    plugin(({ addVariant }) => addVariant('#{variants_prefix}#{name}', ['&[#{scope_attr}][data-#{data_name}="#{value}"]', '[#{scope_attr}][data-#{data_name}="#{value}"] &[#{scope_attr}]'])),
     """
   end
 
