@@ -12,6 +12,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
   def run(components, opts \\ []) do
+    components = Enum.sort(components, :desc)
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
     enable_variants = Keyword.get(opts, :enable_variants, false)
@@ -22,6 +23,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     env = Keyword.get(opts, :env, Mix.env())
     {js_files, js_diagnostics} = get_colocated_js_files(components)
     generate_js_files(js_files, hooks_output_dir)
+
     css_diagnostics = generate_css_file(components, css_output_file, env)
 
     variants_diagnostics =
@@ -41,7 +43,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       end
 
     {content, diagnostics, imports_set} =
-      for mod <- Enum.sort(components, :desc),
+      for mod <- components,
           function_exported?(mod, :__style__, 0),
           {_func, %{css: css, vars: vars, imports: imports}} = func_style <- mod.__style__(),
           reduce: {"", [], MapSet.new()} do
@@ -92,9 +94,8 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
     sort_spec = &Enum.sort_by(&1, fn spec -> spec.name end)
 
-    # TODO: move the sort outside
     content =
-      for mod <- Enum.sort(components, :desc), reduce: [] do
+      for mod <- components, reduce: [] do
         content ->
           specs = sort_spec.(mod.__props__()) ++ sort_spec.(mod.__data__())
           scope_attr = Surface.Compiler.CSSTranslator.scope_attr(mod)
