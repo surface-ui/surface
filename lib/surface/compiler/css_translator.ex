@@ -13,12 +13,28 @@ defmodule Surface.Compiler.CSSTranslator do
   @scope_id_length 5
   @var_name_length 5
 
-  def scope_attr(component, func) do
-    @scope_attr_prefix <> scope_id(component, func)
+  def scope_attr(module) do
+    @scope_attr_prefix <> scope_id(module)
   end
 
-  def scope_id(component, func) do
-    hash("#{inspect(component)}.#{func}", @scope_id_length)
+  def scope_attr(module, func) do
+    @scope_attr_prefix <> scope_id(module, func)
+  end
+
+  def scope_id(scope) when is_binary(scope) do
+    scope
+  end
+
+  def scope_id({module, func}) do
+    scope_id(module, func)
+  end
+
+  def scope_id(module) do
+    hash(inspect(module), @scope_id_length)
+  end
+
+  def scope_id(module, func) do
+    hash("#{inspect(module)}.#{func}", @scope_id_length)
   end
 
   def var_name(scope, expr) do
@@ -46,12 +62,12 @@ defmodule Surface.Compiler.CSSTranslator do
   end
 
   def translate!(css, opts \\ []) do
-    module = Keyword.get(opts, :module)
-    func = Keyword.get(opts, :func)
-    scope_id = Keyword.get(opts, :scope_id) || scope_id(module, func)
+    scope = Keyword.fetch!(opts, :scope)
+    scope_id = scope_id(scope)
     scope_attr_prefix = Keyword.get(opts, :scope_attr_prefix) || @scope_attr_prefix
     file = Keyword.get(opts, :file)
     line = Keyword.get(opts, :line) || 1
+    inline? = Keyword.get(opts, :inline?, false)
     env = Keyword.get(opts, :env) || :dev
 
     state = %{
@@ -61,8 +77,9 @@ defmodule Surface.Compiler.CSSTranslator do
       line: line,
       env: env,
       vars: %{},
+      imports: [],
       selectors_buffer: [],
-      requires_data_attrs_on_root: false,
+      use_deep_at_the_beginning?: false,
       selectors: %{
         elements: MapSet.new(),
         classes: MapSet.new(),
@@ -81,10 +98,12 @@ defmodule Surface.Compiler.CSSTranslator do
       scope_id: scope_id,
       file: file,
       line: line,
+      inline?: inline?,
       css: to_string(updated_tokens),
       selectors: state.selectors,
       vars: state.vars,
-      requires_data_attrs_on_root: state.requires_data_attrs_on_root
+      imports: state.imports,
+      use_deep_at_the_beginning?: state.use_deep_at_the_beginning?
     }
   end
 
@@ -117,6 +136,19 @@ defmodule Surface.Compiler.CSSTranslator do
 
   defp translate([{:comment, text} | rest], acc, state) do
     translate(rest, ["*/", text, "/*" | acc], state)
+  end
+
+  defp translate([{:at_rule, [{:text, "@import"} | _] = tokens} | rest], acc, state) do
+    {updated_tokens, state} = translate(tokens, [], state)
+
+    rest =
+      case rest do
+        [{:ws, _} | rest_with_no_leading_ws] -> rest_with_no_leading_ws
+        _ -> rest
+      end
+
+    state = %{state | imports: [to_string(updated_tokens) | state.imports]}
+    translate(rest, acc, state)
   end
 
   defp translate([{:at_rule, tokens} | rest], acc, state) do
@@ -154,7 +186,7 @@ defmodule Surface.Compiler.CSSTranslator do
   # :deep as the first selector
   defp translate_selector_list([{:text, ":deep"}, {:block, "(", arg, _meta} | rest], acc, state) do
     {updated_tokens, state} = translate(arg, [], state)
-    state = %{state | requires_data_attrs_on_root: true}
+    state = %{state | use_deep_at_the_beginning?: true}
     acc = [updated_tokens, "[#{@self_attr}][#{state.scope_attr_prefix}#{state.scope_id}] " | acc]
     translate_selector(rest, acc, state)
   end

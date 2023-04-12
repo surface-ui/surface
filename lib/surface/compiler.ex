@@ -69,9 +69,25 @@ defmodule Surface.Compiler do
   # TODO: Add all relevant information from the caller (when it's a component), e.g. props, data, style, etc.
   # Make the compiler use this struct instead of calls to Surface.API.*(caller.module)
   defmodule CallerSpec do
-    defstruct [:type]
+    defstruct type: nil,
+              props: [],
+              variants: [],
+              data_variants: [],
+              requires_s_self_on_root?: false,
+              requires_s_scope_on_root?: false,
+              has_style_or_variants?: false,
+              scope_id: nil
 
-    @type t :: %__MODULE__{type: module()}
+    @type t :: %__MODULE__{
+            type: module(),
+            props: list(),
+            variants: list(),
+            data_variants: list(),
+            requires_s_self_on_root?: boolean(),
+            requires_s_scope_on_root?: boolean(),
+            has_style_or_variants?: boolean(),
+            scope_id: binary()
+          }
   end
 
   defmodule CompileMeta do
@@ -115,6 +131,8 @@ defmodule Surface.Compiler do
       |> skip_blanks()
       |> maybe_pop_style(caller, [file: file, line: line] ++ opts)
 
+    caller_spec = build_caller_spec(caller, style)
+
     compile_meta = %CompileMeta{
       line: line,
       file: file,
@@ -122,7 +140,7 @@ defmodule Surface.Compiler do
       checks: opts[:checks] || [],
       variables: opts[:variables],
       style: style,
-      caller_spec: opts[:caller_spec] || %CallerSpec{}
+      caller_spec: caller_spec
     }
 
     tokens
@@ -130,6 +148,49 @@ defmodule Surface.Compiler do
     |> to_ast(compile_meta)
     |> maybe_transform_ast(compile_meta)
     |> validate_component_structure(compile_meta, caller.module)
+  end
+
+  defp build_caller_spec(caller, style) do
+    component_type =
+      if Module.open?(caller.module) do
+        Module.get_attribute(caller.module, :component_type)
+      end
+
+    use_deep_at_the_beginning? = Map.get(style, :use_deep_at_the_beginning?, false)
+
+    caller_spec = %CallerSpec{
+      type: component_type,
+      scope_id: style.scope_id,
+      requires_s_self_on_root?: use_deep_at_the_beginning?,
+      requires_s_scope_on_root?: use_deep_at_the_beginning?,
+      has_style_or_variants?: Map.has_key?(style, :css)
+    }
+
+    if component_type do
+      # Currently, we only support props and data for the module components
+      {props, datas} =
+        if caller.function == {:render, 1} do
+          {Surface.API.get_props(caller.module), Surface.API.get_data(caller.module)}
+        else
+          {[], []}
+        end
+
+      {variants, data_variants} = Surface.Compiler.Variants.generate(props ++ datas)
+
+      define_variants? = variants != []
+
+      %CallerSpec{
+        caller_spec
+        | props: props,
+          variants: variants,
+          data_variants: data_variants,
+          requires_s_self_on_root?: caller_spec.requires_s_self_on_root? or define_variants?,
+          requires_s_scope_on_root?: caller_spec.requires_s_scope_on_root? or define_variants?,
+          has_style_or_variants?: caller_spec.has_style_or_variants? or define_variants?
+      }
+    else
+      caller_spec
+    end
   end
 
   def to_live_struct(nodes, opts \\ []) do
@@ -850,10 +911,10 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp maybe_add_caller_scope_id_prop(node, %mod{style: %{} = style})
+  defp maybe_add_caller_scope_id_prop(node, %mod{caller_spec: %{has_style_or_variants?: true} = caller_spec})
        when mod in [CompileMeta, AST.Meta] do
     %{meta: meta, props: props} = node
-    %{scope_id: scope_id} = style
+    %CallerSpec{scope_id: scope_id} = caller_spec
 
     prop = %AST.Attribute{
       meta: meta,
@@ -869,7 +930,7 @@ defmodule Surface.Compiler do
     node
   end
 
-  defp maybe_add_caller_scope_id_attr_to_root_node(%type{} = node, _style, %CallerSpec{} = caller_spec)
+  defp maybe_add_caller_scope_id_attr_to_root_node(%type{} = node, %CallerSpec{} = caller_spec)
        when type in [AST.Tag, AST.VoidTag] do
     is_caller_a_component? = caller_spec.type != nil
 
@@ -877,8 +938,7 @@ defmodule Surface.Compiler do
     function_component? = node.meta.caller.function != {:render, 1}
 
     has_css_class_prop? = fn ->
-      props = Helpers.get_module_attribute(node.meta.caller.module, :prop, [])
-      Enum.any?(props, &(&1.type == :css_class))
+      Enum.any?(caller_spec.props, &(&1.type == :css_class))
     end
 
     passing_class_expr? = fn node ->
@@ -911,7 +971,7 @@ defmodule Surface.Compiler do
     %{node | attributes: attributes}
   end
 
-  defp maybe_add_caller_scope_id_attr_to_root_node(node, _style, _caller_spec) do
+  defp maybe_add_caller_scope_id_attr_to_root_node(node, _caller_spec) do
     node
   end
 
@@ -1572,12 +1632,14 @@ defmodule Surface.Compiler do
     end
   end
 
-  defp maybe_transform_ast(nodes, %CompileMeta{style: style, caller_spec: caller_spec}) do
+  defp maybe_transform_ast(nodes, %CompileMeta{style: style, caller: caller, caller_spec: caller_spec}) do
     Enum.map(nodes, fn node ->
       node
-      |> maybe_add_data_s_attrs_to_root_node(style)
-      |> maybe_add_or_update_style_attr_of_root_node(style)
-      |> maybe_add_caller_scope_id_attr_to_root_node(style, caller_spec)
+      |> maybe_add_s_scope_to_root_node(caller_spec)
+      |> maybe_add_s_self_to_root_node(caller_spec)
+      |> maybe_add_vars_to_style_attr_on_root(style, caller.function)
+      |> maybe_add_caller_scope_id_attr_to_root_node(caller_spec)
+      |> maybe_add_data_variants_to_root_node(caller_spec)
     end)
   end
 
@@ -1585,10 +1647,30 @@ defmodule Surface.Compiler do
     nodes
   end
 
-  defp maybe_add_data_s_attrs_to_root_node(%AST.Tag{} = node, %{requires_data_attrs_on_root: true} = style) do
+  defp maybe_add_s_self_to_root_node(%AST.Tag{} = node, %CallerSpec{requires_s_self_on_root?: true}) do
     %AST.Tag{attributes: attributes, meta: meta} = node
-    %{scope_id: scope_id} = style
-    data_s_scope = :"#{CSSTranslator.scope_attr_prefix()}#{scope_id}"
+
+    data_self_attr = %AST.Attribute{
+      meta: meta,
+      name: :"#{CSSTranslator.self_attr()}",
+      type: :string,
+      value: %AST.Literal{value: true}
+    }
+
+    %AST.Tag{node | attributes: [data_self_attr | attributes]}
+  end
+
+  defp maybe_add_s_self_to_root_node(node, _caller_spec) do
+    node
+  end
+
+  defp maybe_add_s_scope_to_root_node(
+         %AST.Tag{} = node,
+         %CallerSpec{requires_s_scope_on_root?: true} = caller_spec
+       ) do
+    %AST.Tag{attributes: attributes, meta: meta} = node
+
+    data_s_scope = :"#{CSSTranslator.scope_attr_prefix()}#{caller_spec.scope_id}"
 
     attributes =
       if not AST.has_attribute?(attributes, data_s_scope) do
@@ -1604,25 +1686,16 @@ defmodule Surface.Compiler do
         attributes
       end
 
-    data_self_attr = %AST.Attribute{
-      meta: meta,
-      name: :"#{CSSTranslator.self_attr()}",
-      type: :string,
-      value: %AST.Literal{value: true}
-    }
-
-    %AST.Tag{node | attributes: [data_self_attr | attributes]}
+    %AST.Tag{node | attributes: attributes}
   end
 
-  defp maybe_add_data_s_attrs_to_root_node(node, _style) do
+  defp maybe_add_s_scope_to_root_node(node, _caller_spec) do
     node
   end
 
-  defp maybe_add_or_update_style_attr_of_root_node(
-         %AST.Tag{attributes: attributes, meta: meta} = node,
-         %{vars: vars} = style
-       )
-       when vars != %{} do
+  defp maybe_add_vars_to_style_attr_on_root(%AST.Tag{} = node, %{vars: vars, inline?: inline?} = style, func)
+       when vars != %{} and (func == {:render, 1} or inline?) do
+    %AST.Tag{attributes: attributes, meta: meta} = node
     %{file: file} = style
 
     vars_ast =
@@ -1655,7 +1728,54 @@ defmodule Surface.Compiler do
     %AST.Tag{node | attributes: updated_attrs}
   end
 
-  defp maybe_add_or_update_style_attr_of_root_node(node, _style) do
+  defp maybe_add_vars_to_style_attr_on_root(node, _style, _func) do
+    node
+  end
+
+  defp maybe_add_data_variants_to_root_node(%AST.Tag{} = node, caller_spec) do
+    %AST.Tag{attributes: attributes, meta: meta} = node
+    %CallerSpec{data_variants: data_variants} = caller_spec
+
+    variants_attributes =
+      for {type, _func, _name, data_name, assign_ast, _variants} <- data_variants do
+        expr_ast =
+          case type do
+            :boolean ->
+              quote do
+                unquote(assign_ast) == true
+              end
+
+            :enum ->
+              quote do
+                unquote(assign_ast) != nil and not Enum.empty?(unquote(assign_ast))
+              end
+
+            :choice ->
+              quote do
+                unquote(assign_ast)
+              end
+
+            :other ->
+              quote do
+                unquote(assign_ast) != nil
+              end
+          end
+
+        %AST.Attribute{
+          meta: meta,
+          name: "data-#{data_name}",
+          type: :string,
+          value: %AST.AttributeExpr{
+            meta: meta,
+            value: expr_ast
+          }
+        }
+      end
+
+    %AST.Tag{node | attributes: variants_attributes ++ attributes}
+  end
+
+  defp maybe_add_data_variants_to_root_node(node, _style) do
     node
   end
 
@@ -1675,14 +1795,18 @@ defmodule Surface.Compiler do
     }
   end
 
-  defp maybe_transform_tag(node, %mod{style: %{} = style})
+  defp maybe_transform_tag(node, %mod{
+         style: style,
+         caller_spec: %CallerSpec{has_style_or_variants?: true} = caller_spec
+       })
        when mod in [CompileMeta, AST.Meta] do
     %{element: element, attributes: attributes, meta: meta} = node
-    %{scope_id: scope_id, selectors: selectors} = style
+    %{selectors: selectors} = style
+    %CallerSpec{scope_id: scope_id, variants: variants} = caller_spec
 
     if universal_in_selectors?(selectors) or
          element_in_selectors?(element, selectors) or
-         maybe_in_selectors?(element, attributes, selectors) do
+         maybe_in_selectors_or_using_variants?(element, attributes, selectors, variants) do
       s_data_attr = %AST.Attribute{
         meta: meta,
         name: :"#{CSSTranslator.scope_attr_prefix()}#{scope_id}",
@@ -1700,21 +1824,23 @@ defmodule Surface.Compiler do
     node
   end
 
-  defp maybe_in_selectors?(element, attributes, selectors) do
+  defp maybe_in_selectors_or_using_variants?(element, attributes, selectors, variants) do
     {%{id: id, class: class}, _} = AST.pop_attributes_values_as_map(attributes, [:id, :class])
 
-    maybe_in_class_selectors?(element, class, selectors) or
+    maybe_in_class_selectors_or_variants?(element, class, selectors, variants) or
       maybe_in_id_selectors?(element, id, selectors) or
       maybe_in_combined_selectors?(element, id, class, selectors)
   end
 
-  defp maybe_in_class_selectors?(element, class, %{classes: classes, combined: combined}) do
+  defp maybe_in_class_selectors_or_variants?(element, class, %{classes: classes, combined: combined}, variants) do
     case class do
       %AST.Literal{value: value} ->
         value
         |> String.split()
         |> Enum.any?(fn c ->
-          MapSet.member?(classes, c) or MapSet.member?(combined, MapSet.new([element, ".#{c}"]))
+          MapSet.member?(classes, c) or
+            MapSet.member?(combined, MapSet.new([element, ".#{c}"])) or
+            String.contains?(c, variants)
         end)
 
       nil ->
@@ -1778,10 +1904,10 @@ defmodule Surface.Compiler do
       content
       |> to_string()
       |> CSSTranslator.translate!(
-        module: caller.module,
-        func: elem(caller.function, 0),
         line: line,
-        file: opts[:file]
+        file: opts[:file],
+        inline?: true,
+        scope: {caller.module, elem(caller.function, 0)}
       )
 
     if not Module.has_attribute?(caller.module, :__style__) do
@@ -1798,8 +1924,22 @@ defmodule Surface.Compiler do
       if Module.open?(caller.module) && caller.function do
         caller.module
         |> Helpers.get_module_attribute(:__style__, [])
-        |> Keyword.get(elem(caller.function, 0))
+        |> Keyword.get(:__module__)
       end
+
+    # TODO: Create a struct to hold and inicialize the selectors or even the style itself
+    style =
+      style ||
+        %{
+          scope_id: Surface.Compiler.CSSTranslator.scope_id(caller.module),
+          selectors: %{
+            elements: MapSet.new(),
+            classes: MapSet.new(),
+            ids: MapSet.new(),
+            combined: MapSet.new(),
+            other: MapSet.new()
+          }
+        }
 
     {style, tokens}
   end

@@ -4,14 +4,18 @@ defmodule Surface.ComponentStyleTest do
   import Surface.Compiler.CSSTranslator,
     only: [
       scope_attr: 0,
+      scope_attr: 1,
       scope_attr: 2,
       scope_id: 0,
+      scope_id: 1,
       scope_id: 2,
       self_attr: 0,
       var_name: 2
     ]
 
   alias Mix.Tasks.Compile.SurfaceTest.FakeButton
+  alias Mix.Tasks.Compile.SurfaceTest.FakeButtonWithVariant
+  alias Mix.Tasks.Compile.SurfaceTest.MultipleStyles
 
   test "colocated css file" do
     html =
@@ -21,12 +25,42 @@ defmodule Surface.ComponentStyleTest do
         """
       end
 
-    color_var = var_name(scope_id(FakeButton, :render), "@color")
+    color_var = var_name(scope_id(FakeButton), "@color")
 
     assert html =~ """
-           <button style="#{color_var}: red" #{scope_attr(FakeButton, :render)} class="btn">
+           <button style="#{color_var}: red" #{scope_attr(FakeButton)} class="btn">
              FAKE BUTTON
            </button>
+           """
+  end
+
+  test "function component without inline styles gets the file's scope and no style vars" do
+    html =
+      render_surface do
+        ~F"""
+        <FakeButton.func_without_inline_style/>
+        """
+      end
+
+    assert html =~ """
+           <button #{scope_attr(FakeButton)} class="btn">
+             FAKE BUTTON WITHOUT STYLE
+           </button>
+           """
+  end
+
+  test "the inline style is applied when both (inline and css file) are present" do
+    html =
+      render_surface do
+        ~F"""
+        <MultipleStyles/>
+        """
+      end
+
+    assert html =~ """
+           <div #{scope_attr(MultipleStyles, :render)} class="panel">
+           FAKE PANEL
+           </div>
            """
   end
 
@@ -281,6 +315,18 @@ defmodule Surface.ComponentStyleTest do
     end
   end
 
+  defmodule UsingMyLinkWithVariant do
+    use Surface.Component
+
+    prop live, :boolean, css_variant: true
+
+    def render(assigns) do
+      ~F"""
+      <MyLink class="live:text-sm"/>
+      """
+    end
+  end
+
   defmodule MyLinkNotUsingClass do
     use Surface.Component
 
@@ -311,6 +357,32 @@ defmodule Surface.ComponentStyleTest do
       <a href="#" class={"a"}>caller_scope_id: {@__caller_scope_id__}</a>
       """
     end
+  end
+
+  test "don't inject caller's scope attribute if no style nor variants are defined" do
+    html =
+      render_surface do
+        ~F"""
+        <MyLink />
+        """
+      end
+
+    assert html =~ """
+           <a href="#" class="a">caller_scope_id: </a>
+           """
+  end
+
+  test "inject caller's scope attribute if variants are defined" do
+    html =
+      render_surface do
+        ~F"""
+        <UsingMyLinkWithVariant/>
+        """
+      end
+
+    assert html =~ """
+           <a #{scope_attr(UsingMyLinkWithVariant)} href="#" class="a">caller_scope_id: #{scope_id(UsingMyLinkWithVariant)}</a>
+           """
   end
 
   test "inject caller's scope attribute on the root nodes of a child components that define a :css_class prop and pass a class attr as expression" do
@@ -499,6 +571,44 @@ defmodule Surface.ComponentStyleTest do
 
     assert html == """
            <button #{scope_attr()} class="btn">OK</button>
+           """
+  end
+
+  test "if there are variants, add s-self, s-scope and data-[variant_name] to the root and s-scope to any children that may be using them" do
+    html =
+      render_surface do
+        ~F"""
+        <FakeButtonWithVariant visible={true} active={false} dark?={true}/>
+        """
+      end
+
+    assert html =~ """
+           <button data-dark data-visible data-other data-mapset data-keyword data-map data-items data-status="on" data-size="small" #{self_attr()} #{scope_attr(FakeButtonWithVariant)}>
+             <span>no scope</span>
+             <span class="class-not-using-variants">no scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@visible:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@not-visible:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@active:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@inactive:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@is-dark:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@is-light:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@size-small:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@on:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@off:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@has-items:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@no-items:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@has-map:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@no-map:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@has-keyword:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@no-keyword:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@has-mapset:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@no-mapset:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@valid:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@invalid:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@other:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="@no-other:block">with scope</span>
+             <span #{scope_attr(FakeButtonWithVariant)} class="dynamic">with scope</span>
+           </button>
            """
   end
 end

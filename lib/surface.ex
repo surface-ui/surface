@@ -109,17 +109,11 @@ defmodule Surface do
     indentation = meta[:indentation] || 0
     column = meta[:column] || 1
 
-    component_type =
-      if Module.open?(__CALLER__.module) do
-        Module.get_attribute(__CALLER__.module, :component_type)
-      end
-
-    caller_is_surface_component = component_type != nil
+    component_type = Module.get_attribute(__CALLER__.module, :component_type)
 
     string
     |> Surface.Compiler.compile(line, __CALLER__, __CALLER__.file,
-      checks: [no_undefined_assigns: caller_is_surface_component],
-      caller_spec: %Surface.Compiler.CallerSpec{type: component_type},
+      checks: [no_undefined_assigns: component_type != nil],
       indentation: indentation,
       column: column
     )

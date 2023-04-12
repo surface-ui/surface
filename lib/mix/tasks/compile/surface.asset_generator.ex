@@ -5,18 +5,31 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
 
   @default_hooks_output_dir "assets/js/_hooks"
   @default_css_output_file "assets/css/_components.css"
+  @default_variants_output_file "assets/css/_variants.js"
+  @default_variants_prefix "@"
   @supported_hooks_extensions ~W"js jsx ts tsx" |> Enum.join(",")
   @hooks_tag ".hooks"
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
   def run(components, opts \\ []) do
+    components = Enum.sort(components, :desc)
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)
+    enable_variants = Keyword.get(opts, :enable_variants, false)
+    variants_prefix = Keyword.get(opts, :variants_prefix, @default_variants_prefix)
+
+    variants_output_file = Keyword.get(opts, :variants_output_file, @default_variants_output_file)
+
     env = Keyword.get(opts, :env, Mix.env())
     {js_files, js_diagnostics} = get_colocated_js_files(components)
     generate_js_files(js_files, hooks_output_dir)
+
     css_diagnostics = generate_css_file(components, css_output_file, env)
-    diagnostics = js_diagnostics ++ css_diagnostics
+
+    variants_diagnostics =
+      generate_variants_file(components, enable_variants, variants_output_file, variants_prefix)
+
+    diagnostics = js_diagnostics ++ css_diagnostics ++ variants_diagnostics
     diagnostics |> Enum.reject(&is_nil/1)
   end
 
@@ -29,23 +42,34 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
         _ -> nil
       end
 
-    {content, _, diagnostics} =
-      for mod <- Enum.sort(components, :desc),
+    {content, diagnostics, imports_set} =
+      for mod <- components,
           function_exported?(mod, :__style__, 0),
-          {func, %{css: css, scope_id: scope_id, vars: vars}} = func_style <- mod.__style__(),
-          reduce: {"", nil, []} do
-        {content, last_mod_func_style, diagnostics} ->
+          {_func, %{css: css, vars: vars, imports: imports}} = func_style <- mod.__style__(),
+          reduce: {"", [], MapSet.new()} do
+        {content, diagnostics, imports_set} ->
           css = String.trim_leading(css, "\n")
-          component_header = [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
 
           {
-            ["\n/* ", component_header, " */\n\n", vars_comment(vars, env), css | content],
-            {mod, func_style},
-            validate_multiple_styles({mod, func_style}, last_mod_func_style) ++ diagnostics
+            ["\n/* ", scope_header(mod, func_style), " */\n\n", vars_comment(vars, env), css | content],
+            diagnostics,
+            Enum.reduce(imports, imports_set, fn i, acc -> MapSet.put(acc, i) end)
           }
       end
 
-    content = to_string([header(), "\n" | content])
+    # We move all @import entries to the top of the file to adhere to the CSS spec
+    imports_content =
+      if MapSet.size(imports_set) > 0 do
+        """
+
+        /* Extracted CSS imports from components */
+        #{Enum.join(imports_set, "\n")}
+        """
+      else
+        ""
+      end
+
+    content = to_string([header(), "\n", imports_content | content])
 
     if content != dest_file_content do
       dest_file |> Path.dirname() |> File.mkdir_p!()
@@ -53,6 +77,100 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
     end
 
     diagnostics
+  end
+
+  defp generate_variants_file(_components, false, _output_file, _variants_prefix) do
+    []
+  end
+
+  defp generate_variants_file(components, _enable_variants, output_file, variants_prefix) do
+    dest_file = Path.join([File.cwd!(), output_file])
+
+    dest_file_content =
+      case File.read(dest_file) do
+        {:ok, content} -> content
+        _ -> nil
+      end
+
+    sort_spec = &Enum.sort_by(&1, fn spec -> spec.name end)
+
+    content =
+      for mod <- components, reduce: [] do
+        content ->
+          specs = sort_spec.(mod.__props__()) ++ sort_spec.(mod.__data__())
+          scope_attr = Surface.Compiler.CSSTranslator.scope_attr(mod)
+
+          {_variants, data_variants} = Surface.Compiler.Variants.generate(specs)
+
+          variants =
+            for {_type, assign_func, assign_name, data_name, _assign_ast, variants_specs} <- data_variants do
+              [
+                "\n    /* #{assign_func} #{assign_name} */\n",
+                for variant_spec <- variants_specs do
+                  "    #{generate_variant(variant_spec, data_name, scope_attr, variants_prefix)}"
+                end
+              ]
+            end
+
+          if variants != [] do
+            ["    /* ", inspect(mod), " */\n", variants | content]
+          else
+            content
+          end
+      end
+
+    content = [
+      header(),
+      """
+
+
+      const plugin = require("tailwindcss/plugin");
+
+      module.exports = {
+        plugins: [
+      """,
+      content,
+      """
+        ]
+      };
+      """
+    ]
+
+    content = to_string(content)
+
+    if content != dest_file_content do
+      dest_file |> Path.dirname() |> File.mkdir_p!()
+      File.write!(dest_file, content)
+    end
+
+    # TODO: implement disgnostics, if needed
+    []
+  end
+
+  defp generate_variant({:data_present, name}, data_name, scope_attr, variants_prefix) do
+    """
+    plugin(({ addVariant }) => addVariant('#{variants_prefix}#{name}', ['&[#{scope_attr}][data-#{data_name}]', '[#{scope_attr}][data-#{data_name}] &[#{scope_attr}]'])),
+    """
+  end
+
+  defp generate_variant({:data_not_present, name}, data_name, scope_attr, variants_prefix) do
+    """
+    plugin(({ addVariant }) => addVariant('#{variants_prefix}#{name}', ['&[s-self][#{scope_attr}]:not([data-#{data_name}])', '[s-self][#{scope_attr}]:not([data-#{data_name}]) &[#{scope_attr}]'])),
+    """
+  end
+
+  defp generate_variant({:data_with_value, name, value}, data_name, scope_attr, variants_prefix) do
+    """
+    plugin(({ addVariant }) => addVariant('#{variants_prefix}#{name}', ['&[#{scope_attr}][data-#{data_name}="#{value}"]', '[#{scope_attr}][data-#{data_name}="#{value}"] &[#{scope_attr}]'])),
+    """
+  end
+
+  defp scope_header(mod, {:__module__, %{scope_id: scope_id}}) do
+    [inspect(mod), " (", scope_id, ")"]
+  end
+
+  defp scope_header(mod, {func, %{scope_id: scope_id}}) do
+    [inspect(mod), ".", to_string(func), "/1 (", scope_id, ")"]
   end
 
   defp generate_js_files(js_files, hooks_output_dir) do
@@ -207,22 +325,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       severity: :warning,
       compiler_name: "Surface"
     }
-  end
-
-  defp validate_multiple_styles({mod, {func, style}}, {mod, {func, other_style}}) do
-    position = "#{Path.relative_to_cwd(style.file)}:#{style.line}"
-
-    message = """
-    scoped CSS style already defined for #{inspect(mod)}.#{func}/1 at #{position}. \
-    Scoped styles must be defined either as the first <style> node in \
-    the template or in a colocated .css file.
-    """
-
-    [warning(message, other_style.file, other_style.line)]
-  end
-
-  defp validate_multiple_styles(_, _) do
-    []
   end
 
   defp vars_comment(vars, env) do
