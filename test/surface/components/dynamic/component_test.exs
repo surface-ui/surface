@@ -491,7 +491,7 @@ defmodule Surface.Components.Dynamic.ComponentTest do
 
   describe "dynamic components in dead views" do
     defmodule DeadView do
-      use Phoenix.View, root: "support/dead_views"
+      use Phoenix.Template, root: "support/dead_views"
       import Surface
       alias Surface.Components.Dynamic.Component
 
@@ -503,7 +503,7 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     end
 
     test "renders dynamic components" do
-      assert Phoenix.View.render_to_string(DeadView, "index.html", []) =~
+      assert Phoenix.Template.render_to_string(DeadView, "index", "html", []) =~
                """
                <div><div class="myclass">
                  <span>My label</span>
