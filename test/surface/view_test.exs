@@ -1,10 +1,10 @@
 defmodule MyAppWeb.FooView do
-  use Phoenix.View, root: "test/support/view_test/templates"
+  use Phoenix.Template, root: "test/support/view_test/templates"
   use Surface.View, root: "test/support/view_test/templates"
 end
 
 defmodule MyAppWeb.Nested.FooView do
-  use Phoenix.View, root: "test/support/view_test/templates"
+  use Phoenix.Template, root: "test/support/view_test/templates"
   use Surface.View, root: "test/support/view_test/templates"
 end
 
