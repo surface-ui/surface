@@ -125,6 +125,54 @@ defmodule Surface do
   end
 
   @doc """
+  Embeds an `.sface` template as a function component.
+
+  ## Example
+
+      defmodule MyAppWeb.Layouts do
+        use MyAppWeb, :html
+
+        embed_sface "layouts/root.sface"
+        embed_sface "layouts/app.sface"
+      end
+
+  The code above generates two functions, `root` and `app`. You can use both
+  as regular function components or as layout templates.
+  """
+  defmacro embed_sface(relative_file) do
+    file =
+      __CALLER__.file
+      |> Path.dirname()
+      |> Path.join(relative_file)
+
+    if File.exists?(file) do
+      name = file |> Path.rootname() |> Path.basename()
+
+      body =
+        file
+        |> File.read!()
+        |> Surface.Compiler.compile(1, __CALLER__, file)
+        |> Surface.Compiler.to_live_struct()
+
+      quote do
+        @external_resource unquote(file)
+        @file unquote(file)
+        def unquote(String.to_atom(name))(var!(assigns)) do
+          _ = var!(assigns)
+          unquote(body)
+        end
+      end
+    else
+      message = """
+      could not read template "#{relative_file}": no such file or directory. \
+      Trying to read file "#{file}".
+      """
+
+      IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
+    end
+  end
+
+  @doc """
   Converts the given code into Surface's AST.
 
   The code must be passed with the `do` block using the `~F` sigil.
