@@ -61,7 +61,7 @@ end
 
 ## Installation
 
-Phoenix v1.6 comes with built-in support for LiveView apps. You can create a new phoenix application with:
+Phoenix v1.7 comes with built-in support for LiveView apps. You can create a new phoenix application with:
 
 ```
 mix phx.new my_app
@@ -76,7 +76,7 @@ Add `surface` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:surface, "~> 0.9.4"}
+    {:surface, "~> 0.10.0"}
   ]
 end
 ```
