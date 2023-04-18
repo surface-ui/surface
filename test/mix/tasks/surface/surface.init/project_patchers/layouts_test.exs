@@ -14,8 +14,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.LayoutsTest do
       end
       """
 
-      {:patched, updated_code} =
-        Patcher.patch_code(code, add_embed_sface_calls_to_layouts(MyAppWeb))
+      {:patched, updated_code} = Patcher.patch_code(code, add_embed_sface_calls_to_layouts(MyAppWeb))
 
       assert updated_code == """
              defmodule MyAppWeb.Layouts do
@@ -38,8 +37,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.LayoutsTest do
       end
       """
 
-      assert {:already_patched, ^code} =
-               Patcher.patch_code(code, add_embed_sface_calls_to_layouts(MyAppWeb))
+      assert {:already_patched, ^code} = Patcher.patch_code(code, add_embed_sface_calls_to_layouts(MyAppWeb))
     end
   end
 end

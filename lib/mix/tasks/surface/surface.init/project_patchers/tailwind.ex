@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
   @impl true
   def specs(_assigns) do
     [
-      {:patch, "assets/tailwind.config.js", [add_sface_patterns_to_tailwind_config_js()]},
+      {:patch, "assets/tailwind.config.js", [add_sface_patterns_to_tailwind_config_js()]}
     ]
   end
 

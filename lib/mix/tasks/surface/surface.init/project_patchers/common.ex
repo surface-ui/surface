@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
       {:patch, "mix.exs", [add_surface_to_mix_compilers()]},
       {:patch, "config/dev.exs",
        [
-         add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path),
+         add_surface_live_reload_pattern_to_endpoint_config(context_app, web_module, web_path)
        ]},
       {:patch, web_module_path,
        [
@@ -104,15 +104,15 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Common do
   def add_surface_live_view_macro(web_module) do
     %{
       name: "Add `surface_live_view` macro",
-      patch: &FilePatchers.Phoenix.append_def_to_web_module(&1, :surface_live_view, """
+      patch:
+        &FilePatchers.Phoenix.append_def_to_web_module(&1, :surface_live_view, """
           quote do
             use Surface.LiveView,
               layout: {#{inspect(web_module)}.Layouts, :app}
 
             unquote(html_helpers())
           end\
-        """
-        ),
+        """),
       instructions: """
       Create a `surface_live_view` macro so it includes the default phoenix helpers and layouts
       when using `use #{inspect(web_module)}, :surface_live_view`.

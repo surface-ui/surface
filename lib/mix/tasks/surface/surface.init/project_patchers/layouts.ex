@@ -23,10 +23,16 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Layouts do
   def add_embed_sface_calls_to_layouts(web_module) do
     %{
       name: "Embed sface templates in the Layouts module",
-      patch: &FilePatchers.Phoenix.append_code_to_layouts_module(&1, """
-      embed_sface "layouts/root.sface"
-      embed_sface "layouts/app.sface"\
-      """, "embed_sface", Module.concat(web_module, "Layouts")),
+      patch:
+        &FilePatchers.Phoenix.append_code_to_layouts_module(
+          &1,
+          """
+          embed_sface "layouts/root.sface"
+          embed_sface "layouts/app.sface"\
+          """,
+          "embed_sface",
+          Module.concat(web_module, "Layouts")
+        ),
       instructions: """
       If you want to use `.sface` files instead of `.html.heex` files as your layout templates,
       use the `embed_sface` macro to embed the templates in your Layouts module.
