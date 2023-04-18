@@ -1,38 +1,17 @@
 defmodule <%= inspect(web_module) %>.Demo do
-  use Surface.LiveView
+  use <%= inspect(web_module) %>, :surface_live_view
 
   alias <%= inspect(web_module) %>.Components.Card
 
   def render(assigns) do
     ~F"""
     <style>
-      .flex {
-        display: flex;
-      }
-
-      .items-center {
-        align-items: center;
-      }
-
-      .justify-center {
-        justify-content: center;
-      }
-
-      .h-screen {
-        height: 100vh;
-      }
-
       .tag {
-        display: inline-block;
-        background-color: #ddd;
-        border-radius: 9999px;
-        padding: 3px 10px;
-        color: #888;
-        font-weight: 500;
+        @apply bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2;
       }
     </style>
 
-    <div class="flex items-center justify-center h-screen">
+    <div class="flex justify-center mt-12">
       <Card max_width="lg" rounded>
         <:header>
           Surface UI

@@ -95,4 +95,31 @@ defmodule Mix.Tasks.Surface.Init.ExPatcherTest do
 
     assert value == ~S("C")
   end
+
+  test "find_def" do
+    code = """
+    defmodule MyAppWeb do
+      defmacro __using__(which) when is_atom(which) do
+        apply(__MODULE__, which, [])
+      end
+
+      def surface_live_view do
+        1
+      end
+    end
+    """
+
+    config =
+      code
+      |> ExPatcher.parse_string!()
+      |> ExPatcher.enter_call(:defmodule)
+      |> ExPatcher.find_def(:surface_live_view)
+      |> ExPatcher.node_to_string()
+
+    assert config == """
+           def surface_live_view do
+             1
+           end\
+           """
+  end
 end

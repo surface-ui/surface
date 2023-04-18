@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def specs(%{catalogue: true, demo: true, tailwind: tailwind?} = assigns) do
+  def specs(%{catalogue: true, demo: true} = assigns) do
     %{web_module: web_module} = assigns
 
     web_folder = web_module |> inspect() |> Macro.underscore()
@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
 
     patches(assigns) ++
       [
-        {:create, "demo/#{demo_path(tailwind?)}/card_examples.ex", dest},
+        {:create, "demo/card_examples.ex", dest},
         {:create, "demo/card_playground.ex", dest}
       ]
   end
@@ -53,7 +53,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   def add_surface_catalogue_to_mix_deps do
     %{
       name: "Add `surface_catalogue` dependency",
-      patch: &FilePatchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.5.2")),
+      patch: &FilePatchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.6.0")),
       update_deps: [:surface_catalogue],
       instructions: """
       Add `surface_catalogue` to the list of dependencies in `mix.exs`.
@@ -87,7 +87,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
           fn code -> "#{code} ++ catalogues()" end,
           "catalogues()"
         ),
-        &FilePatchers.MixExs.append_def(&1, "catalogues", """
+        &FilePatchers.MixExs.append_def(&1, :catalogues, """
           [
             "priv/catalogue"
           ]\
@@ -236,7 +236,4 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
       """
     }
   end
-
-  defp demo_path(true), do: "tailwind"
-  defp demo_path(_), do: "default"
 end

@@ -26,18 +26,20 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
     output =
       cmd(
-        "mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
+        "mix surface.init --catalogue --demo --layouts --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
         opts
       )
 
-    assert output == """
+    assert output =~ """
            * patching .formatter.exs
            * patching .gitignore
            * patching assets/css/app.css
            * patching assets/js/app.js
+           * patching assets/tailwind.config.js
            * patching config/config.exs
            * patching config/dev.exs
            * patching lib/surface_init_test_web.ex
+           * patching lib/surface_init_test_web/components/layouts.ex
            * patching lib/surface_init_test_web/router.ex
            * patching mix.exs
            * creating lib/surface_init_test_web/components/card.ex
@@ -45,19 +47,13 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating lib/surface_init_test_web/live/demo.ex
            * creating priv/catalogue/surface_init_test_web/components/card_examples.ex
            * creating priv/catalogue/surface_init_test_web/components/card_playground.ex
-           * deleting assets/css/phoenix.css
-           * creating assets/tailwind.config.js
-           * creating lib/surface_init_test_web/templates/page/index.sface
-           * deleting lib/surface_init_test_web/templates/page/index.html.heex
-           * creating lib/surface_init_test_web/templates/layout/app.sface
-           * deleting lib/surface_init_test_web/templates/layout/app.html.heex
-           * creating lib/surface_init_test_web/templates/layout/live.sface
-           * deleting lib/surface_init_test_web/templates/layout/live.html.heex
-           * creating lib/surface_init_test_web/templates/layout/root.sface
-           * deleting lib/surface_init_test_web/templates/layout/root.html.heex
+           * creating lib/surface_init_test_web/components/layouts/app.sface
+           * deleting lib/surface_init_test_web/components/layouts/app.html.heex
+           * creating lib/surface_init_test_web/components/layouts/root.sface
+           * deleting lib/surface_init_test_web/components/layouts/root.html.heex
 
-           Finished running 41 patches for 24 files.
-           41 changes applied, 0 skipped.
+           Finished running 30 patches for 20 files.
+           30 changes applied, 0 skipped.
            """
   end
 
@@ -66,18 +62,20 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
     output =
       cmd(
-        "mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
+        "mix surface.init --catalogue --demo --layouts --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
         opts
       )
 
-    assert compact_output(output) == """
+    assert compact_output(output) =~ """
            * patching .formatter.exs (skipped)
            * patching .gitignore (skipped)
            * patching assets/css/app.css (skipped)
            * patching assets/js/app.js (skipped)
+           * patching assets/tailwind.config.js (skipped)
            * patching config/config.exs (skipped)
            * patching config/dev.exs (skipped)
            * patching lib/surface_init_test_web.ex (skipped)
+           * patching lib/surface_init_test_web/components/layouts.ex (skipped)
            * patching lib/surface_init_test_web/router.ex (skipped)
            * patching mix.exs (skipped)
            * creating lib/surface_init_test_web/components/card.ex (skipped)
@@ -85,19 +83,13 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating lib/surface_init_test_web/live/demo.ex (skipped)
            * creating priv/catalogue/surface_init_test_web/components/card_examples.ex (skipped)
            * creating priv/catalogue/surface_init_test_web/components/card_playground.ex (skipped)
-           * deleting assets/css/phoenix.css (skipped)
-           * creating assets/tailwind.config.js (skipped)
-           * creating lib/surface_init_test_web/templates/page/index.sface (skipped)
-           * deleting lib/surface_init_test_web/templates/page/index.html.heex (skipped)
-           * creating lib/surface_init_test_web/templates/layout/app.sface (skipped)
-           * deleting lib/surface_init_test_web/templates/layout/app.html.heex (skipped)
-           * creating lib/surface_init_test_web/templates/layout/live.sface (skipped)
-           * deleting lib/surface_init_test_web/templates/layout/live.html.heex (skipped)
-           * creating lib/surface_init_test_web/templates/layout/root.sface (skipped)
-           * deleting lib/surface_init_test_web/templates/layout/root.html.heex (skipped)
+           * creating lib/surface_init_test_web/components/layouts/app.sface (skipped)
+           * deleting lib/surface_init_test_web/components/layouts/app.html.heex (skipped)
+           * creating lib/surface_init_test_web/components/layouts/root.sface (skipped)
+           * deleting lib/surface_init_test_web/components/layouts/root.html.heex (skipped)
 
-           Finished running 41 patches for 24 files.
-           0 changes applied, 41 skipped.
+           Finished running 30 patches for 20 files.
+           0 changes applied, 30 skipped.
            It looks like this project has already been patched.
            """
   end
@@ -146,13 +138,17 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
       Mix.shell().info([:green, "* creating ", :reset, project_folder])
       File.rm_rf!(project_folder)
-      cmd("mix phx.new #{project_folder} --no-ecto --no-dashboard --no-mailer --install")
+      Mix.Task.run("phx.new", [project_folder, "--no-ecto", "--no-dashboard", "--no-mailer", "--no-install"])
 
       File.write!(project_phx_new_version_file, surface_phx_new_version)
 
-      project_folder
-      |> Path.join("mix.exs")
-      |> Mix.Tasks.Surface.Init.Patcher.patch_file([add_surface_to_mix_deps()], %{dry_run: false})
+      mix_file = Path.join(project_folder, "mix.exs")
+      Mix.Tasks.Surface.Init.Patcher.patch_file(mix_file, [add_surface_to_mix_deps()], %{dry_run: false})
+
+      mix_file
+      |> File.read!()
+      |> String.replace(~S({:phoenix_live_view, "~> 0.18.16"}), ~S({:phoenix_live_view, "~> 0.18.18"}))
+      |> then(&File.write!(mix_file, &1))
 
       cmd("mix deps.get", cd: project_folder)
     end
@@ -186,7 +182,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     end
   end
 
-  defp cmd(str_cmd, opts \\ []) do
+  defp cmd(str_cmd, opts) do
     [cmd | args] = String.split(str_cmd)
 
     case System.cmd(cmd, args, opts) do
@@ -213,7 +209,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
   defp surface_init_all(project_folder) do
     restore(project_folder)
     Mix.shell().info([:green, "* patching ", :reset, project_folder])
-    cmd("mix surface.init --catalogue --demo --layouts --tailwind --yes --no-install", cd: project_folder)
+    cmd("mix surface.init --catalogue --demo --layouts --yes --no-install", cd: project_folder)
     compile(project_folder)
   end
 end

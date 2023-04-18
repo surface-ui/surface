@@ -6,16 +6,16 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
   alias Mix.Tasks.Surface.Init.ExPatcher
   import ExPatcher
 
-  def add_import_to_view_macro(code, module, web_module) do
+  def add_import_to_html_macro(code, module, web_module) do
     import_str = "import #{inspect(module)}"
-    append_code_to_view_macro(code, import_str, import_str, web_module)
+    append_code_to_html_macro(code, import_str, import_str, web_module)
   end
 
-  def append_code_to_view_macro(code, text_to_append, already_patched_text, web_module) do
+  def append_code_to_html_macro(code, text_to_append, already_patched_text, web_module) do
     code
     |> parse_string!()
     |> enter_defmodule(web_module)
-    |> enter_def(:view)
+    |> enter_def(:html)
     |> enter_call(:quote)
     |> halt_if(&find_code_containing(&1, already_patched_text), :already_patched)
     |> append_child_code(text_to_append)
@@ -150,6 +150,27 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
           #{key}: #{value}\
       """
     )
+  end
+
+  def append_def_to_web_module(code, def, body) do
+    code
+    |> parse_string!()
+    |> enter_defmodule()
+    |> halt_if(&find_def(&1, def), :already_patched)
+    |> append_code("""
+
+    def #{def} do
+    #{body}
+    end\
+    """)
+  end
+
+  def append_code_to_layouts_module(code, text_to_append, already_patched_text, module) do
+    code
+    |> parse_string!()
+    |> enter_defmodule(module)
+    |> halt_if(&find_code_containing(&1, already_patched_text), :already_patched)
+    |> append_child_code(text_to_append)
   end
 
   defp find_endpoint_config_with_live_reload(patcher, context_app, web_module) do

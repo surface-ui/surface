@@ -27,13 +27,13 @@ defmodule <%= inspect(web_module) %>.Components.Card do
     ~F"""
     <style>
       .card {
-        @apply overflow-hidden shadow-lg;
+        @apply overflow-hidden shadow-md;
       }
       .content {
         @apply px-6 py-4 text-gray-700 text-base;
       }
       .header {
-        @apply p-6 font-semibold text-2xl text-teal-600 w-full bg-gray-200;
+        @apply p-6 font-semibold text-2xl text-brand w-full bg-gray-200;
       }
       .footer {
         @apply px-6 py-4;
