@@ -6,14 +6,14 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Demo do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def specs(%{demo: true, tailwind: tailwind?} = assigns) do
+  def specs(%{demo: true} = assigns) do
     %{web_module: web_module, web_path: web_path, web_test_path: web_test_path} = assigns
 
     [
       {:patch, "#{web_path}/router.ex", [configure_demo_route(web_module)]},
-      {:create, "demo/#{demo_path(tailwind?)}/card.ex", Path.join([web_path, "components"])},
+      {:create, "demo/card.ex", Path.join([web_path, "components"])},
       {:create, "demo/card_test.exs", Path.join([web_test_path, "components"])},
-      {:create, "demo/#{demo_path(tailwind?)}/demo.ex", Path.join([web_path, "live"])}
+      {:create, "demo/demo.ex", Path.join([web_path, "live"])}
     ]
   end
 
@@ -44,7 +44,4 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Demo do
       """
     }
   end
-
-  defp demo_path(true), do: "tailwind"
-  defp demo_path(_), do: "default"
 end

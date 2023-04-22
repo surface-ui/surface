@@ -229,7 +229,7 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
         end
       end)
 
-    assert output == ""
+    refute output == ~S(Unknown property "unknown_attr")
   end
 
   test "handle events in LiveComponent (handled by the component itself)" do

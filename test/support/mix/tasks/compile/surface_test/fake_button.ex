@@ -13,6 +13,14 @@ defmodule Mix.Tasks.Compile.SurfaceTest.FakeButton do
     """
   end
 
+  def func_without_inline_style(assigns) do
+    ~F"""
+    <button class="btn">
+      FAKE BUTTON WITHOUT STYLE
+    </button>
+    """
+  end
+
   def func(assigns) do
     assigns =
       assigns

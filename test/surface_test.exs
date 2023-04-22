@@ -132,4 +132,14 @@ defmodule SurfaceTest do
       compile_surface(code)
     end)
   end
+
+  describe "embed_sface" do
+    embed_sface("surface_test_embed_sface.sface")
+
+    test "generate function that renders the given template" do
+      assert %Phoenix.LiveView.Rendered{
+               static: ["<div>embed_sface</div>"]
+             } = __MODULE__.surface_test_embed_sface(%{})
+    end
+  end
 end

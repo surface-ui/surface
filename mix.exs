@@ -1,13 +1,13 @@
 defmodule Surface.MixProject do
   use Mix.Project
 
-  @version "0.9.4"
+  @version "0.10.0"
 
   def project do
     [
       app: :surface,
       version: @version,
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       description: "A component based library for Phoenix LiveView",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
@@ -33,12 +33,12 @@ defmodule Surface.MixProject do
   defp deps do
     [
       {:jason, "~> 1.0"},
-      {:phoenix_live_view, "~> 0.18.14"},
+      {:phoenix_live_view, "~> 0.18.18"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
       {:sourceror, "~> 0.11"},
       {:ecto, "~> 3.4.2", only: :test},
-      {:phx_new, "~> 1.6.11", only: :test},
+      {:phx_new, "~> 1.7.2", only: :test},
       {:ex_doc, ">= 0.28.5", only: :docs}
     ]
   end

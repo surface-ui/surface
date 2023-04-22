@@ -32,11 +32,6 @@ defmodule Mix.Tasks.Surface.Init do
       Warning: using this option always replaces the existing layouts, so any changes done
       in those layout files will be lost. It's recommended to use this option only on fresh projects.
 
-    * `--tailwind` - Configures the project to support Tailwind CSS, adding [tailwind](https://hex.pm/packages/tailwind)
-      as a dependency, which will install tailwind's standalone CLI. That means no Node.js nor npm
-      is required. When used together with the `--catalogue`, `--demo` and `--layouts` options,
-      the related artefacts generated will be styled using Tailwind CSS instead of Milligram.
-
     * `--yes` - automatic answer "yes" to all prompts. Warning: this will also say "yes"
       to overwrite existing files as well as fetching/installing dependencies, if required.
 
@@ -68,7 +63,6 @@ defmodule Mix.Tasks.Surface.Init do
     formatter: :boolean,
     catalogue: :boolean,
     demo: :boolean,
-    tailwind: :boolean,
     layouts: :boolean,
     yes: :boolean,
     js_hooks: :boolean,
@@ -83,7 +77,6 @@ defmodule Mix.Tasks.Surface.Init do
     formatter: true,
     catalogue: false,
     demo: false,
-    tailwind: false,
     layouts: false,
     yes: false,
     js_hooks: true,

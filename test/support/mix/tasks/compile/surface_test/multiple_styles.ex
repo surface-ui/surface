@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Compile.SurfaceTest.DuplicatedStyle do
+defmodule Mix.Tasks.Compile.SurfaceTest.MultipleStyles do
   use Surface.Component
 
   def render(assigns) do
@@ -6,7 +6,9 @@ defmodule Mix.Tasks.Compile.SurfaceTest.DuplicatedStyle do
     <style>
       .panel { padding: 10px; }
     </style>
+    <div class="panel">
     FAKE PANEL
+    </div>
     """
   end
 end

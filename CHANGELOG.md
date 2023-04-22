@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.10.0 (2023-04-18)
+
+  * Add support for Liveview `v0.18.8`
+  * Add support for Phoenix `v1.7`
+  * Introduce an optional `css_variant` option to `prop` and `data` to support auto-generation of CSS (tailwind)
+    variants based on their values
+  * Add `embed_sface/1` macro to allow adding `.sface` template as a function component
+  * Collect and generate `@import` entries from components to the top of the file to adhere to the CSS spec
+  * Fix CSS scope so it can be shared by all function components in the same module, avoiding unnecessary use of `:deep`
+
 ## v0.9.4 (2023-02-15)
 
   * Update `phoenix_live_view` to `v0.18.14`

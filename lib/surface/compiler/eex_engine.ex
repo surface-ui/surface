@@ -51,7 +51,7 @@ defmodule Surface.Compiler.EExEngine do
     ast = state.engine.handle_body(buffer, root: true)
 
     quote do
-      require Phoenix.LiveView.HTMLEngine
+      require Phoenix.LiveView.TagEngine
       unquote(ast)
     end
   end
@@ -265,7 +265,7 @@ defmodule Surface.Compiler.EExEngine do
     static_props_map = {:%{}, [], slot_props ++ static_props}
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &apply(unquote(module_expr), unquote(fun_expr), [&1]),
         Map.merge(
           Surface.build_dynamic_assigns(
@@ -296,7 +296,7 @@ defmodule Surface.Compiler.EExEngine do
     static_props_map = {:%{}, [], slot_props ++ static_props}
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &(unquote(Macro.var(fun, __MODULE__)) / 1),
         Map.merge(
           Surface.build_assigns(
@@ -332,7 +332,7 @@ defmodule Surface.Compiler.EExEngine do
     module_for_build_assigns = if fun == :render, do: module
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &(unquote(module).unquote(fun) / 1),
         Map.merge(
           Surface.build_assigns(
@@ -363,7 +363,7 @@ defmodule Surface.Compiler.EExEngine do
     static_props_map = {:%{}, [], static_props ++ slot_props}
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &unquote(module).render/1,
         Map.merge(
           Surface.build_assigns(
@@ -394,7 +394,7 @@ defmodule Surface.Compiler.EExEngine do
     static_props_map = {:%{}, [], slot_props ++ static_props}
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &unquote(module).render/1,
         Map.merge(
           Surface.build_assigns(
@@ -425,7 +425,7 @@ defmodule Surface.Compiler.EExEngine do
     static_props_map = {:%{}, [], [{:module, module} | slot_props] ++ static_props}
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &Phoenix.Component.live_component/1,
         Map.merge(
           Surface.build_assigns(
@@ -460,7 +460,7 @@ defmodule Surface.Compiler.EExEngine do
     static_props_map = {:%{}, [], [{:module, module_expr} | slot_props] ++ static_props}
 
     quote do
-      Phoenix.LiveView.HTMLEngine.component(
+      Phoenix.LiveView.TagEngine.component(
         &Phoenix.Component.live_component/1,
         Map.merge(
           Surface.build_dynamic_assigns(
@@ -554,7 +554,7 @@ defmodule Surface.Compiler.EExEngine do
 
           inner_block =
             quote do
-              Phoenix.LiveView.HTMLEngine.inner_block(unquote(slot_name), do: unquote(block))
+              Phoenix.LiveView.TagEngine.inner_block(unquote(slot_name), do: unquote(block))
             end
 
           props = [__slot__: slot_name, inner_block: inner_block] ++ props
@@ -645,7 +645,7 @@ defmodule Surface.Compiler.EExEngine do
 
           ast =
             quote do
-              Phoenix.LiveView.HTMLEngine.inner_block(unquote(name), do: unquote(block))
+              Phoenix.LiveView.TagEngine.inner_block(unquote(name), do: unquote(block))
             end
 
           props = [__slot__: name, inner_block: ast] ++ props

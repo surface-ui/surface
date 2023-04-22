@@ -4,32 +4,24 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
   # Common patches for `mix.exs`
 
   import Mix.Tasks.Surface.Init.ExPatcher
+  alias Mix.Tasks.Surface.Init.ExPatcher
 
   def add_compiler(code, compiler) do
-    code
-    |> maybe_remove_gettext_compile()
-    |> parse_string!()
-    |> enter_defmodule()
-    |> enter_def(:project)
-    |> find_keyword_value(:compilers)
-    |> halt_if(&find_code_containing(&1, compiler), :already_patched)
-    |> append_child(" ++ [#{compiler}]")
-  end
-
-  # TODO: Remove this when phx.new stops generating `[:gettext] ++`
-  def maybe_remove_gettext_compile(code) do
-    gettext_version = Application.spec(:gettext, :vsn)
-
-    if gettext_version && Version.compare(to_string(gettext_version), "0.20.0") != :lt do
+    patcher =
       code
       |> parse_string!()
       |> enter_defmodule()
       |> enter_def(:project)
-      |> find_keyword_value(:compilers)
-      |> replace(fn code -> String.replace(code, "[:gettext] ++ ", "") end)
-      |> code()
-    else
-      code
+
+    case find_keyword_value(patcher, :compilers) do
+      %ExPatcher{node: nil} ->
+        patcher
+        |> append_keyword(:compilers, "Mix.compilers() ++ [#{compiler}]")
+
+      compilers_patcher ->
+        compilers_patcher
+        |> halt_if(&find_code_containing(&1, compiler), :already_patched)
+        |> append_child(" ++ [#{compiler}]")
     end
   end
 
@@ -38,7 +30,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
     |> parse_string!()
     |> enter_defmodule()
     |> enter_defp(:deps)
-    |> halt_if(&find_list_item_containing(&1, "{#{dep}, "), :already_patched)
+    |> halt_if(&find_list_item_containing(&1, "{#{dep},"), :already_patched)
     |> append_list_item(~s({#{dep}, #{opts}}), preserve_indentation: true)
   end
 
@@ -73,7 +65,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
       :maybe_already_patched
     )
     |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
-    |> replace(&"defp elixirc_paths(#{env}), do: #{body}\n  #{&1}")
+    |> replace(&"defp elixirc_paths(#{env}), do: #{body}\n#{&1}")
   end
 
   def update_elixirc_paths_entry(code, env, update_fun, already_patched_text) do
