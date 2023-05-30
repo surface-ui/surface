@@ -41,6 +41,6 @@ defmodule Surface.Components.LiveFileInput do
 
     assigns = assign(assigns, opts: opts)
 
-    ~F"{live_file_input(@upload, @opts)}"
+    ~F"<.live_file_input upload={@upload} {...@opts} />"
   end
 end
