@@ -189,7 +189,7 @@ defmodule Surface.Components.Context do
       <MyTextInput form={form} field={field} />
       "\""
 
-  > **Note**: When using `put/3` in [`update/2`](`c:Phoenix.LiveComponent.update/2`) call it giving the `socket`.
+  > **Note**: Whenever using `Context.get/3` inside the [`update/2`](`c:Phoenix.LiveComponent.update/2`) callback, make sure you call it passing the `socket`, not the `assigns`.
   """
   def get(socket_or_assigns, scope \\ nil, key)
 
