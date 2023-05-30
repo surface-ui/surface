@@ -50,8 +50,6 @@ defmodule Surface.LiveComponent do
       end
   """
 
-  alias Surface.BaseComponent
-
   defmacro __using__(_) do
     quote do
       @before_compile Surface.Renderer
@@ -130,14 +128,9 @@ defmodule Surface.LiveComponent do
         def update(var!(assigns), socket) do
           unquote(quoted_updated_assigns)
 
-          {:ok, socket} = super(Map.merge(var!(assigns), updated_assigns), socket)
+          {assigns, socket} = Surface.LiveComponent.move_private_assigns(var!(assigns), socket)
 
-          socket =
-            socket
-            |> BaseComponent.restore_private_assigns(var!(assigns))
-            |> Phoenix.Component.assign(updated_assigns)
-
-          {:ok, socket}
+          super(Map.merge(assigns, updated_assigns), socket)
         end
       end
     else
@@ -181,5 +174,14 @@ defmodule Surface.LiveComponent do
         end
       end
     end
+  end
+
+  @private_assigns [:__context__, :__caller_scope_id__]
+  @doc false
+  def move_private_assigns(assigns, socket) do
+    {
+      Map.drop(var!(assigns), @private_assigns),
+      Phoenix.Component.assign(socket, Map.take(var!(assigns), @private_assigns))
+    }
   end
 end

@@ -140,8 +140,9 @@ defmodule Surface.Components.Context do
 
   Without scope:
 
-      Context.put=(key1: @value1, key2: "some other value")
+      Context.put(key1: @value1, key2: "some other value")
 
+  > **Note**: Whenever using `Context.put/3` inside the [`update/2`](`c:Phoenix.LiveComponent.update/2`) callback, make sure you call it passing the `socket`, not the `assigns`.
   """
   def put(socket_or_assigns, scope \\ nil, values)
 
@@ -187,6 +188,8 @@ defmodule Surface.Components.Context do
       ~F"\""
       <MyTextInput form={form} field={field} />
       "\""
+
+  > **Note**: Whenever using `Context.get/3` inside the [`update/2`](`c:Phoenix.LiveComponent.update/2`) callback, make sure you call it passing the `socket`, not the `assigns`.
   """
   def get(socket_or_assigns, scope \\ nil, key)
 
