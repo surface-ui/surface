@@ -142,7 +142,7 @@ defmodule Surface.Components.Context do
 
       Context.put(key1: @value1, key2: "some other value")
 
-  > **Note**: When using `put/3` in [`update/2`](`c:Phoenix.LiveComponent.update/2`) call it giving the `socket`.
+  > **Note**: Whenever using `Context.put/3` inside the [`update/2`](`c:Phoenix.LiveComponent.update/2`) callback, make sure you call it passing the `socket`, not the `assigns`.
   """
   def put(socket_or_assigns, scope \\ nil, values)
 
