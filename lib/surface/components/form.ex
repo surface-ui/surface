@@ -86,9 +86,9 @@ defmodule Surface.Components.Form do
       |> opts_to_phx_opts()
 
     event_opts =
-      event_to_opts(assigns.change, :phx_change) ++
-        event_to_opts(assigns.submit, :phx_submit) ++
-        event_to_opts(assigns.auto_recover, :phx_auto_recover)
+      event_to_opts(assigns.change, :"phx-change") ++
+        event_to_opts(assigns.submit, :"phx-submit") ++
+        event_to_opts(assigns.auto_recover, :"phx-auto-recover")
 
     opts =
       assigns.opts

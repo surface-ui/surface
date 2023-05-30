@@ -78,7 +78,7 @@ defmodule Surface.Components.Utils do
   def opts_to_phx_opts(opts) do
     for {key, value} <- opts do
       case key do
-        :trigger_action -> {:phx_trigger_action, value}
+        :trigger_action -> {:"phx-trigger-action", value}
         _ -> {key, value}
       end
     end
@@ -86,16 +86,16 @@ defmodule Surface.Components.Utils do
 
   def events_to_opts(assigns) do
     [
-      event_to_opts(assigns.capture_click, :phx_capture_click),
-      event_to_opts(assigns.click, :phx_click),
-      event_to_opts(assigns.window_focus, :phx_window_focus),
-      event_to_opts(assigns.window_blur, :phx_window_blur),
-      event_to_opts(assigns.focus, :phx_focus),
-      event_to_opts(assigns.blur, :phx_blur),
-      event_to_opts(assigns.window_keyup, :phx_window_keyup),
-      event_to_opts(assigns.window_keydown, :phx_window_keydown),
-      event_to_opts(assigns.keyup, :phx_keyup),
-      event_to_opts(assigns.keydown, :phx_keydown),
+      event_to_opts(assigns.capture_click, :"phx-capture-click"),
+      event_to_opts(assigns.click, :"phx-click"),
+      event_to_opts(assigns.window_focus, :"phx-window-focus"),
+      event_to_opts(assigns.window_blur, :"phx-window-blur"),
+      event_to_opts(assigns.focus, :"phx-focus"),
+      event_to_opts(assigns.blur, :"phx-blur"),
+      event_to_opts(assigns.window_keyup, :"phx-window-keyup"),
+      event_to_opts(assigns.window_keydown, :"phx-window-keydown"),
+      event_to_opts(assigns.keyup, :"phx-keyup"),
+      event_to_opts(assigns.keydown, :"phx-keydown"),
       values_to_opts(assigns.values)
     ]
     |> List.flatten()

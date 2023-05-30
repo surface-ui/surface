@@ -192,7 +192,7 @@ defmodule Surface.Components.EventsTest do
       end
 
     assert html =~ """
-           <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-click="my_click"></div>
+           <div phx-click="my_click" phx-value-foo="bar" phx-value-hello="world" phx-value-one="2"></div>
            """
   end
 end
