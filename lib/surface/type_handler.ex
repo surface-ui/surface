@@ -209,8 +209,7 @@ defmodule Surface.TypeHandler do
         node_alias: node_alias || module,
         caller: caller,
         file: ctx.file,
-        line: ctx.line,
-        function_component?: ctx.function_component?
+        line: ctx.line
       })
 
     if Keyword.get(type_opts, :accumulate, false) do
@@ -288,28 +287,12 @@ defmodule Surface.TypeHandler do
     {:string, []}
   end
 
-  def attribute_type_and_opts(module, name, meta) do
-    function_component? = Map.get(meta, :function_component?) || false
-
-    with false <- function_component?,
-         true <- function_exported?(module, :__get_prop__, 1),
+  def attribute_type_and_opts(module, name, _meta) do
+    with true <- function_exported?(module, :__get_prop__, 1),
          prop when not is_nil(prop) <- module.__get_prop__(name) do
       {prop.type, prop.opts}
     else
-      # The module is not loaded or it's a plain old phoenix (live) component
-      false ->
-        {:string, []}
-
       _ ->
-        if Map.get(meta, :runtime, false) and not function_component? do
-          IOHelper.warn(
-            "Unknown property \"#{to_string(name)}\" for component <#{meta.node_alias}>",
-            meta.caller,
-            meta.file,
-            meta.line
-          )
-        end
-
         {:string, []}
     end
   end

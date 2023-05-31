@@ -1203,35 +1203,3 @@ defmodule Surface.DirectivesTest do
     assert {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
   end
 end
-
-defmodule Surface.DirectivesSyncTest do
-  use Surface.ConnCase
-
-  import ExUnit.CaptureIO
-
-  alias Surface.DirectivesTest.{DivWithProps}
-
-  describe ":props on a component" do
-    test "emits a warning with an unknown prop at runtime" do
-      assigns = %{
-        opts: %{
-          unknown: "value",
-          class: "text-xs",
-          hidden: false,
-          content: "dynamic props content"
-        }
-      }
-
-      message =
-        capture_io(:standard_error, fn ->
-          render_surface do
-            ~F"""
-            <DivWithProps :props={@opts} />
-            """
-          end
-        end)
-
-      assert message =~ ~S|Unknown property "unknown" for component <DivWithProps>|
-    end
-  end
-end

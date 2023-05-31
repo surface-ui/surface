@@ -2,7 +2,6 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
   use Surface.ConnCase, async: true
 
   alias Surface.Components.Dynamic.LiveComponent
-  import ExUnit.CaptureIO
 
   defmodule StatefulComponent do
     use Surface.LiveComponent
@@ -159,77 +158,6 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     assert html =~ """
            <div phx-click="#{event}"></div>
            """
-  end
-
-  test "at runtime, warn on unknown attributes with dynamic values at the component definition's file/line " do
-    file = Path.relative_to_cwd(__ENV__.file)
-    line = __ENV__.line + 8
-
-    output =
-      capture_io(:standard_error, fn ->
-        assigns = %{mod: StatefulComponentWithEvent}
-
-        render_surface do
-          ~F"""
-          <LiveComponent
-            module={@mod}
-            id="comp"
-            unknown_attr={"123"}
-          />
-          """
-        end
-      end)
-
-    assert output =~ ~r"""
-           Unknown property "unknown_attr" for component <Surface.Components.Dynamic.LiveComponentTest.StatefulComponentWithEvent>
-             #{file}:#{line}: Surface.Components.Dynamic.LiveComponentTest \(module\)\
-           """
-  end
-
-  test "at runtime, warn on unknown attributes as expr at the component definition's file/line " do
-    file = Path.relative_to_cwd(__ENV__.file)
-    line = __ENV__.line + 8
-
-    output =
-      capture_io(:standard_error, fn ->
-        assigns = %{mod: StatefulComponentWithEvent, var: 123}
-
-        render_surface do
-          ~F"""
-          <LiveComponent
-            module={@mod}
-            id="comp"
-            unknown_attr={@var}
-          />
-          """
-        end
-      end)
-
-    assert output =~ ~r"""
-           Unknown property "unknown_attr" for component <Surface.Components.Dynamic.LiveComponentTest.StatefulComponentWithEvent>
-             #{file}:#{line}: Surface.Components.Dynamic.LiveComponentTest \(module\)\
-           """
-  end
-
-  # TODO: When LV 0.18 is released, we should introduce a warning for LV >= 0.18
-  test "at runtime, does not warn on unknown attributes if module attr is a plain old phoenix live component" do
-    output =
-      capture_io(:standard_error, fn ->
-        assigns = %{mod: StatefulPhoenixLiveComponent, label: "My Label"}
-
-        render_surface do
-          ~F"""
-          <LiveComponent
-            module={@mod}
-            id="comp"
-            label="My Label"
-            unknown-attr="unknown-attr"
-          />
-          """
-        end
-      end)
-
-    refute output == ~S(Unknown property "unknown_attr")
   end
 
   test "handle events in LiveComponent (handled by the component itself)" do

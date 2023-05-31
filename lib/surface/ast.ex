@@ -97,14 +97,13 @@ defmodule Surface.AST.Meta do
       * `:node_alias` - the alias used inside the source code (e.g. `LivePatch`)
       * `:file` - the file from which the source was extracted
       * `:caller` - a Macro.Env struct representing the caller
-      * `:function_component?` - indicates if it's a function component or not
       * `:style` - the style info of the component, if any
       * `:caller_spec` - the specs of the caller component
   """
 
   alias Surface.Compiler.Helpers
 
-  @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks, :function_component?]}
+  @derive {Inspect, only: [:line, :column, :module, :node_alias, :file, :checks]}
   defstruct [
     :line,
     :column,
@@ -113,7 +112,6 @@ defmodule Surface.AST.Meta do
     :file,
     :caller,
     :checks,
-    :function_component?,
     :style,
     :caller_spec
   ]
@@ -126,7 +124,6 @@ defmodule Surface.AST.Meta do
           caller: Macro.Env.t(),
           file: binary(),
           checks: Keyword.t(boolean()),
-          function_component?: boolean(),
           caller_spec: struct(),
           style:
             %{
@@ -152,8 +149,7 @@ defmodule Surface.AST.Meta do
         cid: unquote(quoted_cid),
         file: unquote(meta.file),
         line: unquote(meta.line),
-        module: unquote(meta.caller.module),
-        function_component?: unquote(meta.function_component?)
+        module: unquote(meta.caller.module)
       }
     end
   end
