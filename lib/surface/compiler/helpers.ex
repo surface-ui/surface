@@ -6,7 +6,8 @@ defmodule Surface.Compiler.Helpers do
 
   @builtin_common_assigns [
     :__context__,
-    :__caller_scope_id__
+    :__caller_scope_id__,
+    :streams
   ]
 
   @builtin_component_assigns [:inner_block] ++ @builtin_common_assigns
