@@ -27,18 +27,23 @@ defmodule Surface.Components.FormTest do
     end
 
     def mount(_params, session, socket) do
-      {:ok, assign(socket, changeset: session["changeset"])}
+      changeset =
+        Ecto.Changeset.cast(
+          {%{}, %{name: :string}},
+          session["changeset_data"],
+          [:name]
+        )
+
+      {:ok, assign(socket, changeset: changeset)}
     end
   end
 
   defmodule ViewWithFormWithMethodPut do
     use Surface.LiveView
 
-    data changeset, :any
-
     def render(assigns) do
       ~F"""
-      <Form for={@changeset} action="#" csrf_token="test" as={:user} method="put">
+      <Form for={%{}} action="#" csrf_token="test" as={:user} method="put">
         <TextInput field={:name} />
       </Form>
       """
@@ -102,16 +107,9 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form as a changeset", %{conn: conn} do
-    assigns = %{
-      "changeset" =>
-        Ecto.Changeset.cast(
-          {%{}, %{name: :string}},
-          %{name: "myname"},
-          [:name]
-        )
-    }
+    session = %{"changeset_data" => %{name: "myname"}}
 
-    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: session)
 
     assert html =~ """
            <form action="#" method="post">\
@@ -136,16 +134,9 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form exposes the generated form instance", %{conn: conn} do
-    assigns = %{
-      "changeset" =>
-        Ecto.Changeset.cast(
-          {%{}, %{name: :string}},
-          %{name: 123},
-          [:name]
-        )
-    }
+    session = %{"changeset_data" => %{name: 123}}
 
-    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: assigns)
+    {:ok, _view, html} = live_isolated(conn, ViewWithForm, session: session)
 
     assert html =~ ~r/Name is invalid/
   end
@@ -163,14 +154,7 @@ defmodule Surface.Components.FormTest do
   end
 
   test "form generates method input for changeset", %{conn: conn} do
-    changeset =
-      %User{}
-      |> Ecto.put_meta(state: :loaded)
-      |> Ecto.Changeset.cast(%{name: "myname"}, [:name])
-
-    assigns = %{"changeset" => changeset}
-
-    {:ok, _view, html} = live_isolated(conn, ViewWithFormWithMethodPut, session: assigns)
+    {:ok, _view, html} = live_isolated(conn, ViewWithFormWithMethodPut)
 
     assert html =~ ~s(><input name="_method" type="hidden" hidden="hidden" value="put"/>)
   end
