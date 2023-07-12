@@ -174,13 +174,9 @@ defmodule Surface.Components.EventsTest do
         """
       end
 
-    event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"my_click","target":1}]]))
+    doc = parse_document!(html)
 
-    assert html =~ """
-           <div>
-             <div phx-click="#{event}"></div>
-           </div>
-           """
+    assert js_attribute(doc, "div > div", "phx-click") == [["push", %{"event" => "my_click", "target" => 1}]]
   end
 
   test "event with values" do
@@ -191,8 +187,11 @@ defmodule Surface.Components.EventsTest do
         """
       end
 
-    assert html =~ """
-           <div phx-click="my_click" phx-value-foo="bar" phx-value-hello="world" phx-value-one="2"></div>
-           """
+    # Assert: <div phx-click="my_click" phx-value-foo="bar" phx-value-hello="world" phx-value-one="2"></div>
+    doc = parse_document!(html)
+    assert attribute(doc, "phx-click") == ["my_click"]
+    assert attribute(doc, "phx-value-foo") == ["bar"]
+    assert attribute(doc, "phx-value-hello") == ["world"]
+    assert attribute(doc, "phx-value-one") == ["2"]
   end
 end

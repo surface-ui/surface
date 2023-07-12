@@ -145,7 +145,7 @@ defmodule Surface.Compiler.Helpers do
     "#{plural} #{rest |> Enum.reverse() |> Enum.join(", ")} and #{last}"
   end
 
-  @blanks ' \n\r\t\v\b\f\e\d\a'
+  @blanks ~c" \n\r\t\v\b\f\e\d\a"
 
   def blank?([]), do: true
 

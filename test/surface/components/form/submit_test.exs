@@ -60,7 +60,11 @@ defmodule Surface.Components.Form.SubmitTest do
         """
       end
 
-    assert html =~ ~s(<button class="btn" id="submit-btn" type="submit">Submit</button>)
+    # Assert: <button class="btn" id="submit-btn" type="submit">Submit</button>
+    doc = parse_document!(html)
+    assert inner_text(doc) == "Submit"
+    assert attribute(doc, "class") == ["btn"]
+    assert attribute(doc, "id") == ["submit-btn"]
   end
 
   test "with children" do

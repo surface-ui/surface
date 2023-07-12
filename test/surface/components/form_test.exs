@@ -128,9 +128,11 @@ defmodule Surface.Components.FormTest do
         """
       end
 
-    assert html =~ """
-           <form action="#" method="post" phx-auto-recover="recover" phx-change="change" phx-submit="submit">\
-           """
+    # Assert: <form action="#" method="post" phx-auto-recover="recover" phx-change="change" phx-submit="submit">
+    doc = parse_document!(html)
+    assert attribute(doc, "phx-change") == ["change"]
+    assert attribute(doc, "phx-submit") == ["submit"]
+    assert attribute(doc, "phx-auto-recover") == ["recover"]
   end
 
   test "form exposes the generated form instance", %{conn: conn} do

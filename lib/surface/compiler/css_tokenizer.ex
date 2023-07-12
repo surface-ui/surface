@@ -2,12 +2,12 @@ defmodule Surface.Compiler.CSSTokenizer do
   @moduledoc false
   alias Surface.Compiler.CSSParserError
 
-  @ws '\n\r\t '
-  @block_open '{(['
-  @block_close '})]'
+  @ws ~c"\n\r\t "
+  @block_open ~c"{(["
+  @block_close ~c"})]"
   @quotes [?', ?"]
-  @combinators '>+~'
-  @stop_chars ':.#'
+  @combinators ~c">+~"
+  @stop_chars ~c":.#"
 
   @closing_symbol %{
     "{" => "}",

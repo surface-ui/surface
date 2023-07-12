@@ -357,12 +357,9 @@ defmodule Surface.Formatter.Phases.Render do
   end
 
   defp render_attribute({:root, {:attribute_expr, expression, _expr_meta}, _meta}, opts) do
-    case format_attribute_expression(expression, opts) do
-      "... " <> expression ->
-        "{...#{expression}}"
-
-      formatted ->
-        "{#{formatted}}"
+    case Regex.split(~r[^\s*\.\.\.], expression) do
+      [_, expr] -> "{...#{format_attribute_expression(expr, opts)}}"
+      [expr] -> "{#{format_attribute_expression(expr, opts)}}"
     end
   end
 
