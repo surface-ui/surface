@@ -779,28 +779,27 @@ defmodule Surface.APISyncTest do
              """
     end
 
-    test "do not validate required slots of non-existing components" do
-      id = :erlang.unique_integer([:positive]) |> to_string()
-      module = "TestComponentWithRequiredDefaultSlot_#{id}"
+    if Version.match?(System.version(), ">= 1.15.0") do
+      test "do not validate required slots of non-existing components" do
+        id = :erlang.unique_integer([:positive]) |> to_string()
+        module = "TestComponentWithRequiredDefaultSlot_#{id}"
 
-      code = """
-      defmodule #{module} do
-        use Surface.Component
+        code = """
+        defmodule #{module} do
+          use Surface.Component
 
-        def render(assigns) do
-          ~F"\""
-          <ComponentWithRequiredDefaultSlot>
-            <NonExisting>
-              Don't validate me!
-            </NonExisting>
-          </ComponentWithRequiredDefaultSlot>
-          "\""
+          def render(assigns) do
+            ~F"\""
+            <ComponentWithRequiredDefaultSlot>
+              <NonExisting>
+                Don't validate me!
+              </NonExisting>
+            </ComponentWithRequiredDefaultSlot>
+            "\""
+          end
         end
-      end
-      """
+        """
 
-      # Remove the condition whenever we drop support for Elixir < 1.15
-      if Version.match?(System.version(), ">= 1.15.0") do
         diagnostics =
           Code.with_diagnostics(fn ->
             try do
@@ -815,7 +814,29 @@ defmodule Surface.APISyncTest do
                   %{message: "cannot render <NonExisting> (module NonExisting could not be loaded)" <> _},
                   %{message: "module NonExisting is not loaded and could not be found"}
                 ]} = diagnostics
-      else
+      end
+    else
+      # Remove this test (and the `if`) whenever we drop support for Elixir < 1.15
+      test "do not validate required slots of non-existing components" do
+        id = :erlang.unique_integer([:positive]) |> to_string()
+        module = "TestComponentWithRequiredDefaultSlot_#{id}"
+
+        code = """
+        defmodule #{module} do
+          use Surface.Component
+
+          def render(assigns) do
+            ~F"\""
+            <ComponentWithRequiredDefaultSlot>
+              <NonExisting>
+                Don't validate me!
+              </NonExisting>
+            </ComponentWithRequiredDefaultSlot>
+            "\""
+          end
+        end
+        """
+
         error_message = "code.exs:7: module NonExisting is not loaded and could not be found"
 
         output =
