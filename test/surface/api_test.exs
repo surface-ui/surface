@@ -799,17 +799,36 @@ defmodule Surface.APISyncTest do
       end
       """
 
-      error_message = "code.exs:7: module NonExisting is not loaded and could not be found"
-
-      output =
-        capture_io(:standard_error, fn ->
-          assert_raise(CompileError, error_message, fn ->
-            {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+      # Remove the condition whenever we drop support for Elixir < 1.15
+      if Version.match?(System.version(), ">= 1.15.0") do
+        diagnostics =
+          Code.with_diagnostics(fn ->
+            try do
+              Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
+            rescue
+              e -> e
+            end
           end)
-        end)
 
-      assert output =~ ~r"cannot render <NonExisting> \(module NonExisting could not be loaded\)"
-      assert output =~ ~r"  code.exs:7:"
+        assert {%CompileError{},
+                [
+                  %{message: "cannot render <NonExisting> (module NonExisting could not be loaded)" <> _},
+                  %{message: "module NonExisting is not loaded and could not be found"}
+                ]} = diagnostics
+      else
+        error_message = "code.exs:7: module NonExisting is not loaded and could not be found"
+
+        output =
+          capture_io(:standard_error, fn ->
+            assert_raise(CompileError, error_message, fn ->
+              {{:module, _, _, _}, _} =
+                Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1}) |> IO.inspect()
+            end)
+          end)
+
+        assert output =~ ~r"cannot render <NonExisting> \(module NonExisting could not be loaded\)"
+        assert output =~ ~r"  code.exs:7:"
+      end
     end
   end
 end

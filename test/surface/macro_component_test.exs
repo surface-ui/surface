@@ -242,13 +242,31 @@ defmodule Surface.MacroComponentTest do
         """
       end
 
-    output =
-      capture_io(:standard_error, fn ->
-        assert_raise(CompileError, ~r/code:1: module NonExisting is not loaded and could not be found/, fn ->
-          compile_surface(code)
+    # Remove the condition whenever we drop support for Elixir < 1.15
+    if Version.match?(System.version(), ">= 1.15.0") do
+      diagnostics =
+        Code.with_diagnostics(fn ->
+          try do
+            compile_surface(code)
+          rescue
+            e -> e
+          end
         end)
-      end)
 
-    assert output =~ ~r/cannot render <#NonExisting> \(module NonExisting could not be loaded\)/
+      assert {%CompileError{},
+              [
+                %{message: "cannot render <#NonExisting> (module NonExisting could not be loaded)" <> _},
+                %{message: "module NonExisting is not loaded and could not be found", severity: :error}
+              ]} = diagnostics
+    else
+      output =
+        capture_io(:standard_error, fn ->
+          assert_raise(CompileError, ~r/code:1: module NonExisting is not loaded and could not be found/, fn ->
+            compile_surface(code)
+          end)
+        end)
+
+      assert output =~ ~r/cannot render <#NonExisting> \(module NonExisting could not be loaded\)/
+    end
   end
 end

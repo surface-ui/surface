@@ -104,7 +104,11 @@ defmodule Surface.Components.Form.LabelTest do
 
       html = render_surface(do: ~F[<Label form={:search} field={:key} class="foo" opts={for: "test_key"} />])
 
-      assert html =~ ~r[<label class="foo" for="test_key">(.*)Key(.*)</label>]s
+      # Assert: <label class="foo" for="test_key">(.*)Key(.*)</label>
+      doc = parse_document!(html)
+      assert inner_text(doc) == "Key"
+      assert attribute(doc, "class") == ["foo"]
+      assert attribute(doc, "for") == ["test_key"]
     end
 
     test "with field and inline content" do
@@ -152,7 +156,11 @@ defmodule Surface.Components.Form.LabelTest do
           """
         end
 
-      assert html =~ ~r[<label class="foo" for="test_key">(.+)Search(.*)</label>]s
+      # Assert: <label class="foo" for="test_key">(.+)Search(.*)</label>
+      doc = html |> parse_document!() |> find("label")
+      assert inner_text(doc) == "Search"
+      assert attribute(doc, "class") == ["foo"]
+      assert attribute(doc, "for") == ["test_key"]
     end
 
     test "with field and inline safe content" do
@@ -186,7 +194,11 @@ defmodule Surface.Components.Form.LabelTest do
           """
         end
 
-      assert html =~ ~r[<label class="test-label" for="search_key">(.+)Hello(.*)</label>]s
+      # Assert: <label class="test-label" for="search_key">(.+)Hello(.*)</label>
+      doc = html |> parse_document!() |> find("label")
+      assert inner_text(doc) == "Hello"
+      assert attribute(doc, "class") == ["test-label"]
+      assert attribute(doc, "for") == ["search_key"]
     end
   end
 end

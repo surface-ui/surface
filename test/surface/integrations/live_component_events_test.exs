@@ -1,8 +1,6 @@
 defmodule Surface.EventsTest do
   use Surface.ConnCase, async: true
 
-  import Phoenix.HTML.Engine, only: [html_escape: 1]
-
   defmodule LiveDiv do
     use Surface.LiveComponent
 
@@ -97,11 +95,9 @@ defmodule Surface.EventsTest do
         """
       end
 
-    event = html_escape(~S([["push",{"event":"click","target":1}]]))
+    doc = parse_document!(html)
 
-    assert html =~ """
-           <button phx-click="#{event}"\
-           """
+    assert js_attribute(doc, "div > button", "phx-click") == [["push", %{"event" => "click", "target" => 1}]]
   end
 
   test "handle event locally" do
@@ -114,11 +110,9 @@ defmodule Surface.EventsTest do
         """
       end
 
-    event = html_escape(~S([["push",{"event":"click","target":1}]]))
+    doc = parse_document!(html)
 
-    assert html =~ """
-           <button phx-click="#{event}"\
-           """
+    assert js_attribute(doc, "div > button", "phx-click") == [["push", %{"event" => "click", "target" => 1}]]
   end
 
   test "override target" do
@@ -131,19 +125,15 @@ defmodule Surface.EventsTest do
         """
       end
 
-    event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+    doc = parse_document!(html)
 
-    assert html =~ """
-           phx-click="#{event}"\
-           """
+    assert js_attribute(doc, "div > button", "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
   end
 
   test "override target with keyword list notation" do
-    event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+    # event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
 
-    expected = """
-    phx-click="#{event}"\
-    """
+    expected = [["push", %{"event" => "ok", "target" => "#comp"}]]
 
     # Event name as string
     html =
@@ -155,7 +145,8 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert html =~ expected
+    doc = parse_document!(html)
+    assert js_attribute(doc, "div > button", "phx-click") == expected
 
     # Event name as atom
     html =
@@ -167,7 +158,8 @@ defmodule Surface.EventsTest do
         """
       end
 
-    assert html =~ expected
+    doc = parse_document!(html)
+    assert js_attribute(doc, "div > button", "phx-click") == expected
   end
 
   test "passing event as nil does not render phx-*" do

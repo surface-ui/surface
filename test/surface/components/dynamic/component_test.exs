@@ -411,11 +411,9 @@ defmodule Surface.Components.Dynamic.ComponentTest do
           """
         end
 
-      event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <div phx-click="#{event}"></div>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
     end
   end
 

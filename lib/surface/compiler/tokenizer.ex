@@ -1,10 +1,10 @@
 defmodule Surface.Compiler.Tokenizer do
   @moduledoc false
-  @space_chars '\n\r\t\f\s'
-  @name_stop_chars @space_chars ++ '>/='
-  @unquoted_value_invalid_chars '"\'=<`'
-  @unquoted_value_stop_chars @space_chars ++ '>'
-  @block_name_stop_chars @space_chars ++ '}'
+  @space_chars ~c"\n\r\t\f\s"
+  @name_stop_chars @space_chars ++ ~c">/="
+  @unquoted_value_invalid_chars ~c"\"'=<`"
+  @unquoted_value_stop_chars @space_chars ++ ~c">"
+  @block_name_stop_chars @space_chars ++ ~c"}"
   @markers ["=", "...", "$", "^", ~S(~")]
 
   @ignored_body_tags ["style", "script"]

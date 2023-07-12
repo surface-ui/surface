@@ -13,6 +13,8 @@ defmodule Surface.ConnCase do
     quote do
       # Import conveniences for testing
       use Surface.LiveViewTest
+      import Floki
+      import FlokiHelpers
 
       # The default endpoint for testing
       @endpoint Endpoint
