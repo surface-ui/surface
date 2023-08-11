@@ -44,6 +44,7 @@ defmodule Surface.Components.Form.HiddenInputsTest do
              <form action="#" method="post">
                  <input name="_csrf_token" type="hidden" hidden value="test">
                    <input type="hidden" name="parent[children][_persistent_id]" value="0">
+                 <input id="parent_children_0__persistent_id" name="parent[children][_persistent_id]" type="hidden" value="0">
              </form>
              """
   end
