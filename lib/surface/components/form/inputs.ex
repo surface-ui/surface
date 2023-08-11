@@ -38,7 +38,7 @@ defmodule Surface.Components.Form.Inputs do
   def render(assigns) do
     ~F"""
     <.inputs_for :let={nested_form} field={@form[@for || @field]} {...@opts}>
-      <#slot {@default, form: nested_form, index: nested_form.index } context_put={__MODULE__, form: nested_form} />
+      <#slot {@default, form: nested_form, index: nested_form.index } context_put={Form, form: nested_form} />
     </.inputs_for>
     """
   end
