@@ -94,7 +94,7 @@ defmodule Surface.Components.LivePatchTest do
           class: "link",
           method: :delete,
           data: [confirm: "Really?"],
-          csrf_token: "token"
+          "csrf-token": "token"
         )
 
       assert attr_map(html) == attr_map(actual)

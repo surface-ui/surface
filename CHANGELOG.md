@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.11.0 (2023-06-02)
+
+  * Add support for Liveview `v0.19` (#692)
+  * Fix `Context.get/put` in LiveComponent's `update` callback (#691)
+  * Fix issue when passing `css_class` props inside vanilla LV components' slots (#680)
+
 ## v0.10.0 (2023-04-18)
 
   * Add support for Liveview `v0.18.8`

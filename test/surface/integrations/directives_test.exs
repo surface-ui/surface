@@ -1,7 +1,6 @@
 defmodule Surface.DirectivesTest do
   use Surface.ConnCase, async: true
 
-  import Phoenix.HTML.Engine, only: [html_escape: 1]
   alias Phoenix.LiveView.JS
 
   defmodule Div do
@@ -247,11 +246,11 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      assert html =~ """
-             <div aria-label="A div" id="myid" class="myclass">
-               Some Text
-             </div>
-             """
+      doc = parse_document!(html)
+
+      assert attribute(doc, "id") == ["myid"]
+      assert attribute(doc, "aria-label") == ["A div"]
+      assert attribute(doc, "class") == ["myclass"]
     end
 
     test "with boolean properties" do
@@ -298,7 +297,10 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      assert html =~ ~s(<div class="text-xs" style="color: black;"></div>)
+      doc = parse_document!(html)
+
+      assert attribute(doc, "class") == ["text-xs"]
+      assert attribute(doc, "style") == ["color: black;"]
     end
 
     test "raise if trying to assisn `{... }` to an attribute" do
@@ -744,11 +746,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
     end
 
     test "as a string" do
@@ -787,11 +787,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
     end
 
     test "as %JS{} struct without target" do
@@ -802,11 +800,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok"}]]
     end
 
     test "as %JS{} struct with target" do
@@ -817,11 +813,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
     end
 
     test "as %JS{} struct with target as :live_view" do
@@ -832,11 +826,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok"}]]
     end
 
     defmodule LiveComponentUsingOnEvent do
@@ -853,11 +845,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok","target":1}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => 1}]]
     end
 
     defmodule LiveComponentUsingOnEventWithTarget do
@@ -874,11 +864,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>
-             """
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
     end
 
     defmodule FunctionComponentUsingOnEventInLivecomponent do
@@ -896,11 +884,9 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      event = html_escape(~S([["push",{"event":"ok"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <button phx-click="#{event}">OK</button>\
-             """
+      assert js_attribute(doc, "div > button", "phx-click") == [["push", %{"event" => "ok"}]]
     end
 
     test "do not translate invalid events" do
@@ -1072,11 +1058,12 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      assert html =~ """
-             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
-               Some Text
-             </div>
-             """
+      doc = parse_document!(html)
+
+      assert attribute(doc, "phx-value-foo") == ["bar"]
+      assert attribute(doc, "phx-value-hello") == ["world"]
+      assert attribute(doc, "phx-value-one") == ["2"]
+      assert attribute(doc, "phx-value-yes") == ["true"]
     end
 
     test "passing a map" do
@@ -1089,11 +1076,12 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      assert html =~ """
-             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
-               Some Text
-             </div>
-             """
+      doc = parse_document!(html)
+
+      assert attribute(doc, "phx-value-hello") == ["world"]
+      assert attribute(doc, "phx-value-foo") == ["bar"]
+      assert attribute(doc, "phx-value-one") == ["2"]
+      assert attribute(doc, "phx-value-yes") == ["true"]
     end
 
     test "passing unsupported types" do
@@ -1120,11 +1108,12 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      assert html =~ """
-             <div phx-value-foo="bar" phx-value-hello="world" phx-value-one="2" phx-value-yes="true">
-               Some Text
-             </div>
-             """
+      doc = parse_document!(html)
+
+      assert attribute(doc, "phx-value-hello") == ["world"]
+      assert attribute(doc, "phx-value-foo") == ["bar"]
+      assert attribute(doc, "phx-value-one") == ["2"]
+      assert attribute(doc, "phx-value-yes") == ["true"]
     end
 
     test "static properties override dynamic properties" do
@@ -1201,37 +1190,5 @@ defmodule Surface.DirectivesTest do
     '''
 
     assert {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
-  end
-end
-
-defmodule Surface.DirectivesSyncTest do
-  use Surface.ConnCase
-
-  import ExUnit.CaptureIO
-
-  alias Surface.DirectivesTest.{DivWithProps}
-
-  describe ":props on a component" do
-    test "emits a warning with an unknown prop at runtime" do
-      assigns = %{
-        opts: %{
-          unknown: "value",
-          class: "text-xs",
-          hidden: false,
-          content: "dynamic props content"
-        }
-      }
-
-      message =
-        capture_io(:standard_error, fn ->
-          render_surface do
-            ~F"""
-            <DivWithProps :props={@opts} />
-            """
-          end
-        end)
-
-      assert message =~ ~S|Unknown property "unknown" for component <DivWithProps>|
-    end
   end
 end

@@ -84,10 +84,10 @@ defmodule Surface.Compiler.ParserTest do
     assert [
              {
                "div",
-               '',
+               ~c"",
                [
                  "\n  ",
-                 {"span", '', '', %{line: 2, file: "nofile", column: 4}},
+                 {"span", ~c"", ~c"", %{line: 2, file: "nofile", column: 4}},
                  " ",
                  {"span", [], [], %{line: 2, file: "nofile", column: 12}},
                  "\n  ",
@@ -236,14 +236,14 @@ defmodule Surface.Compiler.ParserTest do
 
     test "with root node" do
       assert [
-               {"foo", '', [{:expr, "baz", %{line: 1, file: "nofile", column: 7}}],
+               {"foo", ~c"", [{:expr, "baz", %{line: 1, file: "nofile", column: 7}}],
                 %{line: 1, file: "nofile", column: 2}}
              ] = parse!("<foo>{baz}</foo>")
     end
 
     test "mixed curly bracket" do
       assert [
-               {"foo", '',
+               {"foo", ~c"",
                 [
                   "bar",
                   {:expr, "baz", %{line: 1, file: "nofile", column: 10}},
@@ -303,7 +303,7 @@ defmodule Surface.Compiler.ParserTest do
 
     test "self-closing macro" do
       assert parse!("<#Macro/>") ==
-               [{"#Macro", '', [], %{line: 1, file: "nofile", column: 2}}]
+               [{"#Macro", ~c"", [], %{line: 1, file: "nofile", column: 2}}]
     end
 
     test "keep track of the line of the definition" do

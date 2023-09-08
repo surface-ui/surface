@@ -411,81 +411,9 @@ defmodule Surface.Components.Dynamic.ComponentTest do
           """
         end
 
-      event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"ok","target":"#comp"}]]))
+      doc = parse_document!(html)
 
-      assert html =~ """
-             <div phx-click="#{event}"></div>
-             """
-    end
-
-    test "at runtime, warn on unknown attributes with dynamic values at the component definition's file/line " do
-      file = Path.relative_to_cwd(__ENV__.file)
-      line = __ENV__.line + 8
-
-      output =
-        capture_io(:standard_error, fn ->
-          assigns = %{mod: ComponentWithEvent}
-
-          render_surface do
-            ~F"""
-            <Component
-              module={@mod}
-              unknown_attr={"123"}
-            />
-            """
-          end
-        end)
-
-      assert output =~ ~r"""
-             Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
-               #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
-             """
-    end
-
-    test "at runtime, warn on unknown attributes as expr at the component definition's file/line " do
-      file = Path.relative_to_cwd(__ENV__.file)
-      line = __ENV__.line + 8
-
-      output =
-        capture_io(:standard_error, fn ->
-          assigns = %{mod: ComponentWithEvent, var: 123}
-
-          render_surface do
-            ~F"""
-            <Component
-              module={@mod}
-              unknown_attr={@var}
-            />
-            """
-          end
-        end)
-
-      assert output =~ ~r"""
-             Unknown property "unknown_attr" for component <Surface.Components.Dynamic.ComponentTest.ComponentWithEvent>
-               #{file}:#{line}: Surface.Components.Dynamic.ComponentTest \(module\)\
-             """
-    end
-
-    # TODO: When LV 0.18 is released, we should introduce a warning for LV >= 0.18
-    test "at runtime, does not warn on unknown attributes if module attr is a plain old phoenix component" do
-      output =
-        capture_io(:standard_error, fn ->
-          assigns = %{mod: PhoenixFunctionComponent, label: "My Label"}
-
-          render_surface do
-            ~F"""
-            <Component
-              module={@mod}
-              function={:show}
-              label={@label}
-              class="my-class"
-              unknown-attr="unknown-attr"
-            />
-            """
-          end
-        end)
-
-      refute output == ~S(Unknown property "unknown_attr")
+      assert js_attribute(doc, "phx-click") == [["push", %{"event" => "ok", "target" => "#comp"}]]
     end
   end
 

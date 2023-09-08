@@ -88,6 +88,17 @@ defmodule Surface.PropertiesTest do
     end
   end
 
+  defmodule PropsInspect do
+    use Surface.Component
+
+    prop class, :css_class
+    prop event, :event
+
+    def render(assigns) do
+      ~F[{inspect(@class)} | {inspect(@event)}]
+    end
+  end
+
   defmodule AccumulateProp do
     use Surface.Component
 
@@ -130,6 +141,25 @@ defmodule Surface.PropertiesTest do
       {/if}
       """
     end
+  end
+
+  test "translate props correctly inside vanilla function components' slots" do
+    html =
+      render_surface do
+        ~F"""
+        <PropsInspect class="h-full" event="click"/>
+        <Phoenix.Component.link>
+          <PropsInspect class="h-full" event="click"/>
+        </Phoenix.Component.link>
+        """
+      end
+
+    assert String.replace(html, "&quot;", ~S(")) =~ """
+           ["h-full"] | %{name: "click", target: :live_view}
+           <a href="#">
+             ["h-full"] | %{name: "click", target: :live_view}
+           </a>
+           """
   end
 
   describe "atom" do
@@ -980,27 +1010,6 @@ defmodule Surface.PropertiesSyncTest do
     assert_raise(CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
-  end
-
-  # TODO: remove it when start using `attr` from LV
-  describe "unknown property" do
-    test "warns at runtime and render the component" do
-      output =
-        capture_io(:standard_error, fn ->
-          html =
-            render_surface do
-              ~F"""
-              <StringProp label="My Label." unknown="value" />
-              """
-            end
-
-          assert html =~ """
-                 My Label.
-                 """
-        end)
-
-      assert output =~ "Unknown property \"unknown\" for component <StringProp>"
-    end
   end
 
   defmodule AccumulateListProp do

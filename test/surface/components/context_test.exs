@@ -10,7 +10,8 @@ defmodule Surface.Components.ContextTest do
   register_propagate_context_to_slots([
     __MODULE__.Outer,
     __MODULE__.OuterUsingPropContextPut,
-    __MODULE__.OuterWithNamedSlots
+    __MODULE__.OuterWithNamedSlots,
+    __MODULE__.LiveComponentGetFromContextWithUpdate
   ])
 
   defmodule Outer do
@@ -260,7 +261,12 @@ defmodule Surface.Components.ContextTest do
           String.upcase(assigns.data_without_scope || "")
         ]
 
-        {:ok, assign(socket, :computed_value, computed_value)}
+        socket =
+          socket
+          |> assign(assigns)
+          |> assign(:computed_value, computed_value)
+
+        {:ok, socket}
       end
 
       @impl true
@@ -277,7 +283,7 @@ defmodule Surface.Components.ContextTest do
       end
     end
 
-    test "use a value from the context as default value" do
+    test "use a value from the context if the related prop is not given" do
       html =
         render_surface do
           ~F"""
@@ -314,6 +320,63 @@ defmodule Surface.Components.ContextTest do
 
       assert html =~ "Prop with scope: field from prop with scope"
       assert html =~ "Prop without scope: field from prop without scope"
+    end
+  end
+
+  describe "get in live component update/2" do
+    defmodule LiveComponentGetFromContextWithUpdate do
+      use Surface.LiveComponent
+
+      alias Surface.Components.ContextTest.Outer
+
+      slot default
+      data data_with_scope, :any
+      data data_without_scope, :any
+
+      @impl true
+      def update(assigns, socket) do
+        socket =
+          socket
+          |> assign(assigns)
+          |> assign(:data_with_scope, Context.get(socket, Outer, :field))
+          |> assign(:data_without_scope, Context.get(socket, :field))
+          |> Context.put(field: "updated field")
+
+        {:ok, socket}
+      end
+
+      @impl true
+      def render(assigns) do
+        ~F"""
+        <div>
+          Data with scope: {@data_with_scope}
+          Data without scope: {@data_without_scope}
+          <#slot />
+        </div>
+        """
+      end
+    end
+
+    test "can get and update context in update" do
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <Outer>
+              <LiveComponentGetFromContextWithUpdate id="1"/>
+            </Outer>
+            <Context put={field: "field without scope"}>
+              <LiveComponentGetFromContextWithUpdate id="2">
+                <RenderContext/>
+              </LiveComponentGetFromContextWithUpdate>
+            </Context>
+          </div>
+          """
+        end
+
+      assert html =~ "Data with scope: field from Outer"
+      assert html =~ "Data without scope: field without scope"
+      assert html =~ "updated field"
     end
   end
 
@@ -377,6 +440,15 @@ defmodule Surface.Components.ContextTest do
 
       assert_raise ArgumentError, msg, fn ->
         Context.put(%{}, SomeScope, value: 1)
+      end
+    end
+
+    test "put/3 throws ArgumentError argument error if the subject is not a socket/assigns, even with `__context__` key" do
+      msg =
+        "put/3 expects a socket or an assigns map from a function component as first argument, got: %{__context__: %{}}"
+
+      assert_raise ArgumentError, msg, fn ->
+        Context.put(%{__context__: %{}}, SomeScope, value: 1)
       end
     end
 
@@ -825,8 +897,9 @@ defmodule Surface.Components.ContextTest do
       assert html =~ """
              <form action="#" method="post">
                  <input name="_csrf_token" type="hidden" hidden value="test">
+                   <input type="hidden" name="parent[children][_persistent_id]" value="0">
                <div>
-                 <input id="parent_children_name" name="parent[children][name]" type="text">
+                 <input id="parent_children_0_name" name="parent[children][name]" type="text">
              </div>
              </form>
              """

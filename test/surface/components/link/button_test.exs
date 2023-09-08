@@ -122,8 +122,6 @@ defmodule Surface.Components.Link.ButtonTest do
   end
 
   test "click event with @myself as target" do
-    csrf_token = Plug.CSRFProtection.get_csrf_token()
-
     html =
       render_surface do
         ~F"""
@@ -131,13 +129,11 @@ defmodule Surface.Components.Link.ButtonTest do
         """
       end
 
-    event = Phoenix.HTML.Engine.html_escape(~S([["push",{"event":"my_click","target":1}]]))
+    doc = parse_document!(html)
 
-    assert html =~ """
-           <div>
-             <button data-csrf="#{csrf_token}" data-method="post" data-to="/users/1" phx-capture-click="#{event}">user</button>
-           </div>
-           """
+    assert js_attribute(doc, "div > button", "phx-capture-click") == [
+             ["push", %{"event" => "my_click", "target" => 1}]
+           ]
   end
 
   test "updates when opts change", %{conn: conn} do

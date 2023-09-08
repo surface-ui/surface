@@ -265,13 +265,13 @@ defmodule Surface do
         app in [:surface, project_app] or :surface in deps_apps,
         {dir, files} = app_beams_dir_and_files(app),
         file <- files,
-        List.starts_with?(file, 'Elixir.') do
+        List.starts_with?(file, ~c"Elixir.") do
       :filename.join(dir, file)
     end
     |> Enum.chunk_every(50)
     |> Task.async_stream(fn files ->
       for file <- files,
-          {:ok, {_, [{_, chunk} | _]}} = :beam_lib.chunks(file, ['Attr']),
+          {:ok, {_, [{_, chunk} | _]}} = :beam_lib.chunks(file, [~c"Attr"]),
           chunk |> :erlang.binary_to_term() |> Keyword.get(:component_type) do
         file |> Path.basename(".beam") |> String.to_atom()
       end
