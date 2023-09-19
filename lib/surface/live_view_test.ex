@@ -249,7 +249,7 @@ defmodule Surface.LiveViewTest do
   defmacro catalogue_test(module_or_all, opts \\ []) do
     module_or_all = Macro.expand(module_or_all, __CALLER__)
     except = Keyword.get(opts, :except, []) |> Enum.map(&Macro.expand(&1, __CALLER__))
-    {examples, playgrounds} = get_examples_and_playgrouds(module_or_all, except)
+    {examples, playgrounds} = get_examples_and_playgrouds(module_or_all, except, __CALLER__)
 
     playground_tests =
       for view <- playgrounds do
@@ -333,19 +333,38 @@ defmodule Surface.LiveViewTest do
     |> String.replace(~r/\n\s+\n/, "\n")
   end
 
-  defp get_examples_and_playgrouds(module_or_all, except) do
+  defp get_examples_and_playgrouds(module_or_all, except, caller) do
     components =
       case {module_or_all, except} do
         {:all, []} ->
           Surface.components(only_current_project: true)
 
         {:all, except} ->
+          except_components =
+            Enum.filter(except, fn module ->
+              case Surface.Compiler.Helpers.validate_component_module(module, to_string(module)) do
+                {:error, message} ->
+                  Surface.IOHelper.warn(message, caller)
+                  false
+
+                :ok ->
+                  true
+              end
+            end)
+
           Surface.components(only_current_project: true)
-          |> Enum.filter(fn c -> Surface.Catalogue.get_metadata(c)[:subject] not in except end)
+          |> Enum.filter(fn c -> Surface.Catalogue.get_metadata(c)[:subject] not in except_components end)
 
         {module, _} when is_atom(module) ->
-          Surface.components(only_current_project: true)
-          |> Enum.filter(fn c -> Surface.Catalogue.get_metadata(c)[:subject] == module end)
+          case Surface.Compiler.Helpers.validate_component_module(module, to_string(module)) do
+            {:error, message} ->
+              Surface.IOHelper.warn(message, caller)
+              []
+
+            :ok ->
+              Surface.components(only_current_project: true)
+              |> Enum.filter(fn c -> Surface.Catalogue.get_metadata(c)[:subject] == module end)
+          end
 
         {value, _} ->
           raise(ArgumentError, "catalogue_test/1 expects either a module or `:all`, got #{inspect(value)}")
