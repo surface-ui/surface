@@ -66,6 +66,61 @@ defmodule Surface.LiveViewTestTest do
       assert {:"test Surface.LiveViewTestTest.FakeExample.render", 1} in tests
       refute {:"test Surface.LiveViewTestTest.FakeExampleForOtherFakeComponent.render", 1} in tests
     end
+
+    test "warns when passing an undefined module (subject)" do
+      import ExUnit.CaptureIO
+
+      code = """
+      catalogue_test(Surface.LiveViewTestTest.UndefinedModule)
+      """
+
+      assert capture_io(:stderr, fn ->
+               Code.eval_string(code, [], %{__ENV__ | line: 1})
+             end) =~ "module Surface.LiveViewTestTest.UndefinedModule could not be loaded"
+    end
+
+    test "warns when passing a module that isn't a component (subject)" do
+      import ExUnit.CaptureIO
+
+      code = """
+      catalogue_test(String)
+      """
+
+      assert capture_io(:stderr, fn ->
+               Code.eval_string(code, [], %{__ENV__ | line: 1})
+             end) =~ "module String is not a component"
+    end
+
+    test "warns when passing an undefined module (subject) :all with the :except option" do
+      import ExUnit.CaptureIO
+
+      code = """
+      defmodule Test do
+        use ExUnit.Case
+        @before_compile Surface.LiveViewTestTest.DisableTests
+        catalogue_test(:all, except: [Surface.LiveViewTestTest.UndefinedModule])
+      end
+      """
+
+      assert capture_io(:stderr, fn -> Code.eval_string(code, [], __ENV__) end) =~
+               "module Surface.LiveViewTestTest.UndefinedModule could not be loaded"
+    end
+
+    test "warns when passing a module that isn't a component :all with the :except option" do
+      import ExUnit.CaptureIO
+      unique_test_module = "Test_#{:erlang.unique_integer([:positive])}"
+
+      code = """
+      defmodule #{unique_test_module} do
+        use ExUnit.Case
+        @before_compile Surface.LiveViewTestTest.DisableTests
+        catalogue_test(:all, except: [String])
+      end
+      """
+
+      assert capture_io(:stderr, fn -> Code.eval_string(code, [], __ENV__) end) =~
+               "module String is not a component"
+    end
   end
 
   defp get_test_functions(module) do
