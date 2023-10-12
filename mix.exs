@@ -1,7 +1,7 @@
 defmodule Surface.MixProject do
   use Mix.Project
 
-  @version "0.12.0"
+  @version "0.11.0"
 
   def project do
     [
@@ -36,7 +36,7 @@ defmodule Surface.MixProject do
       {:phoenix_live_view, "~> 0.20.0"},
       {:floki, "~> 0.25.0", only: :test},
       {:phoenix_ecto, "~> 4.0", only: :test},
-      {:sourceror, "~> 0.14.0"},
+      {:sourceror, "~> 0.12.0"},
       {:ecto, "~> 3.7", only: :test},
       {:phx_new, "~> 1.7.2", only: :test},
       {:ex_doc, ">= 0.28.5", only: :docs}
