@@ -2,7 +2,7 @@
 
 ## v0.12.0 (2023-11-07)
 
-  * Add support for Liveview `v0.20` (#713)
+  * Add support for Liveview `v0.20` (#714)
 
 ## v0.11.1 (2023-11-07)
 
