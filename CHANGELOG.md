@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.11.1 (2023-11-07)
+
+  * Warn when module given to `catalogue_test` doesn't exist or is not a component (#711)
+  * Fix `inputs_for/3` warnings (#703)
+
 ## v0.11.0 (2023-06-02)
 
   * Add support for Liveview `v0.19` (#692)
