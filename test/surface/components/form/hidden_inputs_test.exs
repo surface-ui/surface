@@ -4,6 +4,7 @@ defmodule Surface.Components.Form.HiddenInputsTest do
   alias Surface.Components.Form
   alias Surface.Components.Form.Inputs
   alias Surface.Components.Form.HiddenInputs
+  alias Surface.Schemas.Parent
 
   test "using generated form received as slot arg" do
     html =
@@ -22,7 +23,7 @@ defmodule Surface.Components.Form.HiddenInputsTest do
              <form action="#" method="post">
                  <input name="_csrf_token" type="hidden" hidden value="test">
                    <input type="hidden" name="parent[children][_persistent_id]" value="0">
-                 <input id="parent_children_0__persistent_id" name="parent[children][_persistent_id]" type="hidden" value="0">
+               <input type="hidden" name="parent[children][_persistent_id]" value="0">
              </form>
              """
   end
@@ -44,7 +45,31 @@ defmodule Surface.Components.Form.HiddenInputsTest do
              <form action="#" method="post">
                  <input name="_csrf_token" type="hidden" hidden value="test">
                    <input type="hidden" name="parent[children][_persistent_id]" value="0">
-                 <input id="parent_children_0__persistent_id" name="parent[children][_persistent_id]" type="hidden" value="0">
+               <input type="hidden" name="parent[children][_persistent_id]" value="0">
+             </form>
+             """
+  end
+
+  test "based on a changeset" do
+    cs = Parent.changeset(%{children: [%{name: "first"}]})
+
+    html =
+      render_surface do
+        ~F"""
+        <Form for={cs} as={:parent} opts={csrf_token: "test"}>
+          <Inputs for={:children} :let={form: f}>
+            <HiddenInputs for={f} />
+          </Inputs>
+        </Form>
+        """
+      end
+
+    assert html =~
+             """
+             <form action="#" method="post">
+                 <input name="_csrf_token" type="hidden" hidden value="test">
+                   <input type="hidden" name="parent[children][0][_persistent_id]" value="0">
+               <input type="hidden" name="parent[children][0][_persistent_id]" value="0">
              </form>
              """
   end
