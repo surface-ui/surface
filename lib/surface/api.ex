@@ -605,7 +605,7 @@ defmodule Surface.API do
   defp format_opts(opts_ast) do
     opts_ast
     |> Macro.to_string()
-    |> String.slice(1..-2)
+    |> String.slice(1..-2//1)
   end
 
   defp generate_docs(env) do
