@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.12.0 (2023-11-07)
+
+  * Add support for Liveview `v0.20` (#714)
+
 ## v0.11.1 (2023-11-07)
 
   * Warn when module given to `catalogue_test` doesn't exist or is not a component (#711)
