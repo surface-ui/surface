@@ -21,7 +21,7 @@ defmodule Surface.Formatter.Phases.BlockExceptions do
     {:block, "match", match_expr, children, last_meta} = last_sub_block
 
     modified_sub_blocks = [
-      {:block, "match", match_expr, Enum.slice(children, 0..-2), last_meta} | rest
+      {:block, "match", match_expr, Enum.slice(children, 0..-2//1), last_meta} | rest
     ]
 
     modified_sub_blocks = Enum.reverse(modified_sub_blocks)
