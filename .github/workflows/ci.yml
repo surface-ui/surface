@@ -29,6 +29,11 @@ jobs:
             check_formatted: true
             run_plugin_tests: true
             warnings_as_errors: true
+          - elixir: 1.16.0
+            otp: 26.2.1
+            check_formatted: false
+            run_plugin_tests: true
+            warnings_as_errors: true
     env:
       MIX_ENV: test
     steps:

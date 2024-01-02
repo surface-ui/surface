@@ -649,7 +649,7 @@ defmodule Surface.CompilerTest do
       </div>
       """
 
-      assert_raise(SyntaxError, "nofile:3: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, ~r/nofile:3:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
@@ -666,7 +666,7 @@ defmodule Surface.CompilerTest do
       </Grid>
       """
 
-      assert_raise(SyntaxError, "nofile:6: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, ~r/nofile:6:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
@@ -682,7 +682,7 @@ defmodule Surface.CompilerTest do
       </div>
       """
 
-      assert_raise(SyntaxError, "nofile:6: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, ~r/nofile:6:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
@@ -696,7 +696,7 @@ defmodule Surface.CompilerTest do
       </Grid>
       """
 
-      assert_raise(SyntaxError, "nofile:1: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, ~r/nofile:1:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
@@ -713,7 +713,7 @@ defmodule Surface.CompilerTest do
       </Grid>
       """
 
-      assert_raise(SyntaxError, "nofile:5: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, ~r/nofile:5/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end
@@ -727,7 +727,7 @@ defmodule Surface.CompilerTest do
       </GridLive>
       """
 
-      assert_raise(SyntaxError, "nofile:1: syntax error before: ','", fn ->
+      assert_raise(SyntaxError, ~r/nofile:1:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
     end

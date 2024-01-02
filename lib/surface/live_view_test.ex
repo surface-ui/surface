@@ -381,7 +381,8 @@ defmodule Surface.LiveViewTest do
 
   @doc false
   defmacro assert_raise_with_line(exception, message, relative_line, function) do
-    {:fn, _, [{:->, [line: function_start_line], _}]} = function
+    {:fn, _, [{:->, meta, _}]} = function
+    function_start_line = meta[:line]
     expected_line = function_start_line + relative_line
     expected_file = __CALLER__.file |> Path.relative_to_cwd()
 

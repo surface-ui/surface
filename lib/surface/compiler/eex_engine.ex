@@ -1093,16 +1093,6 @@ defmodule Surface.Compiler.EExEngine do
     end
   end
 
-  defp require_expr(module, line) do
-    %AST.Expr{
-      value:
-        quote line: line do
-          require(unquote(module)).__info__(:module)
-        end,
-      meta: %AST.Meta{}
-    }
-  end
-
   defp escape_message(message) do
     {:safe, message_iodata} = Phoenix.HTML.html_escape(message)
     IO.iodata_to_binary(message_iodata)

@@ -38,9 +38,9 @@ defmodule Surface.Formatter.Phases.Newlines do
 
   defp prevent_empty_line_at_end(nodes) do
     nodes
-    |> Enum.slice(-2..-1)
+    |> Enum.slice(-2..-1//1)
     |> case do
-      [:newline, :newline] -> Enum.slice(nodes, 0..-2)
+      [:newline, :newline] -> Enum.slice(nodes, 0..-2//1)
       _ -> nodes
     end
     |> Phase.transform_element_children(&prevent_empty_line_at_end/1)
