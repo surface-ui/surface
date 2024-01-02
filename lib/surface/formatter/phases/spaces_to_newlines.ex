@@ -83,7 +83,7 @@ defmodule Surface.Formatter.Phases.SpacesToNewlines do
     nodes =
       case Enum.reverse(nodes) do
         [:space, _element | _rest] ->
-          Enum.slice(nodes, 0..-2) ++ [:newline]
+          Enum.slice(nodes, 0..-2//1) ++ [:newline]
 
         _ ->
           nodes

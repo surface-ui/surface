@@ -22,7 +22,7 @@ defmodule Surface.Catalogue.DataTest do
 
     test "[first..last] - list's range" do
       list = [:a, :b, :c, :d, :e]
-      assert Data.get(list[1..-2]) == [:b, :c, :d]
+      assert Data.get(list[1..-2//1]) == [:b, :c, :d]
     end
 
     test "[_] - list's all items" do
@@ -134,17 +134,17 @@ defmodule Surface.Catalogue.DataTest do
     end
 
     test "get with negative end index", %{lists: lists} do
-      [cards_1, cards_2] = Data.get(lists[_].cards[1..-2])
+      [cards_1, cards_2] = Data.get(lists[_].cards[1..-2//1])
 
       assert [%{id: "Card_2"}, %{id: "Card_3"}] = cards_1
       assert [%{id: "Card_6"}, %{id: "Card_7"}] = cards_2
 
-      [cards_1, cards_2] = Data.get(lists[_].cards[0..-3])
+      [cards_1, cards_2] = Data.get(lists[_].cards[0..-3//1])
 
       assert [%{id: "Card_1"}, %{id: "Card_2"}] = cards_1
       assert [%{id: "Card_5"}, %{id: "Card_6"}] = cards_2
 
-      [cards_1, cards_2] = Data.get(lists[_].cards[2..-1])
+      [cards_1, cards_2] = Data.get(lists[_].cards[2..-1//1])
 
       assert [%{id: "Card_3"}, %{id: "Card_4"}] = cards_1
       assert [%{id: "Card_7"}, %{id: "Card_8"}] = cards_2

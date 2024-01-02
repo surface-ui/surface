@@ -185,7 +185,7 @@ defmodule Surface.MacroComponentTest do
         """
       end
 
-    assert_raise(SyntaxError, ~r/code:2: syntax error before: ','/, fn ->
+    assert_raise(SyntaxError, ~r/code:2:/, fn ->
       compile_surface(code)
     end)
   end

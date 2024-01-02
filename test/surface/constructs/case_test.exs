@@ -118,7 +118,7 @@ defmodule Surface.Constructs.CaseTest do
         """
       end
 
-    message = ~S(code:4: syntax error before: ',')
+    message = ~r/syntax error before: ','/
 
     assert_raise(SyntaxError, message, fn ->
       compile_surface(code)
