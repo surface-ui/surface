@@ -1,6 +1,10 @@
 defmodule Surface.CompilerTest do
   use ExUnit.Case
 
+  import Surface, only: [sigil_F: 2]
+  import Phoenix.Component, only: [sigil_H: 2]
+  alias Phoenix.LiveView.Rendered
+
   defmodule Macro do
     use Surface.MacroComponent
 
@@ -90,6 +94,93 @@ defmodule Surface.CompilerTest do
     def render(assigns) do
       ~F"""
       """
+    end
+  end
+
+  defp func(assigns) do
+    ~F[hello]
+  end
+
+  describe "set the root field for the %Phoenix.LiveView.Rendered{} struct" do
+    test "set it to `true` if the there's only a single root tag node" do
+      assigns = %{}
+
+      assert %Rendered{root: true} = ~H[<div/>]
+      assert %Rendered{root: true} = ~F[<div/>]
+      assert %Rendered{root: true} = ~H[<div><span>text</span></div>]
+      assert %Rendered{root: true} = ~F[<div><span>text</span></div>]
+      assert %Rendered{root: true} = ~H[<div><.func/></div>]
+      assert %Rendered{root: true} = ~F[<div><.func/></div>]
+      assert %Rendered{root: true} = ~H[<div><%= "text" %></div>]
+      assert %Rendered{root: true} = ~F[<div>{"text"}</div>]
+
+      assert %Rendered{root: true} = ~H[ <div>text</div> ]
+      assert %Rendered{root: true} = ~F[ <div>text</div> ]
+
+      assert %Rendered{root: true} = ~H"""
+             <div>text</div>
+             """
+
+      assert %Rendered{root: true} = ~F"""
+             <div>text</div>
+             """
+    end
+
+    test "set it to `false` if the root tag is translated/wrapped into an expression e.g. using `:for` or `:if`" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<div :if={true}/>]
+      assert %Rendered{root: false} = ~F[<div :if={true}/>]
+      assert %Rendered{root: false} = ~H(<div :for={_ <- []}/>)
+      assert %Rendered{root: false} = ~F(<div :for={_ <- []}/>)
+    end
+
+    test "set it to `false` if it's a text node" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[text]
+      assert %Rendered{root: false} = ~F[text]
+    end
+
+    test "set it to `false` if it's an expression" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<%= "text" %>]
+      assert %Rendered{root: false} = ~F[{"text"}]
+    end
+
+    test "set it to `false` if it's a component" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<.func/>]
+      assert %Rendered{root: false} = ~F[<.func/>]
+    end
+
+    test "set it to `false` if there are multiple nodes" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<div/><div/>]
+      assert %Rendered{root: false} = ~F[<div/><div/>]
+
+      assert %Rendered{root: false} = ~H[text<div/>]
+      assert %Rendered{root: false} = ~F[text<div/>]
+
+      assert %Rendered{root: false} = ~H[<div/>text]
+      assert %Rendered{root: false} = ~F[<div/>text]
+
+      assert %Rendered{root: false} = ~H[<div/><%= "text" %>]
+      assert %Rendered{root: false} = ~F[<div/>{"text"}]
+
+      assert %Rendered{root: false} = ~H[<!-- comment --><div/>]
+      assert %Rendered{root: false} = ~F[<!-- comment --><div/>]
+
+      assert %Rendered{root: false} = ~H[<div/><!-- comment -->]
+      assert %Rendered{root: false} = ~F[<div/><!-- comment -->]
+
+      # Private comments are excluded from the AST.
+      # And since they are not available in ~H, we don't assert against it.
+      assert %Rendered{root: true} = ~F[{!-- comment --}<div/>]
+      assert %Rendered{root: true} = ~F[<div/>{!-- comment --}]
     end
   end
 

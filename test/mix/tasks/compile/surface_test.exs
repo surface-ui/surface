@@ -79,7 +79,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
         assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [])
       end)
 
-    assert output =~ IO.ANSI.format([:yellow, "warning:"]) |> IO.iodata_to_binary()
+    assert output =~ IO.ANSI.format([:yellow, "warning: "]) |> IO.iodata_to_binary()
     assert output =~ "test warning\n  file.ex:1: (file)\n\n"
   end
 
