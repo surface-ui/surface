@@ -51,7 +51,7 @@ jobs:
         if: matrix.check_formatted
       - run: mix compile --warnings-as-errors
         if: matrix.warnings_as_errors
-      - run: mix test
+      - run: mix test --include integration
         if: matrix.run_plugin_tests
-      - run: mix test --exclude plugin
+      - run: mix test --include integration --exclude plugin
         if: ${{ !matrix.run_plugin_tests }}
