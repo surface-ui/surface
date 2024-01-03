@@ -145,11 +145,6 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
       mix_file = Path.join(project_folder, "mix.exs")
       Mix.Tasks.Surface.Init.Patcher.patch_file(mix_file, [add_surface_to_mix_deps()], %{dry_run: false})
 
-      mix_file
-      |> File.read!()
-      |> String.replace(~S({:phoenix_live_view, "~> 0.18.16"}), ~S({:phoenix_live_view, "~> 0.18.18"}))
-      |> then(&File.write!(mix_file, &1))
-
       cmd("mix deps.get", cd: project_folder)
     end
 
