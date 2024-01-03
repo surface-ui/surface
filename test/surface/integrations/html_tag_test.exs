@@ -143,6 +143,19 @@ defmodule HtmlTagTest do
              """
     end
 
+    test "as expression with a literal string, encode HTML entities" do
+      html =
+        render_surface do
+          ~F"""
+          <div title={"> 123"}/>
+          """
+        end
+
+      assert html =~ """
+             <div title="&gt; 123"></div>
+             """
+    end
+
     test "without a value" do
       html =
         render_surface do
@@ -283,10 +296,20 @@ defmodule HtmlTagTest do
              """
     end
 
-    test "as string literal, it's translated directly to static html" do
-      %Rendered{static: static} = eval(~S[<div class="myclass" id={"123"}/>], __ENV__)
+    test "as string literal, translate directly to static html, without encoding" do
+      %Rendered{static: static} = eval(~S{<div class="[&:nth-child(2)]:p-4"></div>}, __ENV__)
 
-      assert static == [~S(<div class="myclass"), "></div>"]
+      assert static == [~S{<div class="[&:nth-child(2)]:p-4"></div>}]
+    end
+
+    test "as expression with a literal string, translate and encode directly to static html" do
+      code = """
+      <div class={"[&:nth-child(2)]:p-4"}/>\
+      """
+
+      %Rendered{static: static} = eval(code, __ENV__)
+
+      assert static == [~S{<div class="[&amp;:nth-child(2)]:p-4"></div>}]
     end
 
     test "css class with keyword list notation" do
