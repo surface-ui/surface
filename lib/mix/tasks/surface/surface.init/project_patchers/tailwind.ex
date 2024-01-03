@@ -6,13 +6,13 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
   @behaviour Mix.Tasks.Surface.Init.ProjectPatcher
 
   @impl true
-  def specs(_assigns) do
+  def specs(assigns) do
     [
-      {:patch, "assets/tailwind.config.js", [add_sface_patterns_to_tailwind_config_js()]}
+      {:patch, "assets/tailwind.config.js", [add_sface_patterns_to_tailwind_config_js(assigns.context_app)]}
     ]
   end
 
-  def add_sface_patterns_to_tailwind_config_js() do
+  def add_sface_patterns_to_tailwind_config_js(context_app) do
     %{
       name: "Add surface files to tailwind.config.js content section",
       instructions: "",
@@ -22,20 +22,20 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Tailwind do
           """
             content: [
               "./js/**/*.js",
-              "../lib/*_web.ex",
-              "../lib/*_web/**/*.*ex"
+              "../lib/#{context_app}_web.ex",
+              "../lib/#{context_app}_web/**/*.*ex"
             ],
           """,
           """
             content: [
               "./js/**/*.js",
-              "../lib/*_web.ex",
-              "../lib/*_web/**/*.*ex",
-              "../lib/*_web/**/*.sface",
+              "../lib/#{context_app}_web.ex",
+              "../lib/#{context_app}_web/**/*.*ex",
+              "../lib/#{context_app}_web/**/*.sface",
               "../priv/catalogue/**/*.{ex,sface}"
             ],
           """,
-          "../lib/*_web/**/*.sface"
+          "../lib/#{context_app}_web/**/*.sface"
         )
     }
   end

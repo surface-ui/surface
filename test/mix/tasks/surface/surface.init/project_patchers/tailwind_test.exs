@@ -12,8 +12,8 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       module.exports = {
         content: [
           "./js/**/*.js",
-          "../lib/*_web.ex",
-          "../lib/*_web/**/*.*ex"
+          "../lib/my_app_web.ex",
+          "../lib/my_app_web/**/*.*ex"
         ],
         theme: {
           extend: {},
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       }
       """
 
-      {:patched, updated_code} = Patcher.patch_code(code, add_sface_patterns_to_tailwind_config_js())
+      {:patched, updated_code} = Patcher.patch_code(code, add_sface_patterns_to_tailwind_config_js(:my_app))
 
       assert updated_code == """
              const plugin = require("tailwindcss/plugin")
@@ -32,9 +32,9 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
              module.exports = {
                content: [
                  "./js/**/*.js",
-                 "../lib/*_web.ex",
-                 "../lib/*_web/**/*.*ex",
-                 "../lib/*_web/**/*.sface",
+                 "../lib/my_app_web.ex",
+                 "../lib/my_app_web/**/*.*ex",
+                 "../lib/my_app_web/**/*.sface",
                  "../priv/catalogue/**/*.{ex,sface}"
                ],
                theme: {
@@ -52,9 +52,9 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       module.exports = {
         content: [
           "./js/**/*.js",
-          "../lib/*_web.ex",
-          "../lib/*_web/**/*.*ex",
-          "../lib/*_web/**/*.sface",
+          "../lib/my_app_web.ex",
+          "../lib/my_app_web/**/*.*ex",
+          "../lib/my_app_web/**/*.sface",
           "../priv/catalogue/**/*.{ex,sface}"
         ],
         theme: {
@@ -64,7 +64,8 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.TailwindTest do
       }
       """
 
-      assert {:already_patched, ^code} = Patcher.patch_code(code, add_sface_patterns_to_tailwind_config_js())
+      assert {:already_patched, ^code} =
+               Patcher.patch_code(code, add_sface_patterns_to_tailwind_config_js(:my_app))
     end
   end
 end
