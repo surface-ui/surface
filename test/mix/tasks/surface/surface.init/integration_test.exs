@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
     output =
       cmd(
-        "mix surface.init --catalogue --demo --layouts --yes --no-install --dry-run --web-module SurfaceInitTestWeb",
+        "mix surface.init --catalogue --demo --layouts --yes --no-install --web-module SurfaceInitTestWeb",
         opts
       )
 
@@ -55,6 +55,9 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            Finished running 30 patches for 20 files.
            30 changes applied, 0 skipped.
            """
+
+    compile(project_folder, warnings_as_errors: true)
+    cmd("mix test --warnings-as-errors", opts)
   end
 
   test "surfice.init on an already patched project applies no changes", %{project_folder_patched: project_folder} do
@@ -148,7 +151,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
       cmd("mix deps.get", cd: project_folder)
     end
 
-    compile_output = cmd("mix compile", cd: project_folder)
+    compile_output = cmd("mix compile --warnings-as-errors", cd: project_folder)
     compiled? = String.contains?(compile_output, "Compiling")
 
     status =
@@ -190,10 +193,15 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     end
   end
 
-  defp compile(project_folder) do
+  defp compile(project_folder, opts \\ []) do
     Mix.shell().info([:green, "* compiling ", :reset, project_folder])
     cmd("mix deps.get", cd: project_folder)
-    cmd("mix compile", cd: project_folder)
+
+    if opts[:warnings_as_errors] do
+      cmd("mix compile --warnings-as-errors", cd: project_folder)
+    else
+      cmd("mix compile", cd: project_folder)
+    end
   end
 
   defp restore(project_folder) do
