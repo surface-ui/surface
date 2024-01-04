@@ -33,6 +33,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     assert output =~ """
            * patching .formatter.exs
            * patching .gitignore
+           * patching Dockerfile
            * patching assets/css/app.css
            * patching assets/js/app.js
            * patching assets/tailwind.config.js
@@ -52,8 +53,8 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating lib/surface_init_test_web/components/layouts/root.sface
            * deleting lib/surface_init_test_web/components/layouts/root.html.heex
 
-           Finished running 30 patches for 20 files.
-           30 changes applied, 0 skipped.
+           Finished running 31 patches for 21 files.
+           31 changes applied, 0 skipped.
            """
   end
 
@@ -69,6 +70,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     assert compact_output(output) =~ """
            * patching .formatter.exs (skipped)
            * patching .gitignore (skipped)
+           * patching Dockerfile (skipped)
            * patching assets/css/app.css (skipped)
            * patching assets/js/app.js (skipped)
            * patching assets/tailwind.config.js (skipped)
@@ -88,8 +90,8 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
            * creating lib/surface_init_test_web/components/layouts/root.sface (skipped)
            * deleting lib/surface_init_test_web/components/layouts/root.html.heex (skipped)
 
-           Finished running 30 patches for 20 files.
-           0 changes applied, 30 skipped.
+           Finished running 31 patches for 21 files.
+           0 changes applied, 31 skipped.
            It looks like this project has already been patched.
            """
   end
@@ -146,6 +148,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
       Mix.Tasks.Surface.Init.Patcher.patch_file(mix_file, [add_surface_to_mix_deps()], %{dry_run: false})
 
       cmd("mix deps.get", cd: project_folder)
+      cmd("mix phx.gen.release --docker", cd: project_folder)
     end
 
     compile_output = cmd("mix compile", cd: project_folder)
