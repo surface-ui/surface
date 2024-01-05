@@ -3,7 +3,7 @@ defmodule Surface.Components.Form.DateInput do
   An input field that let the user enter a **date**, either with a text field
   or a date picker interface.
 
-  Provides a wrapper for Phoenix.HTML.Form's `date_input/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `date_input/3` function.
 
   All options passed via `opts` will be sent to `date_input/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.DateInput do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [date_input: 3]
+  import PhoenixHTMLHelpers.Form, only: [date_input: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

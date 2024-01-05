@@ -178,7 +178,7 @@ defmodule Surface.Components.LinkTest do
         render_surface do
           ~F"""
           <Link to="/hello">
-            {Phoenix.HTML.Tag.content_tag(:p, "world")}
+            {PhoenixHTMLHelpers.Tag.content_tag(:p, "world")}
           </Link>
           """
         end

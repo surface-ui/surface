@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.TimeSelect do
   @moduledoc """
   Generates select tags for time.
 
-  Provides a wrapper for Phoenix.HTML.Form's `time_select/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `time_select/3` function.
 
   All options passed via `opts` will be sent to `time_select/3`,
   `value`, `default`, `hour`, `minute`, `second` and `builder`
@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.TimeSelect do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [time_select: 3]
+  import PhoenixHTMLHelpers.Form, only: [time_select: 3]
   import Surface.Components.Form.Utils
 
   @doc "The form identifier"

@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.DateTimeSelect do
   @moduledoc """
   Generates select tags for datetime.
 
-  Provides a wrapper for Phoenix.HTML.Form's `datetime_select/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `datetime_select/3` function.
 
   All options passed via `opts` will be sent to `datetime_select/3`,
   `value`, `default`, `year`, `month`, `day`, `hour`, `minute`, `second` and `builder`
@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.DateTimeSelect do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [datetime_select: 3]
+  import PhoenixHTMLHelpers.Form, only: [datetime_select: 3]
   import Surface.Components.Form.Utils
 
   @doc "The form identifier"

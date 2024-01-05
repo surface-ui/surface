@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.DateSelect do
   @moduledoc """
   Generates select tags for date.
 
-  Provides a wrapper for Phoenix.HTML.Form's `date_select/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `date_select/3` function.
 
   All options passed via `opts` will be sent to `date_select/3`,
   `value`, `default`, `year`, `month`, `day` and `builder`
@@ -21,7 +21,7 @@ defmodule Surface.Components.Form.DateSelect do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [date_select: 3]
+  import PhoenixHTMLHelpers.Form, only: [date_select: 3]
   import Surface.Components.Form.Utils
 
   @doc "The form identifier"

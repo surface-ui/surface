@@ -3,7 +3,7 @@ defmodule Surface.Components.Form.DateTimeLocalInput do
   An input field that let the user enter both **date** and **time**, using a
   text field and a date picker interface.
 
-  Provides a wrapper for Phoenix.HTML.Form's `datetime_local_input/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `datetime_local_input/3` function.
 
   All options passed via `opts` will be sent to `datetime_local_input/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.DateTimeLocalInput do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [datetime_local_input: 3]
+  import PhoenixHTMLHelpers.Form, only: [datetime_local_input: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

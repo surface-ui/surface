@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.RadioButton do
   @moduledoc """
   Defines a radio button.
 
-  Provides a wrapper for Phoenix.HTML.Form's `radio_button/4` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `radio_button/4` function.
 
   All options passed via `opts` will be sent to `radio_button/4`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.RadioButton do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [radio_button: 4]
+  import PhoenixHTMLHelpers.Form, only: [radio_button: 4]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

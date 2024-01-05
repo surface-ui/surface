@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.UrlInput do
   @moduledoc """
   An input field that let the user enter a **URL**.
 
-  Provides a wrapper for Phoenix.HTML.Form's `url_input/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `url_input/3` function.
 
   All options passed via `opts` will be sent to `url_input/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.UrlInput do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [url_input: 3]
+  import PhoenixHTMLHelpers.Form, only: [url_input: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

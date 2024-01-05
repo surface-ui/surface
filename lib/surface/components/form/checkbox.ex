@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.Checkbox do
   @moduledoc """
   Defines a checkbox.
 
-  Provides a wrapper for Phoenix.HTML.Form's `checkbox/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `checkbox/3` function.
 
   All options passed via `opts` will be sent to `checkbox/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.Checkbox do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [checkbox: 3]
+  import PhoenixHTMLHelpers.Form, only: [checkbox: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

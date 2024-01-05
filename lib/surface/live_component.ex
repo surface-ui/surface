@@ -61,7 +61,8 @@ defmodule Surface.LiveComponent do
       @before_compile unquote(__MODULE__)
 
       use Surface.API, include: [:prop, :slot, :data]
-      import Phoenix.HTML
+      import PhoenixHTMLHelpers
+
 
       @before_compile {Surface.BaseComponent, :__before_compile_init_slots__}
 

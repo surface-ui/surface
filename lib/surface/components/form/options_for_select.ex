@@ -4,7 +4,7 @@ defmodule Surface.Components.Form.OptionsForSelect do
 
   This is useful when building the select by hand.
 
-  Provides a wrapper for Phoenix.HTML.Form's `options_for_select/2` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `options_for_select/2` function.
   """
 
   use Surface.Component

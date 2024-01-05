@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.TextArea do
   @moduledoc """
   An input field that let the user enter a **multi-line** text.
 
-  Provides a wrapper for Phoenix.HTML.Form's `textarea/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `textarea/3` function.
 
   All options passed via `opts` will be sent to `textarea/3`. Explicitly
   defined properties like `value` and `class` can be set directly and will
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.TextArea do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [textarea: 3]
+  import PhoenixHTMLHelpers.Form, only: [textarea: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

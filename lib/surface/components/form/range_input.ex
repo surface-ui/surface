@@ -3,7 +3,7 @@ defmodule Surface.Components.Form.RangeInput do
   An input field that let the user specify a numeric value in a given **range**,
   usually using a slider.
 
-  Provides a wrapper for Phoenix.HTML.Form's `range_input/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `range_input/3` function.
 
   All options passed via `opts` will be sent to `range_input/3`, `value`, `min`, `max`
   and `class` can be set directly and will override anything in `opts`.
@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.RangeInput do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [range_input: 3]
+  import PhoenixHTMLHelpers.Form, only: [range_input: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

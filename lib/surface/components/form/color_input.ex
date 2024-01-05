@@ -3,7 +3,7 @@ defmodule Surface.Components.Form.ColorInput do
   An input field that let the user specify a **color**, either with a
   text field or a color picker interface.
 
-  Provides a wrapper for Phoenix.HTML.Form's `color_input/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `color_input/3` function.
 
   All options passed via `opts` will be sent to `color_input/3`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.ColorInput do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [color_input: 3]
+  import PhoenixHTMLHelpers.Form, only: [color_input: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

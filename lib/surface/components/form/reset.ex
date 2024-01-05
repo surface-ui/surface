@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.Reset do
   @moduledoc """
   Defines a reset button.
 
-  Provides a wrapper for Phoenix.HTML.Form's `reset/2` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `reset/2` function.
 
   All options passed via `opts` will be sent to `reset/2`, `value` and
   `class` can be set directly and will override anything in `opts`.
@@ -18,7 +18,7 @@ defmodule Surface.Components.Form.Reset do
   use Surface.Component
   use Surface.Components.Events
 
-  import Phoenix.HTML.Form, only: [reset: 2]
+  import PhoenixHTMLHelpers.Form, only: [reset: 2]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 

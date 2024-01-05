@@ -36,7 +36,7 @@ defmodule Surface.LiveView do
       use Surface.BaseComponent, type: unquote(__MODULE__)
 
       use Surface.API, include: [:prop, :data]
-      import Phoenix.HTML
+      import PhoenixHTMLHelpers
 
       alias Surface.Components.{Context, Raw}
       alias Surface.Components.Dynamic.Component

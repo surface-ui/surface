@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.Select do
   @moduledoc """
   Defines a select.
 
-  Provides a wrapper for Phoenix.HTML.Form's `select/4` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `select/4` function.
 
   All options passed via `opts` will be sent to `select/4`, `class` can
   be set directly and will override anything in `opts`.
@@ -10,7 +10,7 @@ defmodule Surface.Components.Form.Select do
 
   use Surface.Component
 
-  import Phoenix.HTML.Form, only: [select: 4]
+  import PhoenixHTMLHelpers.Form, only: [select: 4]
   import Surface.Components.Form.Utils
 
   @doc "The form identifier"

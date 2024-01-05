@@ -2,7 +2,7 @@ defmodule Surface.Components.Form.TelephoneInput do
   @moduledoc """
   An input field that let the user enter a **telephone number**.
 
-  Provides a wrapper for Phoenix.HTML.Form's `telephone_input/3` function.
+  Provides a wrapper for PhoenixHTMLHelpers.Form's `telephone_input/3` function.
 
   All options passed via `opts` will be sent to `telephone_input/3`, `value`,
   `pattern` and `class` can be set directly and will override anything in `opts`.
@@ -17,7 +17,7 @@ defmodule Surface.Components.Form.TelephoneInput do
 
   use Surface.Components.Form.Input
 
-  import Phoenix.HTML.Form, only: [telephone_input: 3]
+  import PhoenixHTMLHelpers.Form, only: [telephone_input: 3]
   import Surface.Components.Utils, only: [events_to_opts: 1]
   import Surface.Components.Form.Utils
 
