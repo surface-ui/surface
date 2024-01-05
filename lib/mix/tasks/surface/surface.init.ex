@@ -96,6 +96,7 @@ defmodule Mix.Tasks.Surface.Init do
     ProjectPatchers.Demo,
     ProjectPatchers.Catalogue,
     ProjectPatchers.Tailwind,
+    ProjectPatchers.Docker,
     ProjectPatchers.Layouts
   ]
 
