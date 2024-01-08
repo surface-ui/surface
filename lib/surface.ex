@@ -109,6 +109,7 @@ defmodule Surface do
     indentation = meta[:indentation] || 0
     column = meta[:column] || 1
 
+    debug_annotations? = Module.get_attribute(__CALLER__.module, :__debug_annotations__)
     component_type = Module.get_attribute(__CALLER__.module, :component_type)
 
     string
@@ -120,7 +121,9 @@ defmodule Surface do
     |> Surface.Compiler.to_live_struct(
       debug: Enum.member?(opts, ?d),
       file: __CALLER__.file,
-      line: line
+      line: line,
+      caller: __CALLER__,
+      annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
     )
   end
 
@@ -148,11 +151,21 @@ defmodule Surface do
     if File.exists?(file) do
       name = file |> Path.rootname() |> Path.basename()
 
+      debug_annotations? =
+        Module.get_attribute(
+          __CALLER__.module,
+          :__debug_annotations__,
+          Application.get_env(:phoenix_live_view, :debug_heex_annotations, false)
+        )
+
       body =
         file
         |> File.read!()
         |> Surface.Compiler.compile(1, __CALLER__, file)
-        |> Surface.Compiler.to_live_struct()
+        |> Surface.Compiler.to_live_struct(
+          caller: %Macro.Env{__CALLER__ | file: file, function: {String.to_atom(name), 1}},
+          annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
+        )
 
       quote do
         @external_resource unquote(file)

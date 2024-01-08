@@ -39,7 +39,7 @@ defmodule Surface.Component do
       @before_compile Surface.Renderer
       @before_compile unquote(__MODULE__)
 
-      use Phoenix.Component
+      use Phoenix.Component, unquote(Keyword.drop(opts, [:slot]))
       import Phoenix.Component, except: [slot: 1, slot: 2]
 
       @behaviour unquote(__MODULE__)

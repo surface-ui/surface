@@ -10,12 +10,20 @@ defmodule Surface.Renderer do
 
     template_ast =
       if File.exists?(template) do
-        env = Map.put(env, :function, {:render, 1})
+        env =
+          env
+          |> Map.put(:function, {:render, 1})
+          |> Map.put(:file, template)
+
+        debug_annotations? = Module.get_attribute(__CALLER__.module, :__debug_annotations__)
 
         template
         |> File.read!()
         |> Surface.Compiler.compile(1, env, template)
-        |> Surface.Compiler.to_live_struct()
+        |> Surface.Compiler.to_live_struct(
+          caller: env,
+          annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
+        )
       else
         nil
       end

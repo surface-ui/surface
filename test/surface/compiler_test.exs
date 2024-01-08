@@ -1,5 +1,5 @@
 defmodule Surface.CompilerTest do
-  use ExUnit.Case
+  use Surface.ConnCase, async: true
 
   import Surface, only: [sigil_F: 2]
   import Phoenix.Component, only: [sigil_H: 2]
@@ -821,6 +821,40 @@ defmodule Surface.CompilerTest do
       assert_raise(SyntaxError, ~r/nofile:1:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
+    end
+  end
+
+  describe "annotate content" do
+    test "annotate component with text" do
+      alias Surface.CompilerTest.DebugAnnotations
+      import Surface.CompilerTest.DebugAnnotations
+
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <DebugAnnotations/>
+            a
+            <Surface.CompilerTest.DebugAnnotations/>
+            b
+            <Surface.CompilerTest.DebugAnnotations.func_with_text/>
+            c
+            <.func_with_text/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
+               a
+               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
+               b
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_text> test/support/debug_annotations.ex:5 -->func_wiht_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_text> -->
+               c
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_text> test/support/debug_annotations.ex:5 -->func_wiht_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_text> -->
+             </div>
+             """
     end
   end
 end
