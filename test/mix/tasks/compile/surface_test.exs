@@ -80,6 +80,8 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
       end)
 
     assert output =~ IO.ANSI.format([:yellow, "warning: "]) |> IO.iodata_to_binary()
+    assert output =~ IO.ANSI.format([:yellow, "warning:"]) |> IO.iodata_to_binary()
+    assert output == "what?"
     assert output =~ "test warning\n  file.ex:1: (file)\n\n"
   end
 
