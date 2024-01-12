@@ -41,10 +41,10 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher.Move do
   def find_child(zipper, predicate) do
     zipper
     |> case do
-      {{name, _, _}, _} when name != :__block__ ->
+      %Sourceror.Zipper{node: {name, _, _}} when name != :__block__ ->
         zipper
 
-      _ ->
+      %Sourceror.Zipper{} ->
         Z.down(zipper)
     end
     |> return_match_or_move_right(predicate)
@@ -210,10 +210,10 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher.Move do
 
   defp normalize_opts(zipper) do
     case zipper do
-      {[{{:__block__, _, _}, _} | _], _} ->
+      %Sourceror.Zipper{node: [{{:__block__, _, _}, _} | _]} ->
         zipper
 
-      _ ->
+      %Sourceror.Zipper{} ->
         Z.down(zipper)
     end
   end
