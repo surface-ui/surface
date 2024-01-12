@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
       capture_io(:standard_error, fn ->
         assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [])
       end)
-
+    IO.inspect(output)
     assert output =~ IO.ANSI.format([:yellow, "warning: "]) |> IO.iodata_to_binary()
     assert output =~ IO.ANSI.format([:yellow, "warning:"]) |> IO.iodata_to_binary()
     assert output == "what?"
