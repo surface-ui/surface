@@ -45,11 +45,20 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
+      - name: Deps and _build cache
+        uses: actions/cache@v3
+        id: deps-cache
+        with:
+          path: |
+              deps
+              _build
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
       - name: Install Dependencies
         run: |
           mix local.hex --force
           mix local.rebar --force
           mix deps.get --only test
+      - run: mix deps.compile
       - run: mix format --check-formatted
         if: matrix.check_formatted
       - run: mix compile --warnings-as-errors
