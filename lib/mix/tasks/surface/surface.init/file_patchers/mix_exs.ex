@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.MixExs do
       :maybe_already_patched
     )
     |> find_code(~S|defp elixirc_paths(_), do: ["lib"]|)
-    |> replace(&"defp elixirc_paths(#{env}), do: #{body}\n  #{&1}")
+    |> replace(&"defp elixirc_paths(#{env}), do: #{body}\n#{&1}")
   end
 
   def update_elixirc_paths_entry(code, env, update_fun, already_patched_text) do
