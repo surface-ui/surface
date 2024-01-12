@@ -46,6 +46,8 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
+      - name: Erlang version
+        run: erl -eval '{ok, Version} = file:read_file(filename:join([code:root_dir(), "releases", erlang:system_info(otp_release), "OTP_VERSION"])), io:fwrite(Version), halt().' -noshell
       - name: Deps and _build cache
         uses: actions/cache@v3
         id: deps-cache
@@ -59,6 +61,7 @@ jobs:
         run: |
           mix local.hex --force
           mix local.rebar --force
+          elixir --version
           mix deps.get --only test
       - run: mix deps.compile
         if: steps.deps-cache.outputs.cache-hit != 'true'
