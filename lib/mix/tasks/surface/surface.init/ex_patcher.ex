@@ -334,7 +334,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
           |> Z.node()
           |> Sourceror.to_string()
 
-        {{:., _, _}, _} ->
+        %Sourceror.Zipper{node: {:., _, _}} ->
           # We can't get the range of the dot call in a qualified call like
           # `foo.bar()`, so we apply the patch to the parent. We get into this
           # situation when the qualified call has no arguments: the first child
@@ -344,7 +344,7 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
           # impossible to generate a patch for the child call alone.
           append_child_patch(zipper, string)
 
-        last_child_zipper ->
+        %Sourceror.Zipper{} = last_child_zipper ->
           append_child_patch(last_child_zipper, string)
       end
     end)
