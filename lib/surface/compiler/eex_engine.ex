@@ -7,6 +7,7 @@ defmodule Surface.Compiler.EExEngine do
   for information on this). Finally, it passes these tokens into the engine sequentially in the same
   manner as EEx.Compiler.compile/2
   """
+  alias Surface.Compiler.Helpers
   alias Surface.AST
   alias Surface.IOHelper
   alias Surface.Components.Context
@@ -27,7 +28,8 @@ defmodule Surface.Compiler.EExEngine do
       engine: opts[:engine] || @default_engine,
       depth: 0,
       context_vars: %{count: 0, changed: []},
-      scope: []
+      scope: [],
+      root_tag?: root_tag?(nodes)
     }
 
     nodes
@@ -40,6 +42,22 @@ defmodule Surface.Compiler.EExEngine do
     )
   end
 
+  defp root_tag?(nodes) do
+    Enum.reduce_while(nodes, false, fn
+      %AST.Tag{}, false ->
+        {:cont, true}
+
+      %AST.Tag{}, true ->
+        {:halt, false}
+
+      %AST.Literal{value: value}, acc ->
+        if Helpers.blank?(value), do: {:cont, acc}, else: {:halt, false}
+
+      _node, _acc ->
+        {:halt, false}
+    end)
+  end
+
   defp to_token_sequence(nodes) do
     nodes
     |> to_dynamic_nested_html()
@@ -48,7 +66,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp generate_buffer([], buffer, state) do
-    ast = state.engine.handle_body(buffer, root: true)
+    ast = state.engine.handle_body(buffer, root: state.root_tag?)
 
     quote do
       require Phoenix.LiveView.TagEngine
