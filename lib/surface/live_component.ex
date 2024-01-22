@@ -63,7 +63,6 @@ defmodule Surface.LiveComponent do
       use Surface.API, include: [:prop, :slot, :data]
       import PhoenixHTMLHelpers
 
-
       @before_compile {Surface.BaseComponent, :__before_compile_init_slots__}
 
       alias Surface.Components.{Context, Raw}
