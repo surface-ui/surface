@@ -52,8 +52,8 @@ defmodule Surface.LiveView.LiveViewTest do
   test "forward props to the underlying live_render call", %{conn: conn} do
     {:ok, _view, html} = live_isolated(conn, LiveViewWithPropsView)
 
-    assert html =~ ~S(id="123")
-    assert html =~ ~S(<span class="lv")
+    assert html =~ ~S(<span id="123")
+    assert html =~ ~S(class="lv")
     assert html =~ "User id from session: USER_ID"
     assert html =~ ~S(data-phx-sticky="data-phx-sticky")
   end

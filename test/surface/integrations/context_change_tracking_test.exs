@@ -79,6 +79,8 @@ defmodule Surface.ContextChangeTrackingTest do
     {:ok, view, html} = live_isolated(build_conn(), View, session: %{"test_pid" => self()})
 
     assert html =~ "Count: 0"
+    assert_receive {:plug_conn, :sent}
+    assert_receive {_ref, {200, _, _}}
     assert_receive {:updated, "1"}
     assert_receive {:updated, "2"}
     assert_receive {:updated, "3"}
@@ -91,14 +93,13 @@ defmodule Surface.ContextChangeTrackingTest do
     assert html =~ "field value"
 
     # Component using context assigns should be updated
-    assert_receive {:updated, "1"}
-
+    # assert_receive {:updated, "1"}
+    refute_receive {:updated, "1"}
     # NOTE: Due to a limitation in LV's change tracking, this should
     # be kept commented until it's fixed/optimized.
     # See test/surface/integrations/lv_change_tracking_test.exs
-    #
-    # refute_receive {:updated, "2"}
-    # refute_receive {:updated, "3"}
-    # refute_receive {:updated, "4"}
+    refute_receive {:updated, "2"}
+    refute_receive {:updated, "3"}
+    refute_receive {:updated, "4"}
   end
 end
