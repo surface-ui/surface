@@ -11,9 +11,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     project_folder_patched = "#{template_project_folder}_patched"
     project_folder_unpatched = "#{template_project_folder}_unpatched"
 
-    build_project_from_template(template_status, template_project_folder, project_folder_unpatched,
-      on_change: &compile/1
-    )
+    build_project_from_template(:created, template_project_folder, project_folder_unpatched, on_change: &compile/1)
 
     build_project_from_template(template_status, template_project_folder, project_folder_patched,
       on_create: &surface_init_all/1,
