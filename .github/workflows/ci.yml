@@ -47,7 +47,7 @@ jobs:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
       - name: Use old lock file
-        if: matrix.old_deps == 'true'
+        if: matrix.old_deps
         run: mv mix.lock.old mix.lock
       - name: Deps and _build cache
         uses: actions/cache@v3
