@@ -38,7 +38,6 @@ defmodule Surface.MixProject do
       {:phoenix_ecto, "~> 4.0", only: :test},
       {:sourceror, "~> 1.0.0"},
       {:ecto, "~> 3.7", only: :test},
-      {:phx_new, "~> 1.7.2", only: :test},
       {:ex_doc, ">= 0.31.0", only: :docs}
     ]
   end

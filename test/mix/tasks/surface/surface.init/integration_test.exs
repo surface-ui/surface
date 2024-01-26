@@ -1,8 +1,10 @@
 defmodule Mix.Tasks.Surface.Init.IntegrationTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   @moduletag :integration
 
   alias Mix.Tasks.Surface.Init.FilePatchers
+
+  @phx_new_version "1.7.10"
 
   setup_all do
     {template_status, template_project_folder} = build_test_project_template("surface_init_test")
@@ -123,7 +125,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
     project_folder = Path.join(System.tmp_dir!(), project_name)
     project_exists? = File.exists?(project_folder)
-    surface_phx_new_version = Application.spec(:phx_new, :vsn) |> to_string()
+    surface_phx_new_version = @phx_new_version
     project_phx_new_version_file = Path.join(project_folder, ".phx_new_version")
 
     project_phx_new_version =
@@ -143,7 +145,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
       Mix.shell().info([:green, "* creating ", :reset, project_folder])
       File.rm_rf!(project_folder)
-      Mix.Task.run("phx.new", [project_folder, "--no-ecto", "--no-dashboard", "--no-mailer", "--no-install"])
+      phx_new(project_folder)
 
       File.write!(project_phx_new_version_file, surface_phx_new_version)
 
@@ -183,16 +185,33 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     end
   end
 
-  defp cmd(str_cmd, opts) do
-    [cmd | args] = String.split(str_cmd)
+  defp phx_new(project_folder) do
+    phx_new_script =
+      """
+      Mix.install([{:phx_new, "#{@phx_new_version}"}])
+      Mix.Task.run("phx.new", ["#{project_folder}", "--no-ecto", "--no-dashboard", "--no-mailer", "--no-install"])
+      """
 
+    cmd("elixir", ["--eval", phx_new_script])
+  end
+
+  defp cmd(str_cmd, opts) do
+    if Keyword.keyword?(opts) do
+      [cmd | args] = String.split(str_cmd)
+      cmd(cmd, args, opts)
+    else
+      cmd(str_cmd, opts, [])
+    end
+  end
+
+  defp cmd(cmd, args, opts) do
     case System.cmd(cmd, args, opts) do
       {result, 0} ->
         result
 
       {result, code} ->
         Mix.shell().info([:red, "exit with code ", code, ", output: \n", :reset, result])
-        raise "command `#{str_cmd}` failed"
+        raise "command `#{cmd} #{args}` failed"
     end
   end
 
