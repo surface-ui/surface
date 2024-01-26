@@ -52,9 +52,12 @@ defmodule Surface.LiveView.LiveViewTest do
   test "forward props to the underlying live_render call", %{conn: conn} do
     {:ok, _view, html} = live_isolated(conn, LiveViewWithPropsView)
 
-    assert html =~ ~S(id="123")
-    assert html =~ ~S(<span class="lv")
-    assert html =~ "User id from session: USER_ID"
-    assert html =~ ~S(data-phx-sticky="data-phx-sticky")
+    [inner_live_view_tag] =
+      Floki.parse_document!(html)
+      |> Floki.find("span#123")
+
+    assert Floki.attribute(inner_live_view_tag, "class") == ["lv"]
+    assert Floki.attribute(inner_live_view_tag, "data-phx-sticky") == ["data-phx-sticky"]
+    assert Floki.text(inner_live_view_tag) == "User id from session: USER_ID\n"
   end
 end
