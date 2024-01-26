@@ -93,13 +93,14 @@ defmodule Surface.ContextChangeTrackingTest do
     assert html =~ "field value"
 
     # Component using context assigns should be updated
-    # assert_receive {:updated, "1"}
-    refute_receive {:updated, "1"}
-    # NOTE: Due to a limitation in LV's change tracking, this should
-    # be kept commented until it's fixed/optimized.
+    assert_receive {:updated, "1"}
+
+    # NOTE: Due to a limitation in LV's change tracking,
+    # the following updates are received. If they fail it probably
+    # means LiveView was fixed/optimized and we can change them to refute_receive.
     # See test/surface/integrations/lv_change_tracking_test.exs
-    refute_receive {:updated, "2"}
-    refute_receive {:updated, "3"}
-    refute_receive {:updated, "4"}
+    assert_receive {:updated, "2"}
+    assert_receive {:updated, "3"}
+    assert_receive {:updated, "4"}
   end
 end

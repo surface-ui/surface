@@ -649,13 +649,16 @@ defmodule Surface.Compiler.EExEngine do
                 unquote(let),
                 unquote(no_warnings_generator),
                 unquote(context_var)
-              } ->
+              }
+              when unquote(context_var) != nil ->
+                # `unquote(context_var) != nil` is to avoid unused variable warning
+                # this kind of context will be removed in the future
                 unquote(body)
 
               {
                 argument,
                 generator_value,
-                unquote(context_var)
+                _
               } ->
                 unquote(validate_let_ast)
                 unquote(validate_generator_ast)
@@ -1116,10 +1119,13 @@ defmodule Surface.Compiler.EExEngine do
     IO.iodata_to_binary(message_iodata)
   end
 
-  defp context_name(count, caller) do
+  defp context_name(count) do
     "context_#{count}"
     |> String.to_atom()
-    |> Macro.var(caller.module)
+    # don't assign context to pretend it's a user defined variable
+    # this will trigger updates for components using context
+    # see: https://github.com/phoenixframework/phoenix_live_view/commit/3d5fab2fbb265d55a9a695132a6c8717ace0c971#diff-0a72359110b9a777449f08e30231b039e8fe115f2b40bed06156064fd06a1b2aR999
+    |> Macro.var(nil)
   end
 
   defp store_component_call(module, node_alias, component, props, directives, line, dep_type)
@@ -1201,7 +1207,7 @@ defmodule Surface.Compiler.EExEngine do
         initial_context
       end
 
-    context_var = context_name(state.context_vars.count, caller)
+    context_var = context_name(state.context_vars.count)
 
     state =
       if changes_context? do
