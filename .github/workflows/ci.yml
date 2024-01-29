@@ -28,16 +28,19 @@ jobs:
             warnings_as_errors: true
           - elixir: '1.15.2'
             otp: '26.0'
+            run_plugin_tests: true
+            run_integration_tests: true
+            warnings_as_errors: true
+          - elixir: '1.16.0'
+            otp: '26.2.1'
             check_formatted: true
             run_plugin_tests: true
             run_integration_tests: true
             warnings_as_errors: true
           - elixir: '1.16.0'
             otp: '26.2.1'
-            check_formatted: false
+            update_deps: true
             run_plugin_tests: true
-            run_integration_tests: true
-            warnings_as_errors: true
     env:
       MIX_ENV: test
     steps:
@@ -49,6 +52,9 @@ jobs:
       - name: Use old lock file
         if: matrix.old_deps
         run: mv mix.lock.old mix.lock
+      - name: Update deps
+        if: matrix.update_deps
+        run: mix deps.update --all
       - name: Deps and _build cache
         uses: actions/cache@v3
         id: deps-cache
