@@ -45,7 +45,8 @@ jobs:
       MIX_ENV: test
     steps:
       - uses: actions/checkout@v4
-      - uses: erlef/setup-beam@v1
+      # Change to version after https://github.com/erlef/setup-beam/pull/249 is merged
+      - uses: erlef/setup-beam@afd4927d4af60a676d1a691cf3c51dd420cdeb00
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
@@ -56,7 +57,7 @@ jobs:
         if: matrix.update_deps
         run: mix deps.update --all
       - name: Deps and _build cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: deps-cache
         with:
           path: |
