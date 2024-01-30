@@ -35,7 +35,6 @@ defmodule FlokiHelpers do
 
   defp decode_js([value]) do
     value
-    |> HtmlEntities.decode()
     |> Jason.decode!()
   end
 end
