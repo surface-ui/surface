@@ -850,14 +850,20 @@ defmodule Surface.Components.ContextTest do
       prop count, :integer, default: 1
 
       data field, :any
+      data item, :any
+      data rest, :list
 
       def render(%{list: [item | rest]} = assigns) do
-        assigns = Context.copy_assign(assigns, {ContextTest.Outer, :field})
+        assigns =
+          assigns
+          |> Context.copy_assign({ContextTest.Outer, :field})
+          |> assign(:item, item)
+          |> assign(:rest, rest)
 
         ~F"""
-        {@count}. {item} - {@field}
+        {@count}. {@item} - {@field}
         <Context put={ContextTest.Outer, field: "#{@field} #{@count}"}>
-          <Recursive list={rest} count={@count + 1}/>
+          <Recursive list={@rest} count={@count + 1}/>
         </Context>
         """
       end

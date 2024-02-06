@@ -31,12 +31,10 @@ defmodule Surface.Components.Form.InputsTest do
   end
 
   test "if the index is received as a slot arg" do
-    cs = Parent.changeset(%{children: [%{name: "first"}, %{name: "second"}]})
-
     html =
       render_surface do
         ~F"""
-        <Form for={cs} as={:cs} opts={csrf_token: "test"}>
+        <Form for={Parent.changeset(%{children: [%{name: "first"}, %{name: "second"}]})} as={:cs} opts={csrf_token: "test"}>
           <Inputs for={:children} :let={index: idx}>
             <div>index: <span>{idx}</span></div>
           </Inputs>

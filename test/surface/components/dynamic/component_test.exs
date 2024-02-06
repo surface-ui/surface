@@ -83,10 +83,8 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      module = Stateless
-
       ~F"""
-      <Component module={module} label="My label" class="myclass"/>
+      <Component module={Stateless} label="My label" class="myclass"/>
       """
     end
   end
@@ -95,10 +93,8 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      module = PhoenixFunctionComponent
-
       ~F"""
-      <Component module={module} function={:show} label="My label" class="myclass"/>
+      <Component module={PhoenixFunctionComponent} function={:show} label="My label" class="myclass"/>
       """
     end
   end
@@ -163,10 +159,8 @@ defmodule Surface.Components.Dynamic.ComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      module = StatelessWithId
-
       ~F"""
-      <Component module={module} id="my_id" />
+      <Component module={StatelessWithId} id="my_id" />
       """
     end
   end

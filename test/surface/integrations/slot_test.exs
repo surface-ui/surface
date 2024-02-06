@@ -264,8 +264,6 @@ defmodule Surface.SlotTest do
     slot col, as: :cols, arg: %{info: :string}, generator_prop: :items
 
     def render(assigns) do
-      info = "Some info from Grid"
-
       ~F"""
       <table>
         <tr>
@@ -275,7 +273,7 @@ defmodule Surface.SlotTest do
         </tr>
         <tr :for={item <- @items}>
           <td :for={col <- @cols}>
-            <#slot {col, info: info} generator_value={item} />
+            <#slot {col, info: "Some info from Grid"} generator_value={item} />
           </td>
         </tr>
       </table>

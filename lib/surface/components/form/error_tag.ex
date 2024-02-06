@@ -103,16 +103,19 @@ defmodule Surface.Components.Form.ErrorTag do
   prop feedback_for, :string
 
   def render(assigns) do
-    translate_error = assigns.translator || translator_from_config() || (&translate_error/1)
-    class = assigns.class || get_config(:default_class)
+    assigns = assign(assigns, :class, assigns.class || get_config(:default_class))
 
     ~F"""
     <span
       :for={error <- Keyword.get_values(@form.errors || [], @field)}
-      class={class}
+      class={@class}
       phx-feedback-for={@feedback_for || input_name(@form, @field)}
-    >{translate_error.(error)}</span>
+    >{translator(assigns.translator).(error)}</span>
     """
+  end
+
+  defp translator(translator) do
+    translator || translator_from_config() || (&translate_error/1)
   end
 
   @doc """

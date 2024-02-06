@@ -144,11 +144,18 @@ defmodule Surface.ComponentTest do
 
     prop list, :list
     prop count, :integer, default: 1
+    data item, :any
+    data rest, :list
 
     def render(%{list: [item | rest]} = assigns) do
+      assigns =
+        assigns
+        |> assign(:item, item)
+        |> assign(:rest, rest)
+
       ~F"""
-      {@count}. {item}
-      <Recursive list={rest} count={@count + 1}/>
+      {@count}. {@item}
+      <Recursive list={@rest} count={@count + 1}/>
       """
     end
 
