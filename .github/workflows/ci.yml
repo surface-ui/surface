@@ -45,8 +45,7 @@ jobs:
       MIX_ENV: test
     steps:
       - uses: actions/checkout@v4
-      # Change to version after https://github.com/erlef/setup-beam/pull/249 is merged
-      - uses: erlef/setup-beam@afd4927d4af60a676d1a691cf3c51dd420cdeb00
+      - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
