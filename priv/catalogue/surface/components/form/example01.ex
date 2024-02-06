@@ -26,7 +26,7 @@ defmodule Surface.Components.Form.Example01 do
       </Field>
     </Form>
 
-    <pre>@user = {Jason.encode!(@user, pretty: true)}</pre>
+    <pre>@user = {inspect(@user, pretty: true)}</pre>
     """
   end
 
