@@ -28,7 +28,9 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      assert html =~ actual_content("user", to: "/users/1")
+      assert html == """
+             <a href="/users/1" data-phx-link="patch" data-phx-link-state="push">user</a>
+             """
     end
 
     test "creates a link without label" do
@@ -39,7 +41,9 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      assert html =~ actual_content(to: "/users/1")
+      assert html == """
+             <a href="/users/1" data-phx-link="patch" data-phx-link-state="push"></a>
+             """
     end
 
     test "creates a link with default slot" do
@@ -50,7 +54,9 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      assert html =~ actual_content({:safe, "<span>user</span>"}, to: "/users/1")
+      assert html == """
+             <a href="/users/1" data-phx-link="patch" data-phx-link-state="push"><span>user</span></a>
+             """
     end
 
     test "setting the class" do
@@ -61,7 +67,9 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      assert html =~ actual_content("user", to: "/users/1", class: "link")
+      assert html == """
+             <a href="/users/1" class="link" data-phx-link="patch" data-phx-link-state="push">user</a>
+             """
     end
 
     test "setting multiple classes" do
@@ -72,7 +80,9 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      assert html =~ actual_content("user", to: "/users/1", class: "link primary")
+      assert html == """
+             <a href="/users/1" class="link primary" data-phx-link="patch" data-phx-link-state="push">user</a>
+             """
     end
 
     test "passing other options" do
@@ -88,14 +98,9 @@ defmodule Surface.Components.LivePatchTest do
           """
         end
 
-      actual =
-        actual_content("user",
-          to: "/users/1",
-          class: "link",
-          method: :delete,
-          data: [confirm: "Really?"],
-          "csrf-token": "token"
-        )
+      actual = """
+      <a href="/users/1" class="link" method="delete" data-confirm="Really?" data-phx-link="patch" data-phx-link-state="push" csrf-token="token">user</a>
+      """
 
       assert attr_map(html) == attr_map(actual)
     end
@@ -105,16 +110,5 @@ defmodule Surface.Components.LivePatchTest do
     [{_, attrs, _}] = Floki.parse_fragment!(html)
 
     Map.new(attrs)
-  end
-
-  defp actual_content(text, opts) do
-    text
-    |> Phoenix.LiveView.Helpers.live_patch(opts)
-    |> Phoenix.HTML.html_escape()
-    |> Phoenix.HTML.safe_to_string()
-  end
-
-  defp actual_content(opts) do
-    actual_content("", opts)
   end
 end

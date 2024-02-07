@@ -1,5 +1,9 @@
 defmodule Surface.CompilerTest do
-  use ExUnit.Case
+  use Surface.ConnCase, async: true
+
+  import Surface, only: [sigil_F: 2]
+  import Phoenix.Component, only: [sigil_H: 2]
+  alias Phoenix.LiveView.Rendered
 
   defmodule Macro do
     use Surface.MacroComponent
@@ -90,6 +94,93 @@ defmodule Surface.CompilerTest do
     def render(assigns) do
       ~F"""
       """
+    end
+  end
+
+  defp func(assigns) do
+    ~F[hello]
+  end
+
+  describe "set the root field for the %Phoenix.LiveView.Rendered{} struct" do
+    test "set it to `true` if the there's only a single root tag node" do
+      assigns = %{}
+
+      assert %Rendered{root: true} = ~H[<div/>]
+      assert %Rendered{root: true} = ~F[<div/>]
+      assert %Rendered{root: true} = ~H[<div><span>text</span></div>]
+      assert %Rendered{root: true} = ~F[<div><span>text</span></div>]
+      assert %Rendered{root: true} = ~H[<div><.func/></div>]
+      assert %Rendered{root: true} = ~F[<div><.func/></div>]
+      assert %Rendered{root: true} = ~H[<div><%= "text" %></div>]
+      assert %Rendered{root: true} = ~F[<div>{"text"}</div>]
+
+      assert %Rendered{root: true} = ~H[ <div>text</div> ]
+      assert %Rendered{root: true} = ~F[ <div>text</div> ]
+
+      assert %Rendered{root: true} = ~H"""
+             <div>text</div>
+             """
+
+      assert %Rendered{root: true} = ~F"""
+             <div>text</div>
+             """
+    end
+
+    test "set it to `false` if the root tag is translated/wrapped into an expression e.g. using `:for` or `:if`" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<div :if={true}/>]
+      assert %Rendered{root: false} = ~F[<div :if={true}/>]
+      assert %Rendered{root: false} = ~H(<div :for={_ <- []}/>)
+      assert %Rendered{root: false} = ~F(<div :for={_ <- []}/>)
+    end
+
+    test "set it to `false` if it's a text node" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[text]
+      assert %Rendered{root: false} = ~F[text]
+    end
+
+    test "set it to `false` if it's an expression" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<%= "text" %>]
+      assert %Rendered{root: false} = ~F[{"text"}]
+    end
+
+    test "set it to `false` if it's a component" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<.func/>]
+      assert %Rendered{root: false} = ~F[<.func/>]
+    end
+
+    test "set it to `false` if there are multiple nodes" do
+      assigns = %{}
+
+      assert %Rendered{root: false} = ~H[<div/><div/>]
+      assert %Rendered{root: false} = ~F[<div/><div/>]
+
+      assert %Rendered{root: false} = ~H[text<div/>]
+      assert %Rendered{root: false} = ~F[text<div/>]
+
+      assert %Rendered{root: false} = ~H[<div/>text]
+      assert %Rendered{root: false} = ~F[<div/>text]
+
+      assert %Rendered{root: false} = ~H[<div/><%= "text" %>]
+      assert %Rendered{root: false} = ~F[<div/>{"text"}]
+
+      assert %Rendered{root: false} = ~H[<!-- comment --><div/>]
+      assert %Rendered{root: false} = ~F[<!-- comment --><div/>]
+
+      assert %Rendered{root: false} = ~H[<div/><!-- comment -->]
+      assert %Rendered{root: false} = ~F[<div/><!-- comment -->]
+
+      # Private comments are excluded from the AST.
+      # And since they are not available in ~H, we don't assert against it.
+      assert %Rendered{root: true} = ~F[{!-- comment --}<div/>]
+      assert %Rendered{root: true} = ~F[<div/>{!-- comment --}]
     end
   end
 
@@ -730,6 +821,122 @@ defmodule Surface.CompilerTest do
       assert_raise(SyntaxError, ~r/nofile:1:/, fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end)
+    end
+  end
+
+  describe "debug annotations" do
+    @describetag skip: not Surface.CompilerTest.DebugAnnotationsUtil.debug_heex_annotations_supported?()
+
+    test "show debug info for components with a single root tag" do
+      import Surface.CompilerTest.DebugAnnotations
+
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <Surface.CompilerTest.DebugAnnotations.func_with_tag/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:7 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
+             </div>
+             """
+    end
+
+    test "show debug info for components with multiple root tags" do
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> test/support/debug_annotations.ex:21 --><div>text 1</div><div>text 2</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> -->
+             </div>
+             """
+    end
+
+    test "show debug info for components with text only" do
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <Surface.CompilerTest.DebugAnnotations.func_with_only_text/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_only_text> test/support/debug_annotations.ex:11 -->only_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_only_text> -->
+             </div>
+             """
+    end
+
+    test "show full namespace if the component is imported" do
+      import Surface.CompilerTest.DebugAnnotations
+
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <.func_with_tag/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:7 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
+             </div>
+             """
+    end
+
+    test "show debug info for module components with a colocated sface file and point to line 1" do
+      alias Surface.CompilerTest.DebugAnnotations
+
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <DebugAnnotations/>
+            <Surface.CompilerTest.DebugAnnotations/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
+             </div>
+             """
+    end
+
+    test "show debug info for component generated by embed_sface/1 and point to line 1" do
+      import Surface.CompilerTest.DebugAnnotations
+
+      html =
+        render_surface do
+          ~F"""
+          <div>
+            <.debug_annotations/>
+          </div>
+          """
+        end
+
+      assert html == """
+             <div>
+               <!-- <Surface.CompilerTest.DebugAnnotations.debug_annotations> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.debug_annotations> -->
+             </div>
+             """
     end
   end
 end

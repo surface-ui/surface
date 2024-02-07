@@ -74,10 +74,8 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     alias Surface.Components.Dynamic.LiveComponent
 
     def render(assigns) do
-      module = StatefulComponent
-
       ~F"""
-      <LiveComponent module={module} id="comp"/>
+      <LiveComponent module={StatefulComponent} id="comp"/>
       """
     end
 
@@ -90,12 +88,10 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     use Surface.LiveView
 
     def render(assigns) do
-      module = StatefulPhoenixLiveComponent
-
       ~F"""
       <LiveComponent
         id="comp"
-        module={module}
+        module={StatefulPhoenixLiveComponent}
         label="My label"
       />
       """
@@ -107,10 +103,8 @@ defmodule Surface.Components.Dynamic.LiveComponentTest do
     alias Surface.Components.Dynamic.LiveComponent
 
     def render(assigns) do
-      module = StatefulComponentWithDefaultSlot
-
       ~F"""
-      <LiveComponent module={module} id="comp" label="my label">
+      <LiveComponent module={StatefulComponentWithDefaultSlot} id="comp" label="my label">
         <span>Inner</span>
       </LiveComponent>
       """

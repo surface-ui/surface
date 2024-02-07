@@ -177,7 +177,12 @@ defmodule Surface.TypeHandler do
         {:ok, [~S( ), to_string(name)]}
 
       {:ok, val} ->
-        {:ok, Phoenix.HTML.attributes_escape([{name, val}])}
+        attr_value =
+          [{name, val}]
+          |> Phoenix.HTML.attributes_escape()
+          |> Phoenix.HTML.safe_to_string()
+
+        {:ok, attr_value}
 
       {:error, message} ->
         {:error, message}

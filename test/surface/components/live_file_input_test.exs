@@ -16,7 +16,9 @@ defmodule Surface.Components.LiveFileInputTest do
 
     def render(assigns) do
       ~F"""
+      <div>
         <LiveFileInput upload={@uploads.avatar} class={"test_class", disabled_test: true} opts={"data-test": "test-data", name: "a name?"} values={a: "one", b: :two, c: 3} />
+      </div>
       """
     end
   end
@@ -34,7 +36,9 @@ defmodule Surface.Components.LiveFileInputTest do
 
     def render(assigns) do
       ~F"""
+      <div>
         <LiveFileInput upload={@uploads.avatar} />
+      </div>
       """
     end
   end

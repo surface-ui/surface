@@ -222,11 +222,18 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     use Surface.Component
 
     prop list, :list, required: true
+    data item, :any
+    data rest, :list
 
     def render(%{list: [item | rest]} = assigns) do
+      assigns =
+        assigns
+        |> assign(:item, item)
+        |> assign(:rest, rest)
+
       ~F"""
-      {item}
-      <Recursive list={rest} />
+      {@item}
+      <Recursive list={@rest} />
       """
     end
 

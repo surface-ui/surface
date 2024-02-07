@@ -51,12 +51,10 @@ defmodule Surface.Components.Form.HiddenInputsTest do
   end
 
   test "based on a changeset" do
-    cs = Parent.changeset(%{children: [%{name: "first"}]})
-
     html =
       render_surface do
         ~F"""
-        <Form for={cs} as={:parent} opts={csrf_token: "test"}>
+        <Form for={Parent.changeset(%{children: [%{name: "first"}]})} as={:parent} opts={csrf_token: "test"}>
           <Inputs for={:children} :let={form: f}>
             <HiddenInputs for={f} />
           </Inputs>

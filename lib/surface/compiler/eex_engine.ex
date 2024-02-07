@@ -7,6 +7,7 @@ defmodule Surface.Compiler.EExEngine do
   for information on this). Finally, it passes these tokens into the engine sequentially in the same
   manner as EEx.Compiler.compile/2
   """
+  alias Surface.Compiler.Helpers
   alias Surface.AST
   alias Surface.IOHelper
   alias Surface.Components.Context
@@ -27,10 +28,12 @@ defmodule Surface.Compiler.EExEngine do
       engine: opts[:engine] || @default_engine,
       depth: 0,
       context_vars: %{count: 0, changed: []},
-      scope: []
+      scope: [],
+      root_tag?: root_tag?(nodes)
     }
 
     nodes
+    |> maybe_annotate_content(opts[:annotate_content], opts[:caller])
     |> to_token_sequence()
     |> generate_buffer(state.engine.init(opts), state)
     |> maybe_print_expression(
@@ -38,6 +41,31 @@ defmodule Surface.Compiler.EExEngine do
       opts[:file] || "nofile",
       opts[:line] || 1
     )
+  end
+
+  defp maybe_annotate_content(nodes, annotate_content, caller) do
+    if annotate_content do
+      {before_comment, after_comment} = annotate_content.(caller)
+      [%AST.Literal{value: before_comment}] ++ nodes ++ [%AST.Literal{value: after_comment}]
+    else
+      nodes
+    end
+  end
+
+  defp root_tag?(nodes) do
+    Enum.reduce_while(nodes, false, fn
+      %AST.Tag{}, false ->
+        {:cont, true}
+
+      %AST.Tag{}, true ->
+        {:halt, false}
+
+      %AST.Literal{value: value}, acc ->
+        if Helpers.blank?(value), do: {:cont, acc}, else: {:halt, false}
+
+      _node, _acc ->
+        {:halt, false}
+    end)
   end
 
   defp to_token_sequence(nodes) do
@@ -48,7 +76,7 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp generate_buffer([], buffer, state) do
-    ast = state.engine.handle_body(buffer, root: true)
+    ast = state.engine.handle_body(buffer, root: state.root_tag?)
 
     quote do
       require Phoenix.LiveView.TagEngine
