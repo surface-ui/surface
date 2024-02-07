@@ -151,25 +151,12 @@ defmodule Surface do
     if File.exists?(file) do
       name = file |> Path.rootname() |> Path.basename()
 
-      debug_annotations? =
-        Module.get_attribute(
-          __CALLER__.module,
-          :__debug_annotations__,
-          Application.get_env(:phoenix_live_view, :debug_heex_annotations, false)
-        )
+      quote bind_quoted: [file: file, name: name] do
+        @external_resource file
+        @file file
 
-      body =
-        file
-        |> File.read!()
-        |> Surface.Compiler.compile(1, __CALLER__, file)
-        |> Surface.Compiler.to_live_struct(
-          caller: %Macro.Env{__CALLER__ | file: file, function: {String.to_atom(name), 1}},
-          annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
-        )
+        body = Surface.__compile_sface__(name, file, __ENV__)
 
-      quote do
-        @external_resource unquote(file)
-        @file unquote(file)
         def unquote(String.to_atom(name))(var!(assigns)) do
           _ = var!(assigns)
           unquote(body)
@@ -183,6 +170,24 @@ defmodule Surface do
 
       IOHelper.compile_error(message, __CALLER__.file, __CALLER__.line)
     end
+  end
+
+  @doc false
+  def __compile_sface__(name, file, env) do
+    debug_annotations? =
+      Module.get_attribute(
+        env.module,
+        :__debug_annotations__,
+        Application.get_env(:phoenix_live_view, :debug_heex_annotations, false)
+      )
+
+    file
+    |> File.read!()
+    |> Surface.Compiler.compile(1, env, file)
+    |> Surface.Compiler.to_live_struct(
+      caller: %Macro.Env{env | file: file, line: 1, function: {String.to_atom(name), 1}},
+      annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
+    )
   end
 
   @doc """
