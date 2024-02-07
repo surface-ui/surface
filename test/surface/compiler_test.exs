@@ -825,6 +825,8 @@ defmodule Surface.CompilerTest do
   end
 
   describe "debug annotations" do
+    @describetag skip: not Surface.CompilerTest.DebugAnnotationsUtil.debug_heex_annotations_supported?()
+
     test "show debug info for components with a single root tag" do
       import Surface.CompilerTest.DebugAnnotations
 
@@ -839,7 +841,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:5 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:7 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
              </div>
              """
     end
@@ -856,7 +858,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> test/support/debug_annotations.ex:19 --><div>text 1</div><div>text 2</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> test/support/debug_annotations.ex:21 --><div>text 1</div><div>text 2</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> -->
              </div>
              """
     end
@@ -873,7 +875,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_only_text> test/support/debug_annotations.ex:9 -->only_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_only_text> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_only_text> test/support/debug_annotations.ex:11 -->only_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_only_text> -->
              </div>
              """
     end
@@ -892,7 +894,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:5 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:7 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
              </div>
              """
     end

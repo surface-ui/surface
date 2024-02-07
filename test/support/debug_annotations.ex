@@ -1,5 +1,7 @@
 defmodule Surface.CompilerTest.DebugAnnotations do
-  use Surface.Component, debug_heex_annotations: true
+  import Surface.CompilerTest.DebugAnnotationsUtil
+
+  use_component()
 
   def func_with_tag(assigns) do
     ~F[<div>func_with_tag</div>]
