@@ -1,8 +1,28 @@
 # Changelog
 
-## v0.12.0 (2023-11-07)
+## v0.12.0 (2024-02-XX)
 
-  * Add support for Liveview `v0.20` (#714)
+  * Add support for Liveview >= `v0.20` (#714)
+  * Add support for debug annotations using liveview's `debug_heex_annotations` config.
+  * Avoid using deprecated `hidden_inputs_for` in `HiddenInputs` (#716)
+  * Update Tailwind patcher for phx_new >= 1.7.8 (#724)
+  * Add a Dockerfile patcher for `surface.init` (#727)
+  * Fix error related to `_persistent_id` (#716)
+  * Fix warning about negative steps in Elixir 1.16 (#718 and #722)
+  * Fix `Malformed HTML in rendered.js` error
+  * Fix error when passing special chars as literals inside an expression
+
+### Soft Deprecations
+
+  * `LivePatch` and `LiveRedirect` have been deprecated in favor of liveview's built-in `<.link>`.
+    See https://hexdocs.pm/phoenix_live_view/live-navigation.html for more info.
+  * The `Form` component along with all form inputs will be moved to a separate project and
+    later deprecated in favor of their LiveView built-in counterparts.
+  * Scope-aware context as described in https://surface-ui.org/contexts#scope-aware-context will
+    be deprecaded and fully removed in `v0.13`. The reason is the lack of built-in support for that
+    feature in Liveview itself, which leads to unefficient diff-tracking when using it. Global context
+    related functions like `Context.put` and `Context.get`, as well as the `:from_context` option, will
+    be kept as their use don't affect diff-tracking negatively.
 
 ## v0.11.1 (2023-11-07)
 
