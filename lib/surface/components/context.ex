@@ -2,6 +2,11 @@ defmodule Surface.Components.Context do
   @moduledoc """
   A built-in module and component that allows users to set and retrieve values
   to/from the context.
+
+  > **Soft deprecation alert:** Scope-aware context will be deprecaded in the near future and fully removed
+  > in `v0.13`. The reason is the lack of built-in support for that feature in Liveview itself, which
+  > leads to inefficient diff-tracking when using it. Global context related functions like `Context.put`
+  > and `Context.get`, as well as the `:from_context` option, will be kept as their use don't affect diff-tracking negatively.
   """
 
   use Surface.Component
