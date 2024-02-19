@@ -20,7 +20,7 @@
     later deprecated in favor of their LiveView built-in counterparts.
   * Scope-aware context as described in https://surface-ui.org/contexts#scope-aware-context will
     be deprecaded and fully removed in `v0.13`. The reason is the lack of built-in support for that
-    feature in Liveview itself, which leads to unefficient diff-tracking when using it. Global context
+    feature in Liveview itself, which leads to inefficient diff-tracking when using it. Global context
     related functions like `Context.put` and `Context.get`, as well as the `:from_context` option, will
     be kept as their use don't affect diff-tracking negatively.
 

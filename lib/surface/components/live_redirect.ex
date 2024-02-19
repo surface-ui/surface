@@ -1,5 +1,11 @@
 defmodule Surface.Components.LiveRedirect do
   @moduledoc """
+  > #### Soft deprecation warning {: .warning}
+  >
+  > This component has been deprecated in favor of liveview's built-in `<.link>`
+  > and will be removed in `v0.13`. See https://hexdocs.pm/phoenix_live_view/live-navigation.html for
+  > more info usage.
+
   Defines a link that will **redirect** to a new LiveView.
 
   Provides similar capabilities to Phoenix's built-in `live_redirect/2`
@@ -11,6 +17,8 @@ defmodule Surface.Components.LiveRedirect do
   fresh. If you want to navigate to the same LiveView without remounting
   it, use `<LivePatch>` instead.
   """
+
+  @moduledoc deprecated: "Use liveview's built-in `<.link>` instead"
 
   use Surface.Component
 
