@@ -7,7 +7,7 @@ defmodule Surface.Catalogue.ExampleTest do
   test "saves subject as metadata" do
     meta = Surface.Catalogue.get_metadata(FakeExample)
 
-    assert meta.subject == Surface.Components.Form
+    assert meta.subject == Surface.FakeComponent
   end
 
   test "saves render/1's content as metadata" do

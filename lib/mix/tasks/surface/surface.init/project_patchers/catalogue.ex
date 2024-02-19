@@ -25,6 +25,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
 
   def specs(_assigns), do: []
 
+  def catalogue_requirement do
+    # ~S("~> 0.6.3")
+    # FIXME: restore catalogue requirement
+    ~S(github: "surface-ui/surface_catalogue", ref: "remove_dependency_on_surface_forms")
+  end
+
   defp patches(assigns) do
     %{context_app: context_app, web_module: web_module, web_path: web_path} = assigns
 
@@ -53,7 +59,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   def add_surface_catalogue_to_mix_deps do
     %{
       name: "Add `surface_catalogue` dependency",
-      patch: &FilePatchers.MixExs.add_dep(&1, ":surface_catalogue", ~S("~> 0.6.0")),
+      patch: &FilePatchers.MixExs.add_dep(&1, ":surface_catalogue", catalogue_requirement()),
       update_deps: [:surface_catalogue],
       instructions: """
       Add `surface_catalogue` to the list of dependencies in `mix.exs`.
@@ -63,7 +69,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
       ```
       def deps do
         [
-          {:surface_catalogue, "~> 0.5.2"}
+          {:surface_catalogue, #{catalogue_requirement()}}
         ]
       end
       ```

@@ -19,6 +19,8 @@ defmodule Surface.BaseComponent do
 
   @optional_callbacks transform: 1
 
+  # We're keeping this here to make the migration easier it will be removed when we remove
+  # scope-aware context.
   @default_propagate_context_to_slots_map %{
     {Surface.Components.Form, :render} => true,
     {Surface.Components.Form.Field, :render} => true,
