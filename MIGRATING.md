@@ -89,10 +89,10 @@ with Surface `v0.8`.
 
 ### Limitations of the converter
 
-  * By design, the converter doesn't touch Surface code inside documentation or macro components. If you have
+* By design, the converter doesn't touch Surface code inside documentation or macro components. If you have
   any code written inside `<!-- -->` or `<#Raw>...</#Raw>`, you need to convert it manually.
 
-  * Running the converter on a project that has already been converted may generate invalid code. If anything goes
+* Running the converter on a project that has already been converted may generate invalid code. If anything goes
   wrong with the conversion, make sure you revert the changes before running it again.
 
 ## Before converting the project
