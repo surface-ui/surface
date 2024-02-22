@@ -13,6 +13,7 @@ defmodule Surface.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      preferred_cli_env: [docs: :docs],
       docs: docs(),
       package: package()
     ]

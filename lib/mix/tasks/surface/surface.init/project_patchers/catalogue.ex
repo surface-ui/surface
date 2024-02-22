@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   def catalogue_requirement do
     # ~S("~> 0.6.3")
     # FIXME: restore catalogue requirement
-    ~S(github: "surface-ui/surface_catalogue", ref: "remove_dependency_on_surface_forms")
+    ~S(github: "surface-ui/surface_catalogue", ref: "main")
   end
 
   defp patches(assigns) do
