@@ -13,10 +13,6 @@ end
 defmodule FlokiHelpers do
   import Floki
 
-  def inner_text(html) do
-    html |> text() |> String.trim()
-  end
-
   def js_attribute(html, selector, attribute_name) do
     html
     |> attribute(selector, attribute_name)

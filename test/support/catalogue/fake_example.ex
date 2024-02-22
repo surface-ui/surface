@@ -1,6 +1,6 @@
 defmodule Surface.Catalogue.FakeExample do
   use Surface.Catalogue.Example,
-    subject: Surface.Components.Form,
+    subject: Surface.FakeComponent,
     title: "A fake example",
     assert: ["The code"]
 

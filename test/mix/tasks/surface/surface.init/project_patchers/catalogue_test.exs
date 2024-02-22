@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
                    {:phoenix, "~> 1.6.0"},
                    {:surface, "~> 0.5.2"},
                    {:plug_cowboy, "~> 2.5"},
-                   {:surface_catalogue, "~> 0.6.0"}
+                   {:surface_catalogue, #{catalogue_requirement()}}
                  ]
                end
              end

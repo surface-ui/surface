@@ -13,6 +13,7 @@ defmodule Surface.MixProject do
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      preferred_cli_env: [docs: :docs],
       docs: docs(),
       package: package()
     ]
@@ -33,12 +34,9 @@ defmodule Surface.MixProject do
   defp deps do
     [
       {:phoenix_live_view, "~> 0.19.0 or ~> 0.20.0"},
-      {:phoenix_html, "~> 3.3.1"},
       {:sourceror, "~> 1.0.0"},
       {:jason, "~> 1.0", only: :test},
       {:floki, "~> 0.35", only: :test},
-      {:phoenix_ecto, "~> 4.3", only: :test},
-      {:ecto, "~> 3.9.5 or ~> 3.9", only: :test},
       {:ex_doc, ">= 0.31.0", only: :docs}
     ]
   end
@@ -61,7 +59,6 @@ defmodule Surface.MixProject do
         Surface.Catalogue,
         Surface.Compiler,
         Surface.Components,
-        Surface.Components.Form,
         Surface.Directive,
         Surface.Formatter.Phases
       ],

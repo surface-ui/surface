@@ -42,14 +42,14 @@ defmodule SurfaceTest do
       # We cannot assert if it retrieves deps' components from here since this project cannot
       # depend on a another project that depends on surface itself. So we just make sure it
       # retrieves, at least, the list of components of this project.
-      assert Surface.Components.Form in list
+      assert Surface.Components.Raw in list
       assert Enum not in list
     end
 
     test "retrieve only components in the current project" do
       list = components(only_current_project: true)
 
-      assert Surface.Components.Form in list
+      assert Surface.Components.Raw in list
       assert Enum not in list
 
       # We cannot test `only_current_project: false` from here since this project cannot
@@ -57,7 +57,7 @@ defmodule SurfaceTest do
       # retrieves, at least, the list of components of this project.
       list = components(only_current_project: false)
 
-      assert Surface.Components.Form in list
+      assert Surface.Components.Raw in list
       assert Enum not in list
     end
   end

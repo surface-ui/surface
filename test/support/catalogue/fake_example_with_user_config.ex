@@ -1,6 +1,6 @@
 defmodule Surface.Catalogue.FakeExampleWithUserConfig do
   use Surface.Catalogue.Example,
-    subject: Surface.Components.Form,
+    subject: Surface.FakeComponent,
     head_css: "User's fake css",
     head_js: "User's fake js"
 
