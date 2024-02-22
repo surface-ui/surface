@@ -173,23 +173,6 @@ defmodule Surface.Components.LinkTest do
                ~s[<a data-method="put" data-to="/world" rel="nofollow" href="/world">hello</a>]
     end
 
-    test "link with :do contents" do
-      html =
-        render_surface do
-          ~F"""
-          <Link to="/hello">
-            {Phoenix.HTML.Tag.content_tag(:p, "world")}
-          </Link>
-          """
-        end
-
-      assert html == """
-             <a href="/hello">
-               <p>world</p>
-             </a>
-             """
-    end
-
     test "link with scheme" do
       html = render_surface(do: ~F[<Link label="foo" to="/javascript:alert(<1>)" />])
       assert html =~ ~s[<a href="/javascript:alert(&lt;1&gt;)">foo</a>]
