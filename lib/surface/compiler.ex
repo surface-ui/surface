@@ -333,6 +333,7 @@ defmodule Surface.Compiler do
 
   defp process_directives(%{directives: directives} = node) when is_list(directives) do
     node_is_tag? = match?(%AST.Tag{}, node)
+
     {directives, _} =
       for %AST.Directive{module: mod, meta: meta} = directive <- directives,
           function_exported?(mod, :process, 2),
