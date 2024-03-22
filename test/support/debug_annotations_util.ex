@@ -3,7 +3,7 @@ defmodule Surface.CompilerTest.DebugAnnotationsUtil do
     Application.spec(:phoenix_live_view, :vsn)
     |> to_string()
     |> Version.parse!()
-    |> Version.compare("0.20.0") != :lt
+    |> Version.match?(">= 0.20.0 and <= 0.20.9")
   end
 
   defmacro use_component() do
