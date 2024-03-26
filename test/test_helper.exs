@@ -1,3 +1,9 @@
+# Borrowed solution from phoenix_live_view test_helper.exs
+# https://github.com/phoenixframework/phoenix_live_view/blob/main/test/test_helper.exs#L4
+Application.put_env(:phoenix_live_view, :debug_heex_annotations, true)
+Code.require_file("test/support/debug_annotations.exs")
+Application.put_env(:phoenix_live_view, :debug_heex_annotations, false)
+
 ExUnit.start()
 ExUnit.configure(exclude: [integration: true])
 

@@ -1,3 +1,5 @@
+# Note this file is intentionally a .exs file because it is loaded
+# in the test helper with phoenix_live_view debug_heex_annotations turned on.
 defmodule Surface.CompilerTest.DebugAnnotations do
   use Surface.Component
 

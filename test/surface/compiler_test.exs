@@ -841,7 +841,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:7 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.exs:7 () --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
              </div>
              """
     end
@@ -858,7 +858,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> test/support/debug_annotations.ex:21 --><div>text 1</div><div>text 2</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> test/support/debug_annotations.exs:21 () --><div>text 1</div><div>text 2</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_multiple_root_tags> -->
              </div>
              """
     end
@@ -875,7 +875,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_only_text> test/support/debug_annotations.ex:11 -->only_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_only_text> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_only_text> test/support/debug_annotations.exs:11 () -->only_text<!-- </Surface.CompilerTest.DebugAnnotations.func_with_only_text> -->
              </div>
              """
     end
@@ -894,12 +894,12 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.ex:7 --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.func_with_tag> test/support/debug_annotations.exs:7 () --><div>func_with_tag</div><!-- </Surface.CompilerTest.DebugAnnotations.func_with_tag> -->
              </div>
              """
     end
 
-    test "show debug info for module components with a colocated sface file and point to line 1" do
+    test "show debug info for module components with a colocated sface file and point to line 3" do
       alias Surface.CompilerTest.DebugAnnotations
 
       html =
@@ -914,8 +914,8 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
-               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:3 () -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.render> test/support/debug_annotations.sface:3 () -->render<!-- </Surface.CompilerTest.DebugAnnotations.render> -->
              </div>
              """
     end
@@ -934,7 +934,7 @@ defmodule Surface.CompilerTest do
 
       assert html == """
              <div>
-               <!-- <Surface.CompilerTest.DebugAnnotations.debug_annotations> test/support/debug_annotations.sface:1 -->render<!-- </Surface.CompilerTest.DebugAnnotations.debug_annotations> -->
+               <!-- <Surface.CompilerTest.DebugAnnotations.debug_annotations> test/support/debug_annotations.sface:1 () -->render<!-- </Surface.CompilerTest.DebugAnnotations.debug_annotations> -->
              </div>
              """
     end
