@@ -123,7 +123,7 @@ defmodule Surface do
       file: __CALLER__.file,
       line: line,
       caller: __CALLER__,
-      annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
+      annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_body/1)
     )
   end
 
@@ -186,7 +186,7 @@ defmodule Surface do
     |> Surface.Compiler.compile(1, env, file)
     |> Surface.Compiler.to_live_struct(
       caller: %Macro.Env{env | file: file, line: 1, function: {String.to_atom(name), 1}},
-      annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
+      annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_body/1)
     )
   end
 
