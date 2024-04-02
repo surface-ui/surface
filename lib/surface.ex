@@ -498,7 +498,8 @@ defmodule Surface do
   end
 
   defp annotate_content do
-    function_exported?(Phoenix.LiveView.HTMLEngine, :annotate_body, 1) &&
+    Code.ensure_loaded?(Phoenix.LiveView.HTMLEngine) &&
+      function_exported?(Phoenix.LiveView.HTMLEngine, :annotate_body, 1) &&
       (&Phoenix.LiveView.HTMLEngine.annotate_body/1)
   end
 end
