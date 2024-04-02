@@ -21,7 +21,8 @@ defmodule Surface.Renderer do
         |> Surface.Compiler.to_live_struct(
           caller: env,
           annotate_content:
-            function_exported?(Phoenix.LiveView.HTMLEngine, :annotate_body, 1) &&
+            Code.ensure_loaded?(Phoenix.LiveView.HTMLEngine) &&
+              function_exported?(Phoenix.LiveView.HTMLEngine, :annotate_body, 1) &&
               (&Phoenix.LiveView.HTMLEngine.annotate_body/1)
         )
       else
