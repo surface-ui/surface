@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.11.4 (2024-04-09)
+
+* Add support for Liveview `~> 0.20.10` (#743)
+
 ## v0.11.3 (2024-04-09)
 
 * Restrict phoenix_live_view version up to `0.20.9` due to compatibility
