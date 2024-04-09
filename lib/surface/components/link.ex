@@ -1,5 +1,11 @@
 defmodule Surface.Components.Link do
   @moduledoc """
+  > #### Soft deprecation warning {: .warning}
+  >
+  > This component has been deprecated in favor of liveview's built-in `<.link>`
+  > and will be removed in `v0.13`. See https://hexdocs.pm/phoenix_live_view/live-navigation.html for
+  > more info usage.
+
   Generates a link to the given URL.
 
   Provides similar capabilities to Phoenix's built-in `link/2` function.
@@ -25,6 +31,8 @@ defmodule Surface.Components.Link do
   </Link>
   ```
   """
+
+  @moduledoc deprecated: "Use liveview's built-in `<.link>` instead"
 
   use Surface.Component
   use Surface.Components.Events

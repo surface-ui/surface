@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.3 (2024-04-09)
+
+* Restrict phoenix_live_view version up to `0.20.9` due to compatibility
+  issues introduced by phoenix_live_view `0.20.10` regarding debug annotations.
+
+### Soft Deprecations
+
+* `Link` has been deprecated in favor of liveview's built-in `<.link>`.
+    See <https://hexdocs.pm/phoenix_live_view/live-navigation.html> for more info.
+
 ## v0.11.2 (2024-02-19)
 
   * Add support for Liveview >= `v0.20` (#714)
