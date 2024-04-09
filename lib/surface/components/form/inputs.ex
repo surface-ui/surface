@@ -11,8 +11,6 @@ defmodule Surface.Components.Form.Inputs do
   alias Surface.Components.Form
   alias Surface.Components.Form.Field
 
-  import Phoenix.HTML.Form
-
   @doc """
   The parent form.
 
@@ -26,9 +24,9 @@ defmodule Surface.Components.Form.Inputs do
   prop for, :any, from_context: {Field, :field}
 
   @doc """
-  Extra options for `inputs_for/3`.
+  Extra options for `inputs_for/1`.
 
-  See `Phoenix.HTML.Form.html.inputs_for/4` for the available options.
+  See `Phoenix.Component.inputs_for/1` for the available options.
   """
   prop opts, :keyword, default: []
 
@@ -39,9 +37,9 @@ defmodule Surface.Components.Form.Inputs do
 
   def render(assigns) do
     ~F"""
-    {#for {f, index}  <- Enum.with_index(inputs_for(@form, @for || @field, @opts))}
-      <#slot {@default, form: f, index: index} context_put={Form, form: f}/>
-    {/for}
+    <.inputs_for :let={nested_form} field={@form[@for || @field]} {...@opts}>
+      <#slot {@default, form: nested_form, index: nested_form.index } context_put={Form, form: nested_form} />
+    </.inputs_for>
     """
   end
 end

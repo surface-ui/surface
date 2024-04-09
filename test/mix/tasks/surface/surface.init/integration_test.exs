@@ -152,6 +152,25 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
       project_folder
       |> Path.join("mix.exs")
+      |> tap(fn path ->
+        changed =
+          File.read!(path)
+          |> String.replace(~s'{:phoenix_live_view, "~> 0.17.5"}', ~s'{:phoenix_live_view, "~> 0.18.18"}')
+
+        File.write!(path, changed)
+
+        web_path = Path.join(project_folder, "lib/surface_init_test_web.ex")
+        content = File.read!(web_path)
+
+        new_content =
+          content
+          |> String.replace(
+            "import Phoenix.LiveView.Helpers",
+            "import Phoenix.LiveView.Helpers\n      import Phoenix.Component"
+          )
+
+        File.write!(web_path, new_content)
+      end)
       |> Mix.Tasks.Surface.Init.Patcher.patch_file([add_surface_to_mix_deps()], %{dry_run: false})
 
       cmd("mix deps.get", cd: project_folder)

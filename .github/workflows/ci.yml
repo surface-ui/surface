@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+      - v0.11
+      - v0.9
 
 jobs:
   mix_test:
@@ -14,8 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.12.3
-            otp: 24.0
           - elixir: 1.13.4
             otp: 24.0
           - elixir: 1.13.4
