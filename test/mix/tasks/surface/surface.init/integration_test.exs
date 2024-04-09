@@ -153,8 +153,10 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
       project_folder
       |> Path.join("mix.exs")
       |> tap(fn path ->
-        changed = File.read!(path)
-        |> String.replace(~s'{:phoenix_live_view, "~> 0.17.5"}', ~s'{:phoenix_live_view, "~> 0.18.18"}')
+        changed =
+          File.read!(path)
+          |> String.replace(~s'{:phoenix_live_view, "~> 0.17.5"}', ~s'{:phoenix_live_view, "~> 0.18.18"}')
+
         File.write!(path, changed)
 
         web_path = Path.join(project_folder, "lib/surface_init_test_web.ex")
