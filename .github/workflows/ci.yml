@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+      - v0.11
+      - v0.9
 
 jobs:
   mix_test:
