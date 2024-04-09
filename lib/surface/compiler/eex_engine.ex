@@ -44,11 +44,12 @@ defmodule Surface.Compiler.EExEngine do
   end
 
   defp maybe_annotate_content(nodes, annotate_content, caller) do
-    if annotate_content do
-      {before_comment, after_comment} = annotate_content.(caller)
-      [%AST.Literal{value: before_comment}] ++ nodes ++ [%AST.Literal{value: after_comment}]
-    else
-      nodes
+    case annotate_content && annotate_content.(caller) do
+      {before_comment, after_comment} ->
+        [%AST.Literal{value: before_comment}] ++ nodes ++ [%AST.Literal{value: after_comment}]
+
+      _ ->
+        nodes
     end
   end
 
