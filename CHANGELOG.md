@@ -4,6 +4,20 @@
 
 This version moves all Form helpers to a [separate library](https://github.com/surface-ui/surface_form). Form Helpers are no longer used in new apps from Surface v0.12. Older applications who wish to maintain compatibility, add `{:surface_form, "~> 0.1.0"}` to your `mix.exs`.
 
+## v0.11.4 (2024-04-09)
+
+* Add support for Liveview `~> 0.20.10` (#743)
+
+## v0.11.3 (yyyy-mm-dd)
+
+* Restrict phoenix_live_view version up to `0.20.9` due to compatibility
+  issues introduced by phoenix_live_view `0.20.10` regarding debug annotations.
+
+### Soft Deprecations
+
+* `Link` has been deprecated in favor of liveview's built-in `<.link>`.
+    See <https://hexdocs.pm/phoenix_live_view/live-navigation.html> for more info.
+
 ## v0.11.2 (2024-02-19)
 
 * Add support for Liveview >= `v0.20` (#714)
@@ -48,6 +62,14 @@ This version moves all Form helpers to a [separate library](https://github.com/s
 * Add `embed_sface/1` macro to allow adding `.sface` template as a function component
 * Collect and generate `@import` entries from components to the top of the file to adhere to the CSS spec
 * Fix CSS scope so it can be shared by all function components in the same module, avoiding unnecessary use of `:deep`
+
+## v0.9.5 (2024-04-09)
+
+Improves compatibility with minor dependency versions used by Surface v0.9, this will improve the upgrade (`mix deps.update --all`) of apps that depend on this version.
+
+* Compatibility with `phoenix_live_view ~> 0.18.18`
+* Compatibility with `phoenix ~> 1.6.16`
+* Compatibility with `phoenix_html ~> 3.3.1`
 
 ## v0.9.4 (2023-02-15)
 

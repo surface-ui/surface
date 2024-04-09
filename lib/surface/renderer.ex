@@ -15,14 +15,15 @@ defmodule Surface.Renderer do
           |> Map.put(:function, {:render, 1})
           |> Map.put(:file, template)
 
-        debug_annotations? = Module.get_attribute(__CALLER__.module, :__debug_annotations__)
-
         template
         |> File.read!()
         |> Surface.Compiler.compile(1, env, template)
         |> Surface.Compiler.to_live_struct(
           caller: env,
-          annotate_content: debug_annotations? && (&Phoenix.LiveView.HTMLEngine.annotate_tagged_content/1)
+          annotate_content:
+            Code.ensure_loaded?(Phoenix.LiveView.HTMLEngine) &&
+              function_exported?(Phoenix.LiveView.HTMLEngine, :annotate_body, 1) &&
+              (&Phoenix.LiveView.HTMLEngine.annotate_body/1)
         )
       else
         nil
