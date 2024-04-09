@@ -59,6 +59,14 @@ This version moves all Form helpers to a [separate library](https://github.com/s
 * Collect and generate `@import` entries from components to the top of the file to adhere to the CSS spec
 * Fix CSS scope so it can be shared by all function components in the same module, avoiding unnecessary use of `:deep`
 
+## v0.9.5 (2024-04-09)
+
+Improves compatibility with minor dependency versions used by Surface v0.9, this will improve the upgrade (`mix deps.update --all`) of apps that depend on this version.
+
+* Compatibility with `phoenix_live_view ~> 0.18.18`
+* Compatibility with `phoenix ~> 1.6.16`
+* Compatibility with `phoenix_html ~> 3.3.1`
+
 ## v0.9.4 (2023-02-15)
 
 * Update `phoenix_live_view` to `v0.18.14`
