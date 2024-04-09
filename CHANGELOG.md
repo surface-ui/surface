@@ -4,6 +4,16 @@
 
 This version moves all Form helpers to a [separate library](https://github.com/surface-ui/surface_form). Form Helpers are no longer used in new apps from Surface v0.12. Older applications who wish to maintain compatibility, add `{:surface_form, "~> 0.1.0"}` to your `mix.exs`.
 
+## v0.11.3 (yyyy-mm-dd)
+
+* Restrict phoenix_live_view version up to `0.20.9` due to compatibility
+  issues introduced by phoenix_live_view `0.20.10` regarding debug annotations.
+
+### Soft Deprecations
+
+* `Link` has been deprecated in favor of liveview's built-in `<.link>`.
+    See <https://hexdocs.pm/phoenix_live_view/live-navigation.html> for more info.
+
 ## v0.11.2 (2024-02-19)
 
 * Add support for Liveview >= `v0.20` (#714)
