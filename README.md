@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/surface-ui/surface/workflows/CI/badge.svg)](https://github.com/surface-ui/surface/actions?query=workflow%3A%22CI%22)
 
 Surface is a **server-side rendering** component library that allows developers to
-build **rich interactive user-interfaces**, writing minimal custom Javascript.
+build **rich interactive user-interfaces**, writing minimal custom JavaScript.
 
 Built on top of [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/) and its component API,
 Surface leverages the amazing Phoenix Framework to provide a **fast** and **productive** solution
