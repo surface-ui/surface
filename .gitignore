@@ -28,3 +28,7 @@ surface-*.tar
 # Ignore fake hooks files that are created in tests
 /test/support/mix/tasks/compile/surface_test/fake_button.hooks.js
 /test/support/mix/tasks/compile/surface_test/fake_link.hooks.js
+
+# Ignore blends compiled artifacts and deps
+/blend/_build
+/blend/deps
