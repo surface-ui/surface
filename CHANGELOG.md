@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.11.5 (2024-09-04)
+
+* Support Liveview `~> 0.20.15` (#749)
+
 ## v0.11.4 (2024-04-09)
 
 * Add support for Liveview `~> 0.20.10` (#743)
