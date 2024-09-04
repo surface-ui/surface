@@ -107,6 +107,22 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
     }
   end
 
+  # TODO: Remove this patch whenever phx.new starts generating the project
+  # without warnings related to API changes in Gettext v0.26.
+  def replace_gettext_in_mix_deps do
+    %{
+      name: "Replace `gettext` dependency",
+      instructions: "",
+      patch:
+        &FilePatchers.Text.replace_text(
+          &1,
+          ~s({:gettext, "~> 0.20"}),
+          ~s({:gettext, "~> 0.25.0"}),
+          ~s({:gettext, "~> 0.25.0"})
+        )
+    }
+  end
+
   defp compact_output(output) do
     output
     |> String.split(["\n"])
@@ -148,7 +164,12 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
       File.write!(project_phx_new_version_file, surface_phx_new_version)
 
       mix_file = Path.join(project_folder, "mix.exs")
-      Mix.Tasks.Surface.Init.Patcher.patch_file(mix_file, [add_surface_to_mix_deps()], %{dry_run: false})
+
+      Mix.Tasks.Surface.Init.Patcher.patch_file(
+        mix_file,
+        [add_surface_to_mix_deps(), replace_gettext_in_mix_deps()],
+        %{dry_run: false}
+      )
 
       cmd("mix deps.get", cd: project_folder)
       cmd("mix phx.gen.release --docker", cd: project_folder)
