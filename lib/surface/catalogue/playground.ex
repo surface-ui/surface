@@ -55,6 +55,8 @@ defmodule Surface.Catalogue.Playground do
 
     quote do
       @config unquote(opts)
+      @after_compile unquote(__MODULE__)
+      @__use_line__ unquote(__CALLER__.line)
       @before_compile unquote(__MODULE__)
 
       use Surface.LiveView, unquote(opts)
@@ -194,6 +196,22 @@ defmodule Surface.Catalogue.Playground do
           unquote(__MODULE__).__handle_event__(event, value, socket)
         end
       end
+    end
+  end
+
+  def __after_compile__(env, _) do
+    case Module.get_attribute(env.module, :config)[:catalogue] do
+      nil ->
+        nil
+
+      module ->
+        case Code.ensure_compiled(module) do
+          {:module, _mod} -> nil
+          {:error, _} ->
+            message =
+              "defined catalogue `#{inspect(module)}` could not be found"
+              Surface.IOHelper.compile_error(message, env.file,  Module.get_attribute(env.module, :__use_line__))
+        end
     end
   end
 
