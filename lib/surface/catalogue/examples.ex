@@ -153,11 +153,14 @@ defmodule Surface.Catalogue.Examples do
 
       module ->
         case Code.ensure_compiled(module) do
-          {:module, _mod} -> nil
+          {:module, _mod} ->
+            nil
+
           {:error, _} ->
             message =
               "defined catalogue `#{inspect(module)}` could not be found"
-              Surface.IOHelper.compile_error(message, env.file,  Module.get_attribute(env.module, :__use_line__))
+
+            Surface.IOHelper.compile_error(message, env.file, Module.get_attribute(env.module, :__use_line__))
         end
     end
   end
