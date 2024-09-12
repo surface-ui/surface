@@ -18,7 +18,7 @@ jobs:
         include:
           - elixir: '1.13.4'
             otp: '24.0'
-            old_deps: true
+            blend: phoenix_live_view_0_19
           - elixir: '1.13.4'
             otp: '25.0'
             run_plugin_tests: true
@@ -51,9 +51,9 @@ jobs:
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
-      - name: Use old lock file
-        if: matrix.old_deps
-        run: mv mix.lock.old mix.lock
+      - name: Set lock file from blend
+        if: matrix.blend
+        run: cp blend/${{matrix.blend}}.mix.lock mix.lock
       - name: Update deps
         if: matrix.update_deps
         run: mix deps.update --all
