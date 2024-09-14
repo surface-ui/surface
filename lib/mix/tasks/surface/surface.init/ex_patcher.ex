@@ -419,9 +419,8 @@ defmodule Mix.Tasks.Surface.Init.ExPatcher do
   end
 
   defp to_string_opts() do
-    "mix.exs"
-    |> Mix.Tasks.Format.formatter_opts_for_file()
-    |> Keyword.take([:line_length])
+    {_formatter, opts} = Mix.Tasks.Format.formatter_for_file("mix.exs")
+    Keyword.take(opts, [:line_length])
   end
 
   defp get_code_by_range(code, range) do
