@@ -47,6 +47,19 @@ defmodule Surface.Components.EventsTest do
            """
   end
 
+  test "click away event with parent live view as target" do
+    html =
+      render_surface do
+        ~F"""
+        <ComponentWithEvents click_away="my_click_away" />
+        """
+      end
+
+    assert html =~ """
+           <div phx-click-away="my_click_away"></div>
+           """
+  end
+
   test "click event with parent live view as target" do
     html =
       render_surface do

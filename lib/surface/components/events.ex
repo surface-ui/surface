@@ -9,6 +9,9 @@ defmodule Surface.Components.Events do
       @doc "Triggered when the component receives click"
       prop click, :event
 
+      @doc "Triggered when a click event happens outside of the element"
+      prop click_away, :event
+
       @doc "Triggered when the page receives focus"
       prop window_focus, :event
 
