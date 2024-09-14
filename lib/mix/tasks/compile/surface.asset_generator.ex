@@ -263,7 +263,7 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
           namespace = Regex.replace(~r/#{@hooks_tag}.*$/, dest_file, "")
           var = "c#{index}"
           hook = ~s[ns(#{var}, "#{namespace}")]
-          imp = ~s[import * as #{var} from "./#{namespace}.hooks"]
+          imp = ~s[import * as #{var} from "./#{dest_file}"]
           {[hook | hooks], [imp | imports]}
       end
 
