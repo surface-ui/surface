@@ -184,7 +184,7 @@ defmodule Surface.Catalogue.Data do
     Access.at(value)
   end
 
-  def access_fun(from..to = range) when is_integer(from) and is_integer(to) do
+  def access_fun(from..to//1 = range) when is_integer(from) and is_integer(to) do
     slice(range)
   end
 
@@ -244,14 +244,14 @@ defmodule Surface.Catalogue.Data do
     {:lists.reverse(gets), :lists.reverse(updates)}
   end
 
-  defp get_and_update_slice(list, from..to, next, updates, gets, -1) do
+  defp get_and_update_slice(list, from..to//1, next, updates, gets, -1) do
     list_length = length(list)
     from = normalize_range_bound(from, list_length)
     to = normalize_range_bound(to, list_length)
     get_and_update_slice(list, from..to, next, updates, gets, 0)
   end
 
-  defp get_and_update_slice([head | rest], from..to = range, next, updates, gets, index) do
+  defp get_and_update_slice([head | rest], from..to//1 = range, next, updates, gets, index) do
     new_index = index + 1
 
     if index >= from and index <= to do
