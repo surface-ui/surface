@@ -1,6 +1,6 @@
 defmodule Surface.Components.LivePatch do
   @moduledoc """
-  > #### Soft deprecation warning {: .warning}
+  > #### Deprecation warning {: .warning}
   >
   > This component has been deprecated in favor of liveview's built-in `<.link>`
   > and will be removed in `v0.13`. See https://hexdocs.pm/phoenix_live_view/live-navigation.html for
@@ -18,7 +18,7 @@ defmodule Surface.Components.LivePatch do
   `<LiveRedirect>` instead.
   """
 
-  @moduledoc deprecated: "Use liveview's built-in `<.link>` instead"
+  @moduledoc deprecated: "Use Liveview's built-in `<.link>` instead"
 
   use Surface.Component
 
@@ -46,6 +46,10 @@ defmodule Surface.Components.LivePatch do
   the value of property `label` is used instead.
   """
   slot default
+
+  if Mix.env() != :test do
+    @deprecated "Use liveview's built-in `<.link>` instead"
+  end
 
   def render(assigns) do
     ~F"""

@@ -1,5 +1,9 @@
 defmodule Surface.Catalogue.Example do
   @moduledoc """
+  > #### Deprecation warning {: .warning}
+  >
+  > This component has been deprecated in favor of `Surface.Catalogue.Examples`.
+
   A generic LiveView to create a single example for catalogue tools.
 
   ## Options
@@ -32,7 +36,16 @@ defmodule Surface.Catalogue.Example do
 
   """
 
+  @moduledoc deprecated: "Use `Surface.Catalogue.Examples` instead"
+
   defmacro __using__(opts) do
+    if Mix.env() != :test do
+      IO.warn(
+        "`Surface.Catalogue.Example` is deprecated. Use `Surface.Catalogue.Examples` instead",
+        Macro.Env.stacktrace(__CALLER__)
+      )
+    end
+
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
     quote do
