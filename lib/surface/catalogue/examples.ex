@@ -1,4 +1,5 @@
 defmodule Surface.Catalogue.Examples do
+  @moduledoc since: "0.8.0"
   @moduledoc ~S'''
   A generic LiveView to create multiple examples for catalogue tools.
 
