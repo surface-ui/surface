@@ -293,7 +293,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props = build_slot_props(component, buffer, state, context_var)
     static_props_map = {:%{}, [], slot_props ++ static_props}
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &apply(unquote(module_expr), unquote(fun_expr), [&1]),
         Map.merge(
@@ -324,7 +324,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props = build_slot_props(component, buffer, state, context_var)
     static_props_map = {:%{}, [], slot_props ++ static_props}
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &(unquote(Macro.var(fun, __MODULE__)) / 1),
         Map.merge(
@@ -360,7 +360,7 @@ defmodule Surface.Compiler.EExEngine do
     # we pass the module, otherwise, we pass `nil`.
     module_for_build_assigns = if fun == :render, do: module
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &(unquote(module).unquote(fun) / 1),
         Map.merge(
@@ -391,7 +391,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props = build_slot_props(component, buffer, state, context_var)
     static_props_map = {:%{}, [], static_props ++ slot_props}
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &unquote(module).render/1,
         Map.merge(
@@ -422,7 +422,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props = build_slot_props(component, buffer, state, context_var)
     static_props_map = {:%{}, [], slot_props ++ static_props}
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &unquote(module).render/1,
         Map.merge(
@@ -453,7 +453,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props = build_slot_props(component, buffer, state, context_var)
     static_props_map = {:%{}, [], [{:module, module} | slot_props] ++ static_props}
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &Phoenix.Component.live_component/1,
         Map.merge(
@@ -488,7 +488,7 @@ defmodule Surface.Compiler.EExEngine do
     slot_props = build_slot_props(component, buffer, state, context_var)
     static_props_map = {:%{}, [], [{:module, module_expr} | slot_props] ++ static_props}
 
-    quote do
+    quote line: meta.line do
       Phoenix.LiveView.TagEngine.component(
         &Phoenix.Component.live_component/1,
         Map.merge(
