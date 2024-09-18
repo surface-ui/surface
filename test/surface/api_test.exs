@@ -421,7 +421,7 @@ defmodule Surface.APITest do
 
     test "validate unknown options" do
       code = "slot cols, a: 1"
-      message = ~r/unknown option :a. Available options: \[:required, :arg, :args, :as, :generator_prop\]/
+      message = ~r/unknown option :a. Available options: \[:required, :arg, :as, :generator_prop\]/
 
       assert_raise(CompileError, message, fn ->
         eval(code)

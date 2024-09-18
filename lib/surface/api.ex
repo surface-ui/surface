@@ -395,42 +395,7 @@ defmodule Surface.API do
   end
 
   defp get_valid_opts(:slot, _type, _opts) do
-    [:required, :arg, :args, :as, :generator_prop]
-  end
-
-  defp validate_opt_ast!(:slot, :args, args_ast, caller) do
-    Enum.each(args_ast, fn
-      {name, {:^, _, [{generator, _, context}]}} when context in [Elixir, nil] ->
-        message = """
-        The API for generators has changed. Use `generator_prop: :#{generator}` instead of `args: [#{name}: ^#{generator}]`.
-
-        Example:
-
-          prop #{generator}, :generator, root: true
-          slot default, generator_prop: :#{generator}
-
-          ...
-
-          {#for #{name} <- @#{generator}}
-            <#slot generator_value={#{name}} />
-          {/for}
-        """
-
-        IOHelper.compile_error(message, caller.file, caller.line)
-
-      _ ->
-        nil
-    end)
-
-    message = """
-    option :args has been deprecated. Use :arg instead.
-
-    Example:
-
-    slot default, arg: %{name: :string, age: :number}
-    """
-
-    IOHelper.warn(message, caller)
+    [:required, :arg, :as, :generator_prop]
   end
 
   defp validate_opt_ast!(_func, _key, value, _caller) do

@@ -1536,7 +1536,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1567,7 +1567,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1670,120 +1670,6 @@ defmodule Surface.SlotSyncTest do
                <#slot {item}/>
              {/for}
            """
-  end
-
-  test "outputs compile warning when using deprecated args option" do
-    component_code = """
-    defmodule UsingDeprecatedArgsOption do
-      use Surface.Component
-
-      slot default, args: [:info]
-
-      def render(assigns) do
-        ~F"\""
-        <span class="fancy-column">
-          <#slot {@default, info: "this is a test"} />
-        </span>
-        "\""
-      end
-    end
-    """
-
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
-
-    assert output =~ "option :args has been deprecated. Use :arg instead."
-  end
-
-  test "outputs compile warning when using deprecated :args directive" do
-    component_code = """
-    defmodule UsingDeprecatedArgsDirective do
-      use Surface.Component
-
-      slot default, args: [:info]
-
-      def render(assigns) do
-        ~F"\""
-        <#slot :args={arg: "slot argument"} />
-        "\""
-      end
-    end
-    """
-
-    component_output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "component.exs", line: 1})
-
-        code =
-          quote do
-            ~F"""
-            <Surface.SlotSyncTest.UsingDeprecatedArgsDirective :let={arg: arg}>
-              {arg}
-            </Surface.SlotSyncTest.UsingDeprecatedArgsDirective>
-            """
-          end
-
-        usage_output =
-          capture_io(:standard_error, fn ->
-            module = compile_surface(code)
-
-            html =
-              module.render(%{__context__: %{}})
-              |> Phoenix.HTML.Safe.to_iodata()
-              |> IO.iodata_to_binary()
-
-            assert html == """
-
-                     slot argument
-
-
-                   """
-          end)
-
-        assert usage_output == ""
-      end)
-
-    assert component_output =~ "directive :args has been deprecated. Use the root prop instead.\n  component.exs:8"
-  end
-
-  test "outputs compile warning when using deprecated :args generator option" do
-    component_code = """
-    defmodule UsingDeprecatedGenerator do
-      use Surface.Component
-
-      prop items, :list, root: true
-      slot default, args: [item: ^items]
-
-      def render(assigns) do
-        ~F"\""
-        {#for item <- @items}
-          <#slot :args={item: item} />
-        {/for}
-        "\""
-      end
-    end
-    """
-
-    message = """
-    component.exs:5: The API for generators has changed. Use `generator_prop: :items` instead of `args: [item: ^items]`.
-
-    Example:
-
-      prop items, :generator, root: true
-      slot default, generator_prop: :items
-
-      ...
-
-      {#for item <- @items}
-        <#slot generator_value={item} />
-      {/for}
-    """
-
-    assert_raise(CompileError, message, fn ->
-      {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "component.exs", line: 1})
-    end)
   end
 
   test "outputs compile warning when adding arg attribute to the default slot in a slotable component" do

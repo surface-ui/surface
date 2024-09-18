@@ -43,7 +43,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props [:root, "for", "name", "index", "generator_value", ":args", "context_put"]
+  @valid_slot_props [:root, "for", "name", "index", "generator_value", "context_put"]
 
   @directive_prefixes [":", "s-"]
 
@@ -609,24 +609,11 @@ defmodule Surface.Compiler do
         slot.name == name || (Keyword.has_key?(slot.opts, :as) and slot.opts[:as] == name)
       end)
 
-    if has_attribute?(attributes, ":args") do
-      Surface.IOHelper.warn(
-        "directive :args has been deprecated. Use the root prop instead.",
-        meta.caller,
-        meta.line
-      )
-    end
-
     arg =
-      cond do
-        has_root? ->
-          render_slot_args.argument
-
-        has_attribute?(attributes, ":args") ->
-          attribute_value_as_ast(attributes, ":args", :let_arg, %Surface.AST.Literal{value: nil}, compile_meta)
-
-        true ->
-          nil
+      if has_root? do
+        render_slot_args.argument
+      else
+        nil
       end
 
     if slot do
@@ -1611,7 +1598,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:args`, `:if` and `:for`.
+    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)
