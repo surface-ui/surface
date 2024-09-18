@@ -12,6 +12,16 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   @hooks_extension "#{@hooks_tag}.{#{@supported_hooks_extensions}}"
 
   def run(components, opts \\ []) do
+    generate_assets? = Keyword.get(opts, :generate_assets, true)
+
+    if generate_assets? do
+      do_run(components, opts)
+    else
+      []
+    end
+  end
+
+  defp do_run(components, opts) do
     components = Enum.sort(components, :desc)
     hooks_output_dir = Keyword.get(opts, :hooks_output_dir, @default_hooks_output_dir)
     css_output_file = Keyword.get(opts, :css_output_file, @default_css_output_file)

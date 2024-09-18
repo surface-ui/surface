@@ -21,6 +21,10 @@ defmodule Mix.Tasks.Compile.Surface do
 
   ### Options
 
+  * `generate_assets` - instructs the compiler to generate components' css and js files.
+    Set it to `false` when developing a library of components that doesn't require any CSS
+    style nor JS hooks. Default is `true`.
+
   * `hooks_output_dir` - defines the folder where the compiler generates the JS hooks files.
     Default is `./assets/js/_hooks/`.
 
@@ -148,6 +152,7 @@ defmodule Mix.Tasks.Compile.Surface do
   ]
 
   @assets_opts [
+    :generate_assets,
     :hooks_output_dir,
     :css_output_file,
     :enable_variants,

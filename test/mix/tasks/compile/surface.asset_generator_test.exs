@@ -374,6 +374,18 @@ defmodule Mix.Tasks.Compile.Surface.AssetGeneratorTest do
     refute File.exists?(@link_dest_hooks_file)
   end
 
+  test "don't generate assets if :generate_assets is false", %{opts: opts} do
+    refute File.exists?(@css_output_file)
+    refute File.exists?(@variants_output_file)
+    refute File.exists?(@hooks_output_dir)
+
+    assert run(@components, [generate_assets: false] ++ opts) == []
+
+    refute File.exists?(@css_output_file)
+    refute File.exists?(@variants_output_file)
+    refute File.exists?(@hooks_output_dir)
+  end
+
   test "returns diagnostic if component has more then 1 hook and uses the first one", %{opts: opts} do
     File.write!(@other_link_src_hooks_file, @link_src_hooks_file_content)
     refute File.exists?(@hooks_output_dir)
