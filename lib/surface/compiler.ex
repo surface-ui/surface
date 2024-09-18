@@ -564,42 +564,27 @@ defmodule Surface.Compiler do
         ]
       end
 
-    # TODO: Validate attributes with custom messages
-
     has_root? = has_attribute?(attributes, :root)
-    has_for? = !has_root? and has_attribute?(attributes, "for")
+    name = extract_name_from_root(attributes)
 
     name =
-      extract_name_from_root(attributes) || attribute_value_as_atom(attributes, "name", nil) ||
-        extract_name_from_for(attributes)
-
-    name =
-      if !name and !has_for? and !has_root? do
+      if !name and !has_root? do
         :default
       else
         name
       end
 
-    default_syntax? = not has_attribute?(attributes, "name") && not has_for? && not has_root?
+    default_syntax? = not has_root?
 
     render_slot_args =
       if has_root? do
         attribute_value_as_ast(attributes, :root, :render_slot, %Surface.AST.Literal{value: nil}, compile_meta)
       end
 
-    for_ast =
-      cond do
-        has_for? ->
-          attribute_value_as_ast(attributes, "for", :any, %Surface.AST.Literal{value: nil}, compile_meta)
-
-        has_root? ->
-          render_slot_args.slot
-
-        true ->
-          nil
+    slot_entry_ast =
+      if has_root? do
+        render_slot_args.slot
       end
-
-    index = attribute_value_as_ast(attributes, "index", %Surface.AST.Literal{value: 0}, compile_meta)
 
     {:ok, directives, attrs} = collect_directives(@slot_directive_handlers, attributes, meta)
     validate_slot_attrs!(attrs, meta.caller)
@@ -620,7 +605,7 @@ defmodule Surface.Compiler do
       maybe_warn_required_slot_with_default_value(
         slot,
         children,
-        for_ast,
+        slot_entry_ast,
         meta
       )
 
@@ -666,8 +651,7 @@ defmodule Surface.Compiler do
      %AST.Slot{
        name: name,
        as: if(slot, do: slot[:opts][:as]),
-       index: index,
-       for: for_ast,
+       for: slot_entry_ast,
        directives: directives,
        default: to_ast(children, compile_meta),
        arg: arg,
@@ -960,14 +944,6 @@ defmodule Surface.Compiler do
     node
   end
 
-  defp attribute_value_as_atom(attributes, attr_name, default) do
-    Enum.find_value(attributes, default, fn {name, value, _} ->
-      if name == attr_name do
-        String.to_atom(value)
-      end
-    end)
-  end
-
   defp attribute_raw_value(attributes, attr_name, default) do
     Enum.find_value(attributes, default, fn
       {^attr_name, {:attribute_expr, expr, _}, _} ->
@@ -976,20 +952,6 @@ defmodule Surface.Compiler do
       _ ->
         nil
     end)
-  end
-
-  defp extract_name_from_for(attributes) do
-    with value when is_binary(value) <- attribute_raw_value(attributes, "for", nil),
-         {:ok, {:@, _, [{assign_name, _, _}]}} when is_atom(assign_name) <- Code.string_to_quoted(value) do
-      assign_name
-    else
-      {:error, _} ->
-        # TODO: raise
-        nil
-
-      _ ->
-        nil
-    end
   end
 
   defp extract_name_from_root(attributes) do

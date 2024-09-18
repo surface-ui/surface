@@ -196,7 +196,6 @@ defmodule Surface.Compiler.EExEngine do
          %AST.Slot{
            name: provided_name,
            as: slot_as,
-           index: index_ast,
            for: slot_for_ast,
            arg: arg_expr,
            generator_value: generator_value_ast,
@@ -207,12 +206,6 @@ defmodule Surface.Compiler.EExEngine do
          buffer,
          state
        ) do
-    slot_index =
-      case index_ast do
-        %AST.AttributeExpr{value: expr} -> expr
-        %AST.Literal{value: value} -> value
-      end
-
     slot_for =
       case slot_for_ast do
         %AST.AttributeExpr{value: expr} -> expr
@@ -232,7 +225,7 @@ defmodule Surface.Compiler.EExEngine do
         slot_assign = {:@, [], [{slot_name, [], nil}]}
 
         quote do
-          Enum.at(List.wrap(unquote(slot_assign)), unquote(slot_index))
+          Enum.at(List.wrap(unquote(slot_assign)), 0)
         end
       end
 
