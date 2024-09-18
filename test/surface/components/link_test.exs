@@ -25,7 +25,7 @@ defmodule Surface.Components.LinkTest do
     def render(assigns) do
       ~F"""
       <div>
-        <Link label="user" to="/users/1" capture_click="my_click" />
+        <Link label="user" to="/users/1" click="my_click" />
       </div>
       """
     end

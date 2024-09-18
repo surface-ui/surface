@@ -702,7 +702,7 @@ defmodule Surface.Compiler.ParserTest do
       <li
         {=id}
         {=@class}
-        {=@phx_capture_click}
+        {=@phx_click_away}
       />
       """
 
@@ -711,7 +711,7 @@ defmodule Surface.Compiler.ParserTest do
       assert [
                {"id", {:attribute_expr, "id", %{column: 5, line: 2}}, %{column: 4, line: 2}},
                {"class", {:attribute_expr, "@class", %{column: 5, line: 3}}, %{column: 4, line: 3}},
-               {"phx-capture-click", {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
+               {"phx-click-away", {:attribute_expr, "@phx_click_away", %{column: 5, line: 4}},
                 %{column: 4, line: 4}}
              ] = attributes
     end
@@ -721,7 +721,7 @@ defmodule Surface.Compiler.ParserTest do
       <Component
         {=id}
         {=@class}
-        {=@phx_capture_click}
+        {=@phx_click_away}
       />
       """
 
@@ -730,7 +730,7 @@ defmodule Surface.Compiler.ParserTest do
       assert [
                {"id", {:attribute_expr, "id", %{column: 5, line: 2}}, %{column: 4, line: 2}},
                {"class", {:attribute_expr, "@class", %{column: 5, line: 3}}, %{column: 4, line: 3}},
-               {"phx_capture_click", {:attribute_expr, "@phx_capture_click", %{column: 5, line: 4}},
+               {"phx_click_away", {:attribute_expr, "@phx_click_away", %{column: 5, line: 4}},
                 %{column: 4, line: 4}}
              ] = attributes
     end

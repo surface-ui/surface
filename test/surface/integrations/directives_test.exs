@@ -889,6 +889,47 @@ defmodule Surface.DirectivesTest do
       assert js_attribute(doc, "div > button", "phx-click") == [["push", %{"event" => "ok"}]]
     end
 
+    test "translate available events" do
+      html =
+        render_surface do
+          ~F"""
+          <div :on-click="event">click</div>
+          <div :on-click-away="event">click-away</div>
+          <div :on-capture-click="event">capture-click</div>
+          <div :on-change="event">change</div>
+          <div :on-submit="event">submit</div>
+          <div :on-blur="event">blur</div>
+          <div :on-focus="event">focus</div>
+          <div :on-window-blur="event">window-blur</div>
+          <div :on-window-focus="event">window-focus</div>
+          <div :on-keydown="event">keydown</div>
+          <div :on-keyup="event">keyup</div>
+          <div :on-window-keydown="event">window-keydown</div>
+          <div :on-window-keyup="event">window-keyup</div>
+          <div :on-viewport-top="event">viewport-top</div>
+          <div :on-viewport-bottom="event">viewport-bottom</div>
+          """
+        end
+
+      assert html =~ """
+             <div phx-click="event">click</div>
+             <div phx-click-away="event">click-away</div>
+             <div phx-capture-click="event">capture-click</div>
+             <div phx-change="event">change</div>
+             <div phx-submit="event">submit</div>
+             <div phx-blur="event">blur</div>
+             <div phx-focus="event">focus</div>
+             <div phx-window-blur="event">window-blur</div>
+             <div phx-window-focus="event">window-focus</div>
+             <div phx-keydown="event">keydown</div>
+             <div phx-keyup="event">keyup</div>
+             <div phx-window-keydown="event">window-keydown</div>
+             <div phx-window-keyup="event">window-keyup</div>
+             <div phx-viewport-top="event">viewport-top</div>
+             <div phx-viewport-bottom="event">viewport-bottom</div>
+             """
+    end
+
     test "do not translate invalid events" do
       html =
         render_surface do
