@@ -1536,7 +1536,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:10: invalid directive `:attrs` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1567,7 +1567,7 @@ defmodule Surface.SlotSyncTest do
     message = ~r"""
     code:11: invalid attribute `let` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `generator_value`, `:if` and `:for`.
     """
 
     assert_raise(CompileError, message, fn ->
@@ -1635,41 +1635,6 @@ defmodule Surface.SlotSyncTest do
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
     end)
-  end
-
-  test "outputs compile warning when using deprecated for property" do
-    component_code = """
-    defmodule UsingDeprecatedArgsOption do
-      use Surface.Component
-
-      slot default
-
-      def render(assigns) do
-        ~F"\""
-        <#slot for={@default} />
-        "\""
-      end
-    end
-    """
-
-    output =
-      capture_io(:standard_error, fn ->
-        {{:module, _, _, _}, _} = Code.eval_string(component_code, [], %{__ENV__ | file: "code.exs", line: 1})
-      end)
-
-    assert output =~ """
-           property `for` has been deprecated. Please use the root prop instead. Examples:
-
-           Rendering the slot:
-
-             <#slot {@default}/>
-
-           Iterating over the slot items:
-
-             {#for item <- @default}
-               <#slot {item}/>
-             {/for}
-           """
   end
 
   test "outputs compile warning when adding arg attribute to the default slot in a slotable component" do

@@ -43,7 +43,7 @@ defmodule Surface.Compiler do
     Surface.Directive.For
   ]
 
-  @valid_slot_props [:root, "for", "name", "index", "generator_value", "context_put"]
+  @valid_slot_props [:root, "generator_value", "context_put"]
 
   @directive_prefixes [":", "s-"]
 
@@ -1523,67 +1523,6 @@ defmodule Surface.Compiler do
     Enum.each(attrs, &validate_slot_attr!(&1, caller))
   end
 
-  defp validate_slot_attr!({"for", value, _meta}, caller) do
-    {:attribute_expr, expr, expr_meta} = value
-
-    message = """
-    property `for` has been deprecated. Please use the root prop instead. Examples:
-
-    Rendering the slot:
-
-      <#slot {#{expr}}/>
-
-    Iterating over the slot items:
-
-      {#for item <- #{expr}}
-        <#slot {item}/>
-      {/for}
-    """
-
-    Surface.IOHelper.warn(message, caller, expr_meta.line)
-    :ok
-  end
-
-  defp validate_slot_attr!({"name", value, meta}, caller) do
-    message = """
-    properties `name` and `index` have been deprecated. Please use root prop instead. Examples:
-
-    Rendering the slot:
-
-      <#slot {@#{value}}/>
-
-    Iterating over the slot items:
-
-      {#for item <- @#{value}}
-        <#slot {item}/>
-      {/for}
-    """
-
-    Surface.IOHelper.warn(message, caller, meta.line)
-
-    :ok
-  end
-
-  defp validate_slot_attr!({"index", _value, meta}, caller) do
-    message = """
-    properties `name` and `index` have been deprecated. Please use root prop instead. Examples:
-
-    Rendering the slot:
-
-      <#slot {@slot_name}/>
-
-    Iterating over the slot items:
-
-      {#for item <- @slot_name}
-        <#slot {item}/>
-      {/for}
-    """
-
-    Surface.IOHelper.warn(message, caller, meta.line)
-
-    :ok
-  end
-
   defp validate_slot_attr!({name, _, _meta}, _caller) when name in @valid_slot_props do
     :ok
   end
@@ -1598,7 +1537,7 @@ defmodule Surface.Compiler do
     message = """
     invalid #{type} `#{name}` for <#slot>.
 
-    Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `generator_value`, `:if` and `:for`.
     """
 
     IOHelper.compile_error(message, file, line)
