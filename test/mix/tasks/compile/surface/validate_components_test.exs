@@ -16,7 +16,9 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
   test "should return diagnostic when unkwnown prop is passed to Component" do
     component =
       quote do
-        ~F[<StringProp unknown />]
+        ~F"""
+          <StringProp unknown />
+        """
       end
       |> compile_surface()
 
@@ -28,7 +30,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                details: nil,
                file: Path.expand("code"),
                message: "Unknown property \"unknown\" for component <StringProp>",
-               position: 0,
+               position: {1, 15},
                severity: :warning
              }
            ]
@@ -72,7 +74,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                details: nil,
                file: Path.expand("code"),
                message: "Missing required property \"title\" for component <RequiredPropTitle>",
-               position: 0,
+               position: {0, 2},
                severity: :warning
              }
            ]
@@ -100,7 +102,11 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
   test "should return diagnostic when missing automatically define id prop for LiveComponent" do
     component =
       quote do
-        ~F[<LiveComponentHasRequiredIdProp />]
+        ~F"""
+        <div>
+          <LiveComponentHasRequiredIdProp />
+        </div>
+        """
       end
       |> compile_surface()
 
@@ -117,7 +123,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                Hint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
                If you meant to create a stateless component, you can switch to `use Surface.Component`.
                """,
-               position: 0,
+               position: {2, 12},
                severity: :warning
              }
            ]
@@ -142,7 +148,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
 
                Hint: remove all redundant definitions.
                """,
-               position: 0,
+               position: {0, 24},
                severity: :warning
              }
            ]
@@ -170,7 +176,10 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
     component =
       quote do
         alias MacroWithRequiredPropTitle, as: Macro
-        ~F[<#Macro body="body text" />]
+
+        ~F"""
+          <#Macro body="body text" />
+        """
       end
       |> compile_surface()
 
@@ -182,7 +191,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                details: nil,
                file: Path.expand("code"),
                message: "Missing required property \"title\" for component <#Macro>",
-               position: 0,
+               position: {1, 4},
                severity: :warning
              }
            ]
@@ -212,7 +221,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                    "test/support/mix/tasks/compile/surface/validate_components_test/live_view_with_external_template.sface"
                  ),
                message: "Missing required property \"value\" for component <ComponentCall>",
-               position: 1,
+               position: {1, 2},
                severity: :warning
              }
            ]
@@ -255,7 +264,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                details: nil,
                file: Path.expand("code"),
                message: "Missing required property \"list\" for component <Recursive>",
-               position: 0,
+               position: {0, 2},
                severity: :warning
              }
            ]
@@ -291,7 +300,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
 
                This way the values will be accumulated in a list.
                """,
-               position: 3,
+               position: {3, 11},
                severity: :warning
              }
            ]
@@ -328,7 +337,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                Hint: Either specify the `text` via the root property \(`<RootProp { ... }>`\) or \
                explicitly via the text property \(`<RootProp text="...">`\), but not both.
                """,
-               position: 3,
+               position: {3, 11},
                severity: :warning
              }
            ]
@@ -353,7 +362,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
 
                Hint: you can declare a root property using option `root: true`
                """,
-               position: 0,
+               position: {0, 14},
                severity: :warning
              }
            ]

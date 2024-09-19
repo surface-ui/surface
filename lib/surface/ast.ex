@@ -93,6 +93,7 @@ defmodule Surface.AST.Meta do
 
   ## Properties
       * `:line` - the line from the source code where the parent was extracted
+      * `:column` - the column from the source code where the parent was extracted
       * `:module` - the component module (e.g. `Surface.Components.LivePatch`)
       * `:node_alias` - the alias used inside the source code (e.g. `LivePatch`)
       * `:file` - the file from which the source was extracted

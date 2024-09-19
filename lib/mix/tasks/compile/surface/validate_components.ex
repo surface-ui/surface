@@ -30,6 +30,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     props = component_call.props
     node_alias = component_call.node_alias
     line = component_call.line
+    col = component_call.column
     directives = component_call.directives
 
     has_directive_props? = Enum.any?(directives, &match?(%{name: :props}, &1))
@@ -53,7 +54,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
             message
           end
 
-        warning(message, file, line)
+        warning(message, file, {line, col})
       end
     else
       []
@@ -79,7 +80,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
               Hint: you can declare a root property using option `root: true`
               """
 
-              diagnostics = [warning(message, file, attr.line) | diagnostics]
+              diagnostics = [warning(message, file, {attr.line, attr.column}) | diagnostics]
               {diagnostics, attrs}
 
             true ->
@@ -107,7 +108,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
   defp validate_attribute(attr, nil, node_alias, file, _) do
     message = "Unknown property \"#{attr.name}\" for component <#{node_alias}>"
-    warning(message, file, attr.line)
+    warning(message, file, {attr.line, attr.column})
   end
 
   defp validate_attribute(attr, prop, node_alias, file, processed_attrs) do
@@ -115,6 +116,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
     if attr_processed? and !prop.opts[:accumulate] do
       attr_line = attr.line
+      attr_col = attr.column
 
       message =
         if prop.opts[:root] == true do
@@ -138,7 +140,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
           """
         end
 
-      warning(message, file, attr_line)
+      warning(message, file, {attr_line, attr_col})
     end
   end
 
@@ -161,6 +163,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
 
     if processed_directives? do
       directive_line = directive.line
+      directive_col = directive.column
 
       message = """
       the directive `#{directive.name}` has been passed multiple times. Considering only the last value.
@@ -168,7 +171,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
       Hint: remove all redundant definitions.
       """
 
-      warning(message, file, directive_line)
+      warning(message, file, {directive_line, directive_col})
     end
   end
 
@@ -180,17 +183,16 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
     end
   end
 
-  defp warning(message, file, line) do
-    diagnostic(message, file, line, :warning)
+  defp warning(message, file, position) do
+    diagnostic(message, file, position, :warning)
   end
 
-  defp diagnostic(message, file, line, severity) do
-    # TODO: Provide column information in diagnostic once we depend on Elixir v1.13+
+  defp diagnostic(message, file, position, severity) do
     %Diagnostic{
       compiler_name: "Surface",
       file: file,
       message: message,
-      position: line,
+      position: position,
       severity: severity
     }
   end

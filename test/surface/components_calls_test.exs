@@ -8,6 +8,7 @@ defmodule Surface.ComponentsCallsTest do
                  component: Surface.Components.Raw,
                  directives: [],
                  line: 2,
+                 column: 4,
                  node_alias: "#Raw",
                  props: [],
                  dep_type: :compile
@@ -16,6 +17,7 @@ defmodule Surface.ComponentsCallsTest do
                  component: Surface.ComponentsCallsTest.Components.ComponentCall,
                  directives: [],
                  line: 1,
+                 column: 2,
                  node_alias: "ComponentCall",
                  props: [],
                  dep_type: :export
@@ -29,6 +31,7 @@ defmodule Surface.ComponentsCallsTest do
                  component: Surface.ComponentsCallsTest.Components.ComponentCall,
                  directives: [],
                  line: 1,
+                 column: 2,
                  node_alias: "ComponentCall",
                  props: [],
                  dep_type: :export
@@ -42,6 +45,7 @@ defmodule Surface.ComponentsCallsTest do
                  component: Surface.ComponentsCallsTest.Components.ComponentCall,
                  directives: [],
                  line: 1,
+                 column: 2,
                  node_alias: "ComponentCall",
                  props: [],
                  dep_type: :export

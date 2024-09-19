@@ -153,7 +153,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
       File.write!(dest_file, content)
     end
 
-    # TODO: implement disgnostics, if needed
     []
   end
 
@@ -327,7 +326,6 @@ defmodule Mix.Tasks.Compile.Surface.AssetGenerator do
   end
 
   defp warning(message, file, line) do
-    # TODO: Provide column information in diagnostic once we depend on Elixir v1.13+
     %Diagnostic{
       message: message,
       file: file,
