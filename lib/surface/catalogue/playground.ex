@@ -127,34 +127,6 @@ defmodule Surface.Catalogue.Playground do
     props_data = Module.get_attribute(env.module, :props, [])
     slots_data = Module.get_attribute(env.module, :slots, [])
 
-    existing_props_data =
-      env.module
-      |> Module.get_attribute(:assigns, [])
-      |> Enum.find(fn %{name: name} -> name == :props end)
-
-    # TODO: Remove this validation in v0.9 and inject the `data props` code directly in `common_ast`
-    props_data_ast =
-      case existing_props_data do
-        %{line: line} ->
-          message = """
-          using `data props, :map, default: %{...}` has been deprecated in favor of `@props [...]`.
-
-          Example:
-
-            @props [
-              label: "My label",
-              color: "red",
-            ]
-          """
-
-          Surface.IOHelper.warn(message, env, line)
-
-        _ ->
-          quote do
-            data props, :keyword, default: unquote(Macro.escape(props_data))
-          end
-      end
-
     common_ast =
       quote do
         @moduledoc catalogue: [
@@ -163,7 +135,7 @@ defmodule Surface.Catalogue.Playground do
                      config: unquote(config)
                    ]
 
-        unquote(props_data_ast)
+        data props, :keyword, default: unquote(Macro.escape(props_data))
         data slots, :keyword, default: unquote(slots_data)
       end
 

@@ -59,10 +59,8 @@ defmodule Surface.BaseComponent do
 
       @before_compile unquote(__MODULE__)
 
-      # TODO: Remove the alias after fix ElixirSense
-      alias Module, as: Mod
-      Mod.register_attribute(__MODULE__, :component_type, persist: true)
-      Mod.put_attribute(__MODULE__, :component_type, unquote(type))
+      Module.register_attribute(__MODULE__, :component_type, persist: true)
+      Module.put_attribute(__MODULE__, :component_type, unquote(type))
 
       @doc false
       def component_type do
