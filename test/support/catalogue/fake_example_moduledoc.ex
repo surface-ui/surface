@@ -1,7 +1,7 @@
 defmodule Surface.Catalogue.FakeExampleModuleDocFalse do
   @moduledoc false
 
-  use Surface.Catalogue.Example,
+  use Surface.Catalogue.LiveExample,
     subject: Surface.FakeComponent,
     title: "A fake example"
 

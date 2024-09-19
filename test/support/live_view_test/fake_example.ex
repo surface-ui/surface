@@ -1,5 +1,5 @@
 defmodule Surface.LiveViewTestTest.FakeExample do
-  use Surface.Catalogue.Example,
+  use Surface.Catalogue.LiveExample,
     subject: Surface.LiveViewTestTest.FakeComponent,
     title: "A fake example",
     assert: "the code"

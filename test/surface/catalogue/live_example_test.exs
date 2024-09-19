@@ -1,4 +1,4 @@
-defmodule Surface.Catalogue.ExampleTest do
+defmodule Surface.Catalogue.LiveExampleTest do
   use ExUnit.Case
 
   alias Surface.Catalogue.FakeExample
@@ -31,16 +31,16 @@ defmodule Surface.Catalogue.ExampleTest do
   test "subject is required" do
     code = """
     defmodule ExampleTest_subject_is_required do
-      use Surface.Catalogue.Example
+      use Surface.Catalogue.LiveExample
     end
     """
 
     message = """
-    code.exs:2: no subject defined for Surface.Catalogue.Example
+    code.exs:2: no subject defined for Surface.Catalogue.LiveExample
 
     Hint: You can define the subject using the :subject option. Example:
 
-      use Surface.Catalogue.Example, subject: MyApp.MyButton
+      use Surface.Catalogue.LiveExample, subject: MyApp.MyButton
     """
 
     assert_raise CompileError, message, fn ->

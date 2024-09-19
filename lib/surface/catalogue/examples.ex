@@ -1,9 +1,12 @@
 defmodule Surface.Catalogue.Examples do
   @moduledoc since: "0.8.0"
   @moduledoc ~S'''
-  A generic LiveView to create multiple examples for catalogue tools.
+  A generic LiveView to create multiple stateless examples for the Surface Catalogue.
 
   Each example must be a function component defined with the module attribute `@example`.
+
+  > **NOTE**: If your examples require manipulating state (data) through `handle_event` callbacks,
+  > use `Surface.Catalogue.LiveExample` instead.
 
   ## Options
 
