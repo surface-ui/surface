@@ -1,5 +1,6 @@
 defmodule Surface.Catalogue.LiveExample do
-  @moduledoc """
+  @moduledoc since: "0.12.0"
+  @moduledoc ~S'''
   A generic LiveView to create a single live example for the Surface Catalogue.
 
   Use `LiveExample` if your example requires manipulating state (data) through
@@ -8,21 +9,21 @@ defmodule Surface.Catalogue.LiveExample do
 
   ## Options
 
-  Besides the buit-in options provided by the LiveView itself, an Example also
+  Besides the buit-in options provided by the LiveView itself, a LiveExample also
   provides the following options:
 
     * `subject` - Required. The target component of the Example.
-
-    * `height` - Required. The height of the Example.
 
     * `catalogue` - Optional. A module that implements the `Surface.Catalogue`
       providing additional information to the catalogue tool. Usually required
       if you want to share your components as a library.
 
-    * `body` - Optional. Sets/overrides the attributes of the the Example's body tag.
-      Useful to set a different background or padding.
+    * `height` - Required. The height of the Example.
 
     * `title` - Optional. The title of the example.
+
+    * `body` - Optional. Sets/overrides the attributes of the the Example's body tag.
+      Useful to set a different background or padding.
 
     * `direction` - Optional. Defines how the example + code boxes should be displayed.
       Available values are "horizontal" or "vertical". Default is "horizontal" (side-by-side).
@@ -34,7 +35,23 @@ defmodule Surface.Catalogue.LiveExample do
     * `assert` - Optional. When using `catalogue_test/1`, generates simple `=~` assertions for
       the given text or list of texts.
 
-  """
+  ## Example
+
+      defmodule MyApp.Catalogue.MyComponentExample do
+        use Surface.Catalogue.LiveExample,
+          subject: MyApp.MyComponent,
+          title: "An example for MyComponent",
+          assert: ["Value is 0"]
+
+        data value, :integer, default: 0
+
+        def render(assigns) do
+          ~F"""
+          <MyApp.MyComponent {=value}/>
+          """
+        end
+      end
+  '''
 
   defmacro __using__(opts) do
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)

@@ -1,4 +1,4 @@
-defmodule Surface.Catalogue.FakeExample do
+defmodule Surface.Catalogue.FakeLiveExample do
   use Surface.Catalogue.LiveExample,
     subject: Surface.FakeComponent,
     title: "A fake example",

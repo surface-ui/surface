@@ -37,9 +37,9 @@ defmodule Surface.Catalogue.Examples do
       has no effect when direction is "vertical".
 
     * `assert` - Optional. When using `catalogue_test/1`, generates simple `=~` assertions for
-      the given text or list of texts. This option is available only for Examples, not Playgrounds.
+      the given text or list of texts.
 
-  When defined at the module level, i.e. passing to `use Surface.Catalogue.Example, ...`, the
+  When defined at the module level, i.e. passing to `use Surface.Catalogue.Examples, ...`, the
   options apply to all examples. Aside from `subject` and `catalogue`, options can be overridden
   at the function level using the `@example` module attribute.
 

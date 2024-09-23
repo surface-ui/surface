@@ -1,9 +1,8 @@
-defmodule Surface.Catalogue.FakeExampleModuleDocFalse do
-  @moduledoc false
-
+defmodule Surface.Catalogue.FakeLiveExampleWithUserConfig do
   use Surface.Catalogue.LiveExample,
     subject: Surface.FakeComponent,
-    title: "A fake example"
+    head_css: "User's fake css",
+    head_js: "User's fake js"
 
   def render(assigns) do
     ~F"""

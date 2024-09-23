@@ -1,29 +1,29 @@
 defmodule Surface.Catalogue.LiveExampleTest do
   use ExUnit.Case
 
-  alias Surface.Catalogue.FakeExample
-  alias Surface.Catalogue.FakeExampleModuleDocFalse
+  alias Surface.Catalogue.FakeLiveExample
+  alias Surface.Catalogue.FakeLiveExampleModuleDocFalse
 
   test "saves subject as metadata" do
-    meta = Surface.Catalogue.get_metadata(FakeExample)
+    meta = Surface.Catalogue.get_metadata(FakeLiveExample)
 
     assert meta.subject == Surface.FakeComponent
   end
 
   test "saves render/1's content as metadata" do
-    [meta] = Surface.Catalogue.get_metadata(FakeExample).examples_configs
+    [meta] = Surface.Catalogue.get_metadata(FakeLiveExample).examples_configs
 
     assert Keyword.fetch!(meta, :code) == "The code\n"
   end
 
   test "saves user config" do
-    config = Surface.Catalogue.get_config(FakeExample)
+    config = Surface.Catalogue.get_config(FakeLiveExample)
 
     assert config[:title] == "A fake example"
   end
 
   test "saves render/1's content as metadata when moduledoc is false" do
-    [meta] = Surface.Catalogue.get_metadata(FakeExampleModuleDocFalse).examples_configs
+    [meta] = Surface.Catalogue.get_metadata(FakeLiveExampleModuleDocFalse).examples_configs
 
     assert Keyword.fetch!(meta, :code) == "The code\n"
   end

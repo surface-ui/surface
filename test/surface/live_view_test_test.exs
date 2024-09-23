@@ -41,13 +41,13 @@ defmodule Surface.LiveViewTestTest do
       tests = get_test_functions(Surface.LiveViewTestTest.PassingCatalogueSubjectTests)
 
       assert tests == [
-               # Using Example
-               {:"test Surface.LiveViewTestTest.FakeExample.render", 1},
                # Using Examples
                {:"test Surface.LiveViewTestTest.FakeExamples.example_with_assert_text", 1},
                {:"test Surface.LiveViewTestTest.FakeExamples.example_with_assert_texts", 1},
                {:"test Surface.LiveViewTestTest.FakeExamples.example_with_opts", 1},
                {:"test Surface.LiveViewTestTest.FakeExamples.example_without_opts", 1},
+               # Using LiveExample
+               {:"test Surface.LiveViewTestTest.FakeLiveExample.render", 1},
                # Using Playground
                {:"test Surface.LiveViewTestTest.FakePlayground", 1}
              ]
@@ -56,15 +56,15 @@ defmodule Surface.LiveViewTestTest do
     test "passing :all" do
       tests = get_test_functions(Surface.LiveViewTestTest.PassingCatalogueAllTests)
 
-      assert {:"test Surface.LiveViewTestTest.FakeExample.render", 1} in tests
-      assert {:"test Surface.LiveViewTestTest.FakeExampleForOtherFakeComponent.render", 1} in tests
+      assert {:"test Surface.LiveViewTestTest.FakeLiveExample.render", 1} in tests
+      assert {:"test Surface.LiveViewTestTest.FakeLiveExampleForOtherFakeComponent.render", 1} in tests
     end
 
     test "passing :all with the :except option" do
       tests = get_test_functions(Surface.LiveViewTestTest.PassingCatalogueAllAndExceptTests)
 
-      assert {:"test Surface.LiveViewTestTest.FakeExample.render", 1} in tests
-      refute {:"test Surface.LiveViewTestTest.FakeExampleForOtherFakeComponent.render", 1} in tests
+      assert {:"test Surface.LiveViewTestTest.FakeLiveExample.render", 1} in tests
+      refute {:"test Surface.LiveViewTestTest.FakeLiveExampleForOtherFakeComponent.render", 1} in tests
     end
 
     test "warns when passing an undefined module (subject)" do
