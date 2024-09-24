@@ -26,9 +26,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Catalogue do
   def specs(_assigns), do: []
 
   def catalogue_requirement do
-    # ~S("~> 0.6.3")
-    # FIXME: restore catalogue requirement
-    ~S(github: "surface-ui/surface_catalogue", ref: "main")
+    ~S("~> 0.6.3")
   end
 
   defp patches(assigns) do
