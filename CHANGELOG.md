@@ -14,7 +14,7 @@
 
 ### Breaking Changes
 
-* Move all form-related components, including `<Form>` and all inputs to a separate `surface_form` project.
+* Move all form-related components, including `<Form>` and all inputs to a separate `surface_form_helpers` project.
   For more info, see [Migration Guide](https://github.com/surface-ui/surface/blob/main/MIGRATING.md#migrating-to-v012x).
 * Rename `Surface.Catalogue.Example` to `Surface.Catalogue.LiveExample` as its use now should only be required in
   live examples that update assigns through `handle_event` calls
