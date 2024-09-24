@@ -4,7 +4,7 @@ defmodule Surface.Components.LiveRedirect do
   >
   > This component has been deprecated in favor of liveview's built-in `<.link>`
   > and will be removed in `v0.13`. See https://hexdocs.pm/phoenix_live_view/live-navigation.html for
-  > more info usage.
+  > more info and usage.
 
   Defines a link that will **redirect** to a new LiveView.
 

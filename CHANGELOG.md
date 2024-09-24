@@ -1,8 +1,25 @@
 # Changelog
 
-## v0.12.0 (yyyy-mm-dd)
+## v0.12.0 (2024-09-24)
 
-This version moves all Form helpers to a [separate library](https://github.com/surface-ui/surface_form). Form Helpers are no longer used in new apps from Surface v0.12. Older applications who wish to maintain compatibility, add `{:surface_form, "~> 0.1.0"}` to your `mix.exs`.
+* Add column information to diagnostics to improve error/warning messages during compiler validation
+* Add compiler option `:generate_assets` to switch on/off component-related CSS/JS generation
+* Fix warning line when using  `@deprecated` on function components
+* Raise compile error when catalogue module cannot be found
+
+### Deprecations
+
+* Deprecate components `<LivePatch>`, `<LiveRedirect>` and `<Link>`, in favor of `<.link>`
+* Deprecate component `<Context>` as support for scoped-aware context is planned to be removed in `v0.13`.
+
+### Breaking Changes
+
+* Move all form-related components, including `<Form>` and all inputs to a separate `surface_form` project.
+  For more info, see [Migration Guide](https://github.com/surface-ui/surface/blob/main/MIGRATING.md#migrating-to-v012x).
+* Rename `Surface.Catalogue.Example` to `Surface.Catalogue.LiveExample` as its use now should only be required in
+  live examples that update assigns through `handle_event` calls
+* Remove deprecated slot attributes `for`, `name` and `ìndex`
+* Remove deprecated slot `:args` option and directive
 
 ## v0.11.5 (2024-09-04)
 

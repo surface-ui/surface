@@ -1,3 +1,36 @@
+# Migrating to `v0.12.x`
+
+### Forms
+
+Component `<Form>` and all its related input components (`<TextInput>`, `<Checkbox>`, etc.) have been
+deprecated and moved to a separate project called `surface_form_helpers`. The reason those components were created
+in the first place was to add support for [scope-aware contexts](https://www.surface-ui.org/contexts#scope-aware-context)
+to forms. Since this feature has been deprecated due to the lack of built-in support in Liveview, we strongly
+recommend using the new built-in [<.form>](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#form/)
+component, along with [Phoenix.HTML.Form](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html) and
+[Phoenix.HTML.FormField](https://hexdocs.pm/phoenix_html/Phoenix.HTML.FormField.html) structs. This new Liveview API
+is way more efficient regarding diff-tracking and should be the default way to desing forms.
+
+If you're not able to update all your forms at once, `surface_form_helpers` can be used as a safe fallback so you can
+gradually replace them.
+
+### Using `surface_form_helpers`
+
+```elixir
+def deps do
+  [
+    {:surface_form_helpers, "~> 0.1.0"}
+  ]
+end
+```
+
+### Surface Catalogue
+
+In case you're using `surface_catalogue` and have examples using `Surface.Catalogue.Example`, you need to
+rename those with `Surface.Catalogue.LiveExample`. Pay attention that you should use `LiveExample` mostly
+if your example requires manipulating state (data) through `handle_event` callbacks. For stateless examples,
+use `Surface.Catalogue.Examples` instead, as it allows defining multiple examples on a single module.
+
 # Migrating from `v0.7.x` to `v0.8.x`
 
 Historically, most of the updates that require changes in your code, can be automatically
