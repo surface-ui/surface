@@ -123,7 +123,6 @@ defmodule Mix.Tasks.Surface.Init.FilePatchers.Phoenix do
       esbuild_patcher ->
         esbuild_patcher
         |> halt_if(&find_keyword(&1, [:catalogue]), :already_patched)
-        |> find_keyword_value([:default])
         |> replace_code(
           &"""
           #{&1},

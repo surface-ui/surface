@@ -58,8 +58,8 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JsHooks do
         &FilePatchers.JS.add_import(&1, ~S[import Hooks from "./_hooks"]),
         &FilePatchers.Text.replace_line_text(
           &1,
-          ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})],
-          ~S[let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})]
+          ~S[  params: {_csrf_token: csrfToken}],
+          ~s[  hooks: Hooks,\n  params: {_csrf_token: csrfToken}]
         )
       ]
     }
