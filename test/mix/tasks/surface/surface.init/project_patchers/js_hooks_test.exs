@@ -14,7 +14,10 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JSHooksTest do
       import topbar from "../vendor/topbar"
 
       let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-      let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+      let liveSocket = new LiveSocket("/live", Socket, {
+        longPollFallbackMs: 2500,
+        params: {_csrf_token: csrfToken}
+      })
 
       // connect if there are any LiveViews on the page
       liveSocket.connect()
@@ -22,7 +25,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JSHooksTest do
       window.liveSocket = liveSocket
       """
 
-      {:patched, updated_code} = Patcher.patch_code(code, js_hooks())
+      {_patched, updated_code} = Patcher.patch_code(code, js_hooks())
 
       assert updated_code == """
              // We import the CSS which is extracted to its own file by esbuild.
@@ -33,7 +36,11 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JSHooksTest do
              import Hooks from "./_hooks"
 
              let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-             let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+             let liveSocket = new LiveSocket("/live", Socket, {
+               longPollFallbackMs: 2500,
+               hooks: Hooks,
+               params: {_csrf_token: csrfToken}
+             })
 
              // connect if there are any LiveViews on the page
              liveSocket.connect()
@@ -52,7 +59,11 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.JSHooksTest do
       import Hooks from "./_hooks"
 
       let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-      let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+      let liveSocket = new LiveSocket("/live", Socket, {
+        longPollFallbackMs: 2500,
+        hooks: Hooks,
+        params: {_csrf_token: csrfToken}
+      })
 
       // connect if there are any LiveViews on the page
       liveSocket.connect()

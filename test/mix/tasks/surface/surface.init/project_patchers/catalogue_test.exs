@@ -228,7 +228,9 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
     end
 
     test "add catalogue entry if esbuild config has already been set" do
-      code = ~S"""
+      profile = Enum.random(["default", "surface_init_test"])
+
+      code = ~s"""
       import Config
 
       # Use Jason for JSON parsing in Phoenix
@@ -237,7 +239,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
       # Configure esbuild (the version is required)
       config :esbuild,
         version: "0.14.10",
-        default: [
+        #{profile}: [
           args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
           cd: Path.expand("../assets", __DIR__),
           env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
@@ -245,12 +247,12 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
 
       # Import environment specific config. This must remain at the bottom
       # of this file so it overrides the configuration defined above.
-      import_config "#{config_env()}.exs"
+      import_config "\#{config_env()}.exs"
       """
 
       {:patched, updated_code} = Patcher.patch_code(code, configure_catalogue_esbuild())
 
-      assert updated_code == ~S"""
+      assert updated_code == ~s"""
              import Config
 
              # Use Jason for JSON parsing in Phoenix
@@ -259,7 +261,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
              # Configure esbuild (the version is required)
              config :esbuild,
                version: "0.14.10",
-               default: [
+               #{profile}: [
                  args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
                  cd: Path.expand("../assets", __DIR__),
                  env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
@@ -272,7 +274,7 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.CatalogueTest do
 
              # Import environment specific config. This must remain at the bottom
              # of this file so it overrides the configuration defined above.
-             import_config "#{config_env()}.exs"
+             import_config "\#{config_env()}.exs"
              """
     end
 

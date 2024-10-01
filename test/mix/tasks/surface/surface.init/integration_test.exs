@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Surface.Init.IntegrationTest do
 
   alias Mix.Tasks.Surface.Init.FilePatchers
 
-  @phx_new_version "1.7.10"
+  @phx_new_version "1.7.14"
 
   setup_all do
     {template_status, template_project_folder} = build_test_project_template("surface_init_test")
