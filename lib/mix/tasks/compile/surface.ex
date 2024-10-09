@@ -201,6 +201,10 @@ defmodule Mix.Tasks.Compile.Surface do
     end
   end
 
+  defp print_diagnostic(message, :warning, file, {line, _column}) do
+    print_diagnostic(message, :warning, file, line)
+  end
+
   defp print_diagnostic(message, :warning, file, line) do
     # Use IO.warn(message, file: ..., line: ...) on Elixir v1.14+
     rel_file = file |> Path.relative_to_cwd() |> to_charlist()
