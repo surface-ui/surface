@@ -196,9 +196,14 @@ defmodule Mix.Tasks.Compile.Surface do
   end
 
   defp print_diagnostics(diagnostics) do
+    IO.inspect(diagnostics)
     for %Diagnostic{message: message, severity: severity, file: file, position: position} <- diagnostics do
       print_diagnostic(message, severity, file, position)
     end
+  end
+
+  defp print_diagnostic(message, :warning, file, {line, _column}) do
+    print_diagnostic(message, :warning, file, line)
   end
 
   defp print_diagnostic(message, :warning, file, line) do
