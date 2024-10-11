@@ -160,6 +160,10 @@ defmodule Mix.Tasks.Compile.Surface do
     :variants_prefix
   ]
 
+  @definitions_opts [
+    :generate_definitions
+  ]
+
   @doc false
   def run(args) do
     # Do nothing if it's a dependency. We only have to run it once for the main project
@@ -169,12 +173,14 @@ defmodule Mix.Tasks.Compile.Surface do
       {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
       opts = Application.get_env(:surface, :compiler, [])
       asset_opts = Keyword.take(opts, @assets_opts)
+      definitions_opts = Keyword.take(opts, @definitions_opts)
       asset_components = Surface.components()
       project_components = Surface.components(only_current_project: true)
 
       [
         Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
-        Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
+        Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts),
+        Mix.Tasks.Compile.Surface.Definitions.run(asset_components, definitions_opts)
       ]
       |> List.flatten()
       |> handle_diagnostics(compile_opts)

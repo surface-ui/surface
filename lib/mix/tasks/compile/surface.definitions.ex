@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Compile.Surface.Definitions do
           props: get_props(component),
           source: Path.relative_to_cwd(to_string(component.module_info()[:compile][:source]))
         }
+
         {inspect(component), spec}
       end
 
@@ -53,6 +54,7 @@ defmodule Mix.Tasks.Compile.Surface.Definitions do
     case Code.fetch_docs(module) do
       {:docs_v1, _moduledoc_anno, _language, "text/markdown", %{"en" => docs}, _meta, _docs} ->
         docs
+
       _ ->
         nil
     end
@@ -97,5 +99,4 @@ defmodule Mix.Tasks.Compile.Surface.Definitions do
 
   defp ensure_loaded?(Elixir), do: false
   defp ensure_loaded?(mod), do: match?({:module, _}, Code.ensure_compiled(mod))
-
 end
