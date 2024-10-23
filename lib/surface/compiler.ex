@@ -289,9 +289,10 @@ defmodule Surface.Compiler do
 
         {:error, {message, details, line, column}, meta} ->
           details = if details, do: "\n\n" <> details, else: ""
-          IOHelper.warn(message <> details, compile_meta.caller, meta.file, {line, column})
-          # TODO: check if it's better to raise a compile error
-          # IOHelper.compile_error(message, details, meta.file, {line, column})
+          # TODO: turn it back as a warning when using @after_verify in Elixir >= 0.14.
+          # Make sure to check if the genarated `require <component>.__info__()` doesn't get called,
+          # raising Elixir's CompileError.
+          IOHelper.compile_error(message, details, meta.file, {line, column})
           %AST.Error{message: message, meta: meta}
       end
     end

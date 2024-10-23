@@ -801,11 +801,25 @@ defmodule Surface.APISyncTest do
             end
           end)
 
-        assert {%CompileError{},
-                [
-                  %{message: "cannot render <NonExisting> (module NonExisting could not be loaded)" <> _},
-                  %{message: "module NonExisting is not loaded and could not be found"}
-                ]} = diagnostics
+        assert {%Surface.CompileError{
+                  description: "cannot render <NonExisting> (module NonExisting could not be loaded)",
+                  hint: """
+
+
+                  Hint: make sure module `NonExisting` can be successfully compiled.
+
+                  If the module is namespaced, you can use its full name. For instance:
+
+                    <MyProject.Components.NonExisting>
+
+                  or add a proper alias so you can use just `<NonExisting>`:
+
+                    alias MyProject.Components.NonExisting
+                  """,
+                  file: "code.exs",
+                  line: 7,
+                  column: 8
+                }, []} = diagnostics
       end
     else
       # Remove this test (and the `if`) whenever we drop support for Elixir < 1.15
@@ -829,23 +843,12 @@ defmodule Surface.APISyncTest do
         end
         """
 
-        # NOTE: there's a bug in Elixir that report the error with the wrong line
-        # in versions <= 1.7. See https://github.com/elixir-lang/elixir/issues/13542
-        # for details.
-        # TODO: Keep only code.exs:7:
+        error_message = ~r"code.exs:7: cannot render <NonExisting> \(module NonExisting could not be loaded\)"
 
-        error_message = "code.exs:7: module NonExisting is not loaded and could not be found"
-
-        output =
-          capture_io(:standard_error, fn ->
-            assert_raise(CompileError, error_message, fn ->
-              {{:module, _, _, _}, _} =
-                Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1}) |> IO.inspect()
-            end)
-          end)
-
-        assert output =~ ~r"cannot render <NonExisting> \(module NonExisting could not be loaded\)"
-        assert output =~ ~r"  code.exs:7:"
+        assert_raise(Surface.CompileError, error_message, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1}) |> IO.inspect()
+        end)
       end
     end
   end

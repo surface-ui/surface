@@ -13,7 +13,7 @@ defmodule Surface.CompileError do
 
   """
 
-  @support_snippet Version.match?(System.version(), ">= 1.16.0")
+  @support_snippet Version.match?(System.version(), ">= 1.17.0")
 
   defexception [:file, :line, :column, :snippet, :hint, description: "compile error"]
 

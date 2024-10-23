@@ -141,7 +141,7 @@ defmodule Surface.BaseComponent do
               # module. This way if the missing/failing module is created/fixed,
               # Elixir will recompile this file.
               # NOTE: there's a bug in Elixir that report the error with the wrong line
-              # in versions <= 1.7. See https://github.com/elixir-lang/elixir/issues/13542
+              # in versions <= 1.17. See https://github.com/elixir-lang/elixir/issues/13542
               # for details.
               {imports,
                [
