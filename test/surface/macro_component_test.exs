@@ -284,7 +284,7 @@ defmodule Surface.MacroComponentTest do
 
       assert_raise(
         Surface.CompileError,
-        ~r/code:1: cannot render \<#NonExisting\> \(module NonExisting could not be loaded\)/,
+        ~r/code:1(:2)?: cannot render \<#NonExisting\> \(module NonExisting could not be loaded\)/,
         fn ->
           compile_surface(code)
         end

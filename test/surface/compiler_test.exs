@@ -1021,7 +1021,7 @@ defmodule Surface.CompilerSyncTest do
 
     assert_raise(
       Surface.CompileError,
-      ~r/nofile:2(:\d)?: cannot render <But> \(module But could not be loaded\)/,
+      ~r/nofile:2(:4)?: cannot render <But> \(module But could not be loaded\)/,
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

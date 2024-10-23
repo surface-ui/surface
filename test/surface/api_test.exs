@@ -843,7 +843,7 @@ defmodule Surface.APISyncTest do
         end
         """
 
-        error_message = ~r"code.exs:7: cannot render <NonExisting> \(module NonExisting could not be loaded\)"
+        error_message = ~r"code.exs:7(:8)?: cannot render <NonExisting> \(module NonExisting could not be loaded\)"
 
         assert_raise(Surface.CompileError, error_message, fn ->
           {{:module, _, _, _}, _} =
