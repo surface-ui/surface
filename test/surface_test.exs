@@ -69,7 +69,7 @@ defmodule SurfaceTest do
     Available variable: "message"
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       quote_surface line: 1, file: "code.ex" do
         ~F"""
         <div>
@@ -87,7 +87,7 @@ defmodule SurfaceTest do
     The expression to be unquoted must be written as `^var`, where `var` is an existing variable.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       quote_surface line: 1, file: "code.ex" do
         ~F"""
         <div>
@@ -111,7 +111,7 @@ defmodule SurfaceTest do
 
     message = "code.exs:1: the code to be quoted must be wrapped in a `~F` sigil."
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
@@ -128,7 +128,7 @@ defmodule SurfaceTest do
         """
       end
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end

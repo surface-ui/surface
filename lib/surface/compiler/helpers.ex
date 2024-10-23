@@ -291,7 +291,7 @@ defmodule Surface.Compiler.Helpers do
 
   defp hint_for_unloaded_module(node_alias) do
     """
-    Hint: Make sure module `#{node_alias}` can be successfully compiled.
+    Hint: make sure module `#{node_alias}` can be successfully compiled.
 
     If the module is namespaced, you can use its full name. For instance:
 

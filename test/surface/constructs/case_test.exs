@@ -81,7 +81,7 @@ defmodule Surface.Constructs.CaseTest do
 
     message = ~S(code:2: cannot have content between {#case ...} and {#match ...})
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -100,7 +100,7 @@ defmodule Surface.Constructs.CaseTest do
     message =
       ~S(code:2: no {#match} sub-block defined. A {#case} block must include at least one {#match ...} sub-block.)
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end

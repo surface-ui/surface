@@ -185,7 +185,7 @@ defmodule Surface.TransformTest do
     """
 
     assert_raise(
-      CompileError,
+      Surface.CompileError,
       "nofile:1: invalid value for property \"prop\". Expected a :list, got: \"string\".",
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)

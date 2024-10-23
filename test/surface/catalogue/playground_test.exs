@@ -36,7 +36,7 @@ defmodule Surface.Catalogue.PlaygroundTest do
       use Surface.Catalogue.Playground, subject: MyApp.MyButton
     """
 
-    assert_raise CompileError, message, fn ->
+    assert_raise Surface.CompileError, message, fn ->
       Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end
   end
