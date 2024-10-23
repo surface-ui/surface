@@ -210,7 +210,7 @@ defmodule Surface.ComponentTest do
 
     message = "code.exs:2: invalid value for option :slot. Expected a string, got: {1, 2}"
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
@@ -335,10 +335,8 @@ defmodule Surface.ComponentTest do
                  """
         end)
 
-      assert output =~ ~r"""
-             cannot render <Enum> \(module Enum is not a component\)
-               code:2:\
-             """
+      assert output =~ "cannot render <Enum> (module Enum is not a component)"
+      assert output =~ "code:2:"
     end
   end
 

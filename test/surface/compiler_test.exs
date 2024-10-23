@@ -1024,7 +1024,7 @@ defmodule Surface.CompilerSyncTest do
     assert message =~ """
            cannot render <But> (module But could not be loaded)
 
-           Hint: Make sure module `But` can be successfully compiled.
+           Hint: make sure module `But` can be successfully compiled.
 
            If the module is namespaced, you can use its full name. For instance:
 

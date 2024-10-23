@@ -123,7 +123,9 @@ defmodule Surface.BaseComponent do
     components = Enum.uniq_by(components_calls, & &1.component)
 
     {imports, requires} =
-      for %{component: mod, line: line, dep_type: dep_type} <- components, mod != env.module, reduce: {[], []} do
+      for %{component: mod, file: file, line: line, dep_type: dep_type} <- components,
+          mod != env.module,
+          reduce: {[], []} do
         {imports, requires} ->
           case dep_type do
             :export ->
@@ -135,9 +137,15 @@ defmodule Surface.BaseComponent do
                ], requires}
 
             :compile ->
+              # We use `require` for macros or when there's an error loading the
+              # module. This way if the missing/failing module is created/fixed,
+              # Elixir will recompile this file.
+              # NOTE: there's a bug in Elixir that report the error with the wrong line
+              # in versions <= 1.7. See https://github.com/elixir-lang/elixir/issues/13542
+              # for details.
               {imports,
                [
-                 quote line: line do
+                 quote file: file, line: line do
                    require(unquote(mod)).__info__(:module)
                  end
                  | requires

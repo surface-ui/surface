@@ -3,7 +3,7 @@ defmodule Surface.ComponentsCallsTest do
 
   describe "__component_calls__/0" do
     test "on Component" do
-      assert Surface.ComponentsCallsTest.Components.ComponentWithExternalTemplate.__components_calls__() == [
+      assert [
                %{
                  component: Surface.Components.Raw,
                  directives: [],
@@ -11,7 +11,8 @@ defmodule Surface.ComponentsCallsTest do
                  column: 4,
                  node_alias: "#Raw",
                  props: [],
-                 dep_type: :compile
+                 dep_type: :compile,
+                 file: file
                },
                %{
                  component: Surface.ComponentsCallsTest.Components.ComponentCall,
@@ -20,13 +21,16 @@ defmodule Surface.ComponentsCallsTest do
                  column: 2,
                  node_alias: "ComponentCall",
                  props: [],
-                 dep_type: :export
+                 dep_type: :export,
+                 file: file
                }
-             ]
+             ] = Surface.ComponentsCallsTest.Components.ComponentWithExternalTemplate.__components_calls__()
+
+      assert file =~ "test/support/components_calls_test/component_with_external_template.sface"
     end
 
     test "on LiveComponent" do
-      assert Surface.ComponentsCallsTest.Components.LiveComponentWithExternalTemplate.__components_calls__() == [
+      assert [
                %{
                  component: Surface.ComponentsCallsTest.Components.ComponentCall,
                  directives: [],
@@ -34,13 +38,16 @@ defmodule Surface.ComponentsCallsTest do
                  column: 2,
                  node_alias: "ComponentCall",
                  props: [],
-                 dep_type: :export
+                 dep_type: :export,
+                 file: file
                }
-             ]
+             ] = Surface.ComponentsCallsTest.Components.LiveComponentWithExternalTemplate.__components_calls__()
+
+      assert file =~ "test/support/components_calls_test/live_component_with_external_template.sface"
     end
 
     test "on LiveView" do
-      assert Surface.ComponentsCallsTest.Components.LiveViewWithExternalTemplate.__components_calls__() == [
+      assert [
                %{
                  component: Surface.ComponentsCallsTest.Components.ComponentCall,
                  directives: [],
@@ -48,9 +55,12 @@ defmodule Surface.ComponentsCallsTest do
                  column: 2,
                  node_alias: "ComponentCall",
                  props: [],
-                 dep_type: :export
+                 dep_type: :export,
+                 file: file
                }
-             ]
+             ] = Surface.ComponentsCallsTest.Components.LiveViewWithExternalTemplate.__components_calls__()
+
+      assert file =~ "test/support/components_calls_test/live_view_with_external_template.sface"
     end
   end
 

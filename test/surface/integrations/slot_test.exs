@@ -789,7 +789,7 @@ defmodule Surface.SlotTest do
     Hint: choose a different name.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1007,7 +1007,7 @@ defmodule Surface.SlotTest do
     got: {"a_string", "other_string"}.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code, assigns)
     end)
   end
@@ -1026,7 +1026,7 @@ defmodule Surface.SlotTest do
     code:1: no slot "default" defined in parent component <OuterWithoutDefaultSlot>
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1049,7 +1049,7 @@ defmodule Surface.SlotTest do
     got: {a, info: [my_info]}.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1069,7 +1069,7 @@ defmodule Surface.SlotTest do
     got: {@default, a, b}.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1089,7 +1089,7 @@ defmodule Surface.SlotTest do
     got: {@default, a, info: "Info from slot"}.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1256,7 +1256,7 @@ defmodule Surface.SlotSyncTest do
     Please declare the slot in the parent component or rename the value in the `:slot` option.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1282,7 +1282,7 @@ defmodule Surface.SlotSyncTest do
     Available slot: "col"
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1309,7 +1309,7 @@ defmodule Surface.SlotSyncTest do
     Available slots: "default", "header" and "footer"
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1344,7 +1344,7 @@ defmodule Surface.SlotSyncTest do
     For instance: `slot footer`\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1372,7 +1372,7 @@ defmodule Surface.SlotSyncTest do
     Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1473,7 +1473,7 @@ defmodule Surface.SlotSyncTest do
     code:1: no slot "default" defined in parent component <OuterWithoutDefaultSlot>
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1539,7 +1539,7 @@ defmodule Surface.SlotSyncTest do
     Slots only accept the root prop, `generator_value`, `:if` and `:for`.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1570,7 +1570,7 @@ defmodule Surface.SlotSyncTest do
     Slots only accept the root prop, `generator_value`, `:if` and `:for`.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1600,7 +1600,7 @@ defmodule Surface.SlotSyncTest do
     Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1630,7 +1630,7 @@ defmodule Surface.SlotSyncTest do
     Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1715,9 +1715,9 @@ defmodule Surface.SlotSyncTest do
         compile_surface(code, %{})
       end)
 
-    assert output =~ ~r"""
-           cannot render <div> \(slot entries are not allowed as children of HTML elements. Did you mean \<\#slot \/\>\?\)
-             code:2:\
-           """
+    assert output =~
+             "cannot render <div> (slot entries are not allowed as children of HTML elements. Did you mean <#slot />?)"
+
+    assert output =~ "code:2:"
   end
 end

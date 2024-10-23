@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponents do
       missing_props_names = required_props_names -- existing_props_names
 
       for prop_name <- missing_props_names do
-        message = "Missing required property \"#{prop_name}\" for component <#{node_alias}>"
+        message = "missing required property \"#{prop_name}\" for component <#{node_alias}>"
 
         message =
           if prop_name == :id and Helpers.is_stateful_component(module) do

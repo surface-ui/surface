@@ -748,7 +748,7 @@ defmodule Surface.Compiler.ParserTest do
       Examples: `<div {=@class}>` or `<div {=class}>`
       """
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end
 
     test "raise on assigning {= ...} to an attribute" do
@@ -765,7 +765,7 @@ defmodule Surface.Compiler.ParserTest do
       Example: <div {=@class}>
       """
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end
   end
 
@@ -997,7 +997,7 @@ defmodule Surface.Compiler.ParserTest do
 
       message = "nofile:2: missing expression for block {#if ...}"
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
 
       code = """
       1
@@ -1008,7 +1008,7 @@ defmodule Surface.Compiler.ParserTest do
 
       message = "nofile:2: missing expression for block {#case ...}"
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end
 
     test "raise error on missing closing block" do

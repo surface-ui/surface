@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                compiler_name: "Surface",
                details: nil,
                file: Path.expand("code"),
-               message: "Missing required property \"title\" for component <RequiredPropTitle>",
+               message: "missing required property \"title\" for component <RequiredPropTitle>",
                position: {0, 2},
                severity: :warning
              }
@@ -118,7 +118,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                details: nil,
                file: Path.expand("code"),
                message: ~S"""
-               Missing required property "id" for component <LiveComponentHasRequiredIdProp>
+               missing required property "id" for component <LiveComponentHasRequiredIdProp>
 
                Hint: Components using `Surface.LiveComponent` automatically define a required `id` prop to make them stateful.
                If you meant to create a stateless component, you can switch to `use Surface.Component`.
@@ -190,7 +190,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                compiler_name: "Surface",
                details: nil,
                file: Path.expand("code"),
-               message: "Missing required property \"title\" for component <#Macro>",
+               message: "missing required property \"title\" for component <#Macro>",
                position: {1, 4},
                severity: :warning
              }
@@ -220,7 +220,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                  Path.expand(
                    "test/support/mix/tasks/compile/surface/validate_components_test/live_view_with_external_template.sface"
                  ),
-               message: "Missing required property \"value\" for component <ComponentCall>",
+               message: "missing required property \"value\" for component <ComponentCall>",
                position: {1, 2},
                severity: :warning
              }
@@ -263,7 +263,7 @@ defmodule Mix.Tasks.Compile.Surface.ValidateComponentsTest do
                compiler_name: "Surface",
                details: nil,
                file: Path.expand("code"),
-               message: "Missing required property \"list\" for component <Recursive>",
+               message: "missing required property \"list\" for component <Recursive>",
                position: {0, 2},
                severity: :warning
              }

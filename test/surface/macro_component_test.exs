@@ -211,7 +211,7 @@ defmodule Surface.MacroComponentTest do
     assigns, cannot be evaluated as they are not available during compilation.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         compile_surface(code, %{class: "markdown"})
       end)

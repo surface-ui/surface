@@ -193,7 +193,7 @@ defmodule Surface.DirectivesTest do
       Example: <div {...@attrs}>
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code, assigns)
       end)
     end
@@ -322,7 +322,7 @@ defmodule Surface.DirectivesTest do
       Example: <div {...@attrs}>
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code, assigns)
       end)
     end
@@ -389,7 +389,7 @@ defmodule Surface.DirectivesTest do
       code:2: unknown modifier "unknown" for directive :for\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code, assigns)
       end)
     end
@@ -411,7 +411,7 @@ defmodule Surface.DirectivesTest do
       code:2: cannot apply modifier "with_index" on generators with multiple clauses\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code, assigns)
       end)
     end
@@ -1126,7 +1126,7 @@ defmodule Surface.DirectivesTest do
     end
 
     test "passing unsupported types" do
-      assert_raise(CompileError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
+      assert_raise(Surface.CompileError, ~r(invalid value for key ":map" in attribute ":values".), fn ->
         """
         <div :values={map: %{}, tuple: {}}>
           Some Text

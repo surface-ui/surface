@@ -938,7 +938,7 @@ defmodule Surface.Components.ContextTest do
       got: {ContextTest.Outer, field: [field]}.\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
       end)
     end
@@ -954,7 +954,7 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
+      assert_raise(Surface.CompileError, ~r/code:2: invalid value for property "get"/, fn ->
         compile_surface(code)
       end)
     end
@@ -970,7 +970,7 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
+      assert_raise(Surface.CompileError, ~r/code:2: invalid value for property "get"/, fn ->
         compile_surface(code)
       end)
     end
@@ -995,7 +995,7 @@ defmodule Surface.Components.ContextTest do
       got: {ContextTest.Outer, 123}.\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
       end)
     end
@@ -1011,7 +1011,7 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
+      assert_raise(Surface.CompileError, ~r/code:2: invalid value for property "put"/, fn ->
         compile_surface(code)
       end)
     end
@@ -1027,7 +1027,7 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
+      assert_raise(Surface.CompileError, ~r/code:2: invalid value for property "put"/, fn ->
         compile_surface(code)
       end)
     end
@@ -1195,7 +1195,7 @@ defmodule Surface.Components.ContextTest do
     it's placed inside a parent component that propagates context values through its slots.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
@@ -1239,7 +1239,7 @@ defmodule Surface.Components.ContextTest do
         * `Surface.Components.Context` at line 8
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
@@ -1286,7 +1286,7 @@ defmodule Surface.Components.ContextTest do
         * `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
