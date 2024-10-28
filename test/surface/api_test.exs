@@ -628,7 +628,7 @@ defmodule Surface.APITest do
 end
 
 defmodule Surface.APISyncTest do
-  use ExUnit.Case
+  use Surface.Case
   import ExUnit.CaptureIO
 
   defmodule ComponentWithRequiredDefaultSlot do
