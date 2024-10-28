@@ -781,15 +781,16 @@ defmodule Surface.SlotTest do
         """
       end
 
-    message = """
-    code:2: cannot use :let to redefine variable from the component's generator.
+    message = ~r"""
+    code:2:
+    #{maybe_ansi("error:")} cannot use :let to redefine variable from the component's generator\.
 
     variables `i` and `j` already defined in `{i, j} <- @items` at code:1
 
     Hint: choose a different name.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1001,13 +1002,14 @@ defmodule Surface.SlotTest do
         """
       end
 
-    message = """
-    code:3: invalid value for directive :let. \
+    message = ~r"""
+    code:3:
+    #{maybe_ansi("error:")} invalid value for directive :let\. \
     Expected a pattern to be matched by the slot argument, \
-    got: {"a_string", "other_string"}.\
+    got: {"a_string", "other_string"}\.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code, assigns)
     end)
   end
@@ -1022,11 +1024,12 @@ defmodule Surface.SlotTest do
         """
       end
 
-    message = """
-    code:1: no slot "default" defined in parent component <OuterWithoutDefaultSlot>
+    message = ~r"""
+    code:1:
+    #{maybe_ansi("error:")} no slot "default" defined in parent component <OuterWithoutDefaultSlot>
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1043,13 +1046,14 @@ defmodule Surface.SlotTest do
         """
       end
 
-    message = """
-    code:2: invalid value for directive :let. \
+    message = ~r"""
+    code:2:
+    #{maybe_ansi("error:")} invalid value for directive :let\. \
     Expected a pattern to be matched by the slot argument, \
-    got: {a, info: [my_info]}.\
+    got: {a, info: \[my_info\]}\.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1063,13 +1067,14 @@ defmodule Surface.SlotTest do
         """
       end
 
-    message = """
-    code:2: invalid value for attribute "root". \
+    message = ~r"""
+    code:2:
+    #{maybe_ansi("error:")} invalid value for attribute "root"\. \
     Expected the slot and a single expression to be given as the slot argument, \
-    got: {@default, a, b}.\
+    got: {@default, a, b}\.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1083,13 +1088,14 @@ defmodule Surface.SlotTest do
         """
       end
 
-    message = """
-    code:2: invalid value for attribute "root". \
+    message = ~r"""
+    code:2:
+    #{maybe_ansi("error:")} invalid value for attribute "root"\. \
     Expected the slot and a single expression to be given as the slot argument, \
-    got: {@default, a, info: "Info from slot"}.\
+    got: {@default, a, info: "Info from slot"}\.\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1248,15 +1254,16 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    message = """
-    code:2: The slotable component <Surface.SlotTest.InnerData> has the `:slot` option set to `inner`.
+    message = ~r"""
+    code:2:
+    #{maybe_ansi("error:")} The slotable component <Surface.SlotTest.InnerData> has the `:slot` option set to `inner`\.
 
-    That slot name is not declared in parent component <StatefulComponent>.
+    That slot name is not declared in parent component <StatefulComponent>\.
 
-    Please declare the slot in the parent component or rename the value in the `:slot` option.
+    Please declare the slot in the parent component or rename the value in the `:slot` option\.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1272,17 +1279,18 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    message = """
-    code:2: The slotable component <Surface.SlotTest.InnerData> has the `:slot` option set to `inner`.
+    message = ~r"""
+    code:2:
+    #{maybe_ansi("error:")} The slotable component <Surface.SlotTest.InnerData> has the `:slot` option set to `inner`\.
 
-    That slot name is not declared in parent component <Grid>.
+    That slot name is not declared in parent component <Grid>\.
 
-    Please declare the slot in the parent component or rename the value in the `:slot` option.
+    Please declare the slot in the parent component or rename the value in the `:slot` option\.
 
     Available slot: "col"
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1301,15 +1309,16 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    message = """
-    code:4: no slot "foot" defined in parent component <OuterWithNamedSlot>
+    message = ~r"""
+    code:4:
+    #{maybe_ansi("error:")} no slot "foot" defined in parent component <OuterWithNamedSlot>
 
-    Did you mean "footer"?
+    Did you mean "footer"\?
 
     Available slots: "default", "header" and "footer"
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1335,16 +1344,17 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:12: no slot `footer` defined in the component `Surface.SlotSyncTest.TestComponentWithoutDeclaringSlots`
+    code:12:
+    #{maybe_ansi("error:")} no slot `footer` defined in the component `Surface.SlotSyncTest.TestComponentWithoutDeclaringSlots`
 
     Available slots: "default" and "header"\
 
-    Hint: You can define slots using the `slot` macro.\
+    Hint: You can define slots using the `slot` macro\.\
 
     For instance: `slot footer`\
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1367,12 +1377,13 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:7: no slot `default` defined in the component `Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
+    code:7:
+    #{maybe_ansi("error:")} no slot `default` defined in the component `Surface.SlotSyncTest.TestComponentWithShortSyntaxButWithoutDeclaringDefaultSlot`
 
-    Please declare the default slot using `slot default` in order to use the `<#slot />` notation.
+    Please declare the default slot using `slot default` in order to use the `<#slot />` notation\.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(component_code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1469,11 +1480,12 @@ defmodule Surface.SlotSyncTest do
         """
       end
 
-    message = """
-    code:1: no slot "default" defined in parent component <OuterWithoutDefaultSlot>
+    message = ~r"""
+    code:1:
+    #{maybe_ansi("error:")} no slot "default" defined in parent component <OuterWithoutDefaultSlot>
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end
@@ -1534,12 +1546,13 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:10: invalid directive `:attrs` for <#slot>.
+    code:10:
+    #{maybe_ansi("error:")} invalid directive `:attrs` for <#slot>\.
 
-    Slots only accept the root prop, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `generator_value`, `:if` and `:for`\.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1565,12 +1578,13 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:11: invalid attribute `let` for <#slot>.
+    code:11:
+    #{maybe_ansi("error:")} invalid attribute `let` for <#slot>\.
 
-    Slots only accept the root prop, `generator_value`, `:if` and `:for`.
+    Slots only accept the root prop, `generator_value`, `:if` and `:for`\.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1595,12 +1609,13 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:10: cannot pass dynamic attributes to <#slot>.
+    code:10:
+    #{maybe_ansi("error:")} cannot pass dynamic attributes to <#slot>.
 
     Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1625,12 +1640,13 @@ defmodule Surface.SlotSyncTest do
     """
 
     message = ~r"""
-    code:10: cannot pass dynamic attributes to <#slot>.
+    code:10:
+    #{maybe_ansi("error:")} cannot pass dynamic attributes to <#slot>.
 
     Slots only accept the root prop, `for`, `name`, `index`, `generator_value`, `:if` and `:for`.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       capture_io(:standard_error, fn ->
         Code.eval_string(code, [], %{__ENV__ | file: "code", line: 1})
       end)
@@ -1715,9 +1731,9 @@ defmodule Surface.SlotSyncTest do
         compile_surface(code, %{})
       end)
 
-    assert output =~ ~r"""
-           cannot render <div> \(slot entries are not allowed as children of HTML elements. Did you mean \<\#slot \/\>\?\)
-             code:2:\
-           """
+    assert output =~
+             "cannot render <div> (slot entries are not allowed as children of HTML elements. Did you mean <#slot />?)"
+
+    assert output =~ "code:2:"
   end
 end

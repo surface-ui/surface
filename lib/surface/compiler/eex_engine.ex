@@ -874,6 +874,7 @@ defmodule Surface.Compiler.EExEngine do
            meta:
              %AST.Meta{
                module: mod,
+               file: file,
                line: line,
                column: col
              } = meta
@@ -882,7 +883,7 @@ defmodule Surface.Compiler.EExEngine do
        ])
        when not is_nil(mod) do
     %{attributes: attributes, directives: directives, meta: %{node_alias: node_alias}} = component
-    store_component_call(meta.caller.module, node_alias, mod, attributes, directives, line, col, :compile)
+    store_component_call(meta.caller.module, node_alias, mod, attributes, directives, file, line, col, :compile)
     [to_dynamic_nested_html(children) | to_dynamic_nested_html(nodes)]
   end
 
@@ -960,12 +961,12 @@ defmodule Surface.Compiler.EExEngine do
         {requires, Map.put(by_name, name, Enum.reverse(slot_entries))}
       end)
 
-    %{caller: caller, node_alias: node_alias, line: line, column: col} = component.meta
+    %{caller: caller, node_alias: node_alias, file: file, line: line, column: col} = component.meta
     %{props: props, directives: directives} = component
 
     if type != AST.FunctionComponent do
       dep_type = if is_atom(mod) and function_exported?(mod, :transform, 1), do: :compile, else: :export
-      store_component_call(caller.module, node_alias, mod, props, directives, line, col, dep_type)
+      store_component_call(caller.module, node_alias, mod, props, directives, file, line, col, dep_type)
     end
 
     [requires, %{component | slot_entries: slot_entries_by_name} | to_dynamic_nested_html(nodes)]
@@ -984,6 +985,7 @@ defmodule Surface.Compiler.EExEngine do
       module,
       attributes,
       directives,
+      meta.file,
       meta.line,
       meta.column,
       :compile
@@ -1143,7 +1145,7 @@ defmodule Surface.Compiler.EExEngine do
     |> Macro.var(nil)
   end
 
-  defp store_component_call(module, node_alias, component, props, directives, line, col, dep_type)
+  defp store_component_call(module, node_alias, component, props, directives, file, line, col, dep_type)
        when dep_type in [:compile, :export] do
     # No need to store dynamic modules
     if !match?(%Surface.AST.AttributeExpr{}, component) do
@@ -1152,6 +1154,7 @@ defmodule Surface.Compiler.EExEngine do
         component: component,
         props: map_attrs(props),
         directives: map_attrs(directives),
+        file: file,
         line: line,
         column: col,
         dep_type: dep_type

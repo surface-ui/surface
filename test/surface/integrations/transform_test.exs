@@ -1,5 +1,5 @@
 defmodule Surface.TransformTest do
-  use ExUnit.Case
+  use Surface.Case
 
   defmodule Span do
     use Surface.Component
@@ -185,8 +185,8 @@ defmodule Surface.TransformTest do
     """
 
     assert_raise(
-      CompileError,
-      "nofile:1: invalid value for property \"prop\". Expected a :list, got: \"string\".",
+      Surface.CompileError,
+      ~r"nofile:1:\n#{maybe_ansi("error:")} invalid value for property \"prop\"\. Expected a :list, got: \"string\".",
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

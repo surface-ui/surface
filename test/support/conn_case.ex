@@ -15,6 +15,7 @@ defmodule Surface.ConnCase do
       use Surface.LiveViewTest
       import Floki
       import FlokiHelpers
+      import ANSIHelpers
 
       # The default endpoint for testing
       @endpoint Endpoint

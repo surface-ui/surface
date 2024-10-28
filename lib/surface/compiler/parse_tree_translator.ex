@@ -109,7 +109,11 @@ defmodule Surface.Compiler.ParseTreeTranslator do
         _state,
         _context
       ) do
-    {:expr, value, _expr_meta} = expr
+    value =
+      case expr do
+        {:expr, value, _expr_meta} -> value
+        nil -> ""
+      end
 
     message = """
     cannot assign `{...#{value}}` to attribute `#{name}`. \

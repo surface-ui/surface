@@ -63,13 +63,14 @@ defmodule SurfaceTest do
   end
 
   test "raise error when trying to unquote an undefined variable" do
-    message = """
-    code.ex:2: undefined variable "content".
+    message = ~r"""
+    code.ex:2:
+    #{maybe_ansi("error:")} undefined variable "content"\.
 
     Available variable: "message"
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       quote_surface line: 1, file: "code.ex" do
         ~F"""
         <div>
@@ -81,13 +82,14 @@ defmodule SurfaceTest do
   end
 
   test "raise error when trying to unquote expressions that are not variables" do
-    message = """
-    code.ex:2: cannot unquote `to_string(:abc)`.
+    message = ~r"""
+    code.ex:2:
+    #{maybe_ansi("error:")} cannot unquote `to_string\(:abc\)`\.
 
-    The expression to be unquoted must be written as `^var`, where `var` is an existing variable.
+    The expression to be unquoted must be written as `\^var`, where `var` is an existing variable\.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       quote_surface line: 1, file: "code.ex" do
         ~F"""
         <div>
@@ -109,15 +111,15 @@ defmodule SurfaceTest do
     end
     """
 
-    message = "code.exs:1: the code to be quoted must be wrapped in a `~F` sigil."
+    message = ~r"code.exs:1:\n#{maybe_ansi("error:")} the code to be quoted must be wrapped in a `~F` sigil\."
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
 
   test "raise error when using {^...} outside `quote_surface`" do
-    message = "code:2: cannot use tagged expression {^var} outside `quote_surface`"
+    message = ~r"code:2:\n#{maybe_ansi("error:")} cannot use tagged expression \{\^var\} outside `quote_surface`"
 
     code =
       quote do
@@ -128,7 +130,7 @@ defmodule SurfaceTest do
         """
       end
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       compile_surface(code)
     end)
   end

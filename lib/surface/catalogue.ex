@@ -104,15 +104,15 @@ defmodule Surface.Catalogue do
         subject
 
       _ ->
-        message = """
-        no subject defined for #{inspect(type)}
+        message = "no subject defined for #{inspect(type)}"
 
-        Hint: You can define the subject using the :subject option. Example:
+        hint = """
+        you can define the subject using the :subject option. Example:
 
           use #{inspect(type)}, subject: MyApp.MyButton
         """
 
-        Surface.IOHelper.compile_error(message, caller.file, caller.line)
+        Surface.IOHelper.compile_error(message, hint, caller.file, caller.line)
     end
   end
 

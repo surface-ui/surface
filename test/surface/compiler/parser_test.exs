@@ -1,5 +1,5 @@
 defmodule Surface.Compiler.ParserTest do
-  use ExUnit.Case, async: true
+  use Surface.Case, async: true
 
   import Surface.Compiler.Parser
   alias Surface.Compiler.ParseError
@@ -742,13 +742,14 @@ defmodule Surface.Compiler.ParserTest do
       />
       """
 
-      message = """
-      nofile:2: invalid value for tagged expression `{=1}`. The expression must be either an assign or a variable.
+      message = ~r"""
+      nofile:2:
+      #{maybe_ansi("error:")} invalid value for tagged expression `{=1}`. The expression must be either an assign or a variable.
 
       Examples: `<div {=@class}>` or `<div {=class}>`
       """
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end
 
     test "raise on assigning {= ...} to an attribute" do
@@ -758,14 +759,15 @@ defmodule Surface.Compiler.ParserTest do
       />
       """
 
-      message = """
-      nofile:2: cannot assign `{=@class}` to attribute `class`. \
+      message = ~r"""
+      nofile:2:
+      #{maybe_ansi("error:")} cannot assign `{=@class}` to attribute `class`. \
       The tagged expression `{= }` can only be used on a root attribute/property.
 
       Example: <div {=@class}>
       """
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end
   end
 
@@ -995,9 +997,9 @@ defmodule Surface.Compiler.ParserTest do
       {/if}
       """
 
-      message = "nofile:2: missing expression for block {#if ...}"
+      message = ~r"nofile:2:\n#{maybe_ansi("error:")} missing expression for block {#if ...}"
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
 
       code = """
       1
@@ -1006,9 +1008,9 @@ defmodule Surface.Compiler.ParserTest do
       {/case}
       """
 
-      message = "nofile:2: missing expression for block {#case ...}"
+      message = ~r"nofile:2:\n#{maybe_ansi("error:")} missing expression for block {#case ...}"
 
-      assert_raise CompileError, message, fn -> parse!(code) end
+      assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end
 
     test "raise error on missing closing block" do

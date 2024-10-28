@@ -942,7 +942,7 @@ defmodule Surface.CompilerTest do
 end
 
 defmodule Surface.CompilerSyncTest do
-  use ExUnit.Case
+  use Surface.Case
 
   import ExUnit.CaptureIO
 
@@ -1012,30 +1012,20 @@ defmodule Surface.CompilerSyncTest do
     assert {:ok, _component} = run_compile(code, __ENV__)
   end
 
-  test "warning with hint when a unaliased component cannot be loaded" do
+  test "raise when a unaliased component cannot be loaded" do
     code = """
     <div>
       <But />
     </div>
     """
 
-    {:warn, line, message} = run_compile(code, __ENV__)
-
-    assert message =~ """
-           cannot render <But> (module But could not be loaded)
-
-           Hint: Make sure module `But` can be successfully compiled.
-
-           If the module is namespaced, you can use its full name. For instance:
-
-             <MyProject.Components.But>
-
-           or add a proper alias so you can use just `<But>`:
-
-             alias MyProject.Components.But
-           """
-
-    assert line == 2
+    assert_raise(
+      Surface.CompileError,
+      ~r/nofile:2(:4)?:\n#{maybe_ansi("error:")} cannot render <But> \(module But could not be loaded\)/,
+      fn ->
+        Surface.Compiler.compile(code, 1, __ENV__)
+      end
+    )
   end
 
   test "warning when module is not a component" do
