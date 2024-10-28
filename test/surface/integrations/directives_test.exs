@@ -187,7 +187,8 @@ defmodule Surface.DirectivesTest do
         end
 
       message = ~r"""
-      code:3:\n.+?error:.+? cannot assign `{\.\.\.@props}` to attribute `class`\. \
+      code:3:
+      #{maybe_ansi("error:")} cannot assign `{\.\.\.@props}` to attribute `class`\. \
       The tagged expression `{\.\.\. }` can only be used on a root attribute/property\.
 
       Example: <div {\.\.\.@attrs}>
@@ -316,7 +317,8 @@ defmodule Surface.DirectivesTest do
         end
 
       message = ~r"""
-      code:3:\n.+?error:.+? cannot assign `{\.\.\.@attrs}` to attribute `class`\. \
+      code:3:
+      #{maybe_ansi("error:")} cannot assign `{\.\.\.@attrs}` to attribute `class`\. \
       The tagged expression `{\.\.\. }` can only be used on a root attribute/property\.
 
       Example: <div {\.\.\.@attrs}>
@@ -386,7 +388,8 @@ defmodule Surface.DirectivesTest do
         end
 
       message = ~r"""
-      code:2:\n.+?error:.+? unknown modifier "unknown" for directive :for\
+      code:2:
+      #{maybe_ansi("error:")} unknown modifier "unknown" for directive :for\
       """
 
       assert_raise(Surface.CompileError, message, fn ->
@@ -408,7 +411,8 @@ defmodule Surface.DirectivesTest do
         end
 
       message = ~r"""
-      code:2:\n.+?error:.+? cannot apply modifier "with_index" on generators with multiple clauses\
+      code:2:
+      #{maybe_ansi("error:")} cannot apply modifier "with_index" on generators with multiple clauses\
       """
 
       assert_raise(Surface.CompileError, message, fn ->

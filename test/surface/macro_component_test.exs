@@ -202,7 +202,8 @@ defmodule Surface.MacroComponentTest do
       end
 
     message = ~r"""
-    code:2:\n.+?error:.+? invalid value for property "align"
+    code:2:
+    #{maybe_ansi("error:")} invalid value for property "align"
 
     Expected a string while evaluating {@align}, got: nil
 
@@ -282,7 +283,7 @@ defmodule Surface.MacroComponentTest do
 
       assert_raise(
         Surface.CompileError,
-        ~r/code:1(:2)?:\n.+?error:.+? cannot render \<#NonExisting\> \(module NonExisting could not be loaded\)/,
+        ~r/code:1(:2)?:\n#{maybe_ansi("error:")} cannot render \<#NonExisting\> \(module NonExisting could not be loaded\)/,
         fn ->
           compile_surface(code)
         end

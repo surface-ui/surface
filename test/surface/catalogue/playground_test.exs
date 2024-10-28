@@ -29,9 +29,10 @@ defmodule Surface.Catalogue.PlaygroundTest do
     """
 
     message = ~r"""
-    code.exs:2:\n.+?error:.+? no subject defined for Surface.Catalogue.Playground
+    code.exs:2:
+    #{maybe_ansi("error:")} no subject defined for Surface.Catalogue.Playground
 
-    .+?hint:.+?you can define the subject using the :subject option. Example:
+    #{maybe_ansi("hint:")} you can define the subject using the :subject option. Example:
 
       use Surface.Catalogue.Playground, subject: MyApp.MyButton
     """

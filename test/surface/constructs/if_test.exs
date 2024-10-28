@@ -86,7 +86,8 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message = ~r/code:2:\n.+?error:.+? invalid value for property "prop". Expected a :list, got: "some string"./
+      message =
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "prop". Expected a :list, got: "some string"./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -311,7 +312,8 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message = ~r/code:12:\n.+?error:.+? invalid value for property "prop". Expected a :list, got: "some string"./
+      message =
+        ~r/code:12:\n#{maybe_ansi("error:")} invalid value for property "prop". Expected a :list, got: "some string"./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -396,7 +398,8 @@ defmodule Surface.Constructs.IfTest do
           """
         end
 
-      message = ~r/code:2:\n.+?error:.+? invalid value for property "prop". Expected a :list, got: "some string"./
+      message =
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "prop". Expected a :list, got: "some string"./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)

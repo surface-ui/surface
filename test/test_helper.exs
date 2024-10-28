@@ -41,6 +41,22 @@ defmodule FlokiHelpers do
   end
 end
 
+defmodule ANSIHelpers do
+  @doc """
+  Returns a regex fragment that conditionally matches a colored text.
+
+  It should be used in tests to avoid failure when running in enviroments where ANSI
+  is disabled, e.g. CI servers.
+  """
+  def maybe_ansi(text) do
+    if IO.ANSI.enabled?() do
+      "(\\e\\[\\d+m)?#{text}(\\e\\[0m)"
+    else
+      text
+    end
+  end
+end
+
 Application.put_env(:surface, Endpoint,
   secret_key_base: "J4lTFt000ENUVhu3dbIB2P2vRVl2nDBH6FLefnPUImL8mHYNX8Kln/N9J0HH19Mq",
   live_view: [

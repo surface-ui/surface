@@ -942,7 +942,7 @@ defmodule Surface.CompilerTest do
 end
 
 defmodule Surface.CompilerSyncTest do
-  use ExUnit.Case
+  use Surface.Case
 
   import ExUnit.CaptureIO
 
@@ -1021,7 +1021,7 @@ defmodule Surface.CompilerSyncTest do
 
     assert_raise(
       Surface.CompileError,
-      ~r/nofile:2(:4)?:\n.+?error:.+? cannot render <But> \(module But could not be loaded\)/,
+      ~r/nofile:2(:4)?:\n#{maybe_ansi("error:")} cannot render <But> \(module But could not be loaded\)/,
       fn ->
         Surface.Compiler.compile(code, 1, __ENV__)
       end

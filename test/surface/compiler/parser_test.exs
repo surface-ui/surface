@@ -1,5 +1,5 @@
 defmodule Surface.Compiler.ParserTest do
-  use ExUnit.Case, async: true
+  use Surface.Case, async: true
 
   import Surface.Compiler.Parser
   alias Surface.Compiler.ParseError
@@ -743,7 +743,8 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       message = ~r"""
-      nofile:2:\n.+?error:.+? invalid value for tagged expression `{=1}`. The expression must be either an assign or a variable.
+      nofile:2:
+      #{maybe_ansi("error:")} invalid value for tagged expression `{=1}`. The expression must be either an assign or a variable.
 
       Examples: `<div {=@class}>` or `<div {=class}>`
       """
@@ -759,7 +760,8 @@ defmodule Surface.Compiler.ParserTest do
       """
 
       message = ~r"""
-      nofile:2:\n.+?error:.+? cannot assign `{=@class}` to attribute `class`. \
+      nofile:2:
+      #{maybe_ansi("error:")} cannot assign `{=@class}` to attribute `class`. \
       The tagged expression `{= }` can only be used on a root attribute/property.
 
       Example: <div {=@class}>
@@ -995,7 +997,7 @@ defmodule Surface.Compiler.ParserTest do
       {/if}
       """
 
-      message = ~r"nofile:2:\n.+?error:.+? missing expression for block {#if ...}"
+      message = ~r"nofile:2:\n#{maybe_ansi("error:")} missing expression for block {#if ...}"
 
       assert_raise Surface.CompileError, message, fn -> parse!(code) end
 
@@ -1006,7 +1008,7 @@ defmodule Surface.Compiler.ParserTest do
       {/case}
       """
 
-      message = ~r"nofile:2:\n.+?error:.+? missing expression for block {#case ...}"
+      message = ~r"nofile:2:\n#{maybe_ansi("error:")} missing expression for block {#case ...}"
 
       assert_raise Surface.CompileError, message, fn -> parse!(code) end
     end

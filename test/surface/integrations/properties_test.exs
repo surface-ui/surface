@@ -195,7 +195,8 @@ defmodule Surface.PropertiesTest do
           """
         end
 
-      message = ~r/code:1:\n.+?error:.+? invalid value for property "as"\. Expected a :atom, got: "some string"\./
+      message =
+        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "as"\. Expected a :atom, got: "some string"\./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -301,7 +302,7 @@ defmodule Surface.PropertiesTest do
         end
 
       message =
-        ~r/code:1:\n.+?error:.+? invalid value for property "prop"\. Expected a :keyword, got: "some string"\./
+        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "prop"\. Expected a :keyword, got: "some string"\./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -447,7 +448,8 @@ defmodule Surface.PropertiesTest do
           """
         end
 
-      message = ~r/code:1:\n.+?error:.+? invalid value for property "prop"\. Expected a :map, got: "some string"\./
+      message =
+        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "prop"\. Expected a :map, got: "some string"\./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -530,7 +532,8 @@ defmodule Surface.PropertiesTest do
           """
         end
 
-      message = ~r/code:1:\n.+?error:.+? invalid value for property "prop"\. Expected a :list, got: {1, 2}\./
+      message =
+        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "prop"\. Expected a :list, got: {1, 2}\./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -600,7 +603,7 @@ defmodule Surface.PropertiesTest do
         end
 
       message =
-        ~r/code:1:\n.+?error:.+? invalid value for property "prop"\. Expected a :list, got: "some string"\./
+        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "prop"\. Expected a :list, got: "some string"\./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
@@ -851,7 +854,8 @@ defmodule Surface.PropertiesTest do
         end
 
       message = ~r"""
-      code:2:\n.+?error:.+? invalid value for property "labels"\. Expected a :generator Example: `{i <- \.\.\.}`, got: {"label"}\.\
+      code:2:
+      #{maybe_ansi("error:")} invalid value for property "labels"\. Expected a :generator Example: `{i <- \.\.\.}`, got: {"label"}\.\
       """
 
       assert_raise(Surface.CompileError, message, fn ->
@@ -1007,7 +1011,7 @@ defmodule Surface.PropertiesSyncTest do
     end
     """
 
-    message = ~r"code.exs:11:\n.+?error:.+? `generator_value` is missing for slot `default`"
+    message = ~r"code.exs:11:\n#{maybe_ansi("error:")} `generator_value` is missing for slot `default`"
 
     assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})

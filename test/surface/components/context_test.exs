@@ -932,7 +932,8 @@ defmodule Surface.Components.ContextTest do
         end
 
       message = ~r"""
-      code:2:\n.+?error:.+? invalid value for property "get". expected a scope \
+      code:2:
+      #{maybe_ansi("error:")} invalid value for property "get". expected a scope \
       module \(optional\) along with a keyword list of bindings, \
       e.g. {Form, form: form} or {field: my_field}, \
       got: {ContextTest.Outer, field: \[field\]}.\
@@ -954,9 +955,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(Surface.CompileError, ~r/code:2:\n.+?error:.+? invalid value for property "get"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "get"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
 
     test "raise compile error when passing invalid scope" do
@@ -970,9 +975,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(Surface.CompileError, ~r/code:2:\n.+?error:.+? invalid value for property "get"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "get"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
   end
 
@@ -989,7 +998,8 @@ defmodule Surface.Components.ContextTest do
         end
 
       message = ~r"""
-      code:2:\n.+?error:.+? invalid value for property "put". expected a scope \
+      code:2:
+      #{maybe_ansi("error:")} invalid value for property "put". expected a scope \
       module \(optional\) along with a keyword list of values, \
       e.g. {MyModule, field: @value, other: "other"} or {field: @value}, \
       got: {ContextTest.Outer, 123}.\
@@ -1011,9 +1021,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(Surface.CompileError, ~r/code:2:\n.+?error:.+? invalid value for property "put"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "put"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
 
     test "raise compile error when passing invalid scope" do
@@ -1027,9 +1041,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(Surface.CompileError, ~r/code:2:\n.+?error:.+? invalid value for property "put"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "put"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
   end
 
@@ -1178,7 +1196,8 @@ defmodule Surface.Components.ContextTest do
     """
 
     message = ~r"""
-    code.exs:7:\n.+?error:.+? components propagating context values through slots must be configured \
+    code.exs:7:
+    #{maybe_ansi("error:")} components propagating context values through slots must be configured \
     as `propagate_context_to_slots: true`.
 
     In case you don't want to propagate any value, you need to explicitly \
@@ -1218,7 +1237,8 @@ defmodule Surface.Components.ContextTest do
     """
 
     message = ~r"""
-    code.exs:9:\n.+?error:.+? components propagating context values through slots must be configured \
+    code.exs:9:
+    #{maybe_ansi("error:")} components propagating context values through slots must be configured \
     as `propagate_context_to_slots: true`.
 
     In case you don't want to propagate any value, you need to explicitly \
@@ -1264,7 +1284,8 @@ defmodule Surface.Components.ContextTest do
     """
 
     message = ~r"""
-    code.exs:10:\n.+?error:.+? components propagating context values through slots must be configured \
+    code.exs:10:
+    #{maybe_ansi("error:")} components propagating context values through slots must be configured \
     as `propagate_context_to_slots: true`\.
 
     In case you don't want to propagate any value, you need to explicitly \

@@ -1,5 +1,5 @@
 defmodule Surface.Catalogue.LiveExampleTest do
-  use ExUnit.Case
+  use Surface.Case
 
   alias Surface.Catalogue.FakeLiveExample
   alias Surface.Catalogue.FakeLiveExampleModuleDocFalse
@@ -36,9 +36,10 @@ defmodule Surface.Catalogue.LiveExampleTest do
     """
 
     message = ~r"""
-    code\.exs:2:\n.+?error:.+? no subject defined for Surface\.Catalogue\.LiveExample
+    code\.exs:2:
+    #{maybe_ansi("error:")} no subject defined for Surface\.Catalogue\.LiveExample
 
-    .+?hint:.+? you can define the subject using the :subject option\. Example:
+    #{maybe_ansi("hint:")} you can define the subject using the :subject option\. Example:
 
       use Surface\.Catalogue\.LiveExample, subject: MyApp.MyButton
     """

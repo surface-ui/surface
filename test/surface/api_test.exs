@@ -1,5 +1,5 @@
 defmodule Surface.APITest do
-  use ExUnit.Case, async: true
+  use Surface.Case, async: true
 
   test "raise error at the right line" do
     code = "prop label, :unknown_type"
@@ -147,7 +147,8 @@ defmodule Surface.APITest do
     code = "prop field, :string, css_variant: 123"
 
     message = ~r"""
-    code:4:\n.+?error:.+? invalid value for :css_variant\. Expected either a boolean or a keyword list of options, got: 123\.
+    code:4:
+    #{maybe_ansi("error:")} invalid value for :css_variant\. Expected either a boolean or a keyword list of options, got: 123\.
 
     Valid options for type :string are:
 
@@ -446,7 +447,8 @@ defmodule Surface.APITest do
       """
 
       message = ~r"""
-      code.exs:7:\n.+?error:.+? cannot use property `unknown` as generator for slot\. \
+      code.exs:7:
+      #{maybe_ansi("error:")} cannot use property `unknown` as generator for slot\. \
       Expected an existing property of type `:generator`, got: an undefined property `unknown`.
 
       Hint: Available generators are \[:items\]\
@@ -474,7 +476,8 @@ defmodule Surface.APITest do
       """
 
       message = ~r"""
-      code.exs:6:\n.+?error:.+? cannot use property `label` as generator for slot\. \
+      code.exs:6:
+      #{maybe_ansi("error:")} cannot use property `label` as generator for slot\. \
       Expected a property of type :generator, got: a property of type :string
 
       Hint: Available generators are \[\]\
@@ -842,7 +845,7 @@ defmodule Surface.APISyncTest do
         """
 
         error_message =
-          ~r"code.exs:7(:8)?:\n.+?error:.+? cannot render <NonExisting> \(module NonExisting could not be loaded\)"
+          ~r"code.exs:7(:8)?:\n#{maybe_ansi("error:")} cannot render <NonExisting> \(module NonExisting could not be loaded\)"
 
         assert_raise(Surface.CompileError, error_message, fn ->
           {{:module, _, _, _}, _} =

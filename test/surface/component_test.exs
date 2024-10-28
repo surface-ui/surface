@@ -208,7 +208,8 @@ defmodule Surface.ComponentTest do
     end
     """
 
-    message = ~r"code.exs:2:\n.+?error:.+? invalid value for option :slot. Expected a string, got: {1, 2}"
+    message =
+      ~r"code.exs:2:\n#{maybe_ansi("error:")} invalid value for option :slot. Expected a string, got: {1, 2}"
 
     assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})

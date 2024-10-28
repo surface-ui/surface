@@ -64,7 +64,8 @@ defmodule SurfaceTest do
 
   test "raise error when trying to unquote an undefined variable" do
     message = ~r"""
-    code.ex:2:\n.+?error:.+? undefined variable "content"\.
+    code.ex:2:
+    #{maybe_ansi("error:")} undefined variable "content"\.
 
     Available variable: "message"
     """
@@ -82,7 +83,8 @@ defmodule SurfaceTest do
 
   test "raise error when trying to unquote expressions that are not variables" do
     message = ~r"""
-    code.ex:2:\n.+?error:.+? cannot unquote `to_string\(:abc\)`\.
+    code.ex:2:
+    #{maybe_ansi("error:")} cannot unquote `to_string\(:abc\)`\.
 
     The expression to be unquoted must be written as `\^var`, where `var` is an existing variable\.
     """
@@ -109,7 +111,7 @@ defmodule SurfaceTest do
     end
     """
 
-    message = ~r"code.exs:1:\n.+?error:.+? the code to be quoted must be wrapped in a `~F` sigil\."
+    message = ~r"code.exs:1:\n#{maybe_ansi("error:")} the code to be quoted must be wrapped in a `~F` sigil\."
 
     assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
@@ -117,7 +119,7 @@ defmodule SurfaceTest do
   end
 
   test "raise error when using {^...} outside `quote_surface`" do
-    message = ~r"code:2:\n.+?error:.+? cannot use tagged expression \{\^var\} outside `quote_surface`"
+    message = ~r"code:2:\n#{maybe_ansi("error:")} cannot use tagged expression \{\^var\} outside `quote_surface`"
 
     code =
       quote do
