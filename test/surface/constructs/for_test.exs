@@ -111,9 +111,10 @@ defmodule Surface.Constructs.ForTest do
           """
         end
 
-      message = ~S(code:3: invalid value for property "prop". Expected a :list, got: "some string".)
+      message =
+        ~r/code:3:\n#{maybe_ansi("error:")} invalid value for property "prop". Expected a :list, got: "some string"./
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
       end)
     end
@@ -207,9 +208,9 @@ defmodule Surface.Constructs.ForTest do
         end
 
       message =
-        ~r/code:3: using `{#else}` is only supported when the expression in `{#for}` has a single generator and no filters./
+        ~r/code:3:\n#{maybe_ansi("error:")} using `{#else}` is only supported when the expression in `{#for}` has a single generator and no filters./
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code, assigns)
       end)
     end

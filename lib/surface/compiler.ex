@@ -283,13 +283,15 @@ defmodule Surface.Compiler do
         {:ok, ast} ->
           process_directives(ast)
 
-        {:error, {message, line}, meta} ->
-          IOHelper.warn(message, compile_meta.caller, meta.file, line)
+        {:error, {message, line, column}, meta} ->
+          IOHelper.warn(message, compile_meta.caller, meta.file, {line, column})
           %AST.Error{message: message, meta: meta}
 
-        {:error, {message, details, line}, meta} ->
-          details = if details, do: "\n\n" <> details, else: ""
-          IOHelper.warn(message <> details, compile_meta.caller, meta.file, line)
+        {:error, {message, details, line, column}, meta} ->
+          # TODO: turn it back as a warning when using @after_verify in Elixir >= 0.14.
+          # Make sure to check if the genarated `require <component>.__info__()` doesn't get called,
+          # raising Elixir's CompileError.
+          IOHelper.compile_error(message, details, meta.file, {line, column})
           %AST.Error{message: message, meta: meta}
       end
     end
@@ -854,8 +856,9 @@ defmodule Surface.Compiler do
       end
     else
       false ->
-        {:error, {"cannot render <#{node_alias}> (MacroComponents must export an expand/3 function)", meta.line},
-         meta}
+        {:error,
+         {"cannot render <#{node_alias}> (MacroComponents must export an expand/3 function)", meta.line,
+          meta.column}, meta}
 
       error ->
         handle_convert_node_to_ast_error(node_alias, error, meta)
@@ -1246,7 +1249,7 @@ defmodule Surface.Compiler do
         !Map.has_key?(slot_entries, name) or
           Enum.all?(Map.get(slot_entries, name, []), &Helpers.is_blank_or_empty/1) do
       message = "missing required slot \"#{name}\" for component <#{meta.node_alias}>"
-      IOHelper.warn(message, meta.caller, meta.file, meta.line)
+      IOHelper.warn(message, meta.caller, meta.file, {meta.line, meta.column})
     end
 
     for {slot_name, slot_entry_instances} <- slot_entries,
@@ -1508,13 +1511,13 @@ defmodule Surface.Compiler do
   defp handle_convert_node_to_ast_error(name, error, meta) do
     case error do
       {:error, message, details} ->
-        {:error, {"cannot render <#{name}> (#{message})", details, meta.line}, meta}
+        {:error, {"cannot render <#{name}> (#{message})", details, meta.line, meta.column}, meta}
 
       {:error, message} ->
-        {:error, {"cannot render <#{name}> (#{message})", meta.line}, meta}
+        {:error, {"cannot render <#{name}> (#{message})", meta.line, meta.column}, meta}
 
       _ ->
-        {:error, {"cannot render <#{name}>", meta.line}, meta}
+        {:error, {"cannot render <#{name}>", meta.line, meta.column}, meta}
     end
   end
 

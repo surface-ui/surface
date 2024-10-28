@@ -931,14 +931,15 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      message = """
-      code:2: invalid value for property "get". expected a scope \
-      module (optional) along with a keyword list of bindings, \
+      message = ~r"""
+      code:2:
+      #{maybe_ansi("error:")} invalid value for property "get". expected a scope \
+      module \(optional\) along with a keyword list of bindings, \
       e.g. {Form, form: form} or {field: my_field}, \
-      got: {ContextTest.Outer, field: [field]}.\
+      got: {ContextTest.Outer, field: \[field\]}.\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
       end)
     end
@@ -954,9 +955,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "get"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
 
     test "raise compile error when passing invalid scope" do
@@ -970,9 +975,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "get"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "get"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
   end
 
@@ -988,14 +997,15 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      message = """
-      code:2: invalid value for property "put". expected a scope \
-      module (optional) along with a keyword list of values, \
+      message = ~r"""
+      code:2:
+      #{maybe_ansi("error:")} invalid value for property "put". expected a scope \
+      module \(optional\) along with a keyword list of values, \
       e.g. {MyModule, field: @value, other: "other"} or {field: @value}, \
       got: {ContextTest.Outer, 123}.\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
       end)
     end
@@ -1011,9 +1021,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "put"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
 
     test "raise compile error when passing invalid scope" do
@@ -1027,9 +1041,13 @@ defmodule Surface.Components.ContextTest do
           """
         end
 
-      assert_raise(CompileError, ~r/code:2: invalid value for property "put"/, fn ->
-        compile_surface(code)
-      end)
+      assert_raise(
+        Surface.CompileError,
+        ~r/code:2:\n#{maybe_ansi("error:")} invalid value for property "put"/,
+        fn ->
+          compile_surface(code)
+        end
+      )
     end
   end
 
@@ -1177,8 +1195,9 @@ defmodule Surface.Components.ContextTest do
     end
     """
 
-    message = """
-    code.exs:7: components propagating context values through slots must be configured \
+    message = ~r"""
+    code.exs:7:
+    #{maybe_ansi("error:")} components propagating context values through slots must be configured \
     as `propagate_context_to_slots: true`.
 
     In case you don't want to propagate any value, you need to explicitly \
@@ -1186,16 +1205,16 @@ defmodule Surface.Components.ContextTest do
 
     # Example
 
-    config :surface, :components, [
+    config :surface, :components, \[
       {Surface.Components.ContextTest.WarnOnSlotPropContextPut, propagate_context_to_slots: true},
       ...
-    ]
+    \]
 
     This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
     it's placed inside a parent component that propagates context values through its slots.
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
@@ -1217,8 +1236,9 @@ defmodule Surface.Components.ContextTest do
     end
     """
 
-    message = """
-    code.exs:9: components propagating context values through slots must be configured \
+    message = ~r"""
+    code.exs:9:
+    #{maybe_ansi("error:")} components propagating context values through slots must be configured \
     as `propagate_context_to_slots: true`.
 
     In case you don't want to propagate any value, you need to explicitly \
@@ -1226,20 +1246,20 @@ defmodule Surface.Components.ContextTest do
 
     # Example
 
-    config :surface, :components, [
+    config :surface, :components, \[
       {Surface.Components.ContextTest.WarnOnContextPut, propagate_context_to_slots: true},
       ...
-    ]
+    \]
 
     This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
     it's placed inside a parent component that propagates context values through its slots.
 
     Current parent components propagating context values:
 
-        * `Surface.Components.Context` at line 8
+        \* `Surface.Components.Context` at line 8
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end
@@ -1263,30 +1283,31 @@ defmodule Surface.Components.ContextTest do
     end
     """
 
-    message = """
-    code.exs:10: components propagating context values through slots must be configured \
-    as `propagate_context_to_slots: true`.
+    message = ~r"""
+    code.exs:10:
+    #{maybe_ansi("error:")} components propagating context values through slots must be configured \
+    as `propagate_context_to_slots: true`\.
 
     In case you don't want to propagate any value, you need to explicitly \
-    set `propagate_context_to_slots` to `false`.
+    set `propagate_context_to_slots` to `false`\.
 
     # Example
 
-    config :surface, :components, [
+    config :surface, :components, \[
       {Surface.Components.ContextTest.WarnOnSlotInsideComponentPropagating, propagate_context_to_slots: true},
       ...
-    ]
+    \]
 
     This warning is emitted whenever a <#slot ...> uses the `context_put` prop or \
     it's placed inside a parent component that propagates context values through its slots.
 
     Current parent components propagating context values:
 
-        * `Surface.Components.ContextTest.Outer` at line 8
-        * `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
+        \* `Surface.Components.ContextTest.Outer` at line 8
+        \* `Surface.Components.ContextTest.OuterUsingPropContextPut` at line 9
     """
 
-    assert_raise(CompileError, message, fn ->
+    assert_raise(Surface.CompileError, message, fn ->
       {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
     end)
   end

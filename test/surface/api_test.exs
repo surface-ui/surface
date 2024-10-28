@@ -1,11 +1,11 @@
 defmodule Surface.APITest do
-  use ExUnit.Case, async: true
+  use Surface.Case, async: true
 
   test "raise error at the right line" do
     code = "prop label, :unknown_type"
     message = ~r/code:4/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate ast type" do
@@ -16,14 +16,14 @@ defmodule Surface.APITest do
     Expected an atom, got: {:a, :b}
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate type in list of available types" do
     code = "prop label, :foo"
     message = ~r/invalid type :foo for prop label.\nExpected one of \[:any/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate options" do
@@ -31,33 +31,33 @@ defmodule Surface.APITest do
 
     message = ~r/invalid options for prop label. Expected a keyword list of options, got: {:a, :b}/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate type options" do
     code = "data label, :string, a: 1"
     message = ~r/unknown option :a/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = "data label, :string, a: 1, b: 2"
     message = ~r/unknown options \[:a, :b\]/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :required" do
     code = "prop label, :string, required: 1"
     message = ~r/invalid value for option :required. Expected a boolean, got: 1/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :values" do
     code = "prop label, :string, values: 1"
     message = ~r/invalid value for option :values. Expected a list of values or a Range, got: 1/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :values when using a range" do
@@ -73,21 +73,21 @@ defmodule Surface.APITest do
     code = "slot label, as: \"default_label\""
     message = ~r/invalid value for option :as in slot. Expected an atom, got: \"default_label\"/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :root in prop" do
     code = "prop label, :string, root: 1"
     message = ~r/invalid value for option :root. Expected a boolean, got: 1/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :static in prop" do
     code = "prop label, :string, static: 1"
     message = ~r/invalid value for option :static. Expected a boolean, got: 1/
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :from_context type" do
@@ -100,30 +100,30 @@ defmodule Surface.APITest do
     """
 
     code = "prop field, :any, from_context: 123"
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = "data field, :any, from_context: 123"
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :from_context with :default" do
     message = ~r/using option :from_context along with :default is currently not allowed/
 
     code = "prop field, :any, from_context: :field, default: :my_field"
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = "data field, :any, from_context: :field, default: :my_field"
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate :from_context in LiveView" do
     message = ~r/option :from_context is not supported for Surface.Liveview/
 
     code = "prop field, :any, from_context: :field"
-    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code, "LiveView") end)
 
     code = "data field, :any, from_context: :field"
-    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code, "LiveView") end)
   end
 
   test "validate :css_variant type + options" do
@@ -146,20 +146,21 @@ defmodule Surface.APITest do
     # invalid value
     code = "prop field, :string, css_variant: 123"
 
-    message = """
-    code:4: invalid value for :css_variant. Expected either a boolean or a keyword list of options, got: 123.
+    message = ~r"""
+    code:4:
+    #{maybe_ansi("error:")} invalid value for :css_variant\. Expected either a boolean or a keyword list of options, got: 123\.
 
     Valid options for type :string are:
 
-      * :not_nil - the name of the variant when the value is not `nil`. Default is the assign name.
-      * :nil - the name of the variant when the value is `nil`. Default is `no-[assign-name]`.
+      \* :not_nil - the name of the variant when the value is not `nil`\. Default is the assign name\.
+      \* :nil - the name of the variant when the value is `nil`\. Default is `no-\[assign-name\]`\.
 
     or, if you use the `values` or `values!` options:
 
-      * :prefix - the prefix of the variant name for each value listed in `values` or `values!`. Default is `[assign-name]-`.
+      \* :prefix - the prefix of the variant name for each value listed in `values` or `values!`. Default is `\[assign-name\]-`\.
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "validate duplicate assigns" do
@@ -173,7 +174,7 @@ defmodule Surface.APITest do
     There's already a prop assign with the same name at line 4\
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     prop label, :string
@@ -181,7 +182,7 @@ defmodule Surface.APITest do
     """
 
     message = ~r/cannot use name "label". There's already a prop/
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     prop label, :string
@@ -189,7 +190,7 @@ defmodule Surface.APITest do
     """
 
     message = ~r/cannot use name "label". There's already a prop/
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     data label, :string
@@ -197,7 +198,7 @@ defmodule Surface.APITest do
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     data label, :string
@@ -205,7 +206,7 @@ defmodule Surface.APITest do
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     data label, :string
@@ -213,7 +214,7 @@ defmodule Surface.APITest do
     """
 
     message = ~r/cannot use name "label". There's already a data assign/
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     slot label
@@ -225,7 +226,7 @@ defmodule Surface.APITest do
     You could use the optional ':as' option in slot macro to name the related assigns.
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     slot label
@@ -237,7 +238,7 @@ defmodule Surface.APITest do
     You could use the optional ':as' option in slot macro to name the related assigns.
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     slot label
@@ -249,7 +250,7 @@ defmodule Surface.APITest do
     You could use the optional ':as' option in slot macro to name the related assigns.
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
 
     code = """
     slot label, as: :default_label
@@ -290,7 +291,7 @@ defmodule Surface.APITest do
     There's already a built-in data assign with the same name.\
     """
 
-    assert_raise(CompileError, message, fn -> eval(code, "LiveComponent") end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code, "LiveComponent") end)
 
     # Ignore built-in assigns from other component types
     code = """
@@ -312,7 +313,7 @@ defmodule Surface.APITest do
     There's already a built-in data assign with the same name.\
     """
 
-    assert_raise(CompileError, message, fn -> eval(code, "LiveComponent") end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code, "LiveComponent") end)
 
     # Ignore built-in assigns from other component types
     code = """
@@ -333,7 +334,7 @@ defmodule Surface.APITest do
     There's already a built-in data assign with the same name.\
     """
 
-    assert_raise(CompileError, message, fn -> eval(code, "LiveView") end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code, "LiveView") end)
 
     # Ignore built-in assigns from other component types
     code = """
@@ -357,7 +358,7 @@ defmodule Surface.APITest do
     Hint: choose a single property to be the root prop.
     """
 
-    assert_raise(CompileError, message, fn -> eval(code) end)
+    assert_raise(Surface.CompileError, message, fn -> eval(code) end)
   end
 
   test "accept invalid quoted expressions like literal maps as default value" do
@@ -386,7 +387,7 @@ defmodule Surface.APITest do
       code = "prop {a, b}, :string"
       message = ~r/invalid prop name. Expected a variable name, got: {a, b}/
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         eval(code)
       end)
     end
@@ -403,7 +404,7 @@ defmodule Surface.APITest do
       message =
         ~r/unknown option :a. Available options: \[:required, :default, :values, :values!, :accumulate, :root, :static, :from_context, :css_variant\]/
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         eval(code)
       end)
     end
@@ -414,7 +415,7 @@ defmodule Surface.APITest do
       code = "slot {a, b}"
       message = ~r/invalid slot name. Expected a variable name, got: {a, b}/
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         eval(code)
       end)
     end
@@ -423,7 +424,7 @@ defmodule Surface.APITest do
       code = "slot cols, a: 1"
       message = ~r/unknown option :a. Available options: \[:required, :arg, :as, :generator_prop\]/
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         eval(code)
       end)
     end
@@ -445,14 +446,15 @@ defmodule Surface.APITest do
       end
       """
 
-      message = """
-      code.exs:7: cannot use property `unknown` as generator for slot. \
+      message = ~r"""
+      code.exs:7:
+      #{maybe_ansi("error:")} cannot use property `unknown` as generator for slot\. \
       Expected an existing property of type `:generator`, got: an undefined property `unknown`.
 
-      Hint: Available generators are [:items]\
+      Hint: Available generators are \[:items\]\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
@@ -473,14 +475,15 @@ defmodule Surface.APITest do
       end
       """
 
-      message = """
-      code.exs:6: cannot use property `label` as generator for slot. \
+      message = ~r"""
+      code.exs:6:
+      #{maybe_ansi("error:")} cannot use property `label` as generator for slot\. \
       Expected a property of type :generator, got: a property of type :string
 
-      Hint: Available generators are []\
+      Hint: Available generators are \[\]\
       """
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
       end)
     end
@@ -491,7 +494,7 @@ defmodule Surface.APITest do
       code = "data {a, b}, :string"
       message = ~r/invalid data name. Expected a variable name, got: {a, b}/
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         eval(code)
       end)
     end
@@ -507,7 +510,7 @@ defmodule Surface.APITest do
       message =
         ~r/unknown option :a. Available options: \[:default, :values, :values!, :from_context, :css_variant\]/
 
-      assert_raise(CompileError, message, fn ->
+      assert_raise(Surface.CompileError, message, fn ->
         eval(code)
       end)
     end
@@ -625,7 +628,7 @@ defmodule Surface.APITest do
 end
 
 defmodule Surface.APISyncTest do
-  use ExUnit.Case
+  use Surface.Case
   import ExUnit.CaptureIO
 
   defmodule ComponentWithRequiredDefaultSlot do
@@ -686,10 +689,8 @@ defmodule Surface.APISyncTest do
           {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
-      assert output =~ ~r"""
-             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
-             """
+      assert output =~ ~S(missing required slot "default" for component <ComponentWithRequiredDefaultSlot>)
+      assert output =~ "code.exs:6:"
     end
 
     test "warn if required slot is not assigned (blank content)" do
@@ -714,10 +715,8 @@ defmodule Surface.APISyncTest do
           {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
-      assert output =~ ~r"""
-             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
-             """
+      assert output =~ ~S(missing required slot "default" for component <ComponentWithRequiredDefaultSlot>)
+      assert output =~ "code.exs:6:"
     end
 
     test "warn if required default slot is not assigned (other slots present)" do
@@ -745,10 +744,8 @@ defmodule Surface.APISyncTest do
           {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
-      assert output =~ ~r"""
-             missing required slot "default" for component <ComponentWithRequiredDefaultSlot>
-               code.exs:6:\
-             """
+      assert output =~ ~S(missing required slot "default" for component <ComponentWithRequiredDefaultSlot>)
+      assert output =~ "code.exs:6:"
     end
 
     test "warn if a required named slot is not assigned" do
@@ -773,10 +770,8 @@ defmodule Surface.APISyncTest do
           {{:module, _, _, _}, _} = Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1})
         end)
 
-      assert output =~ ~r"""
-             missing required slot "header" for component <ComponentWithRequiredSlots>
-               code.exs:6:\
-             """
+      assert output =~ ~S(missing required slot "header" for component <ComponentWithRequiredSlots>)
+      assert output =~ "code.exs:6:"
     end
 
     if Version.match?(System.version(), ">= 1.15.0") do
@@ -809,11 +804,23 @@ defmodule Surface.APISyncTest do
             end
           end)
 
-        assert {%CompileError{},
-                [
-                  %{message: "cannot render <NonExisting> (module NonExisting could not be loaded)" <> _},
-                  %{message: "module NonExisting is not loaded and could not be found"}
-                ]} = diagnostics
+        assert {%Surface.CompileError{
+                  description: "cannot render <NonExisting> (module NonExisting could not be loaded)",
+                  hint: """
+                  make sure module `NonExisting` can be successfully compiled.
+
+                  If the module is namespaced, you can use its full name. For instance:
+
+                    <MyProject.Components.NonExisting>
+
+                  or add a proper alias so you can use just `<NonExisting>`:
+
+                    alias MyProject.Components.NonExisting
+                  """,
+                  file: "code.exs",
+                  line: 7,
+                  column: 8
+                }, []} = diagnostics
       end
     else
       # Remove this test (and the `if`) whenever we drop support for Elixir < 1.15
@@ -837,18 +844,13 @@ defmodule Surface.APISyncTest do
         end
         """
 
-        error_message = "code.exs:7: module NonExisting is not loaded and could not be found"
+        error_message =
+          ~r"code.exs:7(:8)?:\n#{maybe_ansi("error:")} cannot render <NonExisting> \(module NonExisting could not be loaded\)"
 
-        output =
-          capture_io(:standard_error, fn ->
-            assert_raise(CompileError, error_message, fn ->
-              {{:module, _, _, _}, _} =
-                Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1}) |> IO.inspect()
-            end)
-          end)
-
-        assert output =~ ~r"cannot render <NonExisting> \(module NonExisting could not be loaded\)"
-        assert output =~ ~r"  code.exs:7:"
+        assert_raise(Surface.CompileError, error_message, fn ->
+          {{:module, _, _, _}, _} =
+            Code.eval_string(code, [], %{__ENV__ | file: "code.exs", line: 1}) |> IO.inspect()
+        end)
       end
     end
   end

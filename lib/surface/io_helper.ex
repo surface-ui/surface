@@ -13,15 +13,51 @@ defmodule Surface.IOHelper do
     IO.warn(message, stacktrace)
   end
 
+  if Version.match?(System.version(), ">= 1.14.0") do
+    def warn(message, _caller, file, {line, column}) do
+      IO.warn(message, file: file, line: line, column: column)
+    end
+  else
+    # TODO: Remove this clause in Surface v0.13 and set required elixir to >= v1.14
+    def warn(message, caller, file, {line, _column}) do
+      warn(message, caller, file, line)
+    end
+  end
+
   def warn(message, caller, file, line) do
     stacktrace = Macro.Env.stacktrace(%{caller | file: file, line: line})
 
     IO.warn(message, stacktrace)
   end
 
-  @spec compile_error(String.t(), String.t(), integer()) :: no_return()
+  if Version.match?(System.version(), ">= 1.14.0") do
+    def compile_error(message, file, {line, column}) do
+      reraise(%Surface.CompileError{file: file, line: line, column: column, description: message}, [])
+    end
+  else
+    # TODO: Remove this clause in Surface v0.13 and set required elixir to >= v1.14
+    def compile_error(message, file, {line, _column}) do
+      reraise(%Surface.CompileError{line: line, file: file, description: message}, [])
+    end
+  end
+
   def compile_error(message, file, line) do
-    reraise(%CompileError{line: line, file: file, description: message}, [])
+    reraise(%Surface.CompileError{line: line, file: file, description: message}, [])
+  end
+
+  if Version.match?(System.version(), ">= 1.14.0") do
+    def compile_error(message, hint, file, {line, column}) do
+      reraise(%Surface.CompileError{file: file, line: line, column: column, description: message, hint: hint}, [])
+    end
+  else
+    # TODO: Remove this clause in Surface v0.13 and set required elixir to >= v1.14
+    def compile_error(message, hint, file, {line, _column}) do
+      reraise(%Surface.CompileError{file: file, line: line, description: message, hint: hint}, [])
+    end
+  end
+
+  def compile_error(message, hint, file, line) do
+    reraise(%Surface.CompileError{line: line, file: file, description: message, hint: hint}, [])
   end
 
   @spec syntax_error(String.t(), String.t(), integer()) :: no_return()
