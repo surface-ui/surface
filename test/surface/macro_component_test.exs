@@ -201,14 +201,14 @@ defmodule Surface.MacroComponentTest do
         """
       end
 
-    message = """
-    code:2: invalid value for property "align"
+    message = ~r"""
+    code:2:\n.+?error:.+? invalid value for property "align"
 
     Expected a string while evaluating {@align}, got: nil
 
     Hint: static properties of macro components can only accept static values like module attributes,
     literals or compile-time expressions. Runtime variables and expressions, including component
-    assigns, cannot be evaluated as they are not available during compilation.
+    assigns, cannot be evaluated as they are not available during compilation\.
     """
 
     assert_raise(Surface.CompileError, message, fn ->
@@ -255,9 +255,7 @@ defmodule Surface.MacroComponentTest do
       assert {%Surface.CompileError{
                 description: "cannot render <#NonExisting> (module NonExisting could not be loaded)",
                 hint: """
-
-
-                Hint: make sure module `NonExisting` can be successfully compiled.
+                make sure module `NonExisting` can be successfully compiled.
 
                 If the module is namespaced, you can use its full name. For instance:
 
@@ -284,7 +282,7 @@ defmodule Surface.MacroComponentTest do
 
       assert_raise(
         Surface.CompileError,
-        ~r/code:1(:2)?: cannot render \<#NonExisting\> \(module NonExisting could not be loaded\)/,
+        ~r/code:1(:2)?:\n.+?error:.+? cannot render \<#NonExisting\> \(module NonExisting could not be loaded\)/,
         fn ->
           compile_surface(code)
         end

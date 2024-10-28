@@ -35,12 +35,12 @@ defmodule Surface.Catalogue.LiveExampleTest do
     end
     """
 
-    message = """
-    code.exs:2: no subject defined for Surface.Catalogue.LiveExample
+    message = ~r"""
+    code\.exs:2:\n.+?error:.+? no subject defined for Surface\.Catalogue\.LiveExample
 
-    Hint: You can define the subject using the :subject option. Example:
+    .+?hint:.+? you can define the subject using the :subject option\. Example:
 
-      use Surface.Catalogue.LiveExample, subject: MyApp.MyButton
+      use Surface\.Catalogue\.LiveExample, subject: MyApp.MyButton
     """
 
     assert_raise Surface.CompileError, message, fn ->

@@ -36,7 +36,8 @@ defmodule Surface.CompileError do
           lineCode = String.trim_trailing(lineCode)
           :elixir_errors.format_snippet(:error, {line, column}, file, description, lineCode, %{})
         else
-          description
+          prefix = IO.ANSI.format([:red, "error:"])
+          "#{prefix} #{description}"
         end
 
       hint =
@@ -47,12 +48,22 @@ defmodule Surface.CompileError do
         end
 
       location = Exception.format_file_line_column(Path.relative_to_cwd(file), line, column)
-      location <> " " <> message <> hint
+      location <> "\n" <> message <> hint
     end
   else
     defp format_message(file, line, column, description, hint) do
       location = Exception.format_file_line_column(Path.relative_to_cwd(file), line, column)
-      location <> " " <> description <> (hint || "")
+
+      hint =
+        if hint do
+          prefix = IO.ANSI.format([:blue, "hint:"])
+          "\n\n#{prefix} " <> hint
+        else
+          ""
+        end
+
+      prefix = IO.ANSI.format([:red, "error:"])
+      location <> "\n#{prefix} " <> description <> hint
     end
   end
 end

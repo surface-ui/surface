@@ -186,11 +186,11 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      message = """
-      code:3: cannot assign `{...@props}` to attribute `class`. \
-      The tagged expression `{... }` can only be used on a root attribute/property.
+      message = ~r"""
+      code:3:\n.+?error:.+? cannot assign `{\.\.\.@props}` to attribute `class`\. \
+      The tagged expression `{\.\.\. }` can only be used on a root attribute/property\.
 
-      Example: <div {...@attrs}>
+      Example: <div {\.\.\.@attrs}>
       """
 
       assert_raise(Surface.CompileError, message, fn ->
@@ -315,11 +315,11 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      message = """
-      code:3: cannot assign `{...@attrs}` to attribute `class`. \
-      The tagged expression `{... }` can only be used on a root attribute/property.
+      message = ~r"""
+      code:3:\n.+?error:.+? cannot assign `{\.\.\.@attrs}` to attribute `class`\. \
+      The tagged expression `{\.\.\. }` can only be used on a root attribute/property\.
 
-      Example: <div {...@attrs}>
+      Example: <div {\.\.\.@attrs}>
       """
 
       assert_raise(Surface.CompileError, message, fn ->
@@ -385,8 +385,8 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      message = """
-      code:2: unknown modifier "unknown" for directive :for\
+      message = ~r"""
+      code:2:\n.+?error:.+? unknown modifier "unknown" for directive :for\
       """
 
       assert_raise(Surface.CompileError, message, fn ->
@@ -407,8 +407,8 @@ defmodule Surface.DirectivesTest do
           """
         end
 
-      message = """
-      code:2: cannot apply modifier "with_index" on generators with multiple clauses\
+      message = ~r"""
+      code:2:\n.+?error:.+? cannot apply modifier "with_index" on generators with multiple clauses\
       """
 
       assert_raise(Surface.CompileError, message, fn ->
