@@ -101,6 +101,10 @@ defmodule Surface.BaseComponent do
     components_calls = Module.get_attribute(env.module, :__components_calls__)
     style = Module.get_attribute(env.module, :__style__)
 
+    possible_components_imports = filter_possible_function_components(__CALLER__.functions)
+    Module.register_attribute(__CALLER__.module, :surface_imports, persist: true)
+    Module.put_attribute(__CALLER__.module, :surface_imports, possible_components_imports)
+
     style_ast =
       if style do
         quote do
@@ -251,5 +255,16 @@ defmodule Surface.BaseComponent do
     |> List.last()
     |> Macro.underscore()
     |> Kernel.<>(".css")
+  end
+
+  defp filter_possible_function_components(functions) do
+    for {mod, funcs} when mod not in [Kernel, Phoenix.HTML, Surface, Phoenix.LiveView.Helpers] <- functions do
+      possible_comps =
+        for {func, 1} <- funcs do
+          func
+        end
+
+      {mod, possible_comps}
+    end
   end
 end

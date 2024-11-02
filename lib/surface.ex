@@ -281,9 +281,9 @@ defmodule Surface do
     |> Enum.chunk_every(50)
     |> Task.async_stream(fn files ->
       for file <- files,
-          {:ok, {_, [{_, chunk} | _]}} = :beam_lib.chunks(file, [~c"Attr"]),
-          chunk |> :erlang.binary_to_term() |> Keyword.get(:component_type) do
-        file |> Path.basename(".beam") |> String.to_atom()
+          {:ok, {mod, [{_, attributes} | _]}} = :beam_lib.chunks(file, [:attributes]),
+          Keyword.has_key?(attributes, :component_type) do
+        mod
       end
     end)
     |> Enum.flat_map(fn {:ok, result} -> result end)
