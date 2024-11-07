@@ -25,6 +25,9 @@ defmodule Mix.Tasks.Compile.Surface do
     Set it to `false` when developing a library of components that doesn't require any CSS
     style nor JS hooks. Default is `true`.
 
+  * `generate_definitions` - instructs the compiler to generate components' definitions for
+    language servers. Default is `true`.
+
   * `hooks_output_dir` - defines the folder where the compiler generates the JS hooks files.
     Default is `./assets/js/_hooks/`.
 
@@ -174,13 +177,14 @@ defmodule Mix.Tasks.Compile.Surface do
       opts = Application.get_env(:surface, :compiler, [])
       asset_opts = Keyword.take(opts, @assets_opts)
       definitions_opts = Keyword.take(opts, @definitions_opts)
-      asset_components = Surface.components()
-      project_components = Surface.components(only_current_project: true)
+
+      {surface_components, project_surface_components, components_specs} =
+        all_components_metadata() |> build_components_and_specs()
 
       [
-        Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
-        Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts),
-        Mix.Tasks.Compile.Surface.Definitions.run(asset_components, definitions_opts)
+        Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_surface_components),
+        Mix.Tasks.Compile.Surface.AssetGenerator.run(surface_components, asset_opts),
+        Mix.Tasks.Compile.Surface.Definitions.run(components_specs, definitions_opts)
       ]
       |> List.flatten()
       |> handle_diagnostics(compile_opts)
@@ -236,4 +240,239 @@ defmodule Mix.Tasks.Compile.Surface do
       true -> :ok
     end
   end
+
+  @doc false
+  def build_components_and_specs(meta_list) do
+    project_app = Mix.Project.config()[:app]
+
+    Enum.reduce(meta_list, {[], [], []}, fn meta, {components, project_components, specs} ->
+      # TODO: Check if it's faster to retrieve the source directly from the file's chunk and add to meta
+      {mod, _, _, _, _} = meta
+      source = Path.relative_to_cwd(to_string(mod.module_info()[:compile][:source]))
+
+      {specs, privates} = add_functions(meta, specs, source)
+      add_component(meta, components, project_components, specs, source, project_app, privates)
+    end)
+  end
+
+  defp add_component(
+         {_, _surface_component? = true, _, _, _} = meta,
+         components,
+         project_components,
+         specs,
+         source,
+         project_app,
+         privates
+       ) do
+    {mod, _, _, aliases, imports} = meta
+    project_component? = Application.get_application(mod) == project_app
+
+    components = [mod | components]
+
+    project_components =
+      if project_component? do
+        [mod | project_components]
+      else
+        project_components
+      end
+
+    spec = %{
+      type: :surface,
+      module: inspect(mod),
+      docs: get_doc(mod),
+      props: get_props(mod),
+      source: source,
+      privates: privates,
+      aliases: map_aliases(aliases),
+      imports: components_from_imports(imports)
+      # TODO: line
+    }
+
+    {components, project_components, [spec | specs]}
+  end
+
+  defp add_component(_meta, components, project_components, specs, _source, _project_app, _privates) do
+    {components, project_components, specs}
+  end
+
+  defp add_functions({mod, _, _has_function_components? = true, _, _}, specs, source) do
+    function_components = mod.__components__()
+
+    docs =
+      if function_components != [] do
+        get_functions_docs(mod)
+      else
+        %{}
+      end
+
+    Enum.reduce(function_components, {specs, []}, fn {func, func_spec}, {specs, privates} ->
+      spec = %{
+        type: func_spec.kind,
+        module: inspect(mod),
+        func: func,
+        docs: docs[func],
+        attrs: attrs_to_specs(func_spec.attrs),
+        source: source,
+        line: func_spec.line
+      }
+
+      case func_spec.kind do
+        :def -> {[spec | specs], privates}
+        :defp -> {specs, [spec | privates]}
+      end
+    end)
+  end
+
+  defp add_functions(_meta, specs, _source) do
+    {specs, []}
+  end
+
+  defp all_components_metadata do
+    :ok = Application.ensure_loaded(Mix.Project.config()[:app])
+    {:ok, dirs} = :file.list_dir(~c"#{Mix.Project.build_path()}/lib")
+    apps = Enum.map(dirs, fn dir -> :"#{dir}" end)
+
+    for app <- apps,
+        maybe_has_component?(app),
+        {dir, files} = app_beams_dir_and_files(app),
+        file <- files,
+        List.starts_with?(file, ~c"Elixir.") do
+      :filename.join(dir, file)
+    end
+    |> Enum.chunk_every(50)
+    |> Task.async_stream(&extract_components_metadata/1, ordered: false)
+    # Check if it's faster to use `|> Stream.map(fn {:ok, v} -> v end)` and then unfold recursively when
+    # generating the 3 different lists
+    |> Enum.flat_map(fn {:ok, result} -> result end)
+  end
+
+  @doc false
+  def extract_components_metadata(files) do
+    Enum.reduce(files, [], fn file, acc ->
+      {:ok, {mod, [{:attributes, attrs}, {:exports, exports}]}} = :beam_lib.chunks(file, [:attributes, :exports])
+      component_type = Keyword.get(attrs, :component_type)
+      surface_component? = component_type != nil
+
+      {aliases, imports} =
+        if surface_component? do
+          {Keyword.get(attrs, :surface_aliases, []), Keyword.get(attrs, :surface_imports, [])}
+        else
+          {[], []}
+        end
+
+      has_function_components? = Keyword.get(exports, :__components__) == 0
+
+      if surface_component? or has_function_components? do
+        [{mod, component_type != nil, has_function_components?, aliases || [], imports || []} | acc]
+      else
+        acc
+      end
+    end)
+  end
+
+  defp map_aliases(aliases) do
+    Map.new(aliases, fn {key, value} ->
+      {inspect(key), inspect(value)}
+    end)
+  end
+
+  defp components_from_imports(surface_imports) do
+    for {mod, imports} <- surface_imports,
+        function_exported?(mod, :__components__, 0),
+        components = mod.__components__(),
+        func <- imports,
+        Map.has_key?(components, func),
+        into: %{} do
+      {func, "#{inspect(mod)}.#{func}"}
+    end
+  end
+
+  defp attrs_to_specs(attrs) do
+    Enum.map(attrs, fn attr ->
+      %{
+        line: attr.line,
+        name: attr.name,
+        type: inspect(attr.type),
+        doc: attr.doc,
+        required: attr.required
+      }
+    end)
+  end
+
+  defp app_beams_dir_and_files(app) do
+    dir =
+      app
+      |> Application.app_dir()
+      |> Path.join("ebin")
+      |> String.to_charlist()
+
+    {:ok, files} = :file.list_dir(dir)
+    {dir, files}
+  end
+
+  # We may need to do this recursively down the deps
+  defp maybe_has_component?(app) do
+    apps_with_components = [:phoenix_live_view, :surface]
+
+    if app in apps_with_components do
+      true
+    else
+      deps_apps = Application.spec(app)[:applications] || []
+      Enum.any?(deps_apps, fn dep -> dep in apps_with_components end)
+    end
+  end
+
+  defp get_doc(module) do
+    case Code.fetch_docs(module) do
+      {:docs_v1, _moduledoc_anno, _language, "text/markdown", %{"en" => docs}, _meta, _docs} ->
+        docs
+
+      _ ->
+        nil
+    end
+  end
+
+  defp get_functions_docs(module) do
+    case Code.fetch_docs(module) do
+      {:docs_v1, _moduledoc_anno, _language, "text/markdown", _mod_docs, _meta, func_docs} ->
+        for {{:function, func, 1}, _line, _sig, %{"en" => doc}, _meta} <- func_docs, into: %{} do
+          {func, doc}
+        end
+
+      _ ->
+        %{}
+    end
+  end
+
+  defp get_props(module) do
+    if ensure_loaded?(module) and function_exported?(module, :__props__, 0) do
+      for prop <- module.__props__(), prop.type != :children do
+        %{
+          name: "#{to_string(prop.name)}",
+          type: prop.type,
+          doc: prop.doc,
+          opts: "#{inspect(prop.type)}#{format_opts(prop.opts_ast)}",
+          line: prop.line
+        }
+      end
+    else
+      []
+    end
+  end
+
+  defp format_opts(opts_ast) do
+    if opts_ast == [] do
+      ""
+    else
+      str =
+        opts_ast
+        |> Macro.to_string()
+        |> String.slice(1..-2//1)
+
+      ", " <> str
+    end
+  end
+
+  defp ensure_loaded?(Elixir), do: false
+  defp ensure_loaded?(mod), do: match?({:module, _}, Code.ensure_compiled(mod))
 end
