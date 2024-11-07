@@ -101,6 +101,10 @@ defmodule Surface.BaseComponent do
     components_calls = Module.get_attribute(env.module, :__components_calls__)
     style = Module.get_attribute(env.module, :__style__)
 
+    aliases = __CALLER__.aliases
+    Module.register_attribute(__CALLER__.module, :surface_aliases, persist: true)
+    Module.put_attribute(__CALLER__.module, :surface_aliases, aliases)
+
     possible_components_imports = filter_possible_function_components(__CALLER__.functions)
     Module.register_attribute(__CALLER__.module, :surface_imports, persist: true)
     Module.put_attribute(__CALLER__.module, :surface_imports, possible_components_imports)

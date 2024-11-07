@@ -197,6 +197,7 @@ defmodule Mix.Tasks.Compile.Surface.Definitions do
                 props: get_props(mod),
                 source: source,
                 privates: privates,
+                aliases: map_aliases(Keyword.get(attributes, :surface_aliases, [])),
                 imports: components_from_imports(Keyword.get(attributes, :surface_imports, []))
                 # TODO: line
               }
@@ -206,6 +207,12 @@ defmodule Mix.Tasks.Compile.Surface.Definitions do
       end
     end)
     |> Enum.flat_map(fn {:ok, result} -> result end)
+  end
+
+  defp map_aliases(aliases) do
+    Map.new(aliases, fn {key, value} ->
+      {inspect(key), inspect(value)}
+    end)
   end
 
   defp components_from_imports(surface_imports) do
