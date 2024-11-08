@@ -1,31 +1,41 @@
 defmodule Surface.Directive.Events do
   use Surface.Directive
 
-  @events [
-    # Click Events
-    "click",
-    "click-away",
-    # TODO: Remove this when LV min is >= v0.20.15
-    "capture-click",
-    # Form Events
-    "change",
-    "submit",
-    # Focus Events
-    "blur",
-    "focus",
-    "window-blur",
-    "window-focus",
-    # Key Events
-    "keydown",
-    "keyup",
-    "window-keydown",
-    "window-keyup",
-    # Scroll Events
-    "viewport-top",
-    "viewport-bottom"
+  @events_by_group [
+    click: [
+      "click",
+      "click-away",
+      # TODO: Remove this when LV min is >= v0.20.15
+      "capture-click"
+    ],
+    form: [
+      "change",
+      "submit"
+    ],
+    focus: [
+      "blur",
+      "focus",
+      "window-blur",
+      "window-focus"
+    ],
+    key: [
+      "keydown",
+      "keyup",
+      "window-keydown",
+      "window-keyup"
+    ],
+    scroll: [
+      "viewport-top",
+      "viewport-bottom"
+    ]
   ]
 
+  @events Enum.flat_map(@events_by_group, fn {_k, v} -> v end)
+
   @phx_events Enum.map(@events, &"phx-#{&1}")
+
+  @doc false
+  def events_by_group(), do: @events_by_group
 
   @doc false
   def names(), do: @events

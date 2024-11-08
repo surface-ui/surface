@@ -378,6 +378,7 @@ defmodule Mix.Tasks.Compile.Surface do
 
   defp components_from_imports(surface_imports) do
     for {mod, imports} <- surface_imports,
+        ensure_loaded?(mod),
         function_exported?(mod, :__components__, 0),
         components = mod.__components__(),
         func <- imports,
