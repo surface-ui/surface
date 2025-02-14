@@ -15,8 +15,9 @@ defmodule Mix.Tasks.Surface.Init.ProjectPatchers.Docker do
   def swap_assets_deploy_with_compile() do
     %{
       name: "Run mix compile before mix assets.deploy",
+      ignore_when: [:file_not_found],
       instructions: """
-      Update `Dockerfile` so that `mix compile` is before `mix assets.deploy`.
+      Update `Dockerfile` so that `mix compile` is called before `mix assets.deploy`.
 
       # Example
 

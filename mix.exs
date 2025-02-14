@@ -43,7 +43,7 @@ defmodule Surface.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view, "~> 0.19.0 or ~> 0.20.10"},
+      {:phoenix_live_view, "~> 0.19.0 or ~> 0.20.10 or ~> 1.0"},
       {:sourceror, "~> 1.0"},
       {:blend, "~> 0.3.0", only: :dev},
       {:jason, "~> 1.0", only: :test},

@@ -17,13 +17,12 @@ jobs:
       matrix:
         include:
           - elixir: '1.13.4'
-            otp: '24.0'
+            otp: '25.0'
             blend: phoenix_live_view_0_19
           - elixir: '1.13.4'
             otp: '25.0'
-            run_plugin_tests: true
-            warnings_as_errors: true
-          - elixir: '1.14.0'
+            blend: phoenix_live_view_0_20
+          - elixir: '1.14.1'
             otp: '25.0'
             run_plugin_tests: true
             run_integration_tests: true
@@ -45,7 +44,13 @@ jobs:
             run_plugin_tests: true
             run_integration_tests: true
             warnings_as_errors: true
-          - elixir: '1.17.0'
+          - elixir: '1.18.0'
+            otp: '27.0.1'
+            check_formatted: true
+            run_plugin_tests: true
+            run_integration_tests: true
+            warnings_as_errors: true
+          - elixir: '1.18.0'
             otp: '27.0.1'
             update_deps: true
             run_plugin_tests: true

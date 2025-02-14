@@ -136,33 +136,35 @@ defmodule Mix.Tasks.Surface.Init.Patcher do
   end
 
   defp to_results(patches, status, file) do
-    Enum.map(patches, fn patch_spec ->
+    for patch_spec <- patches, status not in Map.get(patch_spec, :ignore_when, []) do
       {status, file, patch_spec}
-    end)
+    end
   end
 
   defp log(action, file, fun) do
-    prefix = "* #{action} "
-    Mix.shell().info([:green, prefix, :reset, file])
-
     result = fun.()
 
-    skipped_postfix =
-      case result |> List.wrap() |> Enum.split_with(&match?({:patched, _, _}, &1)) do
-        {[], _not_patched} ->
-          [:yellow, " (skipped)", :reset]
+    if result != [] do
+      prefix = "* #{action} "
+      Mix.shell().info([:green, prefix, :reset, file])
 
-        {_patched, []} ->
-          []
+      skipped_postfix =
+        case result |> List.wrap() |> Enum.split_with(&match?({:patched, _, _}, &1)) do
+          {[], _not_patched} ->
+            [:yellow, " (skipped)", :reset]
 
-        {patched, not_patched} ->
-          n_not_patched = length(not_patched)
-          total = n_not_patched + length(patched)
-          [:yellow, " (skipped #{n_not_patched} of #{total} changes)", :reset]
+          {_patched, []} ->
+            []
+
+          {patched, not_patched} ->
+            n_not_patched = length(not_patched)
+            total = n_not_patched + length(patched)
+            [:yellow, " (skipped #{n_not_patched} of #{total} changes)", :reset]
+        end
+
+      if skipped_postfix != [] do
+        Mix.shell().info([IO.ANSI.cursor_up(), :clear_line, :yellow, prefix, :reset, file] ++ skipped_postfix)
       end
-
-    if skipped_postfix != [] do
-      Mix.shell().info([IO.ANSI.cursor_up(), :clear_line, :yellow, prefix, :reset, file] ++ skipped_postfix)
     end
 
     result
