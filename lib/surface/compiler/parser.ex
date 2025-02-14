@@ -385,9 +385,7 @@ defmodule Surface.Compiler.Parser do
   end
 
   defp node_type({:tag_open, _, _, _}), do: "tag"
-  defp node_type({:tag_close, _, _}), do: "tag"
   defp node_type({:block_open, _, _, _}), do: "block"
-  defp node_type({:block_close, _, _}), do: "block"
 
   defp format_node({:tag_open, name, _attrs, _meta}), do: "<#{name}>"
   defp format_node({:tag_close, name, _meta}), do: "</#{name}>"
