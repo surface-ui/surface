@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.1 (2025-02-14)
+
+* Support Liveview `1.0` (#760)
+* Improve errors and diagnostics (#757)
+* Fix printing diagnostics on hot code reloading (#754)
+* Fix attr={...} error
+
 ## v0.12.0 (2024-09-24)
 
 * Add column information to diagnostics to improve error/warning messages during compiler validation
