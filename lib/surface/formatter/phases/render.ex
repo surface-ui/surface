@@ -448,12 +448,12 @@ defmodule Surface.Formatter.Phases.Render do
         # handle keyword lists, which will be stripped of the outer brackets per surface syntax sugar
         "[#{expression}]"
         |> Code.format_string!(locals_without_parens: [...: 1])
-        |> Enum.slice(1..-2//1)
-        |> to_string()
+        |> IO.iodata_to_binary()
+        |> String.slice(1..-2//1)
       else
         expression
         |> Code.format_string!(locals_without_parens: [...: 1])
-        |> to_string()
+        |> IO.iodata_to_binary()
       end
 
     if length(Keyword.get(opts, :attributes, [])) > 1 do
