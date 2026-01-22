@@ -233,7 +233,7 @@ defmodule Surface.API do
     props_by_name = for p <- props, into: %{}, do: {p.name, p}
     required_props_names = for %{name: name, opts: opts} <- props, opts[:required], do: name
 
-    quote do
+    quote generated: true do
       @doc false
       def __props__() do
         unquote(Macro.escape(props))
@@ -263,7 +263,7 @@ defmodule Surface.API do
 
     assigned_slots_by_parent = Module.get_attribute(env.module, :assigned_slots_by_parent) || %{}
 
-    quote do
+    quote generated: true do
       @doc false
       def __slots__() do
         unquote(slots |> Enum.reverse() |> Macro.escape())
