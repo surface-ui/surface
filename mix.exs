@@ -14,7 +14,6 @@ defmodule Surface.MixProject do
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
-      preferred_cli_env: [docs: :docs],
       # Docs
       name: "Surface",
       source_url: @source_url,
@@ -30,6 +29,10 @@ defmodule Surface.MixProject do
       extra_applications: [:logger],
       env: [csrf_token_reader: {Plug.CSRFProtection, :get_csrf_token_for, []}]
     ]
+  end
+
+  def cli do
+    [preferred_envs: [docs: :docs]]
   end
 
   defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
