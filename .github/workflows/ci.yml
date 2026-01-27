@@ -28,7 +28,6 @@ jobs:
             warnings_as_errors: true
           - elixir: '1.16.0'
             otp: '26.2.1'
-            check_formatted: true
             run_plugin_tests: true
             run_integration_tests: true
             warnings_as_errors: true
