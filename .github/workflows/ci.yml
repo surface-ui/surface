@@ -40,18 +40,22 @@ jobs:
             warnings_as_errors: true
           - elixir: '1.17.0'
             otp: '27.0.1'
-            check_formatted: true
             run_plugin_tests: true
             run_integration_tests: true
             warnings_as_errors: true
           - elixir: '1.18.0'
             otp: '27.0.1'
+            run_plugin_tests: true
+            run_integration_tests: true
+            warnings_as_errors: true
+          - elixir: '1.19.5'
+            otp: '28.3.1'
             check_formatted: true
             run_plugin_tests: true
             run_integration_tests: true
             warnings_as_errors: true
-          - elixir: '1.18.0'
-            otp: '27.0.1'
+          - elixir: '1.19.5'
+            otp: '28.3.1'
             update_deps: true
             run_plugin_tests: true
     env:
