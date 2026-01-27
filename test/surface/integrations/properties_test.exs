@@ -533,7 +533,7 @@ defmodule Surface.PropertiesTest do
         end
 
       message =
-        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "prop"\. Expected a :list, got: {1, 2}\./
+        ~r/code:1:\n#{maybe_ansi("error:")} invalid value for property "prop"\. Expected a :list, got: \{1, 2\}\./
 
       assert_raise(Surface.CompileError, message, fn ->
         compile_surface(code)
