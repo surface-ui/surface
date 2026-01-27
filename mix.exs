@@ -51,6 +51,7 @@ defmodule Surface.MixProject do
       {:blend, "~> 0.3.0", only: :dev},
       {:jason, "~> 1.0", only: :test},
       {:floki, "~> 0.35", only: :test},
+      {:lazy_html, ">= 0.1.0", only: :test},
       {:ex_doc, ">= 0.31.0", only: :docs}
     ]
   end
