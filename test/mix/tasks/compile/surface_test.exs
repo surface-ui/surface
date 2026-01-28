@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 
-    assert capture_io(:standard_error, fn -> run(["--return-errors"]) end) == ""
+    assert capture_io(:standard_error, fn -> run(["--return-errors", "--force"]) end) == ""
 
     assert File.read!(@hooks_index_file) == """
            /*
@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
     output =
       capture_io(:standard_error, fn ->
-        assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [])
+        assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [], :ok)
       end)
 
     assert output =~ "warning:"
@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     output =
       capture_io(:standard_error, fn ->
         assert {:error, [^diagnostic]} =
-                 handle_diagnostics([diagnostic], return_errors: true, warnings_as_errors: true)
+                 handle_diagnostics([diagnostic], [return_errors: true, warnings_as_errors: true], :ok)
       end)
 
     refute output =~ "test warning"
@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
     output =
       capture_io(:standard_error, fn ->
-        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [])
+        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [], :ok)
       end)
 
     assert output == (IO.ANSI.format([:red, "error: "]) |> IO.iodata_to_binary()) <> "test error\n  file.ex:1\n"
@@ -129,7 +129,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
     output =
       capture_io(:standard_error, fn ->
-        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], return_errors: true)
+        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [return_errors: true], :ok)
       end)
 
     assert output == ""
