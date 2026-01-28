@@ -222,16 +222,8 @@ defmodule Mix.Tasks.Compile.Surface do
     end
   end
 
-  if Version.match?(System.version(), ">= 1.14.0") do
-    defp print_diagnostic(message, :warning, file, {line, col}) do
-      IO.warn(message, file: file, line: line, column: col)
-    end
-  end
-
-  # TODO: Remove this clause in Surface v0.13 and set required elixir to >= v1.14
-  defp print_diagnostic(message, :warning, file, line) do
-    rel_file = file |> Path.relative_to_cwd() |> to_charlist()
-    IO.warn(message, [{nil, :__FILE__, 1, [file: rel_file, line: line]}])
+  defp print_diagnostic(message, :warning, file, {line, col}) do
+    IO.warn(message, file: file, line: line, column: col)
   end
 
   defp print_diagnostic(message, :error, file, line) do

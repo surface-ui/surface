@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
   import Mix.Tasks.Compile.Surface
   import ExUnit.CaptureIO
+  import ANSIHelpers
 
   alias Mix.Task.Compiler.Diagnostic
 
@@ -69,7 +70,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     diagnostic = %Diagnostic{
       message: "test warning",
       file: "file.ex",
-      position: 1,
+      position: {1, 1},
       severity: :warning,
       compiler_name: "Surface"
     }
@@ -79,15 +80,15 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
         assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [], :ok)
       end)
 
-    assert output =~ "warning:"
-    assert output =~ "test warning\n  file.ex:1: (file)\n\n"
+    assert output =~ ~r"#{maybe_ansi("warning:")} test warning"
+    assert output =~ "file.ex:1: (file)\n\n"
   end
 
   test "don't print and return `{:error, diagnostics}` on warning with `return_errors` and `warnings_as_errors`" do
     diagnostic = %Diagnostic{
       message: "test warning",
       file: "file.ex",
-      position: 1,
+      position: {1, 1},
       severity: :warning,
       compiler_name: "Surface"
     }
