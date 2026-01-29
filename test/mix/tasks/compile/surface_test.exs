@@ -52,6 +52,43 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     assert run(["--from-mix-deps-compile"]) == {:noop, []}
   end
 
+  test "create manifest when compiling for the first time" do
+    [manifest] = manifests()
+    File.rm(manifest)
+
+    assert read_manifest() == {:unknown, nil}
+
+    assert {:ok, _} = run(["--return-errors"])
+
+    assert {1 = _version, [%Diagnostic{} | _]} = read_manifest()
+  end
+
+  test "force re-compilation if manifest is outdated" do
+    assert {:ok, [%Diagnostic{} | _]} = run(["--return-errors", "--force"])
+
+    assert {version, diagnostics} = read_manifest()
+
+    # No re-compilation as the manifest is up-to-date
+    assert {:noop, _} = run(["--return-errors"])
+
+    # Force an older version
+    write_manifest!(version - 1, diagnostics)
+
+    # Now it re-compiles as the manifest is outdated
+    assert {:ok, _} = run(["--return-errors"])
+  end
+
+  test "use manifest to avoid re-compilation and keep track of diagnostics" do
+    # Runninng the first time compiles it normally, returning diagnostics
+    assert {:ok, [%Diagnostic{} | _]} = run(["--return-errors", "--force"])
+
+    # Runninng again compiles nothing and returns no warnings as there's no change
+    assert {:noop, []} = run(["--return-errors"])
+
+    # Runninng again using --all-warnings compiles nothing but returns existing warnings
+    assert {:noop, [%Diagnostic{} | _]} = run(["--return-errors", "--all-warnings"])
+  end
+
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 

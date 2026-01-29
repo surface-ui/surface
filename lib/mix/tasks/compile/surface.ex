@@ -198,7 +198,7 @@ defmodule Mix.Tasks.Compile.Surface do
         Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
       ])
 
-    write_manifest!(diagnostics)
+    write_manifest!(@manifest_version, diagnostics)
 
     case diagnostics do
       [] ->
@@ -249,15 +249,17 @@ defmodule Mix.Tasks.Compile.Surface do
 
   defp manifest, do: Path.join(Mix.Project.manifest_path(), @manifest)
 
-  defp read_manifest do
+  @doc false
+  def read_manifest do
     case File.read(manifest()) do
       {:ok, contents} -> :erlang.binary_to_term(contents)
       _ -> {:unknown, nil}
     end
   end
 
-  defp write_manifest!(diagnostics) do
-    File.write!(manifest(), :erlang.term_to_binary({@manifest_version, diagnostics}))
+  @doc false
+  def write_manifest!(version, diagnostics) do
+    File.write!(manifest(), :erlang.term_to_binary({version, diagnostics}))
   end
 
   defp manifest_older? do
