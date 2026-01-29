@@ -143,6 +143,8 @@ defmodule Mix.Tasks.Compile.Surface do
 
   use Mix.Task
   @recursive true
+  @manifest ".compile_surface"
+  @manifest_version 1
 
   alias Mix.Task.Compiler.Diagnostic
 
@@ -167,32 +169,51 @@ defmodule Mix.Tasks.Compile.Surface do
       {:noop, []}
     else
       {compile_opts, _argv, _err} = OptionParser.parse(args, switches: @switches)
-      opts = Application.get_env(:surface, :compiler, [])
-      asset_opts = Keyword.take(opts, @assets_opts)
-      asset_components = Surface.components()
-      project_components = Surface.components(only_current_project: true)
 
-      [
-        Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
-        Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
-      ]
-      |> List.flatten()
-      |> handle_diagnostics(compile_opts)
+      {version, diagnostics} = read_manifest()
+      manifest_outdated? = version != @manifest_version or manifest_older?()
+
+      cond do
+        manifest_outdated? || compile_opts[:force] ->
+          do_run(compile_opts)
+
+        compile_opts[:all_warnings] ->
+          handle_diagnostics(diagnostics, compile_opts, :noop)
+
+        true ->
+          {:noop, []}
+      end
     end
   end
 
-  @doc false
-  def handle_diagnostics(diagnostics, compile_opts) do
+  def do_run(compile_opts) do
+    opts = Application.get_env(:surface, :compiler, [])
+    asset_opts = Keyword.take(opts, @assets_opts)
+    asset_components = Surface.components()
+    project_components = Surface.components(only_current_project: true)
+
+    diagnostics =
+      List.flatten([
+        Mix.Tasks.Compile.Surface.ValidateComponents.validate(project_components),
+        Mix.Tasks.Compile.Surface.AssetGenerator.run(asset_components, asset_opts)
+      ])
+
+    write_manifest!(@manifest_version, diagnostics)
+
     case diagnostics do
       [] ->
         {:noop, []}
 
       diagnostics ->
-        if !compile_opts[:return_errors], do: print_diagnostics(diagnostics)
-        status = status(compile_opts[:warnings_as_errors], diagnostics)
-
-        {status, diagnostics}
+        handle_diagnostics(diagnostics, compile_opts, :ok)
     end
+  end
+
+  @doc false
+  def handle_diagnostics(diagnostics, compile_opts, status) do
+    if !compile_opts[:return_errors], do: print_diagnostics(diagnostics)
+    status = status(compile_opts[:warnings_as_errors], diagnostics, status)
+    {status, diagnostics}
   end
 
   defp print_diagnostics(diagnostics) do
@@ -201,16 +222,8 @@ defmodule Mix.Tasks.Compile.Surface do
     end
   end
 
-  if Version.match?(System.version(), ">= 1.14.0") do
-    defp print_diagnostic(message, :warning, file, {line, col}) do
-      IO.warn(message, file: file, line: line, column: col)
-    end
-  end
-
-  # TODO: Remove this clause in Surface v0.13 and set required elixir to >= v1.14
-  defp print_diagnostic(message, :warning, file, line) do
-    rel_file = file |> Path.relative_to_cwd() |> to_charlist()
-    IO.warn(message, [{nil, :__FILE__, 1, [file: rel_file, line: line]}])
+  defp print_diagnostic(message, :warning, file, {line, col}) do
+    IO.warn(message, file: file, line: line, column: col)
   end
 
   defp print_diagnostic(message, :error, file, line) do
@@ -223,11 +236,40 @@ defmodule Mix.Tasks.Compile.Surface do
     IO.puts(:stderr, [error, message, ?\n, stacktrace])
   end
 
-  defp status(warnings_as_errors, diagnostics) do
+  defp status(warnings_as_errors, diagnostics, default) do
     cond do
       Enum.any?(diagnostics, &(&1.severity == :error)) -> :error
       warnings_as_errors && Enum.any?(diagnostics, &(&1.severity == :warning)) -> :error
-      true -> :ok
+      true -> default
     end
+  end
+
+  @doc false
+  def manifests, do: [manifest()]
+
+  defp manifest, do: Path.join(Mix.Project.manifest_path(), @manifest)
+
+  @doc false
+  def read_manifest do
+    case File.read(manifest()) do
+      {:ok, contents} -> :erlang.binary_to_term(contents)
+      _ -> {:unknown, nil}
+    end
+  end
+
+  @doc false
+  def write_manifest!(version, diagnostics) do
+    File.write!(manifest(), :erlang.term_to_binary({version, diagnostics}))
+  end
+
+  defp manifest_older? do
+    other_manifests = Mix.Tasks.Compile.Elixir.manifests()
+    manifest_mtime = mtime(manifest())
+    Enum.any?(other_manifests, fn m -> mtime(m) > manifest_mtime end)
+  end
+
+  defp mtime(file) do
+    %File.Stat{mtime: mtime} = File.stat!(file)
+    mtime
   end
 end

@@ -172,12 +172,12 @@ defmodule Surface do
   end
 
   @doc false
-  def __compile_sface__(name, file, env) do
+  def __compile_sface__(name, file, %Macro.Env{} = env) do
     file
     |> File.read!()
     |> Surface.Compiler.compile(1, env, file)
     |> Surface.Compiler.to_live_struct(
-      caller: %Macro.Env{env | file: file, line: 1, function: {String.to_atom(name), 1}},
+      caller: %{env | file: file, line: 1, function: {String.to_atom(name), 1}},
       annotate_content: annotate_content()
     )
   end

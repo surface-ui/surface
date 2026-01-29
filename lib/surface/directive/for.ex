@@ -42,20 +42,6 @@ defmodule Surface.Directive.For do
     handle_modifiers([{:<-, clause_meta, [var, udpated_list]}], modifiers, meta)
   end
 
-  defp handle_modifiers([{_, clause_meta, _} = list], ["index" | modifiers], meta) do
-    var =
-      quote do
-        var!(index)
-      end
-
-    udpated_list =
-      quote do
-        Enum.scan(unquote(list), -1, fn _, a -> a + 1 end)
-      end
-
-    handle_modifiers([{:<-, clause_meta, [var, udpated_list]}], modifiers, meta)
-  end
-
   defp handle_modifiers(clauses, [modifier | _modifiers], meta) when length(clauses) > 1 do
     message = "cannot apply modifier \"#{modifier}\" on generators with multiple clauses"
     IOHelper.compile_error(message, meta.file, meta.line)

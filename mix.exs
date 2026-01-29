@@ -9,12 +9,11 @@ defmodule Surface.MixProject do
     [
       app: :surface,
       version: @version,
-      elixir: "~> 1.13",
+      elixir: "~> 1.14",
       description: "A component based library for Phoenix LiveView",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
-      preferred_cli_env: [docs: :docs],
       # Docs
       name: "Surface",
       source_url: @source_url,
@@ -30,6 +29,10 @@ defmodule Surface.MixProject do
       extra_applications: [:logger],
       env: [csrf_token_reader: {Plug.CSRFProtection, :get_csrf_token_for, []}]
     ]
+  end
+
+  def cli do
+    [preferred_envs: [docs: :docs]]
   end
 
   defp elixirc_paths(:dev), do: ["lib"] ++ catalogues()
@@ -48,6 +51,7 @@ defmodule Surface.MixProject do
       {:blend, "~> 0.3.0", only: :dev},
       {:jason, "~> 1.0", only: :test},
       {:floki, "~> 0.35", only: :test},
+      {:lazy_html, ">= 0.1.0", only: :test},
       {:ex_doc, ">= 0.31.0", only: :docs}
     ]
   end

@@ -50,7 +50,7 @@ defmodule ANSIHelpers do
   """
   def maybe_ansi(text) do
     if IO.ANSI.enabled?() do
-      "(\\e\\[\\d+m)?#{text}(\\e\\[0m)"
+      "(\\e\\[\\d+m)?#{text}(\\e\\[0m)?"
     else
       text
     end

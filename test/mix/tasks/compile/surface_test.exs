@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
   import Mix.Tasks.Compile.Surface
   import ExUnit.CaptureIO
+  import ANSIHelpers
 
   alias Mix.Task.Compiler.Diagnostic
 
@@ -51,10 +52,47 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     assert run(["--from-mix-deps-compile"]) == {:noop, []}
   end
 
+  test "create manifest when compiling for the first time" do
+    [manifest] = manifests()
+    File.rm(manifest)
+
+    assert read_manifest() == {:unknown, nil}
+
+    assert {:ok, _} = run(["--return-errors"])
+
+    assert {1 = _version, [%Diagnostic{} | _]} = read_manifest()
+  end
+
+  test "force re-compilation if manifest is outdated" do
+    assert {:ok, [%Diagnostic{} | _]} = run(["--return-errors", "--force"])
+
+    assert {version, diagnostics} = read_manifest()
+
+    # No re-compilation as the manifest is up-to-date
+    assert {:noop, _} = run(["--return-errors"])
+
+    # Force an older version
+    write_manifest!(version - 1, diagnostics)
+
+    # Now it re-compiles as the manifest is outdated
+    assert {:ok, _} = run(["--return-errors"])
+  end
+
+  test "use manifest to avoid re-compilation and keep track of diagnostics" do
+    # Runninng the first time compiles it normally, returning diagnostics
+    assert {:ok, [%Diagnostic{} | _]} = run(["--return-errors", "--force"])
+
+    # Runninng again compiles nothing and returns no warnings as there's no change
+    assert {:noop, []} = run(["--return-errors"])
+
+    # Runninng again using --all-warnings compiles nothing but returns existing warnings
+    assert {:noop, [%Diagnostic{} | _]} = run(["--return-errors", "--all-warnings"])
+  end
+
   test "generate index.js with empty object if there's no hooks available" do
     refute File.exists?(@hooks_output_dir)
 
-    assert capture_io(:standard_error, fn -> run(["--return-errors"]) end) == ""
+    assert capture_io(:standard_error, fn -> run(["--return-errors", "--force"]) end) == ""
 
     assert File.read!(@hooks_index_file) == """
            /*
@@ -69,25 +107,25 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     diagnostic = %Diagnostic{
       message: "test warning",
       file: "file.ex",
-      position: 1,
+      position: {1, 1},
       severity: :warning,
       compiler_name: "Surface"
     }
 
     output =
       capture_io(:standard_error, fn ->
-        assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [])
+        assert {:ok, [^diagnostic]} = handle_diagnostics([diagnostic], [], :ok)
       end)
 
-    assert output =~ "warning:"
-    assert output =~ "test warning\n  file.ex:1: (file)\n\n"
+    assert output =~ ~r"#{maybe_ansi("warning:")} test warning"
+    assert output =~ "file.ex:1: (file)\n\n"
   end
 
   test "don't print and return `{:error, diagnostics}` on warning with `return_errors` and `warnings_as_errors`" do
     diagnostic = %Diagnostic{
       message: "test warning",
       file: "file.ex",
-      position: 1,
+      position: {1, 1},
       severity: :warning,
       compiler_name: "Surface"
     }
@@ -95,7 +133,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
     output =
       capture_io(:standard_error, fn ->
         assert {:error, [^diagnostic]} =
-                 handle_diagnostics([diagnostic], return_errors: true, warnings_as_errors: true)
+                 handle_diagnostics([diagnostic], [return_errors: true, warnings_as_errors: true], :ok)
       end)
 
     refute output =~ "test warning"
@@ -112,7 +150,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
     output =
       capture_io(:standard_error, fn ->
-        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [])
+        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [], :ok)
       end)
 
     assert output == (IO.ANSI.format([:red, "error: "]) |> IO.iodata_to_binary()) <> "test error\n  file.ex:1\n"
@@ -129,7 +167,7 @@ defmodule Mix.Tasks.Compile.SurfaceTest do
 
     output =
       capture_io(:standard_error, fn ->
-        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], return_errors: true)
+        assert {:error, [^diagnostic]} = handle_diagnostics([diagnostic], [return_errors: true], :ok)
       end)
 
     assert output == ""

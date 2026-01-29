@@ -557,29 +557,8 @@ defmodule Surface.DirectivesTest do
       html =
         render_surface do
           ~F"""
-          <div :for.index={index <- @items}>
-            Index: {index}
-          </div>
-          """
-        end
-
-      assert html =~ """
-             <div>
-               Index: 0
-             </div><div>
-               Index: 1
-             </div>
-             """
-    end
-
-    test "index modifier with list" do
-      assigns = %{items: [1, 2]}
-
-      html =
-        render_surface do
-          ~F"""
-          <div :for.index={@items}>
-            Index: {index}
+          <div :for.index={i <- @items}>
+            Index: {i}
           </div>
           """
         end

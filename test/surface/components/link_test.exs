@@ -115,9 +115,10 @@ defmodule Surface.Components.LinkTest do
 
   test "updates when opts change", %{conn: conn} do
     {:ok, view, html} = live_isolated(conn, ViewWithLink)
-    refute html =~ ~s(disabled="disabled")
-    assert render_click(view, :toggle_disable) =~ ~s(disabled="disabled")
-    refute render_click(view, :toggle_disable) =~ ~s(disabled="disabled")
+    # On LV < 1.1, it renders `disabled="disabled". For later versions, it renders `disabled=""`
+    refute html =~ ~r/disabled="(disabled)?"/
+    assert render_click(view, :toggle_disable) =~ ~r/disabled="(disabled)?"/
+    refute render_click(view, :toggle_disable) =~ ~r/disabled="(disabled)?"/
   end
 
   describe "is compatible with phoenix link/2" do
