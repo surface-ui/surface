@@ -53,13 +53,15 @@ defmodule Surface.Catalogue.Playground do
   defmacro __using__(opts) do
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
+    lv_opts = Keyword.drop(opts, [:subject, :catalogue, :height, :title, :body, :direction, :code_perc, :assert])
+
     quote do
       @config unquote(opts)
       @after_compile unquote(__MODULE__)
       @__use_line__ unquote(__CALLER__.line)
       @before_compile unquote(__MODULE__)
 
-      use Surface.LiveView, unquote(opts)
+      use Surface.LiveView, unquote(lv_opts)
 
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
@@ -129,11 +131,14 @@ defmodule Surface.Catalogue.Playground do
 
     common_ast =
       quote do
-        @moduledoc catalogue: [
-                     type: :playground,
-                     subject: unquote(subject),
-                     config: unquote(config)
-                   ]
+        @doc false
+        def __catalogue__ do
+          [
+            type: :playground,
+            subject: unquote(subject),
+            config: unquote(config)
+          ]
+        end
 
         data props, :keyword, default: unquote(Macro.escape(props_data))
         data slots, :keyword, default: unquote(slots_data)

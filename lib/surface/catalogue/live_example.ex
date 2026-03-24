@@ -56,13 +56,15 @@ defmodule Surface.Catalogue.LiveExample do
   defmacro __using__(opts) do
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
 
+    lv_opts = Keyword.drop(opts, [:subject, :catalogue, :height, :title, :body, :direction, :code_perc, :assert])
+
     quote do
-      @__example_config__ unquote(opts)
+      @__example_config__ unquote(Macro.escape(opts))
       @__use_line__ unquote(__CALLER__.line)
       @after_compile unquote(__MODULE__)
       @before_compile unquote(__MODULE__)
 
-      use Surface.LiveView, unquote(opts)
+      use Surface.LiveView, unquote(lv_opts)
 
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
@@ -104,12 +106,15 @@ defmodule Surface.Catalogue.LiveExample do
     ]
 
     quote do
-      @moduledoc catalogue: [
-                   type: :example,
-                   subject: unquote(subject),
-                   config: unquote(config),
-                   examples_configs: unquote(examples_configs)
-                 ]
+      @doc false
+      def __catalogue__ do
+        [
+          type: :example,
+          subject: unquote(subject),
+          config: unquote(config),
+          examples_configs: unquote(examples_configs)
+        ]
+      end
     end
   end
 

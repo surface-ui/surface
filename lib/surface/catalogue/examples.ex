@@ -95,18 +95,20 @@ defmodule Surface.Catalogue.Examples do
     subject = Surface.Catalogue.fetch_subject!(opts, __MODULE__, __CALLER__)
     Module.register_attribute(__CALLER__.module, :__examples__, accumulate: true)
 
+    lv_opts = Keyword.drop(opts, [:subject, :catalogue, :height, :title, :body, :direction, :code_perc, :assert])
+
     quote do
       @after_compile unquote(__MODULE__)
       @__use_line__ unquote(__CALLER__.line)
       @before_compile unquote(__MODULE__)
       @on_definition unquote(__MODULE__)
 
-      use Surface.LiveView, unquote(opts)
+      use Surface.LiveView, unquote(lv_opts)
 
       alias unquote(subject)
       require Surface.Catalogue.Data, as: Data
 
-      @__example_config__ unquote(opts)
+      @__example_config__ unquote(Macro.escape(opts))
 
       import Surface, except: [sigil_F: 2]
 
@@ -141,12 +143,15 @@ defmodule Surface.Catalogue.Examples do
       |> Enum.reverse()
 
     quote do
-      @moduledoc catalogue: [
-                   type: :example,
-                   subject: unquote(subject),
-                   config: unquote(config),
-                   examples_configs: unquote(examples_configs)
-                 ]
+      @doc false
+      def __catalogue__ do
+        [
+          type: :example,
+          subject: unquote(subject),
+          config: unquote(config),
+          examples_configs: unquote(examples_configs)
+        ]
+      end
     end
   end
 
