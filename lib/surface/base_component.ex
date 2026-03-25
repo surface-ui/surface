@@ -28,12 +28,15 @@ defmodule Surface.BaseComponent do
     {Surface.Components.Form.Inputs, :render} => true
   }
 
+  @supported_hooks_extensions ~W"js jsx ts tsx"
+
   defmacro __using__(opts) do
     type = Keyword.fetch!(opts, :type)
 
     root = Path.dirname(__CALLER__.file)
     css_file_name = css_filename(__CALLER__)
     css_file = Path.join(root, css_file_name)
+    hooks_files = hooks_files(__CALLER__)
 
     Module.register_attribute(__CALLER__.module, :__style__, accumulate: true)
 
@@ -68,6 +71,13 @@ defmodule Surface.BaseComponent do
       end
 
       @external_resource unquote(css_file)
+
+      # Although hooks have no effect in the generated beam file, we need this dependency
+      # now to trigger js assets building by the surface compiler, which has been optimized
+      # to run only if any of the previous compilers have also run.
+      for file <- unquote(hooks_files) do
+        @external_resource file
+      end
 
       @propagate_context_to_slots_map unquote(__MODULE__).build_propagate_context_to_slots_map()
     end
@@ -246,10 +256,22 @@ defmodule Surface.BaseComponent do
   end
 
   defp css_filename(env) do
-    env.module
+    base_file_name(env.module) <> ".css"
+  end
+
+  defp hooks_files(env) do
+    root = Path.dirname(env.file)
+    base_name = base_file_name(env.module)
+
+    for ext <- @supported_hooks_extensions do
+      Path.join(root, "#{base_name}.hooks.#{ext}")
+    end
+  end
+
+  defp base_file_name(module) do
+    module
     |> Module.split()
     |> List.last()
     |> Macro.underscore()
-    |> Kernel.<>(".css")
   end
 end
